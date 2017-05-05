@@ -17,12 +17,13 @@
  * Description:
  *
  *	This header file contains the structures and definitions required to
- *	implement an emulator for the Alpha 21264 (EV68) processor.
+ *	implement the instruction emulation for the Alpha 21264 (EV68) processor.
  *
  *	Revision History:
  *
  *	V01.000	 04-May-2017	Jonathan D. Belanger
  *	Initially written.
+ *	(May the 4th be with you).
  *
  */
 #ifndef _AXP_21264_INS_DEFS_
@@ -70,117 +71,118 @@ typedef struct
  */
 typedef struct
 {
-	 u32	rc : 5;					_* Register c (source)					*/
-	 u32	func : 7;				_* Integer Function						*/
-	 u32	fmt : 1;				_* Format Literal=1 or Rb=0				*/
-	 u32	lit : 8;				_* Literal (ZEXT)						*/
-	 u32	ra : 5;					_* Register a (destination)				*/
-	 u32	opcode : 6;				_* Operation code						*/
+	 u32	rc : 5;					/* Register c (source)					*/
+	 u32	func : 7;				/* Integer Function						*/
+	 u32	fmt : 1;				/* Format Literal=1 or Rb=0				*/
+	 u32	lit : 8;				/* Literal (ZEXT)						*/
+	 u32	ra : 5;					/* Register a (destination)				*/
+	 u32	opcode : 6;				/* Operation code						*/
 } AXP_OP2_INS;
 
-_*
+/*
  * FP Operate Instruction Format
  */
 typedef struct
 {
-	 u32	fc : 5;					_* Floating Point Register c (source 2)	*/
-	 u32	func : 7;				_* Floating Point Function				*/
-	 u32	fb : 5;					_* Floating Point Register b (source 1)	*/
-	 u32	fa : 5;					_* Floating Point Register a (target)	*/
-	 u32	opcode : 6;				_* Operation Code						*/
+	 u32	fc : 5;					/* Floating Point Register c (source 2)	*/
+	 u32	func : 7;				/* Floating Point Function				*/
+	 u32	fb : 5;					/* Floating Point Register b (source 1)	*/
+	 u32	fa : 5;					/* Floating Point Register a (target)	*/
+	 u32	opcode : 6;				/* Operation Code						*/
 } AXP_FP_INS;
 
-_*
+/*
  * PALcode Instruction Format
  */
 typedef struct
 {
-	 u32	palcode_func : 26;		_* PALcode Function						*/
-	 u32	opcode : 6;				_* Operation Code						*/
+	 u32	palcode_func : 26;		/* PALcode Function						*/
+	 u32	opcode : 6;				/* Operation Code						*/
 } AXP_PAL_INS;
 
-_*
+/*
  * Union of a the 32-bit AXP instruction formats.
  */
 typedef union
 {
-	AXP_MEM_INS		mem;			_* Memory Instruction					*/
-	AXP_BR_INS		br;				_* Branch Instruction					*/
-	AXP_OP1_INS		oper1;			_* Integer Operate Instruction (Rb)		*/
-	AXP_OP2_INS		oper2;			_* Integer Operate Instruction (LIT)	*/
-	AXP_FP_INS		fp;				_* Floating Point Operate Instruction	*/
-	AXP_PAL_INS		pal;			_* PALcode Instruction					*/
+	u32				instr;			/* 32-bit instruction value				*/
+	AXP_MEM_INS		mem;			/* Memory Instruction					*/
+	AXP_BR_INS		br;				/* Branch Instruction					*/
+	AXP_OP1_INS		oper1;			/* Integer Operate Instruction (Rb)		*/
+	AXP_OP2_INS		oper2;			/* Integer Operate Instruction (LIT)	*/
+	AXP_FP_INS		fp;				/* Floating Point Operate Instruction	*/
+	AXP_PAL_INS		pal;			/* PALcode Instruction					*/
 } AXP_INS_FMT;
 
-_*
+/*
  * Instruction Opcode definitions
  */
-#define PAL00	0x00	_* CALL PALcode */
-#define OPC01	0x01	_* reserved */
-#define OPC02	0x02	_* reserved */
-#define OPC03	0x03	_* reserved */
-#define OPC04	0x04	_* reserved */
-#define OPC05	0x05	_* reserved */
-#define OPC06	0x06	_* reserved */
-#define OPC07	0x07	_* reserved */
-#define LDA		0x08	_* memory */
-#define LDAH	0x09	_* memory */
-#define LDBU	0x0a	_* memory */
-#define LDQ_U	0x0b	_* memory */
-#define LWW_U	0x0c	_* memory */
-#define STW		0x0d	_* memory */
-#define STB		0x0e	_* memory */
-#define STQ_U	0x0f	_* memory */
-#define INTA	0x10	_* integer arithmetic operation */
-#define INTL	0x11	_* integer logical operation */
-#define INTS	0x12	_* integer shift operation */
-#define INTM	0x13	_* integer multiply operation */
-#define ITFP	0x14	_* integer-to-FP */
-#define FLTV	0x15	_* VAX FP operation */
-#define FLTI	0x16	_* IEEE FP operation */
-#define FLTL	0x17	_* FP operation */
-#define MISC	0x18	_* miscellaneous */
-#define HW_MFPR	0x19	_* reserved for PALcode */
-#define JSR		0x1a	_* jump */
-#define HW_LD	0x1b	_* reserved for PALcode */
-#define FPTI	0x1c	_* FP-to-integer */
-#define HW_MTPR	0x1d	_* reserved for PALcode */
-#define HW_REI	0x1e	_* reserved for PALcode */
-#define HW_ST	0x1f	_* reserved for PALcode */
-#define LDF		0x20	_* memory */
-#define LDG		0x21	_* memory */
-#define LDS		0x22	_* memory */
-#define LDT		0x23	_* memory */
-#define STF		0x24	_* memory */
-#define STG		0x25	_* memory */
-#define STS		0x26	_* memory */
-#define STT		0x27	_* memory */
-#define LDL		0x28	_* memory */
-#define LDQ		0x29	_* memory */
-#define LDL_L	0x2a	_* memory */
-#define LDQ_L	0x2b	_* memory */
-#define STL		0x2c	_* memory */
-#define STQ		0x2d	_* memory */
-#define STL_C	0x2e	_* memory */
-#define STQ_C	0x2e	_* memory */
-#define BR		0x30	_* branch */
-#define FBEQ	0x31	_* branch */
-#define FBLT	0x32	_* branch */
-#define FBLE	0x33	_* branch */
-#define BSR		0x34	_* branch */
-#define FBNE	0x35	_* branch */
-#define FBGE	0x36	_* branch */
-#define FBGT	0x37	_* branch */
-#define BLBC	0x38	_* branch */
-#define BEQ		0x39	_* branch */
-#define BLT		0x3a	_* branch */
-#define BLE		0x3b	_* branch */
-#define BLBS	0x3c	_* branch */
-#define BNE		0x3d	_* branch */
-#define BGE		0x3e	_* branch */
-#define BGT		0x3f	_* branch */
+#define PAL00	0x00	/* CALL PALcode */
+#define OPC01	0x01	/* reserved */
+#define OPC02	0x02	/* reserved */
+#define OPC03	0x03	/* reserved */
+#define OPC04	0x04	/* reserved */
+#define OPC05	0x05	/* reserved */
+#define OPC06	0x06	/* reserved */
+#define OPC07	0x07	/* reserved */
+#define LDA		0x08	/* memory */
+#define LDAH	0x09	/* memory */
+#define LDBU	0x0a	/* memory */
+#define LDQ_U	0x0b	/* memory */
+#define LWW_U	0x0c	/* memory */
+#define STW		0x0d	/* memory */
+#define STB		0x0e	/* memory */
+#define STQ_U	0x0f	/* memory */
+#define INTA	0x10	/* integer arithmetic operation */
+#define INTL	0x11	/* integer logical operation */
+#define INTS	0x12	/* integer shift operation */
+#define INTM	0x13	/* integer multiply operation */
+#define ITFP	0x14	/* integer-to-FP */
+#define FLTV	0x15	/* VAX FP operation */
+#define FLTI	0x16	/* IEEE FP operation */
+#define FLTL	0x17	/* FP operation */
+#define MISC	0x18	/* miscellaneous */
+#define HW_MFPR	0x19	/* reserved for PALcode */
+#define JSR		0x1a	/* jump */
+#define HW_LD	0x1b	/* reserved for PALcode */
+#define FPTI	0x1c	/* FP-to-integer */
+#define HW_MTPR	0x1d	/* reserved for PALcode */
+#define HW_REI	0x1e	/* reserved for PALcode */
+#define HW_ST	0x1f	/* reserved for PALcode */
+#define LDF		0x20	/* memory */
+#define LDG		0x21	/* memory */
+#define LDS		0x22	/* memory */
+#define LDT		0x23	/* memory */
+#define STF		0x24	/* memory */
+#define STG		0x25	/* memory */
+#define STS		0x26	/* memory */
+#define STT		0x27	/* memory */
+#define LDL		0x28	/* memory */
+#define LDQ		0x29	/* memory */
+#define LDL_L	0x2a	/* memory */
+#define LDQ_L	0x2b	/* memory */
+#define STL		0x2c	/* memory */
+#define STQ		0x2d	/* memory */
+#define STL_C	0x2e	/* memory */
+#define STQ_C	0x2e	/* memory */
+#define BR		0x30	/* branch */
+#define FBEQ	0x31	/* branch */
+#define FBLT	0x32	/* branch */
+#define FBLE	0x33	/* branch */
+#define BSR		0x34	/* branch */
+#define FBNE	0x35	/* branch */
+#define FBGE	0x36	/* branch */
+#define FBGT	0x37	/* branch */
+#define BLBC	0x38	/* branch */
+#define BEQ		0x39	/* branch */
+#define BLT		0x3a	/* branch */
+#define BLE		0x3b	/* branch */
+#define BLBS	0x3c	/* branch */
+#define BNE		0x3d	/* branch */
+#define BGE		0x3e	/* branch */
+#define BGT		0x3f	/* branch */
 
-_*
+/*
  * OpenVMS PALcode Opcodes
  */
 #define VMS_HALT			0x0000
@@ -274,7 +276,7 @@ _*
 #define VMS_GENTRAP			0x00aa
 #define VMS_CLRFEN			0x00ae
 
-_*
+/*
  * Tru64 (OSF) & Linux PALcode Opcodes
  */
 #define OSF_HALT			0x0000
@@ -287,7 +289,7 @@ _*
 #define OSF_WRMCES			0x0011
 #define OSF_WRFEN			0x002b
 #define OSF_WRVPTPTR		0x002d
-#define OSF_WRASN			0x002e	_* Not used by Linux */
+#define OSF_WRASN			0x002e	/* Not used by Linux */
 #define OSF_SWPCTX			0x0030
 #define OSF_WRVAL			0x0031
 #define OSF_RDVAL			0x0032
@@ -307,13 +309,13 @@ _*
 #define OSF_BUGCHK			0x0081
 #define OSF_CALLSYS			0x0083
 #define OSF_IMB				0x0086
-#define OSF_URTI			0x0092	_* Not used by Linux */
+#define OSF_URTI			0x0092	/* Not used by Linux */
 #define OSF_RDUNIQUE		0x009e
 #define OSF_WRUNIQUE		0x009f
 #define OSF_GENTRAP			0x00aa
 #define OSF_CLRFEN			0x00ae
 
-_*
+/*
  * Opcode function codes 
  */
 #define AXP_JMP				0x00
@@ -780,4 +782,4 @@ _*
 #define AXP_WH64			0xf800
 #define AXP_WH64EN			0xfc00
 
-#endif _* _AXP_21264_INS_DEFS_ */
+#endif /* _AXP_21264_INS_DEFS_ */
