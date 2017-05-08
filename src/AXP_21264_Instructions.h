@@ -36,7 +36,11 @@
  */
 typedef struct
 {
-	 u32	mem_disp_func : 16;		/* Memory displacement from PC (SEXT)	*/
+	union
+	{
+		u32	func :16;				/* Memory function						*/
+		i32 disp : 16;				/* Memory displacement from PC (SEXT)	*/
+	} mem;
 	 u32	rb : 5;					/* Register b (source)					*/
 	 u32	ra : 5;					/* Register a (destination)				*/
 	 u32	opcode : 6;				/* Operation code						*/
@@ -47,7 +51,7 @@ typedef struct
  */
 typedef struct
 {
-	 u32	branch_disp : 21;		/* Branch displacement *4 from PC (SEXT)*/
+	 i32	branch_disp : 21;		/* Branch displacement *4 from PC (SEXT)*/
 	 u32	ra : 5;					/* Register a (destination)				*/
 	 u32	opcode : 6;				/* Operatoin code						*/
 } AXP_BR_INS;
