@@ -21,13 +21,18 @@
  *
  *	Revision History:
  *
- *	V01.000	 04-May-2017	Jonathan D. Belanger
+ *	V01.000		04-May-2017	Jonathan D. Belanger
  *	Initially written.
  *	(May the 4th be with you).
+ *
+ *	V01.001		10-May-2017	Jonathan D. Belanger
+ *	Included the AXP Utility header file for definitions like u64, i64, etc..
  *
  */
 #ifndef _AXP_21264_INS_DEFS_
 #define _AXP_21264_INS_DEFS_
+
+#include "AXP_Utility.h"
 
 /*
  * Define the Alpha Instruction Formats
