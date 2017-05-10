@@ -22,13 +22,18 @@
  *
  *	Revision History:
  *
- *	V01.000	 05-May-2017	Jonathan D. Belanger
+ *	V01.000		05-May-2017	Jonathan D. Belanger
  *	Initially written.
  *	(Happy Cinco Daimio)
+ *
+ *	V01.001		10-May-2017	Jonathan D. Belanger
+ *	Included the AXP Utility header file for definitions like u64, i64, etc..
  *
  */
 #ifndef _AXP_21264_PRED_DEFS_
 #define _AXP_21264_PRED_DEFS_
+
+#include "AXP_Utility.h"
 
 /*
  * The following definitions are used to decode the Virtual Program Counter
@@ -36,12 +41,11 @@
  */
 typedef struct
 {
-	u16	ign1 : 2;
-	u16	index : 10;
-	u16 ign2 : 4;
-	u16 ign3;
-	u32 ign4;
+	u64	res_1 : 2;
+	u64	index : 10;
+	u64 res_2 : 52;
 } LCLindex;
+
 typedef union
 {
 	u64 vpc;
@@ -83,24 +87,22 @@ typedef union
  * Define the table definition for the 2-bit saturation counters for the
  * Global Prediction.
  */
-#define AXP_GLOBAL_PREDICTOR_TABLE_SIZE 4096
 typedef struct
 {
-	u8	gbl_pred[AXP_GLOBAL_PREDICTOR_TABLE_SIZE];
+	u8	gbl_pred[FOUR_K];
 } GPT;
 
 /*
  * Define the table definition for the 3-bit saturation counters for the
  * Local Prediction.
  */
-#define AXP_LOCAL_PREDICTOR_TABLE_SIZE 1024
 typedef struct
 {
-	u16	lcl_history[AXP_LOCAL_PREDICTOR_TABLE_SIZE];
+	u16	lcl_history[ONE_K];
 } LHT;
 typedef struct
 {
-	u8	lcl_pred[AXP_LOCAL_PREDICTOR_TABLE_SIZE];
+	u8	lcl_pred[ONE_K];
 } LPT;
 
 /*
@@ -112,10 +114,9 @@ typedef struct
  * saturation counter.  Otherwise, we increment the 2-bit saturation counter.
  * If the local and golbal predictions match, we leave the counter alone.
  */
-#define AXP_CHOICE_PREDICTOR_TABLE_SIZE 4096
 typedef struct
 {
-	u8	choice_pred[AXP_CHOICE_PREDICTOR_TABLE_SIZE];
+	u8	choice_pred[FOUR_K];
 } CPT;
 
 /*
