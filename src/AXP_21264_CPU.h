@@ -30,6 +30,34 @@
 
 #include "AXP_Utility.h"
 #include "AXP_Predictions.h"
+#include "AXP_Instructions.h"
+
+#define AXP_MAX_REGISTERS	32
+#define AXP_RESULTS_REG		41
+#define AXP_NUM_FETCH_INS	4
+#define AXP_IQ_LEN			20
+#define AXP_FQ_LEN			15
+#define AXP_SHADOW_REG		8
+#define AXP_R04_SHADOW		(AXP_MAX_REGISTERS + 0)
+#define AXP_R05_SHADOW		(AXP_MAX_REGISTERS + 1)
+#define AXP_R06_SHADOW		(AXP_MAX_REGISTERS + 2)
+#define AXP_R07_SHADOW		(AXP_MAX_REGISTERS + 3)
+#define AXP_R20_SHADOW		(AXP_MAX_REGISTERS + 4)
+#define AXP_R21_SHADOW		(AXP_MAX_REGISTERS + 5)
+#define AXP_R22_SHADOW		(AXP_MAX_REGISTERS + 6)
+#define AXP_R23_SHADOW		(AXP_MAX_REGISTERS + 7)
+
+/*
+ * TODO: 	We probably want to decode to determine things like, opcode type,
+ *			functional unit (U0, L0, U1, L1, F0, F1), etc.
+ */
+typedef struct
+{
+	AXP_INS_FMT	instructions[AXP_NUM_FETCH_INS];
+	u8			br_pred : 1;
+	u8			line_pred : 1;
+	u8			res_1 : 6;		/* align to the byte boundary */
+} AXP_INS_QUE;
 
 typedef struct
 {
@@ -37,11 +65,42 @@ typedef struct
 	/*
 	 * The following definitions are used by the branch prediction code.
 	 */
-	LHT	localHistoryTable;
-	LPT	localPredictor;
-	GPT	globalPredictor;
-	CPT	choicePredictor;
-	u16	globalPathHistory;
+	LHT			localHistoryTable;
+	LPT			localPredictor;
+	GPT			globalPredictor;
+	CPT			choicePredictor;
+	u16			globalPathHistory;
+	
+	/*
+	 * Architectural (virtual) registers.
+	 */
+	u64			r[AXP_MAX_REGISTERS + AXP_SHADOW_REG];	/* Integer (Virt) Reg */
+	u64 		f[AXP_MAX_REGISTERS];	/* Floating-point (Virtual) Registers */
+	
+	/*
+	 * Physical registers.
+	 *
+	 * There are 80 register file entries for integer registers.  This is the
+	 * 31 Integer registers (R31 is not stored), plus the 8 shadow registers,
+	 * plus the 41 results for instructions that can potentially have not been
+	 * retired.
+	 *
+	 * Since the integer execution unit has 2 cluster, there are a set of 80
+	 * register files for each.
+	 *
+	 * There are 72 register file entries for the floating-point registers.
+	 * This is the 31 Floating-point registers (F31 is not stored), plus the 41
+	 * results for instructions that can potentially have not been retired.
+	 */
+	u64			pr0[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
+	u64			pr1[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
+	u64			pf[AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1];
+
+	/*
+	 * Instruction Queues (Integer and Floating-Point).
+	 */
+	AXP_INS_QUE	iq[AXP_IQ_LEN];
+	AXP_INQ_QUE	fq[AXP_FQ_LEN];
 } AXP_21264_CPU;
 
 #endif /* _AXP_CPU_DEFS_ */

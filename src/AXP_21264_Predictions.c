@@ -150,17 +150,21 @@ void AXP_Branch_Direction(
 	 * predictor, then indicate this for the choice predictor, by decrementing
 	 * the saturation counter
 	 */
-	if (taken == localTaken)
+	if ((taken == localTaken) && (taken != globalTaken))
 	{
 		AXP_2BIT_DECR(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
 	}
 
 	/*
-	 * If the choice to take or not take a branch agreed with the global
-	 * predictor, then indicate this for the choice predictor, by incrementing
-	 * the saturation counter
+	 * Otherwise, if the choice to take or not take a branch agreed with the
+	 * global predictor, then indicate this for the choice predictor, by
+	 * incrementing the saturation counter
+	 *
+	 * NOTE:	If the branch taken does not match both the local and global
+	 *			predictions, then we don't update the choice at all (we had a
+	 *			mis-prediction).
 	 */
-	if (taken == globaTaken)
+	else if (taken == globaTaken)
 	{
 		AXP_2BIT_INCR(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
 	}
@@ -171,6 +175,10 @@ void AXP_Branch_Direction(
 	 * paths were taken, when they agree.  Otherwise, decrement the appropriate
 	 * predictions tables and indicate the local and global paths were not
 	 * taken.
+	 *
+	 * NOTE:	If the local and global predictors indicated that the branch
+	 *			should be taken, then both predictor are correct and should be
+	 *			accounted for.
 	 */
 	if (taken == true)
 	{
@@ -245,7 +253,9 @@ void main()
 
 	/*
 	 * NOTE: 	The current simulation takes in one instruction at a time.  The
-	 *			AXP simulator will process four instructions at a time.
+	 *			AXP simulator will process four instructions at a time and
+	 *			potentially out of order.  When a branch instruction is retired,
+	 *			only then is the
 	 */
 	for (ii = 0, ii < sizeof(fileList), ii++)
 	{
@@ -260,6 +270,12 @@ void main()
 		{
 			scanf(fp, "%7d %1d\n", &vpc, &taken);
 			insCnt++;
+
+			/*
+			 * Predict whether the branch should be taken or not.  We'll get
+			 * results from the Local and Global Predictor, and the Choice
+			 * selected (when the Local and Global do not agree).
+			 */
 			AXP_Branch_Prediction(&cpu, vpc, &localTaken, &globalTaken, &choice);
 			if (localTaken != globalTaken)
 			{
@@ -290,6 +306,19 @@ void main()
 					predictedCnt++;
 				}
 			}
+
+			/*
+			 * Update the predictors based on whether the branch was actually
+			 * taken or not and considering which of the predictors was
+			 * correct.
+			 *
+			 * NOTE: 	Whether choice was used or not is irrelevant.  The
+			 *			choice is determined by whether the local or global
+			 *			were correct.  If both are correct or both are
+			 *			incorrect, then the choice was not used and thus
+			 *			would not have made a difference.
+			 */
+			AXP_Branch_Direction(&cpu, vpc, taken, localTaken, globalTaken);
 		}
 		printf("---------------------------------------------\n");
 		printf("Total Instructions:\t\t\t%d\n", insCnt);
