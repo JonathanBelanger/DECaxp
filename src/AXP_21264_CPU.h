@@ -101,6 +101,10 @@ typedef struct
 	 */
 	AXP_INS_QUE	iq[AXP_IQ_LEN];
 	AXP_INQ_QUE	fq[AXP_FQ_LEN];
+	
+	/*
+	 * All the IPRs
+	 */
 } AXP_21264_CPU;
 
 #endif /* _AXP_CPU_DEFS_ */

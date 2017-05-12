@@ -121,6 +121,29 @@ typedef union
 } AXP_EBOX_VA_FORM;
 
 /*
+ * The following definitions are for the Fbox IPRs
+ */
+typedef struct
+{
+	u64	res : 48;
+	u64 dnz : 1;
+	u64 invd : 1;
+	u64 dzed : 1;
+	u64 ovfd : 1;
+	u64 inv : 1;
+	u64 dze : 1;
+	u64 ovf : 1;
+	u64 unf : 1;
+	u64 ine : 1;
+	u64 iov : 1;
+	u64 dyn : 2;
+	u64 undz : 1;
+	u64 unfd : 1;
+	u64 ined : 1;
+	u64 sum : 1;
+} AXP_FBOX_FPCR;
+
+/*
  * The following definitions are for the Ibox IPRs
  *
  *																MT/MF		Latency

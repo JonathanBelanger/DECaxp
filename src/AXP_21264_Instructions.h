@@ -791,4 +791,52 @@ typedef union
 #define AXP_WH64			0xf800
 #define AXP_WH64EN			0xfc00
 
+/*
+ *
+ * Table Instruction Name, Pipeline, and Types
+ *		U0 = Upper Sub-cluster of Integer Cluster 0
+ *		L0 = Lower Sub-cluster of Integer Cluster 0
+ *		U1 = Upper Sub-cluster of Integer Cluster 1
+ *		L1 = Lower Sub-cluster of Integer Clueter 1
+ *		FA = ?
+ *		FST0 = ?
+ *		FST1 = ?
+ *
+ *	Class
+ *	Name		Pipeline			Instruction Type
+ *	--------	------------------	------------------------------------------------------
+ *	ild			L0, L1				All integer load instructions
+ *	fld			L0, L1				All floating-point load instructions
+ *	ist			L0, L1				All integer store instructions
+ *	fst			FST0, FST1, L0, L1	All floating-point store instructions
+ *	lda			L0, L1, U0, U1		LDA, LDAH
+ *	mem_misc	L1					WH64, ECB, WMB
+ *	rpcc		L1					RPCC
+ *	rx			L1					RS, RC
+ *	mxpr		L0, L1				HW_MTPR, HW_MFPR
+ *				(depends on IPR)
+ *	ibr			U0, U1				Integer conditional branch instructions
+ *	jsr			L0					BR, BSR, JMP, CALL, RET, COR, HW_RET,
+ *									CALL_PAL
+ *	iadd		L0, U0, L1, U1		Instructions with opcode 1016, except CMPBGE
+ *	ilog		L0, U0, L1, U1		AND, BIC, BIS, ORNOT, XOR, EQV, CMPBGE
+ *	ishf		U0, U1				Instructions with opcode 1216
+ *	cmov		L0, U0, L1, U1		Integer CMOV - either cluster
+ *	imul		U1					Integer multiply instructions
+ *	imisc		U0					PERR, MINxxx, MAXxxx, PKxx, UNPKxx
+ *	fbr			FA					Floating-point conditional branch instructions
+ *	fadd		FA					All floating-point operate instructions except multiply,
+ *									divide, square root, and conditional move instructions
+ *	fmul		FM					Floating-point multiply instruction
+ *	fcmov1		FA					Floating-point CMOV—first half
+ *	fcmov2		FA					Floating-point CMOV— second half
+ *	fdiv		FA					Floating-point divide instruction
+ *	fsqrt		FA					Floating-point square root instruction
+ *	nop			None				TRAP, EXCB, UNOP - LDQ_U R31, 0(Rx)
+ *	ftoi		FST0, FST1, L0, L1	FTOIS, FTOIT
+ *	itof		L0, L1				ITOFS, ITOFF, ITOFT
+ *	mx_fpcr		FM					Instructions that move data from the floating-point
+ *									control register
+ */
+
 #endif /* _AXP_21264_INS_DEFS_ */
