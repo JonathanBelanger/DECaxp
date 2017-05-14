@@ -24,11 +24,15 @@
  *	V01.000		10-May-2017	Jonathan D. Belanger
  *	Initially written.
  *
+ *	V01.001		14-May-2017	Jonathan D. Belanger
+ *	Cleaned up some compiler errors.  Ran some tests, and corrected some coding
+ *	mistakes.  The prediction code correctly predicts a branch instruction
+ *	between 95.0% and 99.1% of the time.
  */
+#include "AXP_Base_CPU.h"
 #include "AXP_21264_Predictions.h"
 #include "AXP_21264_CPU.h"
-
-#define _TEST_PREDICTION_ 1
+#include "AXP_Configure.h"
 
 /*
  * AXP_Branch_Prediction
@@ -75,9 +79,9 @@
  * Return Value:
  *	None.
  */
-void AXP_Branch_Prediction(
+bool AXP_Branch_Prediction(
 				AXP_21264_CPU *cpu,
-				u64 vpc,
+				AXP_PC vpc,
 				bool *localTaken,
 				bool *globalTaken, 
 				bool *choice)
@@ -85,6 +89,7 @@ void AXP_Branch_Prediction(
 	LPTIndex	lpt_index;
 	int			lcl_history_idx;
 	int			lcl_predictor_idx;
+	bool		retVal;
 
 	/*
 	 * Need to extract the index into the Local History Table from the VPC, and
@@ -93,12 +98,6 @@ void AXP_Branch_Prediction(
 	lpt_index.vpc = vpc;
 	lcl_history_idx = lpt_index.index.index;
 	lcl_predictor_idx = cpu->localHistoryTable.lcl_history[lcl_history_idx];
-	printf("---------------------------\n");
-	printf("LOCAL:  vpc: %016llx history index: %04x predictor index: %04x prediction: ",
-			lpt_index.vpc,
-			lpt_index.index.index,
-			cpu->localHistoryTable.lcl_history[lcl_history_idx]
-			);
 
 	/*
 	 * Return the take(true)/don't take(false) for each of the Predictor
@@ -108,11 +107,12 @@ void AXP_Branch_Prediction(
 	*localTaken = AXP_3BIT_TAKE(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
 	*globalTaken = AXP_2BIT_TAKE(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
 	*choice = AXP_2BIT_TAKE(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
-	printf("%s\n", (*localTaken ? "true" : "false"));
-	printf("GLOBAL: path history: %04x prediction: ");
-	printf("%s\n", (*globalTaken ? "true" : "false"));
-	printf("CHOICE: which: %s\n", (*choice ? "Global" : "Local"));
-	return;
+	if (*localTaken != *globalTaken)
+		retVal = (*choice == true) ? *globalTaken : *localTaken;
+	else
+		retVal = *localTaken;
+
+	return(retVal);
 }
 
 /*
@@ -140,7 +140,7 @@ void AXP_Branch_Prediction(
  */
 void AXP_Branch_Direction(
 				AXP_21264_CPU *cpu,
-				u64 vpc,
+				AXP_PC vpc,
 				bool taken,
 				bool localTaken,
 				bool globalTaken)
@@ -157,8 +157,6 @@ void AXP_Branch_Direction(
 	lcl_history_idx = lpt_index.index.index;
 	lcl_predictor_idx = cpu->localHistoryTable.lcl_history[lcl_history_idx];
 
-	printf("\nBranch %s\n", (taken == true) ? "Taken" : "Not Taken");
-
 	/*
 	 * If the choice to take or not take a branch agreed with the local
 	 * predictor, then indicate this for the choice predictor, by decrementing
@@ -166,11 +164,7 @@ void AXP_Branch_Direction(
 	 */
 	if ((taken == localTaken) && (taken != globalTaken))
 	{
-		printf("LOCAL taken, GLOBAL not taken.  ");
 		AXP_2BIT_DECR(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
-		printf("CHOICE decremented: %d (%04x)\n",
-				cpu->choicePredictor.choice_pred[cpu->globalPathHistory],
-				cpu->globalPathHistory);
 	}
 
 	/*
@@ -184,16 +178,8 @@ void AXP_Branch_Direction(
 	 */
 	else if ((taken != localTaken) && (taken == globalTaken))
 	{
-		printf("LOCAL not taken, GLOBAL taken.\n");
 		AXP_2BIT_INCR(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
-		printf("CHOICE incremented: %d (%04x)\n",
-				cpu->choicePredictor.choice_pred[cpu->globalPathHistory],
-				cpu->globalPathHistory);
 	}
-	else if (taken == localTaken)
-		printf("LOCAL and GLOBAL both right.\n");
-	else
-		printf("LOCAL and GLOBAL both wrong.\n");
 
 	/*
 	 * If the branch was taken, then indicate this in the local and global
@@ -210,47 +196,19 @@ void AXP_Branch_Direction(
 	{
 		AXP_3BIT_INCR(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
 		AXP_2BIT_INCR(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
-		printf("Path was taken. Increment the Local (%d) and Global (%d) predictors\n",
-				cpu->localPredictor.lcl_pred[lcl_predictor_idx],
-				cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
-		if (localTaken == true)
-		{
-			AXP_LOCAL_PATH_TAKEN(cpu->localHistoryTable.lcl_history[lcl_history_idx]);
-			printf("LOCAL prediction correct (%d).\n",
-					cpu->localHistoryTable.lcl_history[lcl_history_idx]);
-		}
-		if (globalTaken == true)
-		{
-			AXP_GLOBAL_PATH_TAKEN(cpu->globalPathHistory);
-			printf("GLOBAL prediction correct (%d).\n",
-					cpu->globalPathHistory);
-		}
+		AXP_LOCAL_PATH_TAKEN(cpu->localHistoryTable.lcl_history[lcl_history_idx]);
+		AXP_GLOBAL_PATH_TAKEN(cpu->globalPathHistory);
 	}
 	else
 	{
 		AXP_3BIT_DECR(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
 		AXP_2BIT_DECR(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
-		printf("Path was NOT taken. Decrement the Local (%d) and Global (%d) predictors\n",
-				cpu->localPredictor.lcl_pred[lcl_predictor_idx],
-				cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
-		if (localTaken == false)
-		{
-			AXP_LOCAL_PATH_NOT_TAKEN(cpu->localHistoryTable.lcl_history[lcl_history_idx]);
-			printf("LOCAL prediction correct (%d).\n",
-					cpu->localHistoryTable.lcl_history[lcl_history_idx]);
-		}
-		if (globalTaken == false)
-		{
-			AXP_GLOBAL_PATH_NOT_TAKEN(cpu->globalPathHistory);
-			printf("GLOBAL prediction correct (%d).\n",
-					cpu->globalPathHistory);
-		}
+		AXP_LOCAL_PATH_NOT_TAKEN(cpu->localHistoryTable.lcl_history[lcl_history_idx]);
+		AXP_GLOBAL_PATH_NOT_TAKEN(cpu->globalPathHistory);
 	}
 	return;
 }
-#ifdef _TEST_PREDICTION_
-
-#include <stdio.h>
+#if _TEST_PREDICTION_
 
 /*
  * main
@@ -289,10 +247,12 @@ int main()
 	int				takenInt;
 	int				ii, jj;
 	AXP_21264_CPU	cpu;
-	u64				vpc;
+	AXP_PC			vpc;
+	int				vpcInt;
 	bool			localTaken;
 	bool			globalTaken;
 	bool			choice;
+	bool			prediction;
 	int				insCnt;
 	int				predictedCnt;
 	int				localCnt;
@@ -307,7 +267,7 @@ int main()
 	 *			only then is the
 	 */
 	printf("AXP 21264 Predictions Unit Tester\n");
-	printf("%d trace files to be processed\n\n", (sizeof(fileList)/sizeof(char *)));
+	printf("%d trace files to be processed\n\n", (int) (sizeof(fileList)/sizeof(char *)));
 	for (ii = 0; ii < (sizeof(fileList)/sizeof(char *)); ii++)
 	{
 		fp = fopen(fileList[ii], "r");
@@ -319,11 +279,12 @@ int main()
 			globalCnt = 0;
 			choiceUsed = 0;
 			choiceCorrect = 0;
-			printf("Processing trace file: %s (%d)...\n", fileList[ii], lineCnt[ii]);
+			printf("\nProcessing trace file: %s (%d)...\n", fileList[ii], lineCnt[ii]);
 			while (feof(fp) == 0)
 			{
-				fscanf(fp, "%d %d\n", (int *) &vpc, &takenInt);
+				fscanf(fp, "%d %d\n", &vpcInt, &takenInt);
 				insCnt++;
+				vpc.pc = vpcInt;
 				taken = (takenInt == 1) ? true : false;
 
 				/*
@@ -331,7 +292,13 @@ int main()
 				 * results from the Local and Global Predictor, and the Choice
 				 * selected (when the Local and Global do not agree).
 			 	 */
-				AXP_Branch_Prediction(&cpu, vpc, &localTaken, &globalTaken, &choice);
+				prediction = AXP_Branch_Prediction(&cpu, vpc, &localTaken, &globalTaken, &choice);
+				if (prediction == taken)
+					predictedCnt++;
+
+				/*
+				 * Let's determine how the choice was determined.
+				 */
 				if (localTaken != globalTaken)
 				{
 					choiceUsed++;
@@ -358,7 +325,6 @@ int main()
 					{
 						localCnt++;
 						globalCnt++;
-						predictedCnt++;
 					}
 				}
 
@@ -375,17 +341,21 @@ int main()
 			 	 */
 				AXP_Branch_Direction(&cpu, vpc, taken, localTaken, globalTaken);
 			}
-			printf("---------------------------------------------\n");
-			printf("Total Instructions:\t\t\t\t\t%d\n", insCnt);
-			printf("Correct predictions:\t\t\t\t%d\n", predictedCnt);
-			printf("Mispredictions:\t\t\t\t\t\t%d\n", (insCnt - predictedCnt));
-			printf("Prediction accuracy:\t\t\t\t%1.6f\n\n", ((float) predictedCnt / (float) insCnt));
-			printf("Times Local Correct:\t\t\t\t%d\n", localCnt);
-			printf("Times Global Correct:\t\t\t\t%d\n", globalCnt);
-			printf("Times Choice Used:\t\t\t\t\t%d\n", choiceUsed);
-			printf("Times Choice Selected Correctly:\t%d\n", choiceCorrect);
-			printf("Times Choice was wrong:\t\t\t\t%d\n", (choiceUsed - choiceCorrect));
 			fclose(fp);
+
+			/*
+			 * Print out what we found.
+			 */
+			printf("---------------------------------------------\n");
+			printf("Total Instructions:\t\t\t%d\n", insCnt);
+			printf("Correct predictions:\t\t\t%d\n", predictedCnt);
+			printf("Mispredictions:\t\t\t\t%d\n", (insCnt - predictedCnt));
+			printf("Prediction accuracy:\t\t\t%1.6f\n\n", ((float) predictedCnt / (float) insCnt));
+			printf("Times Local Correct:\t\t\t%d\n", localCnt);
+			printf("Times Global Correct:\t\t\t%d\n", globalCnt);
+			printf("Times Choice Used:\t\t\t%d\n", choiceUsed);
+			printf("Times Choice Selected Correctly:\t%d\n", choiceCorrect);
+			printf("Times Choice was wrong:\t\t\t%d\n", (choiceUsed - choiceCorrect));
 
 			/*
 			 * We need to clear out the prediction tables in the CPU record.
@@ -399,7 +369,6 @@ int main()
 				cpu.globalPredictor.gbl_pred[jj] = 0;
 			for (jj = 0; jj < FOUR_K; jj++)
 				cpu.choicePredictor.choice_pred[jj] = 0;
-			ii = 6;
 		}
 		else
 		{

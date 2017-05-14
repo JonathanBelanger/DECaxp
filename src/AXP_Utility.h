@@ -21,8 +21,11 @@
  *
  *	Revision History:
  *
- *	V01.000	 10-May-2017	Jonathan D. Belanger
+ *	V01.000		10-May-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		14-May-2017	Jonathan D. Belanger
+ *	Added includes for a number of standard header files.
  *
  */
 #ifndef _AXP_UTIL_DEFS_

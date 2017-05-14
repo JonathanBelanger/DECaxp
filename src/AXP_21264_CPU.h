@@ -24,15 +24,19 @@
  *	V01.000		04-May-2017	Jonathan D. Belanger
  *	Initially written.
  *	(May the 4th be with you).
+ *
+ *	V01.001		14-May-2017	Jonathan D. Belanger
+ *	Included the AXP_Base_CPU header file and a location for the Program
+ *	Counter (PC) in the CPU record.
  */
-#ifndef _AXP_CPU_DEFS_
-#define _AXP_CPU_DEFS_
+#ifndef _AXP_21264_CPU_DEFS_
+#define _AXP_21264_CPU_DEFS_
 
 #include "AXP_Utility.h"
+#include "AXP_Base_CPU.h"
 #include "AXP_21264_Predictions.h"
 #include "AXP_21264_Instructions.h"
 
-#define AXP_MAX_REGISTERS	32
 #define AXP_RESULTS_REG		41
 #define AXP_NUM_FETCH_INS	4
 #define AXP_IQ_LEN			20
@@ -76,6 +80,7 @@ typedef struct
 	 */
 	u64			r[AXP_MAX_REGISTERS + AXP_SHADOW_REG];	/* Integer (Virt) Reg */
 	u64 		f[AXP_MAX_REGISTERS];	/* Floating-point (Virtual) Registers */
+	AXP_PC		vpc;
 	
 	/*
 	 * Physical registers.
@@ -101,10 +106,10 @@ typedef struct
 	 */
 	AXP_INS_QUE	iq[AXP_IQ_LEN];
 	AXP_INS_QUE	fq[AXP_FQ_LEN];
-	
+
 	/*
 	 * All the IPRs
 	 */
 } AXP_21264_CPU;
 
-#endif /* _AXP_CPU_DEFS_ */
+#endif /* _AXP_21264_CPU_DEFS_ */
