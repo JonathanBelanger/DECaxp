@@ -29,11 +29,16 @@
  *	V01.001		10-May-2017	Jonathan D. Belanger
  *	Included the AXP Utility header file for definitions like u64, i64, etc..
  *
+ *	V01.002		14-May-2017	Jonathan D. Belanger
+ *	Included the AXP_Base_CPU header file, which contains definitions common to
+ *	all Alpha AXP CPUs.
+ *
  */
 #ifndef _AXP_21264_PRED_DEFS_
 #define _AXP_21264_PRED_DEFS_
 
 #include "AXP_Utility.h"
+#include "AXP_Base_CPU.h"
 
 /*
  * The following definitions are used to decode the Virtual Program Counter
@@ -48,7 +53,7 @@ typedef struct
 
 typedef union
 {
-	u64 vpc;
+	AXP_PC vpc;
 	LCLindex index;
 } LPTIndex;
 
@@ -159,7 +164,7 @@ typedef struct
 		else\
 			(cntr)--;\
 	}
-#define AXP_3BIT_TAKE(cntr)	(((cntr) < AXP_3BIT_TAKE_MIN) ? false : true)
+#define AXP_3BIT_TAKE(cntr)	(((cntr) < AXP_3BIT_TAKEN_MIN) ? false : true)
 
 /*
  * The following macros are to maintain the Local History Table and the Global

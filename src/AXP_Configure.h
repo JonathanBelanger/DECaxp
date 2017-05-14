@@ -16,36 +16,19 @@
  *
  * Description:
  *
- *	This header file contains useful definitions to be used throughout the
- *	Digital Alpha AXP emulation software.
+ *	This header file contains useful definitions for compiling various portions
+ *	of the code in or out.  Particularly unit testing code.  This header file
+ *	is only included in .c files and should not be included in an include file.
  *
  *	Revision History:
  *
- *	V01.000		10-May-2017	Jonathan D. Belanger
+ *	V01.000	 14-May-2017	Jonathan D. Belanger
  *	Initially written.
  *
- *	V01.001		14-May-2017	Jonathan D. Belanger
- *	Added includes for a number of standard header files.
- *
  */
-#ifndef _AXP_UTIL_DEFS_
-#define _AXP_UTIL_DEFS_
+#ifndef _AXP_CONFIGURE_DEFS_
+#define _AXP_CONFIGURE_DEFS_
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#define _TEST_PREDICTION_ 0
 
-#define ONE_K				1024
-#define FOUR_K				4096
-
-typedef unsigned char		u8;
-typedef unsigned short		u16;
-typedef unsigned long		u32;
-typedef unsigned long long	u64;
-typedef char				i8;
-typedef short				i16;
-typedef long				i32;
-typedef long long			i64;
-
-#endif /* _AXP_UTIL_DEFS_ */
+#endif /* _AXP_CONFIGURE_DEFS_ */

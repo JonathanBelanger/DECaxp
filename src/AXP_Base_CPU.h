@@ -17,35 +17,30 @@
  * Description:
  *
  *	This header file contains useful definitions to be used throughout the
- *	Digital Alpha AXP emulation software.
+ *	Digital Alpha AXP emulation software that are common to all Alpha AXP
+ *	Processors.
  *
  *	Revision History:
  *
- *	V01.000		10-May-2017	Jonathan D. Belanger
+ *	V01.000	 10-May-2017	Jonathan D. Belanger
  *	Initially written.
  *
- *	V01.001		14-May-2017	Jonathan D. Belanger
- *	Added includes for a number of standard header files.
- *
  */
-#ifndef _AXP_UTIL_DEFS_
-#define _AXP_UTIL_DEFS_
+#ifndef _AXP_BASE_CPU_DEFS_
+#define _AXP_BASE_CPU_DEFS_
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include "AXP_Utility.h"
 
-#define ONE_K				1024
-#define FOUR_K				4096
+#define AXP_MAX_REGISTERS	32
 
-typedef unsigned char		u8;
-typedef unsigned short		u16;
-typedef unsigned long		u32;
-typedef unsigned long long	u64;
-typedef char				i8;
-typedef short				i16;
-typedef long				i32;
-typedef long long			i64;
+/*
+ * Program Counter (PC) Definition
+ */
+typedef struct
+{
+	u64 pal : 1;
+	u64 res : 1;
+	u64 pc  : 62;
+} AXP_PC;
 
-#endif /* _AXP_UTIL_DEFS_ */
+#endif /* _AXP_BASE_CPU_DEFS_ */

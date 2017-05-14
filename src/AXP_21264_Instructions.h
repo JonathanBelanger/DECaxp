@@ -28,6 +28,9 @@
  *	V01.001		10-May-2017	Jonathan D. Belanger
  *	Included the AXP Utility header file for definitions like u64, i64, etc..
  *
+ *	V01.002		14-May-2017	Jonathan D. Belanger
+ *	Added some comments about considerations for the next set of additions.
+ *
  */
 #ifndef _AXP_21264_INS_DEFS_
 #define _AXP_21264_INS_DEFS_
@@ -828,8 +831,8 @@ typedef union
  *	fadd		FA					All floating-point operate instructions except multiply,
  *									divide, square root, and conditional move instructions
  *	fmul		FM					Floating-point multiply instruction
- *	fcmov1		FA					Floating-point CMOV—first half
- *	fcmov2		FA					Floating-point CMOV— second half
+ *	fcmov1		FA					Floating-point CMOVï¿½first half
+ *	fcmov2		FA					Floating-point CMOVï¿½ second half
  *	fdiv		FA					Floating-point divide instruction
  *	fsqrt		FA					Floating-point square root instruction
  *	nop			None				TRAP, EXCB, UNOP - LDQ_U R31, 0(Rx)
