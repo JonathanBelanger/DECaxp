@@ -28,6 +28,11 @@
 #ifndef _AXP_UTIL_DEFS_
 #define _AXP_UTIL_DEFS_
 
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 #define ONE_K				1024
 #define FOUR_K				4096
 

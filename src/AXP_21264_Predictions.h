@@ -159,7 +159,7 @@ typedef struct
 		else\
 			(cntr)--;\
 	}
-#define AXP_3BIT_TAKE(cntr)	(((cntr) < AXP_3BIT_TAKE_MIN) ? false : true)
+#define AXP_3BIT_TAKE(cntr)	(((cntr) < AXP_3BIT_TAKEN_MIN) ? false : true)
 
 /*
  * The following macros are to maintain the Local History Table and the Global

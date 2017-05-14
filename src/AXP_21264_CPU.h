@@ -29,8 +29,8 @@
 #define _AXP_CPU_DEFS_
 
 #include "AXP_Utility.h"
-#include "AXP_Predictions.h"
-#include "AXP_Instructions.h"
+#include "AXP_21264_Predictions.h"
+#include "AXP_21264_Instructions.h"
 
 #define AXP_MAX_REGISTERS	32
 #define AXP_RESULTS_REG		41
@@ -100,7 +100,7 @@ typedef struct
 	 * Instruction Queues (Integer and Floating-Point).
 	 */
 	AXP_INS_QUE	iq[AXP_IQ_LEN];
-	AXP_INQ_QUE	fq[AXP_FQ_LEN];
+	AXP_INS_QUE	fq[AXP_FQ_LEN];
 	
 	/*
 	 * All the IPRs
