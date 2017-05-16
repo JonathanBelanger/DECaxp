@@ -33,6 +33,7 @@
 #define _AXP_21264_CPU_DEFS_
 
 #include "AXP_Utility.h"
+#include "AXP_Blocks.h"
 #include "AXP_Base_CPU.h"
 #include "AXP_21264_Predictions.h"
 #include "AXP_21264_Instructions.h"
@@ -65,6 +66,11 @@ typedef struct
 
 typedef struct
 {
+	/*
+	 * This structure needs to be at the top of all data blocks/structures
+	 * that need to be specifically allocated by the Blocks module.
+	 */
+	AXP_BLOCK_DSC header;
 
 	/*
 	 * The following definitions are used by the branch prediction code.
