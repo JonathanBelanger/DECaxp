@@ -51,6 +51,7 @@
 #define AXP_R21_SHADOW		(AXP_MAX_REGISTERS + 5)
 #define AXP_R22_SHADOW		(AXP_MAX_REGISTERS + 6)
 #define AXP_R23_SHADOW		(AXP_MAX_REGISTERS + 7)
+#define AXP_ITB_LEN			128
 
 /*
  * TODO: 	We probably want to decode to determine things like, opcode type,
@@ -72,7 +73,11 @@ typedef struct
 	 */
 	AXP_BLOCK_DSC header;
 
-	/*
+	/**************************************************************************
+	 *	Ibox Definitions													  *
+	 **************************************************************************/
+
+	 /*
 	 * The following definitions are used by the branch prediction code.
 	 */
 	LHT			localHistoryTable;
@@ -80,14 +85,19 @@ typedef struct
 	GPT			globalPredictor;
 	CPT			choicePredictor;
 	u16			globalPathHistory;
-	
+
 	/*
 	 * Architectural (virtual) registers.
 	 */
 	u64			r[AXP_MAX_REGISTERS + AXP_SHADOW_REG];	/* Integer (Virt) Reg */
 	u64 		f[AXP_MAX_REGISTERS];	/* Floating-point (Virtual) Registers */
-	AXP_PC		vpc;
-	
+
+	/*
+	 * Virtual Program Counter Queue
+	 */
+	AXP_PC		vpc[AXP_IQ_LEN];
+	int			vpcIdx;
+
 	/*
 	 * Physical registers.
 	 *
@@ -106,6 +116,8 @@ typedef struct
 	u64			pr0[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
 	u64			pr1[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
 	u64			pf[AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1];
+	
+	char		itb[AXP_ITB_LEN];
 
 	/*
 	 * Instruction Queues (Integer and Floating-Point).
