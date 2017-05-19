@@ -51,7 +51,7 @@
 #define AXP_R21_SHADOW		(AXP_MAX_REGISTERS + 5)
 #define AXP_R22_SHADOW		(AXP_MAX_REGISTERS + 6)
 #define AXP_R23_SHADOW		(AXP_MAX_REGISTERS + 7)
-#define AXP_ITB_LEN			128
+#define AXP_TB_LEN			128
 
 /*
  * TODO: 	We probably want to decode to determine things like, opcode type,
@@ -60,9 +60,8 @@
 typedef struct
 {
 	AXP_INS_FMT	instructions[AXP_NUM_FETCH_INS];
-	u8			br_pred : 1;
-	u8			line_pred : 1;
-	u8			res_1 : 6;		/* align to the byte boundary */
+	u8			br_pred;
+	u8			line_pred;
 } AXP_INS_QUE;
 
 typedef struct
@@ -75,9 +74,21 @@ typedef struct
 
 	/**************************************************************************
 	 *	Ibox Definitions													  *
+	 *																		  *
+	 *	The Ibox is responsible for instuction processing.  It maintains the  *
+	 *	VPC Queue, ITB, Branch Prediction, Instruction Predecode, Instruction *
+	 *	decode and register renaming, Instruction Cache, Instruction		  *
+	 *	Retirement, and the Integer and Floating-Point Instruction Queues.	  *
+	 *																		  *
+	 *	The Ibox interfaces with with the Cbox, Ebox, and Fbox.  The Cbox	  *
+	 *	provides the next set of instructions when an Icache miss occurs.	  *
+	 *	The set of instructions are provided to the Ibox for predecoding and  *
+	 *	entry into the Icache.  The Ebox reads instructions of the Integer	  *
+	 *	Issue Queue (IQ) into upto 4 integer processors.  The Fbox reads	  *
+	 *	instructions from the FP Issue Queue (FQ) into upto 2 FP processors.  *
 	 **************************************************************************/
 
-	 /*
+	/*
 	 * The following definitions are used by the branch prediction code.
 	 */
 	LHT			localHistoryTable;
@@ -98,6 +109,28 @@ typedef struct
 	AXP_PC		vpc[AXP_IQ_LEN];
 	int			vpcIdx;
 
+	u8			itb[AXP_TB_LEN];
+
+	/*
+	 * Instruction Queues (Integer and Floating-Point).
+	 */
+	AXP_INS_QUE	iq[AXP_IQ_LEN];
+	AXP_INS_QUE	fq[AXP_FQ_LEN];
+
+	/**************************************************************************
+	 *	Ebox Definitions													  *
+	 *																		  *
+	 *	The Ebox is responsible for processing instructions from the IQ.  It  *
+	 *	maintains 2 sets of Physical Integer Registers, which are copies of	  *
+	 *	one another.  It can handle upto 4 simultaneous instructions.		  *
+	 *																		  *
+	 *	The Ebox interfaces with the Ibox (see above for more information),	  *
+	 *	the Fbox and the Mbox.  The Fbox and Ebox are allowed to move values  *
+	 *	from a register in one to the other.  This is does for Integer/FP to  *
+	 *	FP/Integer conversion and FP branch operations.  The Mbox provides	  *
+	 *	data to the Ebox from memory, via that data cache (Dcache).			  *
+	 **************************************************************************/
+
 	/*
 	 * Physical registers.
 	 *
@@ -107,23 +140,68 @@ typedef struct
 	 * retired.
 	 *
 	 * Since the integer execution unit has 2 cluster, there are a set of 80
-	 * register files for each.
+	 * registers for each.
+	 */
+	u64			pr0[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
+	u64			pr1[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
+
+	/**************************************************************************
+	 *	Fbox Definitions													  *
+	 *																		  *
+	 *	The Fbox is responsible for processing instructions from the FQ.  It  *
+	 *	maintains a sets of Physical Integer Registers.  It can handle upto 2 *
+	 *	simultaneous instructions.											  *
+	 *																		  *
+	 *	The Fbox interfaces with the Ibox (see above for more information),	  *
+	 *	the Ebox (See above for more information) and the Mbox.  The Mbox	  *
+	 *	provides data to the Fbox from memory, via that data cache (Dcache).  *
+	 **************************************************************************/
+
+	/*
+	 * Physical registers.
 	 *
 	 * There are 72 register file entries for the floating-point registers.
 	 * This is the 31 Floating-point registers (F31 is not stored), plus the 41
 	 * results for instructions that can potentially have not been retired.
+	 *
+	 * Since the floating-point execution unit only has 1 cluster, there is 
+	 * just 1 set of 72 registers.
 	 */
-	u64			pr0[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
-	u64			pr1[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
 	u64			pf[AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1];
-	
-	char		itb[AXP_ITB_LEN];
 
-	/*
-	 * Instruction Queues (Integer and Floating-Point).
-	 */
-	AXP_INS_QUE	iq[AXP_IQ_LEN];
-	AXP_INS_QUE	fq[AXP_FQ_LEN];
+	/**************************************************************************
+	 *	Mbox Definitions													  *
+	 *																		  *
+	 *	The Mbox is responsible for providing data to the Ebox and Fbox.  The *
+	 *	Mbox maintins a Load and Stor Queue, as well as a Miss Address File.  *
+	 *																		  *
+	 *	The Mbox interfaces with with the Cbox, Ebox, and Fbox (see above for *
+	 *	more information on the last 2).  The Cbox provides data when a		  *
+	 *	Dcache miss occurs.  The Mbox provides data to the Cbox to store in	  *
+	 *	memory when a store operation occirs.								  *
+	 **************************************************************************/
+	u8			lq;
+	u8			sq;
+	u8			maf;
+	u8			dtb[AXP_TB_LEN];
+
+	/**************************************************************************
+	 *	Cbox Definitions													  *
+	 *																		  *
+	 *	The Cbox is responsible for interfacing with the system.  It		  *
+	 *	maintains a Probe Queue, Duplicate Tag Store, I/O Write Buffer		  *
+	 *	(IOWB), Victim Buffer, and Arbiter.  It interfaces with the System	  *
+	 *	(memory, disk drives, I/O devices, etc.), Ibox and Mbox (see above	  *
+	 *	for more information about the last 2 items).						  *
+	 *																		  *
+	 *	The Cbox is responsible for the interfaces between the system and the *
+	 *	CPU.																  *
+	 **************************************************************************/
+	u8			vaf;
+	u8			vdf;
+	u8			iowb;
+	u8			pq;
+	u8			dtag;
 
 	/*
 	 * All the IPRs
