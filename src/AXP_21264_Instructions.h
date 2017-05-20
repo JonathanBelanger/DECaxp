@@ -53,6 +53,7 @@ typedef struct
 	 u32	ra : 5;					/* Register a (destination)				*/
 	 u32	opcode : 6;				/* Operation code						*/
 } AXP_MEM_INS;
+#define AXP_LDAH_MULT		65536
 
 /*
  * Branch Instruction Format
@@ -79,7 +80,7 @@ typedef struct
 } AXP_OP1_INS;
 
 /*
- * Integer Operate Instruction Format, with Rb, bit <12> = 0
+ * Integer Operate Instruction Format, with Rb, bit <12> = 1
  */
 typedef struct
 {
@@ -127,9 +128,23 @@ typedef union
 } AXP_INS_FMT;
 
 /*
+ * Instruction type
+ */
+typedef enum
+{
+	Bra,
+	FP,
+	Mem,
+	Mfc,
+	Mbr,
+	Opr,
+	Pcd
+} AXP_INS_TYPE;
+
+/*
  * Instruction Opcode definitions
  */
-#define PAL00	0x00	/* CALL PALcode */
+#define PAL00	0x00	/* Pcd */
 #define OPC01	0x01	/* reserved */
 #define OPC02	0x02	/* reserved */
 #define OPC03	0x03	/* reserved */
@@ -137,62 +152,62 @@ typedef union
 #define OPC05	0x05	/* reserved */
 #define OPC06	0x06	/* reserved */
 #define OPC07	0x07	/* reserved */
-#define LDA		0x08	/* memory */
-#define LDAH	0x09	/* memory */
-#define LDBU	0x0a	/* memory */
-#define LDQ_U	0x0b	/* memory */
-#define LWW_U	0x0c	/* memory */
-#define STW		0x0d	/* memory */
-#define STB		0x0e	/* memory */
-#define STQ_U	0x0f	/* memory */
-#define INTA	0x10	/* integer arithmetic operation */
-#define INTL	0x11	/* integer logical operation */
-#define INTS	0x12	/* integer shift operation */
-#define INTM	0x13	/* integer multiply operation */
-#define ITFP	0x14	/* integer-to-FP */
-#define FLTV	0x15	/* VAX FP operation */
-#define FLTI	0x16	/* IEEE FP operation */
-#define FLTL	0x17	/* FP operation */
-#define MISC	0x18	/* miscellaneous */
+#define LDA		0x08	/* Mem */
+#define LDAH	0x09	/* Mem */
+#define LDBU	0x0a	/* Mem */
+#define LDQ_U	0x0b	/* Mem */
+#define LWW_U	0x0c	/* Mem */
+#define STW		0x0d	/* Mem */
+#define STB		0x0e	/* Mem */
+#define STQ_U	0x0f	/* Mem */
+#define INTA	0x10	/* Opr */
+#define INTL	0x11	/* Opr */
+#define INTS	0x12	/* Opr */
+#define INTM	0x13	/* Opr */
+#define ITFP	0x14	/* FP */
+#define FLTV	0x15	/* FP (VAX) */
+#define FLTI	0x16	/* FP (IEEE) */
+#define FLTL	0x17	/* FP */
+#define MISC	0x18	/* Mfc */
 #define HW_MFPR	0x19	/* reserved for PALcode */
-#define JSR		0x1a	/* jump */
+#define JSR		0x1a	/* Mbr */
 #define HW_LD	0x1b	/* reserved for PALcode */
-#define FPTI	0x1c	/* FP-to-integer */
+#define FPTI	0x1c	/* FP & Opr */
 #define HW_MTPR	0x1d	/* reserved for PALcode */
 #define HW_REI	0x1e	/* reserved for PALcode */
 #define HW_ST	0x1f	/* reserved for PALcode */
-#define LDF		0x20	/* memory */
-#define LDG		0x21	/* memory */
-#define LDS		0x22	/* memory */
-#define LDT		0x23	/* memory */
-#define STF		0x24	/* memory */
-#define STG		0x25	/* memory */
-#define STS		0x26	/* memory */
-#define STT		0x27	/* memory */
-#define LDL		0x28	/* memory */
-#define LDQ		0x29	/* memory */
-#define LDL_L	0x2a	/* memory */
-#define LDQ_L	0x2b	/* memory */
-#define STL		0x2c	/* memory */
-#define STQ		0x2d	/* memory */
-#define STL_C	0x2e	/* memory */
-#define STQ_C	0x2e	/* memory */
-#define BR		0x30	/* branch */
-#define FBEQ	0x31	/* branch */
-#define FBLT	0x32	/* branch */
-#define FBLE	0x33	/* branch */
-#define BSR		0x34	/* branch */
-#define FBNE	0x35	/* branch */
-#define FBGE	0x36	/* branch */
-#define FBGT	0x37	/* branch */
-#define BLBC	0x38	/* branch */
-#define BEQ		0x39	/* branch */
-#define BLT		0x3a	/* branch */
-#define BLE		0x3b	/* branch */
-#define BLBS	0x3c	/* branch */
-#define BNE		0x3d	/* branch */
-#define BGE		0x3e	/* branch */
-#define BGT		0x3f	/* branch */
+#define LDF		0x20	/* Mem */
+#define LDG		0x21	/* Mem */
+#define LDS		0x22	/* Mem */
+#define LDT		0x23	/* Mem */
+#define STF		0x24	/* Mem */
+#define STG		0x25	/* Mem */
+#define STS		0x26	/* Mem */
+#define STT		0x27	/* Mem */
+#define LDL		0x28	/* Mem */
+#define LDQ		0x29	/* Mem */
+#define LDL_L	0x2a	/* Mem */
+#define LDQ_L	0x2b	/* Mem */
+#define STL		0x2c	/* Mem */
+#define STQ		0x2d	/* Mem */
+#define STL_C	0x2e	/* Mem */
+#define STQ_C	0x2f	/* Mem */
+#define BR		0x30	/* Bra */
+#define FBEQ	0x31	/* Bra (FP) */
+#define FBLT	0x32	/* Bra (FP) */
+#define FBLE	0x33	/* Bra (FP) */
+#define BSR		0x34	/* Mbr */
+#define FBNE	0x35	/* Bra (FP) */
+#define FBGE	0x36	/* Bra (FP) */
+#define FBGT	0x37	/* Bra (FP) */
+#define BLBC	0x38	/* Bra */
+#define BEQ		0x39	/* Bra */
+#define BLT		0x3a	/* Bra */
+#define BLE		0x3b	/* Bra */
+#define BLBS	0x3c	/* Bra */
+#define BNE		0x3d	/* Bra */
+#define BGE		0x3e	/* Bra */
+#define BGT		0x3f	/* Bra */
 
 /*
  * OpenVMS PALcode Opcodes
@@ -831,8 +846,8 @@ typedef union
  *	fadd		FA					All floating-point operate instructions except multiply,
  *									divide, square root, and conditional move instructions
  *	fmul		FM					Floating-point multiply instruction
- *	fcmov1		FA					Floating-point CMOV�first half
- *	fcmov2		FA					Floating-point CMOV� second half
+ *	fcmov1		FA					Floating-point CMOV?first half
+ *	fcmov2		FA					Floating-point CMOV? second half
  *	fdiv		FA					Floating-point divide instruction
  *	fsqrt		FA					Floating-point square root instruction
  *	nop			None				TRAP, EXCB, UNOP - LDQ_U R31, 0(Rx)

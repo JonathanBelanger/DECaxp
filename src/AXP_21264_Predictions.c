@@ -29,6 +29,7 @@
  *	mistakes.  The prediction code correctly predicts a branch instruction
  *	between 95.0% and 99.1% of the time.
  */
+#include "AXP_Blocks.h"
 #include "AXP_Base_CPU.h"
 #include "AXP_21264_Predictions.h"
 #include "AXP_21264_CPU.h"
@@ -246,7 +247,7 @@ int main()
 	bool			taken;
 	int				takenInt;
 	int				ii, jj;
-	AXP_21264_CPU	cpu;
+	AXP_21264_CPU	*cpu;
 	AXP_PC			vpc;
 	int				vpcInt;
 	bool			localTaken;
@@ -266,8 +267,9 @@ int main()
 	 *			potentially out of order.  When a branch instruction is retired,
 	 *			only then is the
 	 */
-	printf("AXP 21264 Predictions Unit Tester\n");
+	printf("\nAXP 21264 Predictions Unit Tester\n");
 	printf("%d trace files to be processed\n\n", (int) (sizeof(fileList)/sizeof(char *)));
+	cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
 	for (ii = 0; ii < (sizeof(fileList)/sizeof(char *)); ii++)
 	{
 		fp = fopen(fileList[ii], "r");
@@ -292,7 +294,7 @@ int main()
 				 * results from the Local and Global Predictor, and the Choice
 				 * selected (when the Local and Global do not agree).
 			 	 */
-				prediction = AXP_Branch_Prediction(&cpu, vpc, &localTaken, &globalTaken, &choice);
+				prediction = AXP_Branch_Prediction(cpu, vpc, &localTaken, &globalTaken, &choice);
 				if (prediction == taken)
 					predictedCnt++;
 
@@ -339,7 +341,7 @@ int main()
 			 	 *			incorrect, then the choice was not used and thus
 			 	 *			would not have made a difference.
 			 	 */
-				AXP_Branch_Direction(&cpu, vpc, taken, localTaken, globalTaken);
+				AXP_Branch_Direction(cpu, vpc, taken, localTaken, globalTaken);
 			}
 			fclose(fp);
 
@@ -360,22 +362,22 @@ int main()
 			/*
 			 * We need to clear out the prediction tables in the CPU record.
 			 */
-			cpu.globalPathHistory = 0;
+			cpu->globalPathHistory = 0;
 			for (jj = 0; jj < ONE_K; jj++)
-				cpu.localHistoryTable.lcl_history[jj] = 0;
+				cpu->localHistoryTable.lcl_history[jj] = 0;
 			for (jj = 0; jj < ONE_K; jj++)
-				cpu.localPredictor.lcl_pred[jj] = 0;
+				cpu->localPredictor.lcl_pred[jj] = 0;
 			for (jj = 0; jj < FOUR_K; jj++)
-				cpu.globalPredictor.gbl_pred[jj] = 0;
+				cpu->globalPredictor.gbl_pred[jj] = 0;
 			for (jj = 0; jj < FOUR_K; jj++)
-				cpu.choicePredictor.choice_pred[jj] = 0;
+				cpu->choicePredictor.choice_pred[jj] = 0;
 		}
 		else
 		{
 			printf("Unable to open trace file: %s\n", fileList[ii]);
 		}
 	}
-
+	AXP_Deallocate_Block((AXP_BLOCK_DSC *) cpu);
 	return(0);
 }
 #endif
