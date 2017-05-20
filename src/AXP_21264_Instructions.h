@@ -138,20 +138,23 @@ typedef enum
 	Mfc,
 	Mbr,
 	Opr,
-	Pcd
+	Pcd,
+	PAL,
+	Res,
+	Cond
 } AXP_INS_TYPE;
 
 /*
  * Instruction Opcode definitions
  */
 #define PAL00	0x00	/* Pcd */
-#define OPC01	0x01	/* reserved */
-#define OPC02	0x02	/* reserved */
-#define OPC03	0x03	/* reserved */
-#define OPC04	0x04	/* reserved */
-#define OPC05	0x05	/* reserved */
-#define OPC06	0x06	/* reserved */
-#define OPC07	0x07	/* reserved */
+#define OPC01	0x01	/* Res */
+#define OPC02	0x02	/* Res */
+#define OPC03	0x03	/* Res */
+#define OPC04	0x04	/* Res */
+#define OPC05	0x05	/* Res */
+#define OPC06	0x06	/* Res */
+#define OPC07	0x07	/* Res */
 #define LDA		0x08	/* Mem */
 #define LDAH	0x09	/* Mem */
 #define LDBU	0x0a	/* Mem */

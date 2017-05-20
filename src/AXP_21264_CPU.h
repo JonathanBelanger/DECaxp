@@ -52,6 +52,7 @@
 #define AXP_R22_SHADOW		(AXP_MAX_REGISTERS + 6)
 #define AXP_R23_SHADOW		(AXP_MAX_REGISTERS + 7)
 #define AXP_TB_LEN			128
+#define AXP_ICB_INS_CNT		16
 
 /*
  * TODO: 	We probably want to decode to determine things like, opcode type,
@@ -63,6 +64,19 @@ typedef struct
 	u8			br_pred;
 	u8			line_pred;
 } AXP_INS_QUE;
+
+typedef struct
+{
+	AXP_INS_FMT		instructions[AXP_ICB_INS_CNT];
+	AXP_INS_TYPE	insType[AXP_ICB_INS_CNT];
+	u64				virtualTag;						/* [47:15] */
+	u16				asn;
+	u8				res : 1;						/* byte align */
+	u8				_asm : 1;
+	u8				pal : 1;
+	u8				valid : 1;
+	u8				kesu : 4;
+} AXP_ICACHE_BLK;
 
 typedef struct
 {
