@@ -68,10 +68,10 @@ static AXP_INS_TYPE instructionType[] =
 	Opr,	/* 11		AND			Logical product							*/
 	Opr,	/* 12		MSKBL		Mask byte low							*/
 	Opr,	/* 13		MULL		Multiply longword						*/
-	F-P,	/* 14		ITOFS		Integer to floating move, S_floating	*/
-	F-P,	/* 15		ADDF		Add F_floating							*/
-	F-P,	/* 16		ADDS		Add S_floating							*/
-	F-P,	/* 17		CVTLQ		Convert longword to quadword			*/
+	FP,		/* 14		ITOFS		Integer to floating move, S_floating	*/
+	FP,		/* 15		ADDF		Add F_floating							*/
+	FP,		/* 16		ADDS		Add S_floating							*/
+	FP,		/* 17		CVTLQ		Convert longword to quadword			*/
 	Mfc,	/* 18		TRAPB		Trap barrier							*/
 	PAL,	/* 19		HW_MFPR		Reserved for PALcode					*/
 	Mbr,	/* 1A		JMP			Jump									*/
