@@ -289,10 +289,6 @@ void AXP_Branch_Direction(
 	return;
 }
 
-/*
- * Check
- */
-
 #if _TEST_PREDICTION_
 
 /*
