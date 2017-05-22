@@ -37,20 +37,32 @@
 #define AXP_CACHE_SIZE			(64 * 1024)	/* 64K */
 
 /*
+ * This definition is used to quickly extract the tag and index from the
+ * virtual address of the cache line for which is being looked up/stored.
+ */
+typedef struct
+{
+	u64				res_1 : 6;
+	u64				index : 9;
+	u64				tag : 33;
+	u64				res_2 : 16;
+} AXP_ICACHE_TAG_INDEX;
+
+/*
  * One I-Cache Line
  */
 typedef struct
 {
-	u64				tag : 33;			/* Virtual Tag Bits [47:15] */
-	u64				asn : 8;			/* Address Space Number */
-	u64				_asm : 1;			/* Address Space Match */
-	u64				vb 	: 1;			/* valid bit */
-	u64				pal : 1;			/* PALcode */
-	u64				replace : 4;
-	u64				access : 4;			/* Kernel/Executive/Supervisor/User */
-	u64				res_1 : 12;			/* align to the 64-bit boundary */
-	AXP_INS_FMT		instructions[AXP_CACHE_LINE_INS];
-	u64				res_2[7];			/* align to 128 bytes */
+	u64						_asm : 1;		/* Address Space Match */
+	u64						vb 	: 1;		/* valid bit */
+	u64						pal : 1;		/* PALcode */
+	u64						replace : 4;
+	u64						access : 4;		/* Kernel/Executive/Supervisor/User */
+	u64						asn : 8;		/* Address Space Number */
+	u64						res_1 : 45;		/* align to the 64-bit boundary */
+	AXP_ICACHE_TAG_INDEX	address;		/* Virtual Tag Bits [47:15] */
+	AXP_INS_FMT				instructions[AXP_CACHE_LINE_INS];
+	u64						res_2[6];		/* align to 128 bytes */
 } AXP_ICACHE_LINE;
 
 #endif /*_AXP_21264_ICACHE_DEFS_ */

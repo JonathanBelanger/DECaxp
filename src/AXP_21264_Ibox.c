@@ -19,7 +19,7 @@
  *	This source file contains the functions needed to implement the
  *	functionality of the Ibox.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		10-May-2017	Jonathan D. Belanger
  *	Initially written.
@@ -29,16 +29,16 @@
  *	mistakes.  The prediction code correctly predicts a branch instruction
  *	between 95.0% and 99.1% of the time.
  *
- *	V01.002		20-May-2017
+ *	V01.002		20-May-2017	Jonathan D. Belanger
  *	Did a bit of reorganization.  This module will contain all the
  *	functionality that is described as being part of the Ibox.  I move the
  *	prediction code here.
+ *
+ *	V01.003		22-May-2017	Jonathan D. Belanger
+ *	Moved the main() function out of this module and into its own.
  */
 #include "AXP_Blocks.h"
-#include "AXP_Base_CPU.h"
-#include "AXP_21264_Predictions.h"
 #include "AXP_21264_CPU.h"
-#include "AXP_Configure.h"
 
 /*
  * The following module specific variable contains a list of instruction types
@@ -289,175 +289,50 @@ void AXP_Branch_Direction(
 	return;
 }
 
-#if _TEST_PREDICTION_
-
 /*
- * main
- *	This function is compiled in when unit testing.  It exercises the branch
- *	prediction code, and should be somewhat extensive.
+ * AXP_InstructionType
+ *	This function is called to determine what type of instruction is specified
+ *	in the supplied 32-bit instruction.
  *
  * Input Parameters:
- *	None.
+ *	inst:
+ *		An Alpha AXP formatted instruction.
  *
  * Output Parameters:
  *	None.
  *
  * Return Value:
- *	None.
+ *	A value representing the type of instruction specified.
  */
-int main()
+AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst)
 {
-	FILE		*fp;
-	char		*fileList[] =
-				{
-					"trace1.txt",
-					"trace2.txt",
-					"trace3.txt",
-					"trace4.txt",
-					"trace5.txt"
-				};
-	int			lineCnt[] =
-				{
-					2213673,
-					1792835,
-					1546797,
-					895842,
-					2422049
-				};
-	bool			taken;
-	int				takenInt;
-	int				ii, jj;
-	AXP_21264_CPU	*cpu;
-	AXP_PC			vpc;
-	int				vpcInt;
-	bool			localTaken;
-	bool			globalTaken;
-	bool			choice;
-	bool			prediction;
-	int				insCnt;
-	int				predictedCnt;
-	int				localCnt;
-	int				globalCnt;
-	int				choiceUsed;
-	int				choiceCorrect;
+	AXP_INS_TYPE retVal = Res;
 
 	/*
-	 * NOTE: 	The current simulation takes in one instruction at a time.  The
-	 *			AXP simulator will process four instructions at a time and
-	 *			potentially out of order.  When a branch instruction is retired,
-	 *			only then is the
+	 * Opcodes can only be between 0x00 and 0x3f.  Any other value is reserved.
 	 */
-	printf("\nAXP 21264 Predictions Unit Tester\n");
-	printf("%d trace files to be processed\n\n", (int) (sizeof(fileList)/sizeof(char *)));
-	cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
-	for (ii = 0; ii < (sizeof(fileList)/sizeof(char *)); ii++)
+	if ((inst.pal.opcode >= 0x00) && (inst.pal.opcode <= 0x3f))
 	{
-		fp = fopen(fileList[ii], "r");
-		if (fp != NULL)
-		{
-			insCnt = 0;
-			predictedCnt = 0;
-			localCnt = 0;
-			globalCnt = 0;
-			choiceUsed = 0;
-			choiceCorrect = 0;
-			printf("\nProcessing trace file: %s (%d)...\n", fileList[ii], lineCnt[ii]);
-			while (feof(fp) == 0)
-			{
-				fscanf(fp, "%d %d\n", &vpcInt, &takenInt);
-				insCnt++;
-				vpc.pc = vpcInt;
-				taken = (takenInt == 1) ? true : false;
 
-				/*
-				 * Predict whether the branch should be taken or not.  We'll get
-				 * results from the Local and Global Predictor, and the Choice
-				 * selected (when the Local and Global do not agree).
-			 	 */
-				prediction = AXP_Branch_Prediction(cpu, vpc, &localTaken, &globalTaken, &choice);
-				if (prediction == taken)
-					predictedCnt++;
-
-				/*
-				 * Let's determine how the choice was determined.
-				 */
-				if (localTaken != globalTaken)
-				{
-					choiceUsed++;
-					if (choice == true)
-					{
-						if (taken == globalTaken)
-						{
-							globalCnt++;
-							choiceCorrect++;
-						}
-					}
-					else
-					{
-						if (taken == localTaken)
-						{
-							localCnt++;
-							choiceCorrect++;
-						}
-					}
-				}
-				else
-				{
-					if (taken == localTaken)
-					{
-						localCnt++;
-						globalCnt++;
-					}
-				}
-
-				/*
-				 * Update the predictors based on whether the branch was actually
-				 * taken or not and considering which of the predictors was
-				 * correct.
-				 *
-				 * NOTE: 	Whether choice was used or not is irrelevant.  The
-			 	 *			choice is determined by whether the local or global
-			 	 *			were correct.  If both are correct or both are
-			 	 *			incorrect, then the choice was not used and thus
-			 	 *			would not have made a difference.
-			 	 */
-				AXP_Branch_Direction(cpu, vpc, taken, localTaken, globalTaken);
-			}
-			fclose(fp);
-
-			/*
-			 * Print out what we found.
-			 */
-			printf("---------------------------------------------\n");
-			printf("Total Instructions:\t\t\t%d\n", insCnt);
-			printf("Correct predictions:\t\t\t%d\n", predictedCnt);
-			printf("Mispredictions:\t\t\t\t%d\n", (insCnt - predictedCnt));
-			printf("Prediction accuracy:\t\t\t%1.6f\n\n", ((float) predictedCnt / (float) insCnt));
-			printf("Times Local Correct:\t\t\t%d\n", localCnt);
-			printf("Times Global Correct:\t\t\t%d\n", globalCnt);
-			printf("Times Choice Used:\t\t\t%d\n", choiceUsed);
-			printf("Times Choice Selected Correctly:\t%d\n", choiceCorrect);
-			printf("Times Choice was wrong:\t\t\t%d\n", (choiceUsed - choiceCorrect));
-
-			/*
-			 * We need to clear out the prediction tables in the CPU record.
-			 */
-			cpu->globalPathHistory = 0;
-			for (jj = 0; jj < ONE_K; jj++)
-				cpu->localHistoryTable.lcl_history[jj] = 0;
-			for (jj = 0; jj < ONE_K; jj++)
-				cpu->localPredictor.lcl_pred[jj] = 0;
-			for (jj = 0; jj < FOUR_K; jj++)
-				cpu->globalPredictor.gbl_pred[jj] = 0;
-			for (jj = 0; jj < FOUR_K; jj++)
-				cpu->choicePredictor.choice_pred[jj] = 0;
-		}
-		else
-		{
-			printf("Unable to open trace file: %s\n", fileList[ii]);
-		}
+		/*
+		 * Look up the instruction type from the instruction array, which is
+		 * indexed by opcode.
+		 */
+		retVal = instructionType[inst.pal.opcode);
+	
+		/*
+		 * If the returned value from the above look up is 'Cond', then we are
+		 * dealing with opcode = 0x1c.  This particular opcode has 2 potential
+		 * values, depending upon the funciton code.  If the function code is
+		 * either 0x70 or 0x78, then type instruction type is 'FP' (Floating
+		 * Point).  Otherwise, it is 'Opr'.
+		 */
+		if (retVal == Cond)
+			retVal = ((inst.fp.func == 0x70) || (inst.fp.func == 0x78)) ? FP : Opr;
 	}
-	AXP_Deallocate_Block((AXP_BLOCK_DSC *) cpu);
-	return(0);
+
+	/*
+	 * Return what we found to the caller.
+	 */
+	return(retVal);
 }
-#endif

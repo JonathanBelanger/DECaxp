@@ -16,25 +16,31 @@
  *
  * Description:
  *
- *	This header file contains useful definitions for compiling various portions
- *	of the code in or out.  Particularly unit testing code.  This header file
- *	is only included in .c files and should not be included in an include file.
+ *	This header file contains the function definitions implemented in the
+ *	AXP_21264_Ibox.c module.
  *
  * Revision History:
  *
  *	V01.000		14-May-2017	Jonathan D. Belanger
  *	Initially written.
- *
- *	V01.001		22-May-2017	Jonathan D. Belanger
- *	Restructured the code a bit, so the definition that was in here is no
- *	longer needed.
  */
-#ifndef _AXP_CONFIGURE_DEFS_
-#define _AXP_CONFIGURE_DEFS_
+#ifndef _AXP_21264_IBOX_DEFS_
+#define _AXP_21264_IBOX_DEFS_
 
-/*
- * Nothing defined here, yet.
- */
+#include "AXP_21264_CPU.h"
 
-#endif /* _AXP_CONFIGURE_DEFS_ */
+bool AXP_Branch_Prediction(
+				AXP_21264_CPU *cpu,
+				AXP_PC vpc,
+				bool *localTaken,
+				bool *globalTaken,
+				bool *choice);
+void AXP_Branch_Direction(
+				AXP_21264_CPU *cpu,
+				AXP_PC vpc,
+				bool taken,
+				bool localTaken,
+				bool globalTaken);
+AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst);
 
+#endif /* _AXP_21264_IBOX_DEFS_ */
