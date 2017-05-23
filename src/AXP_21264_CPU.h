@@ -117,6 +117,24 @@ typedef struct
 	AXP_INS_QUE	iq[AXP_IQ_LEN];
 	AXP_INS_QUE	fq[AXP_FQ_LEN];
 
+	/*
+	 * Ibox Internal Processor Registers (IPRs)
+	 */
+	AXP_IBOX_ITB_TAG	itbTag;		/* ITB tag array write					*/
+	AXP_IBOX_ITB_IS		itbIs;		/* ITB invalidate single				*/
+	AXP_IBOX_EXC_ADDR	exeAddr;	/* Exception address					*/
+	AXP_IBOX_IVA_FORM	ivaForm;	/* Instruction VA format				*/
+	AXP_IBOX_IER_CM		ierCm;		/* Interrupt enable and current mode	*/
+	AXP_IBOX_SIRR		sirr;		/* Software interrupt request			*/
+	AXP_IBOX_ISUM		iSum;		/* Interrupt summary					*/
+	AXP_IBOX_HW_INT_CLR	hwIntClr;	/* Hardware interrupt clear				*/
+	AXP_IBOX_EXC_SUM	excSum;		/* Exception summary					*/
+	AXP_IBOX_PAL_BASE	palBase;	/* PAL base address						*/
+	AXP_IBOX_I_CTL		iCtl;		/* Ibox control							*/
+	AXP_IBOX_I_STAT		iStat;		/* Ibox status							*/
+	AXP_IBOX_PCTX		pCtx;		/* Process context register				*/
+	AXP_IBOX_PCTR_CTL	pCtrCtl;	/* Performance counter control			*/
+
 	/**************************************************************************
 	 *	Ebox Definitions													  *
 	 *																		  *
@@ -144,6 +162,15 @@ typedef struct
 	 */
 	u64			pr0[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
 	u64			pr1[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
+
+	/*
+	 * Ebox IPRs
+	 */
+	AXP_EBOX_CC			cc;			/* Cycle counter						*/
+	AXP_EBOX_CC_CTL		ccCtl;		/* Cycle counter control				*/
+	AXP_EBOX_VA			va;			/* Virtual address						*/
+	AXP_EBOX_VA_CTL		vaCtl;		/* Virtual address control				*/
+	AXP_EBOX_VA_FORM	vaForm;		/* Virtual address format				*/
 
 	/**************************************************************************
 	 *	Fbox Definitions													  *
@@ -185,6 +212,23 @@ typedef struct
 	u8			maf;
 	u8			dtb[AXP_TB_LEN];
 
+	/*
+	 * Mbox IPRs
+	 */
+	AXP_MBOX_DTB_TAG		dtbTag0;	/* DTB tag array write 0			*/
+	AXP_MBOX_DTB_TAG		dtbTag1;	/* DTB tag array write 1			*/
+	AXP_MBOX_DTB_PTE		dtbPte0;	/* DTB PTE array write 0			*/
+	AXP_MBOX_DTB_PTE		dtbPte1;	/* DTB PTE array write 1			*/
+	AXP_MBOX_DTB_ALTMODE	dtbAltMode;	/* DTB alternate processor mode		*/
+	AXP_MBOX_DTB_IS			dtbIs0;		/* DTB invalidate single 0			*/
+	AXP_MBOX_DTB_IS			dtbIs1;		/* DTB invalidate single 1			*/
+	AXP_MBOX_DTB_ASN		dtbAsn0;	/* DTB address space number 0		*/
+	AXP_MBOX_DTB_ASN		dtbAsn1;	/* DTN address space number 1		*/
+	AXP_MBOX_MM_STAT		mmStat;		/* Memory management status			*/
+	AXP_MBOX_M_CTL			mCtl;		/* Mbox control						*/
+	AXP_MBOX_DC_CTL			dcCtl;		/* Dcache control					*/
+	AXP_MBOX_DC_STAT		dcStat;		/* Dcache status					*/
+
 	/**************************************************************************
 	 *	Cbox Definitions													  *
 	 *																		  *
@@ -204,8 +248,36 @@ typedef struct
 	u8			dtag;
 
 	/*
-	 * All the IPRs
+	 * Cbox IPRs
 	 */
-} AXP_21264_CPU;
+	AXP_CBOX_C_DATA		cData;		/* Cbox data							*/
+	AXP_CBOX_C_SHFT		cShft;		/* Cbox shift control					*/
 
+	/*
+	 * Alpha AXP Architectural IPRs
+	 */
+	AXP_BASE_ASN		asn;		/* Address Space Number					*/
+	AXP_BASE_ASTEN		astEn;		/* AST Enable							*/
+	AXP_BASE_ASTSR		astSr;		/* AST Summary Register					*/
+	AXP_BASE_DATFX		datFx;		/* Data Alignment Trap Fixup			*/
+	AXP_BASE_ESP		esp;		/* Executive Stack Pointer				*/
+	AXP_BASE_FEN		fen;		/* Floating-point Enable				*/
+	AXP_BASE_IPIR		ipIr;		/* Interprocessor Interrupt Request		*/
+	AXP_BASE_IPL		ipl;		/* Interrupt Priority Level				*/
+	AXP_BASE_KSP		ksp;		/* Kernel Stack Pointer					*/
+	AXP_BASE_MCES		mces;		/* Machine Check Error Summary			*/
+	AXP_BASE_PCBB		pcbb;		/* Privileged Context Block Base		*/
+	AXP_BAST_PRPB		prbr;		/* Processor Base Register				*/
+	AXP_BAST_PTBR		ptbr;		/* Page Table Base Register				*/
+	AXP_BASE_SCBB		scbb;		/* System Control Block Base			*/
+	AXP_BASE_SISR		sisr;		/* Software Interrupt Summary Register	*/
+	AXP_BASE_SSP		ssp;		/* Supervisor Stack Pointer				*/
+	AXP_BASE_SYSPTBR	sysPtbr;	/* System Page Table Base				*/
+	AXP_BASE TBCHK		tbChk;		/* TB Check								*/
+	AXP_BASE_USP		usp;		/* User Stack Pointer					*/
+	AXP_BASE_VIRBND		virBnd;		/* Virtual Address Boundary				*/
+	AXP_BASE_VPTB		vptb;		/* Virtual Page Table Base				*/
+	AXP_BASE_WHAMI		whami;		/* Who-Am-I								*/
+
+} AXP_21264_CPU;
 #endif /* _AXP_21264_CPU_DEFS_ */
