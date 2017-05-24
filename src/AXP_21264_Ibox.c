@@ -36,6 +36,13 @@
  *
  *	V01.003		22-May-2017	Jonathan D. Belanger
  *	Moved the main() function out of this module and into its own.
+ *
+ *	V01.004		24-May-2017	Jonathan D. Belanger
+ *	Added some instruction cache (icache) code and definitions into this code.
+ *	The iCache structure should be part of the CPU structure and the iCache
+ *	code should not be adding a cache entry on a miss.  There should be a
+ *	separate fill cache function.  Also, the iCache look-up code should return
+ *	the requested instructions on a hit.
  */
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
@@ -113,6 +120,15 @@ static AXP_INS_TYPE instructionType[] =
 	Bra,	/* 3E		BGE			Branch if >= zero						*/
 	Bra		/* 3F		BGT			Branch if > zero						*/
 };
+
+/*
+ * This is the Instruction Cache.  It is 64K bytes in size.  For this emulation
+ * each line/block is 128 bytes in size, which makes for 512 total entries, with
+ * 256 for each association (this is a 2-way cache).
+ *
+ * TODO: This needs to go into th CPU definition.
+ */
+AXP_ICACHE_LINE iCache[AXP_21264_ICACHE_SIZE][AXP_2_WAY_ICACHE];
 
 /*
  * AXP_Branch_Prediction
@@ -333,6 +349,135 @@ AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst)
 
 	/*
 	 * Return what we found to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_InitializeICache
+ *	This function is called to initialize the instruction cache..
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	None.
+ */
+void AXP_InitializeICache()
+{
+	int ii, jj, kk;
+
+	for (ii = 0; ii < AXP_21264_ICACHE_SIZE; ii++)
+	{
+		for (jj = 0; jj < AXP_2_WAY_ICACHE; jj++)
+		{
+			iCache[ii][jj].access = 0;
+			iCache[ii][jj]_asm = 0;
+			iCache[ii][jj].asn = 0;
+			iCache[ii][jj].pal = 0;
+			iCache[ii][jj].replace = jj;
+			iCache[ii][jj].baseAddr.address = 0;
+			for (kk = 0; kk < AXP_CACHE_LINE_INS; kk)
+				instructions[kk].instr = 0;
+		}
+	}
+	return;
+}
+
+/*
+ * AXP_ICacheLookup
+ *	This function is called to look up an instruction in the instruction cache
+ *	using the address of the instruction we are looking for to determine the
+ *	index into the cache and the instruction.
+ *
+ * Input Parameters:
+ *	A value that represents the program counter of the instruction being
+ *	requested.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	TRUE if the instruction is found in the instruction cache.
+ *	FALSE if the instruction was not found.
+ *
+ * TODO:	This is going to have to be broken up.  The way the code is now, it
+ *			inserts a cache entry into and probably should not.  Also, this
+ *			should return thenext 4 pre-decoded instructions to the caller, not
+ *			just a true/false.
+ */
+bool AXP_ICacheLookup(AXP_PC pc)
+{
+	AXP_ICACHE_TAG_IDX address;
+	AXP_ICACHE_TAG_IDX currAddr;
+	int ii, jj;
+	bool retVal = false;	/* Assume Cache Miss */
+
+	/*
+	 * We want to extract the index and tag information from the instruction
+	 * virtual address (PC).
+	 */
+	address.pc = pc;
+
+	/*
+	 * Seach the icache for the instruction for which we are looking.  If we
+	 * find it, then we have a Cache Hit.
+	 */
+	for (ii = 0; ii < AXP_2_WAY_CACHE; ii++)
+		if ((iCache[address.insAddr.index][ii].baseAddr.insAddr.tag ==
+			 address.insAddr.tag) &&
+			(iCache[address.insAddr.index][ii].vb == 1))
+			{
+				for (jj = ii + 1; jj < AXP_2_WAY_CACHE; jj++)
+					iCache[address.insAddr.index][jj - 1] =
+						iCache[address.insAddr.index][jj];
+				iCache[address.insAddr.index][AXP_2_WAY_CACHE - 1] = ii;
+				retVal = true;	/* Cache Hit */
+				break;
+			}
+
+	/*
+	 * Cache Miss (we did not find it in the above search)
+	 */
+	if (retVal == false)
+	{
+
+		/*
+		 * Item 0 at the current index, is the least recently used, so it is
+		 * the one to be replaced.  Find the first place in the cache where the
+		 * valid bit is clear and replace that slot with our new information.
+		 */
+		for (ii = 0; ii < AXP_2_WAY_CACHE; ii++)
+			if (iCache[address.insAddr.index][ii].vb == 0)
+			{
+				for (jj = 1; jj < ii; jj++)
+				{
+					currAddr.address =
+						iCache[address.insAddr.index][jj].baseAddr.address;
+					iCache[address.insAddr.index][jj - 1].baseAddr.address =
+						currAddr.address;
+				}
+				if (ii == AXP_2_WAY_CACHE)
+				{
+					iCache[address.insAddr.index][ii - 1].baseAddr.address =
+						address.address;
+					iCache[address.insAddr.index][ii - 1].vb = 1;
+				}
+				else
+				{
+					iCache[address.insAddr.index][ii].baseAddr.address =
+						address.address;
+					iCache[address.insAddr.index][ii].vb = 1;
+				}
+				break;
+			}
+	}
+
+	/*
+	 * Return what we found back to the caller.
 	 */
 	return(retVal);
 }
