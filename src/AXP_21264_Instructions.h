@@ -31,6 +31,8 @@
  *	V01.002		14-May-2017	Jonathan D. Belanger
  *	Added some comments about considerations for the next set of additions.
  *
+ *	V01.003		25-May-2017	Jonathan D. Belanger
+ *	Added the instruction format for the PALcode Reserved Instructions.
  */
 #ifndef _AXP_21264_INS_DEFS_
 #define _AXP_21264_INS_DEFS_
@@ -114,6 +116,84 @@ typedef struct
 } AXP_PAL_INS;
 
 /*
+ * Reserved for PALcode Instruction Format
+ *
+ *	HW_LD Instruction Format (opcode = 0x1b)
+ *		For len:
+ *			0 = access length is longword
+ *			1 = access length is quadword
+ *		For type:
+ *			000 = Physical
+ *			001 = Physical/Lock
+ *			010 = Virtual/VPTE (virtual PTE fetch)
+ *			100 = Virtual
+ *			101 = Virtual/WriteCheck
+ *			110 = Virtual/AltMode
+ *			111 = Virtual/WriteCheck/AltMode
+ */
+typedef struct
+{
+	i32		disp : 12;				/* 12-bit Signed Displacement			*/
+	u32		len : 1;				/* Access Length						*/
+	u32		type : 3;				/* Type of Address						*/
+	u32		rb : 5;					/* Base Register for Memory Address		*/
+	u32		ra : 5;					/* Destination Register Number			*/
+	u32		opcode : 6;				/* Operation Code						*/
+} AXP_HW_LD;
+
+/*
+ * HW_ST Instruction Format (opcode = 0x1f)
+ *		For len:
+ *			0 = access length is longword
+ *			1 = access length is quadword
+ *		For type:
+ *			000 = Physical
+ *			001 = Physical/Cond
+ *			010 = Virtual
+ *			110 = Virtual/AltMode
+ */
+typedef struct
+{
+	i32		disp : 12;				/* 12-bit Signed Displacement			*/
+	u32		len : 1;				/* Access Length						*/
+	u32		type : 3;				/* Type of Address						*/
+	u32		rb : 5;					/* Base Register for Memory Address		*/
+	u32		ra : 5;					/* Write Data Register Number			*/
+	u32		opcode : 6;				/* Operation Code						*/
+} AXP_HW_ST;
+
+/*
+ * HW_RET Instruction Format (opcode = 0x1e)
+ *		For hint:
+ *			00 = HW_JMP, PC is not pushed onto the prediction stack
+ *			01 = HW_JSR, PC is pushed onto the prediction stack
+ *			10 = HW_RET, prediction is popped off the stack as the target
+ *			11 = HW_COROUTINE, prediction is popped off the stack and PC is
+ *				 pushed on
+ */
+typedef struct
+(
+	i32		disp : 13;				/* 13-bit Signed Displacement			*/
+	u32		stall : 1;				/* Stall Instruction until retire/abort	*/
+	u32		hint : 2;				/* Type of Address						*/
+	u32		rb : 5;					/* Base Register for Memory Address		*/
+	u32		ra : 5;					/* Write Data Register Number			*/
+	u32		opcode : 6;				/* Operation Code						*/
+) AXP_HW_RET;
+
+/*
+ * HW_MFPR/HW_MTPR Instruction Format (opcode = 0x19/0x1d)
+ */
+typedef struct
+{
+	u32		scbd_mask : 8;			/* Scoreboard Mask						*/
+	u32		index : 8;				/* IPR Index							*/
+	u32		rb : 5;					/* Base Register for Memory Address		*/
+	u32		ra : 5;					/* Write Data Register Number			*/
+	u32		opcode : 6;				/* Operation Code						*/
+} AXP_HW_MXPR;
+
+/*
  * Union of a the 32-bit AXP instruction formats.
  */
 typedef union
@@ -125,6 +205,10 @@ typedef union
 	AXP_OP2_INS		oper2;			/* Integer Operate Instruction (LIT)	*/
 	AXP_FP_INS		fp;				/* Floating Point Operate Instruction	*/
 	AXP_PAL_INS		pal;			/* PALcode Instruction					*/
+	AXP_HW_LD		hw_ld;			/* PALcode Load Instruction				*/
+	AXP_HW_ST		hw_st;			/* PALcode Store Instruction			*/
+	AXP_HW_RET		hw_ret;			/* PALcode Return Instruction			*/
+	AXP_HW_MXPR		hw_mxpr;		/* PALcode Move From/To Processor Regis	*/
 } AXP_INS_FMT;
 
 /*
