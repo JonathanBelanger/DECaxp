@@ -30,6 +30,8 @@
  *	V01.001		10-May-2017	Jonathan D. Belanger
  *	Included the AXP Utility header file for definitions like u64, i64, etc..
  *
+ *	V01.002		26-May-2017	Jonathan D. Belanger
+ *	Move some base IPRs from here to the base definitions.
  */
 #ifndef _AXP_21264_IPR_DEFS_
 #define _AXP_21264_IPR_DEFS_
@@ -45,9 +47,9 @@
  *	Register Name		Mnemonic	(Binary)	Bit		Access	Pipe		(Cycles)
  *	------------------	--------	--------	-------	------	-----------	--------
  *	Cycle counter		CC			1100 0000	5		RW		1L			1
- *	Cycle counter ctrl	CC_CTL		1100 0001	5		W0		1L			—
+ *	Cycle counter ctrl	CC_CTL		1100 0001	5		W0		1L			?
  *	Virtual address		VA			1100 0010	4,5,6,7	RO 		1L			1
- *	Virtual addr ctrl	VA_CTL		1100 0100	5		WO		1L			—
+ *	Virtual addr ctrl	VA_CTL		1100 0100	5		WO		1L			?
  *	Virtual addr format	VA_FORM		1100 0011	4,5,6,7	RO		1L			1
  */
 typedef struct
@@ -151,28 +153,28 @@ typedef struct
  *									Index		Board			from Ebox	MFPR
  *	Register Name		Mnemonic	(Binary)	Bit		Access	Pipe		(Cycles)
  *	------------------	--------	--------	-------	------	-----------	--------
- *	ITB tag array write	ITB_TAG		0000 0000	6		WO		0L			—
- *	ITB PTE array write	ITB_PTE		0000 0001	4,0		WO		0L			—
- *	ITB inval all proc	ITB_IAP		0000 0010	4		WO		0L			—
+ *	ITB tag array write	ITB_TAG		0000 0000	6		WO		0L			?
+ *	ITB PTE array write	ITB_PTE		0000 0001	4,0		WO		0L			?
+ *	ITB inval all proc	ITB_IAP		0000 0010	4		WO		0L			?
  *	(ASM=0)
- *	ITB invalidate all	ITB_IA		0000 0011	4		WO		0L			—		Pseudo
- *	ITB invalid single	ITB_IS		0000 0100	4,6		WO		0L			—
- *	Exception address	EXC_ADDR	0000 0110	—		RO		0L			3
+ *	ITB invalidate all	ITB_IA		0000 0011	4		WO		0L			?		Pseudo
+ *	ITB invalid single	ITB_IS		0000 0100	4,6		WO		0L			?
+ *	Exception address	EXC_ADDR	0000 0110	?		RO		0L			3
  *	Instruction VA fmt	IVA_FORM	0000 0111	5		RO		0L			3
  *	Current mode		CM			0000 1001	4		RW		0L			3
  *	Interrupt enable	IER			0000 1010	4		RW		0L			3
  *	Inter ena & cur mod	IER_CM		0000 10xx	4		RW		0L			3
  *	Software inter req	SIRR		0000 1100	4		RW		0L			3
- *	Interrupt summary	ISUM		0000 1101	—		RO		—			—
- *	Hardware inter clr	HW_INT_CLR	0000 1110	4		WO		0L			—
- *	Exception summary	EXC_SUM		0000 1111	—		RO		0L			3
+ *	Interrupt summary	ISUM		0000 1101	?		RO		?			?
+ *	Hardware inter clr	HW_INT_CLR	0000 1110	4		WO		0L			?
+ *	Exception summary	EXC_SUM		0000 1111	?		RO		0L			3
  *	PAL base address	PAL_BASE	0001 0000	4		RW		0L			3
  *	Ibox control		I_CTL		0001 0001	4		RW		0L			3
  *	Ibox status			I_STAT		0001 0110	4		RW		0L			3
- *	Icache flush		IC_FLUSH	0001 0011	4		W		0L			—		Pseudo
- *	Icache flush ASM	IC_FLUSH_ASM 0001 0010	4		WO		0L			—		Pseudo
- *	Clear virt-2-physmap CLR_MAP	0001 0101	4,5,6,7	WO		0L			—		Pseudo
- *	Sleep mode			SLEEP		0001 0111	4,5,6,7	WO		0L			—		Pseudo
+ *	Icache flush		IC_FLUSH	0001 0011	4		W		0L			?		Pseudo
+ *	Icache flush ASM	IC_FLUSH_ASM 0001 0010	4		WO		0L			?		Pseudo
+ *	Clear virt-2-physmap CLR_MAP	0001 0101	4,5,6,7	WO		0L			?		Pseudo
+ *	Sleep mode			SLEEP		0001 0111	4,5,6,7	WO		0L			?		Pseudo
  *	Process ctx reg 	PCTX		01xn nnnn*	4		W		0L			3
  *	Process ctx reg		PCTX		01xx xxxx	4		R		0L			3
  *	Perf counter ctrl	PCTR_CTL	0001 0100	4		RW		0L			3
@@ -411,21 +413,21 @@ typedef struct
  *									Index		Board			from Ebox	MFPR
  *	Register Name		Mnemonic	(Binary)	Bit		Access	Pipe		(Cycles)
  *	------------------	--------	--------	-------	------	-----------	--------
- *	DTB tag array wri0	DTB_TAG0	0010 0000	2,6		WO		0L			—
- *	DTB tag array wri1	DTB_TAG1	1010 0000	1,5		WO		1L			—
- *	DTB PTE array wri0	DTB_PTE0	0010 0001	0,4		WO		0L			—
- *	DTB PTE array wri1	DTB_PTE1	1010 0001	3,7		WO		0L			—
- *	DTB alt proc mode	DTB_ALTMODE	0010 0110	6		WO		1L			—
- *	DTB inval all proc	DTB_IAP		1010 0010	7		WO		1L			—		Pseudo
+ *	DTB tag array wri0	DTB_TAG0	0010 0000	2,6		WO		0L			?
+ *	DTB tag array wri1	DTB_TAG1	1010 0000	1,5		WO		1L			?
+ *	DTB PTE array wri0	DTB_PTE0	0010 0001	0,4		WO		0L			?
+ *	DTB PTE array wri1	DTB_PTE1	1010 0001	3,7		WO		0L			?
+ *	DTB alt proc mode	DTB_ALTMODE	0010 0110	6		WO		1L			?
+ *	DTB inval all proc	DTB_IAP		1010 0010	7		WO		1L			?		Pseudo
  *	(ASM=0)
- *	DTB invalidate all	DTB_IA		1010 0011	7		WO		1L			—		Pseudo
- *	DTB inv single (arr0) DTB_IS0	0010 0100	6		WO		0L			—		Pseudo
- *	DTB inv single (arr1) DTB_IS1	1010 0100	7		WO		1L			—		Pseudo
- *	DTB addr space num 0 DTB_ASN0	0010 0101	4		WO		0L			—
- *	DTB addr space num 1 DTB_ASN1	1010 0101	7		WO		1L			—
- *	Memory mgmt status	MM_STAT		0010 0111	—		RO		0L			3
- *	Mbox control		M_CTL		0010 1000	6		WO		0L			—
- *	Dcache control		DC_CTL		0010 1001	6		WO		0L			—
+ *	DTB invalidate all	DTB_IA		1010 0011	7		WO		1L			?		Pseudo
+ *	DTB inv single (arr0) DTB_IS0	0010 0100	6		WO		0L			?		Pseudo
+ *	DTB inv single (arr1) DTB_IS1	1010 0100	7		WO		1L			?		Pseudo
+ *	DTB addr space num 0 DTB_ASN0	0010 0101	4		WO		0L			?
+ *	DTB addr space num 1 DTB_ASN1	1010 0101	7		WO		1L			?
+ *	Memory mgmt status	MM_STAT		0010 0111	?		RO		0L			3
+ *	Mbox control		M_CTL		0010 1000	6		WO		0L			?
+ *	Dcache control		DC_CTL		0010 1001	6		WO		0L			?
  *	Dcache status		DC_STAT		0010 1010	6		RW		0L			3
  */
 typedef struct
@@ -519,7 +521,7 @@ typedef struct
  *	Register Name		Mnemonic	(Binary)	Bit		Access	Pipe		(Cycles)
  *	------------------	--------	--------	-------	------	-----------	--------
  *	Cbox data			C_DATA		0010 1011	6		RW		0L			3
- *	Cbox shift control	C_SHFT		0010 1100	6		WO		0L			Ò
+ *	Cbox shift control	C_SHFT		0010 1100	6		WO		0L			?
  */
 typedef struct
 {
@@ -532,194 +534,5 @@ typedef struct
 	u64 c_shift : 1;
 	u64 res : 63;
 } AXP_CBOX_C_SHFT;
-
-/*
- * The following are for IPRs defined in the Architectural Reference Manual
- *
- *											Input		Output		Context
- *	Register Name		Mnemonic	Access†	R16			R0			Switched
- *	-------------------	--------	-------	---------	---------	--------
- *	Address Space Num	ASN			R		—			Number		Yes
- *	AST Enable			ASTEN		R/W		Mask		Mask		Yes
- *	AST Summary Reg		ASTSR		R/W		Mask		Mask		Yes
- *	Data Align Trap Fix	DATFX		W		Value		—			Yes
- *	Executive Stack Ptr	ESP			R/W		Address		Address		Yes
- *	Floating-point Ena	FEN			R/W		Value		Value		Yes
- *	Interproc Int. Req	IPIR		W		Number		—			No
- *	Interrupt Prio Lvl	IPL			R/W		Value		Value		No
- *	Kernel Stack Ptr	KSP			None	—			—			Yes
- *	Machine Chk Err Sum	MCES		R/W		Value		Value		No
- *	*Perf Monitoring	PERFMON		W		IMP			IMP			No
- *	Priv Ctx Blk Base	PCBB		R		—			Address		No
- *	Proc Base Register	PRBR		R/W		Value		Value		No
- *	Page Table Base Reg	PTBR		R		—			Frame		Yes
- *	Sys Ctrl Blk Base	SCBB		R/W		Frame		Frame		No
- *	S/W Int. Req Reg	SIRR		W		Level		—			No
- *	S/W Int. Summ Reg	SISR		R		—			Mask		No
- *	Supervi Stack Ptr	SSP			R/W		Address		Address		Yes
- *	Sys Page Tbl Base	SYSPTBR		R/W		Value		Value		Yes
- *	TB Check			TBCHK		R		Number		Status		No
- *	TB Invalid. All		TBIA		W		—			—			No	Pseudo
- *	TB Inv. All Proc	TBIAP		W		—			—			No	Pseudo
- *	TB Invalid. Single	TBIS		W		Address		—			No	Pseudo
- *	TB Inv. Single Data	TBISD		W		Address		—			No	Pseudo
- *	TB Inv. Singl Instr	TBISI		W		Address		—			No	Pseudo
- *	User Stack Pointer	USP			R/W		Address		Address		Yes
- *	Virt Addr Boundary	VIRBND		R/W		Address		Address		Yes
- *	Virt Page Tbl Base	VPTB		R/W		Address		Address		No
- *	Who-Am-I			WHAMI		R		—			Number		No
- *	† Access symbols are defined in Table 13–2.
- *	*PERFMON is implementation specific and not defined in the BASE IPRs.
- */
-typedef u64 AXP_BASE_ASN;
-
-typedef struct
-{
-	u64	ken : 1;
-	u64	een : 1;
-	u64 sen : 1;
-	u64 uen : 1;
-	u64 res : 60;
-} AXP_BASE_ASTEN;
-
-typedef struct
-{
-	u64	kcl : 1;
-	u64	ecl : 1;
-	u64 scl : 1;
-	u64 ucl : 1;
-	u64	kon : 1;
-	u64	eon : 1;
-	u64 son : 1;
-	u64 uon : 1;
-	u64 res : 56;
-} AXP_BASE_ASTEN_R16;
-
-typedef struct
-{
-	u64	ken : 1;
-	u64	een : 1;
-	u64 sen : 1;
-	u64 uen : 1;
-	u64 res : 60;
-} AXP_BASE_ASTSR;
-
-typedef struct
-{
-	u64	kcl : 1;
-	u64	ecl : 1;
-	u64 scl : 1;
-	u64 ucl : 1;
-	u64	kon : 1;
-	u64	eon : 1;
-	u64 son : 1;
-	u64 uon : 1;
-	u64 res : 56;
-} AXP_BASE_ASTSR_R16;
-
-typedef struct
-{
-	u64	dat : 2;
-	u64 res : 62;
-} AXP_BASE_DATFX;
-
-typedef u64 AXP_BASE_ESP;
-
-typedef struct
-{
-	u64	fen : 1;
-	u64 res : 63;
-} AXP_BASE_FEN;
-
-typedef u64 AXP_BASE_IPIR;
-
-typedef struct
-{
-	u64	ipl : 4;
-	u64 res : 60;
-} AXP_BASE_IPL;
-
-typedef struct
-{
-	u64	mck : 1;
-	u64	sce : 1;
-	u64	pce : 1;
-	u64 dpc : 1;
-	u64 dsc : 1;
-	u64 res : 27;
-	u63 imp : 32;
-} AXP_BASE_MCES;
-
-typedef struct
-{
-	u64 pa : 48;
-	u64 res : 16;
-} AXP_BASE_PCBB;
-
-typedef u64 AXP_BASE_PRBR;
-
-typedef struct
-{
-	u32 pfn;
-	u32 res;
-} AXP_BASE_PTBR;
-
-typedef struct
-{
-	u32 pfn;
-	u32 res;
-} AXP_BASE_SCBB;
-
-typedef struct
-{
-	u64	lvl : 4;
-	u64 res : 60;
-} AXP_BASE_SISR;
-
-typedef struct
-{
-	u64 res_1 : 1;
-	u64 ir1 : 1;
-	u64 ir2 : 1;
-	u64 ir3 : 1;
-	u64 ir4 : 1;
-	u64 ir5 : 1;
-	u64 ir6 : 1;
-	u64 ir7 : 1;
-	u64 ir8 : 1;
-	u64 ir9 : 1;
-	u64 ira : 1;
-	u64 irb : 1;
-	u64 irc : 1;
-	u64 ird : 1;
-	u64 ire : 1;
-	u64 irf : 1;
-	u64 res_2 : 48;
-} AXP_BASE_SISR;
-
-typedef u64 AXP_BASE_SSP;
-
-typedef struct
-{
-	u32 pfn;
-	u32 res;
-} AXP_BASE_SYSPTBR;
-
-typedef struct
-{
-	u64 prs : 1;
-	u64 res_1 : 62;
-	u64 imp : 1
-} AXP_BASE_TBCHK;
-
-typedef u64 AXP_BASE_TBCHK_R16;
-
-typedef u64 AXP_BASE_USP;
-
-typedef u64 AXP_BASE_VIRBND;
-
-typedef u64 AXP_BASE_VPTB;
-
-typedef u64 AXP_BASE_WHAMI;
 
 #endif /*_AXP_21264_IPR_DEFS_ */
