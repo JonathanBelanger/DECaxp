@@ -111,7 +111,7 @@ typedef struct
 {
 	u64	res_1 : 3;
 	u64 va : 19;			/* Virtual Page Table Entry Address */
-	u62 res_2 : 8;
+	u64 res_2 : 8;
 	u64 vptb : 34;			/* Virtual Page Table Base */
 } AXP_EBOX_VA_FORM_01;
 
@@ -198,7 +198,7 @@ typedef struct
 typedef struct
 {
 	u64 res_1 : 4;
-	u64 asm : 1;
+	u64 _asm : 1;
 	u64 gh : 2;
 	u64 res_2 : 1;
 	u64 kre : 1;
@@ -208,7 +208,7 @@ typedef struct
 	u64 res_3 : 1;
 	u64 pfn : 31;
 	u64 res_4 : 20;
-} AXP_IBOX_IER_CM;
+} AXP_IBOX_ITB_PTE;
 
 typedef struct
 {
@@ -252,7 +252,7 @@ typedef struct
 {
 	u64	res_1 : 3;
 	u64	va : 19;
-	u62	res_2 : 8;
+	u64	res_2 : 8;
 	u64	vptb : 34;
 } AXP_IBOX_IVA_FORM_01;
 
@@ -322,7 +322,7 @@ typedef struct
 	u64	unf : 1;
 	u64	ine : 1;
 	u64	iov : 1;
-	u64	int : 1;
+	u64	_int : 1;
 	u64	reg : 5;
 	u64	bad_iva : 1;
 	u64	res : 27;
@@ -369,7 +369,7 @@ typedef struct
 	u64 tb_mb_en : 1;
 	u64 bist_fail : 1;
 	u64 chip_id : 6;
-	u64 vptb 18;
+	u64 vptb : 18;
 	u64 sext_vptb : 16;
 } AXP_IBOX_I_CTL;
 
@@ -398,7 +398,7 @@ typedef struct
 {
 	u64 sl1 : 4;
 	u64 sl0 : 1;
-	u64 res_1 : 1
+	u64 res_1 : 1;
 	u64 pctr1 : 20;
 	u64 res_2 : 2;
 	u64 pctr0 : 20;
@@ -440,10 +440,10 @@ typedef struct
 typedef struct
 {
 	u64 res_1 : 1;
-	u64 for : 1;
+	u64 _for : 1;
 	u64 fow : 1;
 	u64 res_2 : 1;
-	u64 asm : 1;
+	u64 _asm : 1;
 	u64 gh : 2;
 	u64 res_3 : 1;
 	u64 kre : 1;
@@ -465,6 +465,8 @@ typedef struct
 	u64 res : 62;
 } AXP_MBOX_DTB_ALTMODE;
 
+typedef AXP_IBOX_ITB_IS AXP_MBOX_DTB_IS;
+
 typedef struct
 {
 	u64 res_1 : 24;
@@ -476,7 +478,7 @@ typedef struct
 {
 	u64 wr : 1;
 	u64 acv : 1;
-	u64 for : 1;
+	u64 _for : 1;
 	u64 fow : 1;
 	u64 opcodes : 6;
 	u64 dc_tag_perr : 1;

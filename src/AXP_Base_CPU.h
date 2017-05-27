@@ -186,7 +186,7 @@ typedef struct
 	u64 dpc : 1;
 	u64 dsc : 1;
 	u64 res : 27;
-	u63 imp : 32;
+	u64 imp : 32;
 } AXP_BASE_MCES;
 
 typedef struct
@@ -213,7 +213,7 @@ typedef struct
 {
 	u64	lvl : 4;
 	u64 res : 60;
-} AXP_BASE_SISR;
+} AXP_BASE_SIRR;
 
 typedef struct
 {
@@ -248,7 +248,7 @@ typedef struct
 {
 	u64 prs : 1;
 	u64 res_1 : 62;
-	u64 imp : 1
+	u64 imp : 1;
 } AXP_BASE_TBCHK;
 
 typedef u64 AXP_BASE_TBCHK_R16;

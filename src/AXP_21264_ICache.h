@@ -74,7 +74,7 @@ typedef struct
 	u64						vb : 1;				/* Valid Bit */
 	u64						res_1 : 45;			/* align to the 32-bit boundary */
 	AXP_ICACHE_TAG_IDX		baseAddr;			/* base instruction address */
-	AXP_INS_FMT				instructions[AXP_CACHE_LINE_INS];
+	AXP_INS_FMT				instructions[AXP_ICACHE_LINE_INS];
 	u64						res_2[6];			/* align to 128 bytes */
 } AXP_ICACHE_LINE;
 

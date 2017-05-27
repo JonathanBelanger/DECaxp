@@ -32,8 +32,9 @@
 #ifndef _AXP_21264_CPU_DEFS_
 #define _AXP_21264_CPU_DEFS_
 
-#include "AXP_Utility.h"
+#include "AXP_Blocks.h"
 #include "AXP_Base_CPU.h"
+#include "AXP_21264_IPRs.h"
 #include "AXP_21264_Predictions.h"
 #include "AXP_21264_Instructions.h"
 
@@ -267,13 +268,13 @@ typedef struct
 	AXP_BASE_KSP		ksp;		/* Kernel Stack Pointer					*/
 	AXP_BASE_MCES		mces;		/* Machine Check Error Summary			*/
 	AXP_BASE_PCBB		pcbb;		/* Privileged Context Block Base		*/
-	AXP_BAST_PRPB		prbr;		/* Processor Base Register				*/
-	AXP_BAST_PTBR		ptbr;		/* Page Table Base Register				*/
+	AXP_BASE_PRBR		prbr;		/* Processor Base Register				*/
+	AXP_BASE_PTBR		ptbr;		/* Page Table Base Register				*/
 	AXP_BASE_SCBB		scbb;		/* System Control Block Base			*/
 	AXP_BASE_SISR		sisr;		/* Software Interrupt Summary Register	*/
 	AXP_BASE_SSP		ssp;		/* Supervisor Stack Pointer				*/
 	AXP_BASE_SYSPTBR	sysPtbr;	/* System Page Table Base				*/
-	AXP_BASE TBCHK		tbChk;		/* TB Check								*/
+	AXP_BASE_TBCHK		tbChk;		/* TB Check								*/
 	AXP_BASE_USP		usp;		/* User Stack Pointer					*/
 	AXP_BASE_VIRBND		virBnd;		/* Virtual Address Boundary				*/
 	AXP_BASE_VPTB		vptb;		/* Virtual Page Table Base				*/

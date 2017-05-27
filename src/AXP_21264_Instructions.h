@@ -172,14 +172,14 @@ typedef struct
  *				 pushed on
  */
 typedef struct
-(
+{
 	i32		disp : 13;				/* 13-bit Signed Displacement			*/
 	u32		stall : 1;				/* Stall Instruction until retire/abort	*/
 	u32		hint : 2;				/* Type of Address						*/
 	u32		rb : 5;					/* Base Register for Memory Address		*/
 	u32		ra : 5;					/* Write Data Register Number			*/
 	u32		opcode : 6;				/* Operation Code						*/
-) AXP_HW_RET;
+} AXP_HW_RET;
 
 /*
  * HW_MFPR/HW_MTPR Instruction Format (opcode = 0x19/0x1d)

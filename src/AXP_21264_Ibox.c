@@ -46,6 +46,7 @@
  */
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
+#include "AXP_21264_ICache.h"
 
 /*
  * The following module specific variable contains a list of instruction types
@@ -334,7 +335,7 @@ AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst)
 		 * Look up the instruction type from the instruction array, which is
 		 * indexed by opcode.
 		 */
-		retVal = instructionType[inst.pal.opcode);
+		retVal = instructionType[inst.pal.opcode];
 	
 		/*
 		 * If the returned value from the above look up is 'Cond', then we are
@@ -375,13 +376,13 @@ void AXP_InitializeICache()
 		for (jj = 0; jj < AXP_2_WAY_ICACHE; jj++)
 		{
 			iCache[ii][jj].access = 0;
-			iCache[ii][jj]_asm = 0;
+			iCache[ii][jj]._asm = 0;
 			iCache[ii][jj].asn = 0;
 			iCache[ii][jj].pal = 0;
 			iCache[ii][jj].replace = jj;
 			iCache[ii][jj].baseAddr.address = 0;
-			for (kk = 0; kk < AXP_CACHE_LINE_INS; kk)
-				instructions[kk].instr = 0;
+			for (kk = 0; kk < AXP_ICACHE_LINE_INS; kk)
+				iCache[ii][jj].instructions[kk].instr = 0;	/* HALT */
 		}
 	}
 	return;
@@ -414,6 +415,7 @@ bool AXP_ICacheLookup(AXP_PC pc)
 	AXP_ICACHE_TAG_IDX address;
 	AXP_ICACHE_TAG_IDX currAddr;
 	int ii, jj;
+	int index, tag;
 	bool retVal = false;	/* Assume Cache Miss */
 
 	/*
@@ -421,20 +423,20 @@ bool AXP_ICacheLookup(AXP_PC pc)
 	 * virtual address (PC).
 	 */
 	address.pc = pc;
+	index = address.insAddr.index;
+	tag = address.insAddr.tag;
 
 	/*
-	 * Seach the icache for the instruction for which we are looking.  If we
+	 * Search the icache for the instruction for which we are looking.  If we
 	 * find it, then we have a Cache Hit.
 	 */
-	for (ii = 0; ii < AXP_2_WAY_CACHE; ii++)
-		if ((iCache[address.insAddr.index][ii].baseAddr.insAddr.tag ==
-			 address.insAddr.tag) &&
-			(iCache[address.insAddr.index][ii].vb == 1))
+	for (ii = 0; ii < AXP_2_WAY_ICACHE; ii++)
+		if ((iCache[index][ii].baseAddr.insAddr.tag == tag) &&
+			(iCache[index][ii].vb == 1))
 			{
-				for (jj = ii + 1; jj < AXP_2_WAY_CACHE; jj++)
-					iCache[address.insAddr.index][jj - 1] =
-						iCache[address.insAddr.index][jj];
-				iCache[address.insAddr.index][AXP_2_WAY_CACHE - 1] = ii;
+				for (jj = ii + 1; jj < AXP_2_WAY_ICACHE; jj++)
+					iCache[index][jj - 1].replace = iCache[index][jj].replace;
+				iCache[index][AXP_2_WAY_ICACHE - 1].replace = ii;
 				retVal = true;	/* Cache Hit */
 				break;
 			}
@@ -450,27 +452,23 @@ bool AXP_ICacheLookup(AXP_PC pc)
 		 * the one to be replaced.  Find the first place in the cache where the
 		 * valid bit is clear and replace that slot with our new information.
 		 */
-		for (ii = 0; ii < AXP_2_WAY_CACHE; ii++)
-			if (iCache[address.insAddr.index][ii].vb == 0)
+		for (ii = 0; ii < AXP_2_WAY_ICACHE; ii++)
+			if (iCache[index][ii].vb == 0)
 			{
 				for (jj = 1; jj < ii; jj++)
 				{
-					currAddr.address =
-						iCache[address.insAddr.index][jj].baseAddr.address;
-					iCache[address.insAddr.index][jj - 1].baseAddr.address =
-						currAddr.address;
+					currAddr.address = iCache[index][jj].baseAddr.address;
+					iCache[index][jj - 1].baseAddr.address = currAddr.address;
 				}
-				if (ii == AXP_2_WAY_CACHE)
+				if (ii == AXP_2_WAY_ICACHE)
 				{
-					iCache[address.insAddr.index][ii - 1].baseAddr.address =
-						address.address;
-					iCache[address.insAddr.index][ii - 1].vb = 1;
+					iCache[index][ii - 1].baseAddr.address = address.address;
+					iCache[index][ii - 1].vb = 1;
 				}
 				else
 				{
-					iCache[address.insAddr.index][ii].baseAddr.address =
-						address.address;
-					iCache[address.insAddr.index][ii].vb = 1;
+					iCache[index][ii].baseAddr.address = address.address;
+					iCache[index][ii].vb = 1;
 				}
 				break;
 			}

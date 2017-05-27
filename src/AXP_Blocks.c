@@ -29,7 +29,7 @@
  *
  */
 #include "AXP_Blocks.h"
-#include "AXP_21246_CPU.h"
+#include "AXP_21264_CPU.h"
 
 void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 {
@@ -38,14 +38,16 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 	switch (blockType)
 	{
 		case AXP_21264_CPU_BLK:
-			AXP_21264_CPU *cpu = NULL;
-
-			retBlock = calloc(1, sizeof(AXP_21264_CPU));
-			if (retBlock != NULL)
 			{
-				*cpu = (AXP_21264_CPU *) retBlk;
-				cpu->header.type = blockType;
-				cpu->header.size = sizeof(AXP_21264_CPU);
+				AXP_21264_CPU *cpu = NULL;
+
+				retBlock = calloc(1, sizeof(AXP_21264_CPU));
+				if (retBlock != NULL)
+				{
+					cpu = (AXP_21264_CPU *) retBlock;
+					cpu->header.type = blockType;
+					cpu->header.size = sizeof(AXP_21264_CPU);
+				}
 			}
 			break;
 
@@ -70,6 +72,6 @@ void AXP_Deallocate_Block(AXP_BLOCK_DSC *block)
 	/*
 	 * Clear the address specified on the call.
 	 */
-	*block = NULL;
+	block = NULL;
 	return;
 }

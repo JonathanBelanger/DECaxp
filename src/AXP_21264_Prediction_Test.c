@@ -26,6 +26,7 @@
  */
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
+#include "AXP_21264_Ibox.h"
 
 /*
  * main
