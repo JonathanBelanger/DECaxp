@@ -36,7 +36,7 @@
 #ifndef _AXP_21264_IPR_DEFS_
 #define _AXP_21264_IPR_DEFS_
 
-#include "AXP_Utility.h"
+#include "AXP_Base_CPU.h"
 
 /*
  * The following definitions are for the Ebox IPRs
@@ -124,25 +124,30 @@ typedef union
 
 /*
  * The following definitions are for the Fbox IPRs
+ *	The dyn field has the following values:
+ *		00 = Chopped
+ *		01 = Minus infinity
+ *		10 = Normal
+ *		11 = Plus infinity
  */
 typedef struct
 {
 	u64	res : 48;
-	u64 dnz : 1;
-	u64 invd : 1;
-	u64 dzed : 1;
-	u64 ovfd : 1;
-	u64 inv : 1;
-	u64 dze : 1;
-	u64 ovf : 1;
-	u64 unf : 1;
-	u64 ine : 1;
-	u64 iov : 1;
-	u64 dyn : 2;
-	u64 undz : 1;
-	u64 unfd : 1;
-	u64 ined : 1;
-	u64 sum : 1;
+	u64 dnz : 1;					/* Denormal operands to zero */
+	u64 invd : 1;					/* Invalid operation disable */
+	u64 dzed : 1;					/* Division by zero disabled */
+	u64 ovfd : 1;					/* Overflow disbabled */
+	u64 inv : 1;					/* Invalid operation */
+	u64 dze : 1;					/* Divide by zero */
+	u64 ovf : 1;					/* Overflow */
+	u64 unf : 1;					/* Underflow */
+	u64 ine : 1;					/* Inexact result */
+	u64 iov : 1;					/* Integer overflow */
+	u64 dyn : 2;					/* Dynamic rounting mode */
+	u64 undz : 1;					/* Underflow to zero */
+	u64 unfd : 1;					/* Underflow disabled */
+	u64 ined : 1;					/* Inexact disabled */
+	u64 sum : 1;					/* Summary bit (OR of exception bits) */
 } AXP_FBOX_FPCR;
 
 /*
@@ -184,43 +189,36 @@ typedef struct
 typedef struct
 {
 	u64	res_1 : 13;
-	u64 va : 35;
+	u64 va : 35;					/* Virtual address[47:13] = ITB tag */
 	u64 res_2 : 16;
 } AXP_IBOX_ITB_TAG;
 
 typedef struct
 {
-	u64	res_1 : 13;
-	u64	inval_itb : 35;
-	u64	res_2 : 16;
-} AXP_IBOX_ITB_IS;
-
-typedef struct
-{
 	u64 res_1 : 4;
-	u64 _asm : 1;
-	u64 gh : 2;
+	u64 _asm : 1;					/* Address space match */
+	u64 gh : 2;						/* Granularity hint */
 	u64 res_2 : 1;
-	u64 kre : 1;
-	u64 ere : 1;
-	u64 sre : 1;
-	u64 ure : 1;
+	u64 kre : 1;					/* Kernel read/execute */
+	u64 ere : 1;					/* Executive read/execute */
+	u64 sre : 1;					/* Supervisor read/execute */
+	u64 ure : 1;					/* User read/execute */
 	u64 res_3 : 1;
-	u64 pfn : 31;
+	u64 pfn : 31;					/* Page frame number */
 	u64 res_4 : 20;
 } AXP_IBOX_ITB_PTE;
 
 typedef struct
 {
-	u64	pal : 1;
-	u64	res : 1;
-	u64	pc : 62;
-} AXP_INSTRUCTION_VA;
+	u64	res_1 : 13;
+	u64	inval_itb : 35;				/* ITB Virtual address(tag) to invalidate */
+	u64	res_2 : 16;
+} AXP_IBOX_ITB_IS;
 
 typedef union
 {
-	AXP_INSTRUCTION_VA	exc_addr;
-	u64	exc_pc;
+	AXP_PC	exc_pc;
+	u64	exc_addr;
 } AXP_IBOX_EXC_ADDR;
 
 
@@ -263,77 +261,92 @@ typedef union
 	AXP_IBOX_IVA_FORM_01	form01;		/* VA_48 = 0 and VA_FORM_32 = 1*/
 } AXP_IBOX_IVA_FORM;
 
+/*
+ * Interrupt enable and current mode register
+ * 	The cm field can have the following values:
+ * 		00 = Kernel
+ * 		01 = Executive
+ * 		10 = Supervisor
+ * 		11 = User
+ */
 typedef struct
 {
 	u64	res_1 : 3;
-	u64	cm : 2;
+	u64	cm : 2;						/* Current mode */
 	u64	res_2 : 8;
-	u64	asten : 1;
-	u64	sien : 15;
-	u64	pcen : 2;
-	u64	cren : 1;
-	u64	slen : 1;
-	u64	eien : 6;
+	u64	asten : 1;					/* AST interrupt enable */
+	u64	sien : 15;					/* Software interrupt enable */
+	u64	pcen : 2;					/* Performance counter interrupt enable */
+	u64	cren : 1;					/* Correct read error interrupt enable */
+	u64	slen : 1;					/* Serial line interrupt enable */
+	u64	eien : 6;					/* External interrupt enable */
 	u64	res_3 : 25;
 } AXP_IBOX_IER_CM;
 
 typedef struct
 {
 	u64	res_1 : 14;
-	u64	sir : 15;
+	u64	sir : 15;					/* Software interrupt requests */
 	u64	res_2 : 35;
 } AXP_IBOX_SIRR;
 
+/*
+ * Interrupt Summary Register - Used to report what interrups are currently
+ * pending.
+ * 	The pc field can have the following values:
+ * 		0 = PC0
+ * 		1 = PC1
+ */
 typedef struct
 {
 	u64	res_1 : 3;
-	u64	astk : 1;
-	u64	aste : 1;
+	u64	astk : 1;					/* Kernel AST interrupt */
+	u64	aste : 1;					/* Executive AST interrupt */
 	u64	res_2 : 4;
-	u64	asts : 1;
-	u64	astu : 1;
+	u64	asts : 1;					/* Supervisor AST interrupt */
+	u64	astu : 1;					/* User AST interrupt */
 	u64	res_3 : 3;
-	u64	si : 15;
-	u64	pc : 2;
-	u64	cr : 1;
-	u64	sl : 1;
-	u64	ei : 6;
+	u64	si : 15;					/* Software interrupt */
+	u64	pc : 2;						/* Performance counter interrupts */
+	u64	cr : 1;						/* Corrected read error interrupt */
+	u64	sl : 1;						/* Serial line interrupt */
+	u64	ei : 6;						/* External interrupts */
 	u64	res_4 : 25;
 } AXP_IBOX_ISUM;
 
 typedef struct
 {
 	u64	res_1 : 26;
-	u64	fbtp : 1;
-	u64	mchk_d : 1;
+	u64	fbtp : 1;					/* Force bad Icache fill parity */
+	u64	mchk_d : 1;					/* Clear Dstream machine check */
 	u64	res_2 : 1;
-	u64	pc : 2;
-	u64	cr : 1;
-	u64	sl : 1;
+	u64	pc : 2;						/* CLear performance counter */
+	u64	cr : 1;						/* Clear corrected read */
+	u64	sl : 1;						/* Clear serial line */
 	u64	res_3 : 31;
 } AXP_IBOX_HW_INT_CLR;
 
 typedef struct
 {
-	u64	swc : 1;
-	u64	inv : 1;
-	u64	dze : 1;
-	u64	fov : 1;
-	u64	unf : 1;
-	u64	ine : 1;
-	u64	iov : 1;
-	u64	_int : 1;
-	u64	reg : 5;
-	u64	bad_iva : 1;
+	u64	swc : 1;					/* Software completion possible */
+	u64	inv : 1;					/* Invalid operation trap */
+	u64	dze : 1;					/* Divide by zero trap */
+	u64	fov : 1;					/* Floating point overflow trap */
+	u64	unf : 1;					/* Floating point underflow trap */
+	u64	ine : 1;					/* Floating point inexact error trap */
+	u64	iov : 1;					/* Integer overflow trap */
+	u64	_int : 1;					/* Ebox(1)/Fbox(0) for iov field */
+	u64	reg : 5;					/* Destination/source register for trap */
+	u64	bad_iva : 1;				/* Bad Istream VA */
 	u64	res : 27;
-	u64	pc_ovfl : 1;
-	u64	set_inv : 1;
-	u64	set_dze : 1;
-	u64	set_ovf : 1;
-	u64	set_unf : 1;
-	u64	set_ine : 1;
-	u64	set_iov : 1;
-	u64	sext_set_iov : 16;
+	u64	pc_ovfl : 1;				/* EXC_ADDR improperly SEXT in 48-bit mode */
+	u64	set_inv : 1;				/* PALcode should set FPCR[INV] */
+	u64	set_dze : 1;				/* PALcode should set FPCR[DZE] */
+	u64	set_ovf : 1;				/* PALcode should set FPCR[OVF] */
+	u64	set_unf : 1;				/* PALcode should set FPCR[UNF] */
+	u64	set_ine : 1;				/* PALcode should set FPCR[INE] */
+	u64	set_iov : 1;				/* PALcode should set FPCR[IOV] */
+	u64	sext_set_iov : 16;			/* Sign-extended (SEXT) of SET_IOV */
 } AXP_IBOX_EXC_SUM;
 
 typedef union
@@ -341,67 +354,101 @@ typedef union
 	struct
 	{
 		u64	res_1 : 15;
-		u64	pal_base : 29;
+		u64	pal_base : 29;			/* Base physical address for PALcode */
 		u64	res_2 : 20;
 	} fields;
-	AXP_INSTRUCTION_VA	pal_base_addr;
+	AXP_PC	pal_base_addr;
 	u64	pal_base_pc;
 } AXP_IBOX_PAL_BASE;
 
+/*
+ * Iboc Control Register
+ * 	The chip_id field can have the following values:
+ * 		3 (0b000011) = 21264 pass 2.3
+ * 		5 (0b000101) = 21264 pass 2.4
+ */
 typedef struct
 {
-	u64	spce : 1;
-	u64	ic_en : 2;
-	u64	spe : 3;
-	u64	sde : 2;
-	u64 sbe : 2;
-	u64 bp_mode : 2;
-	u64 hwe : 1;
-	u64 sl_xmit : 1;
+	u64	spce : 1;					/* System performance counter enable */
+	u64	ic_en : 2;					/* Icache set enable */
+	u64	spe : 3;					/* Super page mode enable */
+	u64	sde : 2;					/* PALshadow register enable */
+	u64 sbe : 2;					/* Stream buffer enable */
+	u64 bp_mode : 2;				/* Branch prediction mode selection */
+	u64 hwe : 1;					/* Allow PAL reserved opcodes in Kernel */
+	u64 sl_xmit : 1;				/* Cause SROM to advance to next bit */
 	u64 sl_rcv : 1;
-	u64 va_48 : 1;
-	u64 va_form_32 : 1;
-	u64 single_issue_h : 1;
-	u64 pct0_en : 1;
-	u64 pct1_en : 1;
-	u64 call_pal_r23 : 1;
-	u64 mchk_en : 1;
-	u64 tb_mb_en : 1;
-	u64 bist_fail : 1;
-	u64 chip_id : 6;
-	u64 vptb : 18;
-	u64 sext_vptb : 16;
+	u64 va_48 : 1;					/* Enable 48-bit addresses (43 otherwise) */
+	u64 va_form_32 : 1;				/* Address formatting on read of IVA_FORM */
+	u64 single_issue_h : 1;			/* Force instruction issue from bottom of queues */
+	u64 pct0_en : 1;				/* Enable performance counter #0 */
+	u64 pct1_en : 1;				/* Enable performance counter #1 */
+	u64 call_pal_r23 : 1;			/* Use PALshadow register R23, instead of R27 */
+	u64 mchk_en : 1;				/* Machine check enable */
+	u64 tb_mb_en : 1;				/* Insert MB on TB fills (1 = multiprocessors) */
+	u64 bist_fail : 1;				/* Indicates status of BiST 1=pass/0=fail */
+	u64 chip_id : 6;				/* Chip revision ID */
+	u64 vptb : 18;					/* Virtual Page Table Base */
+	u64 sext_vptb : 16;				/* Sign extension of 'vptb' */
 } AXP_IBOX_I_CTL;
+
+#define AXP_I_CTL_BP_MODE_FALL		0x2		/* 1x, where 'x' is not relevant */
+#define AXP_I_CTL_BP_MODE_DYN		0x0		/* 0x, where 'x' is relevant */
+#define AXP_I_CTL_BP_MODE_LOCAL		0x1		/* Local History Prediction */
+#define AXP_I_CTL_BP_MODE_CHOICE	0x0		/* Choice selected Local/Global */
 
 typedef struct
 {
 	u64 res_1 : 29;
-	u64 tpe : 1;
-	u64 dpe : 1;
+	u64 tpe : 1;					/* Icache tag parity error */
+	u64 dpe : 1;					/* Icache data parity error */
 	u64 res_2 : 33;
 } AXP_IBOX_I_STAT;
 
+/*
+ * Process Context Register
+ * 	The 'aster' and 'astrr' fields can have the following values:
+ * 		0x1 = Kernal mode
+ * 		0x2 = Supervisor mode
+ * 		0x4 = Executive mode
+ * 		0x8 = User mode
+ */
 typedef struct
 {
 	u64	res_1 : 1;
-	u64	ppce : 1;
-	u64	fpe : 1;
+	u64	ppce : 1;					/* Process performance counting enable */
+	u64	fpe : 1;					/* Floating point enable */
 	u64	res_2 : 2;
-	u64 aster : 4;
+	u64 aster : 4;					/* AST enable register */
 	u64 astrr : 4;
 	u64 res_3 : 26;
-	u64 asn : 8;
+	u64 asn : 8;					/* Address space number */
 	u64 res_4 : 17;
 } AXP_IBOX_PCTX;
 
+/*
+ * Performance Counter Control Register
+ * 	The 'sl1' field can have the following values:
+ * 		0b0000 = Counter 1 counts cycles
+ * 		0b0001 = Counter 1 counts retired conditional branches
+ * 		0b0010 = Counter 1 counts retired branch mispredicts
+ * 		0b0011 = Counter 1 counts retired DTB single misses * 2
+ * 		0b0100 = Counter 1 counts retired DTB double double misses
+ * 		0b0101 = Counter 1 counts retired ITB misses
+ * 		0b0110 = Counter 1 counts retired unaligned traps
+ * 		0b0111 = Counter 1 counts replay traps
+ * 	The 'sl0' field can have the following values:
+ * 		0b0 = Counter 0 counts cycles
+ * 		0b1 = Counter 0 counts retired instructions
+ */
 typedef struct
 {
-	u64 sl1 : 4;
-	u64 sl0 : 1;
+	u64 sl1 : 4;					/* SL1 input select */
+	u64 sl0 : 1;					/* SL0 input select */
 	u64 res_1 : 1;
-	u64 pctr1 : 20;
+	u64 pctr1 : 20;					/* Performance counter 1 */
 	u64 res_2 : 2;
-	u64 pctr0 : 20;
+	u64 pctr0 : 20;					/* Performance counter 0 */
 	u64 sext_pctr0 : 16;
 } AXP_IBOX_PCTR_CTL;
 

@@ -123,15 +123,6 @@ static AXP_INS_TYPE instructionType[] =
 };
 
 /*
- * This is the Instruction Cache.  It is 64K bytes in size.  For this emulation
- * each line/block is 128 bytes in size, which makes for 512 total entries, with
- * 256 for each association (this is a 2-way cache).
- *
- * TODO: This needs to go into th CPU definition.
- */
-AXP_ICACHE_LINE iCache[AXP_21264_ICACHE_SIZE][AXP_2_WAY_ICACHE];
-
-/*
  * AXP_Branch_Prediction
  *
  *	This function is called to determine if a branch should be taken or not.
@@ -189,25 +180,52 @@ bool AXP_Branch_Prediction(
 	bool		retVal;
 
 	/*
-	 * Need to extract the index into the Local History Table from the VPC, and
-	 * use this to determine the index into the Local Predictor Table.
+	 * Determine how branch prediction should be performed based on the value
+	 * of the BP_MODE field of the I_CTL register.
+	 * 	1x = All branches to be predicted to fall through
+	 * 	0x = Dynamic prediction is used
+	 * 	01 = Local history prediction is used
+	 * 	00 = Chooser selects Local or Global history based on its state
 	 */
-	lpt_index.vpc = vpc;
-	lcl_history_idx = lpt_index.index.index;
-	lcl_predictor_idx = cpu->localHistoryTable.lcl_history[lcl_history_idx];
+	if ((cpu->iCtl.bp_mode & AXP_I_CTL_BP_MODE_FALL) == AXP_I_CTL_BP_MODE_DYN)
+	{
 
-	/*
-	 * Return the take(true)/don't take(false) for each of the Predictor
-	 * Tables.  The choice is determined and returned, but my not be used by
-	 * the caller.
-	 */
-	*localTaken = AXP_3BIT_TAKE(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
-	*globalTaken = AXP_2BIT_TAKE(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
-	*choice = AXP_2BIT_TAKE(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
-	if (*localTaken != *globalTaken)
-		retVal = (*choice == true) ? *globalTaken : *localTaken;
+		/*
+		 * Need to extract the index into the Local History Table from the VPC, and
+		 * use this to determine the index into the Local Predictor Table.
+		 */
+		lpt_index.vpc = vpc;
+		lcl_history_idx = lpt_index.index.index;
+		lcl_predictor_idx = cpu->localHistoryTable.lcl_history[lcl_history_idx];
+
+		/*
+		 * Return the take(true)/don't take(false) for each of the Predictor
+		 * Tables.  The choice is determined and returned, but my not be used by
+		 * the caller.
+		 */
+		*localTaken = AXP_3BIT_TAKE(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
+		if (cpu->iCtl.bp_mode == AXP_I_CTL_BP_MODE_CHOICE)
+		{
+			*globalTaken = AXP_2BIT_TAKE(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
+			*choice = AXP_2BIT_TAKE(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
+		}
+		else
+		{
+			*globalTaken = false;
+			*choice = false;	/* This will force choice to select Local */
+		}
+		if (*localTaken != *globalTaken)
+			retVal = (*choice == true) ? *globalTaken : *localTaken;
+		else
+			retVal = *localTaken;
+	}
 	else
-		retVal = *localTaken;
+	{
+		*localTaken = false;
+		*globalTaken = false;
+		*choice = false;
+		retVal = false;
+	}
 
 	return(retVal);
 }
@@ -359,7 +377,9 @@ AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst)
  *	This function is called to initialize the instruction cache..
  *
  * Input Parameters:
- *	None.
+ *	cpu:
+ *		A pointer to the structure containing all the fields needed to
+ *		emulate an Alpha AXP 21264 CPU.
  *
  * Output Parameters:
  *	None.
@@ -367,7 +387,7 @@ AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst)
  * Return Value:
  *	None.
  */
-void AXP_InitializeICache()
+void AXP_InitializeICache(AXP_21264_CPU *cpu)
 {
 	int ii, jj, kk;
 
@@ -375,14 +395,17 @@ void AXP_InitializeICache()
 	{
 		for (jj = 0; jj < AXP_2_WAY_ICACHE; jj++)
 		{
-			iCache[ii][jj].access = 0;
-			iCache[ii][jj]._asm = 0;
-			iCache[ii][jj].asn = 0;
-			iCache[ii][jj].pal = 0;
-			iCache[ii][jj].replace = jj;
-			iCache[ii][jj].baseAddr.address = 0;
-			for (kk = 0; kk < AXP_ICACHE_LINE_INS; kk)
-				iCache[ii][jj].instructions[kk].instr = 0;	/* HALT */
+			cpu->iCache[ii][jj].kre = 0;
+			cpu->iCache[ii][jj].ere = 0;
+			cpu->iCache[ii][jj].sre = 0;
+			cpu->iCache[ii][jj].ure = 0;
+			cpu->iCache[ii][jj]._asm = 0;
+			cpu->iCache[ii][jj].asn = 0;
+			cpu->iCache[ii][jj].pal = 0;
+			cpu->iCache[ii][jj].replace = jj;
+			cpu->iCache[ii][jj].baseAddr.address = 0;
+			for (kk = 0; kk < AXP_ICACHE_LINE_INS; kk++)
+				cpu->iCache[ii][jj].instructions[kk].instr = 0;	/* HALT */
 		}
 	}
 	return;
@@ -395,8 +418,12 @@ void AXP_InitializeICache()
  *	index into the cache and the instruction.
  *
  * Input Parameters:
- *	A value that represents the program counter of the instruction being
- *	requested.
+ *	cpu:
+ *		A pointer to the structure containing all the fields needed to
+ *		emulate an Alpha AXP 21264 CPU.
+ *	pc:
+ *		A value that represents the program counter of the instruction being
+ *		requested.
  *
  * Output Parameters:
  *	None.
@@ -407,10 +434,10 @@ void AXP_InitializeICache()
  *
  * TODO:	This is going to have to be broken up.  The way the code is now, it
  *			inserts a cache entry into and probably should not.  Also, this
- *			should return thenext 4 pre-decoded instructions to the caller, not
+ *			should return the next 4 pre-decoded instructions to the caller, not
  *			just a true/false.
  */
-bool AXP_ICacheLookup(AXP_PC pc)
+bool AXP_ICacheLookup(AXP_21264_CPU *cpu, AXP_PC pc)
 {
 	AXP_ICACHE_TAG_IDX address;
 	AXP_ICACHE_TAG_IDX currAddr;
@@ -431,12 +458,13 @@ bool AXP_ICacheLookup(AXP_PC pc)
 	 * find it, then we have a Cache Hit.
 	 */
 	for (ii = 0; ii < AXP_2_WAY_ICACHE; ii++)
-		if ((iCache[index][ii].baseAddr.insAddr.tag == tag) &&
-			(iCache[index][ii].vb == 1))
+		if ((cpu->iCache[index][ii].baseAddr.insAddr.tag == tag) &&
+			(cpu->iCache[index][ii].vb == 1))
 			{
 				for (jj = ii + 1; jj < AXP_2_WAY_ICACHE; jj++)
-					iCache[index][jj - 1].replace = iCache[index][jj].replace;
-				iCache[index][AXP_2_WAY_ICACHE - 1].replace = ii;
+					cpu->iCache[index][jj - 1].replace =
+						cpu->iCache[index][jj].replace;
+				cpu->iCache[index][AXP_2_WAY_ICACHE - 1].replace = ii;
 				retVal = true;	/* Cache Hit */
 				break;
 			}
@@ -453,22 +481,23 @@ bool AXP_ICacheLookup(AXP_PC pc)
 		 * valid bit is clear and replace that slot with our new information.
 		 */
 		for (ii = 0; ii < AXP_2_WAY_ICACHE; ii++)
-			if (iCache[index][ii].vb == 0)
+			if (cpu->iCache[index][ii].vb == 0)
 			{
 				for (jj = 1; jj < ii; jj++)
 				{
-					currAddr.address = iCache[index][jj].baseAddr.address;
-					iCache[index][jj - 1].baseAddr.address = currAddr.address;
+					currAddr.address = cpu->iCache[index][jj].baseAddr.address;
+					cpu->iCache[index][jj - 1].baseAddr.address =
+						currAddr.address;
 				}
 				if (ii == AXP_2_WAY_ICACHE)
 				{
-					iCache[index][ii - 1].baseAddr.address = address.address;
-					iCache[index][ii - 1].vb = 1;
+					cpu->iCache[index][ii - 1].baseAddr.address = address.address;
+					cpu->iCache[index][ii - 1].vb = 1;
 				}
 				else
 				{
-					iCache[index][ii].baseAddr.address = address.address;
-					iCache[index][ii].vb = 1;
+					cpu->iCache[index][ii].baseAddr.address = address.address;
+					cpu->iCache[index][ii].vb = 1;
 				}
 				break;
 			}

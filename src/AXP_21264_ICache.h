@@ -66,7 +66,10 @@ typedef union
  */
 typedef struct
 {
-	u64						access : 4;			/* Kernel/Executive/Supervisor/User */
+	u64 					kre : 1;			/* Kernel read/execute */
+	u64 					ere : 1;			/* Executive read/execute */
+	u64 					sre : 1;			/* Supervisor read/execute */
+	u64						ure : 1;			/* User read/execute */
 	u64						_asm : 1;			/* Address Space Match */
 	u64						asn : 8;			/* Address Space Number */
 	u64						pal : 1;			/* PALcode */

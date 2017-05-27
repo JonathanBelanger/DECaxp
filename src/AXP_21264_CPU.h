@@ -37,6 +37,7 @@
 #include "AXP_21264_IPRs.h"
 #include "AXP_21264_Predictions.h"
 #include "AXP_21264_Instructions.h"
+#include "AXP_21264_ICache.h"
 
 #define AXP_RESULTS_REG		41
 #define AXP_NUM_FETCH_INS	4
@@ -135,6 +136,13 @@ typedef struct
 	AXP_IBOX_I_STAT		iStat;		/* Ibox status							*/
 	AXP_IBOX_PCTX		pCtx;		/* Process context register				*/
 	AXP_IBOX_PCTR_CTL	pCtrCtl;	/* Performance counter control			*/
+
+	/*
+	 * This is the Instruction Cache.  It is 64K bytes in size.  For this emulation
+	 * each line/block is 128 bytes in size, which makes for 512 total entries, with
+	 * 256 for each association (this is a 2-way cache).
+	 */
+	AXP_ICACHE_LINE 	iCache[AXP_21264_ICACHE_SIZE][AXP_2_WAY_ICACHE];
 
 	/**************************************************************************
 	 *	Ebox Definitions													  *
