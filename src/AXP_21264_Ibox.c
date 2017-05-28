@@ -47,6 +47,7 @@
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
 #include "AXP_21264_ICache.h"
+#include "AXP_21264_Ibox.h"
 
 /*
  * The following module specific variable contains a list of instruction types
@@ -373,42 +374,104 @@ AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst)
 }
 
 /*
- * AXP_InitializeICache
- *	This function is called to initialize the instruction cache..
+ * AXP_ICacheFetch
+ * 	The instruction pre-fetcher (pre-decode) reads an octaword (16 bytes),
+ * 	containing up to four naturally aligned instructions per cycle from the
+ * 	Icache.  Branch prediction and line prediction bits accompany the four
+ * 	instructions.  The branch prediction scheme operates most efficiently when
+ * 	there is only one branch instruction is contained in the four fetched
+ * 	instructions.
+ *
+ * 	An entry from the subroutine prediction stack, together with set
+ * 	prediction bits for use by the Icache stream controller, are fetched along
+ * 	with the octaword.  The Icache stream controller generates fetch requests
+ * 	for additional cache lines and stores the Istream data in the Icache. There
+ * 	is no separate buffer to hold Istream requests.
  *
  * Input Parameters:
- *	cpu:
+ * 	cpu:
  *		A pointer to the structure containing all the fields needed to
  *		emulate an Alpha AXP 21264 CPU.
+ *	pc:
+ *		A value that represents the program counter of the instruction being
+ *		requested.
  *
  * Output Parameters:
- *	None.
+ *	next:
+ *		A pointer to a location to receive the next 4 instructions to be
+ *		processed.
  *
  * Return Value:
- *	None.
+ *	TRUE if the instruction is found in the instruction cache.
+ *	FALSE if there was an ITB miss.
  */
-void AXP_InitializeICache(AXP_21264_CPU *cpu)
+bool AXP_ICacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_IBOX_INS_LINE *next)
 {
-	int ii, jj, kk;
+	bool retVal = false;
+	AXP_ICACHE_TAG_IDX addr;
+	int ii, jj;
+	int index, tag, setStart, setEnd;
+	int offset;
 
-	for (ii = 0; ii < AXP_21264_ICACHE_SIZE; ii++)
+	/*
+	 * First, get the information from the supplied parameters we need to
+	 * search the Icache correctly.
+	 */
+	addr.pc = pc;
+	index = addr.insAddr.index;
+	tag = addr.insAddr.tag;
+	offset = addr.insAddr.offset / AXP_INSTRUCTION_SIZE;
+	switch(cpu->iCtl.ic_en)
 	{
-		for (jj = 0; jj < AXP_2_WAY_ICACHE; jj++)
+
+		/*
+		 * Just set 0
+		 */
+		case 1:
+			setStart = 0;
+			setEnd = 1;
+			break;
+
+		/*
+		 * Just set 1
+		 */
+		case 2:
+			setStart = 1;
+			setEnd = AXP_2_WAY_ICACHE;
+			break;
+
+		/*
+		 * Both set 1 and 2
+		 */
+		case 0:		/* This is an invalid value, but... */
+		case 3:
+			setStart = 0;
+			setEnd = AXP_2_WAY_ICACHE;
+			break;
+	}
+
+	/*
+	 * Now, search through the Icache for the information we have been asked to
+	 * return.
+	 */
+	for (ii = setStart; ii < setEnd; ii++)
+	{
+		if ((cpu->iCache[index][ii].tag == tag) &&
+			(cpu->iCache[index][ii].vb == 1))
 		{
-			cpu->iCache[ii][jj].kre = 0;
-			cpu->iCache[ii][jj].ere = 0;
-			cpu->iCache[ii][jj].sre = 0;
-			cpu->iCache[ii][jj].ure = 0;
-			cpu->iCache[ii][jj]._asm = 0;
-			cpu->iCache[ii][jj].asn = 0;
-			cpu->iCache[ii][jj].pal = 0;
-			cpu->iCache[ii][jj].replace = jj;
-			cpu->iCache[ii][jj].tag = 0;
-			for (kk = 0; kk < AXP_ICACHE_LINE_INS; kk++)
-				cpu->iCache[ii][jj].instructions[kk].instr = 0;	/* HALT */
+			retVal = true;		/* We have a hit */
 		}
 	}
-	return;
+
+	/*
+	 * If we had an Icache miss, go look in the ITB.  If we get an ITB miss,
+	 * this will cause an exception to be generated.
+	 */
+	if (retVal == false)
+	{
+	}
+
+	return(retVal);
 }
 
 /*

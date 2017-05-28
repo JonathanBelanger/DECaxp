@@ -29,6 +29,18 @@
 
 #include "AXP_21264_CPU.h"
 
+#define AXP_IBOX_INS_FETCHED	4
+
+typedef struct
+{
+	bool			branch2bTaken;
+	bool			linePrediction;
+	bool			setPrediction;
+	u64				retPredStack;
+	AXP_INS_FMT		instructions[AXP_IBOX_INS_FETCHED];
+	AXP_INS_TYPE	instrType[AXP_IBOX_INS_FETCHED];
+} AXP_IBOX_INS_LINE;
+
 bool AXP_Branch_Prediction(
 				AXP_21264_CPU *cpu,
 				AXP_PC vpc,

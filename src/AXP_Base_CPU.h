@@ -36,6 +36,7 @@
 #include "AXP_Utility.h"
 
 #define AXP_MAX_REGISTERS	32
+#define AXP_INSTRUCTION_SIZE 4	/* Number of bytes in an Alpha AXP Instruction */
 
 /*
  * Program Counter (PC) Definition

@@ -34,6 +34,7 @@
 void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 {
 	void	*retBlock = NULL;
+	int ii, jj;
 
 	switch (blockType)
 	{
@@ -44,9 +45,19 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 				retBlock = calloc(1, sizeof(AXP_21264_CPU));
 				if (retBlock != NULL)
 				{
+
+					/*
+					 * The calloc cleared all the memory.  We just have to set
+					 * the non-zero values.
+					 */
 					cpu = (AXP_21264_CPU *) retBlock;
 					cpu->header.type = blockType;
 					cpu->header.size = sizeof(AXP_21264_CPU);
+					for (ii = 0; ii < AXP_21264_ICACHE_SIZE; ii++)
+					{
+						for (jj = 0; jj < AXP_2_WAY_ICACHE; jj++)
+							cpu->iCache[ii][jj].replace = jj;
+					}
 				}
 			}
 			break;

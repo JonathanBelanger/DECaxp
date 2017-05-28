@@ -111,7 +111,6 @@ typedef struct
 	AXP_PC		vpc[AXP_IQ_LEN];
 	int			vpcIdx;
 
-	u8			itb[AXP_TB_LEN];
 
 	/*
 	 * Instruction Queues (Integer and Floating-Point).
@@ -143,6 +142,9 @@ typedef struct
 	 * 256 for each association (this is a 2-way cache).
 	 */
 	AXP_ICACHE_LINE 	iCache[AXP_21264_ICACHE_SIZE][AXP_2_WAY_ICACHE];
+	AXP_ICACHE_ITB		itb[AXP_TB_LEN];
+	int					itbStart;	/* Since round-robin, need to know start */
+	int					itbEnd;		/* and end entries in the ITB */
 
 	/**************************************************************************
 	 *	Ebox Definitions													  *

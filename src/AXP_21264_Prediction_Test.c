@@ -63,7 +63,7 @@ int main()
 				};
 	bool			taken;
 	int				takenInt;
-	int				ii, jj;
+	int				ii, jj, kk;
 	AXP_21264_CPU	*cpu;
 	AXP_PC			vpc;
 	int				vpcInt;
@@ -87,46 +87,77 @@ int main()
 	printf("\nAXP 21264 Predictions Unit Tester\n");
 	printf("%d trace files to be processed\n\n", (int) (sizeof(fileList)/sizeof(char *)));
 	cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
-	for (ii = 0; ii < (sizeof(fileList)/sizeof(char *)); ii++)
+	for (kk = 0; kk < 3; kk++)
 	{
-		fp = fopen(fileList[ii], "r");
-		if (fp != NULL)
+		/*
+		 * bp_mode has the following values:
+		 * 	0b00 = Choice selects between local and global history predictions.
+		 * 	0b01 = Only local prediction is used.
+		 * 	0b1x = Prediction always returns false.
+		 */
+		cpu->iCtl.bp_mode = kk;
+		printf("====================================================\n");
+		switch(kk)
 		{
-			insCnt = 0;
-			predictedCnt = 0;
-			localCnt = 0;
-			globalCnt = 0;
-			choiceUsed = 0;
-			choiceCorrect = 0;
-			printf("\nProcessing trace file: %s (%d)...\n", fileList[ii], lineCnt[ii]);
-			while (feof(fp) == 0)
+			case 0x00:
+				printf("Choice predictor selects either Local or Global History Predictions\n");
+				break;
+			case 0x01:
+				printf("Only Local Prediction is used\n");
+				break;
+			case 0x02:
+				printf("Predictor always returns false (fall-through)\n");
+				break;
+		}
+		for (ii = 0; ii < (sizeof(fileList)/sizeof(char *)); ii++)
+		{
+			fp = fopen(fileList[ii], "r");
+			if (fp != NULL)
 			{
-				fscanf(fp, "%d %d\n", &vpcInt, &takenInt);
-				insCnt++;
-				vpc.pc = vpcInt;
-				taken = (takenInt == 1) ? true : false;
-
-				/*
-				 * Predict whether the branch should be taken or not.  We'll get
-				 * results from the Local and Global Predictor, and the Choice
-				 * selected (when the Local and Global do not agree).
-			 	 */
-				prediction = AXP_Branch_Prediction(cpu, vpc, &localTaken, &globalTaken, &choice);
-				if (prediction == taken)
-					predictedCnt++;
-
-				/*
-				 * Let's determine how the choice was determined.
-				 */
-				if (localTaken != globalTaken)
+				insCnt = 0;
+				predictedCnt = 0;
+				localCnt = 0;
+				globalCnt = 0;
+				choiceUsed = 0;
+				choiceCorrect = 0;
+				printf("\nProcessing trace file: %s (%d)...\n", fileList[ii], lineCnt[ii]);
+				while (feof(fp) == 0)
 				{
-					choiceUsed++;
-					if (choice == true)
+					fscanf(fp, "%d %d\n", &vpcInt, &takenInt);
+					insCnt++;
+					vpc.pc = vpcInt;
+					taken = (takenInt == 1) ? true : false;
+
+					/*
+					 * Predict whether the branch should be taken or not.  We'll get
+					 * results from the Local and Global Predictor, and the Choice
+					 * selected (when the Local and Global do not agree).
+					 */
+					prediction = AXP_Branch_Prediction(cpu, vpc, &localTaken, &globalTaken, &choice);
+					if (prediction == taken)
+						predictedCnt++;
+
+					/*
+					 * Let's determine how the choice was determined.
+					 */
+					if (localTaken != globalTaken)
 					{
-						if (taken == globalTaken)
+						choiceUsed++;
+						if (choice == true)
 						{
-							globalCnt++;
-							choiceCorrect++;
+							if (taken == globalTaken)
+							{
+								globalCnt++;
+								choiceCorrect++;
+							}
+						}
+						else
+						{
+							if (taken == localTaken)
+							{
+								localCnt++;
+								choiceCorrect++;
+							}
 						}
 					}
 					else
@@ -134,64 +165,56 @@ int main()
 						if (taken == localTaken)
 						{
 							localCnt++;
-							choiceCorrect++;
+							globalCnt++;
 						}
 					}
+
+					/*
+					 * Update the predictors based on whether the branch was actually
+					 * taken or not and considering which of the predictors was
+					 * correct.
+					 *
+					 * NOTE: 	Whether choice was used or not is irrelevant.  The
+					 *			choice is determined by whether the local or global
+					 *			were correct.  If both are correct or both are
+					 *			incorrect, then the choice was not used and thus
+					 *			would not have made a difference.
+					 */
+					AXP_Branch_Direction(cpu, vpc, taken, localTaken, globalTaken);
 				}
-				else
-				{
-					if (taken == localTaken)
-					{
-						localCnt++;
-						globalCnt++;
-					}
-				}
+				fclose(fp);
 
 				/*
-				 * Update the predictors based on whether the branch was actually
-				 * taken or not and considering which of the predictors was
-				 * correct.
-				 *
-				 * NOTE: 	Whether choice was used or not is irrelevant.  The
-			 	 *			choice is determined by whether the local or global
-			 	 *			were correct.  If both are correct or both are
-			 	 *			incorrect, then the choice was not used and thus
-			 	 *			would not have made a difference.
+				 * Print out what we found.
+				 */
+				printf("---------------------------------------------\n");
+				printf("Total Instructions:\t\t\t%d\n", insCnt);
+				printf("Correct predictions:\t\t\t%d\n", predictedCnt);
+				printf("Mispredictions:\t\t\t\t%d\n", (insCnt - predictedCnt));
+				printf("Prediction accuracy:\t\t\t%1.6f\n\n", ((float) predictedCnt / (float) insCnt));
+				printf("Times Local Correct:\t\t\t%d\n", localCnt);
+				printf("Times Global Correct:\t\t\t%d\n", globalCnt);
+				printf("Times Choice Used:\t\t\t%d\n", choiceUsed);
+				printf("Times Choice Selected Correctly:\t%d\n", choiceCorrect);
+				printf("Times Choice was wrong:\t\t\t%d\n", (choiceUsed - choiceCorrect));
+
+				/*
+				 * We need to clear out the prediction tables in the CPU record.
 			 	 */
-				AXP_Branch_Direction(cpu, vpc, taken, localTaken, globalTaken);
+				cpu->globalPathHistory = 0;
+				for (jj = 0; jj < ONE_K; jj++)
+					cpu->localHistoryTable.lcl_history[jj] = 0;
+				for (jj = 0; jj < ONE_K; jj++)
+					cpu->localPredictor.lcl_pred[jj] = 0;
+				for (jj = 0; jj < FOUR_K; jj++)
+					cpu->globalPredictor.gbl_pred[jj] = 0;
+				for (jj = 0; jj < FOUR_K; jj++)
+					cpu->choicePredictor.choice_pred[jj] = 0;
 			}
-			fclose(fp);
-
-			/*
-			 * Print out what we found.
-			 */
-			printf("---------------------------------------------\n");
-			printf("Total Instructions:\t\t\t%d\n", insCnt);
-			printf("Correct predictions:\t\t\t%d\n", predictedCnt);
-			printf("Mispredictions:\t\t\t\t%d\n", (insCnt - predictedCnt));
-			printf("Prediction accuracy:\t\t\t%1.6f\n\n", ((float) predictedCnt / (float) insCnt));
-			printf("Times Local Correct:\t\t\t%d\n", localCnt);
-			printf("Times Global Correct:\t\t\t%d\n", globalCnt);
-			printf("Times Choice Used:\t\t\t%d\n", choiceUsed);
-			printf("Times Choice Selected Correctly:\t%d\n", choiceCorrect);
-			printf("Times Choice was wrong:\t\t\t%d\n", (choiceUsed - choiceCorrect));
-
-			/*
-			 * We need to clear out the prediction tables in the CPU record.
-			 */
-			cpu->globalPathHistory = 0;
-			for (jj = 0; jj < ONE_K; jj++)
-				cpu->localHistoryTable.lcl_history[jj] = 0;
-			for (jj = 0; jj < ONE_K; jj++)
-				cpu->localPredictor.lcl_pred[jj] = 0;
-			for (jj = 0; jj < FOUR_K; jj++)
-				cpu->globalPredictor.gbl_pred[jj] = 0;
-			for (jj = 0; jj < FOUR_K; jj++)
-				cpu->choicePredictor.choice_pred[jj] = 0;
-		}
-		else
-		{
-			printf("Unable to open trace file: %s\n", fileList[ii]);
+			else
+			{
+				printf("Unable to open trace file: %s\n", fileList[ii]);
+			}
 		}
 	}
 	AXP_Deallocate_Block((AXP_BLOCK_DSC *) cpu);

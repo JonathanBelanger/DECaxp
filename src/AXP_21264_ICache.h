@@ -37,7 +37,7 @@
 #include "AXP_21264_Instructions.h"
 
 #define AXP_2_WAY_ICACHE		2
-#define AXP_ICACHE_OFFSET_BITS	4
+#define AXP_ICACHE_OFFSET_BITS	6
 #define AXP_ICACHE_INDEX		9
 #define AXP_ICACHE_LINE_INS		16
 #define AXP_ICACHE_SIZE			(64 * 1024)	/* 64K */
@@ -48,7 +48,8 @@
  */
 typedef struct
 {
-	u64				res_1 : 4;
+	u64				res_1 : 2;
+	u64				offset : 4;
 	u64				index : 9;
 	u64				tag : 35;
 	u64				res_2 : 16;
@@ -80,6 +81,22 @@ typedef struct
 	AXP_INS_FMT				instructions[AXP_ICACHE_LINE_INS];
 	u64						res_2[7];			/* align to 128 bytes */
 } AXP_ICACHE_LINE;
+
+typedef struct
+{
+	u16 					kre : 1;			/* Kernel read/execute */
+	u16 					ere : 1;			/* Executive read/execute */
+	u16 					sre : 1;			/* Supervisor read/execute */
+	u16						ure : 1;			/* User read/execute */
+	u16						_asm : 1;			/* Address Space Match */
+	u16						asn : 8;			/* Address Space Number */
+	u16						vb : 1;				/* Valid Bit */
+	u16						res_1 :2;			/* Align to 16-bit boundary */
+	u16						mapped;				/* Pages mapped (1, 8, 64, 512) */
+	u16						res_2[2];			/* Align to 64-bit boundary */
+	u64						va;					/* Virtual Address */
+	u64						pa;					/* Physical Address */
+} AXP_ICACHE_ITB;
 
 #define AXP_21264_ICACHE_SIZE	(AXP_ICACHE_SIZE/sizeof(AXP_ICACHE_LINE)/AXP_2_WAY_ICACHE)
 

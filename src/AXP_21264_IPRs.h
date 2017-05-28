@@ -362,7 +362,7 @@ typedef union
 } AXP_IBOX_PAL_BASE;
 
 /*
- * Iboc Control Register
+ * Ibox Control Register
  * 	The chip_id field can have the following values:
  * 		3 (0b000011) = 21264 pass 2.3
  * 		5 (0b000101) = 21264 pass 2.4
