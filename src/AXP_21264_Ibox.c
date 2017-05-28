@@ -403,7 +403,7 @@ void AXP_InitializeICache(AXP_21264_CPU *cpu)
 			cpu->iCache[ii][jj].asn = 0;
 			cpu->iCache[ii][jj].pal = 0;
 			cpu->iCache[ii][jj].replace = jj;
-			cpu->iCache[ii][jj].baseAddr.address = 0;
+			cpu->iCache[ii][jj].tag = 0;
 			for (kk = 0; kk < AXP_ICACHE_LINE_INS; kk++)
 				cpu->iCache[ii][jj].instructions[kk].instr = 0;	/* HALT */
 		}
@@ -458,7 +458,7 @@ bool AXP_ICacheLookup(AXP_21264_CPU *cpu, AXP_PC pc)
 	 * find it, then we have a Cache Hit.
 	 */
 	for (ii = 0; ii < AXP_2_WAY_ICACHE; ii++)
-		if ((cpu->iCache[index][ii].baseAddr.insAddr.tag == tag) &&
+		if ((cpu->iCache[index][ii].tag == tag) &&
 			(cpu->iCache[index][ii].vb == 1))
 			{
 				for (jj = ii + 1; jj < AXP_2_WAY_ICACHE; jj++)
@@ -485,18 +485,17 @@ bool AXP_ICacheLookup(AXP_21264_CPU *cpu, AXP_PC pc)
 			{
 				for (jj = 1; jj < ii; jj++)
 				{
-					currAddr.address = cpu->iCache[index][jj].baseAddr.address;
-					cpu->iCache[index][jj - 1].baseAddr.address =
-						currAddr.address;
+					currAddr.insAddr.tag = cpu->iCache[index][jj].tag;
+					cpu->iCache[index][jj - 1].tag = currAddr.insAddr.tag;
 				}
 				if (ii == AXP_2_WAY_ICACHE)
 				{
-					cpu->iCache[index][ii - 1].baseAddr.address = address.address;
+					cpu->iCache[index][ii - 1].tag = address.insAddr.tag;
 					cpu->iCache[index][ii - 1].vb = 1;
 				}
 				else
 				{
-					cpu->iCache[index][ii].baseAddr.address = address.address;
+					cpu->iCache[index][ii].tag = address.insAddr.tag;
 					cpu->iCache[index][ii].vb = 1;
 				}
 				break;
