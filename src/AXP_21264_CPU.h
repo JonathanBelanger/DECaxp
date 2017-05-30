@@ -109,7 +109,7 @@ typedef struct
 	 * Virtual Program Counter Queue
 	 */
 	AXP_PC		vpc[AXP_IQ_LEN];
-	int			vpcIdx;
+	u32			vpcIdx;
 
 
 	/*
@@ -142,9 +142,17 @@ typedef struct
 	 * 256 for each association (this is a 2-way cache).
 	 */
 	AXP_ICACHE_LINE 	iCache[AXP_21264_ICACHE_SIZE][AXP_2_WAY_ICACHE];
+	AXP_LRU_LIST		iCacheLRU[AXP_21264_ICACHE_SIZE];
+	i32					iCacheLRUIdx;
+
+	/*
+	 * This is the Instruction Address Translation (Look-aside) Table (ITB).
+	 * It is 128 entries in size, and is allocated in a round-robin scheme.
+	 * We, therefore, maintain a start and end index (both start at 0).
+	 */
 	AXP_ICACHE_ITB		itb[AXP_TB_LEN];
-	int					itbStart;	/* Since round-robin, need to know start */
-	int					itbEnd;		/* and end entries in the ITB */
+	u32					itbStart;	/* Since round-robin, need to know start */
+	u32					itbEnd;		/* and end entries in the ITB */
 
 	/**************************************************************************
 	 *	Ebox Definitions													  *

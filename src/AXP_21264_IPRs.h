@@ -189,7 +189,7 @@ typedef struct
 typedef struct
 {
 	u64	res_1 : 13;
-	u64 va : 35;					/* Virtual address[47:13] = ITB tag */
+	u64 tag : 35;					/* Virtual address[47:13] = ITB tag */
 	u64 res_2 : 16;
 } AXP_IBOX_ITB_TAG;
 

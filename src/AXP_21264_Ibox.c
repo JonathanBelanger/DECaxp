@@ -405,13 +405,13 @@ AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst)
  *	TRUE if the instruction is found in the instruction cache.
  *	FALSE if there was an ITB miss.
  */
-bool AXP_ICacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_IBOX_INS_LINE *next)
+AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_IBOX_INS_LINE *next)
 {
-	bool retVal = false;
+	AXP_CACHE_FETCH retVal = WayMiss;
 	AXP_ICACHE_TAG_IDX addr;
-	int ii, jj;
-	int index, tag, setStart, setEnd;
-	int offset;
+	u32 ii, jj;
+	u32 index, tag, setStart, setEnd;
+	u32 offset;
 
 	/*
 	 * First, get the information from the supplied parameters we need to
@@ -459,7 +459,33 @@ bool AXP_ICacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_IBOX_INS_LINE *next)
 		if ((cpu->iCache[index][ii].tag == tag) &&
 			(cpu->iCache[index][ii].vb == 1))
 		{
-			retVal = true;		/* We have a hit */
+
+			/*
+			 * Extract out the next 4 instructions and return these to the
+			 * caller.  While we are here will do some predecoding of the
+			 * instructions.
+			 */
+			for (jj = 0; jj < AXP_IBOX_INS_FETCHED; jj++)
+			{
+				next->instructions[jj] =
+					cpu->iCache[index][ii].instructions[offset + jj];
+				next->instrType[jj] = AXP_InstructionType(next->instructions[jj]);
+			}
+
+			/*
+			 * The return value of the next call is not needed.  Since the
+			 * instructions were already in the Icache, the entry for the
+			 * Least Recently Used (LRU) index/set is already there.  The
+			 * only reason a false would be returned was if an attempt was
+			 * made to actually add an item that was not there and there was
+			 * no room.  Therefore, we can ignore the return value.
+			 */
+			(void) AXP_LRUAdd(cpu->iCacheLRU,
+							  AXP_21264_ICACHE_SIZE,
+							  &cpu->iCacheLRUIdx,
+							  index,
+							  ii);
+			retVal = Hit;
 		}
 	}
 
@@ -467,106 +493,46 @@ bool AXP_ICacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_IBOX_INS_LINE *next)
 	 * If we had an Icache miss, go look in the ITB.  If we get an ITB miss,
 	 * this will cause an exception to be generated.
 	 */
-	if (retVal == false)
+	if (retVal == WayMiss)
 	{
-	}
+		u64 tagITB;
+		u32 pages;
+		AXP_IBOX_ITB_TAG *itbTag = (AXP_IBOX_ITB_TAG *) &pc;
 
-	return(retVal);
-}
-
-/*
- * AXP_ICacheLookup
- *	This function is called to look up an instruction in the instruction cache
- *	using the address of the instruction we are looking for to determine the
- *	index into the cache and the instruction.
- *
- * Input Parameters:
- *	cpu:
- *		A pointer to the structure containing all the fields needed to
- *		emulate an Alpha AXP 21264 CPU.
- *	pc:
- *		A value that represents the program counter of the instruction being
- *		requested.
- *
- * Output Parameters:
- *	None.
- *
- * Return Value:
- *	TRUE if the instruction is found in the instruction cache.
- *	FALSE if the instruction was not found.
- *
- * TODO:	This is going to have to be broken up.  The way the code is now, it
- *			inserts a cache entry into and probably should not.  Also, this
- *			should return the next 4 pre-decoded instructions to the caller, not
- *			just a true/false.
- */
-bool AXP_ICacheLookup(AXP_21264_CPU *cpu, AXP_PC pc)
-{
-	AXP_ICACHE_TAG_IDX address;
-	AXP_ICACHE_TAG_IDX currAddr;
-	int ii, jj;
-	int index, tag;
-	bool retVal = false;	/* Assume Cache Miss */
-
-	/*
-	 * We want to extract the index and tag information from the instruction
-	 * virtual address (PC).
-	 */
-	address.pc = pc;
-	index = address.insAddr.index;
-	tag = address.insAddr.tag;
-
-	/*
-	 * Search the icache for the instruction for which we are looking.  If we
-	 * find it, then we have a Cache Hit.
-	 */
-	for (ii = 0; ii < AXP_2_WAY_ICACHE; ii++)
-		if ((cpu->iCache[index][ii].tag == tag) &&
-			(cpu->iCache[index][ii].vb == 1))
-			{
-				for (jj = ii + 1; jj < AXP_2_WAY_ICACHE; jj++)
-					cpu->iCache[index][jj - 1].replace =
-						cpu->iCache[index][jj].replace;
-				cpu->iCache[index][AXP_2_WAY_ICACHE - 1].replace = ii;
-				retVal = true;	/* Cache Hit */
-				break;
-			}
-
-	/*
-	 * Cache Miss (we did not find it in the above search)
-	 */
-	if (retVal == false)
-	{
+		tag = itbTag->tag;
 
 		/*
-		 * Item 0 at the current index, is the least recently used, so it is
-		 * the one to be replaced.  Find the first place in the cache where the
-		 * valid bit is clear and replace that slot with our new information.
+		 * Search through the ITB for the address we are looking to get,
 		 */
-		for (ii = 0; ii < AXP_2_WAY_ICACHE; ii++)
-			if (cpu->iCache[index][ii].vb == 0)
+		for (ii = cpu->itbStart; ii < cpu->itbEnd; ii++)
+		{
+			tagITB = cpu->itb[ii].tag.tag;
+			pages = cpu->itb[ii].mapped;
+
+			/*
+			 * The ITB can map 1, 8, 64 or 512 contiguous 8KB pages, so the
+			 * ITB.tag is the base address and ITB.tag + ITB.mapped is the
+			 * address after the last byte mapped.
+			 */
+			if ((tagITB >= tag) &&
+				((tagITB + pages) < tag) &&
+				(cpu->itb[ii].vb == 1))
 			{
-				for (jj = 1; jj < ii; jj++)
-				{
-					currAddr.insAddr.tag = cpu->iCache[index][jj].tag;
-					cpu->iCache[index][jj - 1].tag = currAddr.insAddr.tag;
-				}
-				if (ii == AXP_2_WAY_ICACHE)
-				{
-					cpu->iCache[index][ii - 1].tag = address.insAddr.tag;
-					cpu->iCache[index][ii - 1].vb = 1;
-				}
-				else
-				{
-					cpu->iCache[index][ii].tag = address.insAddr.tag;
-					cpu->iCache[index][ii].vb = 1;
-				}
+
+				/*
+				 * OK, the page is mapped in the ITB, but not in the Icache.
+				 * We need to ask the Cbox to load the next set of pages
+				 * into the Icache.
+				 */
+				// AXP_IcacheFill(cpu, pc);
+				retVal = Miss;
 				break;
 			}
+		}
 	}
 
 	/*
-	 * Return what we found back to the caller.
+	 * Return what we did or did not find back to the caller.
 	 */
 	return(retVal);
 }

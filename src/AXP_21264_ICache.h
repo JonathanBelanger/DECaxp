@@ -74,29 +74,39 @@ typedef struct
 	u64						_asm : 1;			/* Address Space Match */
 	u64						asn : 8;			/* Address Space Number */
 	u64						pal : 1;			/* PALcode */
-	u64						replace : 4;		/* Replacement */
 	u64						vb : 1;				/* Valid Bit */
 	u64						tag : 33;			/* Tag */
-	u64						res_1 : 12;			/* align to the 64-bit boundary */
+	u64						res_1 : 16;			/* align to the 64-bit boundary */
 	AXP_INS_FMT				instructions[AXP_ICACHE_LINE_INS];
 	u64						res_2[7];			/* align to 128 bytes */
 } AXP_ICACHE_LINE;
 
 typedef struct
 {
-	u16 					kre : 1;			/* Kernel read/execute */
-	u16 					ere : 1;			/* Executive read/execute */
-	u16 					sre : 1;			/* Supervisor read/execute */
-	u16						ure : 1;			/* User read/execute */
-	u16						_asm : 1;			/* Address Space Match */
-	u16						asn : 8;			/* Address Space Number */
 	u16						vb : 1;				/* Valid Bit */
-	u16						res_1 :2;			/* Align to 16-bit boundary */
+	u16						res_1 :15;			/* Align to 16-bit boundary */
 	u16						mapped;				/* Pages mapped (1, 8, 64, 512) */
 	u16						res_2[2];			/* Align to 64-bit boundary */
-	u64						va;					/* Virtual Address */
-	u64						pa;					/* Physical Address */
+	AXP_IBOX_ITB_TAG		tag;				/* ITB tag (VA[47:13]) */
+	AXP_IBOX_ITB_PTE		pfn;				/* Page Frame Number */
 } AXP_ICACHE_ITB;
+
+/*
+ * When an Icache is searched, we either get a hit, miss, or way-miss.
+ * 		A 'hit' means that the instruction is in the cache.
+ * 		A 'miss' means that the instruction is not in the cache, but that
+ * 			the address is mapped in the ITB.  A request to fill the Icache
+ * 			will be made and the instruction fetch re-issued.
+ * 		A 'way-miss' means that the ITB was not found.  This will cause an
+ * 			ITB-miss exception to be triggered.  The PALcode will have to
+ * 			handle filling the ITB (and PTE).
+ */
+typedef enum
+{
+	Hit,
+	Miss,
+	WayMiss
+} AXP_CACHE_FETCH;
 
 #define AXP_21264_ICACHE_SIZE	(AXP_ICACHE_SIZE/sizeof(AXP_ICACHE_LINE)/AXP_2_WAY_ICACHE)
 
