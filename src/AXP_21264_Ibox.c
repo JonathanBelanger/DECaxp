@@ -43,6 +43,10 @@
  *	code should not be adding a cache entry on a miss.  There should be a
  *	separate fill cache function.  Also, the iCache look-up code should return
  *	the requested instructions on a hit.
+ *
+ *	V01.005		01-Jun-2017	Jonathan D. Belanger
+ *	Added a function to add an Icache line/block.  There are a couple to do
+ *	items for ASM and ASN in this function.
  */
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
@@ -405,7 +409,9 @@ AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst)
  *	TRUE if the instruction is found in the instruction cache.
  *	FALSE if there was an ITB miss.
  */
-AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_IBOX_INS_LINE *next)
+AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
+								AXP_PC pc,
+								AXP_IBOX_INS_LINE *next)
 {
 	AXP_CACHE_FETCH retVal = WayMiss;
 	AXP_ICACHE_TAG_IDX addr;
@@ -535,4 +541,181 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_IBOX_INS_LINE
 	 * Return what we did or did not find back to the caller.
 	 */
 	return(retVal);
+}
+
+/*
+ * AXP_ICacheAdd
+ *  When a entry needs to be added to the Icache, this function is called.  If
+ *  all the sets currently have  a valid reecord in them, then we need to look
+ *  at the Least Recently Used (LRU) record with the same index and evict that
+ *  one.  If one of them is not vvalid, then insert this record into that
+ *  location and update the LRU list.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to
+ *		emulate an Alpha AXP 21264 CPU.
+ *	pc:
+ *		A value that represents the program counter of the instruction being
+ *		requested.
+ *	nextInst:
+ *		A pointer to an array off the next set  of instructions to insert into
+ *		the Icache.
+ *	prot:
+ *		A value containing the memory protections associated with the memory
+ *		location from where these instructions were copied.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_ICacheAdd(AXP_21264_CPU *cpu,
+				   AXP_PC pc,
+				   AXP_INS_FMT *nextInst,
+				   AXP_MEMORY_PROTECTION prot)
+{
+	AXP_ICACHE_TAG_IDX addr;
+	u32 ii, jj;
+	u32 index, tag, setStart, setEnd;
+	u32 offset;
+
+	bool inserted = false;
+
+	/*
+	 * First, get the information from the supplied parameters we need to
+	 * search the Icache correctly.
+	 */
+	addr.pc = pc;
+	index = addr.insAddr.index;
+	tag = addr.insAddr.tag;
+	offset = addr.insAddr.offset / AXP_INSTRUCTION_SIZE;
+	switch(cpu->iCtl.ic_en)
+	{
+
+		/*
+		 * Just set 0
+		 */
+		case 1:
+			setStart = 0;
+			setEnd = 1;
+			break;
+
+		/*
+		 * Just set 1
+		 */
+		case 2:
+			setStart = 1;
+			setEnd = AXP_2_WAY_ICACHE;
+			break;
+
+		/*
+		 * Both set 1 and 2
+		 */
+		case 0:		/* This is an invalid value, but... */
+		case 3:
+			setStart = 0;
+			setEnd = AXP_2_WAY_ICACHE;
+			break;
+	}
+
+	/*
+	 * There are only 2 ways out of this function, successfully added the
+	 * Icache line/block or aborted the program.  Loop until we have
+	 * successfully added the line/block (aborting will end the entire
+	 * program).
+	 */
+	while (inserted == false)
+	{
+
+		/*
+		 * Now, search through the Icache for the information we have been
+		 * asked to locate (a free Icache location to receive another
+		 * line/block.
+		 */
+		for (ii = setStart; ((ii < setEnd) && (inserted == false)); ii++)
+		{
+
+			/*
+		 	 * See if we found a place to hold this line/block.
+		 	 */
+			if (cpu->iCache[index][ii].vb == 0)
+			{
+				inserted =  AXP_LRUAdd(cpu->iCacheLRU,
+								   	   AXP_21264_ICACHE_SIZE,
+							  	   	   &cpu->iCacheLRUIdx,
+							  	   	   index,
+							  	   	   ii);
+
+				/*
+			 	 * If we were able to find an Icache location to place then
+			 	 * line/block, then we should have been able to add an LRU
+			 	 * record.  If not, then print an error message and abort the
+			 	 * program.
+			 	 */
+				if (inserted == false)
+				{
+					printf("%%DECEMU-F-BUGCHK, Bugcheck in the Icache LRU addition.\n");
+					abort();
+				}
+				cpu->iCache[index][ii].kre = prot.kre;
+				cpu->iCache[index][ii].ere = prot.ere;
+				cpu->iCache[index][ii].sre = prot.sre;
+				cpu->iCache[index][ii].ure = prot.ure;
+				cpu->iCache[index][ii]._asm = 0;	// TODO
+				cpu->iCache[index][ii].asn = 0;		// TODO
+					cpu->iCache[index][ii].pal = pc.pal;
+				cpu->iCache[index][ii].vb = 1;
+				cpu->iCache[index][ii].tag = tag;
+				for (jj = 0; jj < AXP_ICACHE_LINE_INS; jj++)
+					cpu->iCache[index][ii].instructions[jj] = nextInst[jj];
+			}
+		}
+
+		/*
+	 	 * If we did not insert a record into the Icache, then the Icache is
+	 	 * full and someone needs to be evicted before we can reinsert.  Since
+	 	 * all the sets at the current index are valid, we need to determine
+	 	 * which one is the LRU item, remove it and try adding again.
+	 	 */
+		if (inserted == false)
+		{
+			u32 set;
+			bool removed;
+
+			removed = AXP_LRUReturnIdx(cpu->iCacheLRU,
+								   	   cpu->iCacheLRUIdx,
+								   	   index,
+								   	   &set);
+			if (removed == false)
+			{
+				printf("%%DECEMU-F-BUGCHK, Bugcheck in the Icache LRU retrieval.\n");
+				abort();
+			}
+			removed = AXP_LRURemove(cpu->iCacheLRU,
+									&cpu->iCacheLRUIdx,
+									index,
+									set);
+
+			/*
+		 	 * We successfully removed a record from the LRU list, we now need
+		 	 * to invalidate (evict) the associated Icache record. Otherwise,
+		 	 * we have a should never happen condition.  Display a message and
+		 	 * a abort the program.
+		 	 */
+			if (removed == true)
+				cpu->iCache[index][set].vb = 0;
+			else
+			{
+				printf("%%DECEMU-F-BUGCHK, Bugcheck in the Icache LRU removal.\n");
+				abort();
+			}
+		}
+	}
+
+	/*
+	 * Return what we did or did not find back to the caller.
+	 */
+	return;
 }

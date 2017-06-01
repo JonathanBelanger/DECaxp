@@ -23,6 +23,9 @@
  *
  *	V01.000		14-May-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		01-Jun-2017	Jonathan D. Belanger
+ *	Added a function prototype to add an Icache line/block.
  */
 #ifndef _AXP_21264_IBOX_DEFS_
 #define _AXP_21264_IBOX_DEFS_
@@ -54,5 +57,11 @@ void AXP_Branch_Direction(
 				bool localTaken,
 				bool globalTaken);
 AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst);
-AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_IBOX_INS_LINE *next);
+AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
+								AXP_PC pc,
+								AXP_IBOX_INS_LINE *next);
+void AXP_ICacheAdd(AXP_21264_CPU *cpu,
+				   AXP_PC pc,
+				   AXP_INS_FMT *nextInst,
+				   AXP_MEMORY_PROTECTION prot);
 #endif /* _AXP_21264_IBOX_DEFS_ */

@@ -238,6 +238,7 @@ int main()
 	int hitCnt, cacheMissCnt, ITBMissCnt, cycleCnt, instrCnt;
 	int jj;
 	u64 ii;
+	AXP_MEMORY_PROTECTION prot;
 	struct
 	{
 		u64 address;
@@ -276,7 +277,11 @@ int main()
 	cacheMissCnt = 0;
 	ITBMissCnt = 0;
 	cycleCnt = 0;
-	instCnt = 0;
+	instrCnt = 0;
+	prot.kre = 1;
+	prot.ere = 1;
+	prot.sre = 1;
+	prot.ure = 1;
 	while (!done)
 	{
 		fetchedPC = pc.pc;
@@ -295,7 +300,7 @@ int main()
 			 */
 			case Hit:
 				hitCnt++;
-				for (ii = 0; (ii < AXP_IBOX_INS_FETCHED) && !done); ii++)
+				for (ii = 0; ((ii < AXP_IBOX_INS_FETCHED) && !done); ii++)
 				{
 
 					/*
@@ -305,7 +310,7 @@ int main()
 					 */
 					if (nextLine.instructions[ii].pal.opcode != 0x00)
 					{
-						instCnt++;
+						instrCnt++;
 						pc.vpc.pc++;	/* increment the pc */
 
 						/*
@@ -376,7 +381,7 @@ int main()
 			 */
 			case Miss:
 				cacheMissCnt++;
-				status = AXP_ICacheAdd(cpu, pc.vpc, &memory[pc.pc]);	// This is not correct (physical -> virtual)!
+				AXP_ICacheAdd(cpu, pc.vpc, &memory[pc.pc], prot); // TODO: physical --> virtual
 				break;
 
 			/*
@@ -384,8 +389,8 @@ int main()
 			 * so we have to add an ITB entry and then replay the instruction/
 			 */
 			case WayMiss:
-				ITBMissCount++;
-				status = AXP_ITBAdd(cpu, pc.vpc);	// Do we want to put the instructions in the cache as well?
+				ITBMissCnt++;
+				//status = AXP_ITBAdd(cpu, pc.vpc);	// Do we want to put the instructions in the cache as well?
 				break;
 		}
 		cycleCnt++;
@@ -395,15 +400,15 @@ int main()
 	 * Print out the results.
 	 */
 	printf("\nNumber of cycles:                %d\n", cycleCnt);
-	printf("Number of instructions executed: %d\n", instCnt);
+	printf("Number of instructions executed: %d\n", instrCnt);
 	printf("Number of cache look-ups:        %d\n", (hitCnt+cacheMissCnt+ITBMissCnt));
 	printf("    Number of cache hits:        %d\n", hitCnt);
 	printf("    Number of cache misses:      %d\n", cacheMissCnt);
 	printf("    Number of ITB misses:        %d\n\n", ITBMissCnt);
 	printf("    Hit percentage:              %1.2f\n", ((float)hitCnt/(float)(hitCnt+cacheMissCnt+ITBMissCnt)));
-	printf("    Miss percentage:             %1.2f\n", ((float)missCnt/(float)(hitCnt+cacheMissCnt+ITBMissCnt)));
+	printf("    Miss percentage:             %1.2f\n", ((float)(ITBMissCnt+cacheMissCnt)/(float)(hitCnt+cacheMissCnt+ITBMissCnt)));
 	printf("    Way Miss percentage:         %1.2f\n\n", ((float)ITBMissCnt/(float)(hitCnt+cacheMissCnt+ITBMissCnt)));
 	printf("Cache look-ups per cycle:        %5.2f\n", ((float)(hitCnt+cacheMissCnt+ITBMissCnt)/(float)cycleCnt));
-	printf("Instructions per cycle:          %5.2f\n\n", ((float)instCnt/(float)cycleCnt));
+	printf("Instructions per cycle:          %5.2f\n\n", ((float)instrCnt/(float)cycleCnt));
 	return(0);
 }

@@ -26,9 +26,12 @@
  *	Initially written.
  *
  *	V01.001		24-May-2017	Jonathan D. Belanger
- *	Change the name of the stucture used to decode a virtual PC to its tag and
+ *	Change the name of the structure used to decode a virtual PC to its tag and
  *	index equivalent, then introduced a union to overlay the AXP PC format and
  *	the Icache tag/index formats.
+ *
+ *	V01.002		01-Jun-2017	Jonathan D. Belanger
+ *	Added a definition to be used to pass the memory protection information.
  */
 #ifndef _AXP_21264_ICACHE_DEFS_
 #define _AXP_21264_ICACHE_DEFS_
@@ -80,6 +83,15 @@ typedef struct
 	AXP_INS_FMT				instructions[AXP_ICACHE_LINE_INS];
 	u64						res_2[7];			/* align to 128 bytes */
 } AXP_ICACHE_LINE;
+
+typedef struct
+{
+	u32 					kre : 1;			/* Kernel read/execute */
+	u32 					ere : 1;			/* Executive read/execute */
+	u32 					sre : 1;			/* Supervisor read/execute */
+	u32						ure : 1;			/* User read/execute */
+	u32						res : 28;			/* align to 32 bits */
+} AXP_MEMORY_PROTECTION;
 
 typedef struct
 {
