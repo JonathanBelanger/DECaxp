@@ -579,8 +579,6 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 	AXP_ICACHE_TAG_IDX addr;
 	u32 ii, jj;
 	u32 index, tag, setStart, setEnd;
-	u32 offset;
-
 	bool inserted = false;
 
 	/*
@@ -590,7 +588,6 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 	addr.pc = pc;
 	index = addr.insAddr.index;
 	tag = addr.insAddr.tag;
-	offset = addr.insAddr.offset / AXP_INSTRUCTION_SIZE;
 	switch(cpu->iCtl.ic_en)
 	{
 
@@ -716,6 +713,118 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 
 	/*
 	 * Return what we did or did not find back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_LRUAdd
+ * 	This  function should only be called as the result of an ITB Miss.  As such
+ * 	we just have to find the next location to enter the next item.  If we are
+ * 	using a currently used field, we'll need to evict all the associated Icache
+ * 	items with the same tag.
+ */
+void AXP_ITBAdd(AXP_21264_CPU *cpu,
+				AXP_IBOX_ITB_TAG itbTag,
+				AXP_IBOX_ITB_PTE *itbPTE)
+{
+	int ii, jj;
+	u32 setStart, setEnd;
+
+	/*
+	 * First, determine which cache sets are in use (0, 1, or both).
+	 */
+	switch(cpu->iCtl.ic_en)
+	{
+
+		/*
+		 * Just set 0
+		 */
+		case 1:
+			setStart = 0;
+			setEnd = 1;
+			break;
+
+		/*
+		 * Just set 1
+		 */
+		case 2:
+			setStart = 1;
+			setEnd = AXP_2_WAY_ICACHE;
+			break;
+
+		/*
+		 * Both set 1 and 2
+		 */
+		case 0:		/* This is an invalid value, but... */
+		case 3:
+			setStart = 0;
+			setEnd = AXP_2_WAY_ICACHE;
+			break;
+	}
+
+	/*
+	 * The ITB array is utilized in a round-robin fashion.  See if the next
+	 * entry in the array is already used.  If so, evict the associate Icache
+	 * entries.
+	 */
+	if (cpu->itb[cpu->itbEnd].vb == 1)
+	{
+		for (ii = 0; ii < AXP_21264_ICACHE_SIZE; ii++)
+			for (jj = setStart; jj <setEnd; jj++)
+			{
+				if ((cpu->iCache[ii][jj].vb == 1) &&
+					(cpu->iCache[ii][jj].tag == itbTag.tag))
+				{
+
+					/*
+					 * We need to invalidate this Icache entry, but don't
+					 * forget to remove the LRU for this cache entry.
+					 */
+					(void) AXP_LRURemove(cpu->iCacheLRU,
+										 &cpu->iCacheLRUIdx,
+										 ii,
+										 jj);
+
+					/*
+					 * Now invalidate the iCache entry;
+					 */
+					cpu->iCache[ii][jj].vb = 0;
+				}
+			}
+	}
+
+	/*
+	 * We are now able to add the ITB entry.
+	 */
+	cpu->itb[cpu->itbEnd].vb = 1;
+	cpu->itb[cpu->itbEnd].mapped = 1;	// TODO: How do we handle more than 1 page?
+	memcpy(&cpu->itb[cpu->itbEnd].tag, &itbTag, sizeof(AXP_IBOX_ITB_TAG));
+	memcpy(&cpu->itb[cpu->itbEnd].pfn, itbPTE, sizeof(AXP_IBOX_ITB_PTE));
+	cpu->itbEnd++;
+
+	/*
+	 * If we have reached the end of the array, then reset it to the beginning.
+	 */
+	if (cpu->itbEnd == AXP_TB_LEN)
+		cpu->itbEnd = 0;
+
+	/*
+	 * The itbEnd equals itbStart only in 2 instances.  One, when there is
+	 * nothing in the itb array.  And two, when an entry was added onto an
+	 * existing entry (which we just removed above).
+	 */
+	if (cpu->itbEnd == cpu->itbStart)
+		cpu->itbStart++;
+
+	/*
+	 * If we have reached the end of the array, then wrap to the beginning.
+	 */
+	if (cpu->itbStart == AXP_TB_LEN)
+		cpu->itbStart = 0;
+
+	/*
+	 * Return back to the caller.
 	 */
 	return;
 }

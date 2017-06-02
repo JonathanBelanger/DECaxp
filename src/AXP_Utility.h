@@ -57,5 +57,6 @@ typedef struct
 bool AXP_LRUAdd(AXP_LRU_LIST *lru, u32 lruSize, i32 *lruMax, u64 index, u32 set);
 bool AXP_LRURemove(AXP_LRU_LIST *lru, i32 *lruMax, u64 index, u32 set);
 bool AXP_LRUReturn(AXP_LRU_LIST *lru, i32 lruMax, u64 *index, u32 *set);
+bool AXP_LRUReturnIdx(AXP_LRU_LIST *lru, i32 lruMax, u64 index, u32 *set);
 
 #endif /* _AXP_UTIL_DEFS_ */

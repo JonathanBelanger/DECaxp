@@ -64,4 +64,7 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 				   AXP_PC pc,
 				   AXP_INS_FMT *nextInst,
 				   AXP_MEMORY_PROTECTION prot);
+void AXP_ITBAdd(AXP_21264_CPU *cpu,
+				AXP_IBOX_ITB_TAG itbTag,
+				AXP_IBOX_ITB_PTE *itbPTE);
 #endif /* _AXP_21264_IBOX_DEFS_ */
