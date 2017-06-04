@@ -191,7 +191,7 @@ static AXP_INS_FMT memory[] =
 	{.instr = 0xb01d0004},
 	{.instr = 0xb09d0000},
 	{.instr = 0x408039a2},		/* Address Offset: 0x0000000000000280 */
-	{.instr = 0xe4400005},		/* Branch: 10 taken, 1 not tkane */
+	{.instr = 0xe4400005},		/* Branch: 10 taken, 1 not taken */
 	{.instr = 0xa0840000},
 	{.instr = 0xa01d0004},
 	{.instr = 0x43a1141d},
@@ -209,14 +209,14 @@ static AXP_INS_FMT memory[] =
 	{.instr = 0x46110017},		/* Address Offset: 0x00000000000002c0 */
 	{.instr = 0x404105a2},
 	{.instr = 0xc3ffffe9},		/* Branch: always taken */
-	{.instr = 0xa09d0000},		/* This line and the remaining never get referenced */
+	{.instr = 0xa09d0000},
 	{.instr = 0xa01d0000},
 	{.instr = 0x43a1141d},
 	{.instr = 0x47e4040e},
-	{.instr = 0x47ff041f}		/* Address Offset: 0x00000000000002dc */
+	{.instr = 0x6be00000}		/* Address Offset: 0x00000000000002dc */
 };
 
-#define AXP_NUMBER_OR_BRANCHES 13
+#define AXP_NUMBER_OR_BRANCHES 15
 
 /*
  * main
@@ -235,6 +235,7 @@ static AXP_INS_FMT memory[] =
 int main()
 {
 	bool done = false;
+	bool branchTaken = false;
 	int hitCnt, cacheMissCnt, ITBMissCnt, cycleCnt, instrCnt;
 	int jj;
 	u64 ii;
@@ -253,29 +254,31 @@ int main()
 			{0x00000000000000d4UL,    0, 0x0000000000000270UL, false},
 			{0x00000000000000f4UL,   28, 0x0000000000000108UL, false},
 			{0x0000000000000108UL,    0, 0x00000000000000e8UL, false},
-			{0x0000000000000148UL,  252, 0x0000000000000150UL, false},
+			{0x0000000000000148UL,  252, 0x0000000000000154UL, false},
 			{0x0000000000000150UL,    0, 0x000000000000012cUL, false},
-			{0x0000000000000188UL,  252, 0x0000000000000190UL, false},
+			{0x0000000000000188UL,  252, 0x0000000000000194UL, false},
 			{0x0000000000000190UL,    0, 0x0000000000000170UL, false},
-			{0x00000000000001d8UL,  508, 0x00000000000001e0UL, false},
+			{0x00000000000001d8UL,  508, 0x00000000000001e4UL, false},
 			{0x00000000000001e0UL,    0, 0x00000000000001b8UL, false},
-			{0x0000000000000228UL, 1020, 0x0000000000000230UL, false},
+			{0x0000000000000228UL, 1020, 0x0000000000000234UL, false},
 			{0x0000000000000230UL,    0, 0x0000000000000208UL, false},
 			{0x0000000000000284UL,   10, 0x000000000000029cUL, true},
-			{0x00000000000002c8UL,    0, 0x0000000000000270UL, false}
+			{0x0000000000000298UL,   10, 0x00000000000002ccUL, false},
+			{0x00000000000002c8UL,    0, 0x0000000000000270UL, false},
+			{0x00000000000002dcUL,    9, 0x00000000000002ccUL, true}
 		};
 	union
 	{
 		u64 	pc;
 		AXP_PC	vpc;
 	} pc = { .pc = 0x0000000000000004UL };
-	u64 fetchedPC;
 	AXP_21264_CPU *cpu;
 	AXP_CACHE_FETCH retStatus;
 	AXP_IBOX_INS_LINE nextLine;
 
 	printf("\nAXP 21264 I-Cache Unit Tester\n\n");
 	cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
+	cpu->iCtl.ic_en = 3;	/* Use both Icache sets */
 	hitCnt = 0;
 	cacheMissCnt = 0;
 	ITBMissCnt = 0;
@@ -285,9 +288,9 @@ int main()
 	prot.ere = 1;
 	prot.sre = 1;
 	prot.ure = 1;
+
 	while (!done)
 	{
-		fetchedPC = pc.pc;
 
 		/*
 		 * Attempt to get the next set of instructions for the Icache.
@@ -303,7 +306,10 @@ int main()
 			 */
 			case Hit:
 				hitCnt++;
-				for (ii = 0; ((ii < AXP_IBOX_INS_FETCHED) && !done); ii++)
+				branchTaken = false;
+				for (ii = (pc.vpc.pc % sizeof(AXP_INS_FMT));
+					 ((ii < AXP_IBOX_INS_FETCHED) && !done && !branchTaken);
+					 ii++)
 				{
 
 					/*
@@ -330,7 +336,7 @@ int main()
 							 * we are to branch to a new address or not.
 							 */
 							for (jj = 0; jj < AXP_NUMBER_OR_BRANCHES; jj++)
-								if (brCntArr[jj].address == (pc.vpc.pc + ii - 1))
+								if (brCntArr[jj].address == (pc.pc - sizeof(AXP_INS_FMT)))
 								{
 
 									/*
@@ -342,8 +348,19 @@ int main()
 									{
 										if (brCntArr[jj].defaultTake == false)
 										{
-											printf("Taking branch 0x%08x\n", (unsigned int) pc.pc);
+											printf("Taking branch 0x%08llx -->",
+												   (pc.pc - sizeof(AXP_INS_FMT)));
 											pc.pc = brCntArr[jj].destination;
+											branchTaken = true;
+											printf("0x%08llx\n", pc.pc);
+										}
+										else if (pc.pc == 0x00000000000002e0UL)  // pc + 4
+										{
+											printf("Taking branch 0x%08llx -->",
+												   (pc.pc - sizeof(AXP_INS_FMT)));
+											pc.pc = 0x00000000000000d8UL;
+											branchTaken = true;
+											printf("0x%08llx\n", pc.pc);
 										}
 									}
 									
@@ -357,8 +374,11 @@ int main()
 										brCntArr[jj].taken--;
 										if (brCntArr[jj].defaultTake == true)
 										{
-											printf("Taking branch 0x%08x\n", (unsigned int) pc.pc);
+											printf("Taking branch 0x%08llx -->",
+												   (pc.pc - sizeof(AXP_INS_FMT)));
 											pc.pc = brCntArr[jj].destination;
+											branchTaken = true;
+											printf("0x%08llx\n", pc.pc);
 										}
 									}
 									break;		/* We're done here. */
@@ -371,16 +391,6 @@ int main()
 						done = true;
 						continue;
 					}
-
-					/*
-					 * If the next instruction to "process" is not contained
-					 * within the PC addresses of the fetched set of
-					 * instructions, then we need to get out of the current
-					 * for loop.
-					 */
-					if ((pc.pc < fetchedPC) &&
-						(pc.pc >= (fetchedPC + AXP_IBOX_INS_FETCHED)))
-						break;
 				}
 				break;
 
@@ -391,7 +401,10 @@ int main()
 			 */
 			case Miss:
 				cacheMissCnt++;
-				AXP_ICacheAdd(cpu, pc.vpc, &memory[pc.pc], prot); // TODO: physical --> virtual
+				AXP_ICacheAdd(cpu,
+							  pc.vpc,
+							  &memory[(pc.vpc.pc&0xfffffffffffffff0UL)],
+							  prot); // TODO: physical --> virtual
 				break;
 
 			/*
@@ -417,9 +430,9 @@ int main()
 	printf("    Number of cache hits:        %d\n", hitCnt);
 	printf("    Number of cache misses:      %d\n", cacheMissCnt);
 	printf("    Number of ITB misses:        %d\n\n", ITBMissCnt);
-	printf("    Hit percentage:              %1.2f\n", ((float)hitCnt/(float)(hitCnt+cacheMissCnt+ITBMissCnt)));
-	printf("    Miss percentage:             %1.2f\n", ((float)(ITBMissCnt+cacheMissCnt)/(float)(hitCnt+cacheMissCnt+ITBMissCnt)));
-	printf("    Way Miss percentage:         %1.2f\n\n", ((float)ITBMissCnt/(float)(hitCnt+cacheMissCnt+ITBMissCnt)));
+	printf("    Hit percentage:              %5.2f\n", ((float)hitCnt/(float)(hitCnt+cacheMissCnt+ITBMissCnt)*100.0));
+	printf("    Miss percentage:             %5.2f\n", ((float)(ITBMissCnt+cacheMissCnt)/(float)(hitCnt+cacheMissCnt+ITBMissCnt)*100.0));
+	printf("    ITB Miss percentage:         %5.2f\n\n", ((float)ITBMissCnt/(float)(hitCnt+cacheMissCnt+ITBMissCnt)*100.0));
 	printf("Cache look-ups per cycle:        %5.2f\n", ((float)(hitCnt+cacheMissCnt+ITBMissCnt)/(float)cycleCnt));
 	printf("Instructions per cycle:          %5.2f\n\n", ((float)instrCnt/(float)cycleCnt));
 	return(0);

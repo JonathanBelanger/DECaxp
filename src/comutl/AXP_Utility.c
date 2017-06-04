@@ -65,7 +65,7 @@
  */
 bool AXP_LRUAdd(AXP_LRU_LIST *lru, u32 lruSize, i32 *lruMax, u64 index, u32 set)
 {
-	u32 ii, jj;
+	i32 ii, jj;
 	bool insert = true;
 	bool retVal = true;
 
@@ -113,7 +113,7 @@ bool AXP_LRUAdd(AXP_LRU_LIST *lru, u32 lruSize, i32 *lruMax, u64 index, u32 set)
 	 */
 	if (insert == true)
 	{
-		if (*lruMax < lruSize)
+		if (*lruMax < (i32) lruSize)
 		{
 			*lruMax = *lruMax + 1;
 			lru[*lruMax].index = index;
@@ -156,7 +156,7 @@ bool AXP_LRUAdd(AXP_LRU_LIST *lru, u32 lruSize, i32 *lruMax, u64 index, u32 set)
  */
 bool AXP_LRURemove(AXP_LRU_LIST *lru, i32 *lruMax, u64 index, u32 set)
 {
-	u32 ii, jj;
+	i32 ii, jj;
 	bool retVal = false;
 
 	for(ii = 0; ii <= *lruMax; ii++)
@@ -248,7 +248,7 @@ bool AXP_LRUReturn(AXP_LRU_LIST *lru, i32 lruMax, u64 *index, u32 *set)
  */
 bool AXP_LRUReturnIdx(AXP_LRU_LIST *lru, i32 lruMax, u64 index, u32 *set)
 {
-	u32 ii;
+	i32 ii;
 	bool retVal = false;
 
 	for(ii = 0; ((ii <= lruMax) && (retVal == false)); ii++)

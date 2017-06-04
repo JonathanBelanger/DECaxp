@@ -415,8 +415,9 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 {
 	AXP_CACHE_FETCH retVal = WayMiss;
 	AXP_ICACHE_TAG_IDX addr;
+	u64 tag;
 	u32 ii, jj;
-	u32 index, tag, setStart, setEnd;
+	u32 index, setStart, setEnd;
 	u32 offset;
 
 	/*
@@ -426,7 +427,7 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 	addr.pc = pc;
 	index = addr.insAddr.index;
 	tag = addr.insAddr.tag;
-	offset = addr.insAddr.offset / AXP_INSTRUCTION_SIZE;
+	offset = addr.insAddr.offset % AXP_ICACHE_LINE_INS;
 	switch(cpu->iCtl.ic_en)
 	{
 
@@ -460,7 +461,7 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 	 * Now, search through the Icache for the information we have been asked to
 	 * return.
 	 */
-	for (ii = setStart; ii < setEnd; ii++)
+	for (ii = setStart; ((ii < setEnd) && (retVal != Hit)); ii++)
 	{
 		if ((cpu->iCache[index][ii].tag == tag) &&
 			(cpu->iCache[index][ii].vb == 1))
@@ -502,7 +503,7 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 	if (retVal == WayMiss)
 	{
 		u64 tagITB;
-		u32 pages;
+		u64 pages;
 		AXP_IBOX_ITB_TAG *itbTag = (AXP_IBOX_ITB_TAG *) &pc;
 
 		tag = itbTag->tag;
@@ -520,8 +521,8 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 			 * ITB.tag is the base address and ITB.tag + ITB.mapped is the
 			 * address after the last byte mapped.
 			 */
-			if ((tagITB >= tag) &&
-				((tagITB + pages) < tag) &&
+			if ((tagITB <= tag) &&
+				((tagITB + pages) > tag) &&
 				(cpu->itb[ii].vb == 1))
 			{
 
@@ -728,7 +729,7 @@ void AXP_ITBAdd(AXP_21264_CPU *cpu,
 				AXP_IBOX_ITB_TAG itbTag,
 				AXP_IBOX_ITB_PTE *itbPTE)
 {
-	int ii, jj;
+	unsigned int ii, jj;
 	u32 setStart, setEnd;
 
 	/*

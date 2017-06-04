@@ -109,7 +109,7 @@ int main()
 				printf("Predictor always returns false (fall-through)\n");
 				break;
 		}
-		for (ii = 0; ii < (sizeof(fileList)/sizeof(char *)); ii++)
+		for (ii = 0; ii < (int) (sizeof(fileList)/sizeof(char *)); ii++)
 		{
 			fp = fopen(fileList[ii], "r");
 			if (fp != NULL)

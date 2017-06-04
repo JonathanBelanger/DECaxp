@@ -55,7 +55,7 @@ $(OBJS): | $(OBJDIR)
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
-$(EXEDIR)%$(EXE) : $(TSTDIR)%.c
+$(EXEDIR)%$(EXE) : $(TSTDIR)%.c $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@ $<
 
 $(OBJDIR)%.o : $(SRCDIR)*/%.c
