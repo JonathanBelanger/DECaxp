@@ -416,9 +416,8 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 	AXP_CACHE_FETCH retVal = WayMiss;
 	AXP_ICACHE_TAG_IDX addr;
 	u64 tag;
-	u32 ii, jj;
-	u32 index, setStart, setEnd;
-	u32 offset;
+	u32 ii;
+	u32 index, set, offset;
 
 	/*
 	 * First, get the information from the supplied parameters we need to
@@ -426,6 +425,7 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 	 */
 	addr.pc = pc;
 	index = addr.insAddr.index;
+	set = addr.insAddr.set;
 	tag = addr.insAddr.tag;
 	offset = addr.insAddr.offset % AXP_ICACHE_LINE_INS;
 	switch(cpu->iCtl.ic_en)
@@ -435,25 +435,20 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 		 * Just set 0
 		 */
 		case 1:
-			setStart = 0;
-			setEnd = 1;
+			set = 0;
 			break;
 
 		/*
 		 * Just set 1
 		 */
 		case 2:
-			setStart = 1;
-			setEnd = AXP_2_WAY_ICACHE;
+			set = 1;
 			break;
 
 		/*
 		 * Both set 1 and 2
 		 */
-		case 0:		/* This is an invalid value, but... */
-		case 3:
-			setStart = 0;
-			setEnd = AXP_2_WAY_ICACHE;
+		default:
 			break;
 	}
 
@@ -461,25 +456,22 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 	 * Now, search through the Icache for the information we have been asked to
 	 * return.
 	 */
-	for (ii = setStart; ((ii < setEnd) && (retVal != Hit)); ii++)
+	if ((cpu->iCache[index][set].tag == tag) &&
+		(cpu->iCache[index][set].vb == 1))
 	{
-		if ((cpu->iCache[index][ii].tag == tag) &&
-			(cpu->iCache[index][ii].vb == 1))
-		{
 
-			/*
-			 * Extract out the next 4 instructions and return these to the
-			 * caller.  While we are here will do some predecoding of the
-			 * instructions.
-			 */
-			for (jj = 0; jj < AXP_IBOX_INS_FETCHED; jj++)
-			{
-				next->instructions[jj] =
-					cpu->iCache[index][ii].instructions[offset + jj];
-				next->instrType[jj] = AXP_InstructionType(next->instructions[jj]);
-			}
-			retVal = Hit;
+		/*
+		 * Extract out the next 4 instructions and return these to the
+		 * caller.  While we are here will do some predecoding of the
+		 * instructions.
+		 */
+		for (ii = 0; ii < AXP_IBOX_INS_FETCHED; ii++)
+		{
+			next->instructions[ii] =
+				cpu->iCache[index][set].instructions[offset + ii];
+			next->instrType[ii] = AXP_InstructionType(next->instructions[ii]);
 		}
+		retVal = Hit;
 	}
 
 	/*
