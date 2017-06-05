@@ -52,7 +52,6 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 					cpu = (AXP_21264_CPU *) retBlock;
 					cpu->header.type = blockType;
 					cpu->header.size = sizeof(AXP_21264_CPU);
-					cpu->iCacheLRUIdx = -1;
 				}
 			}
 			break;

@@ -50,13 +50,17 @@ typedef long long			i64;
 
 typedef struct
 {
-	u64 index;
-	u32 set;
-} AXP_LRU_LIST;
+	void *flink;
+	void *blink;
+} AXP_QUEUE_HDR;
 
-bool AXP_LRUAdd(AXP_LRU_LIST *lru, u32 lruSize, i32 *lruMax, u64 index, u32 set);
-bool AXP_LRURemove(AXP_LRU_LIST *lru, i32 *lruMax, u64 index, u32 set);
-bool AXP_LRUReturn(AXP_LRU_LIST *lru, i32 lruMax, u64 *index, u32 *set);
-bool AXP_LRUReturnIdx(AXP_LRU_LIST *lru, i32 lruMax, u64 index, u32 *set);
+#define AXP_INIT_QUE(queue)		queue.flink = queue.blink = (void *) &queue.flink
+#define AXP_INIT_QUEP(queue)	queue->flink = queue->blink = (void *) &queue->flink
+#define AXP_QUEUE_EMPTY(queue)	(queue.flink == (void *) &queue.flink)
+#define AXP_QUEUEP_EMPTY(queue)	(queue->flink == (void *) &queue->flink)
+
+void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry);
+void AXP_LRURemove(AXP_QUEUE_HDR *entry);
+AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ);
 
 #endif /* _AXP_UTIL_DEFS_ */

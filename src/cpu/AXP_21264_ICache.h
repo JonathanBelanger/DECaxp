@@ -53,8 +53,9 @@ typedef struct
 {
 	u64				res_1 : 2;
 	u64				offset : 4;
-	u64				index : 9;
-	u64				tag : 35;
+	u64				set : 1;
+	u64				index : 8;
+	u64				tag : 33;
 	u64				res_2 : 16;
 } AXP_ICACHE_VPC;
 

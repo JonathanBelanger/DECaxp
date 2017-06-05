@@ -478,20 +478,6 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 					cpu->iCache[index][ii].instructions[offset + jj];
 				next->instrType[jj] = AXP_InstructionType(next->instructions[jj]);
 			}
-
-			/*
-			 * The return value of the next call is not needed.  Since the
-			 * instructions were already in the Icache, the entry for the
-			 * Least Recently Used (LRU) index/set is already there.  The
-			 * only reason a false would be returned was if an attempt was
-			 * made to actually add an item that was not there and there was
-			 * no room.  Therefore, we can ignore the return value.
-			 */
-			(void) AXP_LRUAdd(cpu->iCacheLRU,
-							  AXP_21264_ICACHE_SIZE,
-							  &cpu->iCacheLRUIdx,
-							  index,
-							  ii);
 			retVal = Hit;
 		}
 	}
@@ -578,15 +564,15 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 				   AXP_MEMORY_PROTECTION prot)
 {
 	AXP_ICACHE_TAG_IDX addr;
-	u32 ii, jj;
-	u32 index, tag, setStart, setEnd;
-	bool inserted = false;
+	u32 ii;
+	u32 index, set, tag;
 
 	/*
 	 * First, get the information from the supplied parameters we need to
 	 * search the Icache correctly.
 	 */
 	addr.pc = pc;
+	set = addr.insAddr.set;
 	index = addr.insAddr.index;
 	tag = addr.insAddr.tag;
 	switch(cpu->iCtl.ic_en)
@@ -596,130 +582,55 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 		 * Just set 0
 		 */
 		case 1:
-			setStart = 0;
-			setEnd = 1;
+			set = 0;
 			break;
 
 		/*
 		 * Just set 1
 		 */
 		case 2:
-			setStart = 1;
-			setEnd = AXP_2_WAY_ICACHE;
+			set = 1;
 			break;
 
 		/*
-		 * Both set 1 and 2
+		 * Anything else, we are using both sets.
 		 */
-		case 0:		/* This is an invalid value, but... */
-		case 3:
-			setStart = 0;
-			setEnd = AXP_2_WAY_ICACHE;
+		default:
 			break;
 	}
 
 	/*
-	 * There are only 2 ways out of this function, successfully added the
-	 * Icache line/block or aborted the program.  Loop until we have
-	 * successfully added the line/block (aborting will end the entire
-	 * program).
+	 * If there is something in the cache, we need to evict it first.
+	 * TODO: When evicting, do we also need to drop the ITB as well?
 	 */
-	while (inserted == false)
+	if (cpu->iCache[index][set].vb == 1)
 	{
-
-		/*
-		 * Now, search through the Icache for the information we have been
-		 * asked to locate (a free Icache location to receive another
-		 * line/block.
-		 */
-		for (ii = setStart; ((ii < setEnd) && (inserted == false)); ii++)
-		{
-
-			/*
-		 	 * See if we found a place to hold this line/block.
-		 	 */
-			if (cpu->iCache[index][ii].vb == 0)
-			{
-				inserted =  AXP_LRUAdd(cpu->iCacheLRU,
-								   	   AXP_21264_ICACHE_SIZE,
-							  	   	   &cpu->iCacheLRUIdx,
-							  	   	   index,
-							  	   	   ii);
-
-				/*
-			 	 * If we were able to find an Icache location to place then
-			 	 * line/block, then we should have been able to add an LRU
-			 	 * record.  If not, then print an error message and abort the
-			 	 * program.
-			 	 */
-				if (inserted == false)
-				{
-					printf("%%DECEMU-F-BUGCHK, Bugcheck in the Icache LRU addition.\n");
-					abort();
-				}
-				cpu->iCache[index][ii].kre = prot.kre;
-				cpu->iCache[index][ii].ere = prot.ere;
-				cpu->iCache[index][ii].sre = prot.sre;
-				cpu->iCache[index][ii].ure = prot.ure;
-				cpu->iCache[index][ii]._asm = 0;	// TODO
-				cpu->iCache[index][ii].asn = 0;		// TODO
-					cpu->iCache[index][ii].pal = pc.pal;
-				cpu->iCache[index][ii].vb = 1;
-				cpu->iCache[index][ii].tag = tag;
-				for (jj = 0; jj < AXP_ICACHE_LINE_INS; jj++)
-					cpu->iCache[index][ii].instructions[jj] = nextInst[jj];
-			}
-		}
-
-		/*
-	 	 * If we did not insert a record into the Icache, then the Icache is
-	 	 * full and someone needs to be evicted before we can reinsert.  Since
-	 	 * all the sets at the current index are valid, we need to determine
-	 	 * which one is the LRU item, remove it and try adding again.
-	 	 */
-		if (inserted == false)
-		{
-			u32 set;
-			bool removed;
-
-			removed = AXP_LRUReturnIdx(cpu->iCacheLRU,
-								   	   cpu->iCacheLRUIdx,
-								   	   index,
-								   	   &set);
-			if (removed == false)
-			{
-				printf("%%DECEMU-F-BUGCHK, Bugcheck in the Icache LRU retrieval.\n");
-				abort();
-			}
-			removed = AXP_LRURemove(cpu->iCacheLRU,
-									&cpu->iCacheLRUIdx,
-									index,
-									set);
-
-			/*
-		 	 * We successfully removed a record from the LRU list, we now need
-		 	 * to invalidate (evict) the associated Icache record. Otherwise,
-		 	 * we have a should never happen condition.  Display a message and
-		 	 * a abort the program.
-		 	 */
-			if (removed == true)
-				cpu->iCache[index][set].vb = 0;
-			else
-			{
-				printf("%%DECEMU-F-BUGCHK, Bugcheck in the Icache LRU removal.\n");
-				abort();
-			}
-		}
+		cpu->iCache[index][set].vb = 0;
 	}
 
 	/*
-	 * Return what we did or did not find back to the caller.
+	 * See if we found a place to hold this line/block.
+	 */
+	cpu->iCache[index][set].kre = prot.kre;
+	cpu->iCache[index][set].ere = prot.ere;
+	cpu->iCache[index][set].sre = prot.sre;
+	cpu->iCache[index][set].ure = prot.ure;
+	cpu->iCache[index][set]._asm = 0;		// TODO
+	cpu->iCache[index][set].asn = 0;		// TODO
+	cpu->iCache[index][set].pal = pc.pal;
+	cpu->iCache[index][set].vb = 1;
+	cpu->iCache[index][set].tag = tag;
+	for (ii = 0; ii < AXP_ICACHE_LINE_INS; ii++)
+		cpu->iCache[index][set].instructions[ii] = nextInst[ii];
+
+	/*
+	 * Return back to the caller.
 	 */
 	return;
 }
 
 /*
- * AXP_LRUAdd
+ * AXP_ITBAdd
  * 	This  function should only be called as the result of an ITB Miss.  As such
  * 	we just have to find the next location to enter the next item.  If we are
  * 	using a currently used field, we'll need to evict all the associated Icache
@@ -777,15 +688,6 @@ void AXP_ITBAdd(AXP_21264_CPU *cpu,
 				if ((cpu->iCache[ii][jj].vb == 1) &&
 					(cpu->iCache[ii][jj].tag == itbTag.tag))
 				{
-
-					/*
-					 * We need to invalidate this Icache entry, but don't
-					 * forget to remove the LRU for this cache entry.
-					 */
-					(void) AXP_LRURemove(cpu->iCacheLRU,
-										 &cpu->iCacheLRUIdx,
-										 ii,
-										 jj);
 
 					/*
 					 * Now invalidate the iCache entry;

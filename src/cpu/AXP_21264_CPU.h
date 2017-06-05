@@ -142,8 +142,6 @@ typedef struct
 	 * 256 for each association (this is a 2-way cache).
 	 */
 	AXP_ICACHE_LINE 	iCache[AXP_21264_ICACHE_SIZE][AXP_2_WAY_ICACHE];
-	AXP_LRU_LIST		iCacheLRU[AXP_21264_ICACHE_SIZE];
-	i32					iCacheLRUIdx;
 
 	/*
 	 * This is the Instruction Address Translation (Look-aside) Table (ITB).
