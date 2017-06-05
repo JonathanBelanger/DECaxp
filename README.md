@@ -16,4 +16,4 @@ OK, does anyone know what AXP stands for.  The real answer is "Nothing", it was 
 5) Another eXpensive Processor
 6) Absolutely eXtraordinary Performance
 
-If you can thing of any others, please let me know.
+If you can think of any others, please let me know.
