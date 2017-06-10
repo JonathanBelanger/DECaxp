@@ -23,6 +23,9 @@
 #	V01.000		03-Jun-2017	Jonathan D. Belanger
 #	Initially written.
 #
+#	V01.001		10-Jun-2017	Jonathan D. Belanger
+#	Updates for makedepend considerations.
+#
 PROJDIR = /cygdrive/g/git/DECemu/
 
 SRCDIR = $(PROJDIR)src/
@@ -67,7 +70,9 @@ clean:
 	rm -f $(OBJDIR)* $(EXEDIR)*
 
 depend:
-	makedepend -- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PROGS)# DO NOT DELETE
+	makedepend -- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PROGS)
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
 
 /cygdrive/g/git/DECemu/src/comutl/AXP_Utility.o: /cygdrive/g/git/DECemu/src/comutl/AXP_Utility.h
 /cygdrive/g/git/DECemu/src/comutl/AXP_Utility.o: /usr/include/stdio.h
@@ -330,3 +335,50 @@ depend:
 /cygdrive/g/git/DECemu/tst/AXP_21264_Prediction_Test.o: /cygdrive/g/git/DECemu/src/cpu/AXP_21264_Instructions.h
 /cygdrive/g/git/DECemu/tst/AXP_21264_Prediction_Test.o: /cygdrive/g/git/DECemu/src/cpu/AXP_21264_ICache.h
 /cygdrive/g/git/DECemu/tst/AXP_21264_Prediction_Test.o: /cygdrive/g/git/DECemu/src/cpu/AXP_21264_Ibox.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /cygdrive/g/git/DECemu/src/comutl/AXP_Configure.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /cygdrive/g/git/DECemu/src/comutl/AXP_Utility.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/stdio.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/_ansi.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/newlib.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/_newlib_version.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/config.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/machine/ieeefp.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/features.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/cdefs.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/machine/_default_types.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/reent.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/_types.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/machine/_types.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/lock.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/types.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/_stdint.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/machine/endian.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/machine/_endian.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/bits/endian.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/select.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/_sigset.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/_timeval.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/timespec.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/_timespec.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/_pthreadtypes.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/machine/types.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/endian.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/bits/byteswap.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/bits/wordsize.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/sysmacros.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/stdio.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/string.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/xlocale.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/sys/string.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/stdlib.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/machine/stdlib.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /usr/include/alloca.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /cygdrive/g/git/DECemu/src/comutl/AXP_Blocks.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /cygdrive/g/git/DECemu/src/cpu/AXP_21264_Instructions.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /cygdrive/g/git/DECemu/src/cpu/AXP_Base_CPU.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /cygdrive/g/git/DECemu/src/cpu/AXP_21264_IPRs.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /cygdrive/g/git/DECemu/src/cpu/AXP_21264_Predictions.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /cygdrive/g/git/DECemu/src/cpu/AXP_21264_ICache.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /cygdrive/g/git/DECemu/src/cpu/AXP_21264_Ibox.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /cygdrive/g/git/DECemu/src/cpu/AXP_21264_CPU.h
+/cygdrive/g/git/DECemu/tst/AXP_Test_Structure_Sizes.o: /cygdrive/g/git/DECemu/src/cpu/AXP_21264_Cbox.h

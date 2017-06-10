@@ -58,6 +58,8 @@
 /*
  * TODO: 	We probably want to decode to determine things like, opcode type,
  *			functional unit (U0, L0, U1, L1, F0, F1), etc.
+ * TODO:	There's a duplicate of this definition in AXP_21264_ICache.h.  Use
+ * 			just one of them.
  */
 typedef struct
 {
