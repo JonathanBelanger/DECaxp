@@ -53,78 +53,84 @@
 #include "AXP_21264_ICache.h"
 #include "AXP_21264_Ibox.h"
 
-/*
- * The following module specific variable contains a list of instruction types
- * that are used to decode the Alpha AXP instructions.  The opcode is the index
- * into this array.
- */
-static AXP_INS_TYPE instructionType[] =
+struct instructDecode
 {
-/* Format	   Opcode	Mnemonic	Description 							*/
-	Pcd,	/* 00		CALL_PAL	Trap to PALcode							*/
-	Res,	/* 01					Reserved for Digital					*/
-	Res,	/* 02					Reserved for Digital					*/
-	Res,	/* 03					Reserved for Digital					*/
-	Res,	/* 04					Reserved for Digital					*/
-	Res,	/* 05					Reserved for Digital					*/
-	Res,	/* 06					Reserved for Digital					*/
-	Res,	/* 07					Reserved for Digital					*/
-	Mem,	/* 08		LDA			Load address							*/
-	Mem,	/* 09		LDAH		Load address high						*/
-	Mem,	/* 0A		LDBU		Load zero-extended byte					*/
-	Mem,	/* 0B		LDQ_U		Load unaligned quadword					*/
-	Mem,	/* 0C		LDWU		Load zero-extended word					*/
-	Mem,	/* 0D		STW			Store word								*/
-	Mem,	/* 0E		STB			Store byte								*/
-	Mem,	/* 0F		STQ_U		Store unaligned quadword				*/
-	Opr,	/* 10		ADDL		Add longword							*/
-	Opr,	/* 11		AND			Logical product							*/
-	Opr,	/* 12		MSKBL		Mask byte low							*/
-	Opr,	/* 13		MULL		Multiply longword						*/
-	FP,		/* 14		ITOFS		Integer to floating move, S_floating	*/
-	FP,		/* 15		ADDF		Add F_floating							*/
-	FP,		/* 16		ADDS		Add S_floating							*/
-	FP,		/* 17		CVTLQ		Convert longword to quadword			*/
-	Mfc,	/* 18		TRAPB		Trap barrier							*/
-	PAL,	/* 19		HW_MFPR		Reserved for PALcode					*/
-	Mbr,	/* 1A		JMP			Jump									*/
-	PAL,	/* 1B		HW_LD		Reserved for PALcode					*/
-	Cond,	/* 1C		SEXTB		Sign extend byte						*/
-	PAL,	/* 1D		HW_MTPR		Reserved for PALcode					*/
-	PAL,	/* 1E		HW_REI		Reserved for PALcode					*/
-	PAL,	/* 1F		HW_ST		Reserved for PALcode					*/
-	Mem,	/* 20 		LDF			Load F_floating							*/
-	Mem,	/* 21		LDG			Load G_floating							*/
-	Mem,	/* 22		LDS			Load S_floating							*/
-	Mem,	/* 23		LDT			Load T_floating							*/
-	Mem,	/* 24		STF			Store F_floating						*/
-	Mem,	/* 25		STG			Store G_floating						*/
-	Mem,	/* 26		STS			Store S_floating						*/
-	Mem,	/* 27		STT			Store T_floating						*/
-	Mem,	/* 28		LDL			Load sign-extended longword				*/
-	Mem,	/* 29		LDQ			Load quadword							*/
-	Mem,	/* 2A		LDL_L		Load sign-extended longword locked		*/
-	Mem,	/* 2B		LDQ_L		Load quadword locked					*/
-	Mem,	/* 2C		STL			Store longword							*/
-	Mem,	/* 2D		STQ			Store quadword							*/
-	Mem,	/* 2E		STL_C		Store longword conditional				*/
-	Mem,	/* 2F		STQ_C		Store quadword conditional				*/
-	Bra,	/* 30		BR			Unconditional branch					*/
-	Bra,	/* 31		FBEQ		Floating branch if = zero				*/
-	Bra,	/* 32		FBLT		Floating branch if < zero				*/
-	Bra,	/* 33		FBLE		Floating branch if <= zero				*/
-	Mbr,	/* 34		BSR			Branch to subroutine					*/
-	Bra,	/* 35		FBNE		Floating branch if != zero				*/
-	Bra,	/* 36		FBGE		Floating branch if >=zero				*/
-	Bra,	/* 37		FBGT		Floating branch if > zero				*/
-	Bra,	/* 38		BLBC		Branch if low bit clear					*/
-	Bra,	/* 39		BEQ			Branch if = zero						*/
-	Bra,	/* 3A		BLT			Branch if < zero						*/
-	Bra,	/* 3B		BLE			Branch if <= zero						*/
-	Bra,	/* 3C		BLBS		Branch if low bit set					*/
-	Bra,	/* 3D		BNE			Branch if != zero						*/
-	Bra,	/* 3E		BGE			Branch if >= zero						*/
-	Bra		/* 3F		BGT			Branch if > zero						*/
+	AXP_INS_TYPE	format;
+	AXP_OPER_TYPE	type;
+};
+
+/*
+ * The following module specific variable contains a list of instruction and
+ * operation types that are used to decode the Alpha AXP instructions.  The
+ * opcode is the index into this array.
+ */
+static struct instructDecode insDecode[] =
+{
+/* Format	Type	   Opcode	Mnemonic	Description 						*/
+	{Pcd,	Other},	/* 00		CALL_PAL	Trap to PALcode						*/
+	{Res,	Other},	/* 01					Reserved for Digital				*/
+	{Res,	Other},	/* 02					Reserved for Digital				*/
+	{Res,	Other},	/* 03					Reserved for Digital				*/
+	{Res,	Other},	/* 04					Reserved for Digital				*/
+	{Res,	Other},	/* 05					Reserved for Digital				*/
+	{Res,	Other},	/* 06					Reserved for Digital				*/
+	{Res,	Other},	/* 07					Reserved for Digital				*/
+	{Mem,	Load},	/* 08		LDA			Load address						*/
+	{Mem,	Load},	/* 09		LDAH		Load address high					*/
+	{Mem,	Load},	/* 0A		LDBU		Load zero-extended byte				*/
+	{Mem,	Load},	/* 0B		LDQ_U		Load unaligned quadword				*/
+	{Mem,	Load},	/* 0C		LDWU		Load zero-extended word				*/
+	{Mem,	Store},	/* 0D		STW			Store word							*/
+	{Mem,	Store},	/* 0E		STB			Store byte							*/
+	{Mem,	Store},	/* 0F		STQ_U		Store unaligned quadword			*/
+	{Opr,	Other},	/* 10		ADDL		Add longword						*/
+	{Opr,	Other},	/* 11		AND			Logical product						*/
+	{Opr,	Other},	/* 12		MSKBL		Mask byte low						*/
+	{Opr,	Other},	/* 13		MULL		Multiply longword					*/
+	{FP,	Other},	/* 14		ITOFS		Integer to floating move, S_floating*/
+	{FP,	Other},	/* 15		ADDF		Add F_floating						*/
+	{FP,	Other},	/* 16		ADDS		Add S_floating						*/
+	{FP,	Other},	/* 17		CVTLQ		Convert longword to quadword		*/
+	{Mfc,	Other},	/* 18		TRAPB		Trap barrier						*/
+	{PAL,	Load},	/* 19		HW_MFPR		Reserved for PALcode				*/
+	{Mbr,	Other},	/* 1A		JMP			Jump								*/
+	{PAL,	Load},	/* 1B		HW_LD		Reserved for PALcode				*/
+	{Cond,	Other},	/* 1C		SEXTB		Sign extend byte					*/
+	{PAL,	Store},	/* 1D		HW_MTPR		Reserved for PALcode				*/
+	{PAL,	Other},	/* 1E		HW_REI		Reserved for PALcode				*/
+	{PAL,	Store},	/* 1F		HW_ST		Reserved for PALcode				*/
+	{Mem,	Load},	/* 20 		LDF			Load F_floating						*/
+	{Mem,	Load},	/* 21		LDG			Load G_floating						*/
+	{Mem,	Load},	/* 22		LDS			Load S_floating						*/
+	{Mem,	Load},	/* 23		LDT			Load T_floating						*/
+	{Mem,	Store},	/* 24		STF			Store F_floating					*/
+	{Mem,	Store},	/* 25		STG			Store G_floating					*/
+	{Mem,	Store},	/* 26		STS			Store S_floating					*/
+	{Mem,	Store},	/* 27		STT			Store T_floating					*/
+	{Mem,	Load},	/* 28		LDL			Load sign-extended longword			*/
+	{Mem,	Load},	/* 29		LDQ			Load quadword						*/
+	{Mem,	Load},	/* 2A		LDL_L		Load sign-extended longword locked	*/
+	{Mem,	Load},	/* 2B		LDQ_L		Load quadword locked				*/
+	{Mem,	Store},	/* 2C		STL			Store longword						*/
+	{Mem,	Store},	/* 2D		STQ			Store quadword						*/
+	{Mem,	Store},	/* 2E		STL_C		Store longword conditional			*/
+	{Mem,	Store},	/* 2F		STQ_C		Store quadword conditional			*/
+	{Bra,	Other},	/* 30		BR			Unconditional branch				*/
+	{FPBra,	Other},	/* 31		FBEQ		Floating branch if = zero			*/
+	{FPBra,	Other},	/* 32		FBLT		Floating branch if < zero			*/
+	{FPBra,	Other},	/* 33		FBLE		Floating branch if <= zero			*/
+	{Mbr,	Other},	/* 34		BSR			Branch to subroutine				*/
+	{FPBra,	Other},	/* 35		FBNE		Floating branch if != zero			*/
+	{FPBra,	Other},	/* 36		FBGE		Floating branch if >=zero			*/
+	{FPBra,	Other},	/* 37		FBGT		Floating branch if > zero			*/
+	{Bra,	Other},	/* 38		BLBC		Branch if low bit clear				*/
+	{Bra,	Other},	/* 39		BEQ			Branch if = zero					*/
+	{Bra,	Other},	/* 3A		BLT			Branch if < zero					*/
+	{Bra,	Other},	/* 3B		BLE			Branch if <= zero					*/
+	{Bra,	Other},	/* 3C		BLBS		Branch if low bit set				*/
+	{Bra,	Other},	/* 3D		BNE			Branch if != zero					*/
+	{Bra,	Other},	/* 3E		BGE			Branch if >= zero					*/
+	{Bra,	Other}	/* 3F		BGT			Branch if > zero					*/
 };
 
 /*
@@ -358,7 +364,7 @@ AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst)
 		 * Look up the instruction type from the instruction array, which is
 		 * indexed by opcode.
 		 */
-		retVal = instructionType[inst.pal.opcode];
+		retVal = insDecode[inst.pal.opcode].format;
 	
 		/*
 		 * If the returned value from the above look up is 'Cond', then we are
@@ -411,7 +417,7 @@ AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst)
  */
 AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 								AXP_PC pc,
-								AXP_IBOX_INS_LINE *next)
+								AXP_INS_LINE *next)
 {
 	AXP_CACHE_FETCH retVal = WayMiss;
 	AXP_ICACHE_TAG_IDX addr;
@@ -459,17 +465,20 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 	if ((cpu->iCache[index][set].tag == tag) &&
 		(cpu->iCache[index][set].vb == 1))
 	{
+		AXP_PC tmpPC = pc;
 
 		/*
 		 * Extract out the next 4 instructions and return these to the
 		 * caller.  While we are here will do some predecoding of the
 		 * instructions.
 		 */
-		for (ii = 0; ii < AXP_IBOX_INS_FETCHED; ii++)
+		for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
 		{
 			next->instructions[ii] =
 				cpu->iCache[index][set].instructions[offset + ii];
 			next->instrType[ii] = AXP_InstructionType(next->instructions[ii]);
+			next->instrPC[ii] = tmpPC;
+			tmpPC.pc++;
 		}
 		retVal = Hit;
 	}
@@ -487,12 +496,28 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 		tag = itbTag->tag;
 
 		/*
-		 * Search through the ITB for the address we are looking to get,
+		 * Search through the ITB for the address we are looking to see if
+		 * there is an ITB entry that maps the current PC.  If so, then we
+		 * have a Miss.  Otherwise, it is a WayMiss (this will cause the CPU
+		 * to have to add a new ITB entry (with matching PTE entry) so that
+		 * the physical memory location can be mapped to the virtual and the
+		 * instructions loaded into the instruction cache for execution.
+		 *
+		 * NOTE:	The gh field is a 2 bit field that represents the
+		 * 			following:
+		 *
+		 * 						System Page Size (SPS)
+		 * 			gh		8KB		16KB	32KB	64KB	From SPS
+		 * 			-------------------------------------	-----------------------
+		 * 			00 (0)	  8KB	 16KB	 32KB	 64KB	  1x [8^0 = 1 << (0*3)]
+		 * 			01 (1)	 64KB	128KB	256KB	  2MB	  8x [8^1 = 1 << (1*3)]
+		 * 			10 (2)	512KB	  1MB	  2MB	 64MB	 64x [8^2 = 1 << (2*3)]
+		 * 			11 (3)	  4MB	  8MB	 16MB	512MB	512x [8^3 = 1 << (3*3)]
 		 */
 		for (ii = cpu->itbStart; ii < cpu->itbEnd; ii++)
 		{
 			tagITB = cpu->itb[ii].tag.tag;
-			pages = cpu->itb[ii].mapped;
+			pages = AXP_21264_PAGE_SIZE * (1 << (cpu->itb[ii].pfn.gh * 3));
 
 			/*
 			 * The ITB can map 1, 8, 64 or 512 contiguous 8KB pages, so the
@@ -540,9 +565,9 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
  *	nextInst:
  *		A pointer to an array off the next set  of instructions to insert into
  *		the Icache.
- *	prot:
- *		A value containing the memory protections associated with the memory
- *		location from where these instructions were copied.
+ *	itb:
+ *		A pointer to the ITB entry associated with the instructions to be added
+ *		to the Icache.
  *
  * Output Parameters:
  * 	None.
@@ -553,7 +578,7 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 				   AXP_PC pc,
 				   AXP_INS_FMT *nextInst,
-				   AXP_MEMORY_PROTECTION prot)
+				   AXP_ICACHE_ITB *itb)
 {
 	AXP_ICACHE_TAG_IDX addr;
 	u32 ii;
@@ -592,23 +617,25 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 	}
 
 	/*
-	 * If there is something in the cache, we need to evict it first.
-	 * TODO: When evicting, do we also need to drop the ITB as well?
+	 * If there is something in the cache, we need to evict it first.  There is
+	 * not need to evict the ITB entry.  For one, the ITB entries are allocated
+	 * round-robin.  As a result, entries come and go as needed.  When an ITB
+	 * entry gets overwritten, then this may evict Icache entries.  Finally,
+	 * ITB entries map more than one Icache entry.  Evicting one Icache entry
+	 * should not effect the ITB entry.
 	 */
 	if (cpu->iCache[index][set].vb == 1)
-	{
 		cpu->iCache[index][set].vb = 0;
-	}
 
 	/*
 	 * See if we found a place to hold this line/block.
 	 */
-	cpu->iCache[index][set].kre = prot.kre;
-	cpu->iCache[index][set].ere = prot.ere;
-	cpu->iCache[index][set].sre = prot.sre;
-	cpu->iCache[index][set].ure = prot.ure;
-	cpu->iCache[index][set]._asm = 0;		// TODO
-	cpu->iCache[index][set].asn = 0;		// TODO
+	cpu->iCache[index][set].kre = itb->pfn.kre;
+	cpu->iCache[index][set].ere = itb->pfn.ere;
+	cpu->iCache[index][set].sre = itb->pfn.sre;
+	cpu->iCache[index][set].ure = itb->pfn.ure;
+	cpu->iCache[index][set]._asm = itb->pfn._asm;
+	cpu->iCache[index][set].asn = 0;				// TODO: Need ASN
 	cpu->iCache[index][set].pal = pc.pal;
 	cpu->iCache[index][set].vb = 1;
 	cpu->iCache[index][set].tag = tag;
@@ -627,6 +654,8 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
  * 	we just have to find the next location to enter the next item.  If we are
  * 	using a currently used field, we'll need to evict all the associated Icache
  * 	items with the same tag.
+ *
+ * TODO: Do we want to put the instructions in the cache as well?
  */
 void AXP_ITBAdd(AXP_21264_CPU *cpu,
 				AXP_IBOX_ITB_TAG itbTag,
@@ -693,7 +722,6 @@ void AXP_ITBAdd(AXP_21264_CPU *cpu,
 	 * We are now able to add the ITB entry.
 	 */
 	cpu->itb[cpu->itbEnd].vb = 1;
-	cpu->itb[cpu->itbEnd].mapped = 1;	// TODO: How do we handle more than 1 page?
 	memcpy(&cpu->itb[cpu->itbEnd].tag, &itbTag, sizeof(AXP_IBOX_ITB_TAG));
 	memcpy(&cpu->itb[cpu->itbEnd].pfn, itbPTE, sizeof(AXP_IBOX_ITB_PTE));
 	cpu->itbEnd++;
@@ -722,4 +750,176 @@ void AXP_ITBAdd(AXP_21264_CPU *cpu,
 	 * Return back to the caller.
 	 */
 	return;
+}
+
+/*
+ * AXP_Decode_Rename
+ * 	This function is called to take a set of 4 instructions and decode them
+ * 	and then rename the architectural registers to physical ones.  The results
+ * 	are put onto either the Integer Queue or Floating-point Queue (FQ) for
+ * 	execution.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to
+ *		emulate an Alpha AXP 21264 CPU.
+ *	next:
+ *		A pointer to a location to receive the next 4 instructions to be
+ *		processed.
+ *
+ * Output Parameters:
+ *	cpu.[i|f]q[[i|f]qEnd]:	-- implicit
+ *		Each of the 4 instructions get queued to the end of the appropriate
+ *		instruction queue (IQ or FQ).
+ *
+ * Return value:
+ * 	true:
+ * 		Instructions successfully queued up.
+ * 	false:
+ * 		At least one of the instruction queues is full.  Stall.
+ */
+bool AXP_Decode_Rename(AXP_21264_CPU *cpu, AXP_INS_LINE *next)
+{
+	AXP_INSTRUCTION decodedInstr[AXP_NUM_FETCH_INS];
+	int ii, intCnt, fpCnt;
+	bool retVal = true;
+
+	/*
+	 * Determine if there  is enough space to queue up the next set of
+	 * instructions.
+	 */
+	intCnt = fpCnt = 0;
+	for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
+	{
+		if ((next->instrType[ii] == FP) || (next->instrType[ii] == FPBra))
+			fpCnt++;
+		else
+			intCnt++;
+	}
+	if (intCnt > (AXP_IQ_LEN - abs(cpu->iqEnd - cpu->iqStart)))
+	{
+		printf("DECEMU-W-IQINSUF, insufficient space in Integer Instruction Queue.\n");
+		retVal = false;
+	}
+	else if (fpCnt > (AXP_IQ_LEN - abs(cpu->fqEnd - cpu->fqStart)))
+	{
+		printf("DECEMU-W-FQINSUF, insufficient space in Floating-point Instruction Queue.\n");
+		retVal = false;
+	}
+
+	/*
+	 * Loop through each of the instructions.  Instructions are inserted
+	 * into the queue at the bottom and
+	 */
+	if (retVal == true)
+	{
+		for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
+		{
+
+			/*
+			 * First, decode the instruction.
+			 */
+			decodedInstr[ii].format = next->instrType[ii];
+			decodedInstr[ii].opcode = next->instructions[ii].pal.opcode;
+			decodedInstr[ii].type = insDecode[decodedInstr[ii].opcode].type;
+			switch (decodedInstr[ii].format)
+			{
+				case Pcd:	/* PAL_CODE instruction */
+					decodedInstr[ii].function = next->instructions[ii].pal.palcode_func;
+					decodedInstr[ii].displacement = 0;
+					decodedInstr[ii].aSrc1 = AXP_UNMAPPED_REG;
+					decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
+					decodedInstr[ii].aDest = AXP_UNMAPPED_REG;
+					break;
+
+				case Opr:	/* Operation instruction */
+					decodedInstr[ii].function = next->instructions[ii].oper1.func;
+					decodedInstr[ii].displacement = 0;
+					if (next->instructions[ii].oper1.fmt == 0)
+					{
+						decodedInstr[ii].literal = 0;
+						decodedInstr[ii].useLiteral = false;
+						decodedInstr[ii].aSrc1 = next->instructions[ii].oper1.rb;
+						decodedInstr[ii].aSrc2 = next->instructions[ii].oper1.rc;
+						decodedInstr[ii].aDest = next->instructions[ii].oper1.ra;
+					}
+					else
+					{
+						decodedInstr[ii].literal = next->instructions[ii].oper2.lit;
+						decodedInstr[ii].useLiteral = true;
+						decodedInstr[ii].aSrc1 = next->instructions[ii].oper1.rc;
+						decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
+						decodedInstr[ii].aDest = next->instructions[ii].oper1.ra;
+					}
+					break;
+
+				case Mem:
+					decodedInstr[ii].function = 0;
+					decodedInstr[ii].displacement = next->instructions[ii].mem.mem.disp;
+					if ((decodedInstr[ii].type == Load) ||
+						(decodedInstr[ii].type == Jump))
+					{
+						decodedInstr[ii].aSrc1 = next->instructions[ii].mem.rb;
+						decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
+						decodedInstr[ii].aDest = next->instructions[ii].mem.ra;
+					}
+					else	/* Store operations */
+					{
+						decodedInstr[ii].aSrc1 = next->instructions[ii].mem.ra;
+						decodedInstr[ii].aSrc2 = next->instructions[ii].mem.ra;
+						decodedInstr[ii].aDest = AXP_UNMAPPED_REG;
+					}
+					break;
+
+				case Mfc:	/* Memory with function-code instruction */
+					decodedInstr[ii].function = next->instructions[ii].mem.mem.func;
+					decodedInstr[ii].displacement = 0;
+					decodedInstr[ii].aSrc1 = next->instructions[ii].mem.rb;
+					decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
+					decodedInstr[ii].aDest = next->instructions[ii].mem.ra;
+					break;
+
+				case FP:	/* Floating-point instruction */
+					decodedInstr[ii].function = next->instructions[ii].fp.func;
+					decodedInstr[ii].displacement = 0;
+					decodedInstr[ii].aSrc1 = next->instructions[ii].fp.fb;
+					decodedInstr[ii].aSrc2 = next->instructions[ii].fp.fc;
+					decodedInstr[ii].aDest = next->instructions[ii].fp.fa;
+					break;
+
+				case Bra:
+				case FPBra:
+					decodedInstr[ii].function = 0;
+					decodedInstr[ii].displacement = next->instructions[ii].br.branch_disp;
+					if ((decodedInstr[ii].opcode == BR) ||
+						(decodedInstr[ii].opcode == BSR))
+					{
+						decodedInstr[ii].aSrc1 = AXP_UNMAPPED_REG;
+						decodedInstr[ii].aDest = next->instructions[ii].br.ra;
+					}
+					else
+					{
+						decodedInstr[ii].aSrc1 = next->instructions[ii].br.ra;
+						decodedInstr[ii].aDest = AXP_UNMAPPED_REG;
+					}
+					decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
+					break;
+
+				default:	/* No displacement or function */
+					decodedInstr[ii].displacement = 0;
+					decodedInstr[ii].function = 0;
+					decodedInstr[ii].aSrc1 = AXP_UNMAPPED_REG;
+					decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
+					decodedInstr[ii].aDest = AXP_UNMAPPED_REG;
+					break;
+			}
+			decodedInstr[ii].pc = next->instrPC[ii];
+
+			/*
+			 * Finally, we have to rename the architectural registers to the
+			 * physical registers.
+			 */
+		}
+	}
+	return(retVal);
 }

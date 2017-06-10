@@ -48,7 +48,7 @@ typedef struct
 {
 	union
 	{
-		u16	func :16;				/* Memory function						*/
+		u16	func : 16;				/* Memory function						*/
 		i16 disp : 16;				/* Memory displacement from PC (SEXT)	*/
 	} mem;
 	 u32	rb : 5;					/* Register b (source)					*/
@@ -62,7 +62,7 @@ typedef struct
  */
 typedef struct
 {
-	 i32	branch_disp : 21;		/* Branch displacement *4 from PC (SEXT)*/
+	 i32	branch_disp : 21;		/* Branch displacement*4 from PC (SEXT) */
 	 u32	ra : 5;					/* Register a (destination)				*/
 	 u32	opcode : 6;				/* Operatoin code						*/
 } AXP_BR_INS;
@@ -218,6 +218,7 @@ typedef enum
 {
 	Bra,
 	FP,
+	FPBra,
 	Mem,
 	Mfc,
 	Mbr,
@@ -227,6 +228,17 @@ typedef enum
 	Res,
 	Cond
 } AXP_INS_TYPE;
+
+/*
+ * Operation Tyoe
+ */
+typedef enum
+{
+	Load,
+	Store,
+	Jump,
+	Other
+} AXP_OPER_TYPE;
 
 /*
  * Instruction Opcode definitions

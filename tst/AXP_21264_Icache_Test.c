@@ -239,10 +239,11 @@ int main()
 	int hitCnt, cacheMissCnt, ITBMissCnt, cycleCnt, instrCnt;
 	int jj;
 	u64 ii;
-	AXP_MEMORY_PROTECTION prot;
-	AXP_IBOX_ITB_TAG itb;
+	u64 pages;
+	AXP_IBOX_ITB_TAG itbTag;
 	AXP_IBOX_ITB_PTE pte;
 	AXP_ICACHE_TAG_IDX vpc;
+	AXP_ICACHE_ITB *itb;
 	struct
 	{
 		u64 address;
@@ -271,10 +272,11 @@ int main()
 	{
 		u64 	pc;
 		AXP_PC	vpc;
+		AXP_IBOX_ITB_TAG itbPC;
 	} pc = { .pc = 0x0000000000000004UL };
 	AXP_21264_CPU *cpu;
 	AXP_CACHE_FETCH retStatus;
-	AXP_IBOX_INS_LINE nextLine;
+	AXP_INS_LINE nextLine;
 
 	printf("\nAXP 21264 I-Cache Unit Tester\n\n");
 	cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
@@ -284,10 +286,6 @@ int main()
 	ITBMissCnt = 0;
 	cycleCnt = 0;
 	instrCnt = 0;
-	prot.kre = 1;
-	prot.ere = 1;
-	prot.sre = 1;
-	prot.ure = 1;
 
 	while (!done)
 	{
@@ -308,7 +306,7 @@ int main()
 				hitCnt++;
 				branchTaken = false;
 				for (ii = (pc.vpc.pc % sizeof(AXP_INS_FMT));
-					 ((ii < AXP_IBOX_INS_FETCHED) && !done && !branchTaken);
+					 ((ii < AXP_NUM_FETCH_INS) && !done && !branchTaken);
 					 ii++)
 				{
 
@@ -401,10 +399,36 @@ int main()
 			 */
 			case Miss:
 				cacheMissCnt++;
+
+				/*
+				 * We need to find the ITB entry for the next set of
+				 * instructions.  The ITB entry has various piece of
+				 * information for the iCache entry.
+				 */
+				itb = NULL;
+				for (ii = cpu->itbStart; ((ii < cpu->itbEnd) && (itb == NULL)); ii++)
+				{
+					pages = AXP_21264_PAGE_SIZE * (1 << (cpu->itb[ii].pfn.gh * 3));
+
+					/*
+					 * If the pc is within the ITB entry's page range, then we
+					 * have what we came looking for.
+					 */
+					if ((cpu->itb[ii].tag.tag <= pc.itbPC.tag) &&
+						((cpu->itb[ii].tag.tag + pages) > pc.itbPC.tag) &&
+						(cpu->itb[ii].vb ==1))
+						itb = &cpu->itb[ii];
+				}
+				if (itb == NULL)
+				{
+					printf("%%AXPTST-F-NOITB, Unable to find ITB entry for pc 0x%016llx\n",
+							pc.pc);
+					abort();
+				}
 				AXP_ICacheAdd(cpu,
 							  pc.vpc,
 							  &memory[(pc.vpc.pc&0xfffffffffffffff0UL)],
-							  prot); // TODO: physical --> virtual
+							  itb);
 				break;
 
 			/*
@@ -414,8 +438,8 @@ int main()
 			case WayMiss:
 				ITBMissCnt++;
 				vpc.address = pc.pc;
-				itb.tag = vpc.insAddr.tag;
-				AXP_ITBAdd(cpu, itb, &pte); // TODO: Do we want to put the instructions in the cache as well?
+				itbTag.tag = vpc.insAddr.tag;
+				AXP_ITBAdd(cpu, itbTag, &pte);
 				break;
 		}
 		cycleCnt++;

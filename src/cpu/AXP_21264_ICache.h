@@ -87,18 +87,8 @@ typedef struct
 
 typedef struct
 {
-	u32 					kre : 1;			/* Kernel read/execute */
-	u32 					ere : 1;			/* Executive read/execute */
-	u32 					sre : 1;			/* Supervisor read/execute */
-	u32						ure : 1;			/* User read/execute */
-	u32						res : 28;			/* align to 32 bits */
-} AXP_MEMORY_PROTECTION;
-
-typedef struct
-{
 	u16						vb : 1;				/* Valid Bit */
 	u16						res_1 :15;			/* Align to 16-bit boundary */
-	u16						mapped;				/* Pages mapped (1, 8, 64, 512) */
 	u16						res_2[2];			/* Align to 64-bit boundary */
 	AXP_IBOX_ITB_TAG		tag;				/* ITB tag (VA[47:13]) */
 	AXP_IBOX_ITB_PTE		pfn;				/* Page Frame Number */

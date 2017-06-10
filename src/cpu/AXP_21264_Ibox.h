@@ -32,18 +32,6 @@
 
 #include "AXP_21264_CPU.h"
 
-#define AXP_IBOX_INS_FETCHED	4
-
-typedef struct
-{
-	bool			branch2bTaken;
-	bool			linePrediction;
-	bool			setPrediction;
-	u64				retPredStack;
-	AXP_INS_FMT		instructions[AXP_IBOX_INS_FETCHED];
-	AXP_INS_TYPE	instrType[AXP_IBOX_INS_FETCHED];
-} AXP_IBOX_INS_LINE;
-
 bool AXP_Branch_Prediction(
 				AXP_21264_CPU *cpu,
 				AXP_PC vpc,
@@ -59,11 +47,11 @@ void AXP_Branch_Direction(
 AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst);
 AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 								AXP_PC pc,
-								AXP_IBOX_INS_LINE *next);
+								AXP_INS_LINE *next);
 void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 				   AXP_PC pc,
 				   AXP_INS_FMT *nextInst,
-				   AXP_MEMORY_PROTECTION prot);
+				   AXP_ICACHE_ITB *itb);
 void AXP_ITBAdd(AXP_21264_CPU *cpu,
 				AXP_IBOX_ITB_TAG itbTag,
 				AXP_IBOX_ITB_PTE *itbPTE);

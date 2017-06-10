@@ -77,6 +77,16 @@ int main()
 	int				globalCnt;
 	int				choiceUsed;
 	int				choiceCorrect;
+	int				totalIns;
+	int				totalCorrect;
+	int				totalMispredict;
+	float			totalPredictAccuracy;
+	int				totalLocalCorrect;
+	int				totalGlobalCorrect;
+	int				totalChoiceUsed;
+	int				totalChoiceCorrect;
+	int				totalChoiceWrong;
+	int				numberOfFiles = (int) (sizeof(fileList)/sizeof(char *));
 
 	/*
 	 * NOTE: 	The current simulation takes in one instruction at a time.  The
@@ -89,6 +99,16 @@ int main()
 	cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
 	for (kk = 0; kk < 3; kk++)
 	{
+		totalIns = 0;
+		totalCorrect = 0;
+		totalMispredict = 0;
+		totalPredictAccuracy = 0.0;
+		totalLocalCorrect = 0;
+		totalGlobalCorrect = 0;
+		totalChoiceUsed = 0;
+		totalChoiceCorrect = 0;
+		totalChoiceWrong = 0;
+
 		/*
 		 * bp_mode has the following values:
 		 * 	0b00 = Choice selects between local and global history predictions.
@@ -109,7 +129,7 @@ int main()
 				printf("Predictor always returns false (fall-through)\n");
 				break;
 		}
-		for (ii = 0; ii < (int) (sizeof(fileList)/sizeof(char *)); ii++)
+		for (ii = 0; ii < numberOfFiles; ii++)
 		{
 			fp = fopen(fileList[ii], "r");
 			if (fp != NULL)
@@ -140,32 +160,42 @@ int main()
 					/*
 					 * Let's determine how the choice was determined.
 					 */
-					if (localTaken != globalTaken)
+					if (kk != 2)	// No prediction.  Always returns false (fall-through)
 					{
-						choiceUsed++;
-						if (choice == true)
+						if (kk != 1)	// Local prediction only.
 						{
-							if (taken == globalTaken)
+							if (localTaken != globalTaken)
 							{
-								globalCnt++;
-								choiceCorrect++;
+								choiceUsed++;
+								if (choice == true)
+								{
+									if (taken == globalTaken)
+									{
+										globalCnt++;
+										choiceCorrect++;
+									}
+								}
+								else
+								{
+									if (taken == localTaken)
+									{
+										localCnt++;
+										choiceCorrect++;
+									}
+								}
+							}
+							else
+							{
+								if (taken == localTaken)
+								{
+									localCnt++;
+									globalCnt++;
+								}
 							}
 						}
-						else
-						{
-							if (taken == localTaken)
-							{
-								localCnt++;
-								choiceCorrect++;
-							}
-						}
-					}
-					else
-					{
-						if (taken == localTaken)
+						else if (taken == localTaken)
 						{
 							localCnt++;
-							globalCnt++;
 						}
 					}
 
@@ -188,15 +218,25 @@ int main()
 				 * Print out what we found.
 				 */
 				printf("---------------------------------------------\n");
-				printf("Total Instructions:\t\t\t%d\n", insCnt);
+				printf("Total instructions:\t\t\t%d\n", insCnt);
 				printf("Correct predictions:\t\t\t%d\n", predictedCnt);
 				printf("Mispredictions:\t\t\t\t%d\n", (insCnt - predictedCnt));
 				printf("Prediction accuracy:\t\t\t%1.6f\n\n", ((float) predictedCnt / (float) insCnt));
-				printf("Times Local Correct:\t\t\t%d\n", localCnt);
-				printf("Times Global Correct:\t\t\t%d\n", globalCnt);
-				printf("Times Choice Used:\t\t\t%d\n", choiceUsed);
-				printf("Times Choice Selected Correctly:\t%d\n", choiceCorrect);
-				printf("Times Choice was wrong:\t\t\t%d\n", (choiceUsed - choiceCorrect));
+				printf("Times local correct:\t\t\t%d\n", localCnt);
+				printf("Times global correct:\t\t\t%d\n", globalCnt);
+				printf("Times choice used:\t\t\t%d\n", choiceUsed);
+				printf("Times choice selected correctly:\t%d\n", choiceCorrect);
+				printf("Times choice was wrong:\t\t\t%d\n", (choiceUsed - choiceCorrect));
+
+				totalIns += insCnt;
+				totalCorrect += predictedCnt;
+				totalMispredict += (insCnt - predictedCnt);
+				totalPredictAccuracy += ((float) predictedCnt / (float) insCnt);
+				totalLocalCorrect += localCnt;
+				totalGlobalCorrect += globalCnt;
+				totalChoiceUsed += choiceUsed;
+				totalChoiceCorrect += choiceCorrect;
+				totalChoiceWrong += (choiceUsed - choiceCorrect);
 
 				/*
 				 * We need to clear out the prediction tables in the CPU record.
@@ -216,6 +256,32 @@ int main()
 				printf("Unable to open trace file: %s\n", fileList[ii]);
 			}
 		}
+		printf("\n---------------------------------------------\n");
+
+		/*
+		 * Averages for each predictor mode.
+		 */
+		switch(kk)
+		{
+			case 0x00:
+				printf("Choice Predictor Average:\n");
+				break;
+			case 0x01:
+				printf("Only Local Prediction Average:\n");
+				break;
+			case 0x02:
+				printf("Predictor always returns false (Fall-Through) Average:\n");
+				break;
+		}
+		printf("Average number of instructions:\t\t%d\n", totalIns / numberOfFiles);
+		printf("Average correct predictions:\t\t%d\n", totalCorrect / numberOfFiles);
+		printf("Average mispredictions:\t\t\t%d\n", totalMispredict / numberOfFiles);
+		printf("Average prediction accuracy:\t\t%1.6f\n\n", totalPredictAccuracy / (float) numberOfFiles);
+		printf("Average local correct:\t\t\t%d\n", totalLocalCorrect / numberOfFiles);
+		printf("Average global correct:\t\t\t%d\n", totalGlobalCorrect / numberOfFiles);
+		printf("Average choice used:\t\t\t%d\n", totalChoiceUsed / numberOfFiles);
+		printf("Average choice selected Correctly:\t%d\n", totalChoiceCorrect / numberOfFiles);
+		printf("Average choice wrong:\t\t\t%d\n", totalChoiceWrong / numberOfFiles);
 	}
 	AXP_Deallocate_Block((AXP_BLOCK_DSC *) cpu);
 	return(0);

@@ -54,19 +54,48 @@
 #define AXP_R23_SHADOW		(AXP_MAX_REGISTERS + 7)
 #define AXP_TB_LEN			128
 #define AXP_ICB_INS_CNT		16
+#define AXP_21264_PAGE_SIZE	8192	// 8KB page size
+#define AXP_INT_PHYS_REG	AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1
+#define AXP_FP_PHYS_REG		AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1
 
 /*
- * TODO: 	We probably want to decode to determine things like, opcode type,
- *			functional unit (U0, L0, U1, L1, F0, F1), etc.
- * TODO:	There's a duplicate of this definition in AXP_21264_ICache.h.  Use
- * 			just one of them.
+ * This structure is a buffer to contain the next set of instructions to get
+ * queued up for execution.
  */
 typedef struct
 {
-	AXP_INS_FMT	instructions[AXP_NUM_FETCH_INS];
-	u8			br_pred;
-	u8			line_pred;
-} AXP_INS_QUE;
+	bool			branch2bTaken;
+	bool			linePrediction;
+	bool			setPrediction;
+	u64				retPredStack;
+	AXP_INS_FMT		instructions[AXP_NUM_FETCH_INS];
+	AXP_INS_TYPE	instrType[AXP_NUM_FETCH_INS];
+	AXP_PC			instrPC[AXP_NUM_FETCH_INS];
+} AXP_INS_LINE;
+
+/*
+ * This structure is what will be queued to the Integer or Floating-point
+ * Queue (IQ or FQ) for execution.  It contains a single decoded instruction
+ * that has had it's architectural registers renamed to physical ones.
+ */
+#define AXP_UNMAPPED_REG	31	/* R31 and F31 are never renamed/mapped */
+typedef struct
+{
+	u8				opcode;		/* Operation code */
+	u8				aSrc1;		/* Architectural register R0-R30 or F0-F30 */
+	u8				src1;		/* Physical register PR0-PR79, PF0-PF71 */
+	u8				aSrc2;		/* Architectural register R0-R30 or F0-F30 */
+	u8				src2;		/* Physical register PR0-PR79, PF0-PF71 */
+	u8				aDest;		/* Architectural register R0-R30 or F0-F30 */
+	u8				dest;		/* Physical register PR0-PR79, PF0-PF71 */
+	bool			useLiteral;	/* Indicator that the literal value is valid */
+	u32				function;	/* Function code for operation */
+	i64				displacement;/* Displacement from PC + 4 */
+	u64				literal;	/* Literal value */
+	AXP_INS_TYPE	format;		/* Instruction format */
+	AXP_OPER_TYPE	type;
+	AXP_PC			pc;
+} AXP_INSTRUCTION;
 
 typedef struct
 {
@@ -113,12 +142,15 @@ typedef struct
 	AXP_PC		vpc[AXP_IQ_LEN];
 	u32			vpcIdx;
 
-
 	/*
 	 * Instruction Queues (Integer and Floating-Point).
 	 */
-	AXP_INS_QUE	iq[AXP_IQ_LEN];
-	AXP_INS_QUE	fq[AXP_FQ_LEN];
+	AXP_INSTRUCTION	iq[AXP_IQ_LEN];
+	u32				iqStart;
+	u32				iqEnd;
+	AXP_INSTRUCTION	fq[AXP_FQ_LEN];
+	u32				fqStart;
+	u32				fqEnd;
 
 	/*
 	 * Ibox Internal Processor Registers (IPRs)
@@ -176,11 +208,16 @@ typedef struct
 	 * plus the 41 results for instructions that can potentially have not been
 	 * retired.
 	 *
-	 * Since the integer execution unit has 2 cluster, there are a set of 80
-	 * registers for each.
+	 * In a real implementation, there would be 2 register files for each
+	 * integer pipe.  This is to simplify the data paths needed in silicon.
+	 * In silicon, both files are maintained with the same contents, and when
+	 * renaming registers, the entry in both files are considered one.
+	 *
+	 * In this emulation, there is only 1 register file to be used by both
+	 * integer pipes.  This simplifies the coding needed to keep 2 files
+	 * constantly synchronized.
 	 */
-	u64			pr0[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
-	u64			pr1[AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1];
+	u64			pr[AXP_INT_PHYS_REG];
 
 	/*
 	 * Ebox IPRs
