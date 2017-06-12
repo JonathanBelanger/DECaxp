@@ -47,6 +47,20 @@
  *	V01.005		01-Jun-2017	Jonathan D. Belanger
  *	Added a function to add an Icache line/block.  There are a couple to do
  *	items for ASM and ASN in this function.
+ *
+ *	V01.006		11-Jun-2017	Jonathan D. Belanger
+ *	Started working on the instruction decode and register renaming code.
+ *
+ *	V01.007		12-Jun-2017	Jonathan D. Belanger
+ *	Forogot to include the generation of a unique ID (8-bits long) to associate
+ *	with each decoded instruction.
+ *	BTW: We need a better way to decode an instruction.  The decoded
+ *	instruction does not require the architectural register number, so we
+ *	should not save them.  Also, renaming can be done while we are decoding the
+ *	instruction.  We are also going to have to special calse some instructions,
+ *	such as PAL instructions, CMOVE, and there are exceptions for instruction
+ *	types (Ra is a destination register for a Load, but a source register for a
+ *	store.
  */
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
@@ -816,6 +830,10 @@ bool AXP_Decode_Rename(AXP_21264_CPU *cpu, AXP_INS_LINE *next)
 	{
 		for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
 		{
+			/*
+			 * Assign a unique ID to this instruction.
+			 */
+			decodedInstr[ii].uniqueID = cpu->instrCounter++;
 
 			/*
 			 * First, decode the instruction.

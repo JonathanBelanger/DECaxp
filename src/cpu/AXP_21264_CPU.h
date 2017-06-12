@@ -28,6 +28,16 @@
  *	V01.001		14-May-2017	Jonathan D. Belanger
  *	Included the AXP_Base_CPU header file and a location for the Program
  *	Counter (PC) in the CPU record.
+ *
+ *	V01.002		11-Jun-2017	Jonathan D. Belanger
+ *	Got rid of the architectural registers (R0-R31 and F0-F31) and moved some
+ *	items around so that memory copying is minimized.
+ *
+ *	V01.003		12-Jun-2017	Jonathan D. Belanger
+ *	Forgot the Unique ID counter to be assigned to each instruction.  Also, I'm
+ *	rethinking the use of queues for the IQ and FQ.  I'm thinking a wraparound
+ *	list would be just as good and also avoid the need to allocate and
+ *	initialize memory every time we have to decode an instruction.
  */
 #ifndef _AXP_21264_CPU_DEFS_
 #define _AXP_21264_CPU_DEFS_
@@ -147,6 +157,9 @@ typedef struct
 	GPT			globalPredictor;
 	CPT			choicePredictor;
 	u16			globalPathHistory;
+
+	u8			instrCounter;		/* Unique ID assigned to each instuction*/
+	u8			reg_1;				/* Alogn to 32-bit boundary				*/
 
 	/*
 	 * Reorder Buffer
@@ -335,6 +348,9 @@ typedef struct
 
 	/*
 	 * Alpha AXP Architectural IPRs
+	 *
+	 * NOTE:	Some or all of these may be deleted, as they are emulated in
+	 *			IPRs specific to the 21264 Alpha AXP CPU.
 	 */
 	AXP_BASE_ASN		asn;		/* Address Space Number					*/
 	AXP_BASE_ASTEN		astEn;		/* AST Enable							*/
