@@ -781,7 +781,8 @@ void AXP_ITBAdd(AXP_21264_CPU *cpu,
 bool AXP_Decode_Rename(AXP_21264_CPU *cpu, AXP_INS_LINE *next)
 {
 	AXP_INSTRUCTION decodedInstr[AXP_NUM_FETCH_INS];
-	int ii, intCnt, fpCnt;
+	int ii;
+	u32 intCnt, fpCnt;
 	bool retVal = true;
 
 	/*
@@ -796,12 +797,12 @@ bool AXP_Decode_Rename(AXP_21264_CPU *cpu, AXP_INS_LINE *next)
 		else
 			intCnt++;
 	}
-	if (intCnt > (AXP_IQ_LEN - abs(cpu->iqEnd - cpu->iqStart)))
+	if (intCnt > (AXP_IQ_LEN - AXP_CQUE_COUNT(cpu->iq)))
 	{
 		printf("DECEMU-W-IQINSUF, insufficient space in Integer Instruction Queue.\n");
 		retVal = false;
 	}
-	else if (fpCnt > (AXP_IQ_LEN - abs(cpu->fqEnd - cpu->fqStart)))
+	else if (fpCnt > (AXP_IQ_LEN - AXP_CQUE_COUNT(cpu->fq)))
 	{
 		printf("DECEMU-W-FQINSUF, insufficient space in Floating-point Instruction Queue.\n");
 		retVal = false;

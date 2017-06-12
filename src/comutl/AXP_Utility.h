@@ -31,33 +31,77 @@
 #ifndef _AXP_UTIL_DEFS_
 #define _AXP_UTIL_DEFS_
 
+/*
+ * Includes used throughout the code.
+ */
+//#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
+/*
+ * Define some regularly utilized definitions.
+ */
 #define ONE_K				1024
 #define FOUR_K				4096
+#define EIGHT_K				8192
 
-typedef unsigned char		u8;
-typedef unsigned short		u16;
-typedef unsigned int		u32;
-typedef unsigned long long	u64;
-typedef char				i8;
-typedef short				i16;
-typedef int					i32;
-typedef long long			i64;
+/*
+ * Define some standard data types.
+ */
+typedef unsigned char		u8;		/* 1 byte (8 bits) in length */
+typedef unsigned short		u16;	/* 2 bytes (16 bits) in length */
+typedef unsigned int		u32;	/* 4 bytes (32 bits) in length */
+typedef unsigned long long	u64;	/* 8 bytes (64 bits) in length */
+typedef char				i8;		/* 1 byte (8 bits) in length */
+typedef short				i16;	/* 2 bytes (16 bits) in length */
+typedef int					i32;	/* 4 bytes (32 bits) in length */
+typedef long long			i64;	/* 8 bytes (64 bits) in length */
 
+/*
+ * Define a basic queue.  This will be used to define a number of other queue
+ * types.
+ */
 typedef struct
 {
-	void *flink;
-	void *blink;
+	void 			*flink;
+	void 			*blink;
 } AXP_QUEUE_HDR;
 
+/*
+ * Macros to use with the basic queue.
+ */
 #define AXP_INIT_QUE(queue)		queue.flink = queue.blink = (void *) &queue.flink
 #define AXP_INIT_QUEP(queue)	queue->flink = queue->blink = (void *) &queue->flink
-#define AXP_QUEUE_EMPTY(queue)	(queue.flink == (void *) &queue.flink)
-#define AXP_QUEUEP_EMPTY(queue)	(queue->flink == (void *) &queue->flink)
+#define AXP_QUE_EMPTY(queue)	(queue.flink == (void *) &queue.flink)
+#define AXP_QUEP_EMPTY(queue)	(queue->flink == (void *) &queue->flink)
+
+/*
+ * A counted queue.  If maximum is specified as zero at initialization, then
+ * the number of entries in the queue has no limit.
+ */
+typedef struct
+{
+	AXP_QUEUE_HDR	q;
+	u32				count;
+	u32				max;
+} AXP_COUNTED_QUEUE;
+
+#define AXP_INIT_CQUE(queue, maximum)	\
+	AXP_INIT_QUE(queue.q);				\
+	queue.max = maximum;				\
+	queue.count = 0
+#define AXP_INIT_CQUEP(queue, maximum)	\
+	AXP_INIT_QUE(queue->q);			\
+	queue->max = maximum;				\
+	queue->count = 0
+#define AXP_CQUE_EMPTY(queue)	(queue.count == 0)
+#define AXP_CQUEP_EMPTY(queue)	(queue->count == 0)
+#define AXP_CQUE_FULL(queue)	((queue.maximum !=0 ? (queue.count == queue.maximum) ? false)
+#define AXP_CQUEP_FULL(queue)	((queue->maximum !=0 ? (queue->count == queue->maximum) ? false)
+#define AXP_CQUE_COUNT(queue)	(queue.count)
+#define AXP_CQUEP_COUNT(queue)	(queue->count)
 
 void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry);
 void AXP_LRURemove(AXP_QUEUE_HDR *entry);

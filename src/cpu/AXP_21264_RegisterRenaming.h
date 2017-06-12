@@ -27,13 +27,32 @@
 #ifndef _AXP_REGISTER_RENAMING_DEFS_
 #define _AXP_REGISTER_RENAMING_DEFS_
 
+#include "AXP_Utility.h"
+
 /*
- * General Map Table (GMT)
+ * This enumeration is used during during the Issue, Register Read, and Execute
+ * stages (Stages 3, 4, and 5).  It indicates the state of one PR.  There are
+ * an equal number of these entries as there are physical registers.
+ */
+typedef enum
+{
+	Free,
+	Pending,
+	Valid
+} AXP_21264_REG_STATE;
+
+/*
+ * This structure is used during the Map stage (Stage 2) to locate the current
+ * AR to PR mapping.  The source registers, there can be 0, 1, or 2 of these,
+ * utilize the existing mapping of that register.  The destination register, of
+ * which there can only be 0 or 1, gets a new mapping from the free list.
+ * There are an equal number of these entries as there are architectural
+ * registers.
  */
 typedef struct
 {
-	u8	pReg;
-	u8	refCnt;
-} AXP_21264_GMT;
+	u16				pr;				/* Current Physical Register */
+	u16				prevPr;			/* Previous Physical Register */
+} AXP_21264_REG_MAP;
 
 #endif /* _AXP_REGISTER_RENAMING_DEFS_ */

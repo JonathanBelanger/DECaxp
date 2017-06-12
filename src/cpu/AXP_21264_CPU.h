@@ -38,6 +38,7 @@
 #include "AXP_21264_Predictions.h"
 #include "AXP_21264_Instructions.h"
 #include "AXP_21264_ICache.h"
+#include "AXP_21264_RegisterRenaming.h"
 
 #define AXP_RESULTS_REG		41
 #define AXP_NUM_FETCH_INS	4
@@ -57,6 +58,7 @@
 #define AXP_21264_PAGE_SIZE	8192	// 8KB page size
 #define AXP_INT_PHYS_REG	AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1
 #define AXP_FP_PHYS_REG		AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1
+#define AXP_INFLIGHT_MAX	80
 
 /*
  * This structure is a buffer to contain the next set of instructions to get
@@ -73,14 +75,26 @@ typedef struct
 	AXP_PC			instrPC[AXP_NUM_FETCH_INS];
 } AXP_INS_LINE;
 
+typedef enum
+{
+	Retired,
+	Queued,
+	Executing,
+	WaitingRetirement
+} AXP_INS_STATE;;
+
 /*
- * This structure is what will be queued to the Integer or Floating-point
- * Queue (IQ or FQ) for execution.  It contains a single decoded instruction
- * that has had it's architectural registers renamed to physical ones.
+ * This structure is what will be put into the Reorder Buffer.  A queue entry
+ * in the Integer or Floating-point Queues (IQ or FQ) will point to the queue
+ * entry.  It contains a single decoded instruction that has had it's
+ * architectural registers renamed to physical ones.  And a state value
+ * indicating if the instruction is Queued, Executing, WaitingRetirement, or
+ * Retired.
  */
 #define AXP_UNMAPPED_REG	31	/* R31 and F31 are never renamed/mapped */
 typedef struct
 {
+	u8				uniqueID;	/* A unique id for each instruction */
 	u8				opcode;		/* Operation code */
 	u8				aSrc1;		/* Architectural register R0-R30 or F0-F30 */
 	u8				src1;		/* Physical register PR0-PR79, PF0-PF71 */
@@ -92,9 +106,13 @@ typedef struct
 	u32				function;	/* Function code for operation */
 	i64				displacement;/* Displacement from PC + 4 */
 	u64				literal;	/* Literal value */
+	u64				src1v;		/* Value from src1 register */
+	u64				src2v;		/* Value from src2 register */
+	u64				destv;		/* Value to dest register */
 	AXP_INS_TYPE	format;		/* Instruction format */
 	AXP_OPER_TYPE	type;
 	AXP_PC			pc;
+	AXP_INS_STATE	state;
 } AXP_INSTRUCTION;
 
 typedef struct
@@ -131,26 +149,17 @@ typedef struct
 	u16			globalPathHistory;
 
 	/*
-	 * Architectural (virtual) registers.
+	 * Reorder Buffer
 	 */
-	u64			r[AXP_MAX_REGISTERS + AXP_SHADOW_REG];	/* Integer (Virt) Reg */
-	u64 		f[AXP_MAX_REGISTERS];	/* Floating-point (Virtual) Registers */
-
-	/*
-	 * Virtual Program Counter Queue
-	 */
-	AXP_PC		vpc[AXP_IQ_LEN];
-	u32			vpcIdx;
+	AXP_INSTRUCTION 	rob[AXP_INFLIGHT_MAX];
+	u32					robStart;
+	u32					robEnd;
 
 	/*
 	 * Instruction Queues (Integer and Floating-Point).
 	 */
-	AXP_INSTRUCTION	iq[AXP_IQ_LEN];
-	u32				iqStart;
-	u32				iqEnd;
-	AXP_INSTRUCTION	fq[AXP_FQ_LEN];
-	u32				fqStart;
-	u32				fqEnd;
+	AXP_COUNTED_QUEUE	iq;
+	AXP_COUNTED_QUEUE	fq;
 
 	/*
 	 * Ibox Internal Processor Registers (IPRs)
@@ -216,8 +225,18 @@ typedef struct
 	 * In this emulation, there is only 1 register file to be used by both
 	 * integer pipes.  This simplifies the coding needed to keep 2 files
 	 * constantly synchronized.
+	 *
+	 * NOTE: There are no architectural registers (ARs).  These registers are
+	 * virtual.  The virtual ARs are assigned at the time an instruction is
+	 * decoded.  The register mapping is used too determine which physical
+	 * register (PR) is defined to which AR.
 	 */
-	u64			pr[AXP_INT_PHYS_REG];
+	u64					pr[AXP_INT_PHYS_REG];
+	u32					prFreeList[AXP_INT_PHYS_REG - AXP_MAX_REGISTERS - 1];
+	u32					prFlStart;
+	u32					prFlEnd;
+	AXP_21264_REG_MAP	prMap[AXP_MAX_REGISTERS - 1];
+	AXP_21264_REG_STATE	prState[AXP_INT_PHYS_REG];
 
 	/*
 	 * Ebox IPRs
@@ -250,7 +269,12 @@ typedef struct
 	 * Since the floating-point execution unit only has 1 cluster, there is 
 	 * just 1 set of 72 registers.
 	 */
-	u64			pf[AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1];
+	u64					pf[AXP_FP_PHYS_REG];
+	u32					pfFreeList[AXP_FP_PHYS_REG - AXP_MAX_REGISTERS - 1];
+	u32					pfFlStart;
+	u32					pfFlEnd;
+	AXP_21264_REG_MAP	pfMap[AXP_MAX_REGISTERS - 1];
+	AXP_21264_REG_STATE	pfState[AXP_FP_PHYS_REG];
 
 	/**************************************************************************
 	 *	Mbox Definitions													  *

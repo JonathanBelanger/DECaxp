@@ -156,7 +156,7 @@ AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ)
 {
 	AXP_QUEUE_HDR *entry;
 
-	if (AXP_QUEUEP_EMPTY(lruQ))
+	if (AXP_QUEP_EMPTY(lruQ))
 		entry = NULL;
 	else
 		entry = (AXP_QUEUE_HDR *) lruQ->flink;

@@ -34,6 +34,7 @@
 void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 {
 	void	*retBlock = NULL;
+	int		ii;
 
 	switch (blockType)
 	{
@@ -52,6 +53,49 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 					cpu = (AXP_21264_CPU *) retBlock;
 					cpu->header.type = blockType;
 					cpu->header.size = sizeof(AXP_21264_CPU);
+
+					/*
+					 * The initial register mapping is 1 for one.  Also, the
+					 * contents of the register are ready.
+					 */
+					for (ii = 0; ii < (AXP_MAX_REGISTERS - 1); ii++)
+					{
+						cpu->prMap[ii].pr = ii;
+						cpu->prMap[ii].prevPr = AXP_UNMAPPED_REG;
+						cpu->prState[ii] = Valid;
+						cpu->pfMap[ii].pr = ii;
+						cpu->pfMap[ii].prevPr = AXP_UNMAPPED_REG;
+						cpu->pfState[ii] = Valid;
+					}
+
+					/*
+					 * The remaining physical registers need to be put on the
+					 * free-list.
+					 */
+					for (ii = AXP_MAX_REGISTERS; ii < AXP_INT_PHYS_REG; ii++)
+					{
+						cpu->prState[ii] = Free;
+						cpu->prFreeList[cpu->prFlEnd++] = ii;
+						if (ii < AXP_FP_PHYS_REG)
+						{
+							cpu->pfState[ii] = Free;
+							cpu->pfFreeList[cpu->pfFlEnd++] = ii;
+						}
+					}
+
+					/*
+					 * Initialize the ReOrder Buffer (ROB).
+					 */
+					for (ii = 0; ii < AXP_INFLIGHT_MAX; ii++)
+					{
+						cpu->rob[ii].state = Retired;
+					}
+
+					/*
+					 * Initialize the instruction queues.
+					 */
+					AXP_INIT_CQUE(cpu->iq, AXP_IQ_LEN);
+					AXP_INIT_CQUE(cpu->fq, AXP_FQ_LEN);
 				}
 			}
 			break;

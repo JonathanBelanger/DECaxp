@@ -32,6 +32,9 @@
 
 #include "AXP_21264_CPU.h"
 
+/*
+ * Function prototypes
+ */
 bool AXP_Branch_Prediction(
 				AXP_21264_CPU *cpu,
 				AXP_PC vpc,
