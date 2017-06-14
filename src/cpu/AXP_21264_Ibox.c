@@ -71,6 +71,8 @@ struct instructDecode
 {
 	AXP_INS_TYPE	format;
 	AXP_OPER_TYPE	type;
+	u16				registers;
+	u16				res;	/* 32-bit align 								*/
 };
 
 /*
@@ -80,71 +82,95 @@ struct instructDecode
  */
 static struct instructDecode insDecode[] =
 {
-/* Format	Type	   Opcode	Mnemonic	Description 						*/
-	{Pcd,	Other},	/* 00		CALL_PAL	Trap to PALcode						*/
-	{Res,	Other},	/* 01					Reserved for Digital				*/
-	{Res,	Other},	/* 02					Reserved for Digital				*/
-	{Res,	Other},	/* 03					Reserved for Digital				*/
-	{Res,	Other},	/* 04					Reserved for Digital				*/
-	{Res,	Other},	/* 05					Reserved for Digital				*/
-	{Res,	Other},	/* 06					Reserved for Digital				*/
-	{Res,	Other},	/* 07					Reserved for Digital				*/
-	{Mem,	Load},	/* 08		LDA			Load address						*/
-	{Mem,	Load},	/* 09		LDAH		Load address high					*/
-	{Mem,	Load},	/* 0A		LDBU		Load zero-extended byte				*/
-	{Mem,	Load},	/* 0B		LDQ_U		Load unaligned quadword				*/
-	{Mem,	Load},	/* 0C		LDWU		Load zero-extended word				*/
-	{Mem,	Store},	/* 0D		STW			Store word							*/
-	{Mem,	Store},	/* 0E		STB			Store byte							*/
-	{Mem,	Store},	/* 0F		STQ_U		Store unaligned quadword			*/
-	{Opr,	Other},	/* 10		ADDL		Add longword						*/
-	{Opr,	Other},	/* 11		AND			Logical product						*/
-	{Opr,	Other},	/* 12		MSKBL		Mask byte low						*/
-	{Opr,	Other},	/* 13		MULL		Multiply longword					*/
-	{FP,	Other},	/* 14		ITOFS		Integer to floating move, S_floating*/
-	{FP,	Other},	/* 15		ADDF		Add F_floating						*/
-	{FP,	Other},	/* 16		ADDS		Add S_floating						*/
-	{FP,	Other},	/* 17		CVTLQ		Convert longword to quadword		*/
-	{Mfc,	Other},	/* 18		TRAPB		Trap barrier						*/
-	{PAL,	Load},	/* 19		HW_MFPR		Reserved for PALcode				*/
-	{Mbr,	Other},	/* 1A		JMP			Jump								*/
-	{PAL,	Load},	/* 1B		HW_LD		Reserved for PALcode				*/
-	{Cond,	Other},	/* 1C		SEXTB		Sign extend byte					*/
-	{PAL,	Store},	/* 1D		HW_MTPR		Reserved for PALcode				*/
-	{PAL,	Other},	/* 1E		HW_REI		Reserved for PALcode				*/
-	{PAL,	Store},	/* 1F		HW_ST		Reserved for PALcode				*/
-	{Mem,	Load},	/* 20 		LDF			Load F_floating						*/
-	{Mem,	Load},	/* 21		LDG			Load G_floating						*/
-	{Mem,	Load},	/* 22		LDS			Load S_floating						*/
-	{Mem,	Load},	/* 23		LDT			Load T_floating						*/
-	{Mem,	Store},	/* 24		STF			Store F_floating					*/
-	{Mem,	Store},	/* 25		STG			Store G_floating					*/
-	{Mem,	Store},	/* 26		STS			Store S_floating					*/
-	{Mem,	Store},	/* 27		STT			Store T_floating					*/
-	{Mem,	Load},	/* 28		LDL			Load sign-extended longword			*/
-	{Mem,	Load},	/* 29		LDQ			Load quadword						*/
-	{Mem,	Load},	/* 2A		LDL_L		Load sign-extended longword locked	*/
-	{Mem,	Load},	/* 2B		LDQ_L		Load quadword locked				*/
-	{Mem,	Store},	/* 2C		STL			Store longword						*/
-	{Mem,	Store},	/* 2D		STQ			Store quadword						*/
-	{Mem,	Store},	/* 2E		STL_C		Store longword conditional			*/
-	{Mem,	Store},	/* 2F		STQ_C		Store quadword conditional			*/
-	{Bra,	Other},	/* 30		BR			Unconditional branch				*/
-	{FPBra,	Other},	/* 31		FBEQ		Floating branch if = zero			*/
-	{FPBra,	Other},	/* 32		FBLT		Floating branch if < zero			*/
-	{FPBra,	Other},	/* 33		FBLE		Floating branch if <= zero			*/
-	{Mbr,	Other},	/* 34		BSR			Branch to subroutine				*/
-	{FPBra,	Other},	/* 35		FBNE		Floating branch if != zero			*/
-	{FPBra,	Other},	/* 36		FBGE		Floating branch if >=zero			*/
-	{FPBra,	Other},	/* 37		FBGT		Floating branch if > zero			*/
-	{Bra,	Other},	/* 38		BLBC		Branch if low bit clear				*/
-	{Bra,	Other},	/* 39		BEQ			Branch if = zero					*/
-	{Bra,	Other},	/* 3A		BLT			Branch if < zero					*/
-	{Bra,	Other},	/* 3B		BLE			Branch if <= zero					*/
-	{Bra,	Other},	/* 3C		BLBS		Branch if low bit set				*/
-	{Bra,	Other},	/* 3D		BNE			Branch if != zero					*/
-	{Bra,	Other},	/* 3E		BGE			Branch if >= zero					*/
-	{Bra,	Other}	/* 3F		BGT			Branch if > zero					*/
+/* Format	Type	Registers   					Opcode	Mnemonic	Description 					*/
+	{Pcd,	Other,	0},								/* 00		CALL_PAL	Trap to PALcode					*/
+	{Res,	Other,	0},								/* 01					Reserved for Digital			*/
+	{Res,	Other,	0},								/* 02					Reserved for Digital			*/
+	{Res,	Other,	0},								/* 03					Reserved for Digital			*/
+	{Res,	Other,	0},								/* 04					Reserved for Digital			*/
+	{Res,	Other,	0},								/* 05					Reserved for Digital			*/
+	{Res,	Other,	0},								/* 06					Reserved for Digital			*/
+	{Res,	Other,	0},								/* 07					Reserved for Digital			*/
+	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},		/* 08		LDA			Load address					*/
+	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},		/* 09		LDAH		Load address high				*/
+	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},		/* 0A		LDBU		Load zero-extended byte			*/
+	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},		/* 0B		LDQ_U		Load unaligned quadword			*/
+	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},		/* 0C		LDWU		Load zero-extended word			*/
+	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},		/* 0D		STW			Store word						*/
+	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},		/* 0E		STB			Store byte						*/
+	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},		/* 0F		STQ_U		Store unaligned quadword		*/
+	{Opr,	Other,	AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB},	/* 10		ADDL		Add longword					*/
+// TODO: AMASK (opcode: 11) has 1 source (Rb) and 1 destination (Rc)
+// TODO: IMPLVER (opcode: 11) has 1 destination (Rc)
+	{Opr,	Other,	AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB},	/* 11		AND			Logical product					*/
+	{Opr,	Other,	AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB},	/* 12		MSKBL		Mask byte low					*/
+	{Opr,	Other,	AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB},	/* 13		MULL		Multiply longword				*/
+// TODO: SQRTx (opcode: 14) has 1 source (Fb) and 1 destination (Fc)
+	{FP,	Other,	AXP_DEST_FC|AXP_SRC1_RA},	/* 14		ITOFS		Int to float move, S_floating	*/
+// TODO: CVTGQ (opcode: 15) only has 1 source (Fb) and one destination (Fc)
+// TODO: CVTQx (opcode: 15) only has 1 source (Fb) and one destination (Fc)
+// TODO: CVTxy (opcode: 15) only has 1 source (Fb) and one destination (Fc)
+	{FP,	Other,	AXP_DEST_FC|AXP_SRC1_FA|AXP_SRC2_FB},	/* 15		ADDF		Add F_floating					*/
+// TODO: CVTTQ (opcode: 16) only has 1 source (Fb) and one destination (Fc)
+// TODO: CVTQy (opcode: 16) only has 1 source (Fb) and one destination (Fc)
+// TODO: CVTST (opcode: 16) only has 1 source (Fb) and one destination (Fc)
+// TODO: CVTTS (opcode: 16) only has 1 source (Fb) and one destination (Fc)
+	{FP,	Other,	AXP_DEST_FC|AXP_SRC1_FA|AXP_SRC2_FB},	/* 16		ADDS		Add S_floating					*/
+// TODO: CVTxy (opcode: 17) only has sources (Fb, Fc) and no destination
+// TODO: MF_FPCR (opcode: 17) only has a destination (Fa)
+// TODO: MT_FPCR (opcode: 17) only as a source (Fa)
+	{FP,	Other,	AXP_DEST_FC|AXP_SRC1_FA|AXP_SRC2_FB},	/* 17		CVTLQ		Convert longword to quadword	*/
+// TODO: EXCB (opcode 18) does not have any registers
+// TODO: MB (opcode: 18) does not have any registers
+// TODO: WMB (opcode: 18) does not have any registers
+// TODO: RPCC (opcode: 18) has 1 destination Ra and 1 source Rb
+// TODO: Rx (opcode: 18) has 1 destination Ra
+// TODO: TRAPB (opcode: 18) does not have any registers
+	{Mfc,	Other,	AXP_SRC1_RB},	/* 18		TRAPB		Trap barrier					*/
+	{PAL,	Load},	/* 19		HW_MFPR		Reserved for PALcode			*/
+	{Mbr,	Other,	AXP_DEST_RA|AXP_SRC1_RB},	/* 1A		JMP			Jump							*/
+	{PAL,	Load},	/* 1B		HW_LD		Reserved for PALcode			*/
+// TODO: FTOIx (opcode: 1C has 1 destination (Rc) and 1 source (Fa)
+	{Cond,	Other,	AXP_DEST_RC|AXP_SRC1_RB},	/* 1C		SEXTB		Sign extend byte				*/
+	{PAL,	Store},	/* 1D		HW_MTPR		Reserved for PALcode			*/
+	{PAL,	Other},	/* 1E		HW_REI		Reserved for PALcode			*/
+	{PAL,	Store},	/* 1F		HW_ST		Reserved for PALcode			*/
+	{Mem,	Load,	AXP_DEST_FA|AXP_SRC1_RB},	/* 20 		LDF			Load F_floating					*/
+	{Mem,	Load,	AXP_DEST_FA|AXP_SRC1_RB},	/* 21		LDG			Load G_floating					*/
+// TODO: PREFETCH_M (opcode: 22) has 1 source (Rb)
+	{Mem,	Load,	AXP_DEST_FA|AXP_SRC1_RB},	/* 22		LDS			Load S_floating					*/
+// TODO: PREFETCH_EN (opcode: 23) has 1 source (Rb)
+	{Mem,	Load,	AXP_DEST_FA|AXP_SRC1_RB},	/* 23		LDT			Load T_floating					*/
+	{Mem,	Store,	AXP_SRC1_FA|AXP_SRC2_RB},	/* 24		STF			Store F_floating				*/
+	{Mem,	Store,	AXP_SRC1_FA|AXP_SRC2_RB},	/* 25		STG			Store G_floating				*/
+	{Mem,	Store,	AXP_SRC1_FA|AXP_SRC2_RB},	/* 26		STS			Store S_floating				*/
+	{Mem,	Store,	AXP_SRC1_FA|AXP_SRC2_RB},	/* 27		STT			Store T_floating				*/
+// TODO: PREFETCH (opcode: 28) has 1 source (Rb)
+	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},	/* 28		LDL			Load sign-extended longword		*/
+// TODO: PREFETCH_EN (opcode: 29) has 1 source (Rb)
+	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},	/* 29		LDQ			Load quadword					*/
+	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},	/* 2A		LDL_L		Load sign-extended long locked	*/
+	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},	/* 2B		LDQ_L		Load quadword locked			*/
+	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},	/* 2C		STL			Store longword					*/
+	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},	/* 2D		STQ			Store quadword					*/
+	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},	/* 2E		STL_C		Store longword conditional		*/
+	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},	/* 2F		STQ_C		Store quadword conditional		*/
+	{Bra,	Other,	AXP_DEST_RA},	/* 30		BR			Unconditional branch			*/
+	{FPBra,	Other,	AXP_SRC1_FA},	/* 31		FBEQ		Floating branch if = zero		*/
+	{FPBra,	Other,	AXP_SRC1_FA},	/* 32		FBLT		Floating branch if < zero		*/
+	{FPBra,	Other,	AXP_SRC1_FA},	/* 33		FBLE		Floating branch if <= zero		*/
+	{Mbr,	Other,	AXP_DEST_RA},	/* 34		BSR			Branch to subroutine			*/
+	{FPBra,	Other,	AXP_SRC1_FA},	/* 35		FBNE		Floating branch if != zero		*/
+	{FPBra,	Other,	AXP_SRC1_FA},	/* 36		FBGE		Floating branch if >=zero		*/
+	{FPBra,	Other,	AXP_SRC1_FA},	/* 37		FBGT		Floating branch if > zero		*/
+	{Bra,	Other,	AXP_SRC1_RA},	/* 38		BLBC		Branch if low bit clear			*/
+	{Bra,	Other,	AXP_SRC1_RA},	/* 39		BEQ			Branch if = zero				*/
+	{Bra,	Other,	AXP_SRC1_RA},	/* 3A		BLT			Branch if < zero				*/
+	{Bra,	Other,	AXP_SRC1_RA},	/* 3B		BLE			Branch if <= zero				*/
+	{Bra,	Other,	AXP_SRC1_RA},	/* 3C		BLBS		Branch if low bit set			*/
+	{Bra,	Other,	AXP_SRC1_RA},	/* 3D		BNE			Branch if != zero				*/
+	{Bra,	Other,	AXP_SRC1_RA},	/* 3E		BGE			Branch if >= zero				*/
+	{Bra,	Other,	AXP_SRC1_RA}	/* 3F		BGT			Branch if > zero				*/
 };
 
 /*

@@ -55,4 +55,36 @@ typedef struct
 	u16				prevPr;			/* Previous Physical Register */
 } AXP_21264_REG_MAP;
 
+/*
+ * Alpha AXP Instructions have between 0 and 3 register references.  These
+ * registers can represent 0 to 2 source registers and 0 or 1 destination
+ * registers.  The destination register is most often Ra.  The first source
+ * register is most often Rb, with the second being Rc.  Unfortunately, this is
+ * not always the case.  The below masks will be used to determine which
+ * register is which.  There will be one set of masks for each instruction.
+ * The masks will be used during the decoding to set up the values required for
+ * the register naming process.  These masks will be defined for use with a
+ * unsigned 16-bit value.
+ */
+#define AXP_DEST_RA	0x0100
+#define AXP_DEST_RB	0x0200
+#define AXP_DEST_RC	0x0400
+#define AXP_DEST_FA	0x0900
+#define AXP_DEST_FB	0x0a00
+#define AXP_DEST_FC	0x0c00
+
+#define AXP_SRC1_RA	0x0010
+#define AXP_SRC1_RB	0x0020
+#define AXP_SRC1_RC	0x0040
+#define AXP_SRC1_FA	0x0090
+#define AXP_SRC1_FB	0x00a0
+#define AXP_SRC1_FC	0x00c0
+
+#define AXP_SRC2_RA	0x0001
+#define AXP_SRC2_RB	0x0002
+#define AXP_SRC2_RC	0x0004
+#define AXP_SRC2_FA	0x0009
+#define AXP_SRC2_FB	0x000a
+#define AXP_SRC2_FC	0x000c
+
 #endif /* _AXP_REGISTER_RENAMING_DEFS_ */
