@@ -66,25 +66,33 @@ typedef struct
  * the register naming process.  These masks will be defined for use with a
  * unsigned 16-bit value.
  */
-#define AXP_DEST_RA	0x0100
-#define AXP_DEST_RB	0x0200
-#define AXP_DEST_RC	0x0400
-#define AXP_DEST_FA	0x0900
-#define AXP_DEST_FB	0x0a00
-#define AXP_DEST_FC	0x0c00
+#define AXP_DEST_RA		0x0100		/* Ra as a destination register 	*/
+#define AXP_DEST_RB		0x0200		/* Rb as a destination register 	*/
+#define AXP_DEST_RC		0x0400		/* Rc as a destination register 	*/
+#define AXP_DEST_FA		0x0900		/* Fa as a destination register 	*/
+#define AXP_DEST_FB		0x0a00		/* Fb as a destination register 	*/
+#define AXP_DEST_FC		0x0c00		/* Fc as a destination register 	*/
 
-#define AXP_SRC1_RA	0x0010
-#define AXP_SRC1_RB	0x0020
-#define AXP_SRC1_RC	0x0040
-#define AXP_SRC1_FA	0x0090
-#define AXP_SRC1_FB	0x00a0
-#define AXP_SRC1_FC	0x00c0
+#define AXP_SRC1_RA		0x0010		/* Ra as a source 1 register 		*/
+#define AXP_SRC1_RB		0x0020		/* Rb as a source 1 register 		*/
+#define AXP_SRC1_RC		0x0040		/* Rc as a source 1 register 		*/
+#define AXP_SRC1_FA		0x0090		/* Fa as a source 1 register 		*/
+#define AXP_SRC1_FB		0x00a0		/* Fb as a source 1 register 		*/
+#define AXP_SRC1_FC		0x00c0		/* Fc as a source 1 register 		*/
 
-#define AXP_SRC2_RA	0x0001
-#define AXP_SRC2_RB	0x0002
-#define AXP_SRC2_RC	0x0004
-#define AXP_SRC2_FA	0x0009
-#define AXP_SRC2_FB	0x000a
-#define AXP_SRC2_FC	0x000c
+#define AXP_SRC2_RA		0x0001		/* Ra as a source 2 register 		*/
+#define AXP_SRC2_RB		0x0002		/* Rb as a source 2 register 		*/
+#define AXP_SRC2_RC		0x0004		/* Rc as a source 2 register 		*/
+#define AXP_SRC2_FA		0x0009		/* Fa as a source 2 register 		*/
+#define AXP_SRC2_FB		0x000a		/* Fb as a source 2 register 		*/
+#define AXP_SRC2_FC		0x000c		/* Fc as a source 2 register 		*/
+
+#define AXP_OPCODE_11	0x1000		/* Opcode 11 needs special handling	*/
+#define AXP_OPCODE_14	0x2000		/* Opcode 14 needs special handling	*/
+#define AXP_OPCODE_15	0x3000		/* Opcode 15 needs special handling	*/
+#define AXP_OPCODE_16	0x4000		/* Opcode 16 needs special handling	*/
+#define AXP_OPCODE_17	0x5000		/* Opcode 17 needs special handling	*/
+#define AXP_OPCODE_18	0x6000		/* Opcode 18 needs special handling	*/
+#define AXP_OPCODE_1C	0x7000		/* Opcode 1c needs special handling	*/
 
 #endif /* _AXP_REGISTER_RENAMING_DEFS_ */

@@ -100,38 +100,18 @@ static struct instructDecode insDecode[] =
 	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},		/* 0E		STB			Store byte						*/
 	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},		/* 0F		STQ_U		Store unaligned quadword		*/
 	{Opr,	Other,	AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB},	/* 10		ADDL		Add longword					*/
-// TODO: AMASK (opcode: 11) has 1 source (Rb) and 1 destination (Rc)
-// TODO: IMPLVER (opcode: 11) has 1 destination (Rc)
-	{Opr,	Other,	AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB},	/* 11		AND			Logical product					*/
+	{Opr,	Other,	AXP_OPCODE_11},	/* 11		AND			Logical product					*/
 	{Opr,	Other,	AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB},	/* 12		MSKBL		Mask byte low					*/
 	{Opr,	Other,	AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB},	/* 13		MULL		Multiply longword				*/
-// TODO: SQRTx (opcode: 14) has 1 source (Fb) and 1 destination (Fc)
-	{FP,	Other,	AXP_DEST_FC|AXP_SRC1_RA},	/* 14		ITOFS		Int to float move, S_floating	*/
-// TODO: CVTGQ (opcode: 15) only has 1 source (Fb) and one destination (Fc)
-// TODO: CVTQx (opcode: 15) only has 1 source (Fb) and one destination (Fc)
-// TODO: CVTxy (opcode: 15) only has 1 source (Fb) and one destination (Fc)
-	{FP,	Other,	AXP_DEST_FC|AXP_SRC1_FA|AXP_SRC2_FB},	/* 15		ADDF		Add F_floating					*/
-// TODO: CVTTQ (opcode: 16) only has 1 source (Fb) and one destination (Fc)
-// TODO: CVTQy (opcode: 16) only has 1 source (Fb) and one destination (Fc)
-// TODO: CVTST (opcode: 16) only has 1 source (Fb) and one destination (Fc)
-// TODO: CVTTS (opcode: 16) only has 1 source (Fb) and one destination (Fc)
-	{FP,	Other,	AXP_DEST_FC|AXP_SRC1_FA|AXP_SRC2_FB},	/* 16		ADDS		Add S_floating					*/
-// TODO: CVTxy (opcode: 17) only has sources (Fb, Fc) and no destination
-// TODO: MF_FPCR (opcode: 17) only has a destination (Fa)
-// TODO: MT_FPCR (opcode: 17) only as a source (Fa)
-	{FP,	Other,	AXP_DEST_FC|AXP_SRC1_FA|AXP_SRC2_FB},	/* 17		CVTLQ		Convert longword to quadword	*/
-// TODO: EXCB (opcode 18) does not have any registers
-// TODO: MB (opcode: 18) does not have any registers
-// TODO: WMB (opcode: 18) does not have any registers
-// TODO: RPCC (opcode: 18) has 1 destination Ra and 1 source Rb
-// TODO: Rx (opcode: 18) has 1 destination Ra
-// TODO: TRAPB (opcode: 18) does not have any registers
-	{Mfc,	Other,	AXP_SRC1_RB},	/* 18		TRAPB		Trap barrier					*/
+	{FP,	Other,	AXP_OPCODE_14},	/* 14		ITOFS		Int to float move, S_floating	*/
+	{FP,	Other,	AXP_OPCODE_15},	/* 15		ADDF		Add F_floating					*/
+	{FP,	Other,	AXP_OPCODE_16},	/* 16		ADDS		Add S_floating					*/
+	{FP,	Other,	AXP_OPCODE_17},	/* 17		CVTLQ		Convert longword to quadword	*/
+	{Mfc,	Other,	AXP_OPCODE_18},	/* 18		TRAPB		Trap barrier					*/
 	{PAL,	Load},	/* 19		HW_MFPR		Reserved for PALcode			*/
 	{Mbr,	Other,	AXP_DEST_RA|AXP_SRC1_RB},	/* 1A		JMP			Jump							*/
 	{PAL,	Load},	/* 1B		HW_LD		Reserved for PALcode			*/
-// TODO: FTOIx (opcode: 1C has 1 destination (Rc) and 1 source (Fa)
-	{Cond,	Other,	AXP_DEST_RC|AXP_SRC1_RB},	/* 1C		SEXTB		Sign extend byte				*/
+	{Cond,	Other,	AXP_OPCODE_1C},	/* 1C		SEXTB		Sign extend byte				*/
 	{PAL,	Store},	/* 1D		HW_MTPR		Reserved for PALcode			*/
 	{PAL,	Other},	/* 1E		HW_REI		Reserved for PALcode			*/
 	{PAL,	Store},	/* 1F		HW_ST		Reserved for PALcode			*/
@@ -172,6 +152,17 @@ static struct instructDecode insDecode[] =
 	{Bra,	Other,	AXP_SRC1_RA},	/* 3E		BGE			Branch if >= zero				*/
 	{Bra,	Other,	AXP_SRC1_RA}	/* 3F		BGT			Branch if > zero				*/
 };
+
+/*
+ * Prototypes for local functions
+ */
+inline u16 AXP_RegisterDecodingOpcode11(AXP_INS_FMT);
+inline u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT);
+inline u16 AXP_RegisterDecodingOpcode15(AXP_INS_FMT);
+inline u16 AXP_RegisterDecodingOpcode16(AXP_INS_FMT);
+inline u16 AXP_RegisterDecodingOpcode17(AXP_INS_FMT);
+inline u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT);
+inline u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT);
 
 /*
  * AXP_Branch_Prediction
@@ -965,6 +956,231 @@ bool AXP_Decode_Rename(AXP_21264_CPU *cpu, AXP_INS_LINE *next)
 			 * physical registers.
 			 */
 		}
+	}
+	return(retVal);
+}
+
+/*
+ * AXP_RegisterDecodingOpcode11
+ * 	This function is called to determine which registers in the instruction are
+ * 	the destination and source.  It returns a proper mask to be used by the
+ * 	register renaming process.  The Opcode associated with this instruction is
+ * 	0x11.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A valus of the instruction being parsed.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return value:
+ * 	The register mask to be used to rename the registers from architectural to
+ * 	physical.
+ */
+inline u16 AXP_RegisterDecodingOpcode11(AXP_INS_FMT instr)
+{
+	u16 retVal = 0;
+
+	switch (instr.oper1.func)
+	{
+		case 0x61:		/* AMASK */
+			retVal = AXP_DEST_RC|AXP_SRC1_RB;
+			break;
+
+		case 0x6c:		/* IMPLVER */
+			retVal = AXP_DEST_RC;
+			break;
+
+		default:		/* All others */
+			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
+			break;
+	}
+	return(retVal);
+}
+
+/*
+ * AXP_RegisterDecodingOpcode14
+ * 	This function is called to determine which registers in the instruction are
+ * 	the destination and source.  It returns a proper mask to be used by the
+ * 	register renaming process.  The Opcode associated with this instruction is
+ * 	0x14.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A valus of the instruction being parsed.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return value:
+ * 	The register mask to be used to rename the registers from architectural to
+ * 	physical.
+ */
+inline u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT instr)
+{
+	u16 retVal = 0;
+
+	switch (instr.oper1.func)
+	{
+		default:		/* All others */
+			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
+			break;
+	}
+	return(retVal);
+}
+
+/*
+ * AXP_RegisterDecodingOpcode15
+ * 	This function is called to determine which registers in the instruction are
+ * 	the destination and source.  It returns a proper mask to be used by the
+ * 	register renaming process.  The Opcode associated with this instruction is
+ * 	0x15.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A valus of the instruction being parsed.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return value:
+ * 	The register mask to be used to rename the registers from architectural to
+ * 	physical.
+ */
+inline u16 AXP_RegisterDecodingOpcode15(AXP_INS_FMT instr)
+{
+	u16 retVal = 0;
+
+	switch (instr.oper1.func)
+	{
+		default:		/* All others */
+			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
+			break;
+	}
+	return(retVal);
+}
+
+/*
+ * AXP_RegisterDecodingOpcode16
+ * 	This function is called to determine which registers in the instruction are
+ * 	the destination and source.  It returns a proper mask to be used by the
+ * 	register renaming process.  The Opcode associated with this instruction is
+ * 	0x16.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A valus of the instruction being parsed.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return value:
+ * 	The register mask to be used to rename the registers from architectural to
+ * 	physical.
+ */
+inline u16 AXP_RegisterDecodingOpcode16(AXP_INS_FMT instr)
+{
+	u16 retVal = 0;
+
+	switch (instr.oper1.func)
+	{
+		default:		/* All others */
+			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
+			break;
+	}
+	return(retVal);
+}
+
+/*
+ * AXP_RegisterDecodingOpcode17
+ * 	This function is called to determine which registers in the instruction are
+ * 	the destination and source.  It returns a proper mask to be used by the
+ * 	register renaming process.  The Opcode associated with this instruction is
+ * 	0x17.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A valus of the instruction being parsed.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return value:
+ * 	The register mask to be used to rename the registers from architectural to
+ * 	physical.
+ */
+inline u16 AXP_RegisterDecodingOpcode17(AXP_INS_FMT instr)
+{
+	u16 retVal = 0;
+
+	switch (instr.oper1.func)
+	{
+		default:		/* All others */
+			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
+			break;
+	}
+	return(retVal);
+}
+
+/*
+ * AXP_RegisterDecodingOpcode18
+ * 	This function is called to determine which registers in the instruction are
+ * 	the destination and source.  It returns a proper mask to be used by the
+ * 	register renaming process.  The Opcode associated with this instruction is
+ * 	0x18.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A valus of the instruction being parsed.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return value:
+ * 	The register mask to be used to rename the registers from architectural to
+ * 	physical.
+ */
+inline u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT instr)
+{
+	u16 retVal = 0;
+
+	switch (instr.oper1.func)
+	{
+		default:		/* All others */
+			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
+			break;
+	}
+	return(retVal);
+}
+
+/*
+ * AXP_RegisterDecodingOpcode1c
+ * 	This function is called to determine which registers in the instruction are
+ * 	the destination and source.  It returns a proper mask to be used by the
+ * 	register renaming process.  The Opcode associated with this instruction is
+ * 	0x1c.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A valus of the instruction being parsed.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return value:
+ * 	The register mask to be used to rename the registers from architectural to
+ * 	physical.
+ */
+inline u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT instr)
+{
+	u16 retVal = 0;
+
+	switch (instr.oper1.func)
+	{
+		default:		/* All others */
+			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
+			break;
 	}
 	return(retVal);
 }
