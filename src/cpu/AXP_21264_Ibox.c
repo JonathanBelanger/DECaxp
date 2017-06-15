@@ -61,108 +61,138 @@
  *	such as PAL instructions, CMOVE, and there are exceptions for instruction
  *	types (Ra is a destination register for a Load, but a source register for a
  *	store.
+ *
+ *	V01.008		15-Jun-2017	Jonathan D. Belanger
+ *	Finished defining structure array to be able to normalize how a register is
+ *	used in an instruction.  Generally speaking, register 'c' (Rc or Fc) is a
+ *	destination register.  In load operations, register 'a' (Ra or Fa) is the
+ *	destination register.  Register 'b' (Rb or Fb) is never used as a
+ *	desination (through I have implemented provisions for this).
+ *	Unforunately, sometimes a register is not used, or 'b' may be source 1 and
+ *	other times it is source 2.  Sometimes not register is utilized (e.g. MB).
+ *	The array structures assist in these differences so that in the end we end
+ *	up with a destingation (not not), a source 1 (or not), and/or a source 2
+ *	(or not) set of registers.  If we have a destination register, then
+ *	register renaming needs to allocate a new register.  IF we have source
+ *	register, then renaming needs to assocaite the current register mapping to
+ *	thos register.
  */
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
 #include "AXP_21264_ICache.h"
 #include "AXP_21264_Ibox.h"
 
-struct instructDecode
-{
-	AXP_INS_TYPE	format;
-	AXP_OPER_TYPE	type;
-	u16				registers;
-	u16				res;	/* 32-bit align 								*/
-};
-
-/*
- * The following module specific variable contains a list of instruction and
- * operation types that are used to decode the Alpha AXP instructions.  The
- * opcode is the index into this array.
- */
-static struct instructDecode insDecode[] =
-{
-/* Format	Type	Registers   					Opcode	Mnemonic	Description 					*/
-	{Pcd,	Other,	0},								/* 00		CALL_PAL	Trap to PALcode					*/
-	{Res,	Other,	0},								/* 01					Reserved for Digital			*/
-	{Res,	Other,	0},								/* 02					Reserved for Digital			*/
-	{Res,	Other,	0},								/* 03					Reserved for Digital			*/
-	{Res,	Other,	0},								/* 04					Reserved for Digital			*/
-	{Res,	Other,	0},								/* 05					Reserved for Digital			*/
-	{Res,	Other,	0},								/* 06					Reserved for Digital			*/
-	{Res,	Other,	0},								/* 07					Reserved for Digital			*/
-	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},		/* 08		LDA			Load address					*/
-	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},		/* 09		LDAH		Load address high				*/
-	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},		/* 0A		LDBU		Load zero-extended byte			*/
-	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},		/* 0B		LDQ_U		Load unaligned quadword			*/
-	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},		/* 0C		LDWU		Load zero-extended word			*/
-	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},		/* 0D		STW			Store word						*/
-	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},		/* 0E		STB			Store byte						*/
-	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},		/* 0F		STQ_U		Store unaligned quadword		*/
-	{Opr,	Other,	AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB},	/* 10		ADDL		Add longword					*/
-	{Opr,	Other,	AXP_OPCODE_11},	/* 11		AND			Logical product					*/
-	{Opr,	Other,	AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB},	/* 12		MSKBL		Mask byte low					*/
-	{Opr,	Other,	AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB},	/* 13		MULL		Multiply longword				*/
-	{FP,	Other,	AXP_OPCODE_14},	/* 14		ITOFS		Int to float move, S_floating	*/
-	{FP,	Other,	AXP_OPCODE_15},	/* 15		ADDF		Add F_floating					*/
-	{FP,	Other,	AXP_OPCODE_16},	/* 16		ADDS		Add S_floating					*/
-	{FP,	Other,	AXP_OPCODE_17},	/* 17		CVTLQ		Convert longword to quadword	*/
-	{Mfc,	Other,	AXP_OPCODE_18},	/* 18		TRAPB		Trap barrier					*/
-	{PAL,	Load},	/* 19		HW_MFPR		Reserved for PALcode			*/
-	{Mbr,	Other,	AXP_DEST_RA|AXP_SRC1_RB},	/* 1A		JMP			Jump							*/
-	{PAL,	Load},	/* 1B		HW_LD		Reserved for PALcode			*/
-	{Cond,	Other,	AXP_OPCODE_1C},	/* 1C		SEXTB		Sign extend byte				*/
-	{PAL,	Store},	/* 1D		HW_MTPR		Reserved for PALcode			*/
-	{PAL,	Other},	/* 1E		HW_REI		Reserved for PALcode			*/
-	{PAL,	Store},	/* 1F		HW_ST		Reserved for PALcode			*/
-	{Mem,	Load,	AXP_DEST_FA|AXP_SRC1_RB},	/* 20 		LDF			Load F_floating					*/
-	{Mem,	Load,	AXP_DEST_FA|AXP_SRC1_RB},	/* 21		LDG			Load G_floating					*/
-// TODO: PREFETCH_M (opcode: 22) has 1 source (Rb)
-	{Mem,	Load,	AXP_DEST_FA|AXP_SRC1_RB},	/* 22		LDS			Load S_floating					*/
-// TODO: PREFETCH_EN (opcode: 23) has 1 source (Rb)
-	{Mem,	Load,	AXP_DEST_FA|AXP_SRC1_RB},	/* 23		LDT			Load T_floating					*/
-	{Mem,	Store,	AXP_SRC1_FA|AXP_SRC2_RB},	/* 24		STF			Store F_floating				*/
-	{Mem,	Store,	AXP_SRC1_FA|AXP_SRC2_RB},	/* 25		STG			Store G_floating				*/
-	{Mem,	Store,	AXP_SRC1_FA|AXP_SRC2_RB},	/* 26		STS			Store S_floating				*/
-	{Mem,	Store,	AXP_SRC1_FA|AXP_SRC2_RB},	/* 27		STT			Store T_floating				*/
-// TODO: PREFETCH (opcode: 28) has 1 source (Rb)
-	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},	/* 28		LDL			Load sign-extended longword		*/
-// TODO: PREFETCH_EN (opcode: 29) has 1 source (Rb)
-	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},	/* 29		LDQ			Load quadword					*/
-	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},	/* 2A		LDL_L		Load sign-extended long locked	*/
-	{Mem,	Load,	AXP_DEST_RA|AXP_SRC1_RB},	/* 2B		LDQ_L		Load quadword locked			*/
-	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},	/* 2C		STL			Store longword					*/
-	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},	/* 2D		STQ			Store quadword					*/
-	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},	/* 2E		STL_C		Store longword conditional		*/
-	{Mem,	Store,	AXP_SRC1_RA|AXP_SRC2_RB},	/* 2F		STQ_C		Store quadword conditional		*/
-	{Bra,	Other,	AXP_DEST_RA},	/* 30		BR			Unconditional branch			*/
-	{FPBra,	Other,	AXP_SRC1_FA},	/* 31		FBEQ		Floating branch if = zero		*/
-	{FPBra,	Other,	AXP_SRC1_FA},	/* 32		FBLT		Floating branch if < zero		*/
-	{FPBra,	Other,	AXP_SRC1_FA},	/* 33		FBLE		Floating branch if <= zero		*/
-	{Mbr,	Other,	AXP_DEST_RA},	/* 34		BSR			Branch to subroutine			*/
-	{FPBra,	Other,	AXP_SRC1_FA},	/* 35		FBNE		Floating branch if != zero		*/
-	{FPBra,	Other,	AXP_SRC1_FA},	/* 36		FBGE		Floating branch if >=zero		*/
-	{FPBra,	Other,	AXP_SRC1_FA},	/* 37		FBGT		Floating branch if > zero		*/
-	{Bra,	Other,	AXP_SRC1_RA},	/* 38		BLBC		Branch if low bit clear			*/
-	{Bra,	Other,	AXP_SRC1_RA},	/* 39		BEQ			Branch if = zero				*/
-	{Bra,	Other,	AXP_SRC1_RA},	/* 3A		BLT			Branch if < zero				*/
-	{Bra,	Other,	AXP_SRC1_RA},	/* 3B		BLE			Branch if <= zero				*/
-	{Bra,	Other,	AXP_SRC1_RA},	/* 3C		BLBS		Branch if low bit set			*/
-	{Bra,	Other,	AXP_SRC1_RA},	/* 3D		BNE			Branch if != zero				*/
-	{Bra,	Other,	AXP_SRC1_RA},	/* 3E		BGE			Branch if >= zero				*/
-	{Bra,	Other,	AXP_SRC1_RA}	/* 3F		BGT			Branch if > zero				*/
-};
-
 /*
  * Prototypes for local functions
  */
 inline u16 AXP_RegisterDecodingOpcode11(AXP_INS_FMT);
 inline u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT);
-inline u16 AXP_RegisterDecodingOpcode15(AXP_INS_FMT);
-inline u16 AXP_RegisterDecodingOpcode16(AXP_INS_FMT);
+inline u16 AXP_RegisterDecodingOpcode15_16(AXP_INS_FMT);
 inline u16 AXP_RegisterDecodingOpcode17(AXP_INS_FMT);
 inline u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT);
 inline u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT);
+
+/*
+ * The following module specific structure and variable contains a list of the
+ * instructions, operation types, and register mappings that are used to assist
+ * in decoding the Alpha AXP instructions.  The opcode is the index into this
+ * array.
+ */
+struct instructDecode
+{
+	AXP_INS_TYPE	format;
+	AXP_OPER_TYPE	type;
+	AXP_REG_DECODE	registers;
+	u16				res;	/* 32-bit align 								*/
+};
+
+static struct instructDecode insDecode[] =
+{
+/* Format	Type	Registers   									Opcode	Mnemonic	Description 					*/
+	{Pcd,	Other,	{ .raw = 0}},									/* 00		CALL_PAL	Trap to PALcode				*/
+	{Res,	Other,	{ .raw = 0}},									/* 01					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}},									/* 02					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}},									/* 03					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}},									/* 04					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}},									/* 05					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}},									/* 06					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}},									/* 07					Reserved for Digital		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 08		LDA			Load address				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 09		LDAH		Load address high			*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 0A		LDBU		Load zero-extended byte		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 0B		LDQ_U		Load unaligned quadword		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 0C		LDWU		Load zero-extended word		*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 0D		STW			Store word					*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 0E		STB			Store byte					*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 0F		STQ_U		Store unaligned quadword	*/
+	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}},	/* 10		ADDL		Add longword				*/
+	{Opr,	Other,	{ .raw = AXP_OPCODE_11}},						/* 11		AND			Logical product				*/
+	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}},	/* 12		MSKBL		Mask byte low				*/
+	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}},	/* 13		MULL		Multiply longword			*/
+	{FP,	Other,	{ .raw = AXP_OPCODE_14}},						/* 14		ITOFS		Int to float move, S_float	*/
+	{FP,	Other,	{ .raw = AXP_OPCODE_15}},						/* 15		ADDF		Add F_floating				*/
+	{FP,	Other,	{ .raw = AXP_OPCODE_16}},						/* 16		ADDS		Add S_floating				*/
+	{FP,	Other,	{ .raw = AXP_OPCODE_17}},						/* 17		CVTLQ		Convert longword to quad	*/
+	{Mfc,	Other,	{ .raw = AXP_OPCODE_18}},						/* 18		TRAPB		Trap barrier				*/
+	{PAL,	Load,	{ .raw = AXP_DEST_RA}},							/* 19		HW_MFPR		Reserved for PALcode		*/
+	{Mbr,	Other,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 1A		JMP			Jump						*/
+	{PAL,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 1B		HW_LD		Reserved for PALcode		*/
+	{Cond,	Other,	{ .raw = AXP_OPCODE_1C}},						/* 1C		SEXTB		Sign extend byte			*/
+	{PAL,	Store,	{ .raw = AXP_SRC1_RB}},							/* 1D		HW_MTPR		Reserved for PALcode		*/
+	{PAL,	Other,	{ .raw = AXP_SRC1_RB}},							/* 1E		HW_REI		Reserved for PALcode		*/
+	{PAL,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 1F		HW_ST		Reserved for PALcode		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}},				/* 20 		LDF			Load F_floating				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}},				/* 21		LDG			Load G_floating				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}},				/* 22		LDS			Load S_floating				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}},				/* 23		LDT			Load T_floating				*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}},				/* 24		STF			Store F_floating			*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}},				/* 25		STG			Store G_floating			*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}},				/* 26		STS			Store S_floating			*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}},				/* 27		STT			Store T_floating			*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 28		LDL			Load sign-extended long		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 29		LDQ			Load quadword				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 2A		LDL_L		Load sign-extend long lock	*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 2B		LDQ_L		Load quadword locked		*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 2C		STL			Store longword				*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 2D		STQ			Store quadword				*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 2E		STL_C		Store longword conditional	*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 2F		STQ_C		Store quadword conditional	*/
+	{Bra,	Other,	{ .raw = AXP_DEST_RA}},							/* 30		BR			Unconditional branch		*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 31		FBEQ		Floating branch if = zero	*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 32		FBLT		Floating branch if < zero	*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 33		FBLE		Floating branch if <= zero	*/
+	{Mbr,	Other,	{ .raw = AXP_DEST_RA}},							/* 34		BSR			Branch to subroutine		*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 35		FBNE		Floating branch if != zero	*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 36		FBGE		Floating branch if >=zero	*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 37		FBGT		Floating branch if > zero	*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 38		BLBC		Branch if low bit clear		*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 39		BEQ			Branch if = zero			*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 3A		BLT			Branch if < zero			*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 3B		BLE			Branch if <= zero			*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 3C		BLBS		Branch if low bit set		*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 3D		BNE			Branch if != zero			*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 3E		BGE			Branch if >= zero			*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}}							/* 3F		BGT			Branch if > zero			*/
+};
+
+/*
+ * The following module specific structure and variable are used to be able to
+ * decode opcodes that have differing ways register are utilized.  The index
+ * into this array is the opcodeRegDecode fiels in the bits field of the
+ * register mapping in the above table.  There is no entry [0], so that is
+ * just NULL and should never get referenced.
+ */
+ typedef u16 (*func)(AXP_INS_FMT);
+func[] =
+{
+	AXP_RegisterDecodingOpcode11,
+	AXP_RegisterDecodingOpcode14,
+	AXP_RegisterDecodingOpcode15_16,
+	AXP_RegisterDecodingOpcode15_16,
+	AXP_RegisterDecodingOpcode17,
+	AXP_RegisterDecodingOpcode18,
+	AXP_RegisterDecodingOpcode1c
+};
 
 /*
  * AXP_Branch_Prediction
@@ -1019,23 +1049,21 @@ inline u16 AXP_RegisterDecodingOpcode11(AXP_INS_FMT instr)
  */
 inline u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT instr)
 {
-	u16 retVal = 0;
+	u16 retVal = AXP_DEST_FC;
 
-	switch (instr.oper1.func)
-	{
-		default:		/* All others */
-			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
-			break;
-	}
+	if ((instr.oper1.func & 0x00f) != 0x004)
+		retVal |= AXP_SRC1_FB;
+	else
+		retVal |= AXP_SRC1_RB;
 	return(retVal);
 }
 
 /*
- * AXP_RegisterDecodingOpcode15
+ * AXP_RegisterDecodingOpcode15_16
  * 	This function is called to determine which registers in the instruction are
  * 	the destination and source.  It returns a proper mask to be used by the
- * 	register renaming process.  The Opcode associated with this instruction is
- * 	0x15.
+ * 	register renaming process.  The Opcodes associated with this instruction
+ * 	are 0x15 and 0x16.
  *
  * Input Parameters:
  * 	instr:
@@ -1048,47 +1076,14 @@ inline u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT instr)
  * 	The register mask to be used to rename the registers from architectural to
  * 	physical.
  */
-inline u16 AXP_RegisterDecodingOpcode15(AXP_INS_FMT instr)
+inline u16 AXP_RegisterDecodingOpcode15_16(AXP_INS_FMT instr)
 {
-	u16 retVal = 0;
+	u16 retVal = AXP_DESC_FC;
 
-	switch (instr.oper1.func)
-	{
-		default:		/* All others */
-			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
-			break;
-	}
-	return(retVal);
-}
-
-/*
- * AXP_RegisterDecodingOpcode16
- * 	This function is called to determine which registers in the instruction are
- * 	the destination and source.  It returns a proper mask to be used by the
- * 	register renaming process.  The Opcode associated with this instruction is
- * 	0x16.
- *
- * Input Parameters:
- * 	instr:
- * 		A valus of the instruction being parsed.
- *
- * Output Parameters:
- * 	None.
- *
- * Return value:
- * 	The register mask to be used to rename the registers from architectural to
- * 	physical.
- */
-inline u16 AXP_RegisterDecodingOpcode16(AXP_INS_FMT instr)
-{
-	u16 retVal = 0;
-
-	switch (instr.oper1.func)
-	{
-		default:		/* All others */
-			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
-			break;
-	}
+	if ((instr.fp.func & 0x008) == 0)
+		retVal |= (AXP_SRC1_FA|AXP_SRC2_FB);
+	else
+		retVal |= AXP_SRC1_FB;
 	return(retVal);
 }
 
@@ -1114,10 +1109,25 @@ inline u16 AXP_RegisterDecodingOpcode17(AXP_INS_FMT instr)
 {
 	u16 retVal = 0;
 
-	switch (instr.oper1.func)
+	switch (instr.fp.func)
 	{
+		case 0x010:
+		case 0x030:
+		case 0x130:
+		case 0x530:
+			retVal = AXP_DEST_FC|AXP_SRC1_FB;
+			break;
+
+		case 0x024:
+			retVal = AXP_DEST_FA;
+			break;
+
+		case 0x025:
+			retVal = AXP_SRC1_FA;
+			break;
+
 		default:		/* All others */
-			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
+			retVal = AXP_DEST_FC|AXP_SRC1_FA|AXP_SRC2_FB;
 			break;
 	}
 	return(retVal);
@@ -1145,11 +1155,14 @@ inline u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT instr)
 {
 	u16 retVal = 0;
 
-	switch (instr.oper1.func)
+	if ((instr.mem.func & 0x8000) != 0)
 	{
-		default:		/* All others */
-			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
-			break;
+		if ((instr.mem.mem.func == 0xc000) ||
+			(instr.mem.mem.func == 0xe000) ||
+			(instr.mem.mem.func == 0xf000))
+			retVal = AXP_DEST_RA;
+		else
+			retVal = AXP_SRC_RB;
 	}
 	return(retVal);
 }
@@ -1174,12 +1187,30 @@ inline u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT instr)
  */
 inline u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT instr)
 {
-	u16 retVal = 0;
+	u16 retVal = AXP_DEST_RC;
 
 	switch (instr.oper1.func)
 	{
+		case 0x31:
+		case 0x37:
+		case 0x38:
+		case 0x39:
+		case 0x3a:
+		case 0x3b:
+		case 0x3c:
+		case 0x3d:
+		case 0x3e:
+		case 0x3f:
+			retVal |= (AXP_SRC_RA|AXP_SRC2_RB);
+			Break;
+
+		case 0x70:
+		case 0x78:
+			retVal |= AXP_SRC1_FA;
+			break;
+
 		default:		/* All others */
-			retVal = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB;
+			retVal |= AXP_SRC1_RB;
 			break;
 	}
 	return(retVal);

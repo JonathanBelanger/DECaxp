@@ -23,6 +23,11 @@
  *
  *	V01.000		10-Jun-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		15-Jun-2017	Jonathan D. Belanger
+ *	Added a structure to more easily decode the register masks, especially
+ *	for the opcodes that have varying ways its registers get associated as a
+ *	destination and sources.
  */
 #ifndef _AXP_REGISTER_RENAMING_DEFS_
 #define _AXP_REGISTER_RENAMING_DEFS_
@@ -94,5 +99,28 @@ typedef struct
 #define AXP_OPCODE_17	0x5000		/* Opcode 17 needs special handling	*/
 #define AXP_OPCODE_18	0x6000		/* Opcode 18 needs special handling	*/
 #define AXP_OPCODE_1C	0x7000		/* Opcode 1c needs special handling	*/
+
+struct regDecode
+{
+	u16				src2_RFa : 1;
+	u16				src2_RFb : 1;
+	u16				src2_RFc : 1;
+	u16				src2_Float : 1;
+	u16				src1_RFa : 1;
+	u16				src1_RFb : 1;
+	u16				src1_RFc : 1;
+	u16				src1_Float : 1;
+	u16				dest_RFa : 1;
+	u16				dest_RFb : 1;
+	u16				dest_RFc : 1;
+	u16				dest_Float : 1;
+	u16				opcodeRegDecode	: 4;
+};
+
+typedef union
+{
+	u16					raw;
+	struct regDecode	bits;
+} AXP_REG_DECODE;
 
 #endif /* _AXP_REGISTER_RENAMING_DEFS_ */
