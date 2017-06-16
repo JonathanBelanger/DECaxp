@@ -28,6 +28,11 @@
  *	Added a structure to more easily decode the register masks, especially
  *	for the opcodes that have varying ways its registers get associated as a
  *	destination and sources.
+ *
+ *	V01.002		16-Jun-2017	Jonathan D. Belanger
+ *	The structured defined in the above change is too complex to be useful.
+ *	There just needs to be a field for each 4 bits (DEST, SRC1, SRC2, and
+ *	OPCODEFUNC).
  */
 #ifndef _AXP_REGISTER_RENAMING_DEFS_
 #define _AXP_REGISTER_RENAMING_DEFS_
@@ -102,18 +107,9 @@ typedef struct
 
 struct regDecode
 {
-	u16				src2_RFa : 1;
-	u16				src2_RFb : 1;
-	u16				src2_RFc : 1;
-	u16				src2_Float : 1;
-	u16				src1_RFa : 1;
-	u16				src1_RFb : 1;
-	u16				src1_RFc : 1;
-	u16				src1_Float : 1;
-	u16				dest_RFa : 1;
-	u16				dest_RFb : 1;
-	u16				dest_RFc : 1;
-	u16				dest_Float : 1;
+	u16				src2 : 4;
+	u16				src1 : 4;
+	u16				dest : 4;
 	u16				opcodeRegDecode	: 4;
 };
 
