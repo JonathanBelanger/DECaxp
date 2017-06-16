@@ -76,6 +76,13 @@
  *	register renaming needs to allocate a new register.  IF we have source
  *	register, then renaming needs to assocaite the current register mapping to
  *	thos register.
+ *
+ *	V01.009		16-Jun-2017	Jonathan D. Belanger
+ *	Finished the implementation of normalizing registers, as indicated above,
+ *	and then mapping them from architectural to physical registers, generating
+ *	a new mapping for the destination register.
+ *	TODO:	We need a retirement function to put the destination value into the
+ *			physical register and indicate that the register value is Valid.
  */
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
@@ -182,9 +189,10 @@ static struct instructDecode insDecode[] =
  * register mapping in the above table.  There is no entry [0], so that is
  * just NULL and should never get referenced.
  */
- typedef u16 (*func)(AXP_INS_FMT);
-func[] =
+ typedef u16 (*regDecodeFunc)(AXP_INS_FMT);
+regDecodeFunc decodeFuncs[] =
 {
+	null,
 	AXP_RegisterDecodingOpcode11,
 	AXP_RegisterDecodingOpcode14,
 	AXP_RegisterDecodingOpcode15_16,
@@ -841,7 +849,8 @@ void AXP_ITBAdd(AXP_21264_CPU *cpu,
  */
 bool AXP_Decode_Rename(AXP_21264_CPU *cpu, AXP_INS_LINE *next)
 {
-	AXP_INSTRUCTION decodedInstr[AXP_NUM_FETCH_INS];
+	AXP_INSTRUCTION decodedInstr;
+	AXP_REG_DECODE decodeRegisters;
 	int ii;
 	u32 intCnt, fpCnt;
 	bool retVal = true;
@@ -880,111 +889,129 @@ bool AXP_Decode_Rename(AXP_21264_CPU *cpu, AXP_INS_LINE *next)
 			/*
 			 * Assign a unique ID to this instruction.
 			 */
-			decodedInstr[ii].uniqueID = cpu->instrCounter++;
+			decodedInstr.uniqueID = cpu->instrCounter++;
 
 			/*
 			 * First, decode the instruction.
 			 */
-			decodedInstr[ii].format = next->instrType[ii];
-			decodedInstr[ii].opcode = next->instructions[ii].pal.opcode;
-			decodedInstr[ii].type = insDecode[decodedInstr[ii].opcode].type;
-			switch (decodedInstr[ii].format)
-			{
-				case Pcd:	/* PAL_CODE instruction */
-					decodedInstr[ii].function = next->instructions[ii].pal.palcode_func;
-					decodedInstr[ii].displacement = 0;
-					decodedInstr[ii].aSrc1 = AXP_UNMAPPED_REG;
-					decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
-					decodedInstr[ii].aDest = AXP_UNMAPPED_REG;
-					break;
-
-				case Opr:	/* Operation instruction */
-					decodedInstr[ii].function = next->instructions[ii].oper1.func;
-					decodedInstr[ii].displacement = 0;
-					if (next->instructions[ii].oper1.fmt == 0)
-					{
-						decodedInstr[ii].literal = 0;
-						decodedInstr[ii].useLiteral = false;
-						decodedInstr[ii].aSrc1 = next->instructions[ii].oper1.rb;
-						decodedInstr[ii].aSrc2 = next->instructions[ii].oper1.rc;
-						decodedInstr[ii].aDest = next->instructions[ii].oper1.ra;
-					}
-					else
-					{
-						decodedInstr[ii].literal = next->instructions[ii].oper2.lit;
-						decodedInstr[ii].useLiteral = true;
-						decodedInstr[ii].aSrc1 = next->instructions[ii].oper1.rc;
-						decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
-						decodedInstr[ii].aDest = next->instructions[ii].oper1.ra;
-					}
-					break;
-
-				case Mem:
-					decodedInstr[ii].function = 0;
-					decodedInstr[ii].displacement = next->instructions[ii].mem.mem.disp;
-					if ((decodedInstr[ii].type == Load) ||
-						(decodedInstr[ii].type == Jump))
-					{
-						decodedInstr[ii].aSrc1 = next->instructions[ii].mem.rb;
-						decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
-						decodedInstr[ii].aDest = next->instructions[ii].mem.ra;
-					}
-					else	/* Store operations */
-					{
-						decodedInstr[ii].aSrc1 = next->instructions[ii].mem.ra;
-						decodedInstr[ii].aSrc2 = next->instructions[ii].mem.ra;
-						decodedInstr[ii].aDest = AXP_UNMAPPED_REG;
-					}
-					break;
-
-				case Mfc:	/* Memory with function-code instruction */
-					decodedInstr[ii].function = next->instructions[ii].mem.mem.func;
-					decodedInstr[ii].displacement = 0;
-					decodedInstr[ii].aSrc1 = next->instructions[ii].mem.rb;
-					decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
-					decodedInstr[ii].aDest = next->instructions[ii].mem.ra;
-					break;
-
-				case FP:	/* Floating-point instruction */
-					decodedInstr[ii].function = next->instructions[ii].fp.func;
-					decodedInstr[ii].displacement = 0;
-					decodedInstr[ii].aSrc1 = next->instructions[ii].fp.fb;
-					decodedInstr[ii].aSrc2 = next->instructions[ii].fp.fc;
-					decodedInstr[ii].aDest = next->instructions[ii].fp.fa;
-					break;
-
-				case Bra:
-				case FPBra:
-					decodedInstr[ii].function = 0;
-					decodedInstr[ii].displacement = next->instructions[ii].br.branch_disp;
-					if ((decodedInstr[ii].opcode == BR) ||
-						(decodedInstr[ii].opcode == BSR))
-					{
-						decodedInstr[ii].aSrc1 = AXP_UNMAPPED_REG;
-						decodedInstr[ii].aDest = next->instructions[ii].br.ra;
-					}
-					else
-					{
-						decodedInstr[ii].aSrc1 = next->instructions[ii].br.ra;
-						decodedInstr[ii].aDest = AXP_UNMAPPED_REG;
-					}
-					decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
-					break;
-
-				default:	/* No displacement or function */
-					decodedInstr[ii].displacement = 0;
-					decodedInstr[ii].function = 0;
-					decodedInstr[ii].aSrc1 = AXP_UNMAPPED_REG;
-					decodedInstr[ii].aSrc2 = AXP_UNMAPPED_REG;
-					decodedInstr[ii].aDest = AXP_UNMAPPED_REG;
-					break;
-			}
-			decodedInstr[ii].pc = next->instrPC[ii];
+			decodedInstr.format = next->instrType[ii];
+			decodedInstr.opcode = next->instructions[ii].pal.opcode;
+			decodedInstr.type = insDecode[decodedInstr[ii].opcode].type;
+			decodeRegisters = insDecode[decodedInstr[ii].opcode].registers;
+			if (decodeRegisters.bits.opcodeRegDecode != 0)
+				decodeRegisters.raw = 
+					decodeFuncs[decodeRegisters.bits.opcodeRegDecode](next->instructions[ii]);
 
 			/*
-			 * Finally, we have to rename the architectural registers to the
-			 * physical registers.
+			 * Decode destination register
 			 */
+			switch (decodeRegisters.bits.dest)
+			{
+				case AXP_DEST_RA:
+					decodedInstr.aDest = next->instructions[ii].oper1.ra;
+					break;
+
+				case AXP_DEST_RB:
+					decodedInstr.aDest = next->instructions[ii].oper1.rb;
+					break;
+
+				case AXP_DEST_RC:
+					decodedInstr.aDest = next->instructions[ii].oper1.rc;
+					break;
+
+				case AXP_DEST_FA:
+					decodedInstr.aDest = next->instructions[ii].fp.ra;
+					break;
+
+				case AXP_DEST_FB:
+					decodedInstr.aDest = next->instructions[ii].fp.rb;
+					break;
+
+				case AXP_DEST_FC:
+					decodedInstr.aDest = next->instructions[ii].fp.rc;
+					break;
+
+				default:
+					decodedInstr.aDest = AXP_UNMAPPED_REG;
+					break;
+			}
+
+			/*
+			 * Decode source1 register
+			 */
+			switch (decodeRegisters.bits.src1)
+			{
+				case AXP_DEST_RA:
+					decodedInstr.aSrc1 = next->instructions[ii].oper1.ra;
+					break;
+
+				case AXP_DEST_RB:
+					decodedInstr.aSrc1 = next->instructions[ii].oper1.rb;
+					break;
+
+				case AXP_DEST_RC:
+					decodedInstr.aSrc1 = next->instructions[ii].oper1.rc;
+					break;
+
+				case AXP_DEST_FA:
+					decodedInstr.aSrc1 = next->instructions[ii].fp.ra;
+					break;
+
+				case AXP_DEST_FB:
+					decodedInstr.aSrc1 = next->instructions[ii].fp.rb;
+					break;
+
+				case AXP_DEST_FC:
+					decodedInstr.aSrc1 = next->instructions[ii].fp.rc;
+					break;
+
+				default:
+					decodedInstr.aSrc1 = AXP_UNMAPPED_REG;
+					break;
+			}
+
+			/*
+			 * Decode destination register
+			 */
+			switch (decodeRegisters.bits.src2)
+			{
+				case AXP_DEST_RA:
+					decodedInstr.aSrc2 = next->instructions[ii].oper1.ra;
+					break;
+
+				case AXP_DEST_RB:
+					decodedInstr.aSrc2 = next->instructions[ii].oper1.rb;
+					break;
+
+				case AXP_DEST_RC:
+					decodedInstr.aSrc2 = next->instructions[ii].oper1.rc;
+					break;
+
+				case AXP_DEST_FA:
+					decodedInstr.aSrc2 = next->instructions[ii].fp.ra;
+					break;
+
+				case AXP_DEST_FB:
+					decodedInstr.aSrc2 = next->instructions[ii].fp.rb;
+					break;
+
+				case AXP_DEST_FC:
+					decodedInstr.aSrc2 = next->instructions[ii].fp.rc;
+					break;
+
+				default:
+					decodedInstr.aSrc2 = AXP_UNMAPPED_REG;
+					break;
+			}
+
+			/*
+			 * We need to rename the architectural registers to physical
+			 * registers, now that we know which one, if any, is the
+			 * destination register and which one(s) is(are) the source
+			 * register(s).
+			 */
+			 // AXP_renameRegisters(cpu, &decodedInstr, decodeRegisters.raw);
+			decodedInstr.pc = next->instrPC[ii];
 		}
 	}
 	return(retVal);
@@ -1214,4 +1241,122 @@ inline u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT instr)
 			break;
 	}
 	return(retVal);
+}
+
+/*
+ * AXP_RenameRegisters
+ *	This function is called to map the instruction registers from architectural
+ *	to physical ones.  For the destination register, we get the next one off
+ *	the freelist.  We also differentiate between integer and floating point
+ *	registers at this point (previously, we just noted it).
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *	decodedInstr:
+ *		A pointer to the structure containing a decoded representation of the
+ *		Alpha AXP instruction.
+ *	decodedRegs:
+ *		A value containing the flags indicating which registers are being
+ *		utilized.  We use this information to differentiate between integer
+ *		and floating-point registers.
+ *
+ * Output Parameters:
+ *	decodedInstr:
+ *		A pointer to structure that will be updated to indicate which physical
+ *		registers are being used for this particular instruction.
+ *
+ * Return Value:
+ *	None.
+ */
+static void AXP_RenameRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *decodedInstr, u16 decodedRegs)
+{
+	bool src1Float = ((decodedRegs & 0x0008) == 0x0008);
+	bool src2Float = ((decodedRegs & 0x0080) == 0x0080);
+	bool destFloat = ((decodedRegs & 0x0800) == 0x0800);
+
+	/*
+	 * The source registers just use the current register mapping (integer or
+	 * floating-point).  If the register number is 31, it is not mapped.
+	 *	TODO:	We need to determine if a non-mapped register (R31 or F31)
+	 *			needs to be indicated, somehow.
+	 */
+	if (decodedInstr->aSrc1 != AXP_UNMAPPED_REG)
+		decodedInstr->src1 = src1Float ?
+			cpu->pfMap[decodedInstr->aSrc1].pf :
+			cpu->pfMap[decodedInstr->aSrc1].pr;
+	if (decodedInstr->aSrc2 != AXP_UNMAPPED_REG)
+		decodedInstr->src2 = src2Float ?
+			cpu->pfMap[decodedInstr->aSrc2].pf :
+			cpu->pfMap[decodedInstr->aSrc2].pr;
+
+	/*
+	 * The destination register needs a little more work.  If the register
+	 * number is 31, it is not mapped.
+	 *	TODO:	We need to determine if a non-mapped register (R31 or F31)
+	 *			needs to be indicated, somehow.
+	 */
+	if (decodedInstr->aDest != AXP_UNMAPPED_REG)
+	{
+
+		/*
+		 * Is this a floating-point register or an integer register?
+		 */
+		if (destFloat)
+		{
+
+			/*
+			 * Get the next register off of the freelist.
+			 */
+			decodedInstr->dest = cpu->pfFreeList[cpu->pfFlStart++];
+
+			/*
+			 * If the register for the previous mapping was not R31 or F31
+			 * then, put this previous register back on the free list, then
+			 * make the previous mapping the current one and the current
+			 * mapping the register we just took off the freelist.
+			 */
+			if (cpu->pfMap[decodedInstr->aDest].prevPf != AXP_UNMAPPED_REG)
+				cpu->pfFreeList[cpu->pfFlEnd++] = cpu->pfMap[decodedInstr->aDest].prevPf;
+			cpu->pfMap[decodedInstr->aDest].prevPf = cpu->pfMap[decodedInstr->aDest].pf;
+			cpu->pfMap[decodedInstr->aDest].pf = decodedInstr->dest;
+
+			/*
+			 * Until the instruction executes, the newly mapped register is
+			 * pending a value.  After execution, the state will be waiting to
+			 * retire.  After retirement, the value will be written to the
+			 * physical register.
+			 */
+			cpu->pfState[decodedInstr->aDest] = Pending;
+		}
+		else
+		{
+
+			/*
+			 * Get the next register off of the freelist.
+			 */
+			decodedInstr->dest = cpu->prFreeList[cpu->prFlStart++];
+
+			/*
+			 * If the register for the previous mapping was not R31 or F31
+			 * then, put this previous register back on the free list, then
+			 * make the previous mapping the current one and the current
+			 * mapping the register we just took off the freelist.
+			 */
+			if (cpu->prMap[decodedInstr->aDest].prevPr != AXP_UNMAPPED_REG)
+				cpu->prFreeList[cpu->prFlEnd++] = cpu->prMap[decodedInstr->aDest].prevPr;
+			cpu->prMap[decodedInstr->aDest].prevPr = cpu->pfMap[decodedInstr->aDest].pr;
+			cpu->prMap[decodedInstr->aDest].pr = decodedInstr->dest;
+
+			/*
+			 * Until the instruction executes, the newly mapped register is
+			 * pending a value.  After execution, the state will be waiting to
+			 * retire.  After retirement, the value will be written to the
+			 * physical register.
+			 */
+			cpu->prState[decodedInstr->aDest] = Pending;
+		}
+	}
+	return;
 }
