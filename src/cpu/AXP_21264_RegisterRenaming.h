@@ -105,6 +105,13 @@ typedef struct
 #define AXP_OPCODE_18	0x6000		/* Opcode 18 needs special handling	*/
 #define AXP_OPCODE_1C	0x7000		/* Opcode 1c needs special handling	*/
 
+#define AXP_REG_RA		0x1
+#define AXP_REG_RB		0x2
+#define AXP_REG_RC		0x4
+#define AXP_REG_FA		0x9
+#define AXP_REG_FB		0xa
+#define AXP_REG_FC		0xc
+
 struct regDecode
 {
 	u16				src2 : 4;

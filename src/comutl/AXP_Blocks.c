@@ -58,7 +58,7 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 					 * The initial register mapping is 1 for one.  Also, the
 					 * contents of the register are ready.
 					 */
-					for (ii = 0; ii < (AXP_MAX_REGISTERS - 1); ii++)
+					for (ii = 0; ii < (AXP_REG_MAP_SIZE); ii++)
 					{
 						cpu->prMap[ii].pr = ii;
 						cpu->prMap[ii].prevPr = AXP_UNMAPPED_REG;
@@ -67,6 +67,23 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 						cpu->pfMap[ii].prevPr = AXP_UNMAPPED_REG;
 						cpu->pfState[ii] = Valid;
 					}
+
+					/*
+					 * The above loop initialized prMap and pfMap array entries
+					 * from 0 to 30 to be mapped to the physical registers also
+					 * from 0 to 30.  This next two lines of code initializes
+					 * the mapping for R31 and F31 to be mapped to an invalid
+					 * physical register.  This is used to indicate to the code
+					 * that implements the Alpha AXP instructions that, as a
+					 * source register is always a value of 0, and as a
+					 * destination register, never updated.  This will greatly
+					 * simplify the register (architectural and physical)
+					 * handling.
+					 */
+					cpu->prMap[AXP_MAX_REGISTERS].pr = AXP_INT_PHYS_REG + 1;
+					cpu->prMap[AXP_MAX_REGISTERS].prevPr = AXP_INT_PHYS_REG + 1;
+					cpu->pfMap[AXP_MAX_REGISTERS].pr = AXP_FP_PHYS_REG + 1;
+					cpu->pfMap[AXP_MAX_REGISTERS].prevPr = AXP_FP_PHYS_REG + 1;
 
 					/*
 					 * The remaining physical registers need to be put on the
@@ -96,6 +113,23 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 					 */
 					AXP_INIT_CQUE(cpu->iq, AXP_IQ_LEN);
 					AXP_INIT_CQUE(cpu->fq, AXP_FQ_LEN);
+
+					/*
+					 * Initialize the instruction queue cache.  These are
+					 * pre-allocated queue entries for the above.
+					 */
+					for (ii = 0; ii < AXP_IQ_LEN; ii++)
+					{
+						cpu->iqEFreelist[cpu->iqEFlEnd++] = ii;
+						AXP_INIT_CQENTRY(cpu->iqEntries[ii].header, cpu->iq);
+						cpu->iqEntries[ii].index = ii;
+					}
+					for (ii = 0; ii < AXP_FQ_LEN; ii++)
+					{
+						cpu->fqEFreelist[cpu->fqEFlEnd++] = ii;
+						AXP_INIT_CQENTRY(cpu->fqEntries[ii].header, cpu->fq);
+						cpu->fqEntries[ii].index = ii;
+					}
 				}
 			}
 			break;

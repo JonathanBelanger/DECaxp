@@ -68,6 +68,11 @@
 #define AXP_21264_PAGE_SIZE	8192	// 8KB page size
 #define AXP_INT_PHYS_REG	AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1
 #define AXP_FP_PHYS_REG		AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1
+#define AXP_REG_MAP_SIZE	AXP_MAX_REGISTERS - 1
+#define AXP_UNMAPPED_REG	31	/* R31 and F31 are never renamed/mapped */
+#define AXP_I_FREELIST_SIZE	AXP_INT_PHYS_REG - AXP_MAX_REGISTERS - 1
+#define AXP_F_FREELIST_SIZE	AXP_FP_PHYS_REG - AXP_MAX_REGISTERS - 1
+#define AXP_INFLIGHT_FETCHES 20
 #define AXP_INFLIGHT_MAX	80
 
 /*
@@ -77,8 +82,8 @@
 typedef struct
 {
 	bool			branch2bTaken;
-	bool			linePrediction;
-	bool			setPrediction;
+	u16				linePrediction;
+	u16				setPrediction;
 	u64				retPredStack;
 	AXP_INS_FMT		instructions[AXP_NUM_FETCH_INS];
 	AXP_INS_TYPE	instrType[AXP_NUM_FETCH_INS];
@@ -101,7 +106,6 @@ typedef enum
  * indicating if the instruction is Queued, Executing, WaitingRetirement, or
  * Retired.
  */
-#define AXP_UNMAPPED_REG	31	/* R31 and F31 are never renamed/mapped */
 typedef struct
 {
 	u8				uniqueID;	/* A unique id for each instruction */
@@ -112,6 +116,9 @@ typedef struct
 	u8				src2;		/* Physical register PR0-PR79, PF0-PF71 */
 	u8				aDest;		/* Architectural register R0-R30 or F0-F30 */
 	u8				dest;		/* Physical register PR0-PR79, PF0-PF71 */
+	u8				type_hint_index; /* HW_LD/ST type, HW_RET hint, HW_MxPR index */
+	u8				scbdMask;	/* HW_MxPR scbd_mask */
+	u8				len_stall : 1; /* HW_LD/ST len, HW_RET stall */
 	bool			useLiteral;	/* Indicator that the literal value is valid */
 	u32				function;	/* Function code for operation */
 	i64				displacement;/* Displacement from PC + 4 */
@@ -124,6 +131,13 @@ typedef struct
 	AXP_PC			pc;
 	AXP_INS_STATE	state;
 } AXP_INSTRUCTION;
+
+typedef struct
+{
+	AXP_CQUE_ENTRY		header;
+	AXP_INSTRUCTION		*ins;
+	u32					index;
+} AXP_QUEUE_ENTRY;
 
 typedef struct
 {
@@ -158,8 +172,15 @@ typedef struct
 	CPT			choicePredictor;
 	u16			globalPathHistory;
 
-	u8			instrCounter;		/* Unique ID assigned to each instuction*/
-	u8			reg_1;				/* Alogn to 32-bit boundary				*/
+	u8			instrCounter;		/* Unique ID for each instruction		*/
+	u8			reg_1;				/* Align to 32-bit boundary				*/
+
+	/*
+	 * This is equivalent to the VPC
+	 */
+	AXP_INS_LINE		vpc[AXP_INFLIGHT_FETCHES];
+	u32					vpcStart;
+	u32					vpcEnd;
 
 	/*
 	 * Reorder Buffer
@@ -173,6 +194,18 @@ typedef struct
 	 */
 	AXP_COUNTED_QUEUE	iq;
 	AXP_COUNTED_QUEUE	fq;
+
+	/*
+	 * Instruction Queue Pre-allocated Cache.
+	 */
+	AXP_QUEUE_ENTRY		iqEntries[AXP_IQ_LEN];
+	u32					iqEFreelist[AXP_IQ_LEN];
+	u32					iqEFlStart;
+	u32					iqEFlEnd;
+	AXP_QUEUE_ENTRY		fqEntries[AXP_FQ_LEN];
+	u32					fqEFreelist[AXP_IQ_LEN];
+	u32					fqEFlStart;
+	u32					fqEFlEnd;
 
 	/*
 	 * Ibox Internal Processor Registers (IPRs)
@@ -245,10 +278,10 @@ typedef struct
 	 * register (PR) is defined to which AR.
 	 */
 	u64					pr[AXP_INT_PHYS_REG];
-	u32					prFreeList[AXP_INT_PHYS_REG - AXP_MAX_REGISTERS - 1];
+	u32					prFreeList[AXP_I_FREELIST_SIZE];
 	u32					prFlStart;
 	u32					prFlEnd;
-	AXP_21264_REG_MAP	prMap[AXP_MAX_REGISTERS - 1];
+	AXP_21264_REG_MAP	prMap[AXP_REG_MAP_SIZE + 1];	/* map for R31		*/
 	AXP_21264_REG_STATE	prState[AXP_INT_PHYS_REG];
 
 	/*
@@ -283,10 +316,10 @@ typedef struct
 	 * just 1 set of 72 registers.
 	 */
 	u64					pf[AXP_FP_PHYS_REG];
-	u32					pfFreeList[AXP_FP_PHYS_REG - AXP_MAX_REGISTERS - 1];
+	u32					pfFreeList[AXP_F_FREELIST_SIZE];
 	u32					pfFlStart;
 	u32					pfFlEnd;
-	AXP_21264_REG_MAP	pfMap[AXP_MAX_REGISTERS - 1];
+	AXP_21264_REG_MAP	pfMap[AXP_REG_MAP_SIZE + 1];	/* map for R31		*/
 	AXP_21264_REG_STATE	pfState[AXP_FP_PHYS_REG];
 
 	/**************************************************************************

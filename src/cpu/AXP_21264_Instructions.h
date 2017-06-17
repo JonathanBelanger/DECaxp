@@ -100,7 +100,7 @@ typedef struct
 typedef struct
 {
 	 u32	fc : 5;					/* Floating Point Register c (source 2)	*/
-	 u32	func : 7;				/* Floating Point Function				*/
+	 u32	func : 11;				/* Floating Point Function				*/
 	 u32	fb : 5;					/* Floating Point Register b (source 1)	*/
 	 u32	fa : 5;					/* Floating Point Register a (target)	*/
 	 u32	opcode : 6;				/* Operation Code						*/
@@ -273,7 +273,7 @@ typedef enum
 #define HW_LD	0x1b	/* reserved for PALcode */
 #define FPTI	0x1c	/* FP & Opr */
 #define HW_MTPR	0x1d	/* reserved for PALcode */
-#define HW_REI	0x1e	/* reserved for PALcode */
+#define HW_RET	0x1e	/* reserved for PALcode */
 #define HW_ST	0x1f	/* reserved for PALcode */
 #define LDF		0x20	/* Mem */
 #define LDG		0x21	/* Mem */

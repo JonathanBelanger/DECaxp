@@ -47,7 +47,7 @@ void AXP_Branch_Direction(
 				bool taken,
 				bool localTaken,
 				bool globalTaken);
-AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst);
+AXP_INS_TYPE AXP_InstructionFormat(AXP_INS_FMT inst);
 AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 								AXP_PC pc,
 								AXP_INS_LINE *next);

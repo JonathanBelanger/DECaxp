@@ -91,6 +91,10 @@
 
 /*
  * Prototypes for local functions
+ *
+ * Functions to decode which instruction registers are used for which purpose
+ * for the complex instructions (opcodes that have different ways to use
+ * registers).
  */
 inline u16 AXP_RegisterDecodingOpcode11(AXP_INS_FMT);
 inline u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT);
@@ -98,6 +102,16 @@ inline u16 AXP_RegisterDecodingOpcode15_16(AXP_INS_FMT);
 inline u16 AXP_RegisterDecodingOpcode17(AXP_INS_FMT);
 inline u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT);
 inline u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT);
+static void AXP_RenameRegisters(AXP_21264_CPU *, AXP_INSTRUCTION *, u16);
+
+/*
+ * Functions that manage the instruction queue free entries.
+ */
+static AXP_QUEUE_ENTRY *AXP_GetNextIQEntry(AXP_21264_CPU *);
+static void AXP_ReturnIQEntry(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
+static AXP_QUEUE_ENTRY *AXP_GetNextFQEntry(AXP_21264_CPU *);
+static void AXP_ReturnFQEntry(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
+
 
 /*
  * The following module specific structure and variable contains a list of the
@@ -116,70 +130,70 @@ struct instructDecode
 static struct instructDecode insDecode[] =
 {
 /* Format	Type	Registers   									Opcode	Mnemonic	Description 					*/
-	{Pcd,	Other,	{ .raw = 0}},									/* 00		CALL_PAL	Trap to PALcode				*/
-	{Res,	Other,	{ .raw = 0}},									/* 01					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}},									/* 02					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}},									/* 03					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}},									/* 04					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}},									/* 05					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}},									/* 06					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}},									/* 07					Reserved for Digital		*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 08		LDA			Load address				*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 09		LDAH		Load address high			*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 0A		LDBU		Load zero-extended byte		*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 0B		LDQ_U		Load unaligned quadword		*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 0C		LDWU		Load zero-extended word		*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 0D		STW			Store word					*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 0E		STB			Store byte					*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 0F		STQ_U		Store unaligned quadword	*/
-	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}},	/* 10		ADDL		Add longword				*/
-	{Opr,	Other,	{ .raw = AXP_OPCODE_11}},						/* 11		AND			Logical product				*/
-	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}},	/* 12		MSKBL		Mask byte low				*/
-	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}},	/* 13		MULL		Multiply longword			*/
-	{FP,	Other,	{ .raw = AXP_OPCODE_14}},						/* 14		ITOFS		Int to float move, S_float	*/
-	{FP,	Other,	{ .raw = AXP_OPCODE_15}},						/* 15		ADDF		Add F_floating				*/
-	{FP,	Other,	{ .raw = AXP_OPCODE_16}},						/* 16		ADDS		Add S_floating				*/
-	{FP,	Other,	{ .raw = AXP_OPCODE_17}},						/* 17		CVTLQ		Convert longword to quad	*/
-	{Mfc,	Other,	{ .raw = AXP_OPCODE_18}},						/* 18		TRAPB		Trap barrier				*/
-	{PAL,	Load,	{ .raw = AXP_DEST_RA}},							/* 19		HW_MFPR		Reserved for PALcode		*/
-	{Mbr,	Other,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 1A		JMP			Jump						*/
-	{PAL,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 1B		HW_LD		Reserved for PALcode		*/
-	{Cond,	Other,	{ .raw = AXP_OPCODE_1C}},						/* 1C		SEXTB		Sign extend byte			*/
-	{PAL,	Store,	{ .raw = AXP_SRC1_RB}},							/* 1D		HW_MTPR		Reserved for PALcode		*/
-	{PAL,	Other,	{ .raw = AXP_SRC1_RB}},							/* 1E		HW_REI		Reserved for PALcode		*/
-	{PAL,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 1F		HW_ST		Reserved for PALcode		*/
-	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}},				/* 20 		LDF			Load F_floating				*/
-	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}},				/* 21		LDG			Load G_floating				*/
-	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}},				/* 22		LDS			Load S_floating				*/
-	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}},				/* 23		LDT			Load T_floating				*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}},				/* 24		STF			Store F_floating			*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}},				/* 25		STG			Store G_floating			*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}},				/* 26		STS			Store S_floating			*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}},				/* 27		STT			Store T_floating			*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 28		LDL			Load sign-extended long		*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 29		LDQ			Load quadword				*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 2A		LDL_L		Load sign-extend long lock	*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}},				/* 2B		LDQ_L		Load quadword locked		*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 2C		STL			Store longword				*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 2D		STQ			Store quadword				*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 2E		STL_C		Store longword conditional	*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}},				/* 2F		STQ_C		Store quadword conditional	*/
-	{Bra,	Other,	{ .raw = AXP_DEST_RA}},							/* 30		BR			Unconditional branch		*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 31		FBEQ		Floating branch if = zero	*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 32		FBLT		Floating branch if < zero	*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 33		FBLE		Floating branch if <= zero	*/
-	{Mbr,	Other,	{ .raw = AXP_DEST_RA}},							/* 34		BSR			Branch to subroutine		*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 35		FBNE		Floating branch if != zero	*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 36		FBGE		Floating branch if >=zero	*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}},							/* 37		FBGT		Floating branch if > zero	*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 38		BLBC		Branch if low bit clear		*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 39		BEQ			Branch if = zero			*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 3A		BLT			Branch if < zero			*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 3B		BLE			Branch if <= zero			*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 3C		BLBS		Branch if low bit set		*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 3D		BNE			Branch if != zero			*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}},							/* 3E		BGE			Branch if >= zero			*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}}							/* 3F		BGT			Branch if > zero			*/
+	{Pcd,	Other,	{ .raw = 0}, 0},								/* 00		CALL_PAL	Trap to PALcode				*/
+	{Res,	Other,	{ .raw = 0}, 0},								/* 01					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, 0},								/* 02					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, 0},								/* 03					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, 0},								/* 04					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, 0},								/* 05					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, 0},								/* 06					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, 0},								/* 07					Reserved for Digital		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 08		LDA			Load address				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 09		LDAH		Load address high			*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 0A		LDBU		Load zero-extended byte		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 0B		LDQ_U		Load unaligned quadword		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 0C		LDWU		Load zero-extended word		*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 0D		STW			Store word					*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 0E		STB			Store byte					*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 0F		STQ_U		Store unaligned quadword	*/
+	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, 0},/* 10		ADDL		Add longword				*/
+	{Opr,	Other,	{ .raw = AXP_OPCODE_11}, 0},					/* 11		AND			Logical product				*/
+	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, 0},/* 12		MSKBL		Mask byte low				*/
+	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, 0},/* 13		MULL		Multiply longword			*/
+	{FP,	Other,	{ .raw = AXP_OPCODE_14}, 0},					/* 14		ITOFS		Int to float move, S_float	*/
+	{FP,	Other,	{ .raw = AXP_OPCODE_15}, 0},					/* 15		ADDF		Add F_floating				*/
+	{FP,	Other,	{ .raw = AXP_OPCODE_16}, 0},					/* 16		ADDS		Add S_floating				*/
+	{FP,	Other,	{ .raw = AXP_OPCODE_17}, 0},					/* 17		CVTLQ		Convert longword to quad	*/
+	{Mfc,	Other,	{ .raw = AXP_OPCODE_18}, 0},					/* 18		TRAPB		Trap barrier				*/
+	{PAL,	Load,	{ .raw = AXP_DEST_RA}, 0},						/* 19		HW_MFPR		Reserved for PALcode		*/
+	{Mbr,	Other,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 1A		JMP			Jump						*/
+	{PAL,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 1B		HW_LD		Reserved for PALcode		*/
+	{Cond,	Other,	{ .raw = AXP_OPCODE_1C}, 0},					/* 1C		SEXTB		Sign extend byte			*/
+	{PAL,	Store,	{ .raw = AXP_SRC1_RB}, 0},						/* 1D		HW_MTPR		Reserved for PALcode		*/
+	{PAL,	Other,	{ .raw = AXP_SRC1_RB}, 0},						/* 1E		HW_REI		Reserved for PALcode		*/
+	{PAL,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 1F		HW_ST		Reserved for PALcode		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, 0},			/* 20 		LDF			Load F_floating				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, 0},			/* 21		LDG			Load G_floating				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, 0},			/* 22		LDS			Load S_floating				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, 0},			/* 23		LDT			Load T_floating				*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, 0},			/* 24		STF			Store F_floating			*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, 0},			/* 25		STG			Store G_floating			*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, 0},			/* 26		STS			Store S_floating			*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, 0},			/* 27		STT			Store T_floating			*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 28		LDL			Load sign-extended long		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 29		LDQ			Load quadword				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 2A		LDL_L		Load sign-extend long lock	*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 2B		LDQ_L		Load quadword locked		*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 2C		STL			Store longword				*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 2D		STQ			Store quadword				*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 2E		STL_C		Store longword conditional	*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 2F		STQ_C		Store quadword conditional	*/
+	{Bra,	Other,	{ .raw = AXP_DEST_RA}, 0},						/* 30		BR			Unconditional branch		*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 31		FBEQ		Floating branch if = zero	*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 32		FBLT		Floating branch if < zero	*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 33		FBLE		Floating branch if <= zero	*/
+	{Mbr,	Other,	{ .raw = AXP_DEST_RA}, 0},						/* 34		BSR			Branch to subroutine		*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 35		FBNE		Floating branch if != zero	*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 36		FBGE		Floating branch if >=zero	*/
+	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 37		FBGT		Floating branch if > zero	*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 38		BLBC		Branch if low bit clear		*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 39		BEQ			Branch if = zero			*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 3A		BLT			Branch if < zero			*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 3B		BLE			Branch if <= zero			*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 3C		BLBS		Branch if low bit set		*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 3D		BNE			Branch if != zero			*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 3E		BGE			Branch if >= zero			*/
+	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0}						/* 3F		BGT			Branch if > zero			*/
 };
 
 /*
@@ -192,7 +206,7 @@ static struct instructDecode insDecode[] =
  typedef u16 (*regDecodeFunc)(AXP_INS_FMT);
 regDecodeFunc decodeFuncs[] =
 {
-	null,
+	NULL,
 	AXP_RegisterDecodingOpcode11,
 	AXP_RegisterDecodingOpcode14,
 	AXP_RegisterDecodingOpcode15_16,
@@ -405,8 +419,8 @@ void AXP_Branch_Direction(
 }
 
 /*
- * AXP_InstructionType
- *	This function is called to determine what type of instruction is specified
+ * AXP_InstructionFormat
+ *	This function is called to determine what format of instruction is specified
  *	in the supplied 32-bit instruction.
  *
  * Input Parameters:
@@ -419,7 +433,7 @@ void AXP_Branch_Direction(
  * Return Value:
  *	A value representing the type of instruction specified.
  */
-AXP_INS_TYPE AXP_InstructionType(AXP_INS_FMT inst)
+AXP_INS_TYPE AXP_InstructionFormat(AXP_INS_FMT inst)
 {
 	AXP_INS_TYPE retVal = Res;
 
@@ -545,9 +559,52 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 		{
 			next->instructions[ii] =
 				cpu->iCache[index][set].instructions[offset + ii];
-			next->instrType[ii] = AXP_InstructionType(next->instructions[ii]);
+			next->instrType[ii] = AXP_InstructionFormat(next->instructions[ii]);
 			next->instrPC[ii] = tmpPC;
 			tmpPC.pc++;
+		}
+
+		/*
+		 * Line (index) and Set prediction, at this point, should indicate the
+		 * next instruction to be read from the cache (it could be the current
+		 * list and set).  The following logic is used:
+		 *
+		 * If there are instructions left in the current cache line, then we
+		 * 		use the same line and set
+		 * Otherwise,
+		 * 	If we are only utilizing a single set, then we go to the next line
+		 * 		and the same set
+		 * 	Otherwise,
+		 * 		If we are at the first set, then we go to the next set on the
+		 * 			same line
+		 * 		Otherwise,
+		 * 			We go to the next line and the first set.
+		 *
+		 * NOTE: When the prediction code is run, it may recalculate these
+		 * 		 values.
+		 */
+		if ((offset + AXP_NUM_FETCH_INS + 1) < AXP_ICACHE_LINE_INS)
+		{
+			next->linePrediction = index;			/* same line */
+			next->setPrediction = set;				/* same set */
+		}
+		else
+		{
+			if ((cpu->iCtl.ic_en == 1) || (cpu->iCtl.ic_en == 2))
+			{
+				next->linePrediction = index + 1;	/* next line */
+				next->setPrediction = set;			/* only set */
+			}
+			else if (set == 0)
+			{
+				next->linePrediction = index;		/* same line */
+				next->setPrediction = 1;			/* last set */
+			}
+			else
+			{
+				next->linePrediction = index + 1;	/* next line */
+				next->setPrediction = 0;			/* first set */
+			}
 		}
 		retVal = Hit;
 	}
@@ -575,13 +632,13 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 		 * NOTE:	The gh field is a 2 bit field that represents the
 		 * 			following:
 		 *
-		 * 						System Page Size (SPS)
-		 * 			gh		8KB		16KB	32KB	64KB	From SPS
-		 * 			-------------------------------------	-----------------------
-		 * 			00 (0)	  8KB	 16KB	 32KB	 64KB	  1x [8^0 = 1 << (0*3)]
-		 * 			01 (1)	 64KB	128KB	256KB	  2MB	  8x [8^1 = 1 << (1*3)]
-		 * 			10 (2)	512KB	  1MB	  2MB	 64MB	 64x [8^2 = 1 << (2*3)]
-		 * 			11 (3)	  4MB	  8MB	 16MB	512MB	512x [8^3 = 1 << (3*3)]
+		 * 					System Page Size (SPS)
+		 * 		gh		8KB		16KB	32KB	64KB	From SPS
+		 * 		-------------------------------------	-----------------------
+		 * 		00 (0)	  8KB	 16KB	 32KB	 64KB	  1x [8^0 = 1 << (0*3)]
+		 * 		01 (1)	 64KB	128KB	256KB	  2MB	  8x [8^1 = 1 << (1*3)]
+		 * 		10 (2)	512KB	  1MB	  2MB	 64MB	 64x [8^2 = 1 << (2*3)]
+		 * 		11 (3)	  4MB	  8MB	 16MB	512MB	512x [8^3 = 1 << (3*3)]
 		 */
 		for (ii = cpu->itbStart; ii < cpu->itbEnd; ii++)
 		{
@@ -723,8 +780,6 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
  * 	we just have to find the next location to enter the next item.  If we are
  * 	using a currently used field, we'll need to evict all the associated Icache
  * 	items with the same tag.
- *
- * TODO: Do we want to put the instructions in the cache as well?
  */
 void AXP_ITBAdd(AXP_21264_CPU *cpu,
 				AXP_IBOX_ITB_TAG itbTag,
@@ -837,184 +892,212 @@ void AXP_ITBAdd(AXP_21264_CPU *cpu,
  *		processed.
  *
  * Output Parameters:
- *	cpu.[i|f]q[[i|f]qEnd]:	-- implicit
- *		Each of the 4 instructions get queued to the end of the appropriate
- *		instruction queue (IQ or FQ).
+ * 	decodedInsr:
+ * 		A pointer to the decoded version of the instruction.
  *
  * Return value:
- * 	true:
- * 		Instructions successfully queued up.
- * 	false:
- * 		At least one of the instruction queues is full.  Stall.
+ * 	None.
  */
-bool AXP_Decode_Rename(AXP_21264_CPU *cpu, AXP_INS_LINE *next)
+void AXP_Decode_Rename(AXP_21264_CPU *cpu,
+					   AXP_INS_LINE *next,
+					   int nextInstr,
+					   AXP_INSTRUCTION *decodedInstr)
 {
-	AXP_INSTRUCTION decodedInstr;
 	AXP_REG_DECODE decodeRegisters;
-	int ii;
-	u32 intCnt, fpCnt;
-	bool retVal = true;
 
 	/*
-	 * Determine if there  is enough space to queue up the next set of
-	 * instructions.
+	 * Decode the next instruction.
+	 *
+	 * First, Assign a unique ID to this instruction (the counter should
+	 * auto-wrap).
 	 */
-	intCnt = fpCnt = 0;
-	for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
+	decodedInstr->uniqueID = cpu->instrCounter++;
+
+	/*
+	 * Let's, decode the instruction.
+	 */
+	decodedInstr->format = next->instrType[nextInstr];
+	decodedInstr->opcode = next->instructions[nextInstr].pal.opcode;
+	switch (decodedInstr->format)
 	{
-		if ((next->instrType[ii] == FP) || (next->instrType[ii] == FPBra))
-			fpCnt++;
-		else
-			intCnt++;
+		case Bra:
+		case FPBra:
+			decodedInstr->displacement = next->instructions[nextInstr].br.branch_disp;
+			break;
+
+		case FP:
+			decodedInstr->function = next->instructions[nextInstr].fp.func;
+			break;
+
+		case Mem:
+		case Mbr:
+			decodedInstr->displacement = next->instructions[nextInstr].mem.mem.disp;
+			break;
+
+		case Mfc:
+			decodedInstr->function = next->instructions[nextInstr].mem.mem.func;
+			break;
+
+		case Opr:
+			decodedInstr->function = next->instructions[nextInstr].oper1.func;
+			break;
+
+		case Pcd:
+			decodedInstr->function = next->instructions[nextInstr].pal.palcode_func;
+			break;
+
+		case PAL:
+			switch (decodedInstr->opcode)
+			{
+				case HW_LD:
+				case HW_ST:
+					decodedInstr->displacement = next->instructions[nextInstr].hw_ld.disp;
+					decodedInstr->type_hint_index = next->instructions[nextInstr].hw_ld.type;
+					decodedInstr->len_stall = next->instructions[nextInstr].hw_ld.len;
+					break;
+
+				case HW_RET:
+					decodedInstr->displacement = next->instructions[nextInstr].hw_ret.disp;
+					decodedInstr->type_hint_index = next->instructions[nextInstr].hw_ret.hint;
+					decodedInstr->len_stall = next->instructions[nextInstr].hw_ret.stall;
+					break;
+
+				case HW_MFPR:
+				case HW_MTPR:
+					decodedInstr->type_hint_index = next->instructions[nextInstr].hw_mxpr.index;
+					decodedInstr->scbdMask = next->instructions[nextInstr].hw_mxpr.scbd_mask;
+					break;
+
+				default:
+					break;
+			}
+			break;
+
+		default:
+			break;
 	}
-	if (intCnt > (AXP_IQ_LEN - AXP_CQUE_COUNT(cpu->iq)))
+	decodedInstr->type = insDecode[decodedInstr->opcode].type;
+	decodeRegisters = insDecode[decodedInstr->opcode].registers;
+	if (decodeRegisters.bits.opcodeRegDecode != 0)
+		decodeRegisters.raw =
+			decodeFuncs[decodeRegisters.bits.opcodeRegDecode]
+				(next->instructions[nextInstr]);
+
+	/*
+	 * Decode destination register
+	 */
+	switch (decodeRegisters.bits.dest)
 	{
-		printf("DECEMU-W-IQINSUF, insufficient space in Integer Instruction Queue.\n");
-		retVal = false;
-	}
-	else if (fpCnt > (AXP_IQ_LEN - AXP_CQUE_COUNT(cpu->fq)))
-	{
-		printf("DECEMU-W-FQINSUF, insufficient space in Floating-point Instruction Queue.\n");
-		retVal = false;
+		case AXP_REG_RA:
+			decodedInstr->aDest = next->instructions[nextInstr].oper1.ra;
+			break;
+
+		case AXP_REG_RB:
+			decodedInstr->aDest = next->instructions[nextInstr].oper1.rb;
+			break;
+
+		case AXP_REG_RC:
+			decodedInstr->aDest = next->instructions[nextInstr].oper1.rc;
+			break;
+
+		case AXP_REG_FA:
+			decodedInstr->aDest = next->instructions[nextInstr].fp.fa;
+			break;
+
+		case AXP_REG_FB:
+			decodedInstr->aDest = next->instructions[nextInstr].fp.fb;
+			break;
+
+		case AXP_REG_FC:
+			decodedInstr->aDest = next->instructions[nextInstr].fp.fc;
+			break;
+
+		default:
+			decodedInstr->aDest = AXP_UNMAPPED_REG;
+			break;
 	}
 
 	/*
-	 * Loop through each of the instructions.  Instructions are inserted
-	 * into the queue at the bottom and
+	 * Decode source1 register
 	 */
-	if (retVal == true)
+	switch (decodeRegisters.bits.src1)
 	{
-		for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
-		{
-			/*
-			 * Assign a unique ID to this instruction.
-			 */
-			decodedInstr.uniqueID = cpu->instrCounter++;
+		case AXP_REG_RA:
+			decodedInstr->aSrc1 = next->instructions[nextInstr].oper1.ra;
+			break;
 
-			/*
-			 * First, decode the instruction.
-			 */
-			decodedInstr.format = next->instrType[ii];
-			decodedInstr.opcode = next->instructions[ii].pal.opcode;
-			decodedInstr.type = insDecode[decodedInstr[ii].opcode].type;
-			decodeRegisters = insDecode[decodedInstr[ii].opcode].registers;
-			if (decodeRegisters.bits.opcodeRegDecode != 0)
-				decodeRegisters.raw = 
-					decodeFuncs[decodeRegisters.bits.opcodeRegDecode](next->instructions[ii]);
+		case AXP_REG_RB:
+			decodedInstr->aSrc1 = next->instructions[nextInstr].oper1.rb;
+			break;
 
-			/*
-			 * Decode destination register
-			 */
-			switch (decodeRegisters.bits.dest)
-			{
-				case AXP_DEST_RA:
-					decodedInstr.aDest = next->instructions[ii].oper1.ra;
-					break;
+		case AXP_REG_RC:
+			decodedInstr->aSrc1 = next->instructions[nextInstr].oper1.rc;
+			break;
 
-				case AXP_DEST_RB:
-					decodedInstr.aDest = next->instructions[ii].oper1.rb;
-					break;
+		case AXP_REG_FA:
+			decodedInstr->aSrc1 = next->instructions[nextInstr].fp.fa;
+			break;
 
-				case AXP_DEST_RC:
-					decodedInstr.aDest = next->instructions[ii].oper1.rc;
-					break;
+		case AXP_REG_FB:
+			decodedInstr->aSrc1 = next->instructions[nextInstr].fp.fb;
+			break;
 
-				case AXP_DEST_FA:
-					decodedInstr.aDest = next->instructions[ii].fp.ra;
-					break;
+		case AXP_REG_FC:
+			decodedInstr->aSrc1 = next->instructions[nextInstr].fp.fc;
+			break;
 
-				case AXP_DEST_FB:
-					decodedInstr.aDest = next->instructions[ii].fp.rb;
-					break;
-
-				case AXP_DEST_FC:
-					decodedInstr.aDest = next->instructions[ii].fp.rc;
-					break;
-
-				default:
-					decodedInstr.aDest = AXP_UNMAPPED_REG;
-					break;
-			}
-
-			/*
-			 * Decode source1 register
-			 */
-			switch (decodeRegisters.bits.src1)
-			{
-				case AXP_DEST_RA:
-					decodedInstr.aSrc1 = next->instructions[ii].oper1.ra;
-					break;
-
-				case AXP_DEST_RB:
-					decodedInstr.aSrc1 = next->instructions[ii].oper1.rb;
-					break;
-
-				case AXP_DEST_RC:
-					decodedInstr.aSrc1 = next->instructions[ii].oper1.rc;
-					break;
-
-				case AXP_DEST_FA:
-					decodedInstr.aSrc1 = next->instructions[ii].fp.ra;
-					break;
-
-				case AXP_DEST_FB:
-					decodedInstr.aSrc1 = next->instructions[ii].fp.rb;
-					break;
-
-				case AXP_DEST_FC:
-					decodedInstr.aSrc1 = next->instructions[ii].fp.rc;
-					break;
-
-				default:
-					decodedInstr.aSrc1 = AXP_UNMAPPED_REG;
-					break;
-			}
-
-			/*
-			 * Decode destination register
-			 */
-			switch (decodeRegisters.bits.src2)
-			{
-				case AXP_DEST_RA:
-					decodedInstr.aSrc2 = next->instructions[ii].oper1.ra;
-					break;
-
-				case AXP_DEST_RB:
-					decodedInstr.aSrc2 = next->instructions[ii].oper1.rb;
-					break;
-
-				case AXP_DEST_RC:
-					decodedInstr.aSrc2 = next->instructions[ii].oper1.rc;
-					break;
-
-				case AXP_DEST_FA:
-					decodedInstr.aSrc2 = next->instructions[ii].fp.ra;
-					break;
-
-				case AXP_DEST_FB:
-					decodedInstr.aSrc2 = next->instructions[ii].fp.rb;
-					break;
-
-				case AXP_DEST_FC:
-					decodedInstr.aSrc2 = next->instructions[ii].fp.rc;
-					break;
-
-				default:
-					decodedInstr.aSrc2 = AXP_UNMAPPED_REG;
-					break;
-			}
-
-			/*
-			 * We need to rename the architectural registers to physical
-			 * registers, now that we know which one, if any, is the
-			 * destination register and which one(s) is(are) the source
-			 * register(s).
-			 */
-			 // AXP_renameRegisters(cpu, &decodedInstr, decodeRegisters.raw);
-			decodedInstr.pc = next->instrPC[ii];
-		}
+		default:
+			decodedInstr->aSrc1 = AXP_UNMAPPED_REG;
+			break;
 	}
-	return(retVal);
+
+	/*
+	 * Decode destination register
+	 */
+	switch (decodeRegisters.bits.src2)
+	{
+		case AXP_REG_RA:
+			decodedInstr->aSrc2 = next->instructions[nextInstr].oper1.ra;
+			break;
+
+		case AXP_REG_RB:
+			decodedInstr->aSrc2 = next->instructions[nextInstr].oper1.rb;
+			break;
+
+		case AXP_REG_RC:
+			decodedInstr->aSrc2 = next->instructions[nextInstr].oper1.rc;
+			break;
+
+		case AXP_REG_FA:
+			decodedInstr->aSrc2 = next->instructions[nextInstr].fp.fa;
+			break;
+
+		case AXP_REG_FB:
+			decodedInstr->aSrc2 = next->instructions[nextInstr].fp.fb;
+			break;
+
+		case AXP_REG_FC:
+			decodedInstr->aSrc2 = next->instructions[nextInstr].fp.fc;
+			break;
+
+		default:
+			decodedInstr->aSrc2 = AXP_UNMAPPED_REG;
+			break;
+	}
+
+	/*
+	 * We need to rename the architectural registers to physical
+	 * registers, now that we know which one, if any, is the
+	 * destination register and which one(s) is(are) the source
+	 * register(s).
+	 */
+	AXP_RenameRegisters(cpu, decodedInstr, decodeRegisters.raw);
+	decodedInstr->pc = next->instrPC[nextInstr];
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
 }
 
 /*
@@ -1105,7 +1188,7 @@ inline u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT instr)
  */
 inline u16 AXP_RegisterDecodingOpcode15_16(AXP_INS_FMT instr)
 {
-	u16 retVal = AXP_DESC_FC;
+	u16 retVal = AXP_DEST_FC;
 
 	if ((instr.fp.func & 0x008) == 0)
 		retVal |= (AXP_SRC1_FA|AXP_SRC2_FB);
@@ -1182,14 +1265,14 @@ inline u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT instr)
 {
 	u16 retVal = 0;
 
-	if ((instr.mem.func & 0x8000) != 0)
+	if ((instr.mem.mem.func & 0x8000) != 0)
 	{
 		if ((instr.mem.mem.func == 0xc000) ||
 			(instr.mem.mem.func == 0xe000) ||
 			(instr.mem.mem.func == 0xf000))
 			retVal = AXP_DEST_RA;
 		else
-			retVal = AXP_SRC_RB;
+			retVal = AXP_SRC1_RB;
 	}
 	return(retVal);
 }
@@ -1228,8 +1311,8 @@ inline u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT instr)
 		case 0x3d:
 		case 0x3e:
 		case 0x3f:
-			retVal |= (AXP_SRC_RA|AXP_SRC2_RB);
-			Break;
+			retVal |= (AXP_SRC1_RA|AXP_SRC2_RB);
+			break;
 
 		case 0x70:
 		case 0x78:
@@ -1279,23 +1362,15 @@ static void AXP_RenameRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *decodedInst
 	/*
 	 * The source registers just use the current register mapping (integer or
 	 * floating-point).  If the register number is 31, it is not mapped.
-	 *	TODO:	We need to determine if a non-mapped register (R31 or F31)
-	 *			needs to be indicated, somehow.
 	 */
-	if (decodedInstr->aSrc1 != AXP_UNMAPPED_REG)
-		decodedInstr->src1 = src1Float ?
-			cpu->pfMap[decodedInstr->aSrc1].pf :
-			cpu->pfMap[decodedInstr->aSrc1].pr;
-	if (decodedInstr->aSrc2 != AXP_UNMAPPED_REG)
-		decodedInstr->src2 = src2Float ?
-			cpu->pfMap[decodedInstr->aSrc2].pf :
-			cpu->pfMap[decodedInstr->aSrc2].pr;
+	decodedInstr->src1 = src1Float ? cpu->pfMap[decodedInstr->aSrc1].pr :
+			cpu->prMap[decodedInstr->aSrc1].pr;
+	decodedInstr->src2 = src2Float ? cpu->pfMap[decodedInstr->aSrc2].pr :
+			cpu->prMap[decodedInstr->aSrc2].pr;
 
 	/*
 	 * The destination register needs a little more work.  If the register
 	 * number is 31, it is not mapped.
-	 *	TODO:	We need to determine if a non-mapped register (R31 or F31)
-	 *			needs to be indicated, somehow.
 	 */
 	if (decodedInstr->aDest != AXP_UNMAPPED_REG)
 	{
@@ -1307,20 +1382,23 @@ static void AXP_RenameRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *decodedInst
 		{
 
 			/*
-			 * Get the next register off of the freelist.
+			 * Get the next register off of the free-list.
 			 */
-			decodedInstr->dest = cpu->pfFreeList[cpu->pfFlStart++];
+			decodedInstr->dest = cpu->pfFreeList[cpu->pfFlStart];
 
 			/*
 			 * If the register for the previous mapping was not R31 or F31
-			 * then, put this previous register back on the free list, then
+			 * then, put this previous register back on the free-list, then
 			 * make the previous mapping the current one and the current
-			 * mapping the register we just took off the freelist.
+			 * mapping the register we just took off the free-list.
 			 */
-			if (cpu->pfMap[decodedInstr->aDest].prevPf != AXP_UNMAPPED_REG)
-				cpu->pfFreeList[cpu->pfFlEnd++] = cpu->pfMap[decodedInstr->aDest].prevPf;
-			cpu->pfMap[decodedInstr->aDest].prevPf = cpu->pfMap[decodedInstr->aDest].pf;
-			cpu->pfMap[decodedInstr->aDest].pf = decodedInstr->dest;
+			if (cpu->pfMap[decodedInstr->aDest].prevPr != AXP_UNMAPPED_REG)
+			{
+				cpu->pfFreeList[cpu->pfFlEnd] = cpu->pfMap[decodedInstr->aDest].prevPr;
+				cpu->pfFlEnd = (cpu->pfFlEnd + 1) % AXP_F_FREELIST_SIZE;
+			}
+			cpu->pfMap[decodedInstr->aDest].prevPr = cpu->pfMap[decodedInstr->aDest].pr;
+			cpu->pfMap[decodedInstr->aDest].pr = decodedInstr->dest;
 
 			/*
 			 * Until the instruction executes, the newly mapped register is
@@ -1329,23 +1407,32 @@ static void AXP_RenameRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *decodedInst
 			 * physical register.
 			 */
 			cpu->pfState[decodedInstr->aDest] = Pending;
+
+			/*
+			 * Compute the next free physical register on the free-list.  Wrap
+			 * the counter to the beginning of the list, if we are at the end.
+			 */
+			cpu->pfFlStart = (cpu->pfFlStart + 1) % AXP_F_FREELIST_SIZE;
 		}
 		else
 		{
 
 			/*
-			 * Get the next register off of the freelist.
+			 * Get the next register off of the free-list.
 			 */
 			decodedInstr->dest = cpu->prFreeList[cpu->prFlStart++];
 
 			/*
 			 * If the register for the previous mapping was not R31 or F31
-			 * then, put this previous register back on the free list, then
+			 * then, put this previous register back on the free-list, then
 			 * make the previous mapping the current one and the current
-			 * mapping the register we just took off the freelist.
+			 * mapping the register we just took off the free-list.
 			 */
 			if (cpu->prMap[decodedInstr->aDest].prevPr != AXP_UNMAPPED_REG)
-				cpu->prFreeList[cpu->prFlEnd++] = cpu->prMap[decodedInstr->aDest].prevPr;
+			{
+				cpu->prFreeList[cpu->prFlEnd] = cpu->prMap[decodedInstr->aDest].prevPr;
+				cpu->prFlEnd = (cpu->prFlEnd + 1) % AXP_I_FREELIST_SIZE;
+			}
 			cpu->prMap[decodedInstr->aDest].prevPr = cpu->pfMap[decodedInstr->aDest].pr;
 			cpu->prMap[decodedInstr->aDest].pr = decodedInstr->dest;
 
@@ -1356,7 +1443,163 @@ static void AXP_RenameRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *decodedInst
 			 * physical register.
 			 */
 			cpu->prState[decodedInstr->aDest] = Pending;
+
+			/*
+			 * Compute the next free physical register on the free-list.  Wrap
+			 * the counter to the beginning of the list, if we are at the end.
+			 */
+			cpu->prFlStart = (cpu->prFlStart + 1) % AXP_I_FREELIST_SIZE;
 		}
 	}
+	else
+	{
+
+		/*
+		 * No need to map R31 or F31 to a physical register on the free-list.
+		 * R31 and F31 always equal zero and writes to them do not occur.
+		 */
+		decodedInstr->dest = src2Float ? cpu->pfMap[decodedInstr->aDest].pr :
+				cpu->prMap[decodedInstr->aDest].pr;
+	}
+	return;
+}
+
+/*
+ * AXP_GetNextIQEntry
+ * 	This function is called to get the next available entry for the IQ queue.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	A pointer to the next available pre-allocated queue entry for the IQ.
+ *
+ * NOTE:	This function assumes that there is always at least one free entry.
+ * 			Since the number of entries pre-allocated is equal to the maximum
+ * 			number of entrys that can be in the IQ, this is not necessarily a
+ * 			bad assumption.
+ */
+static AXP_QUEUE_ENTRY *AXP_GetNextIQEntry(AXP_21264_CPU *cpu)
+{
+	AXP_QUEUE_ENTRY *retVal = NULL;
+
+	retVal = &cpu->iqEntries[cpu->iqEFlStart];
+	cpu->iqEFlStart = (cpu->iqEFlStart + 1) % AXP_IQ_LEN;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_ReturnIQEntry
+ * 	This function is called to get the next available entry for the IQ queue.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *	entry:
+ *		A pointer to the entry being returned to the free-list.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+static void AXP_ReturnIQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
+{
+
+	/*
+	 * Enter the index of the IQ entry onto the end of the free-list.
+	 */
+	cpu->iqEFreelist[cpu->iqEFlEnd] = entry->index;
+
+	/*
+	 * Increment the counter, in a round-robin fashion, for the entry just
+	 * after end of the free-list.
+	 */
+	cpu->iqEFlEnd = (cpu->iqEFlEnd + 1) % AXP_IQ_LEN;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_GetNextFQEntry
+ * 	This function is called to get the next available entry for the FQ queue.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	A pointer to the next available pre-allocated queue entry for the FQ.
+ *
+ * NOTE:	This function assumes that there is always at least one free entry.
+ * 			Since the number of entries pre-allocated is equal to the maximum
+ * 			number of entrys that can be in the FQ, this is not necessarily a
+ * 			bad assumption.
+ */
+static AXP_QUEUE_ENTRY *AXP_GetNextFQEntry(AXP_21264_CPU *cpu)
+{
+	AXP_QUEUE_ENTRY *retVal = NULL;
+
+	retVal = &cpu->fqEntries[cpu->fqEFlStart];
+	cpu->fqEFlStart = (cpu->fqEFlStart + 1) % AXP_FQ_LEN;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_ReturnFQEntry
+ * 	This function is called to get the next available entry for the FQ queue.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *	entry:
+ *		A pointer to the entry being returned to the free-list.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+static void AXP_ReturnFQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
+{
+
+	/*
+	 * Enter the index of the IQ entry onto the end of the free-list.
+	 */
+	cpu->fqEFreelist[cpu->fqEFlEnd] = entry->index;
+
+	/*
+	 * Increment the counter, in a round-robin fashion, for the entry just
+	 * after end of the free-list.
+	 */
+	cpu->fqEFlEnd = (cpu->fqEFlEnd + 1) % AXP_FQ_LEN;
+
+	/*
+	 * Return back to the caller.
+	 */
 	return;
 }

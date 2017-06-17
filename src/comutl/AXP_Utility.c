@@ -162,3 +162,111 @@ AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ)
 		entry = (AXP_QUEUE_HDR *) lruQ->flink;
 	return(entry);
 }
+
+/*
+ * AXP_InsertCountedQueue
+ * 	This function is called to insert an entry into a specific location within
+ * 	a counted queue.  The counter at the queue parent (head) is incremented.
+ *
+ * Input Parameters:
+ * 	pred:
+ * 		A pointer to the predecessor entry where 'entry' is to be inserted.
+ * 	entry:
+ * 		A pointer to the entry that is to be inserted.
+ *
+ * Output Parameters:
+ * 	pred:
+ * 		The forward link now points to 'entry' and the backward link of the
+ * 		entry that originally succeeded 'pred' also points to 'entry'.
+ * 	entry:
+ * 		The backward link now points to 'pred' and the forward link points to
+ * 		the entry previously pointed to by 'pred's forward link.
+ *
+ * Return Value:
+ * -1, if the queue has the maximum number of entries.
+ * 	0, if the queue was not empty before adding the entry.
+ * 	1, if the queue was empty.
+ */
+i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
+{
+	i32 retVal;
+
+	if (entry->parent->count <= entry->parent->max)
+	{
+
+		/*
+		 * Let's first have the entry we are inserting into the queue point to its
+		 * predecessor and its successor.
+		 */
+		entry->header.flink = pred->flink;
+		entry->header.blink = pred;
+
+		/*
+		 * Now get the predecessor and successor point to the entry.
+		 */
+		((AXP_QUEUE_HDR *) pred->flink)->blink = (void *) entry;
+		pred->flink = (void *) entry;
+
+		/*
+		 * Finally, since this is a counted queue, increment the counter in the
+		 * parent.
+		 */
+		entry->parent->count++;
+		retVal = (entry->parent->count == 1) ? 1 : 0;	/* was the queue empty */
+	}
+	else
+		retVal = -1;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_RemoveCountedQueue
+ * 	This function is called to remove an entry out of a specific location
+ * 	within a counted queue.  The counter at the queue parent (head) is incremented.
+ *
+ * Input Parameters:
+ * 	entry:
+ * 		A pointer to the entry that is to be removed.
+ *
+ * Output Parameters:
+ * 	entry:
+ * 		The predecessor entry points to the successor and the successor points
+ * 		to the predecessor.
+ *
+ * Return Value:
+ * 	-1, if the queue is empty.
+ * 	0, if the queue is empty after removing this entry.
+ * 	1, if the queue is not empty after removing this entry.
+ */
+i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
+{
+	i32 retVal;
+
+	if (entry->parent->count != 0)
+	{
+
+		/*
+		 * Let's first have the predecessor and successor point to each other.
+		 */
+		((AXP_QUEUE_HDR *) (entry->header.blink))->flink = entry->header.flink;
+		((AXP_QUEUE_HDR *) (entry->header.flink))->blink = entry->header.blink;
+
+		/*
+		 * Finally, since this is a counted queue, decrement the counter in the
+		 * parent.
+		 */
+		entry->parent->count--;
+		retVal = (entry->parent->count == 0) ? 0 : 1;
+	}
+	else
+		retVal = -1;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(retVal);
+}

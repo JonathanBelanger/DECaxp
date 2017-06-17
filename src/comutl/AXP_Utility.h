@@ -27,6 +27,8 @@
  *	V01.001		14-May-2017	Jonathan D. Belanger
  *	Added includes for a number of standard header files.
  *
+ *	V01.002		17-Jun-2017	Jonathan D. Belanger
+ *	Added counted queues and counted queue entries.
  */
 #ifndef _AXP_UTIL_DEFS_
 #define _AXP_UTIL_DEFS_
@@ -83,19 +85,28 @@ typedef struct
  */
 typedef struct
 {
-	AXP_QUEUE_HDR	q;
+	AXP_QUEUE_HDR	header;
 	u32				count;
 	u32				max;
 } AXP_COUNTED_QUEUE;
 
+typedef struct
+{
+	AXP_QUEUE_HDR		header;
+	AXP_COUNTED_QUEUE	*parent;
+} AXP_CQUE_ENTRY;;
+
 #define AXP_INIT_CQUE(queue, maximum)	\
-	AXP_INIT_QUE(queue.q);				\
+	AXP_INIT_QUE(queue.header);			\
 	queue.max = maximum;				\
 	queue.count = 0
 #define AXP_INIT_CQUEP(queue, maximum)	\
-	AXP_INIT_QUE(queue->q);			\
+	AXP_INIT_QUE(queue->header);		\
 	queue->max = maximum;				\
 	queue->count = 0
+#define AXP_INIT_CQENTRY(queue, prent)	\
+		AXP_INIT_QUE(queue.header);		\
+		queue.parent = &prent;
 #define AXP_CQUE_EMPTY(queue)	(queue.count == 0)
 #define AXP_CQUEP_EMPTY(queue)	(queue->count == 0)
 #define AXP_CQUE_FULL(queue)	((queue.maximum !=0 ? (queue.count == queue.maximum) ? false)
@@ -103,8 +114,13 @@ typedef struct
 #define AXP_CQUE_COUNT(queue)	(queue.count)
 #define AXP_CQUEP_COUNT(queue)	(queue->count)
 
+/*
+ * Prototype Definitions
+ */
 void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry);
 void AXP_LRURemove(AXP_QUEUE_HDR *entry);
 AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ);
+i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *, AXP_CQUE_ENTRY *);
+i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *);
 
 #endif /* _AXP_UTIL_DEFS_ */
