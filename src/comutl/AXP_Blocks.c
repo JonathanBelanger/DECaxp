@@ -53,6 +53,7 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 					cpu = (AXP_21264_CPU *) retBlock;
 					cpu->header.type = blockType;
 					cpu->header.size = sizeof(AXP_21264_CPU);
+					cpu->cpuState = Cold;
 
 					/*
 					 * The initial register mapping is 1 for one.  Also, the

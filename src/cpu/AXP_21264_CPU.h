@@ -82,8 +82,8 @@
 typedef struct
 {
 	bool			branch2bTaken;
-	u16				linePrediction;
-	u16				setPrediction;
+	u32				linePrediction;
+	u32				setPrediction;
 	u64				retPredStack;
 	AXP_INS_FMT		instructions[AXP_NUM_FETCH_INS];
 	AXP_INS_TYPE	instrType[AXP_NUM_FETCH_INS];
@@ -120,6 +120,7 @@ typedef struct
 	u8				scbdMask;	/* HW_MxPR scbd_mask */
 	u8				len_stall : 1; /* HW_LD/ST len, HW_RET stall */
 	bool			useLiteral;	/* Indicator that the literal value is valid */
+	bool			branchPredict; /* If this is a branch, do we predict to take it */
 	u32				function;	/* Function code for operation */
 	i64				displacement;/* Displacement from PC + 4 */
 	u64				literal;	/* Literal value */
@@ -139,13 +140,60 @@ typedef struct
 	u32					index;
 } AXP_QUEUE_ENTRY;
 
+/*
+ * The following states are used during CPU execution.  The state transitions
+ * are as follows:
+ *
+ * 		Current State	Event							Next State
+ * 		-------------	----------------------------	------------
+ * 		Cold 			Complete CPU initialization		WaitBiST
+ * 		WaitBiST 		Complete BiST					Run
+ * 		Run 			Fault Reset_L 					FaultReset
+ * 		Run 			SleepMode						Sleep
+ * 		Run 			Shutdown 						ShuttingDown
+ * 		FaultReset 		Complete CPU Reset				Run
+ * 		Sleep 			Wake 							WaitBiSI
+ * 		WaitBiSI 		Complete self initialization 	Run
+ * 		ShuttingDown	shutdown complete				EXIT(1)
+ * 		(1) EXIT = Delete CPU main thread (shutdown already deleted the others)
+ */
+typedef enum
+{
+	Cold,
+	WaitBiST,
+	WaitBiSI,
+	Run,
+	FaultReset,
+	Sleep,
+	ShutingDown
+} AXP_21264_STATES;
+typedef enum
+{
+	InitializationComplete,
+	BiSTComplete,
+	FaultResetL,
+	SleepMode,
+	Wake,
+	BiSIComplete,
+	Shutdown
+} AXP_21264_EVENTS;;
+
+/*
+ * This structure contains all the fields required to emulate an Alpha AXP
+ * 21264 CPU.
+ */
 typedef struct
 {
 	/*
-	 * This structure needs to be at the top of all data blocks/structures
+	 * This field needs to be at the top of all data blocks/structures
 	 * that need to be specifically allocated by the Blocks module.
 	 */
 	AXP_BLOCK_DSC header;
+
+	/*
+	 * CPU state.
+	 */
+	AXP_21264_STATES cpuState;
 
 	/**************************************************************************
 	 *	Ibox Definitions													  *
@@ -178,7 +226,7 @@ typedef struct
 	/*
 	 * This is equivalent to the VPC
 	 */
-	AXP_INS_LINE		vpc[AXP_INFLIGHT_FETCHES];
+	AXP_PC				vpc[AXP_INFLIGHT_MAX];
 	u32					vpcStart;
 	u32					vpcEnd;
 
@@ -212,7 +260,7 @@ typedef struct
 	 */
 	AXP_IBOX_ITB_TAG	itbTag;		/* ITB tag array write					*/
 	AXP_IBOX_ITB_IS		itbIs;		/* ITB invalidate single				*/
-	AXP_IBOX_EXC_ADDR	exeAddr;	/* Exception address					*/
+	AXP_IBOX_EXC_ADDR	excAddr;	/* Exception address					*/
 	AXP_IBOX_IVA_FORM	ivaForm;	/* Instruction VA format				*/
 	AXP_IBOX_IER_CM		ierCm;		/* Interrupt enable and current mode	*/
 	AXP_IBOX_SIRR		sirr;		/* Software interrupt request			*/

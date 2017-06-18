@@ -126,76 +126,76 @@ struct instructDecode
 	AXP_INS_TYPE	format;
 	AXP_OPER_TYPE	type;
 	AXP_REG_DECODE	registers;
-	u16				res;	/* 32-bit align 								*/
+	u16				whichQ;
 };
 
 static struct instructDecode insDecode[] =
 {
 /* Format	Type	Registers   									Opcode	Mnemonic	Description 					*/
-	{Pcd,	Branch,	{ .raw = 0}, 0},								/* 00		CALL_PAL	Trap to PALcode				*/
-	{Res,	Other,	{ .raw = 0}, 0},								/* 01					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}, 0},								/* 02					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}, 0},								/* 03					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}, 0},								/* 04					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}, 0},								/* 05					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}, 0},								/* 06					Reserved for Digital		*/
-	{Res,	Other,	{ .raw = 0}, 0},								/* 07					Reserved for Digital		*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 08		LDA			Load address				*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 09		LDAH		Load address high			*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 0A		LDBU		Load zero-extended byte		*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 0B		LDQ_U		Load unaligned quadword		*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 0C		LDWU		Load zero-extended word		*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 0D		STW			Store word					*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 0E		STB			Store byte					*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 0F		STQ_U		Store unaligned quadword	*/
-	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, 0},/* 10		ADDL		Add longword				*/
-	{Opr,	Other,	{ .raw = AXP_OPCODE_11}, 0},					/* 11		AND			Logical product				*/
-	{Opr,	Logic,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, 0},/* 12		MSKBL		Mask byte low				*/
-	{Opr,	Oper,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, 0},/* 13		MULL		Multiply longword			*/
-	{FP,	Arith,	{ .raw = AXP_OPCODE_14}, 0},					/* 14		ITOFS		Int to float move, S_float	*/
-	{FP,	Other,	{ .raw = AXP_OPCODE_15}, 0},					/* 15		ADDF		Add F_floating				*/
-	{FP,	Other,	{ .raw = AXP_OPCODE_16}, 0},					/* 16		ADDS		Add S_floating				*/
-	{FP,	Other,	{ .raw = AXP_OPCODE_17}, 0},					/* 17		CVTLQ		Convert longword to quad	*/
-	{Mfc,	Other,	{ .raw = AXP_OPCODE_18}, 0},					/* 18		TRAPB		Trap barrier				*/
-	{PAL,	Load,	{ .raw = AXP_DEST_RA}, 0},						/* 19		HW_MFPR		Reserved for PALcode		*/
-	{Mbr,	Branch,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 1A		JMP			Jump						*/
-	{PAL,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 1B		HW_LD		Reserved for PALcode		*/
-	{Cond,	Arith,	{ .raw = AXP_OPCODE_1C}, 0},					/* 1C		SEXTB		Sign extend byte			*/
-	{PAL,	Store,	{ .raw = AXP_SRC1_RB}, 0},						/* 1D		HW_MTPR		Reserved for PALcode		*/
-	{PAL,	Branch,	{ .raw = AXP_SRC1_RB}, 0},						/* 1E		HW_RET		Reserved for PALcode		*/
-	{PAL,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 1F		HW_ST		Reserved for PALcode		*/
-	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, 0},			/* 20 		LDF			Load F_floating				*/
-	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, 0},			/* 21		LDG			Load G_floating				*/
-	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, 0},			/* 22		LDS			Load S_floating				*/
-	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, 0},			/* 23		LDT			Load T_floating				*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, 0},			/* 24		STF			Store F_floating			*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, 0},			/* 25		STG			Store G_floating			*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, 0},			/* 26		STS			Store S_floating			*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, 0},			/* 27		STT			Store T_floating			*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 28		LDL			Load sign-extended long		*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 29		LDQ			Load quadword				*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 2A		LDL_L		Load sign-extend long lock	*/
-	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 2B		LDQ_L		Load quadword locked		*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 2C		STL			Store longword				*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 2D		STQ			Store quadword				*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 2E		STL_C		Store longword conditional	*/
-	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 2F		STQ_C		Store quadword conditional	*/
-	{Bra,	Branch,	{ .raw = AXP_DEST_RA}, 0},						/* 30		BR			Unconditional branch		*/
-	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 31		FBEQ		Floating branch if = zero	*/
-	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 32		FBLT		Floating branch if < zero	*/
-	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 33		FBLE		Floating branch if <= zero	*/
-	{Mbr,	Branch,	{ .raw = AXP_DEST_RA}, 0},						/* 34		BSR			Branch to subroutine		*/
-	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 35		FBNE		Floating branch if != zero	*/
-	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 36		FBGE		Floating branch if >=zero	*/
-	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 37		FBGT		Floating branch if > zero	*/
-	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 38		BLBC		Branch if low bit clear		*/
-	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 39		BEQ			Branch if = zero			*/
-	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 3A		BLT			Branch if < zero			*/
-	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 3B		BLE			Branch if <= zero			*/
-	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 3C		BLBS		Branch if low bit set		*/
-	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 3D		BNE			Branch if != zero			*/
-	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 3E		BGE			Branch if >= zero			*/
-	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0}						/* 3F		BGT			Branch if > zero			*/
+	{Pcd,	Branch,	{ .raw = 0}, AXP_IQ},							/* 00		CALL_PAL	Trap to PALcode				*/
+	{Res,	Other,	{ .raw = 0}, AXP_NONE},							/* 01					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, AXP_NONE},							/* 02					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, AXP_NONE},							/* 03					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, AXP_NONE},							/* 04					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, AXP_NONE},							/* 05					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, AXP_NONE},							/* 06					Reserved for Digital		*/
+	{Res,	Other,	{ .raw = 0}, AXP_NONE},							/* 07					Reserved for Digital		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, AXP_IQ},		/* 08		LDA			Load address				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, AXP_IQ},		/* 09		LDAH		Load address high			*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, AXP_IQ},		/* 0A		LDBU		Load zero-extended byte		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, AXP_IQ},		/* 0B		LDQ_U		Load unaligned quadword		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, AXP_IQ},		/* 0C		LDWU		Load zero-extended word		*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, AXP_IQ},		/* 0D		STW			Store word					*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, AXP_IQ},		/* 0E		STB			Store byte					*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, AXP_IQ},		/* 0F		STQ_U		Store unaligned quadword	*/
+	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, AXP_IQ},/*10	ADDL		Add longword				*/
+	{Opr,	Other,	{ .raw = AXP_OPCODE_11}, AXP_IQ},				/* 11		AND			Logical product				*/
+	{Opr,	Logic,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, AXP_IQ},/*12	MSKBL		Mask byte low				*/
+	{Opr,	Oper,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, AXP_IQ},/*13	MULL		Multiply longword			*/
+	{FP,	Arith,	{ .raw = AXP_OPCODE_14}, AXP_COND},				/* 14		ITOFS		Int to float move, S_float	*/
+	{FP,	Other,	{ .raw = AXP_OPCODE_15}, AXP_FQ},				/* 15		ADDF		Add F_floating				*/
+	{FP,	Other,	{ .raw = AXP_OPCODE_16}, AXP_FQ},				/* 16		ADDS		Add S_floating				*/
+	{FP,	Other,	{ .raw = AXP_OPCODE_17}, AXP_FQ},				/* 17		CVTLQ		Convert longword to quad	*/
+	{Mfc,	Other,	{ .raw = AXP_OPCODE_18}, AXP_IQ},				/* 18		TRAPB		Trap barrier				*/
+	{PAL,	Load,	{ .raw = AXP_DEST_RA}, AXP_IQ},					/* 19		HW_MFPR		Reserved for PALcode		*/
+	{Mbr,	Branch,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, AXP_IQ},		/* 1A		JMP			Jump						*/
+	{PAL,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, AXP_IQ},		/* 1B		HW_LD		Reserved for PALcode		*/
+	{Cond,	Arith,	{ .raw = AXP_OPCODE_1C}, AXP_COND},				/* 1C		SEXTB		Sign extend byte			*/
+	{PAL,	Store,	{ .raw = AXP_SRC1_RB}, AXP_IQ},					/* 1D		HW_MTPR		Reserved for PALcode		*/
+	{PAL,	Branch,	{ .raw = AXP_SRC1_RB}, AXP_IQ},					/* 1E		HW_RET		Reserved for PALcode		*/
+	{PAL,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, AXP_IQ},		/* 1F		HW_ST		Reserved for PALcode		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, AXP_IQ},		/* 20 		LDF			Load F_floating				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, AXP_IQ},		/* 21		LDG			Load G_floating				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, AXP_IQ},		/* 22		LDS			Load S_floating				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, AXP_IQ},		/* 23		LDT			Load T_floating				*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, AXP_FQ},		/* 24		STF			Store F_floating			*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, AXP_FQ},		/* 25		STG			Store G_floating			*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, AXP_FQ},		/* 26		STS			Store S_floating			*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_FA|AXP_SRC2_RB}, AXP_FQ},		/* 27		STT			Store T_floating			*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, AXP_IQ},		/* 28		LDL			Load sign-extended long		*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, AXP_IQ},		/* 29		LDQ			Load quadword				*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, AXP_IQ},		/* 2A		LDL_L		Load sign-extend long lock	*/
+	{Mem,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, AXP_IQ},		/* 2B		LDQ_L		Load quadword locked		*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, AXP_IQ},		/* 2C		STL			Store longword				*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, AXP_IQ},		/* 2D		STQ			Store quadword				*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, AXP_IQ},		/* 2E		STL_C		Store longword conditional	*/
+	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, AXP_IQ},		/* 2F		STQ_C		Store quadword conditional	*/
+	{Bra,	Branch,	{ .raw = AXP_DEST_RA}, AXP_IQ},					/* 30		BR			Unconditional branch		*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, AXP_FQ},					/* 31		FBEQ		Floating branch if = zero	*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, AXP_FQ},					/* 32		FBLT		Floating branch if < zero	*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, AXP_FQ},					/* 33		FBLE		Floating branch if <= zero	*/
+	{Mbr,	Branch,	{ .raw = AXP_DEST_RA}, AXP_IQ},					/* 34		BSR			Branch to subroutine		*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, AXP_FQ},					/* 35		FBNE		Floating branch if != zero	*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, AXP_FQ},					/* 36		FBGE		Floating branch if >=zero	*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, AXP_FQ},					/* 37		FBGT		Floating branch if > zero	*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, AXP_IQ},					/* 38		BLBC		Branch if low bit clear		*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, AXP_IQ},					/* 39		BEQ			Branch if = zero			*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, AXP_IQ},					/* 3A		BLT			Branch if < zero			*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, AXP_IQ},					/* 3B		BLE			Branch if <= zero			*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, AXP_IQ},					/* 3C		BLBS		Branch if low bit set		*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, AXP_IQ},					/* 3D		BNE			Branch if != zero			*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, AXP_IQ},					/* 3E		BGE			Branch if >= zero			*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, AXP_IQ}					/* 3F		BGT			Branch if > zero			*/
 };
 
 /*
@@ -217,6 +217,11 @@ regDecodeFunc decodeFuncs[] =
 	AXP_RegisterDecodingOpcode18,
 	AXP_RegisterDecodingOpcode1c
 };
+typedef union
+{
+	u64		pc;
+	AXP_PC	vpc;
+} AXP_PC_UNION;
 
 /*
  * AXP_Branch_Prediction
@@ -497,8 +502,9 @@ AXP_INS_TYPE AXP_InstructionFormat(AXP_INS_FMT inst)
  *		processed.
  *
  * Return Value:
- *	TRUE if the instruction is found in the instruction cache.
- *	FALSE if there was an ITB miss.
+ *	Hit, if the instruction is found in the instruction cache.
+ *	WayMiss, if there was an ITB miss.
+ *	Miss, if there was an ITB miss.
  */
 AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 								AXP_PC pc,
@@ -662,7 +668,145 @@ AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *cpu,
 				 * We need to ask the Cbox to load the next set of pages
 				 * into the Icache.
 				 */
-				// AXP_IcacheFill(cpu, pc);
+				retVal = Miss;
+				break;
+			}
+		}
+	}
+
+	/*
+	 * Return what we did or did not find back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_ICacheValid
+ * 	This function is called to determine if a specific VPC is already in the
+ * 	Icache.  It just returns the same Hit/Miss/WayMiss.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to
+ *		emulate an Alpha AXP 21264 CPU.
+ *	pc:
+ *		A value that represents the program counter of the instruction being
+ *		requested.
+ *
+ * Output Parameters:
+ * 	index:
+ * 		A pointer to a location to receive the extracted index for the PC.
+ * 	set:
+ * 		A pointer to a location to receive the extracted set for the PC.
+ *
+ * Return Value:
+ *	Hit, if the instruction is found in the instruction cache.
+ *	WayMiss, if there was an ITB miss.
+ *	Miss, if there was an ITB miss.
+ */
+AXP_CACHE_FETCH AXP_ICacheValid(AXP_21264_CPU *cpu,
+								AXP_PC pc,
+								u32 *index,
+								u32 *set)
+{
+	AXP_CACHE_FETCH retVal = WayMiss;
+	AXP_ICACHE_TAG_IDX addr;
+	u64 tag;
+	u32 ii;
+
+	/*
+	 * First, get the information from the supplied parameters we need to
+	 * search the Icache correctly.
+	 */
+	addr.pc = pc;
+	*index = addr.insAddr.index;
+	*set = addr.insAddr.set;
+	tag = addr.insAddr.tag;
+	switch(cpu->iCtl.ic_en)
+	{
+
+		/*
+		 * Just set 0
+		 */
+		case 1:
+			*set = 0;
+			break;
+
+		/*
+		 * Just set 1
+		 */
+		case 2:
+			*set = 1;
+			break;
+
+		/*
+		 * Both set 1 and 2
+		 */
+		default:
+			break;
+	}
+
+	/*
+	 * Now, search through the Icache for the information we have been asked to
+	 * return.
+	 */
+	if ((cpu->iCache[*index][*set].tag == tag) &&
+		(cpu->iCache[*index][*set].vb == 1))
+	{
+		retVal = Hit;
+	}
+
+	/*
+	 * If we had an Icache miss, go look in the ITB.  If we get an ITB miss,
+	 * this will cause an exception to be generated.
+	 */
+	if (retVal == WayMiss)
+	{
+		u64 tagITB;
+		u64 pages;
+		AXP_IBOX_ITB_TAG *itbTag = (AXP_IBOX_ITB_TAG *) &pc;
+
+		tag = itbTag->tag;
+
+		/*
+		 * Search through the ITB for the address we are looking to see if
+		 * there is an ITB entry that maps the current PC.  If so, then we
+		 * have a Miss.  Otherwise, it is a WayMiss (this will cause the CPU
+		 * to have to add a new ITB entry (with matching PTE entry) so that
+		 * the physical memory location can be mapped to the virtual and the
+		 * instructions loaded into the instruction cache for execution.
+		 *
+		 * NOTE:	The gh field is a 2 bit field that represents the
+		 * 			following:
+		 *
+		 * 					System Page Size (SPS)
+		 * 		gh		8KB		16KB	32KB	64KB	From SPS
+		 * 		-------------------------------------	-----------------------
+		 * 		00 (0)	  8KB	 16KB	 32KB	 64KB	  1x [8^0 = 1 << (0*3)]
+		 * 		01 (1)	 64KB	128KB	256KB	  2MB	  8x [8^1 = 1 << (1*3)]
+		 * 		10 (2)	512KB	  1MB	  2MB	 64MB	 64x [8^2 = 1 << (2*3)]
+		 * 		11 (3)	  4MB	  8MB	 16MB	512MB	512x [8^3 = 1 << (3*3)]
+		 */
+		for (ii = cpu->itbStart; ii < cpu->itbEnd; ii++)
+		{
+			tagITB = cpu->itb[ii].tag.tag;
+			pages = AXP_21264_PAGE_SIZE * (1 << (cpu->itb[ii].pfn.gh * 3));
+
+			/*
+			 * The ITB can map 1, 8, 64 or 512 contiguous 8KB pages, so the
+			 * ITB.tag is the base address and ITB.tag + ITB.mapped is the
+			 * address after the last byte mapped.
+			 */
+			if ((tagITB <= tag) &&
+				((tagITB + pages) > tag) &&
+				(cpu->itb[ii].vb == 1))
+			{
+
+				/*
+				 * OK, the page is mapped in the ITB, but not in the Icache.
+				 * We need to ask the Cbox to load the next set of pages
+				 * into the Icache.
+				 */
 				retVal = Miss;
 				break;
 			}
@@ -850,13 +994,11 @@ void AXP_ITBAdd(AXP_21264_CPU *cpu,
 	cpu->itb[cpu->itbEnd].vb = 1;
 	memcpy(&cpu->itb[cpu->itbEnd].tag, &itbTag, sizeof(AXP_IBOX_ITB_TAG));
 	memcpy(&cpu->itb[cpu->itbEnd].pfn, itbPTE, sizeof(AXP_IBOX_ITB_PTE));
-	cpu->itbEnd++;
 
 	/*
-	 * If we have reached the end of the array, then reset it to the beginning.
+	 * Increment the ITB, but not past the end of the list.
 	 */
-	if (cpu->itbEnd == AXP_TB_LEN)
-		cpu->itbEnd = 0;
+	cpu->itbEnd = (cpu->itbEnd + 1) % AXP_TB_LEN;
 
 	/*
 	 * The itbEnd equals itbStart only in 2 instances.  One, when there is
@@ -864,13 +1006,7 @@ void AXP_ITBAdd(AXP_21264_CPU *cpu,
 	 * existing entry (which we just removed above).
 	 */
 	if (cpu->itbEnd == cpu->itbStart)
-		cpu->itbStart++;
-
-	/*
-	 * If we have reached the end of the array, then wrap to the beginning.
-	 */
-	if (cpu->itbStart == AXP_TB_LEN)
-		cpu->itbStart = 0;
+		cpu->itbStart = (cpu->itbStart + 1) % AXP_TB_LEN;
 
 	/*
 	 * Return back to the caller.
@@ -1578,7 +1714,7 @@ static void AXP_RenameRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *decodedInst
  *
  * NOTE:	This function assumes that there is always at least one free entry.
  * 			Since the number of entries pre-allocated is equal to the maximum
- * 			number of entrys that can be in the IQ, this is not necessarily a
+ * 			number of entries that can be in the IQ, this is not necessarily a
  * 			bad assumption.
  */
 static AXP_QUEUE_ENTRY *AXP_GetNextIQEntry(AXP_21264_CPU *cpu)
@@ -1648,7 +1784,7 @@ static void AXP_ReturnIQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
  *
  * NOTE:	This function assumes that there is always at least one free entry.
  * 			Since the number of entries pre-allocated is equal to the maximum
- * 			number of entrys that can be in the FQ, this is not necessarily a
+ * 			number of entries that can be in the FQ, this is not necessarily a
  * 			bad assumption.
  */
 static AXP_QUEUE_ENTRY *AXP_GetNextFQEntry(AXP_21264_CPU *cpu)
@@ -1702,6 +1838,163 @@ static void AXP_ReturnFQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 }
 
 /*
+ * AXP_21264_AddVPC
+ * 	This function is called to add a Virtual Program Counter (VPC) to the list
+ * 	of VPCs.  This is a round-robin list.  The End points to the next entry to
+ * 	be written to.  The Start points to the least recent VPC, which is the one
+ * 	immediately after the End.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *	vpc:
+ *		A value of the next VPC to be entered into the VPC list.
+ *
+ * Output Parameters:
+ * 	cpu:
+ * 		The vpc list will be updated with the newly added VPC and the Start and
+ * 		End indexes will be updated appropriately.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_21264_AddVPC(AXP_21264_CPU *cpu, AXP_PC vpc)
+{
+	cpu->vpc[cpu->vpcEnd] = vpc;
+	cpu->vpcEnd = (cpu->vpcEnd + 1) % AXP_INFLIGHT_MAX;
+	if (cpu->vpcEnd == cpu->vpcStart)
+		cpu->vpcStart = (cpu->vpcStart + 1) % AXP_INFLIGHT_MAX;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_GetNextVPC
+ * 	This function is called to retrieve the VPC for the next set of
+ * 	instructions top fetch.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	The VPC of the next set of instructions to fetch from the cache..
+ */
+AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
+{
+	AXP_PC retVal;
+	u32	prevVPC;
+
+	/*
+	 * The End points to the next location to be filled.  Therefore, the
+	 * previous location is the next VPC to be executed.
+	 */
+	prevVPC = ((cpu->vpcEnd != 0) ? cpu->vpcEnd : AXP_INFLIGHT_MAX) - 1;
+	retVal = cpu->vpc[prevVPC];
+
+	/*
+	 * Return what we found back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_21264_IncrementVPC
+ * 	This function is called to increment Virtual Program Counter (VPC) and add
+ * 	it to the list of VPCs.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *
+ * Output Parameters:
+ * 	cpu:
+ * 		The vpc list will be updated with the newly added VPC and the Start and
+ * 		End indexes will be updated appropriately.
+ *
+ * Return Value:
+ * 	The value of the incremented PC.
+ */
+AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *cpu)
+{
+	AXP_PC vpc;
+
+	/*
+	 * Get the PC for the instruction just executed.
+	 */
+	vpc = AXP_21264_GetNextVPC(cpu);
+
+	/*
+	 * Increment it.
+	 */
+	vpc.pc++;
+
+	/*
+	 * Store it on the VPC List.
+	 */
+	AXP_21264_AddVPC(cpu, vpc);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(vpc);
+}
+
+/*
+ * AXP_21264_DisplaceVPC
+ * 	This function is called to add a displacement value to the VPC and add it
+ * 	to the list of VPCs.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *	displacement:
+ *		A signed 64-bit value to be added to the VPC.
+ *
+ * Output Parameters:
+ * 	cpu:
+ * 		The vpc list will be updated with the newly added VPC and the Start and
+ * 		End indexes will be updated appropriately.
+ *
+ * Return Value:
+ * 	The value of the incremented PC.
+ */
+AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, i64 displacement)
+{
+	AXP_PC vpc;
+
+	/*
+	 * Get the PC for the instruction just executed.
+	 */
+	vpc = AXP_21264_GetNextVPC(cpu);
+
+	/*
+	 * Increment and then add the displacement.
+	 */
+	vpc.pc = vpc.pc + 1 + displacement;
+
+	/*
+	 * Store it on the VPC List.
+	 */
+	AXP_21264_AddVPC(cpu, vpc);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(vpc);
+}
+
+/*
  * AXP_21264_IboxMain
  * 	This function is called to perform the emulation for the Ibox within the
  * 	Alpha AXP 21264 CPU.
@@ -1717,8 +2010,18 @@ static void AXP_ReturnFQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
  * Return Value:
  * 	None.
  */
-void AXP_21264_IboxMain(AXP_21264 *cpu)
+void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 {
+	AXP_CACHE_FETCH cacheStatus;
+	AXP_PC nextPC, branchPC;
+	AXP_INS_LINE nextCacheLine;
+	AXP_INSTRUCTION *decodedInstr;
+	AXP_QUEUE_ENTRY *xqEntry;
+	AXP_PC_UNION workingPC;
+	u32 ii;
+	bool local, global, choice;
+	u16 whichQueue;
+
 	/*
 	 * Here we'll loop starting at the current PC and working our way through
 	 * all the instructions.  We will do the following steps.
@@ -1741,5 +2044,118 @@ void AXP_21264_IboxMain(AXP_21264 *cpu)
 	 *		we have to load an ITB entry and ultimately load the iCache
 	 *	6) Loop back to step 1.
 	 */
+
+	/*
+	 * We keep looping while the CPU is in a running state.
+	 */
+	while (cpu->cpuState == Run)
+	{
+
+		/*
+		 * Get the PC for the next set of insructions to be fetched from the
+		 * Icache and Fetch those instructions.
+		 */
+		nextPC = AXP_21264_GetNextVPC(cpu);
+		cacheStatus = AXP_ICacheFetch(cpu, nextPC, &nextCacheLine);
+
+		/*
+		 * The cache fetch will return one or Hit, Miss, or WayMiss.  If Hit,
+		 * we received the next four instructions.  If Miss, the virtual
+		 * address mapping for the next instructions is in the ITB, but not the
+		 * Icache.  We need to get the Cbox to fill the iCache.  If WayMiss,
+		 * then the instructions are not in the Icache and the mapping does not
+		 * exist in the ITB.  Store the faulting PC and generate an exception.
+		 */
+		switch (cacheStatus)
+		{
+			case Hit:
+				for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
+				{
+					decodedInstr = &cpu->rob[cpu->robEnd];
+					cpu->robEnd = (cpu->robEnd + 1) % AXP_INFLIGHT_MAX;
+					if (cpu->robEnd == cpu->robStart)
+						cpu->robStart = (cpu->robStart + 1) % AXP_INFLIGHT_MAX;
+					AXP_Decode_Rename(cpu, &nextCacheLine, ii, decodedInstr);
+					if (decodedInstr->type == Branch)
+					{
+						decodedInstr->branchPredict = AXP_Branch_Prediction(
+								cpu,
+								nextPC,
+								&local,
+								&global,
+								&choice);
+						if (decodedInstr->branchPredict == true)
+						{
+							branchPC.pc = nextPC.pc + 1 + decodedInstr->displacement;
+							cacheStatus = AXP_ICacheValid(
+												cpu,
+												branchPC,
+												&nextCacheLine.linePrediction,
+												&nextCacheLine.setPrediction);
+
+							/*
+							 * TODO:	If we get a Hit, there is nothing else
+							 * 			to do.  If we get a Miss, we probably
+							 * 			should have someone fill the Icache
+							 * 			with the next set of instructions.  If
+							 * 			a WayMiss, we don't do anything either.
+							 * 			In this last case, we will end up
+							 * 			generating an ITB_MISS event to be
+							 * 			handled by the PALcode.
+							 */
+						}
+					}
+					whichQueue = insDecode[decodedInstr->opcode].whichQ;
+					if(whichQueue == AXP_COND)
+					{
+						if (decodedInstr->opcode == ITFP)
+						{
+							if ((decodedInstr->function == AXP_ITOFS) ||
+								(decodedInstr->function == AXP_ITOFF) ||
+								(decodedInstr->function == AXP_ITOFT))
+								whichQueue = AXP_IQ;
+							else
+								whichQueue = AXP_FQ;
+						}
+						else	/* FPTI */
+						{
+							if ((decodedInstr->function == AXP_FTOIT) ||
+								(decodedInstr->function == AXP_FTOIS))
+								whichQueue = AXP_FQ;
+							else
+								whichQueue = AXP_IQ;
+
+						}
+					}
+					if (whichQueue == AXP_IQ)
+					{
+						xqEntry = AXP_GetNextIQEntry(cpu);
+						xqEntry->ins = decodedInstr;
+						AXP_InsertCountedQueue(&cpu->iq.header, &xqEntry->header);
+					}
+					else	/* FQ */
+					{
+						xqEntry = AXP_GetNextFQEntry(cpu);
+						xqEntry->ins = decodedInstr;
+						AXP_InsertCountedQueue(&cpu->fq.header, &xqEntry->header);
+					}
+					nextPC = AXP_21264_IncrementVPC(cpu);
+				}
+				break;
+
+			case Miss:
+				AXP_ReturnIQEntry(cpu, xqEntry);	// TODO: Remove
+				AXP_ReturnFQEntry(cpu, xqEntry);	// TODO: Remove
+				break;
+
+			case WayMiss:
+				cpu->excAddr.exc_pc = nextPC;
+				workingPC.pc = cpu->palBase.pal_base_pc + AXP_ITB_MISS;
+				nextPC = workingPC.vpc;
+				nextPC.pal = AXP_PAL_MODE;
+				AXP_21264_AddVPC(cpu, nextPC);
+				break;
+		}
+	}
 	return;
 }
