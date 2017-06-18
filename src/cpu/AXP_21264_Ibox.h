@@ -58,4 +58,7 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 void AXP_ITBAdd(AXP_21264_CPU *cpu,
 				AXP_IBOX_ITB_TAG itbTag,
 				AXP_IBOX_ITB_PTE *itbPTE);
+
+void AXP_21264_IboxMain(AXP_21264 *);
+
 #endif /* _AXP_21264_IBOX_DEFS_ */

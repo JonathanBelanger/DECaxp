@@ -91,8 +91,10 @@
 
 /*
  * Prototypes for local functions
- *
- * Functions to decode which instruction registers are used for which purpose
+ */
+static AXP_OPER_TYPE AXP_DecodeOperType(u8, u32);
+
+/* Functions to decode which instruction registers are used for which purpose
  * for the complex instructions (opcodes that have different ways to use
  * registers).
  */
@@ -130,7 +132,7 @@ struct instructDecode
 static struct instructDecode insDecode[] =
 {
 /* Format	Type	Registers   									Opcode	Mnemonic	Description 					*/
-	{Pcd,	Other,	{ .raw = 0}, 0},								/* 00		CALL_PAL	Trap to PALcode				*/
+	{Pcd,	Branch,	{ .raw = 0}, 0},								/* 00		CALL_PAL	Trap to PALcode				*/
 	{Res,	Other,	{ .raw = 0}, 0},								/* 01					Reserved for Digital		*/
 	{Res,	Other,	{ .raw = 0}, 0},								/* 02					Reserved for Digital		*/
 	{Res,	Other,	{ .raw = 0}, 0},								/* 03					Reserved for Digital		*/
@@ -148,19 +150,19 @@ static struct instructDecode insDecode[] =
 	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 0F		STQ_U		Store unaligned quadword	*/
 	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, 0},/* 10		ADDL		Add longword				*/
 	{Opr,	Other,	{ .raw = AXP_OPCODE_11}, 0},					/* 11		AND			Logical product				*/
-	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, 0},/* 12		MSKBL		Mask byte low				*/
-	{Opr,	Other,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, 0},/* 13		MULL		Multiply longword			*/
-	{FP,	Other,	{ .raw = AXP_OPCODE_14}, 0},					/* 14		ITOFS		Int to float move, S_float	*/
+	{Opr,	Logic,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, 0},/* 12		MSKBL		Mask byte low				*/
+	{Opr,	Oper,	{ .raw = AXP_DEST_RC|AXP_SRC1_RA|AXP_SRC2_RB}, 0},/* 13		MULL		Multiply longword			*/
+	{FP,	Arith,	{ .raw = AXP_OPCODE_14}, 0},					/* 14		ITOFS		Int to float move, S_float	*/
 	{FP,	Other,	{ .raw = AXP_OPCODE_15}, 0},					/* 15		ADDF		Add F_floating				*/
 	{FP,	Other,	{ .raw = AXP_OPCODE_16}, 0},					/* 16		ADDS		Add S_floating				*/
 	{FP,	Other,	{ .raw = AXP_OPCODE_17}, 0},					/* 17		CVTLQ		Convert longword to quad	*/
 	{Mfc,	Other,	{ .raw = AXP_OPCODE_18}, 0},					/* 18		TRAPB		Trap barrier				*/
 	{PAL,	Load,	{ .raw = AXP_DEST_RA}, 0},						/* 19		HW_MFPR		Reserved for PALcode		*/
-	{Mbr,	Other,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 1A		JMP			Jump						*/
+	{Mbr,	Branch,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 1A		JMP			Jump						*/
 	{PAL,	Load,	{ .raw = AXP_DEST_RA|AXP_SRC1_RB}, 0},			/* 1B		HW_LD		Reserved for PALcode		*/
-	{Cond,	Other,	{ .raw = AXP_OPCODE_1C}, 0},					/* 1C		SEXTB		Sign extend byte			*/
+	{Cond,	Arith,	{ .raw = AXP_OPCODE_1C}, 0},					/* 1C		SEXTB		Sign extend byte			*/
 	{PAL,	Store,	{ .raw = AXP_SRC1_RB}, 0},						/* 1D		HW_MTPR		Reserved for PALcode		*/
-	{PAL,	Other,	{ .raw = AXP_SRC1_RB}, 0},						/* 1E		HW_REI		Reserved for PALcode		*/
+	{PAL,	Branch,	{ .raw = AXP_SRC1_RB}, 0},						/* 1E		HW_RET		Reserved for PALcode		*/
 	{PAL,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 1F		HW_ST		Reserved for PALcode		*/
 	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, 0},			/* 20 		LDF			Load F_floating				*/
 	{Mem,	Load,	{ .raw = AXP_DEST_FA|AXP_SRC1_RB}, 0},			/* 21		LDG			Load G_floating				*/
@@ -178,22 +180,22 @@ static struct instructDecode insDecode[] =
 	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 2D		STQ			Store quadword				*/
 	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 2E		STL_C		Store longword conditional	*/
 	{Mem,	Store,	{ .raw = AXP_SRC1_RA|AXP_SRC2_RB}, 0},			/* 2F		STQ_C		Store quadword conditional	*/
-	{Bra,	Other,	{ .raw = AXP_DEST_RA}, 0},						/* 30		BR			Unconditional branch		*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 31		FBEQ		Floating branch if = zero	*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 32		FBLT		Floating branch if < zero	*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 33		FBLE		Floating branch if <= zero	*/
-	{Mbr,	Other,	{ .raw = AXP_DEST_RA}, 0},						/* 34		BSR			Branch to subroutine		*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 35		FBNE		Floating branch if != zero	*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 36		FBGE		Floating branch if >=zero	*/
-	{FPBra,	Other,	{ .raw = AXP_SRC1_FA}, 0},						/* 37		FBGT		Floating branch if > zero	*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 38		BLBC		Branch if low bit clear		*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 39		BEQ			Branch if = zero			*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 3A		BLT			Branch if < zero			*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 3B		BLE			Branch if <= zero			*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 3C		BLBS		Branch if low bit set		*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 3D		BNE			Branch if != zero			*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0},						/* 3E		BGE			Branch if >= zero			*/
-	{Bra,	Other,	{ .raw = AXP_SRC1_RA}, 0}						/* 3F		BGT			Branch if > zero			*/
+	{Bra,	Branch,	{ .raw = AXP_DEST_RA}, 0},						/* 30		BR			Unconditional branch		*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 31		FBEQ		Floating branch if = zero	*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 32		FBLT		Floating branch if < zero	*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 33		FBLE		Floating branch if <= zero	*/
+	{Mbr,	Branch,	{ .raw = AXP_DEST_RA}, 0},						/* 34		BSR			Branch to subroutine		*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 35		FBNE		Floating branch if != zero	*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 36		FBGE		Floating branch if >=zero	*/
+	{FPBra,	Branch,	{ .raw = AXP_SRC1_FA}, 0},						/* 37		FBGT		Floating branch if > zero	*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 38		BLBC		Branch if low bit clear		*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 39		BEQ			Branch if = zero			*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 3A		BLT			Branch if < zero			*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 3B		BLE			Branch if <= zero			*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 3C		BLBS		Branch if low bit set		*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 3D		BNE			Branch if != zero			*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0},						/* 3E		BGE			Branch if >= zero			*/
+	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, 0}						/* 3F		BGT			Branch if > zero			*/
 };
 
 /*
@@ -977,6 +979,10 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 			break;
 	}
 	decodedInstr->type = insDecode[decodedInstr->opcode].type;
+	if ((decodedInstr->type == Other) && (decodedInstr->format != Res))
+		decodedInstr->type = AXP_DecodeOperType(
+				decodedInstr->opcode,
+				decodedInstr->function);
 	decodeRegisters = insDecode[decodedInstr->opcode].registers;
 	if (decodeRegisters.bits.opcodeRegDecode != 0)
 		decodeRegisters.raw =
@@ -1098,6 +1104,97 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 	 * Return back to the caller.
 	 */
 	return;
+}
+
+/*
+ * AXP_DecodeOperType
+ * 	This function is called to convert an operation type of 'Other' to a more
+ * 	usable value.  The opcode and funcCode are used in combination to determine
+ * 	the operation type.
+ *
+ * Input Parameters:
+ * 	opCode:
+ * 		A byte value specifying the opcode to be used to determine the
+ * 		operation type.
+ * 	funcCode:
+ * 		A 32-bit value specifying the function code used to determine the
+ * 		operation type.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	The operation type value for the opCode/FuncCode pair.
+ */
+static AXP_OPER_TYPE AXP_DecodeOperType(u8 opCode, u32 funcCode)
+{
+	AXP_OPER_TYPE retVal = Other;
+
+	switch (opCode)
+	{
+		case INTA:		/* OpCode == 0x10 */
+			if (funcCode == AXP_CMPBGE)
+				retVal = Logic;
+			else
+				retVal = Arith;
+			break;
+
+		case INTL:		/* OpCode == 0x11 */
+			if ((funcCode == AXP_AMASK) || (funcCode == AXP_IMPLVER))
+				retVal = Oper;
+			else
+				retVal = Logic;
+			break;
+
+		case FLTV:		/* OpCode == 0x15 */
+			if ((funcCode == AXP_CMPGEQ) ||
+				(funcCode == AXP_CMPGLT) ||
+				(funcCode == AXP_CMPGLE) ||
+				(funcCode == AXP_CMPGEQ_S) ||
+				(funcCode == AXP_CMPGLT_S) ||
+				(funcCode == AXP_CMPGLE_S))
+				retVal = Logic;
+			else
+				retVal = Arith;
+			break;
+
+		case FLTI:		/* OpCode == 0x16 */
+			if ((funcCode == AXP_CMPTUN) ||
+				(funcCode == AXP_CMPTEQ) ||
+				(funcCode == AXP_CMPTLT) ||
+				(funcCode == AXP_CMPTLE) ||
+				(funcCode == AXP_CMPTUN_SU) ||
+				(funcCode == AXP_CMPTEQ_SU) ||
+				(funcCode == AXP_CMPTLT_SU) ||
+				(funcCode == AXP_CMPTLE_SU))
+				retVal = Logic;
+			else
+				retVal = Arith;
+			break;
+
+		case FLTL:		/* OpCode == 0x17 */
+			if (funcCode == AXP_MT_FPCR)
+				retVal = Load;
+			else if (funcCode == AXP_MF_FPCR)
+				retVal = Store;
+			else
+				retVal = Arith;
+			break;
+
+		case MISC:		/* OpCode == 0x18 */
+			if ((funcCode == AXP_RPCC) ||
+				(funcCode == AXP_RC) ||
+				(funcCode == AXP_RS))
+				retVal = Load;
+			else
+				retVal = Store;
+			break;
+	}
+
+	/*
+	 * Return back to the caller with what we determined.
+	 */
+	return(retVal);
 }
 
 /*
@@ -1600,6 +1697,49 @@ static void AXP_ReturnFQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 
 	/*
 	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_IboxMain
+ * 	This function is called to perform the emulation for the Ibox within the
+ * 	Alpha AXP 21264 CPU.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the structure holding the  fields required to emulate an
+ * 		Alpha AXP 21264 CPU.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_21264_IboxMain(AXP_21264 *cpu)
+{
+	/*
+	 * Here we'll loop starting at the current PC and working our way through
+	 * all the instructions.  We will do the following steps.
+	 *
+	 *	1) Fetch the next set of instructions.
+	 *	2) If step 1 returns a Miss, then get the Cbox to fill the Icache with
+	 *		the next set of instructions.
+	 *	3) If step 1 returns a WayMiss, then we need to generate an ITB Miss
+	 *		exception, with the PC address we were trying to step to as the
+	 *		return address.
+	 *	4) If step 1 returns a Hit, then process the next set of instructions.
+	 *		a) Decode and rename the registers in each instruction into the ROB.
+	 *		b) If the decoded instruction is a branch, then predict if this
+	 *			branch will be taken.
+	 *		c) If step 4b is true, then adjust the line and set predictors
+	 *			appropriately.
+	 *		d) Fetch and insert an instruction entry into the appropriate
+	 *			instruction queue (IQ or FQ).
+	 *	5) If the branch predictor indicated a branch, then determine if
+	 *		we have to load an ITB entry and ultimately load the iCache
+	 *	6) Loop back to step 1.
 	 */
 	return;
 }

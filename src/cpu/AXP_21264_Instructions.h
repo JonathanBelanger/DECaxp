@@ -236,7 +236,10 @@ typedef enum
 {
 	Load,
 	Store,
-	Jump,
+	Branch,
+	Arith,
+	Logic,
+	Oper,
 	Other
 } AXP_OPER_TYPE;
 
