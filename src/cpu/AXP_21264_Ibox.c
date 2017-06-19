@@ -98,12 +98,12 @@ static AXP_OPER_TYPE AXP_DecodeOperType(u8, u32);
  * for the complex instructions (opcodes that have different ways to use
  * registers).
  */
-inline u16 AXP_RegisterDecodingOpcode11(AXP_INS_FMT);
-inline u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT);
-inline u16 AXP_RegisterDecodingOpcode15_16(AXP_INS_FMT);
-inline u16 AXP_RegisterDecodingOpcode17(AXP_INS_FMT);
-inline u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT);
-inline u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT);
+static u16 AXP_RegisterDecodingOpcode11(AXP_INS_FMT);
+static u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT);
+static u16 AXP_RegisterDecodingOpcode15_16(AXP_INS_FMT);
+static u16 AXP_RegisterDecodingOpcode17(AXP_INS_FMT);
+static u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT);
+static u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT);
 static void AXP_RenameRegisters(AXP_21264_CPU *, AXP_INSTRUCTION *, u16);
 
 /*
@@ -217,11 +217,6 @@ regDecodeFunc decodeFuncs[] =
 	AXP_RegisterDecodingOpcode18,
 	AXP_RegisterDecodingOpcode1c
 };
-typedef union
-{
-	u64		pc;
-	AXP_PC	vpc;
-} AXP_PC_UNION;
 
 /*
  * AXP_Branch_Prediction
@@ -907,7 +902,7 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 	cpu->iCache[index][set].sre = itb->pfn.sre;
 	cpu->iCache[index][set].ure = itb->pfn.ure;
 	cpu->iCache[index][set]._asm = itb->pfn._asm;
-	cpu->iCache[index][set].asn = 0;				// TODO: Need ASN
+	cpu->iCache[index][set].asn = cpu->pCtx.asn;		// TODO: Need to verify
 	cpu->iCache[index][set].pal = pc.pal;
 	cpu->iCache[index][set].vb = 1;
 	cpu->iCache[index][set].tag = tag;
@@ -1351,7 +1346,7 @@ static AXP_OPER_TYPE AXP_DecodeOperType(u8 opCode, u32 funcCode)
  * 	The register mask to be used to rename the registers from architectural to
  * 	physical.
  */
-inline u16 AXP_RegisterDecodingOpcode11(AXP_INS_FMT instr)
+static u16 AXP_RegisterDecodingOpcode11(AXP_INS_FMT instr)
 {
 	u16 retVal = 0;
 
@@ -1390,7 +1385,7 @@ inline u16 AXP_RegisterDecodingOpcode11(AXP_INS_FMT instr)
  * 	The register mask to be used to rename the registers from architectural to
  * 	physical.
  */
-inline u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT instr)
+static u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT instr)
 {
 	u16 retVal = AXP_DEST_FC;
 
@@ -1419,7 +1414,7 @@ inline u16 AXP_RegisterDecodingOpcode14(AXP_INS_FMT instr)
  * 	The register mask to be used to rename the registers from architectural to
  * 	physical.
  */
-inline u16 AXP_RegisterDecodingOpcode15_16(AXP_INS_FMT instr)
+static u16 AXP_RegisterDecodingOpcode15_16(AXP_INS_FMT instr)
 {
 	u16 retVal = AXP_DEST_FC;
 
@@ -1448,7 +1443,7 @@ inline u16 AXP_RegisterDecodingOpcode15_16(AXP_INS_FMT instr)
  * 	The register mask to be used to rename the registers from architectural to
  * 	physical.
  */
-inline u16 AXP_RegisterDecodingOpcode17(AXP_INS_FMT instr)
+static u16 AXP_RegisterDecodingOpcode17(AXP_INS_FMT instr)
 {
 	u16 retVal = 0;
 
@@ -1494,7 +1489,7 @@ inline u16 AXP_RegisterDecodingOpcode17(AXP_INS_FMT instr)
  * 	The register mask to be used to rename the registers from architectural to
  * 	physical.
  */
-inline u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT instr)
+static u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT instr)
 {
 	u16 retVal = 0;
 
@@ -1528,7 +1523,7 @@ inline u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT instr)
  * 	The register mask to be used to rename the registers from architectural to
  * 	physical.
  */
-inline u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT instr)
+static u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT instr)
 {
 	u16 retVal = AXP_DEST_RC;
 
@@ -1838,6 +1833,82 @@ static void AXP_ReturnFQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 }
 
 /*
+ * AXP_21264_SetPALBaseVPC
+ * 	This function is called to set the Virtual Program Counter (VPC) to a
+ * 	specific offset from the address specified in the PAL_BASE register and
+ * 	then add it the list of VPCs.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *	offset:
+ *		An offset value, from PAL_BASE, of the next VPC to be entered into the
+ *		VPC list.
+ *
+ * Output Parameters:
+ * 	cpu:
+ * 		The vpc list will be updated with the newly added VPC and the Start and
+ * 		End indexes will be updated appropriately.
+ *
+ * Return Value:
+ * 	None.
+ */
+AXP_PC AXP_21264_SetPALBaseVPC(AXP_21264_CPU *cpu, u64 offset)
+{
+	u64 pc;
+
+	pc = cpu->palBase.pal_base_pc + offset;
+
+	/*
+	 * Set the VPC, add it to the list, then return it back to the caller.
+	 */
+	return(AXP_211264_SetVPC(cpu, pc, AXP_PAL_MODE));
+}
+
+/*
+ * AXP_21264_SetVPC
+ * 	This function is called to set the Virtual Program Counter (VPC) to a
+ * 	specific value and then add it the list of VPCs.  This is a round-robin
+ * 	list.  The End points to the next entry to be written to.  The Start points
+ * 	to the least recent VPC, which is the one immediately after the End.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *	addr:
+ *		A value of the next VPC to be entered into the VPC list.
+ *	palMode:
+ *		A value to indicate if we will be running in PAL mode.
+ *
+ * Output Parameters:
+ * 	cpu:
+ * 		The vpc list will be updated with the newly added VPC and the Start and
+ * 		End indexes will be updated appropriately.
+ *
+ * Return Value:
+ * 	None.
+ */
+AXP_PC AXP_21264_SetVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
+{
+	union
+	{
+		u64		pc;
+		AXP_PC	vpc;
+	} vpc;
+
+	vpc.pc = pc;
+	vpc.vpc.pal = pal & 0x01;
+	AXP_211264_AddVPC(cpu, vpc.vpc);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(vpc.vpc);
+}
+
+/*
  * AXP_21264_AddVPC
  * 	This function is called to add a Virtual Program Counter (VPC) to the list
  * 	of VPCs.  This is a round-robin list.  The End points to the next entry to
@@ -1939,14 +2010,9 @@ AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *cpu)
 	vpc.pc++;
 
 	/*
-	 * Store it on the VPC List.
+	 * Store it on the VPC List and return to the caller.
 	 */
-	AXP_21264_AddVPC(cpu, vpc);
-
-	/*
-	 * Return back to the caller.
-	 */
-	return(vpc);
+	return(AXP_21264_AddVPC(cpu, vpc));
 }
 
 /*
@@ -2017,7 +2083,6 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 	AXP_INS_LINE nextCacheLine;
 	AXP_INSTRUCTION *decodedInstr;
 	AXP_QUEUE_ENTRY *xqEntry;
-	AXP_PC_UNION workingPC;
 	u32 ii;
 	bool local, global, choice;
 	u16 whichQueue;
@@ -2139,6 +2204,7 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 						xqEntry->ins = decodedInstr;
 						AXP_InsertCountedQueue(&cpu->fq.header, &xqEntry->header);
 					}
+					decodedInstr->state = Queued;
 					nextPC = AXP_21264_IncrementVPC(cpu);
 				}
 				break;
@@ -2150,10 +2216,7 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 
 			case WayMiss:
 				cpu->excAddr.exc_pc = nextPC;
-				workingPC.pc = cpu->palBase.pal_base_pc + AXP_ITB_MISS;
-				nextPC = workingPC.vpc;
-				nextPC.pal = AXP_PAL_MODE;
-				AXP_21264_AddVPC(cpu, nextPC);
+				nextPC = AXP_21264_SetPALBaseVPC(cpu, AXP_ITB_MISS);
 				break;
 		}
 	}

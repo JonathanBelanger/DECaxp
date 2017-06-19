@@ -17,16 +17,16 @@
  * Description:
  *
  *	This header file contains the function definitions implemented in the
- *	AXP_21264_Cbox.c module.
+ *	AXP_21264_Fbox.c module.
  *
  * Revision History:
  *
- *	V01.000		14-May-2017	Jonathan D. Belanger
+ *	V01.000		19-Jun-2017	Jonathan D. Belanger
  *	Initially written.
  */
-#ifndef _AXP_21264_CBOX_DEFS_
-#define _AXP_21264_CBOX_DEFS_
+#ifndef _AXP_21264_FBOX_DEFS_
+#define _AXP_21264_FBOX_DEFS_
 
 #include "AXP_21264_CPU.h"
 
-#endif /* _AXP_21264_CBOX_DEFS_ */
+#endif /* _AXP_21264_FBOX_DEFS_ */

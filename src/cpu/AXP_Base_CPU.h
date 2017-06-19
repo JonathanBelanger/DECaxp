@@ -264,4 +264,100 @@ typedef u64 AXP_BASE_VPTB;
 
 typedef u64 AXP_BASE_WHAMI;
 
+/*
+ * The following list the possible exceptions, interrupts and Machine Checks.
+ *
+ *	Table: Exceptions, Interrupts, and Machine Checks Summary
+ *								SavedPC	NewMode	R02		R03		R04		R05
+ *								-------	-------	----	----	-----	---
+ *	Exceptions -- Faults:
+ *	Floating Disabled Fault		Current	Kernel	SCBv	SCBp
+ *
+ *	Memory Management Faults:
+ *	Access Control Violation	Current	Kernel	SCBv	SCBp	VA		MMF
+ *	Translation Not Valid		Current	Kernel	SCBv	SCBp	VA		MMF
+ *	Fault on Read				Current	Kernel	SCBv	SCBp	VA		MMF
+ *	Fault on Write				Current	Kernel	SCBv	SCBp	VA		MMF
+ *	Fault on Execute			Current	Kernel	SCBv	SCBp	VA		MMF
+ *
+ *	Exceptions -- Arithmetic Traps:
+ *	Arithmetic Traps			Next	Kernel	SCBv	SCBp	Mask	Exc
+ *
+ *	Exceptions -- Synchronous Traps:
+ *	Breakpoint Trap				Next	Kernel	SCBv	SCBp
+ *	Bugcheck Trap				Next	Kernel	SCBv	SCBp
+ *	Change Mode to K/E/S/U		Next	MostPrv	SCBv	SCBp
+ *	Illegal Instruction			Next	Kernel	SCBv	SCBp
+ *	Illegal Operand				Next	Kernel	SCBv	SCBp
+ *	Data Alignment Trap			Next	Kernel	SCBv	SCBp	VA		RW
+ *
+ *	Interrupts:
+ *	Asynch System Trap (4)		Current	Kernel	SCBv	SCBp
+ *	Interval Clock				Current	Kernel	SCBv	SCBp
+ *	Interprocessor Interrupt	Current	Kernel	SCBv	SCBp
+ *	Software Interrupts			Current	Kernel	SCBv	SCBp
+ *	Performance Monitor			Current	Kernel	SCBv	SCBp	IMP		IMP
+ *	Passive Release				Current	Kernel	SCBv	SCBp
+ *	Powerfail					Current	Kernel	SCBv	SCBp
+ *	I/o Device					Current	Kernel	SCBv	SCBp
+ *
+ *	Machine Checks:
+ *	Processor Correctable		Current	Kernel	SCBv	SCBp	LAOff
+ *	System Correctable			Current	Kernel	SCBv	SCBp	LAOff
+ *	System						Current	Kernel	SCBv	SCBp	LAOff
+ *	Processor					Current	Kernel	SCBv	SCBp	LAOff
+ *
+ *	Current = 	PC of the instruction at which the exception or interrupt or
+ *				machine check was taken.
+ *	MostPrv = 	More privileged of the current and new modes
+ *	SCBv =		The SCB vector quadword.
+ *	SCBp =		The SCB parameter quadword.
+ *	VA =		Exact virtual address that triggered the memory management
+ *				fault or data alignment trap
+ *	Mask =		Register Write Mask
+ *	LAOff =		Offset from base logoff area in the HWRPB
+ *	MMF =		Memory Management Flags
+ *	Exc =		Exception Summary parameter
+ *	RW =		Read/Load=0, Write/Store=1 for data alignment traps
+ */
+typedef enum
+{
+	NoException,
+	FloatingDisabledFault,
+	AccessControlViolation,
+	TranslationNotValid,
+	FaultOnRead,
+	FaultOnWrite,
+	FaultOnExecute,
+	ArithmeticTraps,
+	BreakpointTrap,
+	BucgcheckTrap,
+	ChangeModeToKESU,
+	IllegalInstruction,
+	IllegalOperand,
+	DataAlignmentTrap,
+	AST,
+	IntervalClock,
+	InterprocessorInterrupt,
+	SoftwareInterrupts,
+	PerformanceMonitor,
+	PassiveRelease,
+	Powerfail,
+	IODevice,
+	ProcessorCorrectable,
+	SystemCorrectable,
+	System,
+	Processor
+} AXP_EXCEPTIONS;
+
+typedef struct
+{
+	AXP_EXCEPTIONS	exception;
+	AXP_PC			savedPC;
+	u64				R02;
+	u64				R03;
+	u64				R04;
+	u64				R05;
+} AXP_EXCEPT_INFO;
+
 #endif /* _AXP_BASE_CPU_DEFS_ */
