@@ -68,7 +68,6 @@
 #define AXP_21264_PAGE_SIZE	8192	// 8KB page size
 #define AXP_INT_PHYS_REG	AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1
 #define AXP_FP_PHYS_REG		AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1
-#define AXP_REG_MAP_SIZE	AXP_MAX_REGISTERS - 1
 #define AXP_UNMAPPED_REG	31	/* R31 and F31 are never renamed/mapped */
 #define AXP_I_FREELIST_SIZE	AXP_INT_PHYS_REG - AXP_MAX_REGISTERS - 1
 #define AXP_F_FREELIST_SIZE	AXP_FP_PHYS_REG - AXP_MAX_REGISTERS - 1
@@ -119,6 +118,8 @@ typedef struct
 	u8				type_hint_index; /* HW_LD/ST type, HW_RET hint, HW_MxPR index */
 	u8				scbdMask;	/* HW_MxPR scbd_mask */
 	u8				len_stall : 1; /* HW_LD/ST len, HW_RET stall */
+	bool			lockFlagPending; /* set by the LDx_L instructions */
+	bool			clearLockPending; /* many instructions can clear the lock_flag */
 	bool			useLiteral;	/* Indicator that the literal value is valid */
 	bool			branchPredict; /* If this is a branch, do we predict to take it */
 	u32				function;	/* Function code for operation */
@@ -127,6 +128,8 @@ typedef struct
 	u64				src1v;		/* Value from src1 register */
 	u64				src2v;		/* Value from src2 register */
 	u64				destv;		/* Value to dest register */
+	u64				lockPhysAddrPending; /* used with lockFlagPending */
+	u64				lockVirtAddrPending; /* used with lockFlagPending */
 	AXP_INS_TYPE	format;		/* Instruction format */
 	AXP_OPER_TYPE	type;
 	AXP_PC			pc;
@@ -304,6 +307,20 @@ typedef struct
 	 **************************************************************************/
 
 	/*
+	 * Load Lock/Store Conditional.
+	 *
+	 * The following fields are used for handling the LDx_L/STx_C instructions.
+	 * The first field is a true/false indicator (locked/not locked,
+	 * respectively).  The second field is the Locked Physical Address location
+	 * to receive the address locked by the LDx_L instruction.  The STx_C
+	 * instruction must reference the same 16-byte naturally aligned block as
+	 * the LDx_L instruction.
+	 */
+	bool				lockFlag;
+	u64					lockedPhysicalAddress;
+	u64					lockedVirtualAddress;
+
+	/*
 	 * Physical registers.
 	 *
 	 * There are 80 register file entries for integer registers.  This is the
@@ -329,7 +346,7 @@ typedef struct
 	u32					prFreeList[AXP_I_FREELIST_SIZE];
 	u32					prFlStart;
 	u32					prFlEnd;
-	AXP_21264_REG_MAP	prMap[AXP_REG_MAP_SIZE + 1];	/* map for R31		*/
+	AXP_21264_REG_MAP	prMap[AXP_MAX_REGISTERS];
 	AXP_21264_REG_STATE	prState[AXP_INT_PHYS_REG];
 
 	/*
@@ -367,7 +384,7 @@ typedef struct
 	u32					pfFreeList[AXP_F_FREELIST_SIZE];
 	u32					pfFlStart;
 	u32					pfFlEnd;
-	AXP_21264_REG_MAP	pfMap[AXP_REG_MAP_SIZE + 1];	/* map for R31		*/
+	AXP_21264_REG_MAP	pfMap[AXP_MAX_REGISTERS];
 	AXP_21264_REG_STATE	pfState[AXP_FP_PHYS_REG];
 
 	/**************************************************************************

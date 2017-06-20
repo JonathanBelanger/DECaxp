@@ -147,15 +147,474 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 	va = instr->src1v + instr->displacement;
 
 	/*
-	 * If we are exectuing in big-endian mode, then we need to do some address
+	 * If we are executing in big-endian mode, then we need to do some address
 	 * adjustment.
 	 */
 	if (cpu->vaCtl.b_endian == 1)
-		va ^= 0x07;
-	instr->destv = 0x0000000000ffll & (va);		// TODO: Load from mem/cache
-	// TODO: Check to see if we have read access to the memory (Access Violation)
+		va = AXP_BIG_ENDIAN_BYTE(va);
+	instr->destv = AXP_ZEXT_BYTE((va));		// TODO: Load from mem/cache
+	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_LDWU
+ *	This function implements the Load Zero-Extend Word from Memory to Register
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va;
+
+	/*
+	 * Implement the instruction.
+	 */
+	va = instr->src1v + instr->displacement;
+
+	/*
+	 * If we are executing in big-endian mode, then we need to do some address
+	 * adjustment.
+	 */
+	if (cpu->vaCtl.b_endian == 1)
+		va = AXP_BIG_ENDIAN_WORD(va);
+	instr->destv = AXP_ZEXT_WORD((va));		// TODO: Load from mem/cache
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had an alignment fault (Alignment)
+	// TODO: Check to see if we had a read fault (Fault on Read)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_LDL
+ *	This function implements the Load/Prefetch Sign-Extend Longword from Memory
+ *	to Register/no-where instruction of the Alpha AXP processor.
+ *
+ *	If the destination register is R31, then this instruction becomes the
+ *	PREFETCH instruction.
+ *
+ *	A prefetch is a hint to the processor that a cache block might be used in
+ *	the future and should be brought into the cache now.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va;
+
+	/*
+	 * Implement the instruction.
+	 */
+	va = instr->src1v + instr->displacement;
+
+	/*
+	 * If we are executing in big-endian mode, then we need to do some address
+	 * adjustment.
+	 */
+	if (cpu->vaCtl.b_endian == 1)
+		va = AXP_BIG_ENDIAN_LONG(va);
+	instr->destv = AXP_SEXT_LONG((va));		// TODO: Load from mem/cache
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had an alignment fault (Alignment)
+	// TODO: Check to see if we had a read fault (Fault on Read)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_LDQ
+ *	This function implements the Load/Prefetch Quadword from Memory to
+ *	Register/no-where instruction of the Alpha AXP processor.
+ *
+ *	If the destination register is R31, then this instruction becomes the
+ *	PREFETCH_EN instruction.
+ *
+ *	A prefetch, evict next, is a hint to the processor that a cache block
+ *	should be brought into the cache now and marked for preferential eviction
+ *	on future cache fills.  Such a prefetch is particularly useful with an
+ *	associative cache, to prefetch data that is not repeatedly referenced --
+ *	data that has a short temporal lifetime in the cache.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_LDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va;
+
+	/*
+	 * Implement the instruction.
+	 */
+	va = instr->src1v + instr->displacement;
+
+	instr->destv = (va);					// TODO: Load from mem/cache
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had an alignment fault (Alignment)
+	// TODO: Check to see if we had a read fault (Fault on Read)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_LDQ_U
+ *	This function implements the Unaligned Load Quadword from Memory to
+ *	Register/no-where instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va;
+
+	/*
+	 * Implement the instruction.
+	 */
+	va = (instr->src1v + instr->displacement) & ~0x7;
+
+	instr->destv = (va);					// TODO: Load from mem/cache
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had a read fault (Fault on Read)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * TODO:	The 21264 does not contain a dedicated lock register, not are any
+ * TODO:	system components required to do so.
+ * TODO:
+ * TODO:	When a load-lock instruction executed, data is accessed from the
+ * TODO:	Dcache (or Bcache).  If there is a cache miss, data is access from
+ * TODO:	memory with a RdBlk command.  Its associated cache line is filled
+ * TODO:	into the Dcache in the clean state, if it's not already there.
+ * TODO:
+ * TODO:	When a store-conditional instruction executes, it is allowed to
+ * TODO:	succeed if it's associated cache line is still present in the
+ * TODO:	Dcache and can be made writable; otherwise it fails.
+ * TODO:
+ * TODO:	This algorithm is successful because another agent in the system
+ * TODO:	writing to the cache line between the load-lock and
+ * TODO:	store-conditional cache line would make the cache line invalid.
+ * TODO:
+ * TODO:	The following code does not take any of this into account and will
+ * TODO:	need to be corrected.
+ */
+
+/*
+ * AXP_LDL_L
+ *	This function implements the Load Longword Memory Data into Integer
+ *	Register Locked instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va, vaPrime;
+
+	/*
+	 * Implement the instruction.
+	 */
+	va = instr->src1v + instr->displacement;
+
+	/*
+	 * If we are executing in big-endian mode, then we need to do some address
+	 * adjustment.
+	 */
+	if (cpu->vaCtl.b_endian == 1)
+		vaPrime = AXP_BIG_ENDIAN_LONG(va);
+
+	instr->lockFlagPending = true;
+	instr->lockPhysAddrPending = va;	// TODO: Need to convert to a physical address
+	instr->lockVirtAddrPending = va;
+
+	instr->destv = AXP_SEXT_LONG((vaPrime));		// TODO: Load from mem/cache
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had an alignment fault (Alignment)
+	// TODO: Check to see if we had a read fault (Fault on Read)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_LDQ_L
+ *	This function implements the Load Quadword Memory Data into Integer
+ *	Register Locked instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_LDQ_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va;
+
+	/*
+	 * Implement the instruction.
+	 */
+	va = instr->src1v + instr->displacement;
+
+	instr->lockFlagPending = true;
+	instr->lockPhysAddrPending = va;	// TODO: Need to convert to a physical address
+	instr->lockVirtAddrPending = va;
+
+	instr->destv = AXP_SEXT_LONG((va));		// TODO: Load from mem/cache
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had an alignment fault (Alignment)
+	// TODO: Check to see if we had a read fault (Fault on Read)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_STL_C
+ *	This function implements the Store Longword Memory Data into Integer
+ *	Register Conditional instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va, vaPrime;
+
+	/*
+	 * Implement the instruction.
+	 */
+	va = instr->src1v + instr->displacement;
+
+	/*
+	 * If we are executing in big-endian mode, then we need to do some address
+	 * adjustment.
+	 */
+	if (cpu->vaCtl.b_endian == 1)
+		vaPrime = AXP_BIG_ENDIAN_LONG(va);
+
+	if (cpu->lockFlag == true)
+	{
+		(vaPrime) = instr->src1v;
+		// TODO: Check to see if we had an access fault (Access Violation)
+		// TODO: Check to see if we had an alignment fault (Alignment)
+		// TODO: Check to see if we had a write fault (Fault on Write)
+		// TODO: Check to see if we had a translation fault (Translation Not Valid)
+		instr->destv = 1;
+	}
+	else
+		instr->destv = 0;
+	instr->clearLockPending = true;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_STQ_C
+ *	This function implements the Store Quadword Memory Data into Integer
+ *	Register Conditional instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va;
+
+	/*
+	 * Implement the instruction.
+	 */
+	va = instr->src1v + instr->displacement;
+
+	if (cpu->lockFlag == true)
+	{
+		(va) = instr->src1v;
+		// TODO: Check to see if we had an access fault (Access Violation)
+		// TODO: Check to see if we had an alignment fault (Alignment)
+		// TODO: Check to see if we had a write fault (Fault on Write)
+		// TODO: Check to see if we had a translation fault (Translation Not Valid)
+		instr->destv = 1;
+	}
+	else
+		instr->destv = 0;
+	instr->clearLockPending = true;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

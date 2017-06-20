@@ -265,6 +265,45 @@ typedef u64 AXP_BASE_VPTB;
 typedef u64 AXP_BASE_WHAMI;
 
 /*
+ * The following definitions are used to convert addresses from to their
+ * big endian form.  These definitions are XOR'd with the supplied address,
+ * depending upon the size of the datum being loaded/stored:
+ *
+ *	Size		Bits	Hex
+ *	--------	----	---
+ *	Quadword	000		0x0
+ *	Longword	100		0x4
+ *	Word		110		0x6
+ *	Byte		111		0x7
+ */
+#define AXP_BIG_ENDIAN_QUAD(addr)	(addr)
+#define AXP_BIG_ENDIAN_LONG(addr)	(addr) ^ 0x4
+#define AXP_BIG_ENDIAN_WORD(addr)	(addr) ^ 0x6
+#define AXP_BIG_ENDIAN_BYTE(addr)	(addr) ^ 0x7
+
+/*
+ * These definitions zero extend various sized data
+ */
+#define AXP_ZEXT_BYTE(val)		0x00000000000000ffll & (val)
+#define AXP_ZEXT_WORD(val)		0x000000000000ffffll & (val)
+#define AXP_ZEXT_LONG(val)		0x00000000ffffffffll & (val)
+#define AXP_ZEXT_QUAD(val)		(val)
+
+/*
+ * These definitions zero extend various sized data
+ */
+#define AXP_SEXT_BYTE(val)												\
+	((val) & 0x0000000000000080ll) ? (0xffffffffffffff00ll | (val)) :	\
+			AXP_ZEXT_BYTE(val)
+#define AXP_SEXT_WORD(val)												\
+	((val) & 0x0000000000008000ll) ? (0xffffffffffff0000ll | (val)) :	\
+			AXP_ZEXT_WORD(val)
+#define AXP_SEXT_LONG(val)												\
+	((val) & 0x0000000080000000ll) ? (0xffffffff00000000ll | (val)) :	\
+			AXP_ZEXT_LONG(val)
+#define AXP_SEXT_QUAD(val)		(val)
+
+/*
  * The following list the possible exceptions, interrupts and Machine Checks.
  *
  *	Table: Exceptions, Interrupts, and Machine Checks Summary

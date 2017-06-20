@@ -59,7 +59,7 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 					 * The initial register mapping is 1 for one.  Also, the
 					 * contents of the register are ready.
 					 */
-					for (ii = 0; ii < (AXP_REG_MAP_SIZE); ii++)
+					for (ii = 0; ii < (AXP_MAX_REGISTERS -1); ii++)
 					{
 						cpu->prMap[ii].pr = ii;
 						cpu->prMap[ii].prevPr = AXP_UNMAPPED_REG;
