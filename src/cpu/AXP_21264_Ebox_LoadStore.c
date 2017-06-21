@@ -139,20 +139,20 @@ AXP_EXCEPTIONS AXP_LDAH(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+	u64 va, vaPrime;
 
 	/*
 	 * Implement the instruction.
 	 */
-	va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
 	 * adjustment.
 	 */
 	if (cpu->vaCtl.b_endian == 1)
-		va = AXP_BIG_ENDIAN_BYTE(va);
-	instr->destv = AXP_ZEXT_BYTE((va));		// TODO: Load from mem/cache
+		vaPrime = AXP_BIG_ENDIAN_BYTE(va);
+	instr->destv = AXP_ZEXT_BYTE((vaPrime));		// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
@@ -191,20 +191,20 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+	u64 va, vaPrime;
 
 	/*
 	 * Implement the instruction.
 	 */
-	va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
 	 * adjustment.
 	 */
 	if (cpu->vaCtl.b_endian == 1)
-		va = AXP_BIG_ENDIAN_WORD(va);
-	instr->destv = AXP_ZEXT_WORD((va));		// TODO: Load from mem/cache
+		vaPrime = AXP_BIG_ENDIAN_WORD(va);
+	instr->destv = AXP_ZEXT_WORD((vaPrime));		// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
@@ -250,20 +250,20 @@ AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+	u64 va, vaPrime;
 
 	/*
 	 * Implement the instruction.
 	 */
-	va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
 	 * adjustment.
 	 */
 	if (cpu->vaCtl.b_endian == 1)
-		va = AXP_BIG_ENDIAN_LONG(va);
-	instr->destv = AXP_SEXT_LONG((va));		// TODO: Load from mem/cache
+		vaPrime = AXP_BIG_ENDIAN_LONG(va);
+	instr->destv = AXP_SEXT_LONG((vaPrime));		// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
@@ -431,7 +431,7 @@ AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 	/*
 	 * Implement the instruction.
 	 */
-	va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
@@ -514,8 +514,8 @@ AXP_EXCEPTIONS AXP_LDQ_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 
 /*
  * AXP_STL_C
- *	This function implements the Store Longword Memory Data into Integer
- *	Register Conditional instruction of the Alpha AXP processor.
+ *	This function implements the Store Longword Integer Register into Memory
+ *	Conditional instruction of the Alpha AXP processor.
  *
  * Input Parameters:
  *	cpu:
@@ -540,7 +540,7 @@ AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 	/*
 	 * Implement the instruction.
 	 */
-	va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
@@ -575,8 +575,8 @@ AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 
 /*
  * AXP_STQ_C
- *	This function implements the Store Quadword Memory Data into Integer
- *	Register Conditional instruction of the Alpha AXP processor.
+ *	This function implements the Store Quadword Integer Register into Memory
+ *	Conditional instruction of the Alpha AXP processor.
  *
  * Input Parameters:
  *	cpu:
@@ -615,6 +615,258 @@ AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 	else
 		instr->destv = 0;
 	instr->clearLockPending = true;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_STB
+ *	This function implements the Store Byte Integer Register into Memory
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_STB(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va, vaPrime;
+
+	/*
+	 * Implement the instruction.
+	 */
+	vaPrime = va = instr->src1v + instr->displacement;
+
+	/*
+	 * If we are executing in big-endian mode, then we need to do some address
+	 * adjustment.
+	 */
+	if (cpu->vaCtl.b_endian == 1)
+		vaPrime = AXP_BIG_ENDIAN_BYTE(va);
+	(vaPrime) = AXP_BYTE_MASK(instr->src1v);
+		// TODO: Check to see if we had an access fault (Access Violation)
+		// TODO: Check to see if we had an alignment fault (Alignment)
+		// TODO: Check to see if we had a write fault (Fault on Write)
+		// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_STW
+ *	This function implements the Store Word Integer Register into Memory
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_STW(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va, vaPrime;
+
+	/*
+	 * Implement the instruction.
+	 */
+	vaPrime = va = instr->src1v + instr->displacement;
+
+	/*
+	 * If we are executing in big-endian mode, then we need to do some address
+	 * adjustment.
+	 */
+	if (cpu->vaCtl.b_endian == 1)
+		vaPrime = AXP_BIG_ENDIAN_WORD(va);
+	(vaPrime) = AXP_WORD_MASK(instr->src1v);
+		// TODO: Check to see if we had an access fault (Access Violation)
+		// TODO: Check to see if we had an alignment fault (Alignment)
+		// TODO: Check to see if we had a write fault (Fault on Write)
+		// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_STL
+ *	This function implements the Store Longword Integer Register into Memory
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_STL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va, vaPrime;
+
+	/*
+	 * Implement the instruction.
+	 */
+	vaPrime = va = instr->src1v + instr->displacement;
+
+	/*
+	 * If we are executing in big-endian mode, then we need to do some address
+	 * adjustment.
+	 */
+	if (cpu->vaCtl.b_endian == 1)
+		vaPrime = AXP_BIG_ENDIAN_LONG(va);
+	(vaPrime) = AXP_LONG_MASK(instr->src1v);
+		// TODO: Check to see if we had an access fault (Access Violation)
+		// TODO: Check to see if we had an alignment fault (Alignment)
+		// TODO: Check to see if we had a write fault (Fault on Write)
+		// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_STQ
+ *	This function implements the Store Quadword Integer Register into Memory
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_STQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va;
+
+	/*
+	 * Implement the instruction.
+	 */
+	va = instr->src1v + instr->displacement;
+
+	(va) = instr->src1v;
+		// TODO: Check to see if we had an access fault (Access Violation)
+		// TODO: Check to see if we had an alignment fault (Alignment)
+		// TODO: Check to see if we had a write fault (Fault on Write)
+		// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_STQ_U
+ *	This function implements the Store Unaligned Quadword Integer Register into
+ *	Memory instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_STQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+	u64 va;
+
+	/*
+	 * Implement the instruction.
+	 */
+	va = (instr->src1v + instr->displacement) & ~0x7;
+
+	(va) = instr->src1v;
+		// TODO: Check to see if we had an access fault (Access Violation)
+		// TODO: Check to see if we had a write fault (Fault on Write)
+		// TODO: Check to see if we had a translation fault (Translation Not Valid)
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
