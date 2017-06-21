@@ -282,6 +282,15 @@ typedef u64 AXP_BASE_WHAMI;
 #define AXP_BIG_ENDIAN_BYTE(addr)	(addr) ^ 0x7
 
 /*
+ * The following definitions will mask out various lengths of integers within
+ * a 64-bit register.
+ */
+#define AXP_BYTE_MASK(value)   		(value) & 0x00000000000000ffll
+#define AXP_WORD_MASK(value)   		(value) & 0x000000000000ffffll
+#define AXP_LONG_MASK(value)		(value) & 0x00000000ffffffffll
+#define AXP_QUAD_MASK(value)		(value)
+
+/*
  * These definitions zero extend various sized data
  */
 #define AXP_ZEXT_BYTE(val)		0x00000000000000ffll & (val)
