@@ -81,8 +81,11 @@
  *	Finished the implementation of normalizing registers, as indicated above,
  *	and then mapping them from architectural to physical registers, generating
  *	a new mapping for the destination register.
+ *
  *	TODO:	We need a retirement function to put the destination value into the
  *			physical register and indicate that the register value is Valid.
+ *	TODO:	This module needs to be broken up into parts (like I am doing for the
+ *		Ebox (2,000+ lines in a module is way too large to manage effectively).
  */
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
@@ -1899,7 +1902,8 @@ AXP_PC AXP_21264_SetVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 	} vpc;
 
 	vpc.pc = pc;
-	vpc.vpc.pal = pal & 0x01;
+	vpc.res = 0;
+	vpc.vpc.pal = pal & AXP_PAL_MODE;
 	AXP_211264_AddVPC(cpu, vpc.vpc);
 
 	/*
