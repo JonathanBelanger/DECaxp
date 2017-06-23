@@ -23,6 +23,11 @@
  *
  *	V01.000		22-Jun-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		23-Jun-2017	Jonathan D. Belanger
+ *	On branches, we need to save the branched to PC until the instruction is
+ *	retired.  The original code was updating it immediately.  This would cause
+ *	huge problems, especially around exception and interrupt handling.
  */
 #include "AXP_21264_Ebox_Control.h"
 
@@ -48,13 +53,12 @@
  */
 AXP_EXCEPTIONS AXP_BEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
-	AXP_PC newPC;
 
 	/*
 	 * Implement the instruction.
 	 */
 	if (instr->src1v == 0)
-		newPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
+		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -89,13 +93,12 @@ AXP_EXCEPTIONS AXP_BEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  */
 AXP_EXCEPTIONS AXP_BGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
-	AXP_PC newPC;
 
 	/*
 	 * Implement the instruction.
 	 */
 	if (instr->src1v >= 0)
-		newPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
+		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -130,13 +133,12 @@ AXP_EXCEPTIONS AXP_BGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  */
 AXP_EXCEPTIONS AXP_BGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
-	AXP_PC newPC;
 
 	/*
 	 * Implement the instruction.
 	 */
 	if (instr->src1v > 0)
-		newPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
+		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -171,13 +173,12 @@ AXP_EXCEPTIONS AXP_BGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  */
 AXP_EXCEPTIONS AXP_BLBC(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
-	AXP_PC newPC;
 
 	/*
 	 * Implement the instruction.
 	 */
 	if ((instr->src1v & 0x01) == 0x00)
-		newPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
+		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -212,13 +213,12 @@ AXP_EXCEPTIONS AXP_BLBC(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  */
 AXP_EXCEPTIONS AXP_BLBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
-	AXP_PC newPC;
 
 	/*
 	 * Implement the instruction.
 	 */
 	if ((instr->src1v & 0x01) == 0x01)
-		newPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
+		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -253,13 +253,12 @@ AXP_EXCEPTIONS AXP_BLBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  */
 AXP_EXCEPTIONS AXP_BLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
-	AXP_PC newPC;
 
 	/*
 	 * Implement the instruction.
 	 */
 	if (((i64) instr->src1v) <= 0)
-		newPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
+		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -294,13 +293,12 @@ AXP_EXCEPTIONS AXP_BLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  */
 AXP_EXCEPTIONS AXP_BLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
-	AXP_PC newPC;
 
 	/*
 	 * Implement the instruction.
 	 */
 	if (((i64) instr->src1v) < 0)
-		newPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
+		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -335,13 +333,12 @@ AXP_EXCEPTIONS AXP_BLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  */
 AXP_EXCEPTIONS AXP_BNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
-	AXP_PC newPC;
 
 	/*
 	 * Implement the instruction.
 	 */
 	if (instr->src1v != 0)
-		newPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
+		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -376,15 +373,14 @@ AXP_EXCEPTIONS AXP_BNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  */
 AXP_EXCEPTIONS AXP_BR(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr);
 {
-	AXP_PC nextPC;
 
 	/*
 	 * Implement the instruction.
 	 */
-	nextPC = instr->pc;			// This points to the PC for this instruction.
-	nextPC.pc++;				// This points to the instruction after this.
-	instr->destv = *((u64 *) &nextPc);
-	nextPC = AXP_21264_DisplaceVPC(cpu, instr->displacement)
+	instr->branchPC = instr->pc;// This points to the PC for this instruction.
+	instr->branchPC.pc++;		// This points to the instruction after this.
+	instr->destv = *((u64 *) &instr->branchPC);
+	instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement)
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -419,7 +415,6 @@ AXP_EXCEPTIONS AXP_BR(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr);
  */
 AXP_EXCEPTIONS AXP_BSR(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
-	AXP_PC nextPC;
 
 	/*
 	 * Implement the instruction.
@@ -427,10 +422,10 @@ AXP_EXCEPTIONS AXP_BSR(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 	 * TODO:	We need to use the hints for possible branch prediction and
 	 *			push the return address onto a branch-prediction stack.
 	 */
-	nextPC = instr->pc;			// This points to the PC for this instruction.
-	nextPC.pc++;				// This points to the instruction after this.
-	instr->destv = *((u64 *) &nextPc);
-	nextPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
+	instr->branchPC = instr->pc;	// This points to the PC for this instruction.
+	instr->branchPC.pc++;			// This points to the instruction after this.
+	instr->destv = *((u64 *) &instr->branchPC);
+	instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -485,7 +480,6 @@ AXP_EXCEPTIONS AXP_BSR(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  */
 AXP_EXCEPTIONS AXP_JMP(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
-	AXP_PC nextPC;
 
 	/*
 	 * Implement the instruction.
@@ -493,10 +487,10 @@ AXP_EXCEPTIONS AXP_JMP(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 	 * TODO:	We need to use the hints for possible branch prediction and
 	 *			push/pop the return address onto a branch-prediction stack.
 	 */
-	nextPC = instr->pc;			// This points to the PC for this instruction.
-	nextPC.pc++;				// This points to the instruction after this.
-	instr->destv = *((u64 *) &nextPc);
-	nextPC = AXP_21264_SetVPC(cpu, instr->src1v, AXP_NORMAL_MODE);
+	instr->branchPC = instr->pc;	// This points to the PC for this instruction.
+	instr->branchPC.pc++;			// This points to the instruction after this.
+	instr->destv = *((u64 *) &instr->branchPC);
+	instr->branchPC = AXP_21264_SetVPC(cpu, instr->src1v, AXP_NORMAL_MODE);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

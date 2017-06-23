@@ -82,6 +82,17 @@
  *	and then mapping them from architectural to physical registers, generating
  *	a new mapping for the destination register.
  *
+ *	V01.010		23-Jun-2017	Jonathan D. Belanger
+ *	The way I'm handling the Program Counter (PC/VPC) is not correct.  When
+ *	instructions are decoded, queued, and executed, their results are not
+ *	realized until the instruction is retired.  The Integer Control
+ *	instructions currently determine the next PC and set it immediately. not
+ *	are retirement.  This is because I tried to do to much in the code that
+ *	handles the PC/VPC.  The next PC should only be updated as a part of normal
+ *	instruction queuing or instruction retirement.  We should only have one
+ *	way to "set" the PC, but other functions to calculate one, based on various
+ *	criteria.
+ *
  *	TODO:	We need a retirement function to put the destination value into the
  *			physical register and indicate that the register value is Valid.
  */
@@ -89,6 +100,53 @@
 #include "AXP_21264_CPU.h"
 #include "AXP_21264_ICache.h"
 #include "AXP_21264_Ibox.h"
+
+/*
+ * A local structure used to calculate the PC for a CALL_PAL function.
+ */
+struct palBaseBits
+(
+	u64	res_1 : 15;
+	u64	highPC : 49;
+);
+
+typedef union
+{
+	 struct palBaseBits	bits;
+	 u64				palBaseAddr;
+	 
+}AXP_IBOX_PALBASE_BITS;
+
+struct palPCBits;
+{
+	u64	palMode : 1;
+	u64 mbz_1 : 5;
+	u64 func_5_0 : 6;
+	u64 func_7 : 1;
+	u64 mbo : 1;
+	u64 mbz_2 : 1;
+	u64 highPC : 49;
+};
+
+typedef union
+{
+	struct palPCBits	bits;
+	AXP_PC				vpc;
+} AXP_IBOX_PAL_PC;
+
+struct palFuncBits
+{
+	u32 func_5_0 : 6;
+	u32 res_1 : 1;
+	u32 func_7 : 1;
+	u32 res_2 : 24;
+};
+
+typedef union
+{
+	struct palFuncBits	bits;
+	u32					func;
+} AXP_IBOX_PAL_FUNC_BITS;
 
 /*
  * Prototypes for local functions
@@ -959,83 +1017,6 @@ static void AXP_ReturnFQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 }
 
 /*
- * AXP_21264_SetPALBaseVPC
- * 	This function is called to set the Virtual Program Counter (VPC) to a
- * 	specific offset from the address specified in the PAL_BASE register and
- * 	then add it the list of VPCs.
- *
- * Input Parameters:
- * 	cpu:
- *		A pointer to the structure containing all the fields needed to emulate
- *		an Alpha AXP 21264 CPU.
- *	offset:
- *		An offset value, from PAL_BASE, of the next VPC to be entered into the
- *		VPC list.
- *
- * Output Parameters:
- * 	cpu:
- * 		The vpc list will be updated with the newly added VPC and the Start and
- * 		End indexes will be updated appropriately.
- *
- * Return Value:
- * 	None.
- */
-AXP_PC AXP_21264_SetPALBaseVPC(AXP_21264_CPU *cpu, u64 offset)
-{
-	u64 pc;
-
-	pc = cpu->palBase.pal_base_pc + offset;
-
-	/*
-	 * Set the VPC, add it to the list, then return it back to the caller.
-	 */
-	return(AXP_211264_SetVPC(cpu, pc, AXP_PAL_MODE));
-}
-
-/*
- * AXP_21264_SetVPC
- * 	This function is called to set the Virtual Program Counter (VPC) to a
- * 	specific value and then add it the list of VPCs.  This is a round-robin
- * 	list.  The End points to the next entry to be written to.  The Start points
- * 	to the least recent VPC, which is the one immediately after the End.
- *
- * Input Parameters:
- * 	cpu:
- *		A pointer to the structure containing all the fields needed to emulate
- *		an Alpha AXP 21264 CPU.
- *	addr:
- *		A value of the next VPC to be entered into the VPC list.
- *	palMode:
- *		A value to indicate if we will be running in PAL mode.
- *
- * Output Parameters:
- * 	cpu:
- * 		The vpc list will be updated with the newly added VPC and the Start and
- * 		End indexes will be updated appropriately.
- *
- * Return Value:
- * 	None.
- */
-AXP_PC AXP_21264_SetVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
-{
-	union
-	{
-		u64		pc;
-		AXP_PC	vpc;
-	} vpc;
-
-	vpc.pc = pc;
-	vpc.res = 0;
-	vpc.vpc.pal = pal & AXP_PAL_MODE;
-	AXP_211264_AddVPC(cpu, vpc.vpc);
-
-	/*
-	 * Return back to the caller.
-	 */
-	return(vpc.vpc);
-}
-
-/*
  * AXP_21264_AddVPC
  * 	This function is called to add a Virtual Program Counter (VPC) to the list
  * 	of VPCs.  This is a round-robin list.  The End points to the next entry to
@@ -1071,9 +1052,132 @@ void AXP_21264_AddVPC(AXP_21264_CPU *cpu, AXP_PC vpc)
 }
 
 /*
+ * AXP_21264_GetPALFuncVPC
+ * 	This function is called to get the Virtual Program Counter (VPC) to a
+ * 	specific PAL function which is an offset from the address specified in the
+ *	PAL_BASE register.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *	func:
+ *		The value of the function field in the PALcode Instruction Format.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ * 	The value that the PC should be set to to call the requested function.
+ */
+AXP_PC AXP_21264_SetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
+{
+	AXP_IBOX_PAL_PC pc;
+	AXP_IBOX_PALBASE_BITS palBase;
+	AXP_IBOX_PAL_FUNC_BITS palFunc;
+
+	palBase.palBaseAddr = cpu->palBase.pal_base_pc;
+	palFunc.func = func;
+	
+	/*
+	 * We assume that the function supplied follows any of the following
+	 * criteria:
+	 *
+	 *		Is in the range of 0x40 and 0x7f, inclusive
+	 *		Is greater than 0xbf
+	 *		Is between 0x00 and 0x3f, inclusive, and IER_CM[CM] is not equal to
+	 *			the kernel mode value (0).
+	 *
+	 * Now, let's compose the PC for the PALcode function we are being
+	 * requested to call.
+	 */
+	pc.bits.highPC = palBase.bits.highPC;
+	pc.bits.mbz_2 = 0;
+	pc.bits.mbo = 1;
+	pc.bits.func_7 = palFunc.bits.func_7;
+	pc.bits.mbz_1 = 0;
+	pc.bits.palMode = AXP_PAL_MODE;
+
+	/*
+	 * Return the composed VPC it back to the caller.
+	 */
+	return(pc.vpc);
+}
+
+/*
+ * AXP_21264_GetPALBaseVPC
+ * 	This function is called to get the Virtual Program Counter (VPC) to a
+ * 	specific offset from the address specified in the PAL_BASE register.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *	offset:
+ *		An offset value, from PAL_BASE, of the next VPC to be entered into the
+ *		VPC list.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ * 	The value that the PC should be set to to call the requested offset.
+ */
+AXP_PC AXP_21264_GetPALBaseVPC(AXP_21264_CPU *cpu, u64 offset)
+{
+	u64 pc;
+
+	pc = cpu->palBase.pal_base_pc + offset;
+
+	/*
+	 * Get the VPC set with the correct PALmode bit and return it back to the
+	 * caller.
+	 */
+	return(AXP_211264_GetVPC(cpu, pc, AXP_PAL_MODE));
+}
+
+/*
+ * AXP_21264_GetVPC
+ * 	This function is called to get the Virtual Program Counter (VPC) to a
+ * 	specific value.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to emulate
+ *		an Alpha AXP 21264 CPU.
+ *	addr:
+ *		A value of the next VPC to be entered into the VPC list.
+ *	palMode:
+ *		A value to indicate if we will be running in PAL mode.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ * 	The calculated VPC, based on a target virtual address.
+ */
+AXP_PC AXP_21264_SetVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
+{
+	union
+	{
+		u64		pc;
+		AXP_PC	vpc;
+	} vpc;
+
+	vpc.pc = pc;
+	vpc.res = 0;
+	vpc.vpc.pal = pal & AXP_PAL_MODE;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(vpc.vpc);
+}
+
+/*
  * AXP_21264_GetNextVPC
  * 	This function is called to retrieve the VPC for the next set of
- * 	instructions top fetch.
+ * 	instructions to be fetched.
  *
  * Input Parameters:
  * 	cpu:
@@ -1092,7 +1196,7 @@ AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
 	u32	prevVPC;
 
 	/*
-	 * The End points to the next location to be filled.  Therefore, the
+	 * The End, points to the next location to be filled.  Therefore, the
 	 * previous location is the next VPC to be executed.
 	 */
 	prevVPC = ((cpu->vpcEnd != 0) ? cpu->vpcEnd : AXP_INFLIGHT_MAX) - 1;
@@ -1106,8 +1210,7 @@ AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
 
 /*
  * AXP_21264_IncrementVPC
- * 	This function is called to increment Virtual Program Counter (VPC) and add
- * 	it to the list of VPCs.
+ * 	This function is called to increment Virtual Program Counter (VPC).
  *
  * Input Parameters:
  * 	cpu:
@@ -1115,9 +1218,7 @@ AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
  *		an Alpha AXP 21264 CPU.
  *
  * Output Parameters:
- * 	cpu:
- * 		The vpc list will be updated with the newly added VPC and the Start and
- * 		End indexes will be updated appropriately.
+ *	None.
  *
  * Return Value:
  * 	The value of the incremented PC.
@@ -1139,13 +1240,12 @@ AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *cpu)
 	/*
 	 * Store it on the VPC List and return to the caller.
 	 */
-	return(AXP_21264_AddVPC(cpu, vpc));
+	return(vpc);
 }
 
 /*
  * AXP_21264_DisplaceVPC
- * 	This function is called to add a displacement value to the VPC and add it
- * 	to the list of VPCs.
+ * 	This function is called to add a displacement value to the VPC.
  *
  * Input Parameters:
  * 	cpu:
@@ -1155,12 +1255,10 @@ AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *cpu)
  *		A signed 64-bit value to be added to the VPC.
  *
  * Output Parameters:
- * 	cpu:
- * 		The vpc list will be updated with the newly added VPC and the Start and
- * 		End indexes will be updated appropriately.
+ *	None.
  *
  * Return Value:
- * 	The value of the incremented PC.
+ * 	The value of the PC with the displacement.
  */
 AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, i64 displacement)
 {
@@ -1175,11 +1273,6 @@ AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, i64 displacement)
 	 * Increment and then add the displacement.
 	 */
 	vpc.pc = vpc.pc + 1 + displacement;
-
-	/*
-	 * Store it on the VPC List.
-	 */
-	AXP_21264_AddVPC(cpu, vpc);
 
 	/*
 	 * Return back to the caller.
@@ -1276,6 +1369,19 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 								&local,
 								&global,
 								&choice);
+
+						/*
+						 * TODO:	First, we can use the PC handling functions
+						 *			to calculate the branch PC.
+						 * TODO:	Second, we need to make sure that we are
+						 *			calculating the branch address correctly.
+						 * TODO:	Third, We need to be able to handle
+						 *			returns, and utilization of the, yet to be
+						 *			implemented, prediction stack.
+						 * TODO:	Finally, we need to flush the remaining
+						 *			instructions to be decoded and go get the
+						 *			predicted instructions.
+						 */
 						if (decodedInstr->branchPredict == true)
 						{
 							branchPC.pc = nextPC.pc + 1 + decodedInstr->displacement;
