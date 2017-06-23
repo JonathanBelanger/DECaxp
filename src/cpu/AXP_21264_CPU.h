@@ -133,6 +133,7 @@ typedef struct
 	AXP_INS_TYPE	format;		/* Instruction format */
 	AXP_OPER_TYPE	type;
 	AXP_PC			pc;
+	AXP_PC			branchPC;
 	AXP_INS_STATE	state;
 } AXP_INSTRUCTION;
 
