@@ -16,31 +16,12 @@
  *
  * Description:
  *
- *	This header file contains the function definitions implemented in the
- *	AXP_21264_Fbox.c module.
+ *	This source file contains the functions needed to implement the
+ *	functionality of the Fbox Load/Store Instructions.
  *
- * Revision History:
+ *	Revision History:
  *
- *	V01.000		19-Jun-2017	Jonathan D. Belanger
+ *	V01.000		24-June-2017	Jonathan D. Belanger
  *	Initially written.
  */
-#ifndef _AXP_21264_FBOX_DEFS_
-#define _AXP_21264_FBOX_DEFS_
-
-#include "AXP_21264_CPU.h"
-
-/*
- * FP Operate Function Field Format
- * 	The formatted function field for FP operations is only done for Opcodes
- * 	0x14 and 0x16.
- */
-typedef struct
-{
-	 u32	fnc : 4;
-	 u32	src : 2;
-	 u32	rnd : 2;
-	 u32	trp : 3;
-	 u32	res : 21;
-} AXP_FP_FUNC;
-
-#endif /* _AXP_21264_FBOX_DEFS_ */
+#include "AXP_21264_Fbox_LoadStore.h"

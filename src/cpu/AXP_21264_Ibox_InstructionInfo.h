@@ -16,31 +16,28 @@
  *
  * Description:
  *
- *	This header file contains the function definitions implemented in the
- *	AXP_21264_Fbox.c module.
+ *	This header file contains the functions needed by the other Ibox modules
+ *	to decode instructions.
  *
  * Revision History:
  *
- *	V01.000		19-Jun-2017	Jonathan D. Belanger
- *	Initially written.
+ *	V01.000		22-Jun-2017	Jonathan D. Belanger
+ *	Initially written, migrated from AXP_21264_Ibox.c.
  */
-#ifndef _AXP_21264_FBOX_DEFS_
-#define _AXP_21264_FBOX_DEFS_
+#ifndef _AXP_21264_IBOX_INSTRUCTION_INFO_DEFS_
+#define _AXP_21264_IBOX_INSTRUCTION_INFO_DEFS_
 
+#include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
+#include "AXP_21264_ICache.h"
+#include "AXP_21264_Ibox.h"
 
 /*
- * FP Operate Function Field Format
- * 	The formatted function field for FP operations is only done for Opcodes
- * 	0x14 and 0x16.
+ * Prototype definitions.
  */
-typedef struct
-{
-	 u32	fnc : 4;
-	 u32	src : 2;
-	 u32	rnd : 2;
-	 u32	trp : 3;
-	 u32	res : 21;
-} AXP_FP_FUNC;
+AXP_INS_TYPE AXP_InstructionFormat(AXP_INS_FMT);
+AXP_OPER_TYPE AXP_OperationType(u32);
+AXP_REG_DECODE AXP_RegisterDecoding(u32);
+u16 AXP_InstructionQueue(u32);
 
-#endif /* _AXP_21264_FBOX_DEFS_ */
+#endif	/* _AXP_21264_IBOX_INSTRUCTION_INFO_DEFS_ */

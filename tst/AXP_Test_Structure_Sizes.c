@@ -43,6 +43,7 @@
 #include "AXP_21264_ICache.h"
 #include "AXP_21264_Ibox.h"
 #include "AXP_21264_Cbox.h"
+#include "AXP_21264_Fbox.h"
 #include "AXP_21264_CPU.h"
 
 #define PRINT_SIZE(type, size) \
@@ -168,6 +169,9 @@ int main()
 	PRINT_SIZE(AXP_ICACHE_VPC, 8);
 	PRINT_SIZE(AXP_ICACHE_TAG_IDX, 8);
 	PRINT_SIZE(AXP_ICACHE_LINE, 128);
+
+	printf("\nAXP_21264_Fbox.h\n");
+	PRINT_SIZE(AXP_FP_FUNC, 4);
 
 	return(0);
 }
