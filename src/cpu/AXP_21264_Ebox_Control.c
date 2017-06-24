@@ -17,7 +17,7 @@
  * Description:
  *
  *	This source file contains the functions needed to implement the
- *	Control functionality of the Ebox.
+ *	Integer Control functionality of the Ebox.
  *
  *	Revision History:
  *
@@ -371,7 +371,7 @@ AXP_EXCEPTIONS AXP_BNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_BR(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr);
+AXP_EXCEPTIONS AXP_BR(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 {
 
 	/*
