@@ -30,7 +30,7 @@
  * IMPLEMENTATION NOTES:
  *
  * 		1)	If R31 is a destination register, then the code that selects the
- * 			instruction for executionfrom the IQ, will determine this and just
+ * 			instruction for execution from the IQ, will determine this and just
  * 			move the instruction state to WaitingRetirement.  The exception to
  * 			this are the LDL and LDQ instructions, where these instructions
  * 			become PREFETCH and PREFETCH_EN, respectively.

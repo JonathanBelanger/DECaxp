@@ -32,7 +32,7 @@
 
 #include "AXP_21264_CPU.h"
 #include "AXP_21264_Ibox_Icache.h"
-#include "AXP_21264_Ibox_Instruction_Info.h"
+#include "AXP_21264_Ibox_InstructionInfo.h"
 
 #define AXP_NONE	0
 #define AXP_IQ		1
