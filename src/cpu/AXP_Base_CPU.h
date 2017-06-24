@@ -266,7 +266,7 @@ typedef u64 AXP_BASE_WHAMI;
 
 /*
  * The following definitions are used to convert addresses from to their
- * big endian form.  These definitions are XOR'd with the supplied address,
+ * big-endian form.  These definitions are XOR'd with the supplied address,
  * depending upon the size of the datum being loaded/stored:
  *
  *	Size		Bits	Hex
@@ -277,25 +277,25 @@ typedef u64 AXP_BASE_WHAMI;
  *	Byte		111		0x7
  */
 #define AXP_BIG_ENDIAN_QUAD(addr)	(addr)
-#define AXP_BIG_ENDIAN_LONG(addr)	(addr) ^ 0x4
-#define AXP_BIG_ENDIAN_WORD(addr)	(addr) ^ 0x6
-#define AXP_BIG_ENDIAN_BYTE(addr)	(addr) ^ 0x7
+#define AXP_BIG_ENDIAN_LONG(addr)	((addr) ^ 0x4)
+#define AXP_BIG_ENDIAN_WORD(addr)	((addr) ^ 0x6)
+#define AXP_BIG_ENDIAN_BYTE(addr)	((addr) ^ 0x7)
 
 /*
  * The following definitions will mask out various lengths of integers within
  * a 64-bit register.
  */
-#define AXP_BYTE_MASK(value)   		(value) & 0x00000000000000ffll
-#define AXP_WORD_MASK(value)   		(value) & 0x000000000000ffffll
-#define AXP_LONG_MASK(value)		(value) & 0x00000000ffffffffll
-#define AXP_QUAD_MASK(value)		(value)
+#define AXP_BYTE_MASK(val)			((val) & 0x00000000000000ffll)
+#define AXP_WORD_MASK(val)			((val) & 0x000000000000ffffll)
+#define AXP_LONG_MASK(val)			((val) & 0x00000000ffffffffll)
+#define AXP_QUAD_MASK(val)			(val)
 
 /*
  * These definitions zero extend various sized data
  */
-#define AXP_ZEXT_BYTE(val)		0x00000000000000ffll & (val)
-#define AXP_ZEXT_WORD(val)		0x000000000000ffffll & (val)
-#define AXP_ZEXT_LONG(val)		0x00000000ffffffffll & (val)
+#define AXP_ZEXT_BYTE(val)		(0x00000000000000ffll & (val))
+#define AXP_ZEXT_WORD(val)		(0x000000000000ffffll & (val))
+#define AXP_ZEXT_LONG(val)		(0x00000000ffffffffll & (val))
 #define AXP_ZEXT_QUAD(val)		(val)
 
 /*

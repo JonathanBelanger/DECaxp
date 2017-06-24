@@ -163,8 +163,8 @@ AXP_INS_TYPE AXP_InstructionFormat(AXP_INS_FMT inst)
  *	in the supplied 32-bit instruction.
  *
  * Input Parameters:
- *	inst:
- *		An Alpha AXP formatted instruction.
+ *	opcode:
+ *		An Alpha AXP operation code.
  *
  * Output Parameters:
  *	None.
@@ -172,21 +172,21 @@ AXP_INS_TYPE AXP_InstructionFormat(AXP_INS_FMT inst)
  * Return Value:
  *	A value representing the type of instruction specified.
  */
-AXP_OPER_TYPE AXP_OperationType(AXP_INS_FMT inst)
+AXP_OPER_TYPE AXP_OperationType(u32 opcode)
 {
 	AXP_OPER_TYPE retVal = Other;
 
 	/*
 	 * Opcodes can only be between 0x00 and 0x3f.  Any other value is reserved.
 	 */
-	if ((inst.pal.opcode >= 0x00) && (inst.pal.opcode <= 0x3f))
+	if ((opcode >= 0x00) && (opcode <= 0x3f))
 	{
 
 		/*
 		 * Look up the instruction type from the instruction array, which is
 		 * indexed by opcode.
 		 */
-		retVal = insDecode[inst.pal.opcode].type;
+		retVal = insDecode[opcode].type;
 	}
 
 	/*
@@ -202,8 +202,8 @@ AXP_OPER_TYPE AXP_OperationType(AXP_INS_FMT inst)
  *	source 1, and source 2).
  *
  * Input Parameters:
- *	inst:
- *		An Alpha AXP formatted instruction.
+ *	opcode:
+ *		An Alpha AXP operation code.
  *
  * Output Parameters:
  *	None.
@@ -211,21 +211,21 @@ AXP_OPER_TYPE AXP_OperationType(AXP_INS_FMT inst)
  * Return Value:
  *	A value representing the type of instruction specified.
  */
-AXP_REG_DECODE AXP_RegisterDecoding(AXP_INS_FMT inst)
+AXP_REG_DECODE AXP_RegisterDecoding(u32 opcode)
 {
-	AXP_INS_TYPE retVal = {.raw = 0};
+	AXP_REG_DECODE retVal = {.raw = 0};
 
 	/*
 	 * Opcodes can only be between 0x00 and 0x3f.  Any other value is reserved.
 	 */
-	if ((inst.pal.opcode >= 0x00) && (inst.pal.opcode <= 0x3f))
+	if ((opcode >= 0x00) && (opcode <= 0x3f))
 	{
 
 		/*
 		 * Look up the instruction type from the instruction array, which is
 		 * indexed by opcode.
 		 */
-		retVal = insDecode[inst.pal.opcode].registers;
+		retVal = insDecode[opcode].registers;
 	}
 
 	/*
@@ -240,8 +240,8 @@ AXP_REG_DECODE AXP_RegisterDecoding(AXP_INS_FMT inst)
  *	is specified in the supplied 32-bit instruction.
  *
  * Input Parameters:
- *	inst:
- *		An Alpha AXP formatted instruction.
+ *	opcode:
+ *		An Alpha AXP operation code.
  *
  * Output Parameters:
  *	None.
@@ -249,21 +249,21 @@ AXP_REG_DECODE AXP_RegisterDecoding(AXP_INS_FMT inst)
  * Return Value:
  *	A value representing the type of instruction specified.
  */
-u16 AXP_InstructionQueue(AXP_INS_FMT inst)
+u16 AXP_InstructionQueue(u32 opcode)
 {
 	u16 retVal = AXP_NONE;
 
 	/*
 	 * Opcodes can only be between 0x00 and 0x3f.  Any other value is reserved.
 	 */
-	if ((inst.pal.opcode >= 0x00) && (inst.pal.opcode <= 0x3f))
+	if ((opcode >= 0x00) && (opcode <= 0x3f))
 	{
 
 		/*
 		 * Look up the instruction type from the instruction array, which is
 		 * indexed by opcode.
 		 */
-		retVal = insDecode[inst.pal.opcode].whichQ;
+		retVal = insDecode[opcode].whichQ;
 	}
 
 	/*

@@ -31,6 +31,8 @@
 #define _AXP_21264_IBOX_DEFS_
 
 #include "AXP_21264_CPU.h"
+#include "AXP_21264_Ibox_Icache.h"
+#include "AXP_21264_Ibox_Instruction_Info.h"
 
 #define AXP_NONE	0
 #define AXP_IQ		1
@@ -63,7 +65,13 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 void AXP_ITBAdd(AXP_21264_CPU *cpu,
 				AXP_IBOX_ITB_TAG itbTag,
 				AXP_IBOX_ITB_PTE *itbPTE);
-
+void AXP_21264_AddVPC(AXP_21264_CPU *, AXP_PC);
+AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *, u32);
+AXP_PC AXP_21264_GetPALBaseVPC(AXP_21264_CPU *, u64);
+AXP_PC AXP_21264_GetVPC(AXP_21264_CPU *, u64, u8);
+AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *);
+AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *);
+AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *, i64);
 void AXP_21264_IboxMain(AXP_21264_CPU *);
 
 /*

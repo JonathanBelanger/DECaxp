@@ -105,10 +105,10 @@
  * A local structure used to calculate the PC for a CALL_PAL function.
  */
 struct palBaseBits
-(
+{
 	u64	res_1 : 15;
 	u64	highPC : 49;
-);
+};
 
 typedef union
 {
@@ -117,7 +117,7 @@ typedef union
 	 
 }AXP_IBOX_PALBASE_BITS;
 
-struct palPCBits;
+struct palPCBits
 {
 	u64	palMode : 1;
 	u64 mbz_1 : 5;
@@ -293,12 +293,12 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 		default:
 			break;
 	}
-	decodedInstr->type = insDecode[decodedInstr->opcode].type;
+	decodedInstr->type = AXP_OperationType(decodedInstr->opcode);
 	if ((decodedInstr->type == Other) && (decodedInstr->format != Res))
 		decodedInstr->type = AXP_DecodeOperType(
 				decodedInstr->opcode,
 				decodedInstr->function);
-	decodeRegisters = insDecode[decodedInstr->opcode].registers;
+	decodeRegisters = AXP_RegisterDecoding(decodedInstr->opcode);
 	if (decodeRegisters.bits.opcodeRegDecode != 0)
 		decodeRegisters.raw =
 			decodeFuncs[decodeRegisters.bits.opcodeRegDecode]
@@ -448,58 +448,59 @@ static AXP_OPER_TYPE AXP_DecodeOperType(u8 opCode, u32 funcCode)
 	switch (opCode)
 	{
 		case INTA:		/* OpCode == 0x10 */
-			if (funcCode == AXP_CMPBGE)
+			if (funcCode == AXP_FUNC_CMPBGE)
 				retVal = Logic;
 			else
 				retVal = Arith;
 			break;
 
 		case INTL:		/* OpCode == 0x11 */
-			if ((funcCode == AXP_AMASK) || (funcCode == AXP_IMPLVER))
+			if ((funcCode == AXP_FUNC_AMASK) ||
+				(funcCode == AXP_FUNC_IMPLVER))
 				retVal = Oper;
 			else
 				retVal = Logic;
 			break;
 
 		case FLTV:		/* OpCode == 0x15 */
-			if ((funcCode == AXP_CMPGEQ) ||
-				(funcCode == AXP_CMPGLT) ||
-				(funcCode == AXP_CMPGLE) ||
-				(funcCode == AXP_CMPGEQ_S) ||
-				(funcCode == AXP_CMPGLT_S) ||
-				(funcCode == AXP_CMPGLE_S))
+			if ((funcCode == AXP_FUNC_CMPGEQ) ||
+				(funcCode == AXP_FUNC_CMPGLT) ||
+				(funcCode == AXP_FUNC_CMPGLE) ||
+				(funcCode == AXP_FUNC_CMPGEQ_S) ||
+				(funcCode == AXP_FUNC_CMPGLT_S) ||
+				(funcCode == AXP_FUNC_CMPGLE_S))
 				retVal = Logic;
 			else
 				retVal = Arith;
 			break;
 
 		case FLTI:		/* OpCode == 0x16 */
-			if ((funcCode == AXP_CMPTUN) ||
-				(funcCode == AXP_CMPTEQ) ||
-				(funcCode == AXP_CMPTLT) ||
-				(funcCode == AXP_CMPTLE) ||
-				(funcCode == AXP_CMPTUN_SU) ||
-				(funcCode == AXP_CMPTEQ_SU) ||
-				(funcCode == AXP_CMPTLT_SU) ||
-				(funcCode == AXP_CMPTLE_SU))
+			if ((funcCode == AXP_FUNC_CMPTUN) ||
+				(funcCode == AXP_FUNC_CMPTEQ) ||
+				(funcCode == AXP_FUNC_CMPTLT) ||
+				(funcCode == AXP_FUNC_CMPTLE) ||
+				(funcCode == AXP_FUNC_CMPTUN_SU) ||
+				(funcCode == AXP_FUNC_CMPTEQ_SU) ||
+				(funcCode == AXP_FUNC_CMPTLT_SU) ||
+				(funcCode == AXP_FUNC_CMPTLE_SU))
 				retVal = Logic;
 			else
 				retVal = Arith;
 			break;
 
 		case FLTL:		/* OpCode == 0x17 */
-			if (funcCode == AXP_MT_FPCR)
+			if (funcCode == AXP_FUNC_MT_FPCR)
 				retVal = Load;
-			else if (funcCode == AXP_MF_FPCR)
+			else if (funcCode == AXP_FUNC_MF_FPCR)
 				retVal = Store;
 			else
 				retVal = Arith;
 			break;
 
 		case MISC:		/* OpCode == 0x18 */
-			if ((funcCode == AXP_RPCC) ||
-				(funcCode == AXP_RC) ||
-				(funcCode == AXP_RS))
+			if ((funcCode == AXP_FUNC_RPCC) ||
+				(funcCode == AXP_FUNC_RC) ||
+				(funcCode == AXP_FUNC_RS))
 				retVal = Load;
 			else
 				retVal = Store;
@@ -1070,7 +1071,7 @@ void AXP_21264_AddVPC(AXP_21264_CPU *cpu, AXP_PC vpc)
  * Return Value:
  * 	The value that the PC should be set to to call the requested function.
  */
-AXP_PC AXP_21264_SetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
+AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 {
 	AXP_IBOX_PAL_PC pc;
 	AXP_IBOX_PALBASE_BITS palBase;
@@ -1133,7 +1134,7 @@ AXP_PC AXP_21264_GetPALBaseVPC(AXP_21264_CPU *cpu, u64 offset)
 	 * Get the VPC set with the correct PALmode bit and return it back to the
 	 * caller.
 	 */
-	return(AXP_211264_GetVPC(cpu, pc, AXP_PAL_MODE));
+	return(AXP_21264_GetVPC(cpu, pc, AXP_PAL_MODE));
 }
 
 /*
@@ -1156,7 +1157,7 @@ AXP_PC AXP_21264_GetPALBaseVPC(AXP_21264_CPU *cpu, u64 offset)
  * Return Value:
  * 	The calculated VPC, based on a target virtual address.
  */
-AXP_PC AXP_21264_SetVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
+AXP_PC AXP_21264_GetVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 {
 	union
 	{
@@ -1165,7 +1166,7 @@ AXP_PC AXP_21264_SetVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 	} vpc;
 
 	vpc.pc = pc;
-	vpc.res = 0;
+	vpc.vpc.res = 0;
 	vpc.vpc.pal = pal & AXP_PAL_MODE;
 
 	/*
@@ -1403,22 +1404,22 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 							 */
 						}
 					}
-					whichQueue = insDecode[decodedInstr->opcode].whichQ;
+					whichQueue = AXP_InstructionQueue(decodedInstr->opcode);
 					if(whichQueue == AXP_COND)
 					{
 						if (decodedInstr->opcode == ITFP)
 						{
-							if ((decodedInstr->function == AXP_ITOFS) ||
-								(decodedInstr->function == AXP_ITOFF) ||
-								(decodedInstr->function == AXP_ITOFT))
+							if ((decodedInstr->function == AXP_FUNC_ITOFS) ||
+								(decodedInstr->function == AXP_FUNC_ITOFF) ||
+								(decodedInstr->function == AXP_FUNC_ITOFT))
 								whichQueue = AXP_IQ;
 							else
 								whichQueue = AXP_FQ;
 						}
 						else	/* FPTI */
 						{
-							if ((decodedInstr->function == AXP_FTOIT) ||
-								(decodedInstr->function == AXP_FTOIS))
+							if ((decodedInstr->function == AXP_FUNC_FTOIT) ||
+								(decodedInstr->function == AXP_FUNC_FTOIS))
 								whichQueue = AXP_FQ;
 							else
 								whichQueue = AXP_IQ;
@@ -1448,8 +1449,15 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 				break;
 
 			case WayMiss:
+
+				/*
+				 * TODO:	Calling PALcode implies waiting for outstanding
+				 * 			instructions top complete, then performing a
+				 * 			branch/jump to the appropriate PC.  We need to get
+				 * 			this working, as well.
+				 */
 				cpu->excAddr.exc_pc = nextPC;
-				nextPC = AXP_21264_SetPALBaseVPC(cpu, AXP_ITB_MISS);
+				nextPC = AXP_21264_GetPALBaseVPC(cpu, AXP_ITB_MISS);
 				break;
 		}
 	}

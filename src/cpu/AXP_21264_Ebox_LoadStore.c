@@ -58,7 +58,7 @@
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_LDA(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_LDA(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
 	/*
@@ -97,7 +97,7 @@ AXP_EXCEPTIONS AXP_LDA(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_LDAH(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_LDAH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
 	/*
@@ -136,7 +136,7 @@ AXP_EXCEPTIONS AXP_LDAH(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va, vaPrime;
@@ -188,7 +188,7 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va, vaPrime;
@@ -247,7 +247,7 @@ AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va, vaPrime;
@@ -309,7 +309,7 @@ AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_LDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_LDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va;
@@ -356,7 +356,7 @@ AXP_EXCEPTIONS AXP_LDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va;
@@ -423,7 +423,7 @@ AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va, vaPrime;
@@ -481,7 +481,7 @@ AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_LDQ_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_LDQ_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va;
@@ -532,7 +532,7 @@ AXP_EXCEPTIONS AXP_LDQ_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va, vaPrime;
@@ -593,7 +593,7 @@ AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_STQ_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va;
@@ -647,7 +647,7 @@ AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_STB(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_STB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va, vaPrime;
@@ -700,7 +700,7 @@ AXP_EXCEPTIONS AXP_STB(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_STW(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_STW(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va, vaPrime;
@@ -753,7 +753,7 @@ AXP_EXCEPTIONS AXP_STW(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_STL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_STL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va, vaPrime;
@@ -806,7 +806,7 @@ AXP_EXCEPTIONS AXP_STL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_STQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_STQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va;
@@ -853,7 +853,7 @@ AXP_EXCEPTIONS AXP_STQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_STQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_STQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va;

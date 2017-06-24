@@ -26,12 +26,18 @@
 #	V01.001		10-Jun-2017	Jonathan D. Belanger
 #	Updates for makedepend considerations.
 #
+#	V01.002		24-Jun-2017	Jonathan D. Belanger
+#	Update to have the make clean also delete the makedepend generated
+#	Makefile, but rename Makefile.bak to Makefile, but only if the .bak file
+#	exists.
+#
 PROJDIR = /cygdrive/g/git/DECemu/
 
 SRCDIR = $(PROJDIR)src/
 TSTDIR = $(PROJDIR)tst/
 OBJDIR = $(PROJDIR)bin/
 EXEDIR = $(PROJDIR)bin/
+BLDDIR = $(PROJDIR)bld/
 
 CFILES = $(wildcard $(SRCDIR)*/*.c)
 SRCS = $(CFILES)
@@ -46,7 +52,7 @@ INCDIRS = $(wildcard $(SRCDIR)/*)
 INCS = $(foreach d, $(INCDIRS), -I$d)
 
 CC = gcc
-CFLAGS = $(INCS) -Wall -Werror -Wextra
+CFLAGS = $(INCS) -Wall
 
 debug: CFLAGS += -g -O0 -DDEBUG
 debug: all
@@ -68,6 +74,10 @@ $(OBJDIR)%.o : $(SRCDIR)*/%.c
 
 clean:
 	rm -f $(OBJDIR)* $(EXEDIR)*
+ifneq ($(wildcard $(BLDDIR)*.bak),)
+	rm -f $(BLDDIR)Makefile
+	mv -f $(BLDDIR)Makefile.bak $(BLDDIR)Makefile
+endif
 
 depend:
 	makedepend -- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PROGS)

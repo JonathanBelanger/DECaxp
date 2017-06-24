@@ -25,8 +25,9 @@
  *	Initially written.
  */
 #ifndef _AXP_21264_EBOX_CONTROL_DEFS_
-#define _AXP_21264_EBOX_LOAD_STORE_DEFS_
+#define _AXP_21264_EBOX_CONTROL_DEFS_
 
 #include "AXP_21264_CPU.h"
+#include "AXP_21264_Ibox.h"
 
 #endif /* _AXP_21264_EBOX_CONTROL_DEFS_ */

@@ -75,7 +75,7 @@ u64 AXP_multiply64(u64 a, u64 b, u64 *c)
 	/*
 	 * Now, let's put them all together.
 	 */
-	highResult += AXP_LONG_MASK(mid1Result >> 32) + AXP_LONG_MASK(mid2Result >> 32);
+	highResult = highResult + AXP_LONG_MASK(mid1Result >> 32) + AXP_LONG_MASK(mid2Result >> 32);
 	mid1Result = AXP_QUAD_MASK(mid1Result << 32);
 	mid2Result = AXP_QUAD_MASK(mid2Result << 32);
 
@@ -120,7 +120,7 @@ u64 AXP_multiply64(u64 a, u64 b, u64 *c)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -155,7 +155,7 @@ AXP_EXCEPTIONS AXP_ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_ADDL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_ADDL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
 	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
@@ -195,7 +195,7 @@ AXP_EXCEPTIONS AXP_ADDL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -230,7 +230,7 @@ AXP_EXCEPTIONS AXP_ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_ADDQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_ADDQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
 	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
@@ -268,7 +268,7 @@ AXP_EXCEPTIONS AXP_ADDQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_S4ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_S4ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -303,7 +303,7 @@ AXP_EXCEPTIONS AXP_S4ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_S8ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_S8ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -338,7 +338,7 @@ AXP_EXCEPTIONS AXP_S8ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_S4ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_S4ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -373,7 +373,7 @@ AXP_EXCEPTIONS AXP_S4ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_S8ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_S8ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -408,7 +408,7 @@ AXP_EXCEPTIONS AXP_S8ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_CMPEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_CMPEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	i64 Rbv = (i64) (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -443,7 +443,7 @@ AXP_EXCEPTIONS AXP_CMPEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_CMPLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_CMPLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	i64 Rbv = (i64) (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -478,7 +478,7 @@ AXP_EXCEPTIONS AXP_CMPLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_CMPLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_CMPLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	i64 Rbv = (i64) (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -513,7 +513,7 @@ AXP_EXCEPTIONS AXP_CMPLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_CMPULE(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_CMPULE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = instr->useLiteral ? instr->literal : instr->src2v;
 
@@ -548,7 +548,7 @@ AXP_EXCEPTIONS AXP_CMPULE(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_CTLZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_CTLZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = instr->useLiteral ? instr->literal : instr->src2v;
 	u64 mostSigBit = 0x8000000000000000ll;
@@ -559,7 +559,7 @@ AXP_EXCEPTIONS AXP_CTLZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 	instr->destv = 0;
 	while (mostSigBit != 0)
 	{
-		if (Rbv & mostSigBit != 0)
+		if ((Rbv & mostSigBit) != 0)
 			break;
 		instr->destv++;
 		mostSigBit >>= 1;
@@ -591,7 +591,7 @@ AXP_EXCEPTIONS AXP_CTLZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_CTTZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_CTTZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = instr->useLiteral ? instr->literal : instr->src2v;
 	u64 mostSigBit = 0x0000000000000001ll;
@@ -602,7 +602,7 @@ AXP_EXCEPTIONS AXP_CTTZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
 	instr->destv = 0;
 	while (mostSigBit != 0)
 	{
-		if (Rbv & mostSigBit != 0)
+		if ((Rbv & mostSigBit) != 0)
 			break;
 		instr->destv++;
 		mostSigBit <<= 1;
@@ -634,7 +634,7 @@ AXP_EXCEPTIONS AXP_CTTZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_MULL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_MULL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -669,7 +669,7 @@ AXP_EXCEPTIONS AXP_MULL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_MULL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_MULL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
 	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
@@ -709,7 +709,7 @@ AXP_EXCEPTIONS AXP_MULL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_MULQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_MULQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -744,7 +744,7 @@ AXP_EXCEPTIONS AXP_MULQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_MULQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_MULQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
 	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
@@ -789,16 +789,15 @@ AXP_EXCEPTIONS AXP_MULQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_UMULH(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_UMULH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
 	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
-	u64				lowResult;
 
 	/*
 	 * Implement the instruction
 	 */
-	lowResult = AXP_multiply64(instr->src1v, Rbv, &instr->destv);
+	(void) AXP_multiply64(instr->src1v, Rbv, &instr->destv);
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -826,7 +825,7 @@ AXP_EXCEPTIONS AXP_UMULH(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -861,7 +860,7 @@ AXP_EXCEPTIONS AXP_SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_SUBL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_SUBL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
 	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
@@ -901,7 +900,7 @@ AXP_EXCEPTIONS AXP_SUBL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -936,7 +935,7 @@ AXP_EXCEPTIONS AXP_SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_SUBQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_SUBQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
 	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
@@ -974,7 +973,7 @@ AXP_EXCEPTIONS AXP_SUBQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_S4SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_S4SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -1009,7 +1008,7 @@ AXP_EXCEPTIONS AXP_S4SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_S8SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_S8SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -1044,7 +1043,7 @@ AXP_EXCEPTIONS AXP_S8SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_S4SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_S4SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 
@@ -1079,7 +1078,7 @@ AXP_EXCEPTIONS AXP_S4SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_S8SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION instr)
+AXP_EXCEPTIONS AXP_S8SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
 

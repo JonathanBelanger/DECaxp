@@ -36,8 +36,8 @@
  * Prototype definitions.
  */
 AXP_INS_TYPE AXP_InstructionFormat(AXP_INS_FMT);
-AXP_OPER_TYPE AXP_OperationType(AXP_INS_FMT);
-AXP_REG_DECODE AXP_RegisterDecoding(AXP_INS_FMT);
-u16 AXP_InstructionQueue(AXP_INS_FMT);
+AXP_OPER_TYPE AXP_OperationType(u32);
+AXP_REG_DECODE AXP_RegisterDecoding(u32);
+u16 AXP_InstructionQueue(u32);
 
 #endif	/* _AXP_21264_IBOX_INSTRUCTION_INFO_DEFS_ */

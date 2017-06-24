@@ -62,6 +62,16 @@ typedef int					i32;	/* 4 bytes (32 bits) in length */
 typedef long long			i64;	/* 8 bytes (64 bits) in length */
 
 /*
+ * Various values that are used throughout the code.
+ */
+#define AXP_LOW_BYTE		0x00000000000000ffll
+#define AXP_LOW_WORD		0x000000000000ffffll
+#define AXP_LOW_LONG		0x00000000ffffffffll
+#define AXP_LOW_QUAD		0xffffffffffffffffll
+#define AXP_LOW_6BITS		0x000000000000003fll
+#define AXP_LOW_3BITS		0x0000000000000007ll
+
+/*
  * Define a basic queue.  This will be used to define a number of other queue
  * types.
  */
