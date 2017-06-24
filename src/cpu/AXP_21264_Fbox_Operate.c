@@ -16,18 +16,12 @@
  *
  * Description:
  *
- *	This header file contains the function definitions implemented in the
- *	AXP_21264_Fbox_LoadStore.c module.
+ *	This source file contains the functions needed to implement the
+ *	functionality of the Fbox Operate Instructions.
  *
- * Revision History:
+ *	Revision History:
  *
- *	V01.000		24-Jun-2017	Jonathan D. Belanger
+ *	V01.000		24-June-2017	Jonathan D. Belanger
  *	Initially written.
  */
-#ifndef _AXP_21264_FBOX_LOADSTORE_DEFS_
-#define _AXP_21264_FBOX_LOADSTORE_DEFS_
-
-#include "AXP_21264_CPU.h"
-#include "AXP_21264_Fbox.h"
-
-#endif /* _AXP_21264_FBOX_LOADSTORE_DEFS_ */
+#include "AXP_21264_Fbox_Operate.h"
