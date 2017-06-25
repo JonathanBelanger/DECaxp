@@ -47,9 +47,53 @@
  */
 typedef union
 {
-	i64		s;
-	u64		u;
+	i8		sb;
+	u8		ub;
+	i16		sw;
+	u16		uw;
+	i32		sl;
+	u32		ul;
+	i64		sq;
+	u64		uq;
 } AXP_INT_REGISTER;
+
+/*
+ * Integer Memory Format Definitions
+ *
+ * Byte Memory format (8-bits).
+ */
+typedef union
+{
+	i8		sb;
+	u8		ub;
+} AXP_B_MEMORY;
+
+/*
+ * Word Memory format (16-bits).
+ */
+typedef union
+{
+	i16		sw;
+	u16		uw;
+} AXP_W_MEMORY;
+
+/*
+ * Longword Memory format (32-bits).
+ */
+typedef union
+{
+	i32		sl;
+	u32		ul;
+} AXP_L_MEMORY;
+
+/*
+ * Quadword Memory format (64-bits).
+ */
+typedef union
+{
+	i64		sq;
+	u64		uq;
+} AXP_Q_MEMORY;
 
 /*
  * Floating-point registers have a number of formats.

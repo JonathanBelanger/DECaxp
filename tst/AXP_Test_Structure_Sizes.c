@@ -96,6 +96,10 @@ int main()
 
 	printf("\nAXP_Base_CPU.h\n");
 	PRINT_SIZE(AXP_INT_REGISTER, 8, passed);
+	PRINT_SIZE(AXP_B_MEMORY, 1, passed);
+	PRINT_SIZE(AXP_W_MEMORY, 2, passed);
+	PRINT_SIZE(AXP_L_MEMORY, 4, passed);
+	PRINT_SIZE(AXP_Q_MEMORY, 8, passed);
 	PRINT_SIZE(AXP_F_REGISTER_CVT, 8, passed);
 	PRINT_SIZE(AXP_F_REGISTER, 8, passed);
 	PRINT_SIZE(AXP_G_REGISTER_CVT, 8, passed);
