@@ -75,7 +75,9 @@ u64 AXP_multiply64(u64 a, u64 b, u64 *c)
 	/*
 	 * Now, let's put them all together.
 	 */
-	highResult = highResult + AXP_LONG_MASK(mid1Result >> 32) + AXP_LONG_MASK(mid2Result >> 32);
+	highResult = highResult +
+				 AXP_LONG_MASK(mid1Result >> 32) +
+				 AXP_LONG_MASK(mid2Result >> 32);
 	mid1Result = AXP_QUAD_MASK(mid1Result << 32);
 	mid2Result = AXP_QUAD_MASK(mid2Result << 32);
 

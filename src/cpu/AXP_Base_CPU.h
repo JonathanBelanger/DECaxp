@@ -41,6 +41,215 @@
 #define AXP_NORMAL_MODE			0
 
 /*
+ * Register Definitions
+ *
+ * The integer register is either signed or unsigned.
+ */
+typedef union
+{
+	i64		s;
+	u64		u;
+} AXP_INT_REGISTER;
+
+/*
+ * Floating-point registers have a number of formats.
+ *
+ * VAX F Float Register format.
+ */
+typedef struct
+{
+	u64		zero : 29;
+	u64		fractionLow : 16;
+	u64		fractionHigh : 7;
+	u64		exponent : 11;
+	u64		sign : 1;
+} AXP_F_REGISTER_CVT;
+
+typedef struct
+{
+	u64		zero : 29;
+	u64		fraction : 23;
+	u64		exponent : 11;
+	u64		sign : 1;
+} AXP_F_REGISTER;
+
+/*
+ * VAX G Float Register format.
+ */
+typedef struct
+{
+	u64		fractionLow : 16;
+	u64		fractionMidLow : 16;
+	u64		fractionMidHigh : 16;
+	u64		fractionHigh : 4;
+	u64		exponent : 11;
+	u64		sign : 1;
+} AXP_G_REGISTER_CVT;
+typedef struct
+{
+	u64		fraction : 52;
+	u64		exponent : 11;
+	u64		sign : 1;
+} AXP_G_REGISTER;
+
+/*
+ * VAX D Float Register format.
+ */
+typedef struct
+{
+	u64		fractionLow : 16;
+	u64		fractionMidLow : 16;
+	u64		fractionMidHigh : 16;
+	u64		fractionHigh : 7;
+	u64		exponent : 8;
+	u64		sign : 1;
+} AXP_D_REGISTER_CVT;
+typedef struct
+{
+	u64		fraction : 55;
+	u64		exponent : 8;
+	u64		sign : 1;
+} AXP_D_REGISTER;
+
+/*
+ * IEEE S Float Register format.
+ */
+typedef struct
+{
+	u64		zero : 29;
+	u64		fraction : 23;
+	u64		exponent : 11;
+	u64		sign : 1;
+} AXP_S_REGISTER_CVT;
+typedef struct
+{
+	u64		fraction : 52;
+	u64		exponent : 11;
+	u64		sign : 1;
+} AXP_S_REGISTER;
+
+/*
+ * IEEE T Float Register format.
+ */
+typedef struct
+{
+	u64		fraction : 52;
+	u64		exponent : 11;
+	u64		sign : 1;
+} AXP_T_REGISTER;
+
+/*
+ * IEEE X Float Register format.
+ * 	This format occupies 2 consecutive Floating-point register, with the first
+ * 	being an even numbered register.  This structure occupies 128 bits.
+ */
+typedef struct
+{
+	u64		fractionLow;
+	u64		fractionHigh : 48;
+	u64		exponent : 15;
+	u64		sign : 1;
+} AXP_X_REGISTER;
+
+/*
+ * Longword Integer Float Register format.
+ */
+typedef struct
+{
+	u64		zero_1 : 29;
+	u64		integerLow : 30;
+	u64		zero_2 : 3;
+	u64		integerHigh : 1;
+	u64		sign : 1;
+} AXP_L_REGISTER;
+
+/*
+ * Quadword Integer Float Register format.
+ */
+typedef struct
+{
+	u64		integer : 63;
+	u64		sign : 1;
+} AXP_Q_REGISTER;
+
+/*
+ * Floating-Point Register format.
+ * 	Because IEEE X Float occupies 2 registers, it is not put in the following
+ * 	union declaration.
+ */
+typedef union
+{
+	u64					ui;
+	i64					si;
+	AXP_F_REGISTER_CVT	fCvt;
+	AXP_F_REGISTER		f;
+	AXP_G_REGISTER_CVT	gCvt;
+	AXP_G_REGISTER		g;
+	AXP_D_REGISTER_CVT	dCvt;
+	AXP_D_REGISTER		d;
+	AXP_S_REGISTER_CVT	sCvt;
+	AXP_S_REGISTER		s;
+	AXP_T_REGISTER		t;
+	AXP_L_REGISTER		l;
+	AXP_Q_REGISTER		q;
+} AXP_FP_REGISTER;
+
+/*
+ * Floating-Point Memory Format Definitions
+ * 	The strangeness of these layouts has to do with how the registers and
+ * 	silicon for the VAX architecture was defined.  Memory format, and thus
+ * 	on-disk format for the VAX Float formats are in the VAX Architecture
+ * 	layout.  This was something written to disk by a VAX can be read in by an
+ * 	Alpha AXP and vice versa.  Gotta love backward compatibility (a Digital
+ * 	hallmark).
+ *
+ * VAX F Float Memory format (32-bit structure)
+ */
+typedef struct
+{
+	u32		fractionHigh : 7;
+	u32		exponent : 8;
+	u32		sign : 1;
+	u32		fractionLow : 16;
+} AXP_F_MEMORY;
+
+/*
+ * VAX G Float Memory format (64-bit structure).
+ */
+typedef struct
+{
+	u64		fractionHigh : 4;
+	u64		exponent : 11;
+	u64		sign : 1;
+	u64		fractionMidHigh : 16;
+	u64		fractionMidLow : 16;
+	u64		fractionLow : 16;
+} AXP_G_MEMORY;
+
+/*
+ * VAX D Float Memory format (64-bit structure).
+ */
+typedef struct
+{
+	u64		fractionHigh : 7;
+	u64		exponent : 8;
+	u64		sign : 1;
+	u64		fractionMidHigh : 16;
+	u64		fractionMidLow : 16;
+	u64		fractionLow : 16;
+} AXP_D_MEMORY;
+
+/*
+ * IEEE S Float Memory format (32-bit structure).
+ */
+typedef struct
+{
+	u32		fraction : 23;
+	u32		exponent : 8;
+	u32		sign : 1;
+} AXP_S_MEMORY;
+
+/*
  * Program Counter (PC) Definition
  */
 typedef struct

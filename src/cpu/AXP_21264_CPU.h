@@ -343,7 +343,7 @@ typedef struct
 	 * decoded.  The register mapping is used too determine which physical
 	 * register (PR) is defined to which AR.
 	 */
-	u64					pr[AXP_INT_PHYS_REG];
+	AXP_INT_REGISTER	pr[AXP_INT_PHYS_REG];
 	u32					prFreeList[AXP_I_FREELIST_SIZE];
 	u32					prFlStart;
 	u32					prFlEnd;
@@ -381,12 +381,17 @@ typedef struct
 	 * Since the floating-point execution unit only has 1 cluster, there is 
 	 * just 1 set of 72 registers.
 	 */
-	u64					pf[AXP_FP_PHYS_REG];
+	AXP_FP_REGISTER		pf[AXP_FP_PHYS_REG];
 	u32					pfFreeList[AXP_F_FREELIST_SIZE];
 	u32					pfFlStart;
 	u32					pfFlEnd;
 	AXP_21264_REG_MAP	pfMap[AXP_MAX_REGISTERS];
 	AXP_21264_REG_STATE	pfState[AXP_FP_PHYS_REG];
+
+	/*
+	 * Fbox IPRs
+	 */
+	AXP_FBOX_FPCR		fpcr;
 
 	/**************************************************************************
 	 *	Mbox Definitions													  *
