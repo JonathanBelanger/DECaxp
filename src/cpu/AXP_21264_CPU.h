@@ -95,7 +95,13 @@ typedef enum
 	Queued,
 	Executing,
 	WaitingRetirement
-} AXP_INS_STATE;;
+} AXP_INS_STATE;
+
+typedef union
+{
+	AXP_INT_REGISTER	r;
+	AXP_FP_REGISTER		fp;
+} AXP_REGISTER;;
 
 /*
  * This structure is what will be put into the Reorder Buffer.  A queue entry
@@ -125,9 +131,9 @@ typedef struct
 	u32				function;	/* Function code for operation */
 	i64				displacement;/* Displacement from PC + 4 */
 	u64				literal;	/* Literal value */
-	u64				src1v;		/* Value from src1 register */
-	u64				src2v;		/* Value from src2 register */
-	u64				destv;		/* Value to dest register */
+	AXP_REGISTER	src1v;		/* Value from src1 register */
+	AXP_REGISTER	src2v;		/* Value from src2 register */
+	AXP_REGISTER	destv;		/* Value to dest register */
 	u64				lockPhysAddrPending; /* used with lockFlagPending */
 	u64				lockVirtAddrPending; /* used with lockFlagPending */
 	AXP_INS_TYPE	format;		/* Instruction format */

@@ -23,6 +23,11 @@
  *
  *	V01.000		19-Jun-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		25-Jun-2017	Jonathan D. Belanger
+ *	I changed the way I used registers and retrieved memory.  I was doing it
+ *	with bits and masks and should have been using structures, letting the
+ *	compiler deal with the details.
  */
 #include "AXP_21264_Ebox_LoadStore.h"
 
@@ -36,6 +41,10 @@
  * 			become PREFETCH and PREFETCH_EN, respectively.
  * 		2)	When these functions are called, the instruction state is set to
  * 			Executing prior to the call.
+ * 		3)	Registers have a layout.  Once a value is loaded into a register,
+ * 			the 64-bit value, signed or unsigned, is utilized.  When a value
+ * 			needs to be written from a register, then the proper size is
+ * 			selected (always unsigned byte, word, longword, or quadword).
  */
 
 /*
@@ -64,7 +73,7 @@ AXP_EXCEPTIONS AXP_LDA(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv = instr->src1v + instr->displacement;
+	instr->destv.r.uq = instr->src1v.r.uq + instr->displacement;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -103,7 +112,7 @@ AXP_EXCEPTIONS AXP_LDAH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv = instr->src1v + (instr->displacement * AXP_LDAH_MULT);
+	instr->destv.r.uq = instr->src1v.r.uq + (instr->displacement * AXP_LDAH_MULT);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -144,7 +153,7 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	vaPrime = va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
@@ -152,7 +161,7 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_BYTE(va);
-	instr->destv = AXP_ZEXT_BYTE((vaPrime));		// TODO: Load from mem/cache
+	instr->destv.r.uq = AXP_ZEXT_BYTE((vaPrime));	// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
@@ -196,7 +205,7 @@ AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	vaPrime = va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
@@ -204,7 +213,7 @@ AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_WORD(va);
-	instr->destv = AXP_ZEXT_WORD((vaPrime));		// TODO: Load from mem/cache
+	instr->destv.r.uq = AXP_ZEXT_WORD((vaPrime));	// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
@@ -255,7 +264,7 @@ AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	vaPrime = va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
@@ -263,7 +272,7 @@ AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_LONG(va);
-	instr->destv = AXP_SEXT_LONG((vaPrime));		// TODO: Load from mem/cache
+	instr->destv.r.sq = AXP_SEXT_LONG((vaPrime));	// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
@@ -317,9 +326,9 @@ AXP_EXCEPTIONS AXP_LDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	va = instr->src1v + instr->displacement;
+	va = instr->src1v.r.uq + instr->displacement;
 
-	instr->destv = (va);					// TODO: Load from mem/cache
+	instr->destv.r.uq = (va);					// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
@@ -364,9 +373,9 @@ AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	va = (instr->src1v + instr->displacement) & ~0x7;
+	va = (instr->src1v.r.uq + instr->displacement) & ~0x7;
 
-	instr->destv = (va);					// TODO: Load from mem/cache
+	instr->destv.r.uq = (va);					// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
@@ -431,7 +440,7 @@ AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	vaPrime = va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
@@ -444,7 +453,7 @@ AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->lockPhysAddrPending = va;	// TODO: Need to convert to a physical address
 	instr->lockVirtAddrPending = va;
 
-	instr->destv = AXP_SEXT_LONG((vaPrime));		// TODO: Load from mem/cache
+	instr->destv.r.sq = AXP_SEXT_LONG((vaPrime));	// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
@@ -489,13 +498,13 @@ AXP_EXCEPTIONS AXP_LDQ_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	va = instr->src1v + instr->displacement;
+	va = instr->src1v.r.uq + instr->displacement;
 
 	instr->lockFlagPending = true;
 	instr->lockPhysAddrPending = va;	// TODO: Need to convert to a physical address
 	instr->lockVirtAddrPending = va;
 
-	instr->destv = AXP_SEXT_LONG((va));		// TODO: Load from mem/cache
+	instr->destv.r.sq = AXP_SEXT_LONG((va));		// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
@@ -540,7 +549,7 @@ AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	vaPrime = va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
@@ -551,15 +560,15 @@ AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
 	if (cpu->lockFlag == true)
 	{
-		(vaPrime) = instr->src1v;
+		(vaPrime) = instr->src1v.r.ul;
 		// TODO: Check to see if we had an access fault (Access Violation)
 		// TODO: Check to see if we had an alignment fault (Alignment)
 		// TODO: Check to see if we had a write fault (Fault on Write)
 		// TODO: Check to see if we had a translation fault (Translation Not Valid)
-		instr->destv = 1;
+		instr->destv.r.uq = 1;
 	}
 	else
-		instr->destv = 0;
+		instr->destv.r.uq = 0;
 	instr->clearLockPending = true;
 
 	/*
@@ -601,19 +610,19 @@ AXP_EXCEPTIONS AXP_STQ_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	va = instr->src1v + instr->displacement;
+	va = instr->src1v.r.uq + instr->displacement;
 
 	if (cpu->lockFlag == true)
 	{
-		(va) = instr->src1v;
+		(va) = instr->src1v.r.uq;
 		// TODO: Check to see if we had an access fault (Access Violation)
 		// TODO: Check to see if we had an alignment fault (Alignment)
 		// TODO: Check to see if we had a write fault (Fault on Write)
 		// TODO: Check to see if we had a translation fault (Translation Not Valid)
-		instr->destv = 1;
+		instr->destv.r.uq = 1;
 	}
 	else
-		instr->destv = 0;
+		instr->destv.r.uq = 0;
 	instr->clearLockPending = true;
 
 	/*
@@ -655,7 +664,7 @@ AXP_EXCEPTIONS AXP_STB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	vaPrime = va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
@@ -663,7 +672,7 @@ AXP_EXCEPTIONS AXP_STB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_BYTE(va);
-	(vaPrime) = AXP_BYTE_MASK(instr->src1v);
+	(vaPrime) = instr->src1v.r.ub;
 		// TODO: Check to see if we had an access fault (Access Violation)
 		// TODO: Check to see if we had an alignment fault (Alignment)
 		// TODO: Check to see if we had a write fault (Fault on Write)
@@ -708,7 +717,7 @@ AXP_EXCEPTIONS AXP_STW(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	vaPrime = va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
@@ -716,7 +725,7 @@ AXP_EXCEPTIONS AXP_STW(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_WORD(va);
-	(vaPrime) = AXP_WORD_MASK(instr->src1v);
+	(vaPrime) = instr->src1v.r.uw;
 		// TODO: Check to see if we had an access fault (Access Violation)
 		// TODO: Check to see if we had an alignment fault (Alignment)
 		// TODO: Check to see if we had a write fault (Fault on Write)
@@ -761,7 +770,7 @@ AXP_EXCEPTIONS AXP_STL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	vaPrime = va = instr->src1v + instr->displacement;
+	vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
 	/*
 	 * If we are executing in big-endian mode, then we need to do some address
@@ -769,7 +778,7 @@ AXP_EXCEPTIONS AXP_STL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_LONG(va);
-	(vaPrime) = AXP_LONG_MASK(instr->src1v);
+	(vaPrime) = instr->src1v.r.ul;
 		// TODO: Check to see if we had an access fault (Access Violation)
 		// TODO: Check to see if we had an alignment fault (Alignment)
 		// TODO: Check to see if we had a write fault (Fault on Write)
@@ -814,9 +823,9 @@ AXP_EXCEPTIONS AXP_STQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	va = instr->src1v + instr->displacement;
+	va = instr->src1v.r.uq + instr->displacement;
 
-	(va) = instr->src1v;
+	(va) = instr->src1v.r.uq;
 		// TODO: Check to see if we had an access fault (Access Violation)
 		// TODO: Check to see if we had an alignment fault (Alignment)
 		// TODO: Check to see if we had a write fault (Fault on Write)
@@ -861,12 +870,12 @@ AXP_EXCEPTIONS AXP_STQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	va = (instr->src1v + instr->displacement) & ~0x7;
+	va = (instr->src1v.r.uq + instr->displacement) & ~0x7;
 
-	(va) = instr->src1v;
-		// TODO: Check to see if we had an access fault (Access Violation)
-		// TODO: Check to see if we had a write fault (Fault on Write)
-		// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	(va) = instr->src1v.r.uq;
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had a write fault (Fault on Write)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

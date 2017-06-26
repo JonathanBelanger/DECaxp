@@ -47,11 +47,8 @@
  */
 typedef union
 {
-	i8		sb;
 	u8		ub;
-	i16		sw;
 	u16		uw;
-	i32		sl;
 	u32		ul;
 	i64		sq;
 	u64		uq;
@@ -216,6 +213,28 @@ typedef struct
 	u64		sign : 1;
 } AXP_Q_REGISTER;
 
+typedef struct
+{
+	u64		integerLow : 62;
+	u64		integerHigh : 1;
+	u64		sign : 1;
+} AXP_Q_REGISTER_CVT;
+
+typedef struct
+{
+	u64		integerLow : 32;
+	u64		integerHigh : 31;
+	u64		sign : 1;
+} AXP_Q_REGISTER_V;
+
+typedef struct
+{
+	u64		integerLowLow : 31;
+	u64		integerLowHigh : 1;
+	u64		integerHigh : 31;
+	u64		sign : 1;
+} AXP_Q_REGISTER_V_CVT;
+
 /*
  * Floating-Point Register format.
  * 	Because IEEE X Float occupies 2 registers, it is not put in the following
@@ -223,8 +242,8 @@ typedef struct
  */
 typedef union
 {
-	u64					ui;
-	i64					si;
+	u64					uq;
+	i64					sq;
 	AXP_F_REGISTER_CVT	fCvt;
 	AXP_F_REGISTER		f;
 	AXP_G_REGISTER_CVT	gCvt;
@@ -236,6 +255,9 @@ typedef union
 	AXP_T_REGISTER		t;
 	AXP_L_REGISTER		l;
 	AXP_Q_REGISTER		q;
+	AXP_Q_REGISTER_CVT	qCvt;
+	AXP_Q_REGISTER_V	qV;
+	AXP_Q_REGISTER_V_CVT qVCvt;
 } AXP_FP_REGISTER;
 
 /*

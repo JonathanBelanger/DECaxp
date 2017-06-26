@@ -28,6 +28,10 @@
  *	On branches, we need to save the branched to PC until the instruction is
  *	retired.  The original code was updating it immediately.  This would cause
  *	huge problems, especially around exception and interrupt handling.
+ *
+ *	V01.002		25-Jun-2017	Jonathan D. Belanger
+ *	Change registers to be 64-bit structures to aid in coding.  Needed to
+ *	update all the register references.
  */
 #include "AXP_21264_Ebox_Control.h"
 
@@ -57,7 +61,7 @@ AXP_EXCEPTIONS AXP_BEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if (instr->src1v == 0)
+	if (instr->src1v.r.sq == 0)
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -97,7 +101,7 @@ AXP_EXCEPTIONS AXP_BGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if (instr->src1v >= 0)
+	if (instr->src1v.r.sq >= 0)
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -137,7 +141,7 @@ AXP_EXCEPTIONS AXP_BGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if (instr->src1v > 0)
+	if (instr->src1v.r.sq > 0)
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -177,7 +181,7 @@ AXP_EXCEPTIONS AXP_BLBC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if ((instr->src1v & 0x01) == 0x00)
+	if ((instr->src1v.r.uq & 0x01) == 0x00)
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -217,7 +221,7 @@ AXP_EXCEPTIONS AXP_BLBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if ((instr->src1v & 0x01) == 0x01)
+	if ((instr->src1v.r.uq & 0x01) == 0x01)
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -257,7 +261,7 @@ AXP_EXCEPTIONS AXP_BLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if (((i64) instr->src1v) <= 0)
+	if (instr->src1v.r.sq <= 0)
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -297,7 +301,7 @@ AXP_EXCEPTIONS AXP_BLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if (((i64) instr->src1v) < 0)
+	if (instr->src1v.r.sq < 0)
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -337,7 +341,7 @@ AXP_EXCEPTIONS AXP_BNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if (instr->src1v != 0)
+	if (instr->src1v.r.uq != 0)
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -379,7 +383,7 @@ AXP_EXCEPTIONS AXP_BR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	instr->branchPC = instr->pc;// This points to the PC for this instruction.
 	instr->branchPC.pc++;		// This points to the instruction after this.
-	instr->destv = *((u64 *) &instr->branchPC);
+	instr->destv.r.uq = *((u64 *) &instr->branchPC);
 	instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -424,7 +428,7 @@ AXP_EXCEPTIONS AXP_BSR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	instr->branchPC = instr->pc;	// This points to the PC for this instruction.
 	instr->branchPC.pc++;			// This points to the instruction after this.
-	instr->destv = *((u64 *) &instr->branchPC);
+	instr->destv.r.uq = *((u64 *) &instr->branchPC);
 	instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -489,8 +493,8 @@ AXP_EXCEPTIONS AXP_JMP(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	instr->branchPC = instr->pc;	// This points to the PC for this instruction.
 	instr->branchPC.pc++;			// This points to the instruction after this.
-	instr->destv = *((u64 *) &instr->branchPC);
-	instr->branchPC = AXP_21264_GetVPC(cpu, instr->src1v, AXP_NORMAL_MODE);
+	instr->destv.r.uq = *((u64 *) &instr->branchPC);
+	instr->branchPC = AXP_21264_GetVPC(cpu, instr->src1v.r.uq, AXP_NORMAL_MODE);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

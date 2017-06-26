@@ -24,6 +24,10 @@
  *	V01.000		23-Jun-2017	Jonathan D. Belanger
  *	Initially written.
  *
+ *	V01.001		25-Jun-2017	Jonathan D. Belanger
+ *	Registers are no longer just 64-bit values, but have been described as a
+ *	structure to aid in coding (no more masks and shifts).
+ *
  * TODO:	We need to look at handling Arithmetic Traps.
  */
  #include "AXP_21264_Ebox_IntegerMath.h"
@@ -124,12 +128,12 @@ u64 AXP_multiply64(u64 a, u64 b, u64 *c)
  */
 AXP_EXCEPTIONS AXP_ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = AXP_SEXT_LONG(AXP_LONG_MASK(instr->src1v + Rbv));
+	instr->destv.r.uq = AXP_SEXT_LONG(AXP_LONG_MASK(instr->src1v.r.uq + Rbv));
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -160,16 +164,16 @@ AXP_EXCEPTIONS AXP_ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_ADDL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
-	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = instr->src1v + Rbv;
-	if (instr->destv != AXP_LONG_MASK(instr->destv))
+	instr->destv.r.uq = instr->src1v.r.uq + Rbv;
+	if (instr->destv.r.uq != instr->destv.r.ul)
 		retVal = ArithmeticTraps; // IntegerOverflow;
 	else
-		instr->destv = AXP_SEXT_LONG(instr->destv);
+		instr->destv.r.sq = AXP_SEXT_LONG(instr->destv.r.uq);
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -199,12 +203,12 @@ AXP_EXCEPTIONS AXP_ADDL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = instr->src1v + Rbv;
+	instr->destv.r.uq = instr->src1v.r.uq + Rbv;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -235,13 +239,15 @@ AXP_EXCEPTIONS AXP_ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_ADDQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
-	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = instr->src1v + Rbv;
-	if (((~instr->src1v ^ Rbv) & (instr->src1v & instr->destv)) & 0x8000000000000000ll)
+	instr->destv.r.uq = instr->src1v.r.uq + Rbv;
+	if (((~instr->src1v.r.uq ^ Rbv) &
+		 (instr->src1v.r.uq & instr->destv.r.uq)) &
+		0x8000000000000000ll)
 		retVal = ArithmeticTraps;	// IntegerOverflow;
 
 	/*
@@ -272,12 +278,13 @@ AXP_EXCEPTIONS AXP_ADDQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_S4ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = AXP_SEXT_LONG(AXP_LONG_MASK((instr->src1v * 4) + Rbv));
+	instr->destv.r.sq =
+		AXP_SEXT_LONG(AXP_LONG_MASK((instr->src1v.r.uq * 4) + Rbv));
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -307,12 +314,13 @@ AXP_EXCEPTIONS AXP_S4ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_S8ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = AXP_SEXT_LONG(AXP_LONG_MASK((instr->src1v * 8) + Rbv));
+	instr->destv.r.sq =
+		AXP_SEXT_LONG(AXP_LONG_MASK((instr->src1v.r.uq * 8) + Rbv));
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -342,12 +350,12 @@ AXP_EXCEPTIONS AXP_S8ADDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_S4ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = (instr->src1v * 4) + Rbv;
+	instr->destv.r.uq = (instr->src1v.r.uq * 4) + Rbv;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -377,12 +385,12 @@ AXP_EXCEPTIONS AXP_S4ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_S8ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = (instr->src1v * 8) + Rbv;
+	instr->destv.r.uq = (instr->src1v.r.uq * 8) + Rbv;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -412,12 +420,12 @@ AXP_EXCEPTIONS AXP_S8ADDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMPEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	i64 Rbv = (i64) (instr->useLiteral ? instr->literal : instr->src2v);
+	i64 Rbv = (i64) (instr->useLiteral ? instr->literal : instr->src2v.r.sq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = (i64) instr->src1v == Rbv ? 1 : 0;
+	instr->destv.r.uq = (i64) instr->src1v.r.sq == Rbv ? 1 : 0;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -447,12 +455,12 @@ AXP_EXCEPTIONS AXP_CMPEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMPLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	i64 Rbv = (i64) (instr->useLiteral ? instr->literal : instr->src2v);
+	i64 Rbv = (i64) (instr->useLiteral ? instr->literal : instr->src2v.r.sq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = (i64) instr->src1v <= Rbv ? 1 : 0;
+	instr->destv.r.uq = (i64) instr->src1v.r.sq <= Rbv ? 1 : 0;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -482,12 +490,12 @@ AXP_EXCEPTIONS AXP_CMPLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMPLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	i64 Rbv = (i64) (instr->useLiteral ? instr->literal : instr->src2v);
+	i64 Rbv = (i64) (instr->useLiteral ? instr->literal : instr->src2v.r.sq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = (i64) instr->src1v < Rbv ? 1 : 0;
+	instr->destv.r.uq = (i64) instr->src1v.r.sq < Rbv ? 1 : 0;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -517,12 +525,12 @@ AXP_EXCEPTIONS AXP_CMPLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMPULE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = instr->useLiteral ? instr->literal : instr->src2v;
+	u64 Rbv = instr->useLiteral ? instr->literal : instr->src2v.r.uq;
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = instr->src1v <= Rbv ? 1 : 0;
+	instr->destv.r.uq = instr->src1v.r.uq <= Rbv ? 1 : 0;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -552,18 +560,18 @@ AXP_EXCEPTIONS AXP_CMPULE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CTLZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = instr->useLiteral ? instr->literal : instr->src2v;
+	u64 Rbv = instr->useLiteral ? instr->literal : instr->src2v.r.uq;
 	u64 mostSigBit = 0x8000000000000000ll;
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = 0;
+	instr->destv.r.uq = 0;
 	while (mostSigBit != 0)
 	{
 		if ((Rbv & mostSigBit) != 0)
 			break;
-		instr->destv++;
+		instr->destv.r.uq++;
 		mostSigBit >>= 1;
 	}
 
@@ -595,18 +603,18 @@ AXP_EXCEPTIONS AXP_CTLZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CTTZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = instr->useLiteral ? instr->literal : instr->src2v;
+	u64 Rbv = instr->useLiteral ? instr->literal : instr->src2v.r.uq;
 	u64 mostSigBit = 0x0000000000000001ll;
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = 0;
+	instr->destv.r.uq = 0;
 	while (mostSigBit != 0)
 	{
 		if ((Rbv & mostSigBit) != 0)
 			break;
-		instr->destv++;
+		instr->destv.r.uq++;
 		mostSigBit <<= 1;
 	}
 
@@ -638,12 +646,12 @@ AXP_EXCEPTIONS AXP_CTTZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_MULL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = AXP_SEXT_LONG(AXP_LONG_MASK(instr->src1v * Rbv));
+	instr->destv.r.sq = AXP_SEXT_LONG(AXP_LONG_MASK(instr->src1v.r.uq * Rbv));
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -674,16 +682,16 @@ AXP_EXCEPTIONS AXP_MULL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_MULL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
-	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = instr->src1v * Rbv;
-	if (instr->destv != AXP_LONG_MASK(instr->destv))
+	instr->destv.r.uq = instr->src1v.r.uq * Rbv;
+	if (instr->destv.r.uq != instr->destv.r.ul)
 		retVal = ArithmeticTraps;	// IntegerOverflow;
 	else
-		instr->destv = AXP_SEXT_LONG(instr->destv);
+		instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -713,12 +721,12 @@ AXP_EXCEPTIONS AXP_MULL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_MULQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = instr->src1v * Rbv;
+	instr->destv.r.uq = instr->src1v.r.uq * Rbv;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -749,18 +757,18 @@ AXP_EXCEPTIONS AXP_MULQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_MULQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
-	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 	u64				highResult;
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = AXP_multiply64(instr->src1v, Rbv, &highResult);
-	if (instr->src1v & 0x8000000000000000ll)
-		highResult -= instr->src2v;
-	if (instr->src2v & 0x8000000000000000ll)
-		highResult -= instr->src1v;
-	if ((instr->destv & 0x8000000000000000ll) ?
+	instr->destv.r.uq = AXP_multiply64(instr->src1v.r.uq, Rbv, &highResult);
+	if (instr->src1v.r.sq < 0)
+		highResult -= instr->src2v.r.sq;
+	if (instr->src2v.r.sq < 0)
+		highResult -= instr->src1v.r.uq;
+	if ((instr->destv.r.sq < 0) ?
 		(highResult != 0xffffffffffffffff) :
 		(highResult != 0))
 		retVal = ArithmeticTraps;	// IntegerOverflow;
@@ -794,12 +802,12 @@ AXP_EXCEPTIONS AXP_MULQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_UMULH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
-	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	(void) AXP_multiply64(instr->src1v, Rbv, &instr->destv);
+	(void) AXP_multiply64(instr->src1v.r.uq, Rbv, &instr->destv.r.uq);
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -829,12 +837,12 @@ AXP_EXCEPTIONS AXP_UMULH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = AXP_SEXT_LONG(AXP_LONG_MASK(instr->src1v - Rbv));
+	instr->destv.r.uq = AXP_SEXT_LONG(AXP_LONG_MASK(instr->src1v.r.uq - Rbv));
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -865,16 +873,16 @@ AXP_EXCEPTIONS AXP_SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_SUBL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
-	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = instr->src1v - Rbv;
-	if (instr->destv != AXP_LONG_MASK(instr->destv))
+	instr->destv.r.uq = instr->src1v.r.uq - Rbv;
+	if (instr->destv.r.uq != instr->destv.r.ul)
 		retVal = ArithmeticTraps; // IntegerOverflow;
 	else
-		instr->destv = AXP_SEXT_LONG(instr->destv);
+		instr->destv.r.sq = AXP_SEXT_LONG(instr->destv.r.uq);
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -904,12 +912,12 @@ AXP_EXCEPTIONS AXP_SUBL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = instr->src1v - Rbv;
+	instr->destv.r.uq = instr->src1v.r.uq - Rbv;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -940,13 +948,15 @@ AXP_EXCEPTIONS AXP_SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_SUBQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
-	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64				Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = instr->src1v - Rbv;
-	if (((~instr->src1v ^ Rbv) & (instr->src1v & instr->destv)) & 0x8000000000000000ll)
+	instr->destv.r.uq = instr->src1v.r.uq - Rbv;
+	if (((~instr->src1v.r.uq ^ Rbv) &
+		 (instr->src1v.r.uq & instr->destv.r.uq)) &
+		0x8000000000000000ll)
 		retVal = ArithmeticTraps;	// IntegerOverflow;
 
 	/*
@@ -977,12 +987,12 @@ AXP_EXCEPTIONS AXP_SUBQ_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_S4SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = AXP_SEXT_LONG(AXP_LONG_MASK((instr->src1v * 4) - Rbv));
+	instr->destv.r.sq = AXP_SEXT_LONG(AXP_LONG_MASK((instr->src1v.r.uq * 4) - Rbv));
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1012,12 +1022,12 @@ AXP_EXCEPTIONS AXP_S4SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_S8SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = AXP_SEXT_LONG(AXP_LONG_MASK((instr->src1v * 8) - Rbv));
+	instr->destv.r.sq = AXP_SEXT_LONG(AXP_LONG_MASK((instr->src1v.r.uq * 8) - Rbv));
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1047,12 +1057,12 @@ AXP_EXCEPTIONS AXP_S8SUBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_S4SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = (instr->src1v * 4) - Rbv;
+	instr->destv.r.uq = (instr->src1v.r.uq * 4) - Rbv;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1082,12 +1092,12 @@ AXP_EXCEPTIONS AXP_S4SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_S8SUBQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v);
+	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = (instr->src1v * 8) - Rbv;
+	instr->destv.r.uq = (instr->src1v.r.uq * 8) - Rbv;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.

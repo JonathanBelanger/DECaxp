@@ -52,7 +52,8 @@ AXP_EXCEPTIONS AXP_CPYS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv = ((instr->src1v & AXP_R_SIGN) | (instr->src2v & ~AXP_R_SIGN));
+	instr->destv.fp.s = instr->src2v.fp.s;
+	instr->destv.fp.s.sign = instr->src1v.fp.s.sign;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -91,8 +92,9 @@ AXP_EXCEPTIONS AXP_CPYSE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv = ((instr->src1v & AXP_R_SIGN_EXP) |
-				    (instr->src2v & ~AXP_R_SIGN_EXP));
+	instr->destv.fp.s.sign = instr->src1v.fp.s.sign;
+	instr->destv.fp.s.exponent = instr->src1v.fp.s.exponent;
+	instr->destv.fp.s.fraction = instr->src2v.fp.s.fraction;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -131,8 +133,8 @@ AXP_EXCEPTIONS AXP_CPYSN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv = (((instr->src1v & AXP_R_SIGN) ^ AXP_R_SIGN) |
-					(instr->src2v & ~AXP_R_SIGN));
+	instr->destv.fp.s = instr->src2v.fp.s;
+	instr->destv.fp.s.sign = ~instr->src1v.fp.s.sign;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -171,10 +173,9 @@ AXP_EXCEPTIONS AXP_CVTLQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv =
-			AXP_SEXT_LONG(
-				((instr->src1v >> AXP_R_LSIGN_SHIFT_OUT) & AXP_R_LONG_SIGN) |
-				 ((instr->src1v >> AXP_R_LFRAC_SHIFT_OUT) & AXP_R_LONG_FRAC));
+	instr->destv.fp.qCvt.sign = instr->src1v.fp.l.sign;
+	instr->destv.fp.qCvt.integerHigh = instr->src1v.fp.l.integerHigh;
+	instr->destv.fp.qCvt.integerLow = instr->src1v.fp.l.integerLow;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -213,9 +214,11 @@ AXP_EXCEPTIONS AXP_CVTQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv =
-			(((instr->src1v & AXP_R_LONG_SIGN) << AXP_R_LSIGN_SHIFT_OUT) |
-			 (instr->src1v & AXP_R_LONG_FRAC) << AXP_R_LFRAC_SHIFT_OUT);
+	instr->destv.fp.l.sign = instr->src1v.fp.qVCvt.sign;
+	instr->destv.fp.l.integerHigh = instr->src1v.fp.qVCvt.integerLowHigh;
+	instr->destv.fp.l.zero_2 = 0;
+	instr->destv.fp.l.integerLow = instr->src1v.fp.qVCvt.integerLowLow;
+	instr->destv.fp.l.zero_1 = 0;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -255,10 +258,12 @@ AXP_EXCEPTIONS AXP_CVTQL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv =
-			(((instr->src1v & AXP_R_LONG_SIGN) << AXP_R_LSIGN_SHIFT_OUT) |
-			 (instr->src1v & AXP_R_LONG_FRAC) << AXP_R_LFRAC_SHIFT_OUT);
-    if (AXP_R_Q2L_OVERFLOW(instr->src1v))
+	instr->destv.fp.l.sign = instr->src1v.fp.qVCvt.sign;
+	instr->destv.fp.l.integerHigh = instr->src1v.fp.qVCvt.integerLowHigh;
+	instr->destv.fp.l.zero_2 = 0;
+	instr->destv.fp.l.integerLow = instr->src1v.fp.qVCvt.integerLowLow;
+	instr->destv.fp.l.zero_1 = 0;
+	if (instr->src1v.fp.qVCvt.integerHigh != 0)
 		retVal = ArithmeticTraps;	// IntegerOverflow;
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -299,15 +304,17 @@ AXP_EXCEPTIONS AXP_CVTLQ_SV(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv =
-			(((instr->src1v & AXP_R_LONG_SIGN) << AXP_R_LSIGN_SHIFT_OUT) |
-			 (instr->src1v & AXP_R_LONG_FRAC) << AXP_R_LFRAC_SHIFT_OUT);
+	instr->destv.fp.l.sign = instr->src1v.fp.qVCvt.sign;
+	instr->destv.fp.l.integerHigh = instr->src1v.fp.qVCvt.integerLowHigh;
+	instr->destv.fp.l.zero_2 = 0;
+	instr->destv.fp.l.integerLow = instr->src1v.fp.qVCvt.integerLowLow;
+	instr->destv.fp.l.zero_1 = 0;
 
 	/*
 	 * TODO:	We need to understand how software-completion differs from just
 	 *			reporting the exception.
 	 */
-    if (AXP_R_Q2L_OVERFLOW(instr->src1v))
+	if (instr->src1v.fp.qVCvt.integerHigh != 0)
 		retVal = ArithmeticTraps;	// IntegerOverflow;
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -346,8 +353,13 @@ AXP_EXCEPTIONS AXP_FCMOVEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if ((instr->src1v & ~AXP_R_SIGN) == 0)
-		instr->destv = instr->src2v;
+	if ((instr->src1v.fp.s.exponent == 0) && (instr->src1v.fp.s.fraction == 0))
+		instr->destv.fp.uq = instr->src2v.fp.uq;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -381,8 +393,13 @@ AXP_EXCEPTIONS AXP_FCMOVGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if (instr->src1v <= AXP_R_SIGN)
-		instr->destv = instr->src2v;
+	if (instr->src1v.fp.uq <= AXP_R_SIGN)
+		instr->destv.fp.uq = instr->src2v.fp.uq;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -416,8 +433,13 @@ AXP_EXCEPTIONS AXP_FCMOVGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if (((instr->src1v & AXP_R_SIGN) == 0) && (instr->src1v != 0))
-		instr->destv = instr->src2v;
+	if ((instr->src1v.fp.s.sign == 0) && (instr->src1v.fp.uq != 0))
+		instr->destv.fp.uq = instr->src2v.fp.uq;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -451,8 +473,13 @@ AXP_EXCEPTIONS AXP_FCMOVLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if (((instr->src1v & AXP_R_SIGN) == 1) && (instr->src1v == 0))
-		instr->destv = instr->src2v;
+	if ((instr->src1v.fp.s.sign == 1) || (instr->src1v.fp.uq == 0))
+		instr->destv.fp.uq = instr->src2v.fp.uq;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -486,8 +513,13 @@ AXP_EXCEPTIONS AXP_FCMOVLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if (instr->src1v > AXP_R_SIGN)
-		instr->destv = instr->src2v;
+	if ((instr->src1v.fp.s.sign == 1) || (instr->src1v.fp.uq != 0))
+		instr->destv.fp.uq = instr->src2v.fp.uq;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -521,8 +553,13 @@ AXP_EXCEPTIONS AXP_FCMOVNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if ((instr->src1v & ~AXP_R_SIGN) != 0)
-		instr->destv = instr->src2v;
+	if ((instr->src1v.fp.uq & ~AXP_R_SIGN) != 0)
+		instr->destv.fp.uq = instr->src2v.fp.uq;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -556,7 +593,12 @@ AXP_EXCEPTIONS AXP_MF_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv = *(u64 *) &cpu->fpcr;
+	instr->destv.fp.uq = *(u64 *) &cpu->fpcr;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -589,15 +631,23 @@ AXP_EXCEPTIONS AXP_MF_FTCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
 	/*
 	 * Implement the instruction
+	 *
+	 * NOTE: The value will actually be moved into the FPCR at the time of
+	 * 		 instruction retirement.
 	 */
-	*(u64 *) &cpu->fpcr = instr->src1v;
+	instr->destv.fp.uq = instr->src1v.fp.uq;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
 }
-
+#if 0
 /*
  * AXP_ADDF
  *	This function implements the VAX F Format Floating-Point ADD instruction of
@@ -682,3 +732,4 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	return(retVal);
 }
+#endif
