@@ -27,6 +27,16 @@
  *	V01.001		25-Jun-2017	Jonathan D. Belanger
  *	Updated to used a structured floating-point register and memory format, and
  *	not bit masks and shifts.
+ *
+ *	V01.002		28-Jun-2017	Jonathan D. Belanger
+ *	Added code to call the Mbox function to load and store data values into
+ *	memory (Dcache).
+ *	OK, floating point loads are different than integer loads.  All that we
+ *	have to worry about with integer loads is based off of the length of the
+ *	value read in, do we zero- or sign-extend it.  For floating-point, we have
+ *	to convert from memory format to register format.  This means that the
+ *	functions dealing with loads, are going to have to be broekn up into an
+ *	initiation function and a completion function.
  */
 #include "AXP_21264_Fbox_LoadStore.h"
 
@@ -44,7 +54,7 @@
 
 /*
  * AXP_LDF
- *	This function implements the Load VAX F Format from Memory to Register
+ *	This function initiates the Load VAX F Format from Memory to Register
  *	instruction of the Alpha AXP processor.
  *
  * Input Parameters:
@@ -66,8 +76,6 @@ AXP_EXCEPTIONS AXP_LDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va, vaPrime;
-	u64 tmp, exp;
-	AXP_F_MEMORY *tmpF = (AXP_F_MEMORY *) &tmp;
 
 	/*
 	 * Implement the instruction.
@@ -81,10 +89,56 @@ AXP_EXCEPTIONS AXP_LDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had an alignment fault (Alignment)
+	// TODO: Check to see if we had a read fault (Fault on Read)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
 	/*
 	 * Get the value out of memory (it'll be in memory format and is 32-bits)
 	 */
-	tmp = (vaPrime);		// TODO: Load from mem/cache
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u32));
+	instr->loadCompletion = AXP_LDF_COMPL;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_LDF_COMPL
+ *	This function completes the Load VAX F Format from Memory to Register
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_LDF_COMPL(AXP_INSTRUCTION *instr)
+{
+	u64 tmp, exp;
+	AXP_F_MEMORY *tmpF = (AXP_F_MEMORY *) &tmp;
+
+	/*
+	 * The load operation put the value we were supposed to read into the
+	 * destination value location.  Get it out of there so that we can convert
+	 * it from memory format to register format.
+	 */
+	tmp = instr->destv.f.uq;
 
 	/*
 	 * Extract the exponent, then expand it from 8-bits to 11-bits.
@@ -103,25 +157,15 @@ AXP_EXCEPTIONS AXP_LDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.fp.fCvt.fractionLow = tmpF->fractionLow;
 	instr->destv.fp.fCvt.zero = 0;
 
-	// TODO: Check to see if we had an access fault (Access Violation)
-	// TODO: Check to see if we had an alignment fault (Alignment)
-	// TODO: Check to see if we had a read fault (Fault on Read)
-	// TODO: Check to see if we had a translation fault (Translation Not Valid)
-
 	/*
-	 * Indicate that the instruction is ready to be retired.
+	 * Return back to the caller.
 	 */
-	instr->state = WaitingRetirement;
-
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+	return;
 }
 
 /*
  * AXP_LDG
- *	This function implements the Load VAX G Format from Memory to Register
+ *	This function initiates the Load VAX G Format from Memory to Register
  *	instruction of the Alpha AXP processor.
  *
  * Input Parameters:
@@ -143,34 +187,22 @@ AXP_EXCEPTIONS AXP_LDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va;
-	u64 tmp;
-	AXP_G_MEMORY *tmpG = (AXP_G_MEMORY *) &tmp;
 
 	/*
 	 * Implement the instruction.
 	 */
 	va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * Get the value out of memory (it'll be in memory format and is 64-bits)
-	 */
-	tmp = (va);		// TODO: Load from mem/cache
-
-	/*
-	 * Now put everything back together, but this time in register format and
-	 * 64-bits.
-	 */
-	instr->destv.fp.gCvt.sign = tmpG->sign;
-	instr->destv.fp.gCvt.exponent = tmpG->exponent;
-	instr->destv.fp.gCvt.fractionHigh = tmpG->fractionHigh;
-	instr->destv.fp.gCvt.fractionMidHigh = tmpG->fractionMidHigh;
-	instr->destv.fp.gCvt.fractionMidLow = tmpG->fractionMidLow;
-	instr->destv.fp.gCvt.fractionLow = tmpG->fractionLow;
-
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Get the value out of memory (it'll be in memory format and is 32-bits)
+	 */
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u64));
+	instr->loadCompletion = AXP_LDG_COMPL;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -184,15 +216,64 @@ AXP_EXCEPTIONS AXP_LDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 }
 
 /*
+ * AXP_LDG_COMPL
+ *	This function completes the Load VAX G Format from Memory to Register
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_LDG_COMPL(AXP_INSTRUCTION *instr)
+{
+	u64 tmp;
+	AXP_G_MEMORY *tmpG = (AXP_G_MEMORY *) &tmp;
+
+	/*
+	 * The load operation put the value we were supposed to read into the
+	 * destination value location.  Get it out of there so that we can convert
+	 * it from memory format to register format.
+	 */
+	tmp = instr->destv.f.uq;
+
+	/*
+	 * Now put everything back together, but this time in register format and
+	 * 64-bits.
+	 */
+	instr->destv.fp.gCvt.sign = tmpG->sign;
+	instr->destv.fp.gCvt.exponent = tmpG->exponent;
+	instr->destv.fp.gCvt.fractionHigh = tmpG->fractionHigh;
+	instr->destv.fp.gCvt.fractionMidHigh = tmpG->fractionMidHigh;
+	instr->destv.fp.gCvt.fractionMidLow = tmpG->fractionMidLow;
+	instr->destv.fp.gCvt.fractionLow = tmpG->fractionLow;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return;
+}
+
+/*
  * AXP_LDS
- *	This function implements the Load/Prefetch IEEE S Format from Memory
- *	to Register/no-where instruction of the Alpha AXP processor.
+ *	This function initiates the Load and implements the Prefetch IEEE S Format
+ *	from Memory to Register/no-where instruction of the Alpha AXP processor.
  *
  *	If the destination register is F31, then this instruction becomes the
  *	PREFETCH_EN instruction.
  *
  *	A prefetch is a hint to the processor that a cache block might be used in
  *	the future and should be brought into the cache now.
+ *
+ *	The PREFETCH is started, but does not need a completion (we are just being
+ *	asked to pre-load the Dcache.
  *
  * Input Parameters:
  *	cpu:
@@ -213,8 +294,6 @@ AXP_EXCEPTIONS AXP_LDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
 	u64 va, vaPrime;
-	u64 tmp,exp;
-	AXP_S_MEMORY *tmpS = (AXP_S_MEMORY *) &tmp;
 
 	/*
 	 * Implement the instruction.
@@ -228,10 +307,57 @@ AXP_EXCEPTIONS AXP_LDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had an alignment fault (Alignment)
+	// TODO: Check to see if we had a read fault (Fault on Read)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
 	/*
 	 * Get the value out of memory (it'll be in memory format and is 32-bits)
 	 */
-	tmp = (vaPrime);		// TODO: Load from mem/cache
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u32));
+	if (instr->aDest != AXP_UNMAPPED_REG)
+		instr->loadCompletion = AXP_LDF_COMPL;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_LDS_COMPL
+ *	This function completes the Load IEEE S Format from Memory to Register
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_LDS_COMPL(AXP_INSTRUCTION *instr)
+{
+	u64 tmp, exp;
+	AXP_S_MEMORY *tmpS = (AXP_S_MEMORY *) &tmp;
+
+	/*
+	 * The load operation put the value we were supposed to read into the
+	 * destination value location.  Get it out of there so that we can convert
+	 * it from memory format to register format.
+	 */
+	tmp = instr->destv.f.uq;
 
 	/*
 	 * Extract the exponent, then expand it from 8-bits to 11-bits.
@@ -251,20 +377,10 @@ AXP_EXCEPTIONS AXP_LDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.fp.sCvt.fraction = tmpS->fraction;
 	instr->destv.fp.sCvt.zero = 0;
 
-	// TODO: Check to see if we had an access fault (Access Violation)
-	// TODO: Check to see if we had an alignment fault (Alignment)
-	// TODO: Check to see if we had a read fault (Fault on Read)
-	// TODO: Check to see if we had a translation fault (Translation Not Valid)
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
 	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
-	return(retVal);
+	return;
 }
 
 /*
@@ -303,15 +419,15 @@ AXP_EXCEPTIONS AXP_LDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * Get the value out of memory (it'll be in memory format and is 64-bits)
-	 */
-	instr->destv.fp.uq = (va);		// TODO: Load from mem/cache
-
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Get the value out of memory (it'll be in memory format and is 32-bits)
+	 */
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u32));
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -349,8 +465,9 @@ AXP_EXCEPTIONS AXP_STF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_EXCEPTIONS retVal = NoException;
 	AXP_F_MEMORY tmpF;
 	u64 va, vaPrime;
-	u64 exp;
-	u64 *tmp = (u64 *) &tmpF;
+	u32 exp;
+	u32 tmp;
+	AXP_F_MEMORY *tmpF = (AXP_F_MEMORY *) &tmp;
 
 	/*
 	 * Implement the instruction.
@@ -375,16 +492,16 @@ AXP_EXCEPTIONS AXP_STF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Now put everything back together, but this time in memory format and
 	 * 32-bits.
 	 */
-	tmpF.sign = instr->src1v.fp.fCvt.sign;
-	tmpF.exponent = exp;
-	tmpF.fractionHigh = instr->src1v.fp.fCvt.fractionHigh;
-	tmpF.fractionLow = instr->src1v.fp.fCvt.fractionLow;
-	// (vaPrime) = tmp;	TODO: Store this into memory.
+	tmpF->sign = instr->src1v.fp.fCvt.sign;
+	tmpF->exponent = exp;
+	tmpF->fractionHigh = instr->src1v.fp.fCvt.fractionHigh;
+	tmpF->fractionLow = instr->src1v.fp.fCvt.fractionLow;
 
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Write)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp, sizeof(tmp));
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -420,9 +537,9 @@ AXP_EXCEPTIONS AXP_STF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_STG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
-	AXP_G_MEMORY tmpG;
 	u64 va;
-	u64 *tmp = (u64 *) &tmpG;
+	u64 tmp;
+	AXP_G_MEMORY *tmpG = (AXP_G_MEMORY *) &tmp;
 
 	/*
 	 * Implement the instruction.
@@ -433,18 +550,18 @@ AXP_EXCEPTIONS AXP_STG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Now put everything back together, but this time in memory format and
 	 * 64-bits.
 	 */
-	tmpG.sign = instr->src1v.fp.gCvt.sign;
-	tmpG.exponent = instr->src1v.fp.gCvt.exponent;
-	tmpG.fractionHigh = instr->src1v.fp.gCvt.fractionHigh;
-	tmpG.fractionMidHigh = instr->src1v.fp.gCvt.fractionMidHigh;
-	tmpG.fractionMidLow = instr->src1v.fp.gCvt.fractionMidLow;
-	tmpG.fractionLow = instr->src1v.fp.gCvt.fractionLow;
-	// (va) =	tmp;	TODO: Store this into memory
+	tmpG->sign = instr->src1v.fp.gCvt.sign;
+	tmpG->exponent = instr->src1v.fp.gCvt.exponent;
+	tmpG->fractionHigh = instr->src1v.fp.gCvt.fractionHigh;
+	tmpG->fractionMidHigh = instr->src1v.fp.gCvt.fractionMidHigh;
+	tmpG->fractionMidLow = instr->src1v.fp.gCvt.fractionMidLow;
+	tmpG->fractionLow = instr->src1v.fp.gCvt.fractionLow;
 
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Write)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp, sizeof(tmp));
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -480,10 +597,10 @@ AXP_EXCEPTIONS AXP_STG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_STS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS retVal = NoException;
-	AXP_S_MEMORY tmpS;
 	u64 va, vaPrime;
-	u64 exp;
-	u64 *tmp = (u64 *) &tmpS;
+	u32 exp;
+	u32 tmp;
+	AXP_S_MEMORY *tmpS = (AXP_S_MEMORY *) &tmp;
 
 	/*
 	 * Implement the instruction.
@@ -510,15 +627,15 @@ AXP_EXCEPTIONS AXP_STS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Now put everything back together, but this time in memory format and
 	 * 32-bits.
 	 */
-	tmpS.sign = instr->src1v.fp.sCvt.sign;
-	tmpS.exponent = exp;
-	tmpS.fraction = instr->src1v.fp.sCvt.fraction;
-	// (vaPrime) = tmp;	TODO: store this into memory
+	tmpS->sign = instr->src1v.fp.sCvt.sign;
+	tmpS->exponent = exp;
+	tmpS->fraction = instr->src1v.fp.sCvt.fraction;
 
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Write)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp, sizeof(tmp));
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -564,12 +681,16 @@ AXP_EXCEPTIONS AXP_STT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Put the value into memory (it'll be in memory format and is 64-bits)
 	 */
-	// (va) = instr->src1v.fp.uq;		TODO: Load from mem/cache
-
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_WriteMem(cpu,
+							instr,
+							instr->slot,
+							vaPrime,
+							instr->src1v.fp.uq,
+							sizeof(instr->src1v.fp.uq));
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

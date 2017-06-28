@@ -38,6 +38,15 @@
  *	rethinking the use of queues for the IQ and FQ.  I'm thinking a wraparound
  *	list would be just as good and also avoid the need to allocate and
  *	initialize memory every time we have to decode an instruction.
+ *
+ *	V01.004		28-Jun-2017	Jonathan D. Belanger
+ *	Added an include for the Mbox Load/Store Queue structure definitions.
+ *	Changed the physical registers (pr and pf) back to a u64 type.  Because of
+ *	the out-of-order instruction execution, register values are copied out of
+ *	the register into a location where it is utilized, and interpretted beyond
+ *	an unsigned 64-bit integer, and then stored back into the physical register
+ *	when the instruction is retired, the physical registers are just an place
+ *	to hold the value for the next instruction to copy.
  */
 #ifndef _AXP_21264_CPU_DEFS_
 #define _AXP_21264_CPU_DEFS_
@@ -49,6 +58,7 @@
 #include "AXP_21264_Instructions.h"
 #include "AXP_21264_ICache.h"
 #include "AXP_21264_RegisterRenaming.h"
+#include "AXP_21264_Mbox_Queues.h"
 
 #define AXP_RESULTS_REG		41
 #define AXP_NUM_FETCH_INS	4
@@ -73,6 +83,7 @@
 #define AXP_F_FREELIST_SIZE	AXP_FP_PHYS_REG - AXP_MAX_REGISTERS - 1
 #define AXP_INFLIGHT_FETCHES 20
 #define AXP_INFLIGHT_MAX	80
+#define AXP_MBOX_QUEUE_LEN	32;
 
 /*
  * This structure is a buffer to contain the next set of instructions to get
@@ -129,6 +140,7 @@ typedef struct
 	bool			useLiteral;	/* Indicator that the literal value is valid */
 	bool			branchPredict; /* If this is a branch, do we predict to take it */
 	u32				function;	/* Function code for operation */
+	u32				slot;		/* Assigned Load/Store slot */
 	i64				displacement;/* Displacement from PC + 4 */
 	u64				literal;	/* Literal value */
 	AXP_REGISTER	src1v;		/* Value from src1 register */
@@ -141,6 +153,7 @@ typedef struct
 	AXP_PC			pc;
 	AXP_PC			branchPC;
 	AXP_INS_STATE	state;
+	void			(*loadCompl)(AXP_INSTRUCTION *);
 } AXP_INSTRUCTION;
 
 typedef struct
@@ -349,7 +362,7 @@ typedef struct
 	 * decoded.  The register mapping is used too determine which physical
 	 * register (PR) is defined to which AR.
 	 */
-	AXP_INT_REGISTER	pr[AXP_INT_PHYS_REG];
+	u64					pr[AXP_INT_PHYS_REG];
 	u32					prFreeList[AXP_I_FREELIST_SIZE];
 	u32					prFlStart;
 	u32					prFlEnd;
@@ -387,7 +400,7 @@ typedef struct
 	 * Since the floating-point execution unit only has 1 cluster, there is 
 	 * just 1 set of 72 registers.
 	 */
-	AXP_FP_REGISTER		pf[AXP_FP_PHYS_REG];
+	u64					pf[AXP_FP_PHYS_REG];
 	u32					pfFreeList[AXP_F_FREELIST_SIZE];
 	u32					pfFlStart;
 	u32					pfFlEnd;
@@ -410,10 +423,18 @@ typedef struct
 	 *	Dcache miss occurs.  The Mbox provides data to the Cbox to store in	  *
 	 *	memory when a store operation occirs.								  *
 	 **************************************************************************/
-	u8			lq;
-	u8			sq;
-	u8			maf;
-	u8			dtb[AXP_TB_LEN];
+	/*
+	 * The next 2 "queues" are actually going to be handled as a FIFO stack.
+	 * These queues handle the outstanding load and store operatings into the
+	 * Dcache (and ultimately memory), and need to be completed in order, to
+	 * ensure correct Alpha memory reference behavior.
+	 */
+	AXP_MBOX_QUEUE			lq[AXP_MBOX_QUEUE_LEN];
+	u32						lqNext;
+	AXP_MBOX_QUEUE			sq[AXP_MBOX_QUEUE_LEN];
+	u32						sqNext;
+	u8						maf;
+	u8						dtb[AXP_TB_LEN];
 
 	/*
 	 * Mbox IPRs
@@ -487,3 +508,4 @@ typedef struct
 
 } AXP_21264_CPU;
 #endif /* _AXP_21264_CPU_DEFS_ */
+

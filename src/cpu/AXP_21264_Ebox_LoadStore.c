@@ -28,6 +28,10 @@
  *	I changed the way I used registers and retrieved memory.  I was doing it
  *	with bits and masks and should have been using structures, letting the
  *	compiler deal with the details.
+ *
+ *	V01.002		28-Jun-2017	Jonathan D. Belanger
+ *	Added code to call the Mbox function to load and store data values into
+ *	memory (Dcache).
  */
 #include "AXP_21264_Ebox_LoadStore.h"
 
@@ -161,10 +165,12 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_BYTE(va);
-	instr->destv.r.uq = AXP_ZEXT_BYTE((vaPrime));	// TODO: Load from mem/cache
+
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u8));
+	instr->loadCompletion = AXP_LDBU_COMPL;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -175,6 +181,37 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
+}
+
+/*
+ * AXP_LDBU_COMPL
+ *	This function completes the Load Zero-Extend Byte from Memory to Register
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to complete
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_LDBU_COMPL(AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * The last thing we need to do is zero extend the destination register.
+	 */
+	instr->destv.r.uq = AXP_ZEXT_BYTE(instr->desv.r.uq);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
 }
 
 /*
@@ -213,11 +250,13 @@ AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_WORD(va);
-	instr->destv.r.uq = AXP_ZEXT_WORD((vaPrime));	// TODO: Load from mem/cache
+
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u16));
+	instr->loadCompletion = AXP_LDWU_COMPL;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -228,6 +267,37 @@ AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
+}
+
+/*
+ * AXP_LDWU_COMPL
+ *	This function completes the Load Zero-Extend Word from Memory to Register
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to complete
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_LDWU_COMPL(AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * The last thing we need to do is zero extend the destination register.
+	 */
+	instr->destv.r.uq = AXP_ZEXT_WORD(instr->desv.r.uq);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
 }
 
 /*
@@ -272,11 +342,13 @@ AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_LONG(va);
-	instr->destv.r.sq = AXP_SEXT_LONG((vaPrime));	// TODO: Load from mem/cache
+
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u32));
+	instr->loadCompletion = AXP_LDL_COMPL;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -287,6 +359,37 @@ AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
+}
+
+/*
+ * AXP_LDL_COMPL
+ *	This function completes the Load Sign-Extend Long from Memory to Register
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to complete
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_LDL_COMPL(AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * The last thing we need to do is zero extend the destination register.
+	 */
+	instr->destv.r.uq = AXP_SEXT_LONG(instr->desv.r.uq);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
 }
 
 /*
@@ -328,11 +431,12 @@ AXP_EXCEPTIONS AXP_LDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	va = instr->src1v.r.uq + instr->displacement;
 
-	instr->destv.r.uq = (va);					// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u64));
+	// No completion function required for quadword loads.
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -375,10 +479,12 @@ AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	va = (instr->src1v.r.uq + instr->displacement) & ~0x7;
 
-	instr->destv.r.uq = (va);					// TODO: Load from mem/cache
+	// TODO: Need to make sure the completion code ZEXT the value.
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u64));
+	// No completion function required for quadword loads.
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -392,7 +498,7 @@ AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 }
 
 /*
- * TODO:	The 21264 does not contain a dedicated lock register, not are any
+ * TODO:	The 21264 does not contain a dedicated lock register, nor are any
  * TODO:	system components required to do so.
  * TODO:
  * TODO:	When a load-lock instruction executed, data is accessed from the
@@ -453,11 +559,12 @@ AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->lockPhysAddrPending = va;	// TODO: Need to convert to a physical address
 	instr->lockVirtAddrPending = va;
 
-	instr->destv.r.sq = AXP_SEXT_LONG((vaPrime));	// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u32));
+	instr->loadCompletion = AXP_LDL_COMPL;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -504,11 +611,12 @@ AXP_EXCEPTIONS AXP_LDQ_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->lockPhysAddrPending = va;	// TODO: Need to convert to a physical address
 	instr->lockVirtAddrPending = va;
 
-	instr->destv.r.sq = AXP_SEXT_LONG((va));		// TODO: Load from mem/cache
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u64));
+	// No completion function required for quadword loads.
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -560,7 +668,13 @@ AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
 	if (cpu->lockFlag == true)
 	{
-		(vaPrime) = instr->src1v.r.ul;
+		AXP_21264_Mbox_WriteMem(
+			cpu,
+			instr,
+			instr->slot,
+			vaPrime,
+			instr->src1v.r.ul,
+			sizeof(instr->src1v.r.ul));
 		// TODO: Check to see if we had an access fault (Access Violation)
 		// TODO: Check to see if we had an alignment fault (Alignment)
 		// TODO: Check to see if we had a write fault (Fault on Write)
@@ -614,7 +728,13 @@ AXP_EXCEPTIONS AXP_STQ_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
 	if (cpu->lockFlag == true)
 	{
-		(va) = instr->src1v.r.uq;
+		AXP_21264_Mbox_WriteMem(
+			cpu,
+			instr,
+			instr->slot,
+			vaPrime,
+			instr->src1v.r.uq,
+			sizeof(instr->src1v.r.uq));
 		// TODO: Check to see if we had an access fault (Access Violation)
 		// TODO: Check to see if we had an alignment fault (Alignment)
 		// TODO: Check to see if we had a write fault (Fault on Write)
@@ -672,7 +792,13 @@ AXP_EXCEPTIONS AXP_STB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_BYTE(va);
-	(vaPrime) = instr->src1v.r.ub;
+		AXP_21264_Mbox_WriteMem(
+			cpu,
+			instr,
+			instr->slot,
+			vaPrime,
+			instr->src1v.r.ub,
+			sizeof(instr->src1v.r.ub));
 		// TODO: Check to see if we had an access fault (Access Violation)
 		// TODO: Check to see if we had an alignment fault (Alignment)
 		// TODO: Check to see if we had a write fault (Fault on Write)
@@ -725,11 +851,21 @@ AXP_EXCEPTIONS AXP_STW(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_WORD(va);
-	(vaPrime) = instr->src1v.r.uw;
-		// TODO: Check to see if we had an access fault (Access Violation)
-		// TODO: Check to see if we had an alignment fault (Alignment)
-		// TODO: Check to see if we had a write fault (Fault on Write)
-		// TODO: Check to see if we had a translation fault (Translation Not Valid)
+
+	/*
+	 * Queue up the request to store this value into memory (Dcache).
+	 */
+	AXP_21264_Mbox_WriteMem(
+		cpu,
+		instr,
+		instr->slot,
+		vaPrime,
+		instr->src1v.r.uw,
+		sizeof(instr->src1v.r.uw));
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had an alignment fault (Alignment)
+	// TODO: Check to see if we had a write fault (Fault on Write)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -778,11 +914,17 @@ AXP_EXCEPTIONS AXP_STL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_LONG(va);
-	(vaPrime) = instr->src1v.r.ul;
-		// TODO: Check to see if we had an access fault (Access Violation)
-		// TODO: Check to see if we had an alignment fault (Alignment)
-		// TODO: Check to see if we had a write fault (Fault on Write)
-		// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_WriteMem(
+		cpu,
+		instr,
+		instr->slot,
+		vaPrime,
+		instr->src1v.r.ul,
+		sizeof(instr->src1v.r.ul));
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had an alignment fault (Alignment)
+	// TODO: Check to see if we had a write fault (Fault on Write)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -825,11 +967,17 @@ AXP_EXCEPTIONS AXP_STQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	va = instr->src1v.r.uq + instr->displacement;
 
-	(va) = instr->src1v.r.uq;
-		// TODO: Check to see if we had an access fault (Access Violation)
-		// TODO: Check to see if we had an alignment fault (Alignment)
-		// TODO: Check to see if we had a write fault (Fault on Write)
-		// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_WriteMem(
+		cpu,
+		instr,
+		instr->slot,
+		vaPrime,
+		instr->src1v.r.uq,
+		sizeof(instr->src1v.r.uq));
+	// TODO: Check to see if we had an access fault (Access Violation)
+	// TODO: Check to see if we had an alignment fault (Alignment)
+	// TODO: Check to see if we had a write fault (Fault on Write)
+	// TODO: Check to see if we had a translation fault (Translation Not Valid)
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -872,10 +1020,16 @@ AXP_EXCEPTIONS AXP_STQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	va = (instr->src1v.r.uq + instr->displacement) & ~0x7;
 
-	(va) = instr->src1v.r.uq;
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had a write fault (Fault on Write)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	AXP_21264_Mbox_WriteMem(
+		cpu,
+		instr,
+		instr->slot,
+		vaPrime,
+		instr->src1v.r.uq,
+		sizeof(instr->src1v.r.uq));
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
