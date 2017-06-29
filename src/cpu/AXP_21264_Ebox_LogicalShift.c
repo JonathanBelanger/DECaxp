@@ -596,8 +596,8 @@ AXP_EXCEPTIONS AXP_SRL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 }
 
 /*
- * AXP_SRL
- *	This function implements the Integer Shift Right Logical instruction
+ * AXP_SRA
+ *	This function implements the Integer Shift Right Arithmetical instruction
  *	of the Alpha AXP processor.
  *
  * Input Parameters:
