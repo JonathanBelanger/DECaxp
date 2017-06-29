@@ -37,9 +37,6 @@
 #ifndef _AXP_21264_PRED_DEFS_
 #define _AXP_21264_PRED_DEFS_
 
-#include "AXP_Utility.h"
-#include "AXP_Base_CPU.h"
-
 /*
  * The following definitions are used to decode the Virtual Program Counter
  * (VPC).

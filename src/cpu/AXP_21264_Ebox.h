@@ -27,6 +27,4 @@
 #ifndef _AXP_21264_EBOX_DEFS_
 #define _AXP_21264_EBOX_DEFS_
 
-#include "AXP_21264_CPU.h"
-
 #endif /* _AXP_21264_EBOX_DEFS_ */

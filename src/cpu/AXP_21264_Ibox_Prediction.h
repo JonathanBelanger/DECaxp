@@ -27,9 +27,11 @@
 #ifndef _AXP_21264_IBOX_PREDICTION_DEFS_
 #define _AXP_21264_IBOX_PREDICTION_DEFS_
 
-#include "AXP_Blocks.h"
+#include "AXP_Utility.h"
 #include "AXP_21264_CPU.h"
-#include "AXP_21264_ICache.h"
-#include "AXP_21264_Ibox.h"
+#include "AXP_21264_Ibox_InstructionInfo.h"
+#include "AXP_21264_Icache.h"
+#include "AXP_21264_Instructions.h"
+#include "AXP_21264_RegisterRenaming.h"
 
 #endif	/* _AXP_21264_IBOX_PREDICTION_DEFS_ */

@@ -30,9 +30,12 @@
 #ifndef _AXP_21264_IBOX_DEFS_
 #define _AXP_21264_IBOX_DEFS_
 
+#include "AXP_Utility.h"
 #include "AXP_21264_CPU.h"
-#include "AXP_21264_Ibox_Icache.h"
 #include "AXP_21264_Ibox_InstructionInfo.h"
+#include "AXP_21264_Icache.h"
+#include "AXP_21264_Instructions.h"
+#include "AXP_21264_RegisterRenaming.h"
 
 #define AXP_NONE	0
 #define AXP_IQ		1

@@ -27,7 +27,11 @@
 #ifndef _AXP_21264_FBOX_CONTROL_DEFS_
 #define _AXP_21264_FBOX_CONTROL_DEFS_
 
+#include "AXP_Utility.h"
+#include "AXP_Base_CPU.h"
+#include "AXP_21264_Instructions.h"
 #include "AXP_21264_CPU.h"
+#include "AXP_21264_Mbox.h"
 #include "AXP_21264_Ibox.h"
 #include "AXP_21264_Fbox.h"
 

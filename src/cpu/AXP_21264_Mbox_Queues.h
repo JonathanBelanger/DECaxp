@@ -29,7 +29,7 @@
 
 typedef enum
 {
-	Free,
+	NotInUse,
 	Assigned,
 	ReadPending,
 	WritePending
@@ -37,7 +37,7 @@ typedef enum
 
 typedef struct
 {
-	u64						value;	/* Only used in a store */
+	u64						value;	/* Only used in a store operations */
 	u32						length;
 	u64						virtAddress;
 	AXP_INSTRUCTION			*instr;

@@ -27,7 +27,7 @@
 #ifndef _AXP_21264_FBOX_DEFS_
 #define _AXP_21264_FBOX_DEFS_
 
-#include "AXP_21264_CPU.h"
+#include "AXP_Utility.h"
 
 /*
  * FP Operate Function Field Format

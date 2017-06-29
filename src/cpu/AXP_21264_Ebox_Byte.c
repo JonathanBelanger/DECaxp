@@ -28,6 +28,7 @@
  *	The registers are nolonger just a 64-bit unsigned value.  They now have a
  *	structure to them, to aid in coding.
  */
+#include "AXP_Configure.h"
 #include "AXP_21264_Ebox_Byte.h"
 
 /*

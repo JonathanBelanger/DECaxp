@@ -33,7 +33,19 @@
  *	Added code to call the Mbox function to load and store data values into
  *	memory (Dcache).
  */
+
+#include "AXP_Configure.h"
 #include "AXP_21264_Ebox_LoadStore.h"
+
+/*
+ * Prototypes for Local Functions.
+ */
+void AXP_LDBU_COMPL(AXP_INSTRUCTION *);
+void AXP_LDWU_COMPL(AXP_INSTRUCTION *);
+void AXP_LDL_COMPL(AXP_INSTRUCTION *);
+
+
+
 
 /*
  * IMPLEMENTATION NOTES:
@@ -206,7 +218,7 @@ void AXP_LDBU_COMPL(AXP_INSTRUCTION *instr)
 	/*
 	 * The last thing we need to do is zero extend the destination register.
 	 */
-	instr->destv.r.uq = AXP_ZEXT_BYTE(instr->desv.r.uq);
+	instr->destv.r.uq = AXP_ZEXT_BYTE(instr->destv.r.uq);
 
 	/*
 	 * Return back to the caller.
@@ -292,7 +304,7 @@ void AXP_LDWU_COMPL(AXP_INSTRUCTION *instr)
 	/*
 	 * The last thing we need to do is zero extend the destination register.
 	 */
-	instr->destv.r.uq = AXP_ZEXT_WORD(instr->desv.r.uq);
+	instr->destv.r.uq = AXP_ZEXT_WORD(instr->destv.r.uq);
 
 	/*
 	 * Return back to the caller.
@@ -384,7 +396,7 @@ void AXP_LDL_COMPL(AXP_INSTRUCTION *instr)
 	/*
 	 * The last thing we need to do is zero extend the destination register.
 	 */
-	instr->destv.r.uq = AXP_SEXT_LONG(instr->desv.r.uq);
+	instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
 
 	/*
 	 * Return back to the caller.
@@ -435,7 +447,7 @@ AXP_EXCEPTIONS AXP_LDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u64));
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va, sizeof(u64));
 	// No completion function required for quadword loads.
 
 	/*
@@ -483,7 +495,7 @@ AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u64));
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va, sizeof(u64));
 	// No completion function required for quadword loads.
 
 	/*
@@ -615,7 +627,7 @@ AXP_EXCEPTIONS AXP_LDQ_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	// TODO: Check to see if we had an alignment fault (Alignment)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u64));
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va, sizeof(u64));
 	// No completion function required for quadword loads.
 
 	/*
@@ -732,7 +744,7 @@ AXP_EXCEPTIONS AXP_STQ_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			cpu,
 			instr,
 			instr->slot,
-			vaPrime,
+			va,
 			instr->src1v.r.uq,
 			sizeof(instr->src1v.r.uq));
 		// TODO: Check to see if we had an access fault (Access Violation)
@@ -971,7 +983,7 @@ AXP_EXCEPTIONS AXP_STQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		cpu,
 		instr,
 		instr->slot,
-		vaPrime,
+		va,
 		instr->src1v.r.uq,
 		sizeof(instr->src1v.r.uq));
 	// TODO: Check to see if we had an access fault (Access Violation)
@@ -1027,7 +1039,7 @@ AXP_EXCEPTIONS AXP_STQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		cpu,
 		instr,
 		instr->slot,
-		vaPrime,
+		va,
 		instr->src1v.r.uq,
 		sizeof(instr->src1v.r.uq));
 

@@ -37,8 +37,6 @@
 #ifndef _AXP_REGISTER_RENAMING_DEFS_
 #define _AXP_REGISTER_RENAMING_DEFS_
 
-#include "AXP_Utility.h"
-
 /*
  * This enumeration is used during during the Issue, Register Read, and Execute
  * stages (Stages 3, 4, and 5).  It indicates the state of one PR.  There are

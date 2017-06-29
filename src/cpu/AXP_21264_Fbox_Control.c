@@ -28,6 +28,7 @@
  *	Floating point registers are not just 64-bit values, but now have a
  *	structure to them for the various floating-point types.
  */
+#include "AXP_Configure.h"
 #include "AXP_21264_Fbox_Control.h"
 
 /*

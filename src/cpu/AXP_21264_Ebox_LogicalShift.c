@@ -24,7 +24,8 @@
  *	V01.000		23-Jun-2017	Jonathan D. Belanger
  *	Initially written.
  */
- #include "AXP_21264_Ebox_LogicalShift.h"
+#include "AXP_Configure.h"
+#include "AXP_21264_Ebox_LogicalShift.h"
 
 /*
  * AXP_AND

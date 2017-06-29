@@ -37,7 +37,9 @@
 #ifndef _AXP_21264_INS_DEFS_
 #define _AXP_21264_INS_DEFS_
 
+#include "AXP_Configure.h"
 #include "AXP_Utility.h"
+#include "AXP_Base_CPU.h"
 
 /*
  * Define the Alpha Instruction Formats
@@ -958,5 +960,55 @@ typedef enum
  *	mx_fpcr		FM					Instructions that move data from the floating-point
  *									control register
  */
+
+typedef enum
+{
+	Retired,
+	Queued,
+	Executing,
+	WaitingRetirement
+} AXP_INS_STATE;
+
+/*
+ * This structure is what will be put into the Reorder Buffer.  A queue entry
+ * in the Integer or Floating-point Queues (IQ or FQ) will point to the queue
+ * entry.  It contains a single decoded instruction that has had it's
+ * architectural registers renamed to physical ones.  And a state value
+ * indicating if the instruction is Queued, Executing, WaitingRetirement, or
+ * Retired.
+ */
+typedef struct
+{
+	u8				uniqueID;	/* A unique id for each instruction */
+	u8				opcode;		/* Operation code */
+	u8				aSrc1;		/* Architectural register R0-R30 or F0-F30 */
+	u8				src1;		/* Physical register PR0-PR79, PF0-PF71 */
+	u8				aSrc2;		/* Architectural register R0-R30 or F0-F30 */
+	u8				src2;		/* Physical register PR0-PR79, PF0-PF71 */
+	u8				aDest;		/* Architectural register R0-R30 or F0-F30 */
+	u8				dest;		/* Physical register PR0-PR79, PF0-PF71 */
+	u8				type_hint_index; /* HW_LD/ST type, HW_RET hint, HW_MxPR idx */
+	u8				scbdMask;	/* HW_MxPR scbd_mask */
+	u8				len_stall : 1; /* HW_LD/ST len, HW_RET stall */
+	bool			lockFlagPending; /* set by the LDx_L instructions */
+	bool			clearLockPending; /* many instructions can clr the lock_flag */
+	bool			useLiteral;	/* Indicator that the literal value is valid */
+	bool			branchPredict; /* If this is a branch, predict to take it */
+	u32				function;	/* Function code for operation */
+	u32				slot;		/* Assigned Load/Store slot */
+	i64				displacement;/* Displacement from PC + 4 */
+	u64				literal;	/* Literal value */
+	AXP_REGISTER	src1v;		/* Value from src1 register */
+	AXP_REGISTER	src2v;		/* Value from src2 register */
+	AXP_REGISTER	destv;		/* Value to dest register */
+	u64				lockPhysAddrPending; /* used with lockFlagPending */
+	u64				lockVirtAddrPending; /* used with lockFlagPending */
+	AXP_INS_TYPE	format;		/* Instruction format */
+	AXP_OPER_TYPE	type;
+	AXP_PC			pc;
+	AXP_PC			branchPC;
+	AXP_INS_STATE	state;
+	void			(*loadCompletion)();
+} AXP_INSTRUCTION;
 
 #endif /* _AXP_21264_INS_DEFS_ */

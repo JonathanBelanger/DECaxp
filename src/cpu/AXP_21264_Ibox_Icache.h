@@ -27,10 +27,12 @@
 #ifndef _AXP_21264_IBOX_ICACHE_DEFS_
 #define _AXP_21264_IBOX_ICACHE_DEFS_
 
-#include "AXP_Blocks.h"
+#include "AXP_Utility.h"
 #include "AXP_21264_CPU.h"
-#include "AXP_21264_ICache.h"
-#include "AXP_21264_Ibox.h"
+#include "AXP_21264_Ibox_InstructionInfo.h"
+#include "AXP_21264_Icache.h"
+#include "AXP_21264_Instructions.h"
+#include "AXP_21264_RegisterRenaming.h"
 
 AXP_CACHE_FETCH AXP_ICacheFetch(AXP_21264_CPU *, AXP_PC, AXP_INS_LINE *);
 AXP_CACHE_FETCH AXP_ICacheValid(AXP_21264_CPU *, AXP_PC, u32 *, u32 *);

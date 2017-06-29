@@ -96,9 +96,7 @@
  *	TODO:	We need a retirement function to put the destination value into the
  *			physical register and indicate that the register value is Valid.
  */
-#include "AXP_Blocks.h"
-#include "AXP_21264_CPU.h"
-#include "AXP_21264_ICache.h"
+#include "AXP_Configure.h"
 #include "AXP_21264_Ibox.h"
 
 /*

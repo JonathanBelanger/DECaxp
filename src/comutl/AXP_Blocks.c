@@ -28,6 +28,7 @@
  *	Initially written.
  *
  */
+#include "AXP_Configure.h"
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
 
@@ -130,6 +131,15 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 						cpu->fqEFreelist[cpu->fqEFlEnd++] = ii;
 						AXP_INIT_CQENTRY(cpu->fqEntries[ii].header, cpu->fq);
 						cpu->fqEntries[ii].index = ii;
+					}
+
+					/*
+					 * Initialize the Load and Store Queues.
+					 */
+					for (ii = 0; ii < AXP_MBOX_QUEUE_LEN; ii++)
+					{
+						cpu->lq[ii].state = NotInUse;
+						cpu->sq[ii].state = NotInUse;
 					}
 				}
 			}

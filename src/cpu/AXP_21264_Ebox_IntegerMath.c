@@ -30,7 +30,8 @@
  *
  * TODO:	We need to look at handling Arithmetic Traps.
  */
- #include "AXP_21264_Ebox_IntegerMath.h"
+#include "AXP_Configure.h"
+#include "AXP_21264_Ebox_IntegerMath.h"
 
 /*
  * AXP_multiply64

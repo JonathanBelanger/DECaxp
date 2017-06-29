@@ -24,6 +24,7 @@
  *	V01.000		22-Jun-2017	Jonathan D. Belanger
  *	Initially written, migrated from the AXP_21264_Ibox.c module.
  */
+#include "AXP_Configure.h"
 #include "AXP_21264_Ibox_Icache.h"
 
 /*

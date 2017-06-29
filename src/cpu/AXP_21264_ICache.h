@@ -36,9 +36,6 @@
 #ifndef _AXP_21264_ICACHE_DEFS_
 #define _AXP_21264_ICACHE_DEFS_
 
-#include "AXP_Utility.h"
-#include "AXP_21264_Instructions.h"
-
 #define AXP_2_WAY_ICACHE		2
 #define AXP_ICACHE_OFFSET_BITS	6
 #define AXP_ICACHE_INDEX		9

@@ -36,8 +36,6 @@
 #ifndef _AXP_21264_IPR_DEFS_
 #define _AXP_21264_IPR_DEFS_
 
-#include "AXP_Base_CPU.h"
-
 /*
  * The following definitions are for the Ebox IPRs
  *

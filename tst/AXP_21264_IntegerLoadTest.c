@@ -23,7 +23,9 @@
  *	V01.000		26-Jun-2017	Jonathan D. Belanger
  *	Initially written.
  */
+#include "AXP_Utility.h"
 #include "AXP_Blocks.h"
+#include "AXP_21264_Instructions.h"
 #include "AXP_21264_CPU.h"
 #include "AXP_21264_Ebox_LoadStore.h"
 /*
@@ -63,7 +65,7 @@ int main()
 	instr.aSrc1 = 5;		// Architectural Register (R05).
 	instr.src1 = 40;		// Physical Register.
 	instr.aSrc2 = 31;		// Architectural Register (R31).
-	instr.src3 = 72;		// Physical Register.
+	instr.src2 = 72;		// Physical Register.
 	instr.aDest = 29;		// Architectural Register (R29).
 	instr.dest = 31;		// Physical Register.
 	instr.type_hint_index = 0;
@@ -71,7 +73,7 @@ int main()
 	instr.len_stall = 0;
 	instr.lockFlagPending = false;
 	instr.clearLockPending = false;
-	instr.useLieteral = false;
+	instr.useLiteral = false;
 	instr.branchPredict = false;
 	instr.literal = 0;
 	instr.src2v.r.uq = 0;	// Only 2 registers (Ra = destination, Rb = source)
@@ -89,14 +91,14 @@ int main()
 	if(fp != NULL)
 	{
 		printf("\n Processing Test Data File: %s\n", fileName);
-		fscanf(fp, inputFmt, &ldahAddress, &ldaAffress, &instr.displacement, &instr.src1v.r.uq);
+		fscanf(fp, inputFmt, &ldahAddress, &ldaAddress, &instr.displacement, &instr.src1v.r.uq);
 		while ((feof(fp) == 0) && (pass == true))
 		{
 
 			/*
 			 * Sign extend the displacement.
 			 */
-			instr->displacement |=
+			instr.displacement |=
 				(instr->displacement & 0x0000000000008000ll ? 0xffffffffffff0000 : 0);
 			instr.state = Executing;
 			testCnt++;
@@ -108,7 +110,7 @@ int main()
 					if (instr.destv.r.uq != ldaAddress)
 					{
 						printf("LDA failed: Rbv = 0x%016xll, disp = 0x%04x, Rav = 0x%016xll (expected: 0x%016xll)\n",
-							instr.r.src1v.uq, instr.displacement, instr.destv.r.uq, ldaAddress);
+							instr.src1v.r.uq, instr.displacement, instr.destv.r.uq, ldaAddress);
 						pass = false;
 					}
 					else
@@ -140,8 +142,8 @@ int main()
 					{
 						if (instr.destv.r.uq != ldaAddress)
 						{
-							printf("LDAH failed: Rbv = 0x%016xll, disp = 0x%04x, Rav = 0x%016xll (expected: 0x%016xll)\n",
-								instr.r.src1v.uq, instr.displacement, instr.destv.r.uq, ldaAddress);
+							printf("LDAH failed: Rbv = 0x%016llx, disp = 0x%04llx, Rav = 0x%016llx (expected: 0x%016llx)\n",
+								instr.src1v.r.uq, instr.displacement, instr.destv.r.uq, ldaAddress);
 							pass = false;
 						}
 					else
@@ -162,7 +164,7 @@ int main()
 					pass = false;
 				}
 			}
-			fscanf(fp, inputFmt, &ldahAddress, &ldaAffress, &instr.displacement, &instr.src1v.r.uq);
+			fscanf(fp, inputFmt, &ldahAddress, &ldaAddress, &instr.displacement, &instr.src1v.r.uq);
 		}	// while (!EOF && passing)
 		fclose(fp);
 	}

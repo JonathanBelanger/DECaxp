@@ -27,6 +27,4 @@
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
 
-#include "AXP_21264_CPU.h"
-
 #endif /* _AXP_21264_CBOX_DEFS_ */

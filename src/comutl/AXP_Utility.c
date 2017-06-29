@@ -28,6 +28,7 @@
  *	Added an LRU function to return the least recently used set with a
  *	particular index.
  */
+#include "AXP_Configure.h"
 #include "AXP_Utility.h"
 
 /*

@@ -27,9 +27,9 @@
 #ifndef _AXP_21264_IBOX_INSTRUCTION_INFO_DEFS_
 #define _AXP_21264_IBOX_INSTRUCTION_INFO_DEFS_
 
-#include "AXP_Blocks.h"
-#include "AXP_21264_CPU.h"
-#include "AXP_21264_ICache.h"
+#include "AXP_Utility.h"
+#include "AXP_21264_Instructions.h"
+#include "AXP_21264_RegisterRenaming.h"
 #include "AXP_21264_Ibox.h"
 
 /*

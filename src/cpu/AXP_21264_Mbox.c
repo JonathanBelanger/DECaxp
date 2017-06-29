@@ -24,6 +24,7 @@
  *	V01.000		19-Jun-2017	Jonathan D. Belanger
  *	Initially written.
  */
+#include "AXP_Configure.h"
 #include "AXP_21264_Mbox.h"
 
 /*

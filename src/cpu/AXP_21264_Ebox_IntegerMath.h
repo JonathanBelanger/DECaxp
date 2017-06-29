@@ -27,7 +27,11 @@
 #ifndef _AXP_21264_EBOX_INTEGER_MATH_
 #define _AXP_21264_EBOX_INTEGER_MATH_
 
+#include "AXP_Utility.h"
+#include "AXP_Base_CPU.h"
+#include "AXP_21264_Instructions.h"
 #include "AXP_21264_CPU.h"
+#include "AXP_21264_Mbox.h"
 
 #endif	/* _AXP_21264_EBOX_INTEGER_MATH_ */
  
