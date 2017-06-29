@@ -892,7 +892,7 @@ AXP_EXCEPTIONS AXP_SUBL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 }
 
 /*
- * AXP_SUBLQ
+ * AXP_SUBQ
  *	This function implements the Integer Arithmetic Quadword Subtract without
  *	overflow instruction of the Alpha AXP processor.
  *
