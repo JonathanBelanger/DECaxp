@@ -27,7 +27,8 @@
 #include "AXP_Blocks.h"
 #include "AXP_21264_Instructions.h"
 #include "AXP_21264_CPU.h"
-#include "AXP_21264_Ebox_LoadStore.h"
+#include "AXP_21264_Ebox.h"
+
 /*
  * main
  *	This function is compiled in when unit testing.  It exercises the branch
