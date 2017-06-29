@@ -30,6 +30,12 @@
 #include "AXP_21264_Ebox.h"
 
 /*
+ * TODO:	We need to run a series of tests to utilize the various
+ *		load/store instructions at various parts of the load/store
+ *		process.  We can use the existing test data.
+ */
+
+/*
  * main
  *	This function is compiled in when unit testing.  It exercises the branch
  *	prediction code, and should be somewhat extensive.
