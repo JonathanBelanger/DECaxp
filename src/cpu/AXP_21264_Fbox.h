@@ -96,13 +96,6 @@ typedef struct
 #define AXP_F_FRAC_SHIFT		16
 #define AXP_F_HIGH_MASK			0x0000003f
 #define AXP_F_LOW_MASK			0xffff0000
-#define AXP_F_UNPACK(val, sign, exp, frac, ret)								\
-		sign = ((val) & AXP_R_SIGN) >> AXP_F_SIGN_REG;						\
-		exp = ((val) & AXP_R_EXP) >> AXP_F_EXP_SHIFT_IN;					\
-		frac = ((val) & AXP_R_FRAC);										\
-		if ((exp == 0) && ((val) != 0))										\
-			ret = ArithmeticTraps;											\
-		frac = (frac | AXP_R_HB) << AXP_R_GUARD;
 #define AXP_G_BIAS				0x400
 #define AXP_G_SIGN_EXP_HI_MASK	0x000000000000ffffll
 #define AXP_G_MID_HIGH_MASK		0x00000000ffff0000ll
@@ -119,6 +112,7 @@ typedef struct
 #define AXP_S_FRAC_SHIFT		29
 
 #define AXP_T_BIAS				0x3ff
+#define AXP_D_BIAS				0x80
 
 #define AXP_R_SIGN				0x8000000000000000ll
 #define AXP_R_SIGN_SHIFT_IN		63
