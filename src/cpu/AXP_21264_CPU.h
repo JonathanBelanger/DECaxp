@@ -345,7 +345,7 @@ typedef struct
 	 * Since the floating-point execution unit only has 1 cluster, there is 
 	 * just 1 set of 72 registers.
 	 */
-	u64					pf[AXP_FP_PHYS_REG];
+	AXP_FP_REGISTER		pf[AXP_FP_PHYS_REG];
 	u32					pfFreeList[AXP_F_FREELIST_SIZE];
 	u32					pfFlStart;
 	u32					pfFlEnd;

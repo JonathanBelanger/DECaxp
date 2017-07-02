@@ -798,6 +798,19 @@ static void AXP_RenameRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *decodedInst
 			decodedInstr->dest = cpu->pfFreeList[cpu->pfFlStart];
 
 			/*
+			 * An optimization for later floating-point instructions is when
+			 * a floating point value is converted from memory format to
+			 * register format, that it gets preparsed.  For the VAX floating
+			 * point formats, there is not too much to preparse, but for IEEE
+			 * floating point formats, there are some bit patterns that have
+			 * specific meaning.  Rather than constantly re-interpretting these
+			 * bit patterns, we'll do it in the load instructions (the other
+			 * floating point instructions will determine a results bit
+			 * pattern's meaning.  For now, we always assume a VAX F Float.
+			 */
+			decodedInstr->destv.fp.fpc = VAXfFloat;
+
+			/*
 			 * If the register for the previous mapping was not R31 or F31
 			 * then, put this previous register back on the free-list, then
 			 * make the previous mapping the current one and the current

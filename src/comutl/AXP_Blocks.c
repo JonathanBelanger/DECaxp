@@ -68,6 +68,7 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 						cpu->pfMap[ii].pr = ii;
 						cpu->pfMap[ii].prevPr = AXP_UNMAPPED_REG;
 						cpu->pfState[ii] = Valid;
+						cpu->pf[ii].fpc = FPInteger;
 					}
 
 					/*
@@ -99,6 +100,7 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 						{
 							cpu->pfState[ii] = Free;
 							cpu->pfFreeList[cpu->pfFlEnd++] = ii;
+							cpu->pf[ii].fpc = FPInteger;
 						}
 					}
 

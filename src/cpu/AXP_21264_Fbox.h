@@ -28,6 +28,8 @@
 #define _AXP_21264_FBOX_DEFS_
 
 #include "AXP_Utility.h"
+#include "AXP_Base_CPU.h"
+#include "AXP_21264_CPU.h"
 
 /*
  * Ebox Instruction Prototypes
@@ -86,58 +88,47 @@ typedef struct
 	 u32	res : 21;
 } AXP_FP_FUNC;
 
-#define AXP_F_BIAS				0x080
-#define AXP_F_SIGN				0x00008000
-#define AXP_F_SIGN_MEM			15
-#define AXP_F_SIGN_REG			63
-#define AXP_F_SIGN_SHIFT		(AXP_F_SIGN_REG - AXP_F_SIGN_MEM)
-#define AXP_F_EXP_SHIFT_IN		52
-#define AXP_F_EXP_SHIFT_OUT		7
-#define AXP_F_FRAC_SHIFT		16
-#define AXP_F_HIGH_MASK			0x0000003f
-#define AXP_F_LOW_MASK			0xffff0000
-#define AXP_G_BIAS				0x400
-#define AXP_G_SIGN_EXP_HI_MASK	0x000000000000ffffll
-#define AXP_G_MID_HIGH_MASK		0x00000000ffff0000ll
-#define AXP_G_MID_LOW_MASK		0x0000ffff00000000ll
-#define AXP_G_LOW_MASK			0xffff000000000000ll
+#define AXP_FP_ADD		0x0
+#define AXP_FP_SUB		0x1
+#define AXP_FP_MUL		0x2
+#define AXP_FP_DIV		0x3
+#define AXP_FP_ITOFST	0x4
+#define AXP_FP_CMPEQ	0x5
+#define AXP_FP_CMPLT	0x6
+#define AXP_FP_CMPLE	0x7
+#define AXP_FP_SQRTST	0xb
+#define AXP_FP_CTVS		0xc
+#define AXP_FP_CVTT		0xe
+#define AXP_FP_CVTQ		0xf
 
-#define AXP_S_BIAS				0x7f
-#define AXP_S_NAN				0xff
-#define AXP_S_SIGN				0x800000000
-#define AXP_S_SIGN_SHIFT		(63 - 31)
-#define AXP_S_EXP_SHIFT_IN		52
-#define AXP_S_EXP_SHIFT_OUT		23
-#define AXP_S_FRAC_MASK			0x007fffff
-#define AXP_S_FRAC_SHIFT		29
+#define AXP_FP_S		0x0
+#define AXP_FP_T		0x2
+#define AXP_FP_Q		0x3
 
-#define AXP_T_BIAS				0x3ff
-#define AXP_D_BIAS				0x80
+#define AXP_FP_CHOPPED	0x0
+#define AXP_FP_MINUS_INF 0x1
+#define AXP_FP_NORMAL	0x2
+#define AXP_FP_DYNAMIC	0x3
+
+#define AXP_FP_IMPRECISE 0x0
+#define AXP_FP_UNDERFLOW 0x1
 
 #define AXP_R_SIGN				0x8000000000000000ll
-#define AXP_R_SIGN_SHIFT_IN		63
-#define AXP_R_SIGN_EXP_HI_MASK	0xffff000000000000ll
-#define AXP_R_MID_HIGH_MASK		0x0000ffff00000000ll
-#define AXP_R_MID_LOW_MASK		0x00000000ffff0000ll
-#define AXP_R_LOW_MASK			0x000000000000ffffll
-#define AXP_R_EXP_SHIFT_IN		52
-#define AXP_R_NAN				0x7ff
-#define AXP_R_EXP				0x7ff0000000000000ll
-#define AXP_R_SIGN_EXP			(AXP_R_SIGN|AXP_R_EXP)
+#define AXP_R_NM 				0x8000000000000000ll	/* normalized */
 #define AXP_R_HB				0x0010000000000000ll
-#define AXP_R_FRAC				0x000fffffffffffffll
-#define AXP_R_FRAC_MASK			0x000fffffe0000000ll
-#define AXP_R_HIGH_F_MASK		0x000fe00000000000ll
-#define AXP_R_LOW_F_MASK		0x00001fffe0000000ll
-#define AXP_R_HIGH_F_SHIFT		45
-#define AXP_R_LOW_F_SHIFT		18
-#define AXP_R_LONG_SIGN			0x00000000c0000000ll
-#define AXP_R_LONG_FRAC			0x000000003fffffffll
-#define AXP_R_LSIGN_SHIFT_OUT	32
-#define AXP_R_LFRAC_SHIFT_OUT	29
+#define AXP_R_NAN				0x7ff
+#define AXP_R_GUARD				(63 - 52)
 #define AXP_R_LONG_SMALL		0xffffffff00000000ll
 #define AXP_R_LONG_LARGE		0x000000007fffffffll
-#define AXP_R_GUARD				(AXP_R_SIGN_SHIFT_IN - AXP_R_EXP_SHIFT_IN)
+#define AXP_R_CQ_NAN			0xfff8000000000000ll
+#define AXP_F_BIAS				0x080
+#define AXP_G_BIAS				0x400
+#define AXP_S_BIAS				0x7f
+#define AXP_S_NAN				0xff
+#define AXP_T_BIAS				0x3ff
+#define AXP_D_BIAS				0x80
+#define AXP_D_GUARD				(63 - 55)
+
 #define AXP_R_Q2L_OVERFLOW(val)	(((val) & AXP_R_SIGN) ? 					\
 								 ((val) < AXP_R_LONG_SMALL) :				\
 								 ((val) > AXP_R_LONG_LARGE))

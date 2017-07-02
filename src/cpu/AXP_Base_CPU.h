@@ -256,13 +256,33 @@ typedef union
 	AXP_Q_REGISTER_CVT	qCvt;
 	AXP_Q_REGISTER_V	qV;
 	AXP_Q_REGISTER_V_CVT qVCvt;
+} AXP_FP_FORMATS;
+
+typedef enum
+{
+	FPInteger,
+	VAXfFloat,
+	VAXgFloat,
+	VAXdFloat,
+	IEEEFloat,
+	IEEEZero,
+	IEEEFinite,
+	IEEEDenormal,
+	IEEEInfinity,
+	IEEENotANumber
+} AXP_FP_CONTENT;
+
+typedef struct
+{
+	AXP_FP_FORMATS		fpv;
+	AXP_FP_CONTENT		fpc;
 } AXP_FP_REGISTER;
 
 typedef union
 {
 	AXP_INT_REGISTER	r;
 	AXP_FP_REGISTER		fp;
-} AXP_REGISTER;;
+} AXP_REGISTER;
 
 /*
  * Floating-Point Memory Format Definitions
