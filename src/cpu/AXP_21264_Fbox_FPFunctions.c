@@ -29,11 +29,28 @@
 #include "AXP_21264_Fbox_FPFunctions.h"
 
 /*
- * TODO:	We're going to need the unpacking code, but a highly watered down
- * 			version.
+ * fpNormalize
+ * 	This function is called to normalize a floating point value.  Both VAX and
+ * 	IEEE floating point values are stored in memory and registers with a
+ * 	"hidden" bit.  This hidden bit is always a 1 and represents a value that is
+ * 	1.xxxx-Eyyyy where xxxx is the fraction and yyyy is the exponent.  Since the
+ * 	'1' is always there and always 1, then there is no reason to store it.
+ * 	This allows for greater precision in the fraction.  This code shifts the
+ * 	fraction and adjusts the exponent to this "normalized" form.
+ *
+ * Input Parameter:
+ * 	r:
+ * 		A pointer to the structure containing the fraction and exponent to be
+ * 		normalized.
+ *
+ * Output Parameter:
+ * 	r:
+ * 		A pointer to the structure to receive the normalized result.
+ *
+ * Return Value:
+ * 	None.
  */
-
-void fpNormalize(AXP_FP_REGISTER *r)
+void AXP_FPNormalize(AXP_FP_UNPACKED *r)
 {
 	i32			ii;
 	static u64	normmask[5] =
@@ -46,34 +63,346 @@ void fpNormalize(AXP_FP_REGISTER *r)
 	};
 	static i32	normtab[6] = { 1, 2, 4, 8, 16, 32};
 
-	r->fpv.t.fraction &= AXP_LOW_QUAD;
-	if (r->fpv.t.fraction == 0)
+	r->fraction &= AXP_LOW_QUAD;
+	if (r->fraction == 0)
 	{
-		r->fpv.t.sign = r->fpv.t.exponent = 0;
+		r->sign = r->exponent = 0;
 		return;
 	}
 
 	/*
 	 * Normalize the the register.
-	 *
-	 * TODO:	fraction comes out of a 52-bit field.  The and below masks out
-	 * 			the 64th bit.  We need to check into this.
 	 */
-	while ((r->fpv.t.fraction & AXP_R_NM) == 0)
+	while ((r->fraction & AXP_R_NM) == 0)
 	{
 		for (ii = 0; ii < 5; ii++)
 		{
-			if (r->fpv.t.fraction & normmask[ii])
+			if (r->fraction & normmask[ii])
 				break;
 		}
-		r->fpv.t.fraction <<= normtab[ii];
-		r->fpv.t.exponent -= normtab[ii];
+		r->fraction <<= normtab[ii];
+		r->exponent -= normtab[ii];
 	}
 	return;
 }
 
 /*
- * AXP_FP_AddSub
+ * AXP_FPUnpack
+ * 	This function is called to unpack a floating point value from register
+ * 	format into a structure used to perform the operation that has been
+ * 	requested.  The code also interprets the various bit patterns to determine
+ * 	what is encoded in the FP value (Zero, NaN, Dirty Zero, Finite, ...).
+ * 	There is an equivalent 'pack' function to store the floating point result
+ * 	back into the register.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the Alpha AXP 21264 CPU structure.  We utilize the
+ * 		Floating-Point Control Register (FPRC) to determine how to handle
+ * 		denormalized values (to zero or not).
+ * 	s:
+ * 		A source FP register value to be "unpacked".
+ * 	ieee:
+ * 		An indicator of whether we are unpacking an IEEE float or not (VAX
+ * 		float).
+ *
+ * Output Parameters:
+ * 	r:
+ * 		A structure to receive the various components of the floating point
+ * 		value (sign, exponent, fraction and encoding).
+ *
+ * Return Value:
+ * 	NoException:	The value in the FP register was formed properly, or
+ * 					quietly adjusted.
+ * 	IllegalOperand:	The value in the FP register had 'reserved' or invalid
+ * 					format.
+ */
+AXP_EXCEPTIONS AXP_FPUnpack(
+		AXP_21264_CPU *cpu,
+		AXP_FP_UNPACKED *r,
+		AXP_FP_REGISTER s,
+		bool ieee)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+
+	/*
+	 * Unpack the various fields into the unpacked structure.  We'll re-pack
+	 * the results later.
+	 */
+	r->sign = s.fpr.sign;
+	r->exponent = s.fpr.exponent;
+	r->fraction = s.fpr.fraction;
+	r->encoding = AXP_FP_ENCODE(r, ieee);
+
+	/*
+	 * Now we do some checking and correcting.
+	 */
+	if (ieee == false)
+	{
+		if (r->exponent == 0)
+		{
+			if (s.uq != 0)
+				retVal = IllegalOperand;
+			r->fraction = r->sign = 0;
+		}
+	}
+	else
+	{
+		if (r->exponent == 0)
+		{
+			if (r->fraction != 0)
+			{
+				if (cpu->fpcr.dnz == 1)
+				{
+					r->fraction = 0;
+					r->encoding = Zero;
+				}
+				else
+				{
+					r->fraction <<= AXP_R_GUARD;
+					AXP_FPNormalize(r);
+					r->encoding = Denormal;
+					retVal = IllegalOperand;
+				}
+			}
+		}
+		else if (r->encoding == NotANumber)
+		{
+			if (r->fraction & AXP_R_CQ_NAN)
+				retVal = IllegalOperand;
+		}
+	}
+
+	/*
+	 * If we are still in good shape, insert the hidden bit.
+	 */
+	if (retVal == NoException)
+		r->fraction = (r->fraction | AXP_R_HB) << AXP_R_GUARD;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_VAXPack
+ * 	This function is called to take the results of the executed calculation
+ * 	and store them into the destination value, in register format, rounding as
+ * 	necessary.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A pointer containing the decoded instruction information.
+ * 	r:
+ * 		A pointer to the execution results.
+ * 	dt:
+ * 		A value indicating the data type being packed.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The destination value within the structure is set with the results.
+ *
+ * Return Value:
+ * 	NoException:
+ * 		Normal successful completion.
+ * 	ArithmeticTraps:
+ * 		We got either an Overflow or Underflow.
+ */
+AXP_EXCEPTIONS AXP_VAXPack(
+		AXP_INSTRUCTION *instr,
+		AXP_FP_UNPACKED *r,
+		u32 dt)
+{
+	AXP_EXCEPTIONS		retVal = NoException;
+	AXP_FP_FUNC			fpFunc;
+	u32					roundMode;
+	static const u64	roundBit[] = {AXP_F_RND, AXP_G_RND};
+	static const i32	expMax[] =
+		{
+			AXP_G_BIAS - AXP_F_BIAS + AXP_F_EXP_MASK,
+			AXP_G_EXP_MASK
+		};
+	static const i32	expMin[] = { AXP_G_BIAS - AXP_F_BIAS, 0};
+
+	fpFunc = *((AXP_FP_FUNC *) &instr->function);
+	roundMode = fpFunc.rnd;
+
+	/*
+	 * If the fraction not zero, then we may need to perform some rounding.
+	 */
+	if (r->fraction != 0)
+	{
+
+		/*
+		 * If the instruction rounding mode is not Chopped, then we need to do
+		 * some explicit rounding.
+		 */
+		if (roundMode != AXP_FP_CHOPPED)
+		{
+			r->fraction += roundBit[dt];
+			if ((r->fraction & AXP_R_NM) == 0)
+			{
+				r->fraction = (r->fraction >> 1) | AXP_R_NM;
+				r->exponent++;
+			}
+		}
+
+		/*
+		 * If the exponent is larger than the maximum.  Set it to the maximum
+		 * and return an exception.
+		 */
+		if (r->exponent > expMax[dt])
+		{
+			r->exponent = expMax[dt];
+			retVal = ArithmeticTraps;
+		}
+
+		/*
+		 * If the exponent is smaller than the minimum.  Set it to the minimum
+		 * and, if the instruction indicates return an exception.
+		 */
+		if (r->exponent < expMin[dt])
+		{
+			r->exponent = 0;
+			r->fraction = 0;
+			if (fpFunc.trp == AXP_FP_TRP_V)
+				retVal = ArithmeticTraps;
+		}
+	}
+	else
+		r->exponent = 0;
+
+	/*
+	 * Move the various components into the destination value for the
+	 * instruction (register format).
+	 */
+	instr->destv.fp.fpr.sign = r->sign;
+	instr->destv.fp.fpr.exponent = r->exponent;
+	instr->destv.fp.fpr.fraction = (r->fraction >> AXP_R_GUARD) & AXP_R_FRAC;
+
+	/*
+	 * If this is for a VAX F float, zero out the low part of the fraction.
+	 */
+	if (dt == AXP_F_DT)
+		instr->destv.fp.fCvt.zero = 0;
+	return(retVal);
+}
+
+/*
+ * AXP_IEEEPack
+ * 	This function is called to take the results of the executed calculation
+ * 	and store them into the destination value, in register format, rounding as
+ * 	necessary.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer containing the decoded instruction information.
+ * 	r:
+ * 		A pointer to the execution results.
+ * 	dt:
+ * 		A value indicating the data type being packed.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The destination value within the structure is set with the results.
+ *
+ * Return Value:
+ * 	NoException:
+ * 		Normal successful completion.
+ * 	ArithmeticTraps:
+ * 		We got an Overflow, Underflow, or InExact result.
+ */
+
+AXP_EXCEPTIONS AXP_IEEEPack(
+		AXP_21264_CPU *cpu,
+		AXP_INSTRUCTION *instr,
+		AXP_FP_UNPACKED *r,
+		u32 dt)
+{
+	AXP_EXCEPTIONS		retVal = NoException;
+	AXP_FP_FUNC			fpFunc;
+	static const u64	stdRound[] = {AXP_S_RND, AXP_T_RND};
+	static const u64	infRound[] = {AXP_S_INF, AXP_T_INF};
+	static const i32	expMax[] =
+		{
+			AXP_T_BIAS - AXP_S_BIAS + AXP_S_EXP_MASK - 1,
+			AXP_T_EXP_MASK - 1
+		};
+	static const i32	expMin[] = { AXP_T_BIAS - AXP_S_BIAS, 0};
+	u64					roundAdd, roundBits;
+	u32					roundMode;
+
+	fpFunc = *((AXP_FP_FUNC *) &instr->function);
+	roundMode = fpFunc.rnd;
+	if (r->fraction != 0)
+	{
+		if (roundMode == AXP_FP_DYNAMIC)
+			roundMode = cpu->fpcr.dyn;
+		roundBits = r->fraction & infRound[dt];
+		if (roundMode == AXP_FP_NORMAL)
+			roundAdd = stdRound[dt];
+		else if (((roundMode == AXP_FP_PLUS_INF) && (r->sign == 0)) ||
+				 ((roundMode == AXP_FP_MINUS_INF) && (r->sign == 1)))
+			roundAdd = infRound[dt];
+		else
+			roundAdd = 0;
+		r->fraction += roundAdd;
+		if ((r->fraction & AXP_R_NM) == 0)
+		{
+			r->fraction = (r->fraction & 1) | AXP_R_NM;
+			r->exponent++;
+		}
+		if (roundBits != 0)
+			retVal = ArithmeticTraps;
+		if (r->exponent > expMax[dt])
+		{
+			retVal = ArithmeticTraps;
+			if (roundAdd != 0)
+			{
+				instr->destv.fp.uq = (r->sign == 1) ? AXP_R_MINF : AXP_R_PINF;
+				if (dt == AXP_S_DT)
+					instr->destv.fp.sCvt.zero = 0;
+				return(retVal);
+			}
+			instr->destv.fp.uq = (r->sign == 1) ? AXP_R_MMAX : AXP_R_PMAX;
+			if (dt == AXP_S_DT)
+				instr->destv.fp.sCvt.zero = 0;
+			return(retVal);
+		}
+		if (r->exponent <= expMin[dt])
+		{
+			retVal = ArithmeticTraps;
+			r->sign = 0;
+			r->exponent = 0;
+			r->fraction = 0;
+		}
+	}
+	else
+		r->exponent = 0;
+
+	/*
+	 * Move the various components into the destination value for the
+	 * instruction (register format).
+	 */
+	instr->destv.fp.fpr.sign = r->sign;
+	instr->destv.fp.fpr.exponent = r->exponent;
+	instr->destv.fp.fpr.fraction = (r->fraction >> AXP_R_GUARD) & AXP_R_FRAC;
+	if ((roundMode == AXP_FP_NORMAL) && (roundBits == stdRound[dt]))
+		instr->destv.fp.uq &= ~1;
+
+	/*
+	 * If this is for a IEEE S float, zero out the low part of the fraction.
+	 */
+	if (dt == AXP_S_DT)
+		instr->destv.fp.sCvt.zero = 0;
+	return(retVal);
+}
+/*
+ * AXP_FPAddSub
  *	This function implements the VAX F/G and IEEE S/T Format Floating-Point
  *	ADD/SUB instructions of the Alpha AXP processor.
  *
@@ -92,24 +421,19 @@ void fpNormalize(AXP_FP_REGISTER *r)
  * Return Value:
  * 	An exception indicator.
  */
-AXP_EXCEPTIONS AXP_FP_AddSub(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+AXP_EXCEPTIONS AXP_FPAddSub(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr, u32 dt)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
-	AXP_FP_REGISTER	*a = &instr->src1v.fp;
-	AXP_FP_REGISTER	*b = &instr->src2v.fp;
+	AXP_FP_UNPACKED	a;
+	AXP_FP_UNPACKED b;
 	i32				expDiff;
-	u32				sticky, roundMode;
+	u32				roundMode;
 	bool			subtraction = false;
 	bool			ieee = false;
 
 	/*
-	 * First we need to unpack the sign, exponent and fraction.  We do this
-	 * based on the specific instruction, which indicates the type of floating-
-	 * point value we are dealing.  We also can determine if this is an Add or
-	 * Subtract call.
-	 *
-	 * TODO:	This can be cleaned up quite a bit and simplified.  Same goes
-	 *			at the end of this function.
+	 * First we need to determine whether we are processing a add or
+	 * subtraction, and IEEE Floating or VAX Floating.
 	 */
 	if (instr->opcode == FLTV)
 	{
@@ -123,469 +447,175 @@ AXP_EXCEPTIONS AXP_FP_AddSub(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		if ((instr->function == AXP_FUNC_SUBS) ||
 			(instr->function == AXP_FUNC_SUBT))
 				subtraction = true;
-
-		/*
-		 * If the IEEE value indicates Denormal, then the exponent is zero and
-		 * he fraction is not.  If the denormals are to be set to zero, then
-		 * do so.  Otherwise, we have an invalid operation.
-		 */
-		if (a->fpc == IEEEDenormal)
-		{
-			if (cpu->fpcr.dnz == 1)
-			{
-				a->fpv.t.fraction = 0;
-				a->fpc = IEEEZero;
-			}
-			else
-			{
-				// TODO: The following code may not work as expected.  Fraction
-				//		 is 52-bits and doing this shift may not do what we
-				//		 expect.
-				a->fpv.t.fraction <<= AXP_R_GUARD;
-				fpNormalize(&a);
-				retVal = IllegalOperand;
-			}
-		}
-		if (b->fpc == IEEEDenormal)
-		{
-			if (cpu->fpcr.dnz == 1)
-			{
-				b->fpv.t.fraction = 0;
-				b->fpc = IEEEZero;
-			}
-			else
-			{
-				// TODO: The following code may not work as expected.  Fraction
-				//		 is 52-bits and doing this shift may not do what we
-				//		 expect.
-				b->fpv.t.fraction <<= AXP_R_GUARD;
-				fpNormalize(&b);
-				retVal = IllegalOperand;
-			}
-		}
 	}
 
 	/*
-	 * If unpacking indicated that we had IEEE NaN (Not a Number), then
-	 * return a quiet value.
+	 * Unpack the input registers for processing.
 	 */
-	if (a->fpc == IEEENotANumber)
-	{
-		instr->destv.fp.fpv.uq = a->fpv.uq | AXP_QUIET_NAN;
-		instr->destv.fp.fpc = IEEENotANumber;
-		return(retVal);
-	}
-	else if (b->fpc == IEEENotANumber)
-	{
-		instr->destv.fp.fpv.uq = b->fpv.uq | AXP_QUIET_NAN;
-		instr->destv.fp.fpc = IEEENotANumber;
-		return(retVal);
-	}
+	retVal = AXP_FPUnpack(cpu, &a, instr->src1v.fp, ieee);
+	if (retVal == NoException)
+		retVal = AXP_FPUnpack(cpu, &b, instr->src2v.fp, ieee);
 
 	/*
-	 * OK, we have what appear to be good numbers with which to play.
+	 * We only proceed if some exception was not detected.
 	 */
-	else
+	if (retVal == NoException)
 	{
 
 		/*
-		 * If this is a subtraction, then we invert the sign of the second
-		 * operand (+ --> -/- --> +).
-		 */
+		 * If unpacking indicated that we had IEEE NaN (Not a Number), then
+	 	 * return a quiet value.
+	 	 */
+		if (a.encoding == NotANumber)
+		{
+			instr->destv.fp.uq = instr->src1v.fp.uq | AXP_R_QNAN;
+			return(retVal);
+		}
+		else if (b.encoding == NotANumber)
+		{
+			instr->destv.fp.uq = instr->src2v.fp.uq | AXP_R_QNAN;
+			return(retVal);
+		}
+
+		/*
+	 	 * If this is a subtraction, then we invert the sign of the second
+	 	 * operand (+ --> -/- --> +).
+	 	 */
 		if (subtraction == true)
-			b->fpv.t.sign ^= 1;
+			b.sign ^= 1;
 
 		/*
-		 * If b is infinite, we have some work to do.
+		 * We need to handle some IEEE specifics here.
 		 */
-		if (b->fpc == IEEEInfinity)
+		if (ieee == true)
 		{
 
 			/*
-			 * If a is infinite and we are effectively doing a subtraction,
-			 * then we have an invalid operation.  We'll set the result of the
-			 * subtraction to a canonical quiet NaN value and set the return
-			 * value of this function to Invalid Operation.
-			 */
-			if ((a->fpc == IEEEInfinity) &&
-				((a->fpv.t.sign ^ b->fpv.t.sign) != 0))
-			{
-				instr->destv.fp.fpv.uq = AXP_R_CQ_NAN;	// canonical quiet NaN
-				instr->destv.fp.fpc = IEEENotANumber;
-				retVal = IllegalOperand;
-			}
-			else
-			{
-				instr->destv.fp.fpv.uq = b->fpv.uq;
-				if (subtraction == true)
-					instr->destv.fp.fpv.t.sign ^= 1;
-				instr->destv.fp.fpc = b->fpc;
-			}
-			return(retVal);
-		}
-
-		/*
-		 * If a is infinite, set it as the result and return to the caller.
-		 */
-		if (a->fpc == IEEEInfinity)
-		{
-			instr->destv.fp.fpv.uq = a->fpv.uq;
-			instr->destv.fp.fpc = a->fpc;
-			return(retVal);
-		}
-
-		/*
-		 * TODO:	We need to extract the round mode from the instruction's
-		 *			function value.
-		 */
-		roundMode = ((AXP_FP_FUNC) instr->function).rnd;
-		if (roundMode == AXP_FP_DYNAMIC)
-			roundMode = cpu->fpcr.dyn;
-
-		/*
-		 * If a's exponent is zero, then a is set equal to b.
-		 */
-		if (((a->fpv.t.exponent == 0) && (a->fpc != IEEEZero)) ||
-			(a->fpc == IEEEZero))
-		{
-			if (b->fpc != IEEEZero)
-				a = &b;
-			else if (a->fpv.t.sign != b->fpv.t.sign)
-				a->fpv.t.sign = (roundMode == AXP_FP_MINUS_INF) ? 1 : 0;
-		}
-
-		/*
-		 * If b's exponent is not zero, then we have some calculating to do.
-		 */
-		else if (((b->fpv.t.exponent != 0) && (b->fpc != IEEEZero)) ||
-				 (b->fpc != IEEEZero))
-		{
-
-			/*
-			 * If the absolute value of a is less than b, then swap a and b.
-			 */
-			if ((a->fpv.t.exponent < b->fpv.t.exponent) ||
-				((a->fpv.t.exponent == b->fpv.t.exponent) &&
-				 (a->fpv.t.fraction < b->fpv.t.fraction)))
-			{
-				a = &instr->src2v.fp;
-				b = &instr->src1v.fp;
-			}
-
-			/*
-			 * Get the difference between the two exponents.  This is, potentially,
-			 * for the denormalization of b.
-			 */
-			expDiff = a->fpv.t.exponent - b->fpv.t.exponent;
-
-			/*
-			 * For some reason, the following code is outside the "Subtraction"
-			 * section for IEEE, but inside for VAX.  Not exactly sure why that
-			 * is, or even if it makes a difference.  For now, I'll do either
-			 * depending upon whether I'm dealing with IEEE or VAX floating
-			 * point value.
-			 */
-			if (ieee == true)
+		 	 * If 'b' is infinite, we have some work to do.
+		 	 */
+			if (b.encoding == Infinity)
 			{
 
 				/*
-				 * If the difference is greater than (63), then we need to
-				 * retain the sticky bit.
-				 */
-				if (expDiff > 63)
-					b->fpv.t.fraction = 1;
-
-				/*
-				 * If the exponents for a and b are different, then we need to
-				 * denormalize b by shifting it the same amount.
-				 */
-				else if (expDiff != 0) 
+			 	 * If 'a' is infinite and we are effectively doing a
+			 	 * subtraction, then we have an invalid operation.  We'll set
+			 	 * the result of the subtraction to a canonical quiet NaN value
+			 	 * and set the return value of this function to Invalid
+			 	 * Operation.
+			 	 */
+				if ((a.encoding == Infinity) && ((a.sign ^ b.sign) != 0))
 				{
-
-					/*
-					 * We need to retain the lost bits, and the shift b's
-					 * fraction, or'ing back in these bits.
-					 */
-					sticky = (b->fpv.t.fraction << (64 - expDiff)) ? 1: 0;
-					b->fpv.t.fraction = (b.fpv.t.fraction >> expDiff) | sticky;
-				}
-			}
-
-			/*
-			 * If the signs don't match, but one is set, then we are performing
-			 * a Subtraction.
-			 */
-			if ((a->fpv.t.sign ^ b->fpv.t.sign) != 0)
-			{
-
-				/*
-				 * We did the following code above for IEEE.  Only do it here
-				 * if we are not IEEE (or are VAX).
-				 */
-				if (ieee == false)
-				{
-
-					/*
-					 * If the difference is greater than (63), then we need to
-					 * retain the sticky bit.
-					 */
-					if (expDiff > 63)
-						b->fpv.t.fraction = 1;
-
-					/*
-					 * If the exponents for a and b are different, then we need to
-					 * denormalize b by shifting it the same amount.
-					 */
-					else if (expDiff != 0) 
-					{
-
-						/*
-						 * We need to retain the lost bits, and the shift b's
-						 * fraction, or'ing back in these bits.
-						 */
-						sticky = (b->fpv.t.fraction << (64 - expDiff)) ? 1: 0;
-						b->fpv.t.fraction = (b.fpv.t.fraction >> expDiff) | sticky;
-					}
-				}
-
-				/*
-				 * Normalize the result.
-				 */
-				if (ieee == false)
-					fpNormalize(&a);
-				else if (a->fpv.t.fraction == 0)
-				{
-					a->fpv.t.exponent = 0;
-					a->fpv.t.sign = (roundMode == AXP_FP_MINUS_INF) ? 1 : 0;
+					instr->destv.fp.uq = AXP_R_CQ_NAN;	// canonical quiet NaN
+					retVal = IllegalOperand;
 				}
 				else
-					fpNormalize(&a);
+				{
+					instr->destv.fp.uq = instr->src2v.fp.uq;
+					if (subtraction == true)
+						instr->destv.fp.fpr.sign ^= 1;
+				}
+				return(retVal);
 			}
 
 			/*
-			 * OK, the signs match, so we are performing a Add.
-			 */
+		 	 * If 'a' is infinite, set it as the result and return to the
+		 	 * caller.
+		 	 */
+			if (a.encoding == Infinity)
+			{
+				instr->destv.fp.uq = instr->src1v.fp.uq;
+				return(retVal);
+			}
+
+			/*
+		 	 * Extract the rounding mode indicated in the instruction function.
+		 	 * If it indicates 'dynamic', then get the rounding mode out of the
+		 	 * FPCR.
+		 	 */
+			roundMode = ((AXP_FP_FUNC *) &instr->function)->rnd;
+			if (roundMode == AXP_FP_DYNAMIC)
+				roundMode = cpu->fpcr.dyn;
+		}
+
+		/*
+		 * If 'a' is zero (for VAX), then set 'a' equal to 'b'.
+		 */
+		if ((a.encoding == Zero) || (a.exponent == 0))
+		{
+			if ((ieee == false) ||
+				((ieee == true) && (b.encoding != Zero)))
+				a = b;
+			else if ((ieee == true) && (a.sign != b.sign))
+				a.sign = (roundMode == AXP_FP_MINUS_INF) ? 1 : 0;
+		}
+		else if (((ieee == false) && (b.exponent != 0)) ||
+				 ((ieee == true) && (b.encoding != Zero)))
+		{
+			if ((a.exponent < b.exponent) ||
+				((a.exponent == b.exponent) &&
+				 (a.fraction < b.fraction)))
+			{
+				AXP_FP_UNPACKED t;
+
+				t = a;
+				a = b;
+				b = t;
+			}
+			expDiff = a.exponent - b.exponent;
+			if ((ieee == true) || ((a.sign ^ b.sign) != 0))
+			{
+				if (expDiff > 63)
+					b.fraction = 1;
+				else if (expDiff != 0)
+				{
+					u32		sticky;
+
+					sticky = (b.fraction << (64 - expDiff)) != 0 ? 1 : 0;
+					b.fraction = (b.fraction >> expDiff) | sticky;
+				}
+			}
+			else if ((ieee = false) && ((a.sign ^ b.sign) == 0))
+			{
+				if (expDiff > 63)
+					b.fraction = 0;
+				else if (expDiff != 0)
+					b.fraction >>= expDiff;
+			}
+			if ((a.sign ^ b.sign) != 0)
+			{
+				a.fraction -= b.fraction;
+				if ((ieee == true) && (a.fraction == 0))
+				{
+					a.exponent = 0;
+					a.sign = (roundMode == AXP_FP_MINUS_INF) ? 1 : 0;
+				}
+				else
+					AXP_FPNormalize(&a);
+			}
 			else
 			{
-
-				/*
-				 * We did the following code above for IEEE (but different).
-				 * Only do it here if we are not IEEE (or are VAX).
-				 */
-				if (ieee == false)
+				a.fraction += b.fraction;
+				if (a.fraction < b.fraction)
 				{
-
-					/*
-					 * A difference of exponents greater than 63 means that b's
-					 * fraction goes to zero.
-					 */
-					if (expDiff > 63)
-						b->fpv.t.fraction = 0;
-
-					/*
-					 * A non-zero differnce, means that we have to shift b to
-					 * compensate for this difference (so the exponents can
-					 * have the same value.
-					 */
-					else if (expDiff != 0)
-						b->fpv.t.fraction >>= expDiff;
-				}
-
-				/*
-				 * Perform the operation (in this case it is a subtraction).
-				 */
-				a->fpv.t.fraction += b->fpv.t.fraction;
-
-				/*
-				 * If a is less than b, then we need to perform a shift and
-				 * carry.  There is also no need to normalize the result,
-				 * because it already will be.
-				 *
-				 * TODO:	This code does not look correct.  How are we
-				 * 			supposed to handle these "special" values.
-				 */
-				if (a->fpv.t.fraction < b->fpv.t.fraction)
-				{
-					a->fpv.t.fraction =
-						0x8000000000000000ll | (a->fpv.t.fraction >> 1);
-					a->fpv.t.exponent += 1;
+					a.fraction =
+						AXP_R_NM | (a.fraction >> 1) | (a.fraction & 1);
+					a.exponent++;
 				}
 			}
 		}
 
 		/*
-		 * OK, we now need to pack the sign, exponent, and fraction back into
-		 * their appropriate places, with the appropriate lengths in register
-		 * format.
+		 * OK, we are finally done here.  Go and repack the fraction back into
+		 * register format.
 		 */
-		instr->destv.fp.fpv = a->fpv;
-		if (a->fpv.t.exponent == AXP_R_NAN)
-		{
-			if (a->fpv.t.fraction == 0)
-				instr->destv.fp.fpc = IEEENotANumber;
-			else
-				instr->destv.fp.fpc = IEEEInfinity;
-		}
-		else if (a->fpv.t.exponent == 0)
-		{
-			if (a->fpv.t.fraction == 0)
-				instr->destv.fp.fpc = IEEEZero;
-			else
-				instr->destv.fp.fpc = IEEEDenormal;
-		}
+		if (ieee == true)
+			retVal = AXP_IEEEPack(cpu, instr, &a, dt);
 		else
-			instr->destv.fp.fpc = IEEEFinite;
+			retVal = AXP_VAXPack(instr, &a, dt);
 	}
-
-	/*
-	 * TODO: Need to perform rounding functionality.
-	 */
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
-}
-
-/* Round and pack
-   Much of the treachery of the IEEE standard is buried here
-   - Rounding modes (chopped, +infinity, nearest, -infinity)
-   - Inexact (set if there are any rounding bits, regardless of rounding)
-   - Overflow (result is infinite if rounded, max if not)
-   - Underflow (no denorms!)
-
-   Underflow handling is particularly complicated
-   - Result is always 0
-   - UNF and INE are always set in FPCR
-   - If /U is set,
-     o If /S is clear, trap
-     o If /S is set, UNFD is set, but UNFZ is clear, ignore UNFD and
-       trap, because the hardware cannot produce denormals
-     o If /S is set, UNFD is set, and UNFZ is set, do not trap
-   - If /SUI is set, and INED is clear, trap */
-/*
- * TODO:	The below code needs to be adjusted for this application.  We need
- * 			the rounding and unpacking (though the unpacking has not been
- * 			written, yet).
- */
-typedef struct
-{
-    u32	sign;
-    i32	exp;
-    u64	frac;
-} UFP;
-#define FPR_V_SIGN      63
-#define I_GETFRND(p)	(p)
-#define FPCR_GETFRND(p)	(p)
-#define TRAP_SWC        0x001                           /* software completion */
-#define TRAP_INV        0x002                           /* invalid operand */
-#define TRAP_DZE        0x004                           /* divide by zero */
-#define TRAP_OVF        0x008                           /* overflow */
-#define TRAP_UNF        0x010                           /* underflow */
-#define TRAP_INE        0x020                           /* inexact */
-#define TRAP_IOV        0x040                           /* integer overflow */
-#define TRAP_SUMM_RW 0x07F
-#define UF_SRND         0x0000008000000000              /* S normal round */
-#define UF_SINF         0x000000FFFFFFFFFF              /* S infinity round */
-#define UF_TRND         0x0000000000000400              /* T normal round */
-#define UF_TINF 0x00000000000007FF /* T infinity round */
-#define S_BIAS 0x7F
-#define T_BIAS 0x3FF
-#define S_M_EXP 0xFF
-#define T_M_EXP 0x7FF
-#define  I_FRND_C       0                               /* chopped */
-#define  I_FRND_M       1                               /* to minus inf */
-#define  I_FRND_N       2                               /* normal */
-#define  I_FRND_D       3                               /* dynamic */
-#define  I_FRND_P       3                               /* in FPCR: plus inf */
-#define FPCR_IOV        0x02000000                      /* integer overflow */
-#define FPCR_INE        0x01000000                      /* inexact */
-#define FPCR_UNF        0x00800000                      /* underflow */
-#define FPCR_OVF        0x00400000                      /* overflow */
-#define FPCR_DZE        0x00200000                      /* div by zero */
-#define FPCR_INV        0x00100000                      /* invalid operation */
-#define FPCR_OVFD       0x00080000                      /* overflow disable */
-#define FPCR_DZED       0x00040000                      /* div by zero disable */
-#define FPCR_INVD       0x00020000                      /* invalid op disable */
-#define FPCR_DNZ        0x00010000                      /* denormal to zero */
-#define FPCR_DNOD       0x00008000                      /* denormal disable */
-#define FPCR_RAZ        0x00007FFF                      /* zero */
-#define FPCR_SUM        0x80000000                      /* summary */
-#define FPCR_INED       0x40000000                      /* inexact disable */
-#define FPCR_UNFD       0x20000000                      /* underflow disable */
-#define FPCR_UNDZ 0x10000000 /* underflow to 0 */
-#define QNAN            0x0008000000000000ll              /* quiet NaN flag */
-#define CQNAN           0xFFF8000000000000ll              /* canonical quiet NaN */
-#define FPZERO          0x0000000000000000ll              /* plus zero (fp) */
-#define FMZERO          0x8000000000000000ll              /* minus zero (fp) */
-#define FPINF           0x7FF0000000000000ll              /* plus infinity (fp) */
-#define FMINF           0xFFF0000000000000ll              /* minus infinity (fp) */
-#define FPMAX           0x7FEFFFFFFFFFFFFFll              /* plus MAX (fp) */
-#define FMMAX           0xFFEFFFFFFFFFFFFFll              /* minus MAX (fp) */
-#define IPMAX           0x7FFFFFFFFFFFFFFFll              /* plus MAX (int) */
-#define IMMAX           0x8000000000000000ll              /* minus MAX (int) */
-#define M64				FMMAX
-#define UF_NM 0x8000000000000000 /* normalized */
-#define I_FTRP (I_M_FTRP << I_V_FTRP)
-#define FPR_V_EXP 52
-#define  I_F_VAXRSV     0x4800                          /* VAX reserved */
-#define  I_FTRP_V       0x2000                          /* /V trap */
-#define  I_FTRP_U       0x2000                          /* /U trap */
-#define  I_FTRP_S       0x8000                          /* /S trap */
-#define  I_FTRP_SUI     0xE000                          /* /SUI trap */
-#define  I_FTRP_SVI     0xE000                          /* /SVI trap */
-#define FPR_GUARD (63 - FPR_V_EXP)
-#define FPR_FRAC 0x000FFFFFFFFFFFFFll
-
-u64 ieee_rpack (UFP *r, u32 ir, u32 dp)
-{
-	static const u64 stdrnd[2] = { UF_SRND, UF_TRND };
-	static const u64 infrnd[2] = { UF_SINF, UF_TINF };
-	static const i32 expmax[2] = { T_BIAS - S_BIAS + S_M_EXP - 1, T_M_EXP - 1 };
-	static const i32 expmin[2] = { T_BIAS - S_BIAS, 0 };
-	u64 rndadd, rndbits, res, fpcr;
-	u32 rndm;
-
-	if (r->frac == 0)                                       /* result 0? */
-		return ((u64) r->sign << FPR_V_SIGN);
-	rndm = I_GETFRND (ir);                                  /* inst round mode */
-	if (rndm == I_FRND_D)
-		rndm = FPCR_GETFRND (fpcr);       /* dynamic? use FPCR */
-	rndbits = r->frac & infrnd[dp];                         /* isolate round bits */
-	if (rndm == I_FRND_N)
-		rndadd = stdrnd[dp];              /* round to nearest? */
-	else if (((rndm == I_FRND_P) && !r->sign) ||            /* round to inf and */
-			 ((rndm == I_FRND_M) && r->sign))                    /* right sign? */
-		rndadd = infrnd[dp];
-	else
-		rndadd = 0;
-	r->frac = (r->frac + rndadd) & M64;                     /* round */
-	if ((r->frac & UF_NM) == 0)
-	{                           /* carry out? */
-		r->frac = (r->frac >> 1) | UF_NM;                   /* renormalize */
-		r->exp = r->exp + 1;
-    }
-	if (rndbits)                                            /* inexact? */
-		ieee_trap(TRAP_INE, Q_SUI (ir), FPCR_INED, ir);    /* set inexact */
-	if (r->exp > expmax[dp])
-	{                              /* ovflo? */
-		ieee_trap (TRAP_OVF, 1, FPCR_OVFD, ir);             /* set overflow trap */
-		ieee_trap (TRAP_INE, Q_SUI (ir), FPCR_INED, ir);    /* set inexact */
-		if (rndadd)                                         /* did we round? */
-			return (r->sign? FMINF: FPINF);                 /* return infinity */
-		return (r->sign? FMMAX: FPMAX);                     /* no, return max */
-    }
-	if (r->exp <= expmin[dp])
-	{                             /* underflow? */
-		ieee_trap (TRAP_UNF, ir & I_FTRP_U,                 /* set underflow trap */
-				(fpcr & FPCR_UNDZ)? FPCR_UNFD: 0, ir);          /* (dsbl only if UNFZ set) */
-		ieee_trap (TRAP_INE, Q_SUI (ir), FPCR_INED, ir);    /* set inexact */
-		return(0);                                           /* underflow to +0 */
-    }
-	res = (((u64) r->sign) << FPR_V_SIGN) |            /* form result */
-			(((u64) r->exp) << FPR_V_EXP) |
-			((r->frac >> FPR_GUARD) & FPR_FRAC);
-	if ((rndm == I_FRND_N) && (rndbits == stdrnd[dp]))      /* nearest and halfway? */
-		res = res & ~1;                                     /* clear lo bit */
-	return(res);
 }

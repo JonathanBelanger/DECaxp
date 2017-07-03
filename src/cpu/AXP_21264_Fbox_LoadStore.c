@@ -110,11 +110,6 @@ AXP_EXCEPTIONS AXP_LDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->loadCompletion = AXP_LDF_COMPL;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -147,7 +142,7 @@ void AXP_LDF_COMPL(AXP_INSTRUCTION *instr)
 	 * destination value location.  Get it out of there so that we can convert
 	 * it from memory format to register format.
 	 */
-	tmp = instr->destv.fp.fpv.uq;
+	tmp = instr->destv.fp.uq;
 
 	/*
 	 * Extract the exponent, then expand it from 8-bits to 11-bits.
@@ -160,12 +155,16 @@ void AXP_LDF_COMPL(AXP_INSTRUCTION *instr)
 	 * Now put everything back together, but this time in register format and
 	 * 64-bits.
 	 */
-	instr->destv.fp.fpv.fCvt.sign = tmpF->sign;
-	instr->destv.fp.fpv.fCvt.exponent = exp;
-	instr->destv.fp.fpv.fCvt.fractionHigh = tmpF->fractionHigh;
-	instr->destv.fp.fpv.fCvt.fractionLow = tmpF->fractionLow;
-	instr->destv.fp.fpv.fCvt.zero = 0;
-	instr->destv.fp.fpc = VAXfFloat;
+	instr->destv.fp.fCvt.sign = tmpF->sign;
+	instr->destv.fp.fCvt.exponent = exp;
+	instr->destv.fp.fCvt.fractionHigh = tmpF->fractionHigh;
+	instr->destv.fp.fCvt.fractionLow = tmpF->fractionLow;
+	instr->destv.fp.fCvt.zero = 0;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller.
@@ -215,11 +214,6 @@ AXP_EXCEPTIONS AXP_LDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->loadCompletion = AXP_LDG_COMPL;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -252,19 +246,23 @@ void AXP_LDG_COMPL(AXP_INSTRUCTION *instr)
 	 * destination value location.  Get it out of there so that we can convert
 	 * it from memory format to register format.
 	 */
-	tmp = instr->destv.fp.fpv.uq;
+	tmp = instr->destv.fp.uq;
 
 	/*
 	 * Now put everything back together, but this time in register format and
 	 * 64-bits.
 	 */
-	instr->destv.fp.fpv.gCvt.sign = tmpG->sign;
-	instr->destv.fp.fpv.gCvt.exponent = tmpG->exponent;
-	instr->destv.fp.fpv.gCvt.fractionHigh = tmpG->fractionHigh;
-	instr->destv.fp.fpv.gCvt.fractionMidHigh = tmpG->fractionMidHigh;
-	instr->destv.fp.fpv.gCvt.fractionMidLow = tmpG->fractionMidLow;
-	instr->destv.fp.fpv.gCvt.fractionLow = tmpG->fractionLow;
-	instr->destv.fp.fpc = VAXgFloat;
+	instr->destv.fp.gCvt.sign = tmpG->sign;
+	instr->destv.fp.gCvt.exponent = tmpG->exponent;
+	instr->destv.fp.gCvt.fractionHigh = tmpG->fractionHigh;
+	instr->destv.fp.gCvt.fractionMidHigh = tmpG->fractionMidHigh;
+	instr->destv.fp.gCvt.fractionMidLow = tmpG->fractionMidLow;
+	instr->destv.fp.gCvt.fractionLow = tmpG->fractionLow;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -327,13 +325,7 @@ AXP_EXCEPTIONS AXP_LDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Get the value out of memory (it'll be in memory format and is 32-bits)
 	 */
 	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u32));
-	if (instr->aDest != AXP_UNMAPPED_REG)
-		instr->loadCompletion = AXP_LDS_COMPL;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+	instr->loadCompletion = AXP_LDS_COMPL;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -368,7 +360,7 @@ void AXP_LDS_COMPL(AXP_INSTRUCTION *instr)
 	 * destination value location.  Get it out of there so that we can convert
 	 * it from memory format to register format.
 	 */
-	tmp = instr->destv.fp.fpv.uq;
+	tmp = instr->destv.fp.uq;
 
 	/*
 	 * Extract the exponent, then expand it from 8-bits to 11-bits.
@@ -380,39 +372,18 @@ void AXP_LDS_COMPL(AXP_INSTRUCTION *instr)
 		exp += (AXP_T_BIAS - AXP_S_BIAS);
 
 	/*
-	 * The HRM indicates that when the exponent(E) equals 255 (0xff) we may
-	 * have either NaN or Infinity.  This is the value of E prior to being
-	 * expanded from 8 to 11 bits.  We're going to use the expanded value.
-	 *
-	 * NOTE: We do not look at any of the FPCR bits here.  They will be
-	 * 		 considered within the ADD, SUB, MUL, DIV, SQRT, CMPxx and CVT
-	 * 		 instructions.
-	 */
-	if (exp == AXP_R_NAN)
-	{
-		if (tmpS->fraction == 0)
-			instr->destv.fp.fpc = IEEENotANumber;
-		else
-			instr->destv.fp.fpc = IEEEInfinity;
-	}
-	else if (exp == 0)
-	{
-		if (tmpS->fraction == 0)
-			instr->destv.fp.fpc = IEEEZero;
-		else
-			instr->destv.fp.fpc = IEEEDenormal;
-	}
-	else
-		instr->destv.fp.fpc = IEEEFinite;
-
-	/*
 	 * Now put everything back together, but this time in register format and
 	 * 64-bits.
 	 */
-	instr->destv.fp.fpv.sCvt.sign = tmpS->sign;
-	instr->destv.fp.fpv.sCvt.exponent = exp;
-	instr->destv.fp.fpv.sCvt.fraction = tmpS->fraction;
-	instr->destv.fp.fpv.sCvt.zero = 0;
+	instr->destv.fp.sCvt.sign = tmpS->sign;
+	instr->destv.fp.sCvt.exponent = exp;
+	instr->destv.fp.sCvt.fraction = tmpS->fraction;
+	instr->destv.fp.sCvt.zero = 0;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -462,16 +433,10 @@ AXP_EXCEPTIONS AXP_LDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
 
 	/*
-	 * Get the value out of memory (it'll be in memory format and is 32-bits)
+	 * Get the value out of memory (it'll be in memory format and is 64-bits)
 	 */
 	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va, sizeof(u32));
-	if (instr->aDest != AXP_UNMAPPED_REG)
-		instr->loadCompletion = AXP_LDT_COMPL;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+	instr->loadCompletion = AXP_LDT_COMPL;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -485,9 +450,7 @@ AXP_EXCEPTIONS AXP_LDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  *	instruction of the Alpha AXP processor.
  *
  * Input Parameters:
- * 	instr:
- * 		A pointer to a structure containing the information needed to execute
- * 		this instruction.
+ * 	None.
  *
  * Output Parameters:
  * 	instr:
@@ -500,30 +463,9 @@ void AXP_LDT_COMPL(AXP_INSTRUCTION *instr)
 {
 
 	/*
-	 * The HRM indicates that when the exponent(E) equals 255 (0xff) we may
-	 * have either NaN or Infinity.  This is the value of E prior to being
-	 * expanded from 8 to 11 bits.  We're going to use the expanded value.
-	 *
-	 * NOTE: We do not look at any of the FPCR bits here.  They will be
-	 * 		 considered within the ADD, SUB, MUL, DIV, SQRT, CMPxx and CVT
-	 * 		 instructions.
+	 * Indicate that the instruction is ready to be retired.
 	 */
-	if (instr->destv.fp.fpv.t.exponent == AXP_R_NAN)
-	{
-		if (instr->destv.fp.fpv.t.fraction == 0)
-			instr->destv.fp.fpc = IEEENotANumber;
-		else
-			instr->destv.fp.fpc = IEEEInfinity;
-	}
-	else if (instr->destv.fp.fpv.t.exponent == 0)
-	{
-		if (instr->destv.fp.fpv.t.fraction == 0)
-			instr->destv.fp.fpc = IEEEZero;
-		else
-			instr->destv.fp.fpc = IEEEDenormal;
-	}
-	else
-		instr->destv.fp.fpc = IEEEFinite;
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -574,7 +516,7 @@ AXP_EXCEPTIONS AXP_STF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Extract the exponent, then compress it from 11-bits to 8-bits.
 	 */
-	exp = instr->src1v.fp.fpv.f.exponent;
+	exp = instr->src1v.fp.fCvt.exponent;
 	if (exp != 0)
 		exp = exp - AXP_G_BIAS + AXP_F_BIAS;
 
@@ -582,10 +524,10 @@ AXP_EXCEPTIONS AXP_STF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Now put everything back together, but this time in memory format and
 	 * 32-bits.
 	 */
-	tmpF->sign = instr->src1v.fp.fpv.fCvt.sign;
+	tmpF->sign = instr->src1v.fp.fCvt.sign;
 	tmpF->exponent = exp;
-	tmpF->fractionHigh = instr->src1v.fp.fpv.fCvt.fractionHigh;
-	tmpF->fractionLow = instr->src1v.fp.fpv.fCvt.fractionLow;
+	tmpF->fractionHigh = instr->src1v.fp.fCvt.fractionHigh;
+	tmpF->fractionLow = instr->src1v.fp.fCvt.fractionLow;
 
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
@@ -640,12 +582,12 @@ AXP_EXCEPTIONS AXP_STG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Now put everything back together, but this time in memory format and
 	 * 64-bits.
 	 */
-	tmpG->sign = instr->src1v.fp.fpv.gCvt.sign;
-	tmpG->exponent = instr->src1v.fp.fpv.gCvt.exponent;
-	tmpG->fractionHigh = instr->src1v.fp.fpv.gCvt.fractionHigh;
-	tmpG->fractionMidHigh = instr->src1v.fp.fpv.gCvt.fractionMidHigh;
-	tmpG->fractionMidLow = instr->src1v.fp.fpv.gCvt.fractionMidLow;
-	tmpG->fractionLow = instr->src1v.fp.fpv.gCvt.fractionLow;
+	tmpG->sign = instr->src1v.fp.gCvt.sign;
+	tmpG->exponent = instr->src1v.fp.gCvt.exponent;
+	tmpG->fractionHigh = instr->src1v.fp.gCvt.fractionHigh;
+	tmpG->fractionMidHigh = instr->src1v.fp.gCvt.fractionMidHigh;
+	tmpG->fractionMidLow = instr->src1v.fp.gCvt.fractionMidLow;
+	tmpG->fractionLow = instr->src1v.fp.gCvt.fractionLow;
 
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
@@ -707,7 +649,7 @@ AXP_EXCEPTIONS AXP_STS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Extract the exponent, then compress it from 11-bits to 8-bits.
 	 */
-	exp = instr->src1v.fp.fpv.sCvt.exponent;
+	exp = instr->src1v.fp.sCvt.exponent;
 	if (exp == AXP_R_NAN)
 		exp = AXP_S_NAN;
 	else if (exp != 0)
@@ -717,9 +659,9 @@ AXP_EXCEPTIONS AXP_STS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Now put everything back together, but this time in memory format and
 	 * 32-bits.
 	 */
-	tmpS->sign = instr->src1v.fp.fpv.sCvt.sign;
+	tmpS->sign = instr->src1v.fp.sCvt.sign;
 	tmpS->exponent = exp;
-	tmpS->fraction = instr->src1v.fp.fpv.sCvt.fraction;
+	tmpS->fraction = instr->src1v.fp.sCvt.fraction;
 
 	// TODO: Check to see if we had an access fault (Access Violation)
 	// TODO: Check to see if we had an alignment fault (Alignment)
@@ -779,8 +721,8 @@ AXP_EXCEPTIONS AXP_STT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 							instr,
 							instr->slot,
 							va,
-							instr->src1v.fp.fpv.uq,
-							sizeof(instr->src1v.fp.fpv.uq));
+							instr->src1v.fp.uq,
+							sizeof(instr->src1v.fp.uq));
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

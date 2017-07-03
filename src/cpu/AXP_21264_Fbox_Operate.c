@@ -53,9 +53,8 @@ AXP_EXCEPTIONS AXP_CPYS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv.fp.fpv.s = instr->src2v.fp.fpv.s;
-	instr->destv.fp.fpv.s.sign = instr->src1v.fp.fpv.s.sign;
-	instr->destv.fp.fpc = instr->src2v.fp.fpc;
+	instr->destv.fp.fpr = instr->src2v.fp.fpr;
+	instr->destv.fp.fpr.sign = instr->src1v.fp.fpr.sign;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -94,40 +93,9 @@ AXP_EXCEPTIONS AXP_CPYSE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv.fp.fpv.s.sign = instr->src1v.fp.fpv.s.sign;
-	instr->destv.fp.fpv.s.exponent = instr->src1v.fp.fpv.s.exponent;
-	instr->destv.fp.fpv.s.fraction = instr->src2v.fp.fpv.s.fraction;
-	instr->destv.fp.fpc = instr->src1v.fp.fpc;
-
-	/*
-	 * If we move one of the VAX floats, we are done here.  Otherwise, we are
-	 * dealing with IEEE floats, which have certain bit patters representing
-	 * certain specific values.  For these, since we copied the exponent from
-	 * the first operand and the fraction from the second, the specific value
-	 * based on the bit pattern may have changed.
-	 */
-
-	if ((instr->destv.fp.fpc != VAXfFloat) ||
-		(instr->destv.fp.fpc != VAXgFloat) ||
-		(instr->destv.fp.fpc != VAXdFloat))
-	{
-		if (instr->destv.fp.fpv.s.exponent == AXP_R_NAN)
-		{
-			if (instr->destv.fp.fpv.s.fraction == 0)
-				instr->destv.fp.fpc = IEEENotANumber;
-			else
-				instr->destv.fp.fpc = IEEEInfinity;
-		}
-		else if (instr->destv.fp.fpv.s.exponent == 0)
-		{
-			if (instr->destv.fp.fpv.s.fraction == 0)
-				instr->destv.fp.fpc = IEEEZero;
-			else
-				instr->destv.fp.fpc = IEEEDenormal;
-		}
-		else
-			instr->destv.fp.fpc = IEEEFinite;
-	}
+	instr->destv.fp.fpr.sign = instr->src1v.fp.fpr.sign;
+	instr->destv.fp.fpr.exponent = instr->src1v.fp.fpr.exponent;
+	instr->destv.fp.fpr.fraction = instr->src2v.fp.fpr.fraction;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -166,9 +134,8 @@ AXP_EXCEPTIONS AXP_CPYSN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv.fp.fpv.s = instr->src2v.fp.fpv.s;
-	instr->destv.fp.fpv.s.sign = ~instr->src1v.fp.fpv.s.sign;
-	instr->destv.fp.fpc = instr->src2v.fp.fpc;
+	instr->destv.fp.fpr = instr->src2v.fp.fpr;
+	instr->destv.fp.fpr.sign = ~instr->src1v.fp.fpr.sign;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -207,10 +174,9 @@ AXP_EXCEPTIONS AXP_CVTLQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv.fp.fpv.qCvt.sign = instr->src1v.fp.fpv.l.sign;
-	instr->destv.fp.fpv.qCvt.integerHigh = instr->src1v.fp.fpv.l.integerHigh;
-	instr->destv.fp.fpv.qCvt.integerLow = instr->src1v.fp.fpv.l.integerLow;
-	instr->destv.fp.fpc = instr->src1v.fp.fpc;
+	instr->destv.fp.qCvt.sign = instr->src1v.fp.l.sign;
+	instr->destv.fp.qCvt.integerHigh = instr->src1v.fp.l.integerHigh;
+	instr->destv.fp.qCvt.integerLow = instr->src1v.fp.l.integerLow;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -249,13 +215,11 @@ AXP_EXCEPTIONS AXP_CVTQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv.fp.fpv.l.sign = instr->src1v.fp.fpv.qVCvt.sign;
-	instr->destv.fp.fpv.l.integerHigh =
-		instr->src1v.fp.fpv.qVCvt.integerLowHigh;
-	instr->destv.fp.fpv.l.zero_2 = 0;
-	instr->destv.fp.fpv.l.integerLow = instr->src1v.fp.fpv.qVCvt.integerLowLow;
-	instr->destv.fp.fpv.l.zero_1 = 0;
-	instr->destv.fp.fpc = instr->src1v.fp.fpc;
+	instr->destv.fp.l.sign = instr->src1v.fp.qVCvt.sign;
+	instr->destv.fp.l.integerHigh = instr->src1v.fp.qVCvt.integerLowHigh;
+	instr->destv.fp.l.zero_2 = 0;
+	instr->destv.fp.l.integerLow = instr->src1v.fp.qVCvt.integerLowLow;
+	instr->destv.fp.l.zero_1 = 0;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -295,15 +259,13 @@ AXP_EXCEPTIONS AXP_CVTQL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv.fp.fpv.l.sign = instr->src1v.fp.fpv.qVCvt.sign;
-	instr->destv.fp.fpv.l.integerHigh =
-		instr->src1v.fp.fpv.qVCvt.integerLowHigh;
-	instr->destv.fp.fpv.l.zero_2 = 0;
-	instr->destv.fp.fpv.l.integerLow = instr->src1v.fp.fpv.qVCvt.integerLowLow;
-	instr->destv.fp.fpv.l.zero_1 = 0;
-	instr->destv.fp.fpc = instr->src1v.fp.fpc;
+	instr->destv.fp.l.sign = instr->src1v.fp.qVCvt.sign;
+	instr->destv.fp.l.integerHigh = instr->src1v.fp.qVCvt.integerLowHigh;
+	instr->destv.fp.l.zero_2 = 0;
+	instr->destv.fp.l.integerLow = instr->src1v.fp.qVCvt.integerLowLow;
+	instr->destv.fp.l.zero_1 = 0;
 
-	if (AXP_R_Q2L_OVERFLOW(instr->src1v.fp.fpv.uq))
+	if (AXP_R_Q2L_OVERFLOW(instr->src1v.fp.uq))
 		retVal = ArithmeticTraps;	// IntegerOverflow;
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -344,18 +306,17 @@ AXP_EXCEPTIONS AXP_CVTLQ_SV(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->destv.fp.fpv.l.sign = instr->src1v.fp.fpv.qVCvt.sign;
-	instr->destv.fp.fpv.l.integerHigh = instr->src1v.fp.fpv.qVCvt.integerLowHigh;
-	instr->destv.fp.fpv.l.zero_2 = 0;
-	instr->destv.fp.fpv.l.integerLow = instr->src1v.fp.fpv.qVCvt.integerLowLow;
-	instr->destv.fp.fpv.l.zero_1 = 0;
-	instr->destv.fp.fpc = instr->src1v.fp.fpc;
+	instr->destv.fp.l.sign = instr->src1v.fp.qVCvt.sign;
+	instr->destv.fp.l.integerHigh = instr->src1v.fp.qVCvt.integerLowHigh;
+	instr->destv.fp.l.zero_2 = 0;
+	instr->destv.fp.l.integerLow = instr->src1v.fp.qVCvt.integerLowLow;
+	instr->destv.fp.l.zero_1 = 0;
 
 	/*
 	 * TODO:	We need to understand how software-completion differs from just
 	 *			reporting the exception.
 	 */
-	if (instr->src1v.fp.fpv.qVCvt.integerHigh != 0)
+	if (AXP_R_Q2L_OVERFLOW(instr->src1v.fp.uq))
 		retVal = ArithmeticTraps;	// IntegerOverflow;
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -394,12 +355,9 @@ AXP_EXCEPTIONS AXP_FCMOVEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if ((instr->src1v.fp.fpv.s.exponent == 0) &&
-		(instr->src1v.fp.fpv.s.fraction == 0))
-	{
-		instr->destv.fp.fpv.uq = instr->src2v.fp.fpv.uq;
-		instr->destv.fp.fpc = instr->src2v.fp.fpc;
-	}
+	if ((instr->src1v.fp.fpr.exponent == 0) &&
+		(instr->src1v.fp.fpr.fraction == 0))
+		instr->destv.fp.uq = instr->src2v.fp.uq;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -438,11 +396,8 @@ AXP_EXCEPTIONS AXP_FCMOVGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if (instr->src1v.fp.fpv.uq <= AXP_R_SIGN)
-	{
-		instr->destv.fp.fpv.uq = instr->src2v.fp.fpv.uq;
-		instr->destv.fp.fpc = instr->src1v.fp.fpc;
-	}
+	if (instr->src1v.fp.uq <= AXP_R_SIGN)
+		instr->destv.fp.uq = instr->src2v.fp.uq;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -481,11 +436,8 @@ AXP_EXCEPTIONS AXP_FCMOVGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if ((instr->src1v.fp.fpv.s.sign == 0) && (instr->src1v.fp.fpv.uq != 0))
-	{
-		instr->destv.fp.fpv.uq = instr->src2v.fp.fpv.uq;
-		instr->destv.fp.fpc = instr->src1v.fp.fpc;
-	}
+	if ((instr->src1v.fp.fpr.sign == 0) && (instr->src1v.fp.uq != 0))
+		instr->destv.fp.uq = instr->src2v.fp.uq;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -524,11 +476,8 @@ AXP_EXCEPTIONS AXP_FCMOVLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if ((instr->src1v.fp.fpv.s.sign == 1) || (instr->src1v.fp.fpv.uq == 0))
-	{
-		instr->destv.fp.fpv.uq = instr->src2v.fp.fpv.uq;
-		instr->destv.fp.fpc = instr->src1v.fp.fpc;
-	}
+	if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq == 0))
+		instr->destv.fp.uq = instr->src2v.fp.uq;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -567,11 +516,8 @@ AXP_EXCEPTIONS AXP_FCMOVLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if ((instr->src1v.fp.fpv.s.sign == 1) || (instr->src1v.fp.fpv.uq != 0))
-	{
-		instr->destv.fp.fpv.uq = instr->src2v.fp.fpv.uq;
-		instr->destv.fp.fpc = instr->src1v.fp.fpc;
-	}
+	if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq != 0))
+		instr->destv.fp.uq = instr->src2v.fp.uq;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -610,11 +556,8 @@ AXP_EXCEPTIONS AXP_FCMOVNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	if ((instr->src1v.fp.fpv.uq & ~AXP_R_SIGN) != 0)
-	{
-		instr->destv.fp.fpv.uq = instr->src2v.fp.fpv.uq;
-		instr->destv.fp.fpc = instr->src1v.fp.fpc;
-	}
+	if ((instr->src1v.fp.uq & ~AXP_R_SIGN) != 0)
+		instr->destv.fp.uq = instr->src2v.fp.uq;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -653,8 +596,7 @@ AXP_EXCEPTIONS AXP_MF_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction
 	 */
-	instr->destv.fp.fpv.uq = *(u64 *) &cpu->fpcr;
-	instr->destv.fp.fpc = FPInteger;
+	instr->destv.fp.uq = *((u64 *) &cpu->fpcr);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -696,8 +638,7 @@ AXP_EXCEPTIONS AXP_MT_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * NOTE: The value will actually be moved into the FPCR at the time of
 	 * 		 instruction retirement.
 	 */
-	instr->destv.fp.fpv.uq = instr->src1v.fp.fpv.uq;
-	instr->destv.fp.fpc = FPInteger;
+	instr->destv.fp.uq = instr->src1v.fp.uq;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -709,7 +650,6 @@ AXP_EXCEPTIONS AXP_MT_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	return(NoException);
 }
-#if 0
 /*
  * AXP_ADDF
  *	This function implements the VAX F Format Floating-Point ADD instruction of
@@ -732,66 +672,11 @@ AXP_EXCEPTIONS AXP_MT_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS	retVal = NoException;
-	u64				signA, expA, fracA;
-	u64				signB, expB, fracB;
-
-	AXP_F_UNPACK(instr->src1v, signA, expA, fracA, retVal);
-	AXP_F_UNPACK(instr->src2v, signB, expB, fracB, retVal);
 
 	/*
-	 * TODO:	We need to understand how software-completion differs from just
-	 *			reporting the exception.
+	 * The way this emulator is implemented, there is only one function to
+	 * handle both add and subtract, as well as any of the floating types
+	 * (VAX F, VAX G, IEEE S, and IEEE T).
 	 */
-	if (0)
-		signB ^= 1;                           /* sub? invert b sign */
-	if (expA == 0)
-	{
-		signA = signB;                                  /* s1 = 0? */
-		expA = expB;                                  /* s1 = 0? */
-		fracA = fracB;                                  /* s1 = 0? */
-	}
-	else if (expB)
-	{                                       /* s2 != 0? */
-	    if ((expA < expB) ||                              /* |s1| < |s2|? swap */
-	        ((expA == expB) && (fracA < fracA)))
-	    {
-	    	u64				signT, expT, fracT;
-
-	    	signT = signA;
-	    	expT = expA;
-	    	fracT = fracA;
-	    	signA = signB;
-	    	expA = expB;
-	    	fracA = fracB;
-	    	signB = signT;
-	    	expB = expT;
-	    	fracB = fracT;
-        }
-	    ediff = a.exp - b.exp;                              /* exp diff */
-	    if (a.sign ^ b.sign) {                              /* eff sub? */
-	        if (ediff > 63) b.frac = 1;                     /* >63? retain sticky */
-	        else if (ediff) {                               /* [1,63]? shift */
-	            sticky = ((b.frac << (64 - ediff)) & M64)? 1: 0; /* lost bits */
-	            b.frac = (b.frac >> ediff) | sticky;
-	            }
-	        a.frac = (a.frac - b.frac) & M64;               /* subtract fractions */
-	        vax_norm (&a);                                  /* normalize */
-	        }
-	    else {                                              /* eff add */
-	        if (ediff > 63) b.frac = 0;                     /* >63? b disappears */
-	        else if (ediff) b.frac = b.frac >> ediff;       /* denormalize */
-	        a.frac = (a.frac + b.frac) & M64;               /* add frac */
-	        if (a.frac < b.frac) {                          /* chk for carry */
-	            a.frac = UF_NM | (a.frac >> 1);             /* shift in carry */
-	            a.exp = a.exp + 1;                          /* skip norm */
-	            }
-	        }
-	    }                                                   /* end else if */
-	return vax_rpack (&a, ir, dp); /* round and pack */
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+	return(AXP_FPAddSub(cpu, instr, AXP_F_DT));
 }
-#endif

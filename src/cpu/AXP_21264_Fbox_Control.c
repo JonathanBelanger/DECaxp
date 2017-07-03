@@ -57,8 +57,8 @@ AXP_EXCEPTIONS AXP_FBEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if ((instr->src1v.fp.fpv.s.exponent == 0) &&
-		(instr->src1v.fp.fpv.s.fraction == 0))
+	if ((instr->src1v.fp.fpr.exponent == 0) &&
+		(instr->src1v.fp.fpr.fraction == 0))
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -98,7 +98,7 @@ AXP_EXCEPTIONS AXP_FBGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if (instr->src1v.fp.fpv.uq <= AXP_R_SIGN)
+	if (instr->src1v.fp.uq <= AXP_R_SIGN)
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -138,7 +138,7 @@ AXP_EXCEPTIONS AXP_FBGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if ((instr->src1v.fp.fpv.s.sign == 0) && (instr->src1v.fp.fpv.uq != 0))
+	if ((instr->src1v.fp.fpr.sign == 0) && (instr->src1v.fp.uq != 0))
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -178,7 +178,7 @@ AXP_EXCEPTIONS AXP_FBLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if ((instr->src1v.fp.fpv.s.sign == 1) || (instr->src1v.fp.fpv.uq == 0))
+	if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq == 0))
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -218,7 +218,7 @@ AXP_EXCEPTIONS AXP_FBLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if ((instr->src1v.fp.fpv.s.sign == 1) || (instr->src1v.fp.fpv.uq != 0))
+	if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq != 0))
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*
@@ -258,7 +258,7 @@ AXP_EXCEPTIONS AXP_FBNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	if ((instr->src1v.fp.fpv.uq & ~AXP_R_SIGN) != 0)
+	if ((instr->src1v.fp.uq & ~AXP_R_SIGN) != 0)
 		instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
 	/*

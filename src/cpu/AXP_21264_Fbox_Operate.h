@@ -34,5 +34,6 @@
 #include "AXP_21264_Mbox.h"
 #include "AXP_21264_Ibox.h"
 #include "AXP_21264_Fbox.h"
+#include "AXP_21264_Fbox_FPFunctions.h"
 
 #endif /* _AXP_21264_FBOX_OPERATE_DEFS_ */

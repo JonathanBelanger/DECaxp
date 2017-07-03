@@ -43,6 +43,7 @@
 void AXP_LDBU_COMPL(AXP_INSTRUCTION *);
 void AXP_LDWU_COMPL(AXP_INSTRUCTION *);
 void AXP_LDL_COMPL(AXP_INSTRUCTION *);
+void AXP_LDQ_COMPL(AXP_INSTRUCTION *);
 
 /*
  * IMPLEMENTATION NOTES:
@@ -182,11 +183,6 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->loadCompletion = AXP_LDBU_COMPL;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -216,6 +212,11 @@ void AXP_LDBU_COMPL(AXP_INSTRUCTION *instr)
 	 * The last thing we need to do is zero extend the destination register.
 	 */
 	instr->destv.r.uq = AXP_ZEXT_BYTE(instr->destv.r.uq);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller.
@@ -268,11 +269,6 @@ AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->loadCompletion = AXP_LDWU_COMPL;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -302,6 +298,11 @@ void AXP_LDWU_COMPL(AXP_INSTRUCTION *instr)
 	 * The last thing we need to do is zero extend the destination register.
 	 */
 	instr->destv.r.uq = AXP_ZEXT_WORD(instr->destv.r.uq);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller.
@@ -360,11 +361,6 @@ AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->loadCompletion = AXP_LDL_COMPL;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -394,6 +390,11 @@ void AXP_LDL_COMPL(AXP_INSTRUCTION *instr)
 	 * The last thing we need to do is zero extend the destination register.
 	 */
 	instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller.
@@ -445,12 +446,7 @@ AXP_EXCEPTIONS AXP_LDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
 	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va, sizeof(u64));
-	// No completion function required for quadword loads.
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+	instr->loadCompletion = AXP_LDQ_COMPL;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -493,7 +489,31 @@ AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
 	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va, sizeof(u64));
-	// No completion function required for quadword loads.
+	instr->loadCompletion = AXP_LDQ_COMPL;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_LDQ_COMPL
+ *	This function completes the Load Quadword from Memory to Register
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ * 	None.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_LDQ_COMPL(AXP_INSTRUCTION *instr)
+{
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -501,9 +521,9 @@ AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->state = WaitingRetirement;
 
 	/*
-	 * Return back to the caller with any exception that may have occurred.
+	 * Return back to the caller.
 	 */
-	return(retVal);
+	return;
 }
 
 /*
@@ -576,11 +596,6 @@ AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->loadCompletion = AXP_LDL_COMPL;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -625,12 +640,7 @@ AXP_EXCEPTIONS AXP_LDQ_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	// TODO: Check to see if we had a read fault (Fault on Read)
 	// TODO: Check to see if we had a translation fault (Translation Not Valid)
 	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va, sizeof(u64));
-	// No completion function required for quadword loads.
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+	instr->loadCompletion = AXP_LDQ_COMPL;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.

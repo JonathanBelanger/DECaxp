@@ -110,7 +110,7 @@ typedef struct
 	u64		fraction : 23;
 	u64		exponent : 11;
 	u64		sign : 1;
-} AXP_F_REGISTER;
+} AXP_FPR32_REGISTER;
 
 /*
  * VAX G Float Register format.
@@ -124,12 +124,13 @@ typedef struct
 	u64		exponent : 11;
 	u64		sign : 1;
 } AXP_G_REGISTER_CVT;
+
 typedef struct
 {
 	u64		fraction : 52;
 	u64		exponent : 11;
 	u64		sign : 1;
-} AXP_G_REGISTER;
+} AXP_FPR_REGISTER;
 
 /*
  * VAX D Float Register format.
@@ -143,12 +144,13 @@ typedef struct
 	u64		exponent : 8;
 	u64		sign : 1;
 } AXP_D_REGISTER_CVT;
+
 typedef struct
 {
 	u64		fraction : 55;
 	u64		exponent : 8;
 	u64		sign : 1;
-} AXP_D_REGISTER;
+} AXP_FDR_REGISTER;
 
 /*
  * IEEE S Float Register format.
@@ -160,22 +162,6 @@ typedef struct
 	u64		exponent : 11;
 	u64		sign : 1;
 } AXP_S_REGISTER_CVT;
-typedef struct
-{
-	u64		fraction : 52;
-	u64		exponent : 11;
-	u64		sign : 1;
-} AXP_S_REGISTER;
-
-/*
- * IEEE T Float Register format.
- */
-typedef struct
-{
-	u64		fraction : 52;
-	u64		exponent : 11;
-	u64		sign : 1;
-} AXP_T_REGISTER;
 
 /*
  * IEEE X Float Register format.
@@ -235,47 +221,57 @@ typedef struct
 
 /*
  * Floating-Point Register format.
- * 	Because IEEE X Float occupies 2 registers, it is not put in the following
- * 	union declaration.
+ * 	The following union is used to be able to convert one real to another, from
+ * 	memory format into register format, and vice versa.  There are three
+ * 	formats for floating point registers, with one sub-format.  The three
+ * 	formats are:
+ *
+ * 		1) 1 sign bit, 11 exponent bits, and 52 fraction bits (FPR)
+ * 			a) 1 sign bit, 11 exponent bits, 23 fraction bits, and 29 zero
+ * 			   bits (FPR32)
+ * 		2) 1 sign bit, 8 exponent bits, and 55 fraction bits (FDR)
+ * 		3) 1 sign bit, 15 exponent bits, and 112 fraction bits (IEEE X)
+ *
+ *	The FPR format utilizes the full 64 bit register.  All the floating-point
+ *	operations work primarily off this format, even when performing operations
+ *	on VAX F and IEEE S register formats (FPR32). These two formats occupy just
+ *	32-bits in memory format, so the low order fraction, 29-bits in all, is
+ *	assumed to be zero.  This format is only used when loading/storing a
+ *	register from/to memory.  The memory and register layout for IEEE T is the
+ *	same, and consistent with the FDR format.
+ *
+ *	The FDR format is specific for VAX D float.  VAX D floating is not a fully
+ *	supported data type; no VAX D arithmetic operations are provided in the
+ *	Alpha AXP architecture.  For backward compatibility, exact VAX D arithmetic
+ *	may be provided via software emulation.  VAX D "format compatibility" in
+ *	which binary files of VAX D numbers may be processed, but without the last
+ *	three bits of fraction precision, can be obtained via conversions to VAX G,
+ *	VAX G arithmetic operations, then conversion back to VAX D.
+ *
+ * 	The IEEE X Float occupies 2 registers (128 bits).  As a result it is not
+ * 	put in the following union declaration (all the other definitions are
+ * 	64-bits in length).  Support for 128-bit IEEE extended-precision (IEEE X)
+ * 	floating-point is initially provided entirely through software. This
+ * 	definition is included to preserve the intended consistency of
+ * 	implementation with other IEEE floating-point data types, should the IEEE X
+ * 	data type be supported in future hardware.
  */
 typedef union
 {
 	u64					uq;
 	i64					sq;
 	AXP_F_REGISTER_CVT	fCvt;
-	AXP_F_REGISTER		f;
 	AXP_G_REGISTER_CVT	gCvt;
-	AXP_G_REGISTER		g;
+	AXP_FPR32_REGISTER	fpr32;
+	AXP_FPR_REGISTER	fpr;
 	AXP_D_REGISTER_CVT	dCvt;
-	AXP_D_REGISTER		d;
+	AXP_FDR_REGISTER	fdr;
 	AXP_S_REGISTER_CVT	sCvt;
-	AXP_S_REGISTER		s;
-	AXP_T_REGISTER		t;
 	AXP_L_REGISTER		l;
 	AXP_Q_REGISTER		q;
 	AXP_Q_REGISTER_CVT	qCvt;
 	AXP_Q_REGISTER_V	qV;
 	AXP_Q_REGISTER_V_CVT qVCvt;
-} AXP_FP_FORMATS;
-
-typedef enum
-{
-	FPInteger,
-	VAXfFloat,
-	VAXgFloat,
-	VAXdFloat,
-	IEEEFloat,
-	IEEEZero,
-	IEEEFinite,
-	IEEEDenormal,
-	IEEEInfinity,
-	IEEENotANumber
-} AXP_FP_CONTENT;
-
-typedef struct
-{
-	AXP_FP_FORMATS		fpv;
-	AXP_FP_CONTENT		fpc;
 } AXP_FP_REGISTER;
 
 typedef union

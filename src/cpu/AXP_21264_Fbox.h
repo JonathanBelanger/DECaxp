@@ -92,26 +92,40 @@ typedef struct
 #define AXP_FP_SUB		0x1
 #define AXP_FP_MUL		0x2
 #define AXP_FP_DIV		0x3
-#define AXP_FP_ITOFST	0x4
+#define AXP_FP_ITOF		0x4
+#define AXP_FP_CMPUN	0x4
 #define AXP_FP_CMPEQ	0x5
 #define AXP_FP_CMPLT	0x6
 #define AXP_FP_CMPLE	0x7
+#define AXP_FP_SQRTFG	0xa
 #define AXP_FP_SQRTST	0xb
 #define AXP_FP_CTVS		0xc
+#define AXP_FP_CVTF		0xc
+#define AXP_FP_CVTD		0xd
 #define AXP_FP_CVTT		0xe
+#define AXP_FP_CVTG		0xe
 #define AXP_FP_CVTQ		0xf
 
 #define AXP_FP_S		0x0
 #define AXP_FP_T		0x2
+#define AXP_FP_Q		0x3
+#define AXP_FP_F		0x0
+#define AXP_FP_D		0x1
+#define AXP_FP14_F		0x1
+#define AXP_FP_G		0x2
 #define AXP_FP_Q		0x3
 
 #define AXP_FP_CHOPPED	0x0
 #define AXP_FP_MINUS_INF 0x1
 #define AXP_FP_NORMAL	0x2
 #define AXP_FP_DYNAMIC	0x3
+#define AXP_FP_PLUS_INF 0x3
 
-#define AXP_FP_IMPRECISE 0x0
-#define AXP_FP_UNDERFLOW 0x1
+#define  AXP_FP_TRP_V	0x2								/* /V trap */
+#define  AXP_FP_TRP_U	0x2								/* /U trap */
+#define  AXP_FP_TRP_S	0x8								/* /S trap */
+#define  AXP_FP_TRP_SUI	0xE								/* /SUI trap */
+#define  AXP_FP_TRP_SVI	0xE								/* /SVI trap */
 
 #define AXP_R_SIGN				0x8000000000000000ll
 #define AXP_R_NM 				0x8000000000000000ll	/* normalized */
@@ -120,12 +134,25 @@ typedef struct
 #define AXP_R_GUARD				(63 - 52)
 #define AXP_R_LONG_SMALL		0xffffffff00000000ll
 #define AXP_R_LONG_LARGE		0x000000007fffffffll
+#define AXP_R_FRAC				0x000fffffffffffffll
+#define AXP_R_QNAN				0x0008000000000000ll
 #define AXP_R_CQ_NAN			0xfff8000000000000ll
+#define AXP_R_ZERO				0x0000000000000000ll	/* plus zero */
+#define AXP_R_MZERO				0x8000000000000000ll	/* minus zero */
+#define AXP_R_PINF				0x7ff0000000000000ll	/* plus infinity */
+#define AXP_R_MINF				0xfff0000000000000ll	/* minus infinity */
+#define AXP_R_PMAX				0x7fefffffffffffffll	/* plus maximum */
+#define AXP_R_MMAX				0xffefffffffffffffll	/* minus maximum */
+
 #define AXP_F_BIAS				0x080
+#define AXP_F_EXP_MASK			0xff
 #define AXP_G_BIAS				0x400
+#define AXP_G_EXP_MASK			0x7ff
 #define AXP_S_BIAS				0x7f
 #define AXP_S_NAN				0xff
+#define AXP_S_EXP_MASK			0xff
 #define AXP_T_BIAS				0x3ff
+#define AXP_T_EXP_MASK			0x7ff
 #define AXP_D_BIAS				0x80
 #define AXP_D_GUARD				(63 - 55)
 
@@ -133,4 +160,62 @@ typedef struct
 								 ((val) < AXP_R_LONG_SMALL) :				\
 								 ((val) > AXP_R_LONG_LARGE))
 
+/*
+ * Unpacked rounding constants
+ */
+#define AXP_F_RND				0x0000008000000000ll	/* F round */
+#define AXP_D_RND				0x0000000000000080ll	/* D round */
+#define AXP_G_RND				0x0000000000000400ll	/* G round */
+#define AXP_S_RND				0x0000008000000000ll	/* S normal round */
+#define AXP_S_INF				0x000000ffffffffffll	/* S infinity round */
+#define AXP_T_RND				0x0000000000000400ll	/* T normal round */
+#define AXP_T_INF				0x00000000000007ffll	/* T infinity round */
+#define AXP_F_DT				0						/* type F */
+#define AXP_G_DT				1						/* type G */
+#define AXP_S_DT				0						/* type S */
+#define AXP_T_DT				1						/* type T */
+/*
+ * The following definitions are used throughout the rest of the floating-point
+ * code.  Register values are "unpacked" into this structure and then "packed"
+ * back into the register.  The unpacking will set certain fields, the
+ * operation will set others, and finally the packing will use the fields to
+ * both round the results (simple for VAX, complex for IEEE) and then pack them
+ * into a 64-bit floating point register.
+ */
+typedef enum
+{
+	Reserved,
+	Zero,
+	Finite,
+	Denormal,
+	Infinity,
+	NotANumber,
+	DirtyZero
+} AXP_FP_ENCODING;
+typedef struct
+{
+	u32				sign;
+	i64				exponent;
+	u64				fraction;
+	AXP_FP_ENCODING encoding;
+} AXP_FP_UNPACKED;
+
+#define AXP_FP_ENCODE(ur, ieeeFP)											\
+		((ur)->exponent == -1 ?												\
+			((ieeeFP) ?														\
+				 ((ur)->fraction != 0 ?										\
+						 NotANumber : 										\
+						 Infinity) : 										\
+				 Finite) : 													\
+			((ur)->exponent == 0 ?											\
+				((ieeeFP) ?													\
+					((ur)->fraction != 0 ?									\
+						Denormal :											\
+						Zero) :												\
+					((ur)->sign == 1 ?										\
+						Reserved :											\
+						((ur)->fraction == 0 ?								\
+							Zero :											\
+							DirtyZero))) :									\
+			Finite))
 #endif /* _AXP_21264_FBOX_DEFS_ */
