@@ -141,7 +141,7 @@ int main()
 	 */
 	printf("\nAXP 21264 Integer Load/Store Tester\n");
 	cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
-	instr.uniqueID = 0;		// This will be incremented for each test (and should wrap).
+	instr.uniqueID = 0;		// This will be incremented for each test.
 	instr.aSrc1 = 5;		// Architectural Register (R05).
 	instr.src1 = 40;		// Physical Register.
 	instr.aSrc2 = 31;		// Architectural Register (R31).
@@ -196,11 +196,11 @@ int main()
 			/*
 			 * Sign extend the displacement.
 			 */
-			instr.displacement |=
-				(instr.displacement & 0x0000000000008000ll ? 0xffffffffffff0000 : 0);
+			instr.displacement |= (instr.displacement & 0x0000000000008000ll ?
+						0xffffffffffff0000 : 0);
 			instr.state = Executing;
 			testCnt++;
-			retVal = AXP_LDA(cpu, &instr);		// Call the LDA - Load Address instruction.
+			retVal = AXP_LDA(cpu, &instr);		// Call the LDA instruction.
 			if (retVal == NoException)
 			{
 				if (instr.state == WaitingRetirement)
@@ -208,7 +208,10 @@ int main()
 					if (instr.destv.r.uq != ldaAddress)
 					{
 						printf("LDA failed: Rbv = 0x%016llx, disp = 0x%04llx, Rav = 0x%016llx (expected: 0x%016llx)\n",
-							instr.src1v.r.uq, instr.displacement, instr.destv.r.uq, ldaAddress);
+							instr.src1v.r.uq,
+							instr.displacement,
+							instr.destv.r.uq,
+							ldaAddress);
 						pass = false;
 						testCnt--;
 					}
@@ -244,7 +247,9 @@ int main()
 						if (instr.destv.r.uq != ldahAddress)
 						{
 							printf("LDAH failed: Rbv = 0x%016llx, disp = 0x%04llx, Rav = 0x%016llx (expected: 0x%016llx)\n",
-								instr.src1v.r.uq, instr.displacement, instr.destv.r.uq, ldahAddress);
+								instr.src1v.r.uq,
+								instr.displacement,
+								instr.destv.r.uq, ldahAddress);
 							pass = false;
 							testCnt--;
 						}

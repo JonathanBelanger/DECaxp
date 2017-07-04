@@ -650,6 +650,7 @@ AXP_EXCEPTIONS AXP_MT_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	return(NoException);
 }
+
 /*
  * AXP_ADDF
  *	This function implements the VAX F Format Floating-Point ADD instruction of
@@ -672,11 +673,148 @@ AXP_EXCEPTIONS AXP_MT_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
+	AXP_EXCEPTIONS retVal = NoException;
 
 	/*
 	 * The way this emulator is implemented, there is only one function to
 	 * handle both add and subtract, as well as any of the floating types
 	 * (VAX F, VAX G, IEEE S, and IEEE T).
 	 */
-	return(AXP_FPAddSub(cpu, instr, AXP_F_DT));
+	retVal = AXP_FPAddSub(cpu, instr, AXP_F_DT);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_ADDG
+ *	This function implements the VAX F Format Floating-Point ADD instruction of
+ *	the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+
+	/*
+	 * The way this emulator is implemented, there is only one function to
+	 * handle both add and subtract, as well as any of the floating types
+	 * (VAX F, VAX G, IEEE S, and IEEE T).
+	 */
+	retVal = AXP_FPAddSub(cpu, instr, AXP_G_DT);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_ADDS
+ *	This function implements the IEEE S Format Floating-Point ADD instruction
+ *	of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+
+	/*
+	 * The way this emulator is implemented, there is only one function to
+	 * handle both add and subtract, as well as any of the floating types
+	 * (VAX F, VAX G, IEEE S, and IEEE T).
+	 */
+	retVal = AXP_FPAddSub(cpu, instr, AXP_S_DT);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_ADDF
+ *	This function implements the IEEE T Format Floating-Point ADD instruction
+ *	of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	An exception indicator.
+ */
+AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS retVal = NoException;
+
+	/*
+	 * The way this emulator is implemented, there is only one function to
+	 * handle both add and subtract, as well as any of the floating types
+	 * (VAX F, VAX G, IEEE S, and IEEE T).
+	 */
+	retVal = AXP_FPAddSub(cpu, instr, AXP_T_DT);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
 }
