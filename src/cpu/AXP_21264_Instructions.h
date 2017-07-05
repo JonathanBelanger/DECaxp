@@ -40,6 +40,7 @@
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
 #include "AXP_Base_CPU.h"
+#include "AXP_21264_IPRs.h"
 
 /*
  * Define the Alpha Instruction Formats
@@ -1008,6 +1009,7 @@ typedef struct
 	AXP_PC			pc;
 	AXP_PC			branchPC;
 	AXP_INS_STATE	state;
+	AXP_IBOX_EXC_SUM excSum;
 	void			(*loadCompletion)();
 } AXP_INSTRUCTION;
 

@@ -199,6 +199,7 @@ typedef enum
 	nearestTiesToEven,
 	nearestAwayFromZero
 } AXP_RoundingMode;
+
 typedef struct
 {
 	char				*str;
@@ -217,45 +218,77 @@ AXP_cvtRoundingModeStr cvtRoundingStr[AXP_NUM_ROUNDING] =
 	{"=^", nearestAwayFromZero, "nearest away from zero"}
 };
 
-char *msgStr = "\%AXP-%c-%s, %s.\n";
+typedef enum
+{
+	none,
+	inexact,
+	underflow,
+	overflow,
+	divisionByZero,
+	invalid
+} AXP_TrappedException;
+
+typedef struct
+{
+	char					exceptionChar;
+	AXP_TrappedException	exception;
+	char					*humanReadable;
+} AXP_cvtTExceptionChar;
+
+#define AXP_NUM_EXCEPTION	6
+
+AXP_cvtTExceptionChar cvtExceptionChar[AXP_NUM_EXCEPTION] =
+{
+	{'\0', none, "none"},
+	{'x', inexact, "inexact"},
+	{'u', underflow, "underflow"},
+	{'o', overflow, "overflow"},
+	{'z', divisionByZero, "division by zero"},
+	{'i', invalid, "invalid"},
+};
+
+char *msgStr = "%%AXP-%c-%s, %s.\n";
 char fatal = 'F';
 char error = 'E';
 char info = 'I';
 char success = 'S';
 
-char *ieeeFormatToStr(AXP_IEEEFormat ieeeFmt)
+void ieeeFormatToStr(AXP_IEEEFormat ieeeFmt, char *retVal)
 {
-	char *retVal = "IEEE Error";
-
 	switch(ieeeFmt)
 	{
 		case ieeeS:
-			retVal = "'IEEE S'";
+			strcpy(retVal,"'IEEE S'");
 			break;
 
 		case ieeeT:
-			retVal = "'IEEE T'";
+			strcpy(retVal, "'IEEE T'");
 			break;
 
 		case ieeeX:
-			retVal = "'IEEE X'";
+			strcpy(retVal, "'IEEE X'");
 			break;
 
 		case ieeeUnknown:
-			retVal = "'IEEE Unknown'";
+			strcpy(retVal, "'IEEE Unknown'");
 			break;
 	}
-	return(retVal);
+	return;
 }
 
 void printFormat(AXP_IEEEFormat operand, AXP_IEEEFormat result)
 {
+	char fmt1[10];
+	char fmt2[10];
+
+	ieeeFormatToStr(operand, fmt1);
 	if (operand == result)
-		printf("operand & result format set to %s\n", ieeeFormatToStr(operand));
+		printf("operand & result format set to %s\n", fmt1);
 	else
 	{
-		printf("operand format set to %s, ", ieeeFormatToStr(operand));
-		printf("result format set to %s\n",  ieeeFormatToStr(result));
+		ieeeFormatToStr(result, fmt2);
+		printf("operand format set to %s, ", fmt1);
+		printf("result format set to %s\n",  fmt2);
 	}
 	return;
 }
@@ -307,6 +340,117 @@ i32 readNextToken(FILE *fp, char *retStr, int len)
 }
 
 /*
+ * parseOperands
+ * 	This function is called to parse the input and output operands, one at a
+ * 	time, from the input format to the appropriate IEEE S and IEEE T floating
+ * 	point format.
+ *
+ * Input Parameters:
+ * 	inputStr:
+ * 		A pointer to a string containing the data to be parsed.
+ * 	inputFormat:
+ * 		A value indicating the type of data should be present in the inputStr.
+ *
+ * Output Parameters:
+ * 	resultBool:
+ * 		A pointer to a boolean to receive an indicator that the result is a
+ * 		boolean and can be found in the result parameter.
+ * 	floatResult:
+ * 		A pointer to a structure containing the format of all possible
+ * 		supported floating point types within a 64-bit register.
+ * 	result:
+ * 		A pointer to a boolean to receive a boolean value as the expected
+ * 		result.
+ *
+ * Return Value:
+ * 	1:	success
+ * 	-1:	failure
+ */
+i32 parseOperands(
+	char *inputStr,
+	AXP_IEEEFormat inputFormat,
+	bool *resultsBool,
+	AXP_FP_REGISTER *fpReg,
+	bool *result)
+{
+	int retVal = 1;
+
+	if (inputStr[0] == '-')
+		fpReg->fpr.sign = 1;
+	else if (inputStr[0] == 'Q')
+	{
+		fpReg->uq = AXP_R_CQ_NAN;
+		return(retVal);
+	}
+	else if (inputStr[0] == 'S')
+	{
+		fpReg->uq = AXP_R_C_NAN;
+		return(retVal);
+	}
+	if (inputStr[1] == 'I')
+	{
+		fpReg->fpr.exponent = 0x7ff;
+	}
+	else if (inputStr[1] == 'Z')
+	{
+		fpReg->fpr.exponent = 0;
+		fpReg->fpr.fraction = 0;
+	}
+	else
+	{
+
+		/*
+	 	 * For now, we only support binary floating point
+		 * format and boolean formats.  Also, we assume that
+		 * the boolean format is only used for results.
+		 */
+		if (inputStr[1] == 'x')
+		{
+			*resultsBool = true;
+			*result = (inputStr[2] == '1');
+		}
+		else
+		{
+			char *ptr;
+			bool normal;
+
+			*resultsBool = false;
+			normal = inputStr[1] == '1';
+			if (inputFormat == ieeeS)
+			{
+				u16	exponent;
+
+				fpReg->fpr32.fraction = strtol(&inputStr[3], &ptr, 16);
+				if (normal == true)
+				{
+					ptr++;
+					exponent = (atoi(ptr) + AXP_S_BIAS) & 0xff;
+					fpReg->fpr32.exponent = ((exponent & 0x80) << 3) | (exponent & 0x7f);
+					fpReg->fpr32.exponent |=
+						(exponent & 0x80) ?
+							((exponent & 0x3f) != 0x3f ? 0 : 0x380) :
+							(exponent ? 0x380 : 0);
+				}
+				else
+					fpReg->fpr32.exponent = 0;
+				fpReg->fpr32.zero = 0;
+			}
+			else
+			{
+				fpReg->fpr.fraction = strtol(&inputStr[3], &ptr, 16);
+				ptr++;
+				if (normal == true)
+					fpReg->fpr.exponent = (atoi(ptr) + AXP_T_BIAS) & 0x3ff;
+				else
+					fpReg->fpr.exponent = 0;
+			}
+		}
+	}
+
+	return(retVal);
+}
+
+/*
  * parseNextLine
  * 	This function is called to read the next line and parse it into its
  * 	constituent parts.
@@ -328,14 +472,22 @@ i32 parseNextLine(
 		AXP_Operation *operation,
 		AXP_IEEEFormat *operandFmt,
 		AXP_IEEEFormat *resultFmt,
-		AXP_RoundingMode *roundMode)
+		AXP_RoundingMode *roundMode,
+		AXP_TrappedException *exception,
+		AXP_FP_REGISTER *src1,
+		AXP_FP_REGISTER *src2,
+		AXP_FP_REGISTER *src3,
+		bool			*useResult,
+		AXP_FP_REGISTER *dest,
+		bool			*result)
 {
-	bool	found = false;
-	i32		retVal = 1;
-	char	workingStr[7];
-	int		getC;
-	int		ii;
-	char	remLine[80];
+	AXP_FP_REGISTER	*nextFPReg[3] = {src1, src2, src3};
+	bool			found = false;
+	i32				retVal = 1;
+	char			workingStr[80];
+	int				nextFPRegIdx = 0;
+	int				getC;
+	int				ii;
 
 	/*
 	 * Get the format information.  One or two of:
@@ -359,14 +511,14 @@ i32 parseNextLine(
 				if ((getC != EOF) && (getC != '2'))
 				{
 					sprintf(
-							remLine,
+							workingStr,
 						"format not OK, got 'b3%c', expected 'b32'",
 						*((char *) &getC));
 					printf(
 						msgStr,
 						fatal,
 						"FMTNOTOK",
-						remLine);
+						workingStr);
 					retVal = -1;
 				}
 				break;
@@ -380,14 +532,14 @@ i32 parseNextLine(
 				if ((getC != EOF) && (getC != '4'))
 				{
 					sprintf(
-						remLine,
+						workingStr,
 						"format not OK, got 'b6%c', expected 'b164'",
 						getC);
 					printf(
 						msgStr,
 						fatal,
 						"FMTNOTOK",
-						remLine);
+						workingStr);
 					retVal = -1;
 				}
 				break;
@@ -404,28 +556,28 @@ i32 parseNextLine(
 					if ((getC != EOF) && (getC != '8'))
 					{
 						sprintf(
-							remLine,
+							workingStr,
 							"format not OK, got 'b12%c', expected 'b128'",
 							getC);
 						printf(
 							msgStr,
 							fatal,
 							"FMTNOTOK",
-							remLine);
+							workingStr);
 						retVal = -1;
 					}
 				}
 				else if (getC != EOF)
 				{
 					sprintf(
-						remLine,
+						workingStr,
 						"format not OK, got 'b1%c', expected 'b128'",
 						getC);
 					printf(
 						msgStr,
 						fatal,
 						"FMTNOTOK",
-						remLine);
+						workingStr);
 					retVal = -1;
 				}
 				break;
@@ -473,20 +625,18 @@ i32 parseNextLine(
 			if (found == false)
 			{
 				sprintf(
-					remLine,
+					workingStr,
 					"floating-point operation (%s) not found",
 					workingStr);
 				printf(
 					msgStr,
 					fatal,
 					"OPNOTFOUND",
-					remLine);
+					workingStr);
 				retVal = -1;
 			}
 			else if (getC == EOF)
-			{
 				retVal = 0;
-			}
 		}
 	}
 
@@ -509,31 +659,112 @@ i32 parseNextLine(
 			if (found == false)
 			{
 				sprintf(
-					remLine,
+					workingStr,
 					"floating-point rounding mode (%s) not found",
 					workingStr);
 				printf(
 					msgStr,
 					fatal,
 					"RNDNOTFOUND",
-					remLine);
+					workingStr);
 				retVal = -1;
 			}
-			else if ((getC == EOF) ||
-					 (fgets(remLine, sizeof(remLine), fp) == NULL))
-			{
+			else if (getC == EOF)
 				retVal = 0;
-			}
 		}
 
 	}
-#if 0
-		else if ((getC == EOF) ||
-				 (fgets(remLine, sizeof(remLine), fp) == NULL))
+
+	/*
+	 * Get the trapped exceptions, if any.
+	 */
+	if (retVal == 1)
+	{
+
+		/*
+		 * First things first, set the trapped exception to 'none'.
+		 */
+		*exception = none;
+
+		/*
+		 * OK, the trapped expression may or may not be present.  If it is
+		 * present, then parse it an read in the next space character, so that
+		 * we are ready to parse the input parameters.  IF it is not present,
+		 * then un-get it and move on to the next parsing stage.
+		 */
+		getC = fgetc(fp);
+		if (getC != EOF)
 		{
-			retVal = 0;
+			found = false;
+			for (ii = 1; ii < AXP_NUM_EXCEPTION; ii++)
+			{
+				if (cvtExceptionChar[ii].exceptionChar == getC)
+				{
+					*exception = cvtExceptionChar[ii].exception;
+					found = true;
+					break;
+				}
+			}
+
+			/*
+			 * If we did not find the exception, then we are processing the
+			 * first input value.  Put the character back onto the character
+			 * stream.  Otherwise, read the next character (it is a space).
+			 */
+			if (found != true)
+				getC = ungetc(getC, fp);
+			else
+			{
+				if (fgetc(fp) == EOF)
+					retVal = 0;
+			}
 		}
-#endif
+		else
+			retVal = 0;
+	}
+
+	/*
+	 * Get the input operands (may be up to 3).
+	 */
+	if (retVal == 1)
+	{
+		bool tmpBoolResults;
+		bool tmpResults;
+
+		src1->uq = src2->uq = src3->uq = 0;
+		retVal = readNextToken(fp, workingStr, sizeof(workingStr));
+		while ((strcmp("->", workingStr) != 0) && (retVal == 1))
+		{
+			retVal =  parseOperands(
+						workingStr,
+						*operandFmt,
+						&tmpBoolResults,
+						nextFPReg[nextFPRegIdx++],
+						&tmpResults);
+			if (retVal == 1)
+				retVal = readNextToken(fp, workingStr, sizeof(workingStr));
+		}
+	}
+
+	/*
+	 * Get the output operand.
+	 */
+	if (retVal == 1)
+	{
+		dest->uq = 0;
+		retVal = readNextToken(fp, workingStr, sizeof(workingStr));
+		if (retVal == 1)
+		{
+			retVal =  parseOperands(
+						workingStr,
+						*resultFmt,
+						useResult,
+						dest,
+						result);
+		}
+	}
+	if (fgets(workingStr,sizeof(workingStr), fp) == NULL)
+		retVal = 0;
 	return(retVal);
 }
 
@@ -604,8 +835,13 @@ int main()
 	AXP_IEEEFormat	operandFmt;
 	AXP_IEEEFormat	resultFmt;
 	AXP_RoundingMode roundMode;
-	int				testCnt = 0;
+	AXP_TrappedException trappedException;
+	AXP_FP_REGISTER	src3;
+	bool			useResults;
+	bool			results;
+	int				testCnt = 0, passed = 0, failed = 0;
 	int				retVal;
+	double			*number;
 
 	/*
 	 * NOTE: 	The current simulation takes in one instruction at a time.  The
@@ -644,23 +880,40 @@ int main()
 
 	if(fp != NULL)
 	{
+		number = (double *) &instr.src1v.fp.uq;
 		while ((retVal = parseNextLine(
 								fp,
 								&oper,
 								&operandFmt,
 								&resultFmt,
-								&roundMode)) != 0)
+								&roundMode,
+								&trappedException,
+								&instr.src1v.fp,
+								&instr.src2v.fp,
+								&src3,
+								&useResults,
+								&instr.destv.fp,
+								&results
+								)) != 0)
 		{
+			testCnt++;
 			switch (retVal)
 			{
 				case 1:
 					pass = true;
+					passed++;
+					printf("Test #%d: Source is: %f (0x%016llx) [size = %ld]\n\n",
+							testCnt, *number, instr.src1v.fp.uq,
+							sizeof(instr.src1v.fp.uq));
 					break;
 
 				case -1:
 					pass = false;
+					failed++;
 					break;
 			}
+			if (testCnt >= 30)
+				break;
 		}
 		fclose(fp);
 	}
@@ -670,13 +923,24 @@ int main()
 		pass = false;
 	}
 
+	float f32 = -340282346638528859811704183484516925440.0;
+	double f64 = -340282346638528859811704183484516925440.0;
+	u32		*ul32 = (u32 *) &f32;
+	u64		*ul64 = (u64 *) &f64;
+	printf("single[%ld]: %f (0x%08x)\n", sizeof(f32), f32, *ul32);
+	printf("double[%ld]: %f (0x%016llx)\n", sizeof(f64), f64, *ul64);
+
 	/*
 	 * Display the results of the test.
 	 */
 	 if (pass == true)
-		 printf("Test passed.  %d test cases executed.\n", testCnt);
+		 printf("\n% d tests passed.  %d test cases executed.\n", passed,
+			testCnt);
 	 else
-		 printf("\nTest failed (%d passed before failing).\n", testCnt);
+		 printf("\n%d tests passed and %d failed, with a total of %d tests.\n",
+			passed,
+			failed,
+			testCnt);
 	
 	/*
 	 * We are done.

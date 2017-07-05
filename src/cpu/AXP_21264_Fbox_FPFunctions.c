@@ -28,6 +28,198 @@
 #include "AXP_Configure.h"
 #include "AXP_21264_Fbox_FPFunctions.h"
 
+typedef struct
+{
+	u32		fraction : 23;
+	u32		exponent : 8;
+	u32		sign;
+} AXP_IEEE_S_FLOAT;
+
+/*
+ * AXP_FP_CvtFPRToFloat
+ *	Hey, guess what, the GNU C compiler generates code that is IEEE compliant.
+ *	The only thing We are going to do here is to convert the floating-point
+ *	register format to a 32-bit float and then use the math run-time library
+ *	functions to actually do that work.  This only needs to be called for VAX F
+ *	and IEEE S formatted registers (we need to strip out the high order
+ *	fraction and reduce the exponent from 11 to 8 bits.
+ *
+ * Input Parameter:
+ * 	fpr:
+ * 		The 64-bit floating point register value to be converted.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	The converted float.
+ */
+float AXP_FP_CvtFPRToFloat(AXP_FP_REGISTER fpr)
+{
+	float				retVal = 0.0;
+	AXP_IEEE_S_FLOAT	*sFloat = (AXP_IEEE_S_FLOAT *) &retVal;
+
+	/*
+	 * Convert away.
+	 */
+	sFloat->sign = fpr.fpr.sign;
+	sFloat->exponent =
+		((fpr.fpr.exponent & 0x400) >> 3) |
+		((fpr.fpr.exponent & 0x07f));
+	sFloat->fraction = fpr.fpr32.fraction;
+
+	/*
+	 * Return the converted value back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_FP_CvtFloatToFPR
+ *	Hey, guess what, the GNU C compiler generates code that is IEEE compliant.
+ *	The only thing We are going to do here is to convert the 32-bit float back
+ *	to a floating-point register format.  This only needs to be called for VAX
+ *	F and IEEE S formatted registers (we need to put back the high order
+ *	fraction, clearing out the low order portion, and expend the exponent from
+ *	8 to 11 bits.
+ *
+ * Input Parameter:
+ * 	real32:
+ * 		The float value to be converted.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	The converted 64-bit floating point register value.
+ */
+AXP_FP_REGISTER AXP_FP_CvtFloatToFPR(float real32)
+{
+	AXP_FP_REGISTER		retVal;
+	AXP_IEEE_S_FLOAT	*sFloat = (AXP_IEEE_S_FLOAT *) &real32;
+
+	/*
+	 * Convert away.
+	 */
+	retVal.fpr32.sign =sFloat->sign;
+	retVal.fpr32.exponent =
+		((sFloat->exponent & 0x80) << 3) |
+		((sFloat->exponent & 0x7f));
+	if (sFloat->exponent & 0x80)
+	{
+		if ((sFloat->exponent & 0x7f) == 0x7f)
+			sFloat->exponent |= 0x38;
+	}
+	else
+	{
+		if ((sFloat->exponent & 0x7f) != 0x00)
+			sFloat->exponent |= 0x38;
+	}
+	retVal.fpr32.fraction = sFloat->fraction;
+	retVal.fpr32.zero = 0;
+
+	/*
+	 * Return the converted value back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_FP_SetRoundingMode
+ * 	This function is called to set the rounding mode.  It determines this based
+ * 	one the function field from the instruction of the FPCR in the cpu
+ * 	structure.  If this is called with the cpu equal to NULL, then use the
+ * 	roundingMode parameter to reset the rounding mode.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	function:
+ * 		A pointer to a structure containing the information needed determine
+ * 		the rounding mode.
+ * 	resetRoundingMode:
+ * 		A value of the previous rounding mode, which was returned on a previous
+ * 		call to this function.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	A value representing the previous value for the rounding mode.
+ */
+int AXP_FP_SetRoundingMode(
+	AXP_21264_CPU *cpu,
+	AXP_FP_FUNC *func,
+	int resetRoundingMode)
+{
+	int		savedRoundingMode = fegetround();
+	int		newRoundingMode;
+
+	/*
+	 * perform the math,
+	 * and then convert the result back into 64-bit register format
+	 */
+	if (cpu != NULL)
+	{
+		switch (func->rnd)
+		{
+			case  AXP_FP_CHOPPED:
+				newRoundingMode = FE_TOWARDZERO;
+				break;
+
+			case  AXP_FP_MINUS_INF:
+				newRoundingMode = FE_DOWNWARD;
+				break;
+
+			case  AXP_FP_NORMAL:
+				newRoundingMode = FE_TONEAREST;
+				break;
+
+			case  AXP_FP_DYNAMIC:
+				switch (cpu->fpcr.dyn)
+				{
+					case  AXP_FP_CHOPPED:
+						newRoundingMode = FE_TOWARDZERO;
+						break;
+
+					case  AXP_FP_MINUS_INF:
+						newRoundingMode = FE_DOWNWARD;
+						break;
+
+					case  AXP_FP_NORMAL:
+						newRoundingMode = FE_TONEAREST;
+						break;
+
+					case  AXP_FP_PLUS_INF:
+						newRoundingMode = FE_UPWARD;
+						break;
+				}
+				break;
+		}
+	}
+	else
+		newRoundingMode = resetRoundingMode;
+
+	/*
+	 * Set the rounding mode.
+	 */
+	if (fesetround(newRoundingMode) != 0)
+	{
+		fprintf(stderr, "Internal error: "
+				"unexpected return value when setting "
+				"rounding mode to %d at %s, line %d.\n",
+				newRoundingMode, __FILE__, __LINE__);
+	}
+
+	/*
+	 * Returned the previous rounding mode back to the caller.  They'll call
+	 * back to reset the rounding mode with this value and a NULL cpu
+	 * parameter.
+	 */
+	return(savedRoundingMode);
+}
+
 /*
  * fpNormalize
  * 	This function is called to normalize a floating point value.  Both VAX and

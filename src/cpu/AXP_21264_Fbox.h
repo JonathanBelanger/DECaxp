@@ -141,6 +141,7 @@ typedef struct
 #define AXP_R_FRAC				0x000fffffffffffffll
 #define AXP_R_QNAN				0x0008000000000000ll
 #define AXP_R_CQ_NAN			0xfff8000000000000ll
+#define AXP_R_C_NAN				0xfff0000000000001ll
 #define AXP_R_ZERO				0x0000000000000000ll	/* plus zero */
 #define AXP_R_MZERO				0x8000000000000000ll	/* minus zero */
 #define AXP_R_PINF				0x7ff0000000000000ll	/* plus infinity */

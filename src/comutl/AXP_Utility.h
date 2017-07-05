@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <fenv.h>
 
 /*
  * Define some regularly utilized definitions.

@@ -329,7 +329,7 @@ typedef struct
 	u64	swc : 1;					/* Software completion possible */
 	u64	inv : 1;					/* Invalid operation trap */
 	u64	dze : 1;					/* Divide by zero trap */
-	u64	fov : 1;					/* Floating point overflow trap */
+	u64	ovf : 1;					/* Floating point overflow trap */
 	u64	unf : 1;					/* Floating point underflow trap */
 	u64	ine : 1;					/* Floating point inexact error trap */
 	u64	iov : 1;					/* Integer overflow trap */

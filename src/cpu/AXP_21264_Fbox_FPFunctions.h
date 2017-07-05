@@ -32,6 +32,11 @@
 #include "AXP_21264_Instructions.h"
 #include "AXP_21264_Fbox.h"
 
+float AXP_FP_CvtFPRToFloat(AXP_FP_REGISTER);
+AXP_FP_REGISTER AXP_FP_CvtFloatToFPR(float);
+int AXP_FP_SetRoundingMode(AXP_21264_CPU *, AXP_FP_FUNC *, int);
+
+
 AXP_EXCEPTIONS AXP_FPAddSub(AXP_21264_CPU *, AXP_INSTRUCTION *, u32);
 
 #endif	/* _AXP_21264_FBOX_FPFUNCTIONS_DEFS_ */

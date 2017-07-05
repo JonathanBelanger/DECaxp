@@ -673,14 +673,63 @@ AXP_EXCEPTIONS AXP_MT_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	float			src1v, src2v, destv;
+	int				oldRndMode =0;
+	int				raised;
 
 	/*
-	 * The way this emulator is implemented, there is only one function to
-	 * handle both add and subtract, as well as any of the floating types
-	 * (VAX F, VAX G, IEEE S, and IEEE T).
+	 * Convert from 64-bit register format to 32-bit float.
 	 */
-	retVal = AXP_FPAddSub(cpu, instr, AXP_F_DT);
+	src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
+	src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
+
+	/*
+	 * Set the rounding mode, based on the function code and/or the FPCR.
+	 */
+	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+
+	/*
+	 * Clear the current set of excetions.
+	 */
+	feclearexcept(FE_ALL_EXCEPT);
+
+	/*
+	 * Execute the instruction.
+	 */
+	destv = src1v + src2v;
+
+	/*
+	 * Clear the current set of excetions.
+	 */
+	raised = fetestexcept(FE_ALL_EXCEPT);
+
+	/*
+	 * Convert the result into the 64-bit value we expect it to be.
+	 */
+	instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
+
+	/*
+	 * Set the exception bits.
+	 */
+	if (raised & FE_INEXACT)
+		instr->excSum.ine = instr->excSum.set_ine = 1;
+	if (raised & FE_DIVBYZERO)
+		instr->excSum.dze = instr->excSum.set_dze = 1;
+	if (raised & FE_UNDERFLOW)
+		instr->excSum.unf = instr->excSum.set_unf = 1;
+	if (raised & FE_OVERFLOW)
+		instr->excSum.ovf = instr->excSum.set_ovf = 1;
+	if (raised & FE_INVALID)
+		instr->excSum.inv = instr->excSum.set_inv = 1;
+	if (fpFunc->trp == AXP_FP_TRP_S)
+		instr->excSum.swc = 1;
+
+	/*
+	 * Reset the rounding mode
+	 */
+	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -715,14 +764,26 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	int				oldRndMode = 0;
 
 	/*
-	 * The way this emulator is implemented, there is only one function to
-	 * handle both add and subtract, as well as any of the floating types
-	 * (VAX F, VAX G, IEEE S, and IEEE T).
+	 * Set the rounding mode, based on the function code and/or the FPCR.
 	 */
-	retVal = AXP_FPAddSub(cpu, instr, AXP_G_DT);
+	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+
+	/*
+	 * We perform 64-bit math in here, so just cast the fields and perform
+	 * the math.
+	 */
+	*((double *) &instr->destv.fp.uq) =
+		(double) instr->src1v.fp.uq + (double) instr->src2v.fp.uq;
+
+	/*
+	 * Reset the rounding mode
+	 */
+	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -757,14 +818,29 @@ AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	float			src1v, src2v, destv;
+	int				oldRndMode = 0;
 
 	/*
-	 * The way this emulator is implemented, there is only one function to
-	 * handle both add and subtract, as well as any of the floating types
-	 * (VAX F, VAX G, IEEE S, and IEEE T).
+	 * Convert from 64-bit register format to 32-bit float, perform the math,
+	 * and then convert the result back into 64-bit register format.
 	 */
-	retVal = AXP_FPAddSub(cpu, instr, AXP_S_DT);
+	src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
+	src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
+	destv = src1v + src2v;
+
+	/*
+	 * Set the rounding mode, based on the function code and/or the FPCR.
+	 */
+	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+	instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
+
+	/*
+	 * Reset the rounding mode
+	 */
+	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -799,14 +875,26 @@ AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	int				oldRndMode = 0;
 
 	/*
-	 * The way this emulator is implemented, there is only one function to
-	 * handle both add and subtract, as well as any of the floating types
-	 * (VAX F, VAX G, IEEE S, and IEEE T).
+	 * Set the rounding mode, based on the function code and/or the FPCR.
 	 */
-	retVal = AXP_FPAddSub(cpu, instr, AXP_T_DT);
+	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+
+	/*
+	 * We perform 64-bit math in here, so just cast the fields and perform
+	 * the math.
+	 */
+	*((double *) &instr->destv.fp.uq) =
+		(double) instr->src1v.fp.uq + (double) instr->src2v.fp.uq;
+
+	/*
+	 * Reset the rounding mode
+	 */
+	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
