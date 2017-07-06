@@ -60,6 +60,7 @@
 #include "AXP_21264_ICache.h"
 #include "AXP_21264_RegisterRenaming.h"
 #include "AXP_21264_Mbox_Queues.h"
+#include "AXP_Exceptions.h"
 
 #define AXP_RESULTS_REG		41
 #define AXP_NUM_FETCH_INS	4

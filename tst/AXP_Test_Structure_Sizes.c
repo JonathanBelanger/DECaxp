@@ -76,10 +76,12 @@ int main()
 	PRINT_SIZE(u16, 2, passed);
 	PRINT_SIZE(u32, 4, passed);
 	PRINT_SIZE(u64, 8, passed);
+	PRINT_SIZE(u128, 16, passed);
 	PRINT_SIZE(i8, 1, passed);
 	PRINT_SIZE(i16, 2, passed);
 	PRINT_SIZE(i32, 4, passed);
 	PRINT_SIZE(i64, 8, passed);
+	PRINT_SIZE(i128, 16, passed);
 
 	printf("\nAXP_21264_Instructions.h\n");
 	PRINT_SIZE(AXP_MEM_INS, 4, passed);

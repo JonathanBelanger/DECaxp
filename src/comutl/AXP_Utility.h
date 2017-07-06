@@ -29,6 +29,9 @@
  *
  *	V01.002		17-Jun-2017	Jonathan D. Belanger
  *	Added counted queues and counted queue entries.
+ *
+ *	V01.003		05-Jul-2017	Jonathan D. Belanger
+ *	Added definitions for unsigned/signed 128-bit values.
  */
 #ifndef _AXP_UTIL_DEFS_
 #define _AXP_UTIL_DEFS_
@@ -41,6 +44,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <stdarg.h>
+#include <limits.h>
 #include <fenv.h>
 
 /*
@@ -57,10 +63,12 @@ typedef unsigned char		u8;		/* 1 byte (8 bits) in length */
 typedef unsigned short		u16;	/* 2 bytes (16 bits) in length */
 typedef unsigned int		u32;	/* 4 bytes (32 bits) in length */
 typedef unsigned long long	u64;	/* 8 bytes (64 bits) in length */
+typedef unsigned __int128	u128;	/* 16 bytes (128 bits) in length */
 typedef char				i8;		/* 1 byte (8 bits) in length */
 typedef short				i16;	/* 2 bytes (16 bits) in length */
 typedef int					i32;	/* 4 bytes (32 bits) in length */
 typedef long long			i64;	/* 8 bytes (64 bits) in length */
+typedef __int128			i128;	/* 16 bytes (128 bits) in length */
 
 /*
  * Various values that are used throughout the code.

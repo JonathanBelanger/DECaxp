@@ -221,6 +221,80 @@ int AXP_FP_SetRoundingMode(
 }
 
 /*
+ * AXP_FP_SetExceptions
+ * 	This function is called to conditionally set the excSum field, and always
+ * 	the insFPCR fields in the instruction parameter.  The function field is
+ * 	used to determine which qualifier was supplied with the call.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ * 	raised:
+ * 		A value from the fetestexcept, used to set the FPCR and conditionally,
+ * 		the excSum.
+ *
+ * Output Parameaters:
+ * 	instr:
+ * 		The fpcr and, conditionally, the excSum will be updated, based on the
+ * 		exception.
+ */
+void AXP_FP_SetExceptions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr, int raised)
+{
+	AXP_FP_FUNC *func = (AXP_FP_FUNC *) &instr->function;
+	u32	axpExceptions = 0;
+	u64 ieeeExceptions = 0;
+
+	/*
+	 * We always set the FPCR
+	 */
+	if (raised & FE_DIVBYZERO)
+	{
+		ieeeExceptions |= AXP_IEEE_DIV_BY_ZERO;
+		axpExceptions |= AXP_EXC_DIV_BY_ZERO;
+	}
+	if (raised & FE_INVALID)
+	{
+		ieeeExceptions |= AXP_IEEE_INV_OPER;
+		axpExceptions |= AXP_EXC_INV_OPER;
+	}
+	if (raised & FE_OVERFLOW)
+	{
+		ieeeExceptions |= AXP_IEEE_FP_OVERFLOW;
+		axpExceptions |= AXP_EXC_FP_OVERFLOW;
+	}
+	if (raised & FE_INEXACT)
+	{
+		ieeeExceptions |= AXP_IEEE_INEXACT_RES;
+
+		/*
+		 * If '/I' is present, then set excSum
+		 */
+		if (func & AXP_FP_TRP_I)
+			axpExceptions |= AXP_EXC_INEXACT_RES;
+	}
+	if (raised & FE_UNDERFLOW)
+	{
+		ieeeExceptions |= AXP_IEEE_UNDERFLOW;
+
+		/*
+		 * If '/U', which is the same as '/V', is present, then set excSum
+		 */
+		if (func & AXP_FP_TRP_U)
+			axpExceptions |= AXP_EXC_UNDERFLOW;
+	}
+
+	/*
+	 * Some excSum flags may not get set if the qualifiers indicate it.
+	 */
+	if (axpExceptions != 0)
+		AXP_SetException(instr, axpExceptions);
+	if (ieeeExceptions != 0)
+		AXP_SetIEEEException(instr, ieeeExceptions);
+	return;
+}
+
+/*
  * fpNormalize
  * 	This function is called to normalize a floating point value.  Both VAX and
  * 	IEEE floating point values are stored in memory and registers with a

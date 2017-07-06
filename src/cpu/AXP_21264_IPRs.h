@@ -134,14 +134,14 @@ typedef struct
 	u64 dnz : 1;					/* Denormal operands to zero */
 	u64 invd : 1;					/* Invalid operation disable */
 	u64 dzed : 1;					/* Division by zero disabled */
-	u64 ovfd : 1;					/* Overflow disbabled */
+	u64 ovfd : 1;					/* Overflow disabled */
 	u64 inv : 1;					/* Invalid operation */
 	u64 dze : 1;					/* Divide by zero */
 	u64 ovf : 1;					/* Overflow */
 	u64 unf : 1;					/* Underflow */
 	u64 ine : 1;					/* Inexact result */
 	u64 iov : 1;					/* Integer overflow */
-	u64 dyn : 2;					/* Dynamic rounting mode */
+	u64 dyn : 2;					/* Dynamic rounding mode */
 	u64 undz : 1;					/* Underflow to zero */
 	u64 unfd : 1;					/* Underflow disabled */
 	u64 ined : 1;					/* Inexact disabled */

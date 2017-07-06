@@ -125,20 +125,20 @@ typedef struct
 #define AXP_FP_DYNAMIC	0x3
 #define AXP_FP_PLUS_INF 0x3
 
-#define  AXP_FP_TRP_V	0x2								/* /V trap */
-#define  AXP_FP_TRP_U	0x2								/* /U trap */
-#define  AXP_FP_TRP_S	0x8								/* /S trap */
-#define  AXP_FP_TRP_SUI	0xE								/* /SUI trap */
-#define  AXP_FP_TRP_SVI	0xE								/* /SVI trap */
+#define AXP_FP_TRP_V	0x1							/* /V trap */
+#define AXP_FP_TRP_U	0x1							/* /U trap */
+#define AXP_FP_TRP_I	0x2							/* /I trap - IEEE only */
+#define AXP_FP_TRP_S	0x4							/* /S trap */
 
 #define AXP_R_SIGN				0x8000000000000000ll
+#define AXP_R_EXP				0x7ff0000000000000ll
+#define AXP_R_FRAC				0x000fffffffffffffll
 #define AXP_R_NM 				0x8000000000000000ll	/* normalized */
 #define AXP_R_HB				0x0010000000000000ll
 #define AXP_R_NAN				0x7ff
 #define AXP_R_GUARD				(63 - 52)
 #define AXP_R_LONG_SMALL		0xffffffff00000000ll
 #define AXP_R_LONG_LARGE		0x000000007fffffffll
-#define AXP_R_FRAC				0x000fffffffffffffll
 #define AXP_R_QNAN				0x0008000000000000ll
 #define AXP_R_CQ_NAN			0xfff8000000000000ll
 #define AXP_R_C_NAN				0xfff0000000000001ll

@@ -45,7 +45,7 @@
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_CPYS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -85,7 +85,7 @@ AXP_EXCEPTIONS AXP_CPYS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_CPYSE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -126,7 +126,7 @@ AXP_EXCEPTIONS AXP_CPYSE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_CPYSN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -166,7 +166,7 @@ AXP_EXCEPTIONS AXP_CPYSN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_CVTLQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -207,7 +207,7 @@ AXP_EXCEPTIONS AXP_CVTLQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_CVTQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -250,7 +250,9 @@ AXP_EXCEPTIONS AXP_CVTQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Integer Overflow.
  */
 AXP_EXCEPTIONS AXP_CVTQL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -266,7 +268,11 @@ AXP_EXCEPTIONS AXP_CVTQL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.fp.l.zero_1 = 0;
 
 	if (AXP_R_Q2L_OVERFLOW(instr->src1v.fp.uq))
-		retVal = ArithmeticTraps;	// IntegerOverflow;
+	{
+		retVal = ArithmeticTraps;
+		AXP_SetException(instr, AXP_EXC_INT_OVERFLOW);
+		AXP_SetIEEEException(instr, AXP_IEEE_INT_OVERFLOW | AXP_IEEE_INEXACT_RES);
+	}
 	/*
 	 * Indicate that the instruction is ready to be retired.
 	 */
@@ -297,7 +303,9 @@ AXP_EXCEPTIONS AXP_CVTQL_V(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Integer Overflow.
  */
 AXP_EXCEPTIONS AXP_CVTLQ_SV(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -312,12 +320,13 @@ AXP_EXCEPTIONS AXP_CVTLQ_SV(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.fp.l.integerLow = instr->src1v.fp.qVCvt.integerLowLow;
 	instr->destv.fp.l.zero_1 = 0;
 
-	/*
-	 * TODO:	We need to understand how software-completion differs from just
-	 *			reporting the exception.
-	 */
 	if (AXP_R_Q2L_OVERFLOW(instr->src1v.fp.uq))
-		retVal = ArithmeticTraps;	// IntegerOverflow;
+	{
+		retVal = ArithmeticTraps;
+		AXP_SetException(instr, AXP_EXC_INT_OVERFLOW|AXP_EXC_SW_COMPL);
+		AXP_SetIEEEException(instr, AXP_IEEE_INT_OVERFLOW | AXP_IEEE_INEXACT_RES);
+	}
+
 	/*
 	 * Indicate that the instruction is ready to be retired.
 	 */
@@ -347,7 +356,7 @@ AXP_EXCEPTIONS AXP_CVTLQ_SV(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_FCMOVEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -388,7 +397,7 @@ AXP_EXCEPTIONS AXP_FCMOVEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_FCMOVGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -428,7 +437,7 @@ AXP_EXCEPTIONS AXP_FCMOVGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_FCMOVGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -468,7 +477,7 @@ AXP_EXCEPTIONS AXP_FCMOVGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_FCMOVLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -508,7 +517,7 @@ AXP_EXCEPTIONS AXP_FCMOVLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_FCMOVLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -548,7 +557,7 @@ AXP_EXCEPTIONS AXP_FCMOVLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_FCMOVNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -588,7 +597,7 @@ AXP_EXCEPTIONS AXP_FCMOVNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_MF_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -627,7 +636,7 @@ AXP_EXCEPTIONS AXP_MF_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_MT_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -685,13 +694,15 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
 	src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
 
+	// TODO: We need to have a mutex starting at this point.
+
 	/*
 	 * Set the rounding mode, based on the function code and/or the FPCR.
 	 */
 	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
 	/*
-	 * Clear the current set of excetions.
+	 * Clear the current set of exceptions.
 	 */
 	feclearexcept(FE_ALL_EXCEPT);
 
@@ -701,9 +712,16 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	destv = src1v + src2v;
 
 	/*
-	 * Clear the current set of excetions.
+	 * Test to see what exceptions were raised.
 	 */
 	raised = fetestexcept(FE_ALL_EXCEPT);
+
+	/*
+	 * Reset the rounding mode
+	 */
+	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+
+	// TODO: We need to have a mutex starting at this point.
 
 	/*
 	 * Convert the result into the 64-bit value we expect it to be.
@@ -711,25 +729,12 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
 
 	/*
-	 * Set the exception bits.
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
 	 */
-	if (raised & FE_INEXACT)
-		instr->excSum.ine = instr->excSum.set_ine = 1;
-	if (raised & FE_DIVBYZERO)
-		instr->excSum.dze = instr->excSum.set_dze = 1;
-	if (raised & FE_UNDERFLOW)
-		instr->excSum.unf = instr->excSum.set_unf = 1;
-	if (raised & FE_OVERFLOW)
-		instr->excSum.ovf = instr->excSum.set_ovf = 1;
-	if (raised & FE_INVALID)
-		instr->excSum.inv = instr->excSum.set_inv = 1;
-	if (fpFunc->trp == AXP_FP_TRP_S)
-		instr->excSum.swc = 1;
-
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+	raised &= (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW);
+	AXP_FP_SetExceptions(cpu, instr, raised);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
