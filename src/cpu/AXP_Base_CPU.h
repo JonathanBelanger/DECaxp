@@ -336,6 +336,27 @@ typedef struct
 } AXP_S_MEMORY;
 
 /*
+ * IEEE T Float Memory format (64-bit structure).
+ */
+typedef struct
+{
+	u64		fraction : 52;
+	u64		exponent : 11;
+	u64		sign : 1;
+} AXP_T_MEMORY;
+
+/*
+ * IEEE X Float Memory format (128-bit structure).
+ */
+typedef struct
+{
+	u128	zero : 57;
+	u128	fraction : 55;
+	u128	exponent : 15;
+	u128	sign : 1;
+} AXP_X_MEMORY;
+
+/*
  * Program Counter (PC) Definition
  */
 typedef struct

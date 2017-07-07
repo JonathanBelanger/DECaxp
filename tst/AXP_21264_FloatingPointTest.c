@@ -247,6 +247,18 @@ AXP_cvtTExceptionChar cvtExceptionChar[AXP_NUM_EXCEPTION] =
 	{'i', invalid, "invalid"},
 };
 
+char *cvtEncoding[] =
+{
+	"Reserved",
+	"Zero",
+	"Finite",
+	"Denormal",
+	"Infinity",
+	"NotANumber",
+	"DirtyZero"
+};
+
+
 char *msgStr = "%%AXP-%c-%s, %s.\n";
 char fatal = 'F';
 char error = 'E';
@@ -384,7 +396,7 @@ i32 parseOperands(
 	}
 	else if (inputStr[0] == 'S')
 	{
-		fpReg->uq = AXP_R_C_NAN;
+		fpReg->uq = AXP_R_CS_NAN;
 		return(retVal);
 	}
 	if (inputStr[1] == 'I')
@@ -836,12 +848,14 @@ int main()
 	AXP_IEEEFormat	resultFmt;
 	AXP_RoundingMode roundMode;
 	AXP_TrappedException trappedException;
-	AXP_FP_REGISTER	src3;
+	AXP_FP_REGISTER	src3v;
+	AXP_FP_REGISTER	expectedResults;
+	AXP_FP_ENCODING encoding;
 	bool			useResults;
 	bool			results;
 	int				testCnt = 0, passed = 0, failed = 0;
 	int				retVal;
-	double			*number;
+	double			*Ra, *Rb, *Rc, *expectedRc;
 
 	/*
 	 * NOTE: 	The current simulation takes in one instruction at a time.  The
@@ -853,8 +867,8 @@ int main()
 	instr.uniqueID = 0;		// This will be incremented for each test.
 	instr.aSrc1 = 5;		// Architectural Register (F05).
 	instr.src1 = 40;		// Physical Register.
-	instr.aSrc2 = 31;		// Architectural Register (F31).
-	instr.src2 = 72;		// Physical Register.
+	instr.aSrc2 = 6;		// Architectural Register (F06).
+	instr.src2 = 41;		// Physical Register.
 	instr.aDest = 29;		// Architectural Register (F29).
 	instr.dest = 31;		// Physical Register.
 	instr.type_hint_index = 0;
@@ -865,22 +879,28 @@ int main()
 	instr.useLiteral = false;
 	instr.branchPredict = false;
 	instr.literal = 0;
-	instr.src2v.r.uq = 0;	// Only 2 registers (Ra = destination, Rb = source)
 	instr.lockPhysAddrPending = 0;
 	instr.lockVirtAddrPending = 0;
-	instr.format = Mem;		// Memory formatted instruction.
-	instr.type = Load;		// Load operation.
+	instr.format = FP;		// Memory formatted instruction.
+	instr.type = Other;		// Load operation.
 	instr.pc.pc = 0x000000007ffe000ll;
 	instr.pc.pal = 0;		// not PALmode.
 	instr.branchPC.pc = 0;
 	instr.branchPC.pal = 0;
 	instr.state = Retired;	// All instructions are initially Retired.
+	*((u64 *) &instr.insFpcr) = 0;
+	*((u64 *) &instr.excSum) = 0;
+	instr.excRegMask = 0;	// Exception Register Mask
+	instr.loadCompletion = NULL;
 
 	fp = openNextFile(fileName);
 
 	if(fp != NULL)
 	{
-		number = (double *) &instr.src1v.fp.uq;
+		Ra = (double *) &instr.src1v.fp.uq;
+		Rb = (double *) &instr.src2v.fp.uq;
+		Rc = (double *) &instr.destv.fp.uq;
+		expectedRc = (double *) &expectedResults;
 		while ((retVal = parseNextLine(
 								fp,
 								&oper,
@@ -890,9 +910,9 @@ int main()
 								&trappedException,
 								&instr.src1v.fp,
 								&instr.src2v.fp,
-								&src3,
+								&src3v,
 								&useResults,
-								&instr.destv.fp,
+								&expectedResults,
 								&results
 								)) != 0)
 		{
@@ -900,11 +920,231 @@ int main()
 			switch (retVal)
 			{
 				case 1:
-					pass = true;
-					passed++;
-					printf("Test #%d: Source is: %f (0x%016llx) [size = %ld]\n\n",
-							testCnt, *number, instr.src1v.fp.uq,
-							sizeof(instr.src1v.fp.uq));
+					encoding = AXP_FP_ENCODE(&instr.src1v.fp.fpr, true);
+					switch (oper)
+					{
+						case add:
+							instr.opcode = FLTI;
+							instr.function = AXP_FUNC_ADDS;
+							retValIns = AXP_ADDS(cpu, &instr);
+							printf("ADDS (%d): Ra: %f + Rb: %f = Rc: %f (%f)\n",
+									retValIns, *Ra, *Rb, *Rc, *expectedRc);
+							if (retValIns != NoException)
+								printf("\tFPCR = 0x%016llx\n",
+									*((u64 *) &instr.insFpcr));
+							break;
+
+						case isSigned:
+							printf("isSigned: %f, expecting %d --> ", *Ra,
+								results);
+							if (instr.src1v.fp.fpr.sign == 0)
+							{
+								if (results == false)
+								{
+									passed++;
+									printf("passed 1\n");
+								}
+								else
+								{
+									pass = false;
+									failed++;
+									printf("failed (0x%016llx) 1\n",
+										instr.src1v.fp.uq);
+								}
+							}
+							else
+							{
+								if (results == true)
+								{
+									passed++;
+									printf("passed 2\n");
+								}
+								else
+								{
+									pass = false;
+									failed++;
+									printf("failed (0x%016llx) 2\n",
+										instr.src1v.fp.uq);
+								}
+							}
+							break;
+
+						case isNormal:
+							printf("isNormal (%s): %f, expecting %d --> ",
+								cvtEncoding[encoding], *Ra, results);
+							if ((encoding != Finite) == results)
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							else
+							{
+								passed++;
+								printf("passed\n");
+							}
+							break;
+
+						case isFinite:
+							printf("isFinite (%s): %f, expecting %d --> ",
+								cvtEncoding[encoding], *Ra, results);
+							if (((encoding != Finite) &&
+								(encoding != Denormal) &&
+								(encoding != Zero)) == results)
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							else
+							{
+								passed++;
+								printf("passed\n");
+							}
+							break;
+
+						case isZero:
+							printf("isZero (%s): %f, expecting %d --> ",
+								cvtEncoding[encoding], *Ra, results);
+							if ((encoding != Zero) == results)
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							else
+							{
+								passed++;
+								printf("passed\n");
+							}
+							break;
+
+						case isSubnormal:
+							printf("isSubnormal (%s): %f, expecting %d --> ",
+									cvtEncoding[encoding], *Ra, results);
+							if ((encoding != Denormal) == results)
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							else
+							{
+								passed++;
+								printf("passed\n");
+							}
+							break;
+
+						case isInfinite:
+							printf("isInfinite (%s): %f, expecting %d --> ",
+								cvtEncoding[encoding], *Ra, results);
+							if ((encoding != Infinity) == results)
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							else
+							{
+								passed++;
+								printf("passed\n");
+							}
+							break;
+
+						case isNotANumber:
+							printf("isNotANumber (%s): %f, expecting %d --> ",
+								cvtEncoding[encoding], *Ra, results);
+							if ((encoding != NotANumber) == results)
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							else
+							{
+								passed++;
+								printf("passed\n");
+							}
+							break;
+
+						case isSignaling:
+							printf("isSignaling (%s): %f, expecting %d --> ",
+								cvtEncoding[encoding], *Ra, results);
+							if ((encoding == NotANumber) &&
+								((instr.src1v.fp.uq & AXP_R_QNAN) == 0))
+							{
+								if (results == true)
+								{
+									passed++;
+									printf("passed\n");
+								}
+								else
+								{
+									pass = false;
+									failed++;
+									printf("failed (0x%016llx)\n",
+										instr.src1v.fp.uq);
+								}
+							}
+							else
+							{
+								if (results == true)
+								{
+									pass = false;
+									failed++;
+									printf("failed (0x%016llx)\n",
+										instr.src1v.fp.uq);
+								}
+								else
+								{
+									passed++;
+									printf("passed\n");
+								}
+							}
+							break;
+
+						/*
+						 * These are not yet implemented.
+						 */
+						case subtract:
+						case multiply:
+						case divide:
+						case multiplyAdd:
+						case squareRoot:
+						case remainder:
+						case roundFloatToInt:
+						case convertFloatToFloat:
+						case convertFloatToInt:
+						case convertIntToFloat:
+						case convertToDecimalStr:
+						case convertDecimalStrToFloat:
+						case quietComparison:
+						case signalingComparison:
+						case copy:
+						case negate:
+						case absoluteValue:
+						case copySign:
+						case scalb:
+						case logb:
+						case nextAfter:
+						case class:
+						case minNum:
+						case maxNum:
+						case minNumMag:
+						case maxNumMag:
+						case sameQuantum:
+						case quantize:
+						case nextUp:
+						case nextDown:
+						case equivalent:
+							break;
+					}
 					break;
 
 				case -1:
@@ -912,8 +1152,6 @@ int main()
 					failed++;
 					break;
 			}
-			if (testCnt >= 30)
-				break;
 		}
 		fclose(fp);
 	}
@@ -922,13 +1160,6 @@ int main()
 		printf("Unable to open test data file: %s\n", fileName);
 		pass = false;
 	}
-
-	float f32 = -340282346638528859811704183484516925440.0;
-	double f64 = -340282346638528859811704183484516925440.0;
-	u32		*ul32 = (u32 *) &f32;
-	u64		*ul64 = (u64 *) &f64;
-	printf("single[%ld]: %f (0x%08x)\n", sizeof(f32), f32, *ul32);
-	printf("double[%ld]: %f (0x%016llx)\n", sizeof(f64), f64, *ul64);
 
 	/*
 	 * Display the results of the test.

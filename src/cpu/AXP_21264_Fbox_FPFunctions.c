@@ -28,20 +28,13 @@
 #include "AXP_Configure.h"
 #include "AXP_21264_Fbox_FPFunctions.h"
 
-typedef struct
-{
-	u32		fraction : 23;
-	u32		exponent : 8;
-	u32		sign;
-} AXP_IEEE_S_FLOAT;
-
 /*
  * AXP_FP_CvtFPRToFloat
  *	Hey, guess what, the GNU C compiler generates code that is IEEE compliant.
  *	The only thing We are going to do here is to convert the floating-point
  *	register format to a 32-bit float and then use the math run-time library
- *	functions to actually do that work.  This only needs to be called for VAX F
- *	and IEEE S formatted registers (we need to strip out the high order
+ *	functions to actually do that work.  This only needs to be called for
+ *	IEEE S formatted registers (we need to strip out the high order
  *	fraction and reduce the exponent from 11 to 8 bits.
  *
  * Input Parameter:
@@ -57,7 +50,7 @@ typedef struct
 float AXP_FP_CvtFPRToFloat(AXP_FP_REGISTER fpr)
 {
 	float				retVal = 0.0;
-	AXP_IEEE_S_FLOAT	*sFloat = (AXP_IEEE_S_FLOAT *) &retVal;
+	AXP_S_MEMORY	*sFloat = (AXP_S_MEMORY *) &retVal;
 
 	/*
 	 * Convert away.
@@ -78,10 +71,10 @@ float AXP_FP_CvtFPRToFloat(AXP_FP_REGISTER fpr)
  * AXP_FP_CvtFloatToFPR
  *	Hey, guess what, the GNU C compiler generates code that is IEEE compliant.
  *	The only thing We are going to do here is to convert the 32-bit float back
- *	to a floating-point register format.  This only needs to be called for VAX
- *	F and IEEE S formatted registers (we need to put back the high order
- *	fraction, clearing out the low order portion, and expend the exponent from
- *	8 to 11 bits.
+ *	to a floating-point register format.  This only needs to be called for
+ *	IEEE S formatted registers (we need to put back the high order fraction,
+ *	clearing out the low order portion, and expend the exponent from 8 to 11
+ *	bits.
  *
  * Input Parameter:
  * 	real32:
@@ -96,25 +89,18 @@ float AXP_FP_CvtFPRToFloat(AXP_FP_REGISTER fpr)
 AXP_FP_REGISTER AXP_FP_CvtFloatToFPR(float real32)
 {
 	AXP_FP_REGISTER		retVal;
-	AXP_IEEE_S_FLOAT	*sFloat = (AXP_IEEE_S_FLOAT *) &real32;
+	AXP_S_MEMORY	*sFloat = (AXP_S_MEMORY *) &real32;
 
 	/*
 	 * Convert away.
 	 */
-	retVal.fpr32.sign =sFloat->sign;
-	retVal.fpr32.exponent =
-		((sFloat->exponent & 0x80) << 3) |
-		((sFloat->exponent & 0x7f));
-	if (sFloat->exponent & 0x80)
-	{
-		if ((sFloat->exponent & 0x7f) == 0x7f)
-			sFloat->exponent |= 0x38;
-	}
+	retVal.fpr32.sign = sFloat->sign;
+	if (sFloat->exponent == AXP_S_NAN)
+		retVal.fpr32.exponent = AXP_T_NAN;
+	else if (sFloat->exponent == 0)
+		retVal.fpr32.exponent = 0;
 	else
-	{
-		if ((sFloat->exponent & 0x7f) != 0x00)
-			sFloat->exponent |= 0x38;
-	}
+		retVal.fpr32.exponent = sFloat->exponent + AXP_T_BIAS - AXP_S_BIAS;
 	retVal.fpr32.fraction = sFloat->fraction;
 	retVal.fpr32.zero = 0;
 
@@ -221,7 +207,7 @@ int AXP_FP_SetRoundingMode(
 }
 
 /*
- * AXP_FP_SetExceptions
+ * AXP_FP_SetFPCR
  * 	This function is called to conditionally set the excSum field, and always
  * 	the insFPCR fields in the instruction parameter.  The function field is
  * 	used to determine which qualifier was supplied with the call.
@@ -233,64 +219,126 @@ int AXP_FP_SetRoundingMode(
  * 	raised:
  * 		A value from the fetestexcept, used to set the FPCR and conditionally,
  * 		the excSum.
+ * 	integerOverflow:
+ * 		An indication that the overflow condition is for an integer overflow
+ * 		and not a floating point overflow.
  *
- * Output Parameaters:
+ * Output Parameters:
  * 	instr:
  * 		The fpcr and, conditionally, the excSum will be updated, based on the
  * 		exception.
+ *
+ * Return Value:
+ * 	None.
  */
-void AXP_FP_SetExceptions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr, int raised)
+void AXP_FP_SetFPCR(AXP_INSTRUCTION *instr, int raised, bool integerOverflow)
 {
 	AXP_FP_FUNC *func = (AXP_FP_FUNC *) &instr->function;
-	u32	axpExceptions = 0;
 	u64 ieeeExceptions = 0;
 
 	/*
 	 * We always set the FPCR
 	 */
 	if (raised & FE_DIVBYZERO)
-	{
 		ieeeExceptions |= AXP_IEEE_DIV_BY_ZERO;
-		axpExceptions |= AXP_EXC_DIV_BY_ZERO;
-	}
 	if (raised & FE_INVALID)
-	{
 		ieeeExceptions |= AXP_IEEE_INV_OPER;
-		axpExceptions |= AXP_EXC_INV_OPER;
-	}
 	if (raised & FE_OVERFLOW)
-	{
-		ieeeExceptions |= AXP_IEEE_FP_OVERFLOW;
-		axpExceptions |= AXP_EXC_FP_OVERFLOW;
-	}
-	if (raised & FE_INEXACT)
-	{
+		ieeeExceptions |=
+			(integerOverflow ? AXP_IEEE_INT_OVERFLOW : AXP_IEEE_FP_OVERFLOW);
+	if ((raised & FE_INEXACT) && (func->trp & AXP_FP_TRP_I))
 		ieeeExceptions |= AXP_IEEE_INEXACT_RES;
-
-		/*
-		 * If '/I' is present, then set excSum
-		 */
-		if (func & AXP_FP_TRP_I)
-			axpExceptions |= AXP_EXC_INEXACT_RES;
-	}
-	if (raised & FE_UNDERFLOW)
-	{
+	if ((raised & FE_UNDERFLOW) && (func->trp & AXP_FP_TRP_U))
 		ieeeExceptions |= AXP_IEEE_UNDERFLOW;
 
+	/*
+	 * If we set any IEEE exception bits, which are for the fpcr register, then
+	 * go and set these bits.
+	 */
+	if (ieeeExceptions != 0)
+		AXP_SetIEEEException(instr, ieeeExceptions);
+
+	/*
+	 * Go set the excSum register bit fields, as well.
+	 */
+	AXP_FP_SetExcSum(instr, raised, integerOverflow);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_FP_SetExcSum
+ * 	This function is called to conditionally set the excSum bits in the
+ * 	instruction parameter.  The function field is used to determine which
+ * 	qualifier was supplied with the call, so that we can set, or not, the
+ * 	correct bits.
+ *
+ * Input Parameters:
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ * 	raised:
+ * 		A value from the fetestexcept, used to set the excSum.
+ * 	integerOverflow:
+ * 		An indication that the overflow condition is for an integer overflow
+ * 		and not a floating point overflow.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The excSum will be updated, based on the exception.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_FP_SetExcSum(AXP_INSTRUCTION *instr, int raised, bool integerOverflow)
+{
+	AXP_FP_FUNC *func = (AXP_FP_FUNC *) &instr->function;
+	u32	axpExceptions = 0;
+
+	/*
+	 * We always set the the following exceptions.
+	 */
+	if (raised & FE_DIVBYZERO)
+		axpExceptions |= AXP_EXC_DIV_BY_ZERO;
+	if (raised & FE_INVALID)
+		axpExceptions |= AXP_EXC_INV_OPER;
+	if (raised & FE_OVERFLOW)
+		axpExceptions |=
+			(integerOverflow ? AXP_EXC_INT_OVERFLOW : AXP_EXC_FP_OVERFLOW);
+
+	/*
+	 * If '/I' is present, then set excSum
+	 */
+	if ((raised & FE_INEXACT) && (func->trp & AXP_FP_TRP_I))
+		axpExceptions |= AXP_EXC_INEXACT_RES;
+
+	/*
+	 * If '/U', which is the same as '/V' is present, then set excSum
+	 */
+	if ((raised & FE_UNDERFLOW) && (func->trp & AXP_FP_TRP_U))
+		axpExceptions |= AXP_EXC_UNDERFLOW;
+
+	/*
+	 * If we set any AXP exception bits, which are for the excSum register,
+	 * then go and set these bits.
+	 */
+	if (axpExceptions != 0)
+	{
+
 		/*
-		 * If '/U', which is the same as '/V', is present, then set excSum
+		 * If '/S' is present, then set the software completion bit.
 		 */
-		if (func & AXP_FP_TRP_U)
-			axpExceptions |= AXP_EXC_UNDERFLOW;
+		if (func->trp & AXP_FP_TRP_S)
+			axpExceptions |= AXP_EXC_SW_COMPL;
+		AXP_SetException(instr, axpExceptions);
 	}
 
 	/*
-	 * Some excSum flags may not get set if the qualifiers indicate it.
+	 * Return back to the caller.
 	 */
-	if (axpExceptions != 0)
-		AXP_SetException(instr, axpExceptions);
-	if (ieeeExceptions != 0)
-		AXP_SetIEEEException(instr, ieeeExceptions);
 	return;
 }
 

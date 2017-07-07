@@ -63,8 +63,6 @@ AXP_EXCEPTIONS AXP_CPYSE(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_CPYSN(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_CVTLQ(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_CVTQL(AXP_21264_CPU *, AXP_INSTRUCTION *);
-AXP_EXCEPTIONS AXP_CVTQL_V(AXP_21264_CPU *, AXP_INSTRUCTION *);
-AXP_EXCEPTIONS AXP_CVTQL_SV(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_FCMOVEQ(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_FCMOVGE(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_FCMOVGT(AXP_21264_CPU *, AXP_INSTRUCTION *);
@@ -74,9 +72,9 @@ AXP_EXCEPTIONS AXP_FCMOVNE(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_MF_FPCR(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_MT_FPCR(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *, AXP_INSTRUCTION *);
-AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *, AXP_INSTRUCTION *);
-AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *, AXP_INSTRUCTION *);
-AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *, AXP_INSTRUCTION *);
 
 /*
  * FP Operate Function Field Format
@@ -140,14 +138,15 @@ typedef struct
 #define AXP_R_LONG_SMALL		0xffffffff00000000ll
 #define AXP_R_LONG_LARGE		0x000000007fffffffll
 #define AXP_R_QNAN				0x0008000000000000ll
-#define AXP_R_CQ_NAN			0xfff8000000000000ll
-#define AXP_R_C_NAN				0xfff0000000000001ll
+#define AXP_R_CQ_NAN			0xfff8000000000001ll
+#define AXP_R_CS_NAN			0x7ff0000000000001ll
 #define AXP_R_ZERO				0x0000000000000000ll	/* plus zero */
 #define AXP_R_MZERO				0x8000000000000000ll	/* minus zero */
 #define AXP_R_PINF				0x7ff0000000000000ll	/* plus infinity */
 #define AXP_R_MINF				0xfff0000000000000ll	/* minus infinity */
 #define AXP_R_PMAX				0x7fefffffffffffffll	/* plus maximum */
 #define AXP_R_MMAX				0xffefffffffffffffll	/* minus maximum */
+#define AXP_R_EXP_MAX			0x7ff
 
 #define AXP_F_BIAS				0x080
 #define AXP_F_EXP_MASK			0xff
@@ -157,9 +156,13 @@ typedef struct
 #define AXP_S_NAN				0xff
 #define AXP_S_EXP_MASK			0xff
 #define AXP_T_BIAS				0x3ff
+#define AXP_T_NAN				0x7ff
 #define AXP_T_EXP_MASK			0x7ff
 #define AXP_D_BIAS				0x80
+#define AXP_D_EXP_MASK
 #define AXP_D_GUARD				(63 - 55)
+
+#define AXP_X_BIAS				0x3fff
 
 #define AXP_R_Q2L_OVERFLOW(val)	(((val) & AXP_R_SIGN) ? 					\
 								 ((val) < AXP_R_LONG_SMALL) :				\
@@ -206,21 +209,22 @@ typedef struct
 } AXP_FP_UNPACKED;
 
 #define AXP_FP_ENCODE(ur, ieeeFP)											\
-		((ur)->exponent == -1 ?												\
+		((ur)->exponent == AXP_R_EXP_MAX ?									\
 			((ieeeFP) ?														\
-				 ((ur)->fraction != 0 ?										\
-						 NotANumber : 										\
-						 Infinity) : 										\
+				 ((ur)->fraction == 0 ?										\
+						 Infinity : 										\
+						 NotANumber) : 										\
 				 Finite) : 													\
 			((ur)->exponent == 0 ?											\
 				((ieeeFP) ?													\
-					((ur)->fraction != 0 ?									\
-						Denormal :											\
-						Zero) :												\
+					((ur)->fraction == 0 ?									\
+						Zero :												\
+						Denormal) :											\
 					((ur)->sign == 1 ?										\
 						Reserved :											\
 						((ur)->fraction == 0 ?								\
 							Zero :											\
 							DirtyZero))) :									\
 			Finite))
+
 #endif /* _AXP_21264_FBOX_DEFS_ */
