@@ -35,7 +35,8 @@
 float AXP_FP_CvtFPRToFloat(AXP_FP_REGISTER);
 AXP_FP_REGISTER AXP_FP_CvtFloatToFPR(float);
 int AXP_FP_SetRoundingMode(AXP_21264_CPU *, AXP_FP_FUNC *, int);
-void AXP_FP_SetFPCR(AXP_INSTRUCTION *, int, bool);
+int AXP_FP_SetExceptionMode(AXP_21264_CPU *, int);
+void AXP_FP_SetFPCR(AXP_21264_CPU *, AXP_INSTRUCTION *, int, bool);
 void AXP_FP_SetExcSum(AXP_INSTRUCTION *, int, bool);
 
 #endif	/* _AXP_21264_FBOX_FPFUNCTIONS_DEFS_ */

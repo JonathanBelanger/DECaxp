@@ -23,9 +23,13 @@
  *
  *	V01.000		24-Jun-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		07-Jul-2017	Jonathan D. Belanger
+ *	Renamed and left just the VAX instructions to be implemented in the module
+ *	with the same name.
  */
-#ifndef _AXP_21264_FBOX_OPERATE_DEFS_
-#define _AXP_21264_FBOX_OPERATE_DEFS_
+#ifndef _AXP_21264_FBOX_OPERATE_VAX_DEFS_
+#define _AXP_21264_FBOX_OPERATE_VAX_DEFS_
 
 #include "AXP_Utility.h"
 #include "AXP_Base_CPU.h"
@@ -36,4 +40,4 @@
 #include "AXP_21264_Fbox.h"
 #include "AXP_21264_Fbox_FPFunctions.h"
 
-#endif /* _AXP_21264_FBOX_OPERATE_DEFS_ */
+#endif /* _AXP_21264_FBOX_OPERATE_VAX_DEFS_ */

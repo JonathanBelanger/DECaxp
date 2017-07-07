@@ -23,6 +23,9 @@
  *	V01.000		26-Jun-2017	Jonathan D. Belanger
  *	Initially written.
  */
+#include <math.h>
+#include <float.h>
+
 #include "AXP_Utility.h"
 #include "AXP_Blocks.h"
 #include "AXP_21264_Instructions.h"
@@ -89,46 +92,46 @@ typedef enum
  */
 typedef enum
 {
-	add,
-	subtract,
-	multiply,
-	divide,
-	multiplyAdd,
-	squareRoot,
-	remainder,
-	roundFloatToInt,
-	convertFloatToFloat,
-	convertFloatToInt,
-	convertIntToFloat,
-	convertToDecimalStr,
-	convertDecimalStrToFloat,
-	quietComparison,
-	signalingComparison,
-	copy,
-	negate,
-	absoluteValue,
-	copySign,
-	scalb,
-	logb,
-	nextAfter,
-	class,
-	isSigned,
-	isNormal,
-	isFinite,
-	isZero,
-	isSubnormal,
-	isInfinite,
-	isNotANumber,
-	isSignaling,
-	minNum,
-	maxNum,
-	minNumMag,
-	maxNumMag,
-	sameQuantum,
-	quantize,
-	nextUp,
-	nextDown,
-	equivalent
+	addAction,
+	subtractAction,
+	multiplyAction,
+	divideAction,
+	multiplyAddAction,
+	squareRootAction,
+	remainderAction,
+	roundFloatToIntAction,
+	convertFloatToFloatAction,
+	convertFloatToIntAction,
+	convertIntToFloatAction,
+	convertToDecimalStrAction,
+	convertDecimalStrToFloatAction,
+	quietComparisonAction,
+	signalingComparisonAction,
+	copyAction,
+	negateAction,
+	absoluteValueAction,
+	copySignAction,
+	scalbAction,
+	logbAction,
+	nextAfterAction,
+	classAction,
+	isSignedAction,
+	isNormalAction,
+	isFiniteAction,
+	isZeroAction,
+	isSubnormalAction,
+	isInfiniteAction,
+	isNotANumberAction,
+	isSignalingAction,
+	minNumAction,
+	maxNumAction,
+	minNumMagAction,
+	maxNumMagAction,
+	sameQuantumAction,
+	quantizeAction,
+	nextUpAction,
+	nextDownAction,
+	equivalentAction
 } AXP_Operation;
 
 typedef struct
@@ -142,46 +145,46 @@ typedef struct
 
 AXP_cvtOperationStr cvtOperStr[AXP_NUM_OPER] =
 {
-	{"+", add, "add"},
-	{"-", subtract, "subtract"},
-	{"*", multiply, "multiply"},
-	{"/", divide, "divide"},
-	{"*+", multiplyAdd, "multiply-add"},
-	{"V", squareRoot, "square root"},
-	{"%", remainder, "remainder"},
-	{"rfi", roundFloatToInt, "round float to integer"},
-	{"cff", convertFloatToFloat, "convert float to float"},
-	{"cfi", convertFloatToInt, "convert float to integer"},
-	{"cif", convertIntToFloat, "convert integer to float"},
-	{"cfd", convertToDecimalStr, "convert to decimal string"},
-	{"cdf", convertDecimalStrToFloat, "convert decimal string to float"},
-	{"qC", quietComparison, "quiet comparison"},
-	{"sC", signalingComparison, "signaling comparison"},
-	{"cp", copy, "copy"},
-	{"~", negate, "negate"},
-	{"A", absoluteValue, "absolute value"},
-	{"@", copySign, "copy sign"},
-	{"S", scalb, "scalb"},
-	{"L", logb, "logb"},
-	{"Na", nextAfter, "next after"},
-	{"?", class, "class"},
-	{"?-", isSigned, "is signed"},
-	{"?n", isNormal, "is normal"},
-	{"?f", isFinite, "is finite"},
-	{"?0", isZero, "is zero"},
-	{"?s", isSubnormal, "is subnormal"},
-	{"?i", isInfinite, "is infinite"},
-	{"?N", isNotANumber, "is not a number"},
-	{"?sN", isSignaling, "is signaling"},
-	{"<C", minNum, "min-num"},
-	{">C", maxNum, "max-num"},
-	{"<A", minNumMag, "min-num-mag"},
-	{">A", maxNumMag, "max-num-mag"},
-	{"=quant", sameQuantum, "same quantum"},
-	{"quant", quantize, "quantize"},
-	{"Nu", nextUp, "next up"},
-	{"Nd", nextDown, "next down"},
-	{"eq", equivalent, "equivalent"}
+	{"+", addAction, "add"},
+	{"-", subtractAction, "subtract"},
+	{"*", multiplyAction, "multiply"},
+	{"/", divideAction, "divide"},
+	{"*+", multiplyAddAction, "multiply-add"},
+	{"V", squareRootAction, "square root"},
+	{"%", remainderAction, "remainder"},
+	{"rfi", roundFloatToIntAction, "round float to integer"},
+	{"cff", convertFloatToFloatAction, "convert float to float"},
+	{"cfi", convertFloatToIntAction, "convert float to integer"},
+	{"cif", convertIntToFloatAction, "convert integer to float"},
+	{"cfd", convertToDecimalStrAction, "convert to decimal string"},
+	{"cdf", convertDecimalStrToFloatAction, "convert decimal string to float"},
+	{"qC", quietComparisonAction, "quiet comparison"},
+	{"sC", signalingComparisonAction, "signaling comparison"},
+	{"cp", copyAction, "copy"},
+	{"~", negateAction, "negate"},
+	{"A", absoluteValueAction, "absolute value"},
+	{"@", copySignAction, "copy sign"},
+	{"S", scalbAction, "scalb"},
+	{"L", logbAction, "logb"},
+	{"Na", nextAfterAction, "next after"},
+	{"?", classAction, "class"},
+	{"?-", isSignedAction, "is signed"},
+	{"?n", isNormalAction, "is normal"},
+	{"?f", isFiniteAction, "is finite"},
+	{"?0", isZeroAction, "is zero"},
+	{"?s", isSubnormalAction, "is subnormal"},
+	{"?i", isInfiniteAction, "is infinite"},
+	{"?N", isNotANumberAction, "is not a number"},
+	{"?sN", isSignalingAction, "is signaling"},
+	{"<C", minNumAction, "min-num"},
+	{">C", maxNumAction, "max-num"},
+	{"<A", minNumMagAction, "min-num-mag"},
+	{">A", maxNumMagAction, "max-num-mag"},
+	{"=quant", sameQuantumAction, "same quantum"},
+	{"quant", quantizeAction, "quantize"},
+	{"Nu", nextUpAction, "next up"},
+	{"Nd", nextDownAction, "next down"},
+	{"eq", equivalentAction, "equivalent"}
 };
 /*
  * The rounding mode: one of the following:
@@ -237,7 +240,7 @@ typedef struct
 
 #define AXP_NUM_EXCEPTION	6
 
-AXP_cvtTExceptionChar cvtExceptionChar[AXP_NUM_EXCEPTION] =
+AXP_cvtTExceptionChar cvtTExceptionChar[AXP_NUM_EXCEPTION] =
 {
 	{'\0', none, "none"},
 	{'x', inexact, "inexact"},
@@ -246,6 +249,10 @@ AXP_cvtTExceptionChar cvtExceptionChar[AXP_NUM_EXCEPTION] =
 	{'z', divisionByZero, "division by zero"},
 	{'i', invalid, "invalid"},
 };
+
+
+#define AXP_NUM_OUT_EXCEPTION	8
+
 
 char *cvtEncoding[] =
 {
@@ -364,8 +371,8 @@ i32 readNextToken(FILE *fp, char *retStr, int len)
  * 		A value indicating the type of data should be present in the inputStr.
  *
  * Output Parameters:
- * 	resultBool:
- * 		A pointer to a boolean to receive an indicator that the result is a
+ * 	whichResult:
+ * 		A pointer to an to receive an indicator that the result is a
  * 		boolean and can be found in the result parameter.
  * 	floatResult:
  * 		A pointer to a structure containing the format of all possible
@@ -381,7 +388,7 @@ i32 readNextToken(FILE *fp, char *retStr, int len)
 i32 parseOperands(
 	char *inputStr,
 	AXP_IEEEFormat inputFormat,
-	bool *resultsBool,
+	int *whichResults,
 	AXP_FP_REGISTER *fpReg,
 	bool *result)
 {
@@ -391,20 +398,24 @@ i32 parseOperands(
 		fpReg->fpr.sign = 1;
 	else if (inputStr[0] == 'Q')
 	{
-		fpReg->uq = AXP_R_CQ_NAN;
+		*whichResults = 1;
+		fpReg->uq = (inputFormat == ieeeS) ? AXP_S_CQ_NAN : AXP_T_CQ_NAN;
 		return(retVal);
 	}
 	else if (inputStr[0] == 'S')
 	{
-		fpReg->uq = AXP_R_CS_NAN;
+		*whichResults = 1;
+		fpReg->uq = (inputFormat == ieeeS) ? AXP_S_CS_NAN : AXP_T_CS_NAN;
 		return(retVal);
 	}
 	if (inputStr[1] == 'I')
 	{
+		*whichResults = 1;
 		fpReg->fpr.exponent = 0x7ff;
 	}
 	else if (inputStr[1] == 'Z')
 	{
+		*whichResults = 1;
 		fpReg->fpr.exponent = 0;
 		fpReg->fpr.fraction = 0;
 	}
@@ -418,7 +429,7 @@ i32 parseOperands(
 		 */
 		if (inputStr[1] == 'x')
 		{
-			*resultsBool = true;
+			*whichResults = -1;
 			*result = (inputStr[2] == '1');
 		}
 		else
@@ -426,7 +437,7 @@ i32 parseOperands(
 			char *ptr;
 			bool normal;
 
-			*resultsBool = false;
+			*whichResults = 1;
 			normal = inputStr[1] == '1';
 			if (inputFormat == ieeeS)
 			{
@@ -489,9 +500,10 @@ i32 parseNextLine(
 		AXP_FP_REGISTER *src1,
 		AXP_FP_REGISTER *src2,
 		AXP_FP_REGISTER *src3,
-		bool			*useResult,
+		int				*useResult,
 		AXP_FP_REGISTER *dest,
-		bool			*result)
+		bool			*result,
+		AXP_FBOX_FPCR	*expectedFPCR)
 {
 	AXP_FP_REGISTER	*nextFPReg[3] = {src1, src2, src3};
 	bool			found = false;
@@ -710,9 +722,9 @@ i32 parseNextLine(
 			found = false;
 			for (ii = 1; ii < AXP_NUM_EXCEPTION; ii++)
 			{
-				if (cvtExceptionChar[ii].exceptionChar == getC)
+				if (cvtTExceptionChar[ii].exceptionChar == getC)
 				{
-					*exception = cvtExceptionChar[ii].exception;
+					*exception = cvtTExceptionChar[ii].exception;
 					found = true;
 					break;
 				}
@@ -738,12 +750,12 @@ i32 parseNextLine(
 	/*
 	 * Get the input operands (may be up to 3).
 	 */
+	src1->uq = src2->uq = src3->uq = 0;
 	if (retVal == 1)
 	{
-		bool tmpBoolResults;
-		bool tmpResults;
+		int		tmpBoolResults;
+		bool	tmpResults;
 
-		src1->uq = src2->uq = src3->uq = 0;
 		retVal = readNextToken(fp, workingStr, sizeof(workingStr));
 		while ((strcmp("->", workingStr) != 0) && (retVal == 1))
 		{
@@ -761,22 +773,91 @@ i32 parseNextLine(
 	/*
 	 * Get the output operand.
 	 */
+	dest->uq = 0;
+	*useResult = 0;
 	if (retVal == 1)
 	{
-		dest->uq = 0;
 		retVal = readNextToken(fp, workingStr, sizeof(workingStr));
 		if (retVal == 1)
 		{
-			retVal =  parseOperands(
-						workingStr,
-						*resultFmt,
-						useResult,
-						dest,
-						result);
+			if (workingStr[0] != '#')
+				retVal =  parseOperands(
+					workingStr,
+					*resultFmt,
+					useResult,
+					dest,
+					result);
+			else
+				*useResult += 1;
 		}
 	}
-	if (fgets(workingStr,sizeof(workingStr), fp) == NULL)
-		retVal = 0;
+
+	/*
+	 * Get the output exceptions.
+	 */
+	if (retVal == 1)
+	{
+
+		/*
+		 * First things first, set the trapped exception to 'none'.
+		 */
+		memset(expectedFPCR, 0, sizeof(AXP_FBOX_FPCR));
+
+		/*
+		 * OK, the trapped expression may or may not be present.  If it is
+		 * present, then parse it an read in the next space character, so that
+		 * we are ready to parse the input parameters.  IF it is not present,
+		 * then un-get it and move on to the next parsing stage.
+		 */
+		found = false;
+		getC = fgetc(fp);
+		while ((getC != EOF) && (getC != ' ') && (getC != '\n'))
+		{
+			switch (getC)
+			{
+				case 'x':
+					expectedFPCR->ine = 1;
+					found = true;
+					break;
+
+				case 'u':
+				case 'v':
+				case 'w':
+					expectedFPCR->unf = 1;
+					found = true;
+					break;
+
+				case 'o':
+					expectedFPCR->ovf = 1;
+					found = true;
+					break;
+
+				case 'z':
+					expectedFPCR->dze = 1;
+					found = true;
+					break;
+
+				case 'i':
+					expectedFPCR->inv = 1;
+					found = true;
+					break;
+			}
+
+			/*
+			 * Get the next character.
+			 */
+			getC = fgetc(fp);
+		}
+		if (found == true)
+		{
+			expectedFPCR->sum = 1;
+			*useResult += 1;
+		}
+		else
+			*useResult -= 1;
+		if (getC == EOF)
+			retVal = 0;
+	}
 	return(retVal);
 }
 
@@ -821,6 +902,87 @@ FILE *openNextFile(char *fileName)
 	return(fp);
 }
 
+/****************************************************************************
+ *	The following code represents, either functions/macros that do not		*
+ *	exist, or are not implemented correctly in the C RTL.  I am, therefore,	*
+ *	implementing my own (corrected or implemented).							*
+ ****************************************************************************/
+
+/*
+ * isSignaling
+ * 	This function seems to be missing from the GCC C RTL.  So, I'm going to
+ * 	implement one of my own.  I've up-cased the second 'S' so that there will
+ * 	not be a conflict if there is an 'issignaling' function in the C RTL in the
+ * 	future.  Hey, look at me future-proofing this.  Go me.
+ *
+ * Input Parameters:
+ * 	fpv:
+ * 		A value containing the float to be tested.
+ *
+ * Output Paramteres:
+ * 	None.
+ *
+ * Return Value:
+ * 	true:	If the value in fpv is a signaling NaN.
+ * 	false:	If the value is fpv is not a signaling NaN.
+ */
+bool isSignaling(double fpv)
+{
+	AXP_FPR_QNAN_REGISTER *Tfpv = (AXP_FPR_QNAN_REGISTER *) &fpv;
+
+	return((isnan(fpv)) && (Tfpv->quiet == 0));
+}
+
+/*
+ * isSigned
+ * 	This function seems to be missing from the GCC C RTL.  So, I'm going to
+ * 	implement one of my own.  I've up-cased the second 'S' so that there will
+ * 	not be a conflict if there is an 'issigned' function in the C RTL in the
+ * 	future.
+ *
+ * Input Parameters:
+ * 	fpv:
+ * 		A value containing the float to be tested.
+ *
+ * Output Paramteres:
+ * 	None.
+ *
+ * Return Value:
+ * 	true:	If the value in fpv is a signed.
+ * 	false:	If the value is fpv is not signed.
+ */
+bool isSigned(double fpv)
+{
+	AXP_FPR_REGISTER *Tfpv = (AXP_FPR_REGISTER *) &fpv;
+
+	return((isnan(fpv) == false) && (Tfpv->sign == 1));
+}
+
+/*
+ * isInf
+ * 	This function seems to be incorrect in the GCC C RTL.  The C RTL one does
+ * 	not correctly detect -Inf.  So, I'm going to implement one of my own,
+ * 	corrected version.  I've up-cased the second 'I' so that there will not be
+ * 	a conflict if with the one provided by the C RTL.
+ *
+ * Input Parameters:
+ * 	fpv:
+ * 		A value containing the float to be tested.
+ *
+ * Output Paramteres:
+ * 	None.
+ *
+ * Return Value:
+ * 	true:	If the value in fpv is Infinity (+/1).
+ * 	false:	If the value is fpv is not Infinity (+/1).
+ */
+bool isInf(double fpv)
+{
+	AXP_FPR_REGISTER *fpr = (AXP_FPR_REGISTER *) &fpv;
+
+	return(AXP_FP_ENCODE(fpr, true) == Infinity);
+}
+
 /*
  * main
  *	This function is compiled in when unit testing.  It exercises the branch
@@ -851,8 +1013,9 @@ int main()
 	AXP_FP_REGISTER	src3v;
 	AXP_FP_REGISTER	expectedResults;
 	AXP_FP_ENCODING encoding;
-	bool			useResults;
+	int				useResults;
 	bool			results;
+	AXP_FBOX_FPCR	FPCR;
 	int				testCnt = 0, passed = 0, failed = 0;
 	int				retVal;
 	double			*Ra, *Rb, *Rc, *expectedRc;
@@ -913,8 +1076,8 @@ int main()
 								&src3v,
 								&useResults,
 								&expectedResults,
-								&results
-								)) != 0)
+								&results,
+								&FPCR)) != 0)
 		{
 			testCnt++;
 			switch (retVal)
@@ -923,231 +1086,303 @@ int main()
 					encoding = AXP_FP_ENCODE(&instr.src1v.fp.fpr, true);
 					switch (oper)
 					{
-						case add:
+						case addAction:
+							printf("%7d: ADDS(%d): Ra: %f, Rb: %f; expecting %f (0x%016llx) --> ",
+								testCnt+4, useResults, *Ra, *Rb, *expectedRc, *((u64 *) &FPCR));
 							instr.opcode = FLTI;
 							instr.function = AXP_FUNC_ADDS;
+							memset(&instr.insFpcr, 0, sizeof(u64));
 							retValIns = AXP_ADDS(cpu, &instr);
-							printf("ADDS (%d): Ra: %f + Rb: %f = Rc: %f (%f)\n",
-									retValIns, *Ra, *Rb, *Rc, *expectedRc);
-							if (retValIns != NoException)
-								printf("\tFPCR = 0x%016llx\n",
-									*((u64 *) &instr.insFpcr));
-							break;
 
-						case isSigned:
-							printf("isSigned: %f, expecting %d --> ", *Ra,
-								results);
-							if (instr.src1v.fp.fpr.sign == 0)
+							if (useResults == 2)
 							{
-								if (results == false)
+
+								/*
+								 * We are only expected an exception.  No need
+								 * to compare the expected Rc to the returned
+								 * Rc.  Just compare the expected FPCR to the
+								 * one in the instruction.
+								 */
+								if (memcmp(&FPCR, &instr.insFpcr, sizeof(FPCR)) == 0)
 								{
 									passed++;
-									printf("passed 1\n");
+									printf("passed");
 								}
 								else
 								{
 									pass = false;
 									failed++;
-									printf("failed (0x%016llx) 1\n",
-										instr.src1v.fp.uq);
+									printf(" failed FPCR: 0x%016llx",
+										*((u64 *) &instr.insFpcr));
 								}
 							}
-							else
+							else if ((useResults == 1) || (useResults == 3))
 							{
-								if (results == true)
+
+								/*
+								 * OK, we got 2 things to check out.  First,
+								 * that the returned Rc is equal to the
+								 * expected Rc.
+								 */
+								if (*expectedRc == *Rc)
 								{
-									passed++;
-									printf("passed 2\n");
+
+									/*
+									 * OK, the values matched.  Now we need to
+									 * check the returned exceptions.
+									 */
+									if (memcmp(&FPCR, &instr.insFpcr, sizeof(FPCR)) == 0)
+									{
+										passed++;
+										printf("passed");
+									}
+									else
+									{
+										pass = false;
+										failed++;
+										printf(
+											"Rc values matched, exception failed FPCR: 0x%016llx",
+											*((u64 *) &instr.insFpcr));
+									}
 								}
 								else
 								{
-									pass = false;
-									failed++;
-									printf("failed (0x%016llx) 2\n",
-										instr.src1v.fp.uq);
-								}
-							}
-							break;
 
-						case isNormal:
-							printf("isNormal (%s): %f, expecting %d --> ",
-								cvtEncoding[encoding], *Ra, results);
-							if ((encoding != Finite) == results)
-							{
-								pass = false;
-								failed++;
-								printf("failed (0x%016llx)\n",
-									instr.src1v.fp.uq);
-							}
-							else
-							{
-								passed++;
-								printf("passed\n");
-							}
-							break;
+									/*
+									 * OK, the values did not match.  If we
+									 * were supposed to get exceptions, then
+									 * let's check for their correctness.
+									 * Otherwise, we failed.
+									 */
+									if (useResults == 3)
+									{
+										pass = false;
+										failed++;
 
-						case isFinite:
-							printf("isFinite (%s): %f, expecting %d --> ",
-								cvtEncoding[encoding], *Ra, results);
-							if (((encoding != Finite) &&
-								(encoding != Denormal) &&
-								(encoding != Zero)) == results)
-							{
-								pass = false;
-								failed++;
-								printf("failed (0x%016llx)\n",
-									instr.src1v.fp.uq);
-							}
-							else
-							{
-								passed++;
-								printf("passed\n");
-							}
-							break;
+										/*
+										 * OK, the values did not matched.  Now
+										 * we need to check the returned
+										 * exceptions.
+										 */
+										if (memcmp(&FPCR, &instr.insFpcr, sizeof(FPCR)) == 0)
+										{
+											pass = false;
+											failed++;
+											printf(
+												"Rc %f, FPCRs matched.", *Rc);
+										}
+										else
+										{
+											pass = false;
+											failed++;
+											printf(
+												"Nothing matched, Rc: %f, FPCR: 0x%016llx",
+												*Rc,
+												*((u64 *) &instr.insFpcr));
+										}
 
-						case isZero:
-							printf("isZero (%s): %f, expecting %d --> ",
-								cvtEncoding[encoding], *Ra, results);
-							if ((encoding != Zero) == results)
-							{
-								pass = false;
-								failed++;
-								printf("failed (0x%016llx)\n",
-									instr.src1v.fp.uq);
-							}
-							else
-							{
-								passed++;
-								printf("passed\n");
-							}
-							break;
-
-						case isSubnormal:
-							printf("isSubnormal (%s): %f, expecting %d --> ",
-									cvtEncoding[encoding], *Ra, results);
-							if ((encoding != Denormal) == results)
-							{
-								pass = false;
-								failed++;
-								printf("failed (0x%016llx)\n",
-									instr.src1v.fp.uq);
-							}
-							else
-							{
-								passed++;
-								printf("passed\n");
-							}
-							break;
-
-						case isInfinite:
-							printf("isInfinite (%s): %f, expecting %d --> ",
-								cvtEncoding[encoding], *Ra, results);
-							if ((encoding != Infinity) == results)
-							{
-								pass = false;
-								failed++;
-								printf("failed (0x%016llx)\n",
-									instr.src1v.fp.uq);
-							}
-							else
-							{
-								passed++;
-								printf("passed\n");
-							}
-							break;
-
-						case isNotANumber:
-							printf("isNotANumber (%s): %f, expecting %d --> ",
-								cvtEncoding[encoding], *Ra, results);
-							if ((encoding != NotANumber) == results)
-							{
-								pass = false;
-								failed++;
-								printf("failed (0x%016llx)\n",
-									instr.src1v.fp.uq);
-							}
-							else
-							{
-								passed++;
-								printf("passed\n");
-							}
-							break;
-
-						case isSignaling:
-							printf("isSignaling (%s): %f, expecting %d --> ",
-								cvtEncoding[encoding], *Ra, results);
-							if ((encoding == NotANumber) &&
-								((instr.src1v.fp.uq & AXP_R_QNAN) == 0))
-							{
-								if (results == true)
-								{
-									passed++;
-									printf("passed\n");
-								}
-								else
-								{
-									pass = false;
-									failed++;
-									printf("failed (0x%016llx)\n",
-										instr.src1v.fp.uq);
+									}
+									else
+									{
+										pass = false;
+										failed++;
+										printf(" failed Rc: %f ( 0x%016llx)",
+											*Rc, *((u64 *) &instr.insFpcr));
+									}
 								}
 							}
 							else
 							{
-								if (results == true)
-								{
-									pass = false;
-									failed++;
-									printf("failed (0x%016llx)\n",
-										instr.src1v.fp.uq);
-								}
-								else
-								{
-									passed++;
-									printf("passed\n");
-								}
+
+								/*
+								 * We were not expecting anything.  There is
+								 * probably some test that can occur, but I
+								 * have no idea what it might be.  I'm just
+								 * going to blindly assume we passed.
+								 */
+								passed++;
+								printf("passed");
+							}
+							printf(", AXP Exception: %d\n", retValIns);
+							break;
+
+						case isSignedAction:
+							printf("%7d: isSigned: %f, expecting %d --> ",
+								testCnt+4, *Ra, results);
+							if (isSigned(*Ra) == results)
+							{
+								passed++;
+								printf("passed\n");
+							}
+							else
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							break;
+
+						case isNormalAction:
+							printf("%7d: isNormal (%s): %f, expecting %d --> ",
+								testCnt+4, cvtEncoding[encoding], *Ra, results);
+							if (isnormal(*Ra) == results)
+							{
+								passed++;
+								printf("passed\n");
+							}
+							else
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							break;
+
+						case isFiniteAction:
+							printf("%7d: isFinite (%s): %f, expecting %d --> ",
+								testCnt+4, cvtEncoding[encoding], *Ra, results);
+							if (isfinite(*Ra) == results)
+							{
+								passed++;
+								printf("passed\n");
+							}
+							else
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							break;
+
+						case isZeroAction:
+							printf("%7d: isZero (%s): %f, expecting %d --> ",
+								testCnt+4, cvtEncoding[encoding], *Ra, results);
+							if ((*Ra == 0.0) == results)
+							{
+								passed++;
+								printf("passed\n");
+							}
+							else
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							break;
+
+						case isSubnormalAction:
+							printf("%7d: isSubnormal (%s): %f, expecting %d --> ",
+									testCnt+4, cvtEncoding[encoding], *Ra, results);
+							if ((fpclassify(*Ra) == FP_SUBNORMAL) == results)
+							{
+								passed++;
+								printf("passed\n");
+							}
+							else
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							break;
+
+						case isInfiniteAction:
+							printf("%7d: isInfinite (%s): %f, expecting %d --> ",
+								testCnt+4, cvtEncoding[encoding], *Ra, results);
+							if (isInf(*Ra) == results)
+							{
+								passed++;
+								printf("passed\n");
+							}
+							else
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							break;
+
+						case isNotANumberAction:
+							printf("%7d: isNotANumber (%s): %f, expecting %d --> ",
+								testCnt+4, cvtEncoding[encoding], *Ra, results);
+							if (isnan(*Ra) == results)
+							{
+								passed++;
+								printf("passed\n");
+							}
+							else
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
+							}
+							break;
+
+						case isSignalingAction:
+							printf("%7d: isSignaling (%s): %f, expecting %d --> ",
+								testCnt+4, cvtEncoding[encoding], *Ra, results);
+							if (isSignaling(*Ra) == results)
+							{
+								passed++;
+								printf("passed\n");
+							}
+							else
+							{
+								pass = false;
+								failed++;
+								printf("failed (0x%016llx)\n",
+									instr.src1v.fp.uq);
 							}
 							break;
 
 						/*
 						 * These are not yet implemented.
 						 */
-						case subtract:
-						case multiply:
-						case divide:
-						case multiplyAdd:
-						case squareRoot:
-						case remainder:
-						case roundFloatToInt:
-						case convertFloatToFloat:
-						case convertFloatToInt:
-						case convertIntToFloat:
-						case convertToDecimalStr:
-						case convertDecimalStrToFloat:
-						case quietComparison:
-						case signalingComparison:
-						case copy:
-						case negate:
-						case absoluteValue:
-						case copySign:
-						case scalb:
-						case logb:
-						case nextAfter:
-						case class:
-						case minNum:
-						case maxNum:
-						case minNumMag:
-						case maxNumMag:
-						case sameQuantum:
-						case quantize:
-						case nextUp:
-						case nextDown:
-						case equivalent:
+						case subtractAction:
+						case multiplyAction:
+						case divideAction:
+						case multiplyAddAction:
+						case squareRootAction:
+						case remainderAction:
+						case roundFloatToIntAction:
+						case convertFloatToFloatAction:
+						case convertFloatToIntAction:
+						case convertIntToFloatAction:
+						case convertToDecimalStrAction:
+						case convertDecimalStrToFloatAction:
+						case quietComparisonAction:
+						case signalingComparisonAction:
+						case copyAction:
+						case negateAction:
+						case absoluteValueAction:
+						case copySignAction:
+						case scalbAction:
+						case logbAction:
+						case nextAfterAction:
+						case classAction:
+						case minNumAction:
+						case maxNumAction:
+						case minNumMagAction:
+						case maxNumMagAction:
+						case sameQuantumAction:
+						case quantizeAction:
+						case nextUpAction:
+						case nextDownAction:
+						case equivalentAction:
 							break;
 					}
 					break;
 
 				case -1:
+					printf("%7d: >>>>>> ReadNextLine Failed <<<<<\n",
+						testCnt+4);
 					pass = false;
 					failed++;
 					break;

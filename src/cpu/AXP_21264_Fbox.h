@@ -138,8 +138,6 @@ typedef struct
 #define AXP_R_LONG_SMALL		0xffffffff00000000ll
 #define AXP_R_LONG_LARGE		0x000000007fffffffll
 #define AXP_R_QNAN				0x0008000000000000ll
-#define AXP_R_CQ_NAN			0xfff8000000000001ll
-#define AXP_R_CS_NAN			0x7ff0000000000001ll
 #define AXP_R_ZERO				0x0000000000000000ll	/* plus zero */
 #define AXP_R_MZERO				0x8000000000000000ll	/* minus zero */
 #define AXP_R_PINF				0x7ff0000000000000ll	/* plus infinity */
@@ -155,9 +153,13 @@ typedef struct
 #define AXP_S_BIAS				0x7f
 #define AXP_S_NAN				0xff
 #define AXP_S_EXP_MASK			0xff
+#define AXP_S_CQ_NAN			0xfff8000020000000ll
+#define AXP_S_CS_NAN			0x7ff0000020000000ll
 #define AXP_T_BIAS				0x3ff
 #define AXP_T_NAN				0x7ff
 #define AXP_T_EXP_MASK			0x7ff
+#define AXP_T_CQ_NAN			0xfff8000000000001ll
+#define AXP_T_CS_NAN			0x7ff0000000000001ll
 #define AXP_D_BIAS				0x80
 #define AXP_D_EXP_MASK
 #define AXP_D_GUARD				(63 - 55)
@@ -209,22 +211,28 @@ typedef struct
 } AXP_FP_UNPACKED;
 
 #define AXP_FP_ENCODE(ur, ieeeFP)											\
-		((ur)->exponent == AXP_R_EXP_MAX ?									\
+	((ur)->exponent == AXP_R_EXP_MAX ?										\
+		((ieeeFP) ?															\
+			 ((ur)->fraction == 0 ?											\
+					 Infinity : 											\
+					 NotANumber) : 											\
+			 Finite) : 														\
+		((ur)->exponent == 0 ?												\
 			((ieeeFP) ?														\
-				 ((ur)->fraction == 0 ?										\
-						 Infinity : 										\
-						 NotANumber) : 										\
-				 Finite) : 													\
-			((ur)->exponent == 0 ?											\
-				((ieeeFP) ?													\
+				((ur)->fraction == 0 ?										\
+					Zero :													\
+					Denormal) :												\
+				((ur)->sign == 1 ?											\
+					Reserved :												\
 					((ur)->fraction == 0 ?									\
 						Zero :												\
-						Denormal) :											\
-					((ur)->sign == 1 ?										\
-						Reserved :											\
-						((ur)->fraction == 0 ?								\
-							Zero :											\
-							DirtyZero))) :									\
-			Finite))
+						DirtyZero))) :										\
+		Finite))
+
+#define AXP_FP_CVT_EXP_G2X(fp)												\
+	((fp).exponent ? (fp).exponent + AXP_X_BIAS - AXP_G_BIAS : 0)
+
+#define AXP_FP_CVT_EXP_X2G(fp)												\
+	((fp).exponent ? (fp).exponent - AXP_X_BIAS + AXP_G_BIAS : 0) & AXP_G_EXP_MASK
 
 #endif /* _AXP_21264_FBOX_DEFS_ */

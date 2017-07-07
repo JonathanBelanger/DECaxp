@@ -112,6 +112,15 @@ typedef struct
 	u64		sign : 1;
 } AXP_FPR32_REGISTER;
 
+typedef struct
+{
+	u64		zero : 29;
+	u64		fraction : 22;
+	u64		quiet : 1;
+	u64		exponent : 11;
+	u64		sign : 1;
+} AXP_FPR32_QNAN_REGISTER;
+
 /*
  * VAX G Float Register format.
  */
@@ -131,6 +140,14 @@ typedef struct
 	u64		exponent : 11;
 	u64		sign : 1;
 } AXP_FPR_REGISTER;
+
+typedef struct
+{
+	u64		fraction : 51;
+	u64		quiet : 1;
+	u64		exponent : 11;
+	u64		sign : 1;
+} AXP_FPR_QNAN_REGISTER;
 
 /*
  * VAX D Float Register format.
@@ -258,20 +275,22 @@ typedef struct
  */
 typedef union
 {
-	u64					uq;
-	i64					sq;
-	AXP_F_REGISTER_CVT	fCvt;
-	AXP_G_REGISTER_CVT	gCvt;
-	AXP_FPR32_REGISTER	fpr32;
-	AXP_FPR_REGISTER	fpr;
-	AXP_D_REGISTER_CVT	dCvt;
-	AXP_FDR_REGISTER	fdr;
-	AXP_S_REGISTER_CVT	sCvt;
-	AXP_L_REGISTER		l;
-	AXP_Q_REGISTER		q;
-	AXP_Q_REGISTER_CVT	qCvt;
-	AXP_Q_REGISTER_V	qV;
-	AXP_Q_REGISTER_V_CVT qVCvt;
+	u64						uq;
+	i64						sq;
+	AXP_F_REGISTER_CVT		fCvt;
+	AXP_G_REGISTER_CVT		gCvt;
+	AXP_FPR32_REGISTER		fpr32;
+	AXP_FPR32_QNAN_REGISTER	fprQ32;
+	AXP_FPR_REGISTER		fpr;
+	AXP_FPR_QNAN_REGISTER	fprQ;
+	AXP_D_REGISTER_CVT		dCvt;
+	AXP_FDR_REGISTER		fdr;
+	AXP_S_REGISTER_CVT		sCvt;
+	AXP_L_REGISTER			l;
+	AXP_Q_REGISTER			q;
+	AXP_Q_REGISTER_CVT		qCvt;
+	AXP_Q_REGISTER_V		qV;
+	AXP_Q_REGISTER_V_CVT 	qVCvt;
 } AXP_FP_REGISTER;
 
 typedef union
