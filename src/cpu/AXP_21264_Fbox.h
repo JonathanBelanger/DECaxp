@@ -202,13 +202,6 @@ typedef enum
 	NotANumber,
 	DirtyZero
 } AXP_FP_ENCODING;
-typedef struct
-{
-	u32				sign;
-	i64				exponent;
-	u64				fraction;
-	AXP_FP_ENCODING encoding;
-} AXP_FP_UNPACKED;
 
 #define AXP_FP_ENCODE(ur, ieeeFP)											\
 	((ur)->exponent == AXP_R_EXP_MAX ?										\

@@ -122,6 +122,188 @@ AXP_FP_REGISTER AXP_FP_CvtFloatToFPR(float real32)
 }
 
 /*
+ * AXP_FP_CvtG2X
+ * 	This function is called to convert a 64-bit VAX G Floating value to a
+ * 	128-bit IEEE X Floating value.  It can convert one or two parameters.
+ *
+ * Input Parameter:
+ * 	src1:
+ * 		A pointer to the VAX G Float to be converted.
+ * 	src2:
+ * 		A pointer to the VAX G Float to be converted, or NULL.
+ *
+ * Output Parameters:
+ * 	xSrc1:
+ * 		A pointer to the IEEE X Float to receive the converted value.
+ * 	xSrc2:
+ * 		A pointer to the IEEE X Float to receive the converted value.  This
+ * 		parameter is ignored if 'src2' is NULL.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_FP_CvtG2X(
+		AXP_FPR_REGISTER *src1,
+		AXP_FPR_REGISTER *src2,
+		long double *xSrc1,
+		long double *xSrc2)
+{
+	AXP_X_MEMORY *xSrc1Ptr = (AXP_X_MEMORY *) xSrc1;
+	AXP_X_MEMORY *xSrc2Ptr = (AXP_X_MEMORY *) xSrc2;
+
+	/*
+	 * Convert the first float.
+	 */
+	xSrc1Ptr->sign = src1->sign;
+	xSrc1Ptr->exponent = AXP_FP_CVT_EXP_G2X(*src1);
+	xSrc1Ptr->fraction = src1->fraction;
+	xSrc1Ptr->zero = 0;
+
+	/*
+	 * If the second float was specified, then convert it as well.
+	 */
+	if (src2 != NULL)
+	{
+		xSrc2Ptr->sign = src2->sign;
+		xSrc2Ptr->exponent = AXP_FP_CVT_EXP_G2X(*src2);
+		xSrc2Ptr->fraction = src2->fraction;
+		xSrc2Ptr->zero = 0;
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_FP_Cvt2G
+ * 	This function is called to convert a 128-bit IEEE X Floating value to a
+ * 	64-bit VAX G Floating value.  It can convert one or two parameters.
+ *
+ * Input Parameter:
+ * 	src1:
+ * 		A pointer to the IEEE X Float to be converted.
+ * 	src2:
+ * 		A pointer to the IEEE X Float to be converted, or NULL.
+ *
+ * Output Parameters:
+ * 	xSrc1:
+ * 		A pointer to the VAX G Float to receive the converted value.
+ * 	xSrc2:
+ * 		A pointer to the VAX G Float to receive the converted value.  This
+ * 		parameter is ignored if 'src2' is NULL.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_FP_CvtX2G(
+		long double *src1,
+		long double *src2,
+		AXP_FPR_REGISTER *gSrc1,
+		AXP_FPR_REGISTER *gSrc2)
+{
+	AXP_X_MEMORY *xSrc1Ptr = (AXP_X_MEMORY *) src1;
+	AXP_X_MEMORY *xSrc2Ptr = (AXP_X_MEMORY *) src2;
+
+	/*
+	 * Convert the first float.
+	 */
+	gSrc1->sign = xSrc1Ptr->sign;
+	gSrc1->exponent = AXP_FP_CVT_EXP_X2G(*xSrc1Ptr);
+	gSrc1->fraction = xSrc1Ptr->fraction;
+
+	/*
+	 * If the second float was specified, then convert it as well.
+	 */
+	if (src2 != NULL)
+	{
+		gSrc2->sign = xSrc2Ptr->sign;
+		gSrc2->exponent = AXP_FP_CVT_EXP_G2X(*xSrc2Ptr);
+		gSrc2->fraction = xSrc2Ptr->fraction;
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_FP_Cvt2GOverUnderflow
+ * 	This function is called to convert a 128-bit IEEE X Floating value to a
+ * 	64-bit VAX G Floating value.  It only converts one.  It tests the the value
+ * 	in the IEEE X Float does not overflow the VAX G Float.
+ *
+ * Input Parameter:
+ * 	src1:
+ * 		A pointer to the IEEE X Float to be converted.
+ *
+ * Output Parameters:
+ * 	xSrc1:
+ * 		A pointer to the VAX G Float to receive the converted value.
+ *
+ * Return Value:
+ * 	0:	If the IEEE X Float did not over/underflow the VAX G FLoat.
+ */
+int AXP_FP_CvtX2GOverUnderflow(long double *src1, AXP_FPR_REGISTER *gSrc1)
+{
+	AXP_X_MEMORY *xSrc1Ptr = (AXP_X_MEMORY *) src1;
+	int retVal;
+
+	/*
+	 * Convert the first float.
+	 */
+	gSrc1->sign = xSrc1Ptr->sign;
+	gSrc1->exponent = AXP_FP_CVT_EXP_X2G(*xSrc1Ptr);
+	gSrc1->fraction = xSrc1Ptr->fraction;
+	/*
+	 * Before we can simply return back to the caller, we need to
+	 * determine if an overflow condition may have occurred.
+	 */
+	if ((xSrc1Ptr->exponent - AXP_X_BIAS) > AXP_S_BIAS)
+		retVal = FE_OVERFLOW;
+	else
+		switch (AXP_FP_ENCODE(gSrc1, false))
+		{
+
+			/*
+			 * These 2 cases are the same as Denormal for IEEE.
+			 * Basically, these are values that cannot be represented
+			 * in VAX Float.
+			 */
+			case DirtyZero:
+			case Reserved:
+				retVal = FE_UNDERFLOW;
+				break;
+
+			/*
+			 * These are just fine.  Nothing more to do here.
+			 */
+			case Finite:
+			case Zero:
+				break;
+
+			/*
+			 * These are not returned when IEEE is set to false above.
+			 * So, there's nothing we can do here.  This is done to
+			 * keep the compiler happy (it does not like switch
+			 * statements with an enumeration and not all the values
+			 * are present).
+			 */
+			case Denormal:
+			case Infinity:
+			case NotANumber:
+				break;
+		}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
  * AXP_FP_SetRoundingMode
  * 	This function is called to set the rounding mode.  It determines this based
  * 	one the function field from the instruction of the FPCR in the cpu
@@ -416,4 +598,41 @@ void AXP_FP_SetExcSum(AXP_INSTRUCTION *instr, int raised, bool integerOverflow)
 	 * Return back to the caller.
 	 */
 	return;
+}
+
+/*
+ * AXP_FP_CheckForInvalid
+ * 	This function is called to check one or two parameters are invalid VAX
+ * 	floating point values.
+ *
+ * Input Parameters:
+ * 	src1:
+ * 		A pointer to a value to be verified..
+ * 	src2:
+ * 		A pointer to a value to be verified, or NULL.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	true:	If one or both of the parameters are invalid VAX Floats.
+ * 	false:	If both (or the only) are valid VAX Floats.
+ */
+bool AXP_FP_CheckForInvalid(AXP_FPR_REGISTER *src1, AXP_FPR_REGISTER *src2)
+{
+	bool			retVal = false;
+	AXP_FP_ENCODING encoding;
+
+	encoding = AXP_FP_ENCODE(src1, false);
+	retVal = ((encoding == Reserved) || (encoding == DirtyZero));
+	if ((retVal == false) && (src2 != NULL))
+	{
+		encoding = AXP_FP_ENCODE(src2, false);
+		retVal = ((encoding == Reserved) || (encoding == DirtyZero));
+	}
+
+	/*
+	 * Return the results of the test back to the caller.
+	 */
+	return(retVal);
 }

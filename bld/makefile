@@ -31,32 +31,71 @@
 #	Makefile, but rename Makefile.bak to Makefile, but only if the .bak file
 #	exists.
 #
+#	V01.003		07-Jul-2017	Jonathan D. Belanger
+#	Created an 'exe' directory into which the executables are to be stored.
+#	Created a 'straighten' target, which just deletes the object and executable
+#	files, and does not delete the Makefile and rename Makefile.bak to
+#	Makefile.
+#	Got makedepend to stop spitting out warnings about not finding standard
+#	library header files.
+#
 PROJDIR = /cygdrive/g/git/DECemu/
 
+#
+# Create variables for the various top-level directories we care about.
+#
 SRCDIR = $(PROJDIR)src/
 TSTDIR = $(PROJDIR)tst/
 OBJDIR = $(PROJDIR)bin/
-EXEDIR = $(PROJDIR)bin/
+EXEDIR = $(PROJDIR)exe/
 BLDDIR = $(PROJDIR)bld/
 
+#
+# Create variables for the .c source code files for the emulator and the object
+# files that are created from compiling.  This definition will look in all
+# sub-directories under the top-level source directory.
+#
 CFILES = $(wildcard $(SRCDIR)*/*.c)
 SRCS = $(CFILES)
 OBJS = $(addprefix $(OBJDIR), $(notdir $(CFILES:.c=.o)))
 
+#
+# Create variables for the .c source code files and the object files that are
+# created from compiling.
+#
 TSTFILES = $(wildcard $(TSTDIR)*.c)
 EXE = .exe
 TSTS = $(addprefix $(EXEDIR), $(notdir $(TSTFILES:.c=$(EXE))))
+
+#
+# Create the variable for the emulator source files (the emulator itself and
+# any companion programs - ie: configuration programs, if any).
+#
 PROGS =
 
+#
+# Create variables for the include path for all the emulator header files.
+#
 INCDIRS = $(wildcard $(SRCDIR)/*)
 INCS = $(foreach d, $(INCDIRS), -I$d)
 
+#
+# Set the compiler and initial compiler flags to be used to build build all the
+# object and executable files.
+#
 CC = gcc
 CFLAGS = $(INCS) -Wall
 
+#
+# Debug adds to the compiler flags and then compiles everything that has not
+# already been compiled.
+#
 debug: CFLAGS += -g -O0 -DDEBUG
 debug: all
 
+#
+# Build everything.  Objects, test executables, and emulator executables.
+#
 all: $(OBJS) $(TSTS) $(PROGS)
 
 $(OBJS): | $(OBJDIR)
@@ -72,14 +111,26 @@ $(OBJDIR)%.o : $(SRCDIR)*/%.c
 
 .PHONY: clean
 
-clean:
-	rm -f $(OBJDIR)* $(EXEDIR)*
+#
+# Clean up everything (equvalent to what the 'all' target created, plus
+# restoring the Makefile that had been updated by a "make depend" command).
+#
+clean: straighten
 ifneq ($(wildcard $(BLDDIR)*.bak),)
 	rm -f $(BLDDIR)Makefile
 	mv -f $(BLDDIR)Makefile.bak $(BLDDIR)Makefile
 endif
 
+#
+# Clean up everything (equvalent to what the 'all' target created, only).
+#
+straighten:
+	rm -f $(OBJDIR)* $(EXEDIR)*
+
+#
+# Make all the dependencies.
+#
 depend:
-	makedepend -- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PROGS)
+	makedepend -p$(OBJDIR) -I/usr/lib/gcc/x86_64-pc-cygwin/5.4.0/include -- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PROGS)
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.

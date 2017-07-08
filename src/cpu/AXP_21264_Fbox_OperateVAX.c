@@ -53,7 +53,6 @@
 AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
-	AXP_FP_ENCODING encodingSrc1, encodingSrc2;
 	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
 	double			src1v, src2v, destv;
 	int				oldRndMode =0;
@@ -61,16 +60,11 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
 	/*
 	 * Before we go too far, let's check the contents of the source registers.
-	 */
-	encodingSrc1 = AXP_FP_ENCODE(&instr->src1v.fp.fpr, false);
-	encodingSrc2 = AXP_FP_ENCODE(&instr->src2v.fp.fpr, false);
-
-	/*
+	 *
 	 * If either encoding turned up to be a dirty-zero or a reserved operand,
 	 * then we need to return an Invalid Operation.
 	 */
-	if (((encodingSrc1 == Reserved) || (encodingSrc1 == DirtyZero)) ||
-		((encodingSrc2 == Reserved) || (encodingSrc2 == DirtyZero)))
+	if (AXP_FP_CheckForInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
 	{
 		retVal = IllegalOperand;
 		raised = FE_INVALID;
@@ -210,27 +204,18 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
-	AXP_FP_ENCODING encodingSrc1, encodingSrc2;
 	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
 	long double		src1v, src2v, destv;
-	AXP_X_MEMORY	*xSrc1 = (AXP_X_MEMORY *) &src1v;
-	AXP_X_MEMORY	*xSrc2 = (AXP_X_MEMORY *) &src2v;
-	AXP_X_MEMORY	*xDest = (AXP_X_MEMORY *) &destv;
 	int				oldRndMode =0;
 	int				raised = 0;
 
 	/*
 	 * Before we go too far, let's check the contents of the source registers.
-	 */
-	encodingSrc1 = AXP_FP_ENCODE(&instr->src1v.fp.fpr, false);
-	encodingSrc2 = AXP_FP_ENCODE(&instr->src2v.fp.fpr, false);
-
-	/*
+	 *
 	 * If either encoding turned up to be a dirty-zero or a reserved operand,
 	 * then we need to return an Invalid Operation.
 	 */
-	if (((encodingSrc1 == Reserved) || (encodingSrc1 == DirtyZero)) ||
-		((encodingSrc2 == Reserved) || (encodingSrc2 == DirtyZero)))
+	if (AXP_FP_CheckForInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
 	{
 		retVal = IllegalOperand;
 		raised = FE_INVALID;
@@ -244,14 +229,7 @@ AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 * only go up to 1023.  We need to expand the exponent to a 15-bit
 	 	 * representation from an 11-bit one, to accommodate this difference.
 	 	 */
-		xSrc1->sign = instr->src1v.fp.fpr.sign;
-		xSrc1->exponent = AXP_FP_CVT_EXP_G2X(instr->src1v.fp.fpr);
-		xSrc1->fraction = instr->src1v.fp.fpr.fraction;
-		xSrc1->zero = 0;
-		xSrc2->sign = instr->src2v.fp.fpr.sign;
-		xSrc2->exponent = AXP_FP_CVT_EXP_G2X(instr->src2v.fp.fpr);
-		xSrc2->fraction = instr->src2v.fp.fpr.fraction;
-		xSrc2->zero = 0;
+		AXP_FP_CvtG2X(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr, &src1v, &src2v);
 
 		// TODO: We need to have a mutex starting at this point.
 
@@ -286,53 +264,10 @@ AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		{
 
 			/*
-			 * Recast the result into the destination register.  Since this is
-			 * a 32-bit value, don't forget to clear the bits that are supposed
-			 * to be zero.
+			 * COnvert the result back into a VAX G format and see if we got
+			 * an overflow or underflow.
 			 */
-			instr->destv.fp.fpr.sign = xDest->sign;
-			instr->destv.fp.fpr.exponent = AXP_FP_CVT_EXP_X2G(*xDest);
-			instr->destv.fp.fpr.fraction = xDest->fraction;
-
-			/*
-			 * Before we can simply return back to the caller, we need to
-			 * determine if an overflow condition may have occurred.
-			 */
-			if ((xDest->exponent - AXP_X_BIAS) > AXP_S_BIAS)
-				raised = FE_OVERFLOW;
-			else
-				switch (AXP_FP_ENCODE(&instr->destv.fp.fpr, false))
-				{
-
-					/*
-					 * These 2 cases are the same as Denormal for IEEE.
-					 * Basically, these are values that cannot be represented
-					 * in VAX Float.
-					 */
-					case DirtyZero:
-					case Reserved:
-						raised = FE_UNDERFLOW;
-						break;
-
-					/*
-					 * These are just fine.  Nothing more to do here.
-					 */
-					case Finite:
-					case Zero:
-						break;
-
-					/*
-					 * These are not returned when IEEE is set to false above.
-					 * So, there's nothing we can do here.  This is done to
-					 * keep the compiler happy (it does not like switch
-					 * statements with an enumeration and not all the values
-					 * are present).
-					 */
-					case Denormal:
-					case Infinity:
-					case NotANumber:
-						break;
-				}
+			raised = AXP_FP_CvtX2GOverUnderflow(&destv, &instr->destv.fp.fpr);
 			if (raised != 0)
 				retVal = ArithmeticTraps;
 		}
