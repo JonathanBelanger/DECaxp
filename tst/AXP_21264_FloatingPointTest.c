@@ -1086,6 +1086,15 @@ int main()
 					encoding = AXP_FP_ENCODE(&instr.src1v.fp.fpr, true);
 					switch (oper)
 					{
+						/*
+						 * TODO: It may be worth utilizing the comparison
+						 * instructions (CMPTxx) below, instead of the compiler
+						 * provided ones.
+						 *
+						 * TODO: We should look at also executing the
+						 * instructions for T, G, and F floats.  This is
+						 * starting to look like a separate testing function.
+						 */
 						case addAction:
 						case copySignAction:
 							printf("%7d: ", testCnt);
