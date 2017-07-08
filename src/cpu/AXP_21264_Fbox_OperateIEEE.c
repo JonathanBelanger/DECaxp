@@ -48,7 +48,11 @@
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Invalid Operation
+ * 							Overflow
+ * 							Underflow
  */
 AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -58,8 +62,6 @@ AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	int				oldRndMode = 0;
 	int				oldExcMode = 0;
 	int				raised = 0;
-	AXP_FP_ENCODING	src1Enc;
-	AXP_FP_ENCODING	src2Enc;
 
 	/*
 	 * I was relying upon the calculation below to trigger invalid operation
@@ -71,16 +73,7 @@ AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Unfortunately, it does not apparently do this.  So, I'm going to have to
 	 * do it myself.
 	 */
-	src1Enc = AXP_FP_ENCODE(&instr->src1v.fp.fpr32, true);
-	src2Enc = AXP_FP_ENCODE(&instr->src2v.fp.fpr32, true);
-	if ((src1Enc == Infinity) && (src2Enc == Infinity))
-	{
-		if (instr->src1v.fp.fpr32.sign != instr->src2v.fp.fpr32.sign)
-			raised = FE_INVALID;
-	}
-	else if ((src1Enc == NotANumber) && (instr->src1v.fp.fprQ32.quiet == 0))
-		raised = FE_INVALID;
-	else if ((src2Enc == NotANumber) && (instr->src2v.fp.fprQ32.quiet == 0))
+	if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, &instr->src1v.fp) == true)
 		raised = FE_INVALID;
 
 	if (raised == 0)
@@ -187,7 +180,11 @@ AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Invalid Operation
+ * 							Overflow
+ * 							Underflow
  */
 AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -197,8 +194,6 @@ AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	int				oldRndMode = 0;
 	int				oldExcMode = 0;
 	int				raised = 0;
-	AXP_FP_ENCODING	src1Enc;
-	AXP_FP_ENCODING	src2Enc;
 
 	/*
 	 * I was relying upon the calculation below to trigger invalid operation
@@ -210,16 +205,7 @@ AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Unfortunately, it does not apparently do this.  So, I'm going to have to
 	 * do it myself.
 	 */
-	src1Enc = AXP_FP_ENCODE(&instr->src1v.fp.fpr, true);
-	src2Enc = AXP_FP_ENCODE(&instr->src2v.fp.fpr, true);
-	if ((src1Enc == Infinity) && (src2Enc == Infinity))
-	{
-		if (instr->src1v.fp.fpr.sign != instr->src2v.fp.fpr.sign)
-			raised = FE_INVALID;
-	}
-	else if ((src1Enc == NotANumber) && (instr->src1v.fp.fprQ.quiet == 0))
-		raised = FE_INVALID;
-	else if ((src2Enc == NotANumber) && (instr->src2v.fp.fprQ.quiet == 0))
+	if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, &instr->src1v.fp) == true)
 		raised = FE_INVALID;
 
 	if (raised == 0)
@@ -303,4 +289,240 @@ AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
+}
+
+/*
+ * AXP_CMPTEQ
+ *	This function implements the IEEE T Format Floating-Point Compare Equal
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	IllegalOperand:		An illegal operand trap has occurred:
+ * 							Invalid Operation
+ */
+AXP_EXCEPTIONS AXP_CMPTEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	AXP_FP_ENCODING	src1Enc, src2Enc;
+	double			*src1v = (double *) &instr->src1v.fp.uq;
+	double			*src2v = (double *) &instr->src2v.fp.uq;
+	int				raised = 0;
+
+	src1Enc = AXP_FP_ENCODE(&instr->src1v.fp.fpr,true);
+	src2Enc = AXP_FP_ENCODE(&instr->src2v.fp.fpr,true);
+
+	if ((src1Enc == NotANumber) || (src2Enc == NotANumber))
+	{
+		if (fpFunc->trp == (AXP_FP_TRP_U | AXP_FP_TRP_S))
+			raised = FE_INVALID;
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+	}
+	else if (*src1v == *src2v)
+		instr->destv.fp.uq = AXP_T_TWO;
+	else
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	if (raised != 0)
+		AXP_FP_SetFPCR(cpu, instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_CMPTLE
+ *	This function implements the IEEE T Format Floating-Point Compare Less Than
+ *	or Equal instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	IllegalOperand:		An illegal operand trap has occurred:
+ * 							Invalid Operation
+ */
+AXP_EXCEPTIONS AXP_CMPTLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	AXP_FP_ENCODING	src1Enc, src2Enc;
+	double			*src1v = (double *) &instr->src1v.fp.uq;
+	double			*src2v = (double *) &instr->src2v.fp.uq;
+	int				raised = 0;
+
+	src1Enc = AXP_FP_ENCODE(&instr->src1v.fp.fpr,true);
+	src2Enc = AXP_FP_ENCODE(&instr->src2v.fp.fpr,true);
+
+	if ((src1Enc == NotANumber) || (src2Enc == NotANumber))
+	{
+		if (fpFunc->trp == (AXP_FP_TRP_U | AXP_FP_TRP_S))
+			raised = FE_INVALID;
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+	}
+	else if (*src1v <= *src2v)
+		instr->destv.fp.uq = AXP_T_TWO;
+	else
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	if (raised != 0)
+		AXP_FP_SetFPCR(cpu, instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_CMPTLT
+ *	This function implements the IEEE T Format Floating-Point Compare Less Than
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	IllegalOperand:		An illegal operand trap has occurred:
+ * 							Invalid Operation
+ */
+AXP_EXCEPTIONS AXP_CMPTLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	AXP_FP_ENCODING	src1Enc, src2Enc;
+	double			*src1v = (double *) &instr->src1v.fp.uq;
+	double			*src2v = (double *) &instr->src2v.fp.uq;
+	int				raised = 0;
+
+	src1Enc = AXP_FP_ENCODE(&instr->src1v.fp.fpr,true);
+	src2Enc = AXP_FP_ENCODE(&instr->src2v.fp.fpr,true);
+
+	if ((src1Enc == NotANumber) || (src2Enc == NotANumber))
+	{
+		if (fpFunc->trp == (AXP_FP_TRP_U | AXP_FP_TRP_S))
+			raised = FE_INVALID;
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+	}
+	else if (*src1v < *src2v)
+		instr->destv.fp.uq = AXP_T_TWO;
+	else
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	if (raised != 0)
+		AXP_FP_SetFPCR(cpu, instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_CMPTUN
+ *	This function implements the IEEE T Format Floating-Point Compare Unordered
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_CMPTUN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * Unordered just means that either of the floating-point values is equal
+	 * to NaN (Not a Number).
+	 */
+	if ((AXP_FP_ENCODE(&instr->src1v.fp.fpr,true) == NotANumber) ||
+		(AXP_FP_ENCODE(&instr->src1v.fp.fpr,true) == NotANumber))
+		instr->destv.fp.uq = AXP_T_TWO;
+	else
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
 }

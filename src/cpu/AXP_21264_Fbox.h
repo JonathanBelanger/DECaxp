@@ -75,6 +75,13 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_CMPGEQ(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_CMPGLE(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_CMPGLT(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_CMPTEQ(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_CMPTLE(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_CMPTLT(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_CMPTUN(AXP_21264_CPU *, AXP_INSTRUCTION *);
 
 /*
  * FP Operate Function Field Format
@@ -184,6 +191,15 @@ typedef struct
 #define AXP_G_DT				1						/* type G */
 #define AXP_S_DT				0						/* type S */
 #define AXP_T_DT				1						/* type T */
+
+/*
+ * VAX G/F and IEEE S/T returned values, returned on VAX and IEEE Floating
+ * Compare instructions.
+ */
+#define AXP_G_HALF				0x4000000000000000ll	/* VAX G/F */
+#define AXP_T_TWO				0x4000000000000000ll	/* IEEE T/S 2.0 */
+#define AXP_FPR_ZERO			0x0000000000000000ll	/* True 0.0 */
+
 /*
  * The following definitions are used throughout the rest of the floating-point
  * code.  Register values are "unpacked" into this structure and then "packed"

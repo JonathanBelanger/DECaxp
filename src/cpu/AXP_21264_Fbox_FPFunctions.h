@@ -38,7 +38,8 @@ int AXP_FP_SetRoundingMode(AXP_21264_CPU *, AXP_FP_FUNC *, int);
 int AXP_FP_SetExceptionMode(AXP_21264_CPU *, int);
 void AXP_FP_SetFPCR(AXP_21264_CPU *, AXP_INSTRUCTION *, int, bool);
 void AXP_FP_SetExcSum(AXP_INSTRUCTION *, int, bool);
-bool AXP_FP_CheckForInvalid(AXP_FPR_REGISTER *, AXP_FPR_REGISTER *);
+bool AXP_FP_CheckForVAXInvalid(AXP_FPR_REGISTER *, AXP_FPR_REGISTER *);
+bool AXP_FP_CheckForIEEEInvalid(AXP_FP_REGISTER *, AXP_FP_REGISTER *);
 void AXP_FP_CvtG2X(
 		AXP_FPR_REGISTER *,
 		AXP_FPR_REGISTER *,

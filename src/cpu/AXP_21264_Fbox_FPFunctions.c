@@ -454,6 +454,9 @@ int AXP_FP_SetExceptionMode(AXP_21264_CPU *cpu, int resetExceptionMode)
  * 	used to determine which qualifier was supplied with the call.
  *
  * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
  * 	instr:
  * 		A pointer to a structure containing the information needed to execute
  * 		this instruction.
@@ -601,7 +604,7 @@ void AXP_FP_SetExcSum(AXP_INSTRUCTION *instr, int raised, bool integerOverflow)
 }
 
 /*
- * AXP_FP_CheckForInvalid
+ * AXP_FP_CheckForVAXInvalid
  * 	This function is called to check one or two parameters are invalid VAX
  * 	floating point values.
  *
@@ -618,7 +621,7 @@ void AXP_FP_SetExcSum(AXP_INSTRUCTION *instr, int raised, bool integerOverflow)
  * 	true:	If one or both of the parameters are invalid VAX Floats.
  * 	false:	If both (or the only) are valid VAX Floats.
  */
-bool AXP_FP_CheckForInvalid(AXP_FPR_REGISTER *src1, AXP_FPR_REGISTER *src2)
+bool AXP_FP_CheckForVAXInvalid(AXP_FPR_REGISTER *src1, AXP_FPR_REGISTER *src2)
 {
 	bool			retVal = false;
 	AXP_FP_ENCODING encoding;
@@ -630,6 +633,47 @@ bool AXP_FP_CheckForInvalid(AXP_FPR_REGISTER *src1, AXP_FPR_REGISTER *src2)
 		encoding = AXP_FP_ENCODE(src2, false);
 		retVal = ((encoding == Reserved) || (encoding == DirtyZero));
 	}
+
+	/*
+	 * Return the results of the test back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_FP_CheckForIEEEInvalid
+ * 	This function is called to check one or two parameters are invalid IEEE
+ * 	floating point values.
+ *
+ * Input Parameters:
+ * 	src1:
+ * 		A pointer to a value to be verified..
+ * 	src2:
+ * 		A pointer to a value to be verified, or NULL.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	true:	If one or both of the parameters are invalid IEEE Floats.
+ * 	false:	If both (or the only) are valid IEEE Floats.
+ */
+bool AXP_FP_CheckForIEEEInvalid(AXP_FP_REGISTER *src1, AXP_FP_REGISTER *src2)
+{
+	bool 			retVal = false;
+	AXP_FP_ENCODING	src1Enc, src2Enc;
+
+	src1Enc = AXP_FP_ENCODE(&src1->fpr, true);
+	src2Enc = AXP_FP_ENCODE(&src2->fpr, true);
+	if ((src1Enc == Infinity) && (src2Enc == Infinity))
+	{
+		if (src1->fpr.sign != src2->fpr.sign)
+			retVal = true;
+	}
+	else if ((src1Enc == NotANumber) && (src1->fprQ.quiet == 0))
+		retVal = true;
+	else if ((src2Enc == NotANumber) && (src2->fprQ.quiet == 0))
+		retVal = true;
 
 	/*
 	 * Return the results of the test back to the caller.

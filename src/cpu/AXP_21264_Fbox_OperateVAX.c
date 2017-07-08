@@ -48,7 +48,11 @@
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Invalid Operation
+ * 							Overflow
+ * 							Underflow
  */
 AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -64,7 +68,7 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * If either encoding turned up to be a dirty-zero or a reserved operand,
 	 * then we need to return an Invalid Operation.
 	 */
-	if (AXP_FP_CheckForInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
 	{
 		retVal = IllegalOperand;
 		raised = FE_INVALID;
@@ -199,7 +203,11 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Invalid Operation
+ * 							Overflow
+ * 							Underflow
  */
 AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -215,7 +223,7 @@ AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * If either encoding turned up to be a dirty-zero or a reserved operand,
 	 * then we need to return an Invalid Operation.
 	 */
-	if (AXP_FP_CheckForInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
 	{
 		retVal = IllegalOperand;
 		raised = FE_INVALID;
@@ -264,7 +272,7 @@ AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		{
 
 			/*
-			 * COnvert the result back into a VAX G format and see if we got
+			 * Convert the result back into a VAX G format and see if we got
 			 * an overflow or underflow.
 			 */
 			raised = AXP_FP_CvtX2GOverUnderflow(&destv, &instr->destv.fp.fpr);
@@ -280,6 +288,197 @@ AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	raised &= (FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
 	AXP_FP_SetExcSum(instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_CMPGEQ
+ *	This function implements the VAX G Format Floating-Point Compare Equal
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	IllegalOperand:		An illegal operand trap has occurred:
+ * 							Invalid Operation
+ */
+AXP_EXCEPTIONS AXP_CMPGEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	int				raised = 0;
+
+	/*
+	 * Before we go too far, let's check the contents of the source registers.
+	 *
+	 * If either encoding turned up to be a dirty-zero or a reserved operand,
+	 * then we need to return an Invalid Operation.
+	 */
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
+	{
+		retVal = IllegalOperand;
+		raised = FE_INVALID;
+	}
+	else if (instr->src1v.fp.uq == instr->src2v.fp.uq)
+		instr->destv.fp.uq = AXP_G_HALF;
+	else
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	if (raised != 0)
+		AXP_FP_SetExcSum(instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_CMPGLE
+ *	This function implements the VAX G Format Floating-Point Compare Less Than
+ *	or Equal instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	IllegalOperand:		An illegal operand trap has occurred:
+ * 							Invalid Operation
+ */
+AXP_EXCEPTIONS AXP_CMPGLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	int				raised = 0;
+
+	/*
+	 * Before we go too far, let's check the contents of the source registers.
+	 *
+	 * If either encoding turned up to be a dirty-zero or a reserved operand,
+	 * then we need to return an Invalid Operation.
+	 */
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
+	{
+		retVal = IllegalOperand;
+		raised = FE_INVALID;
+	}
+	else if ((instr->src1v.fp.uq == instr->src2v.fp.uq) ||
+			 (instr->src1v.fp.fpr.sign > instr->src2v.fp.fpr.sign) ||
+			 (((instr->src1v.fp.uq == instr->src2v.fp.uq) ^
+			   instr->src1v.fp.fpr.sign) != 0))
+		instr->destv.fp.uq = AXP_G_HALF;
+	else
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	if (raised != 0)
+		AXP_FP_SetExcSum(instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_CMPGLT
+ *	This function implements the VAX G Format Floating-Point Compare Less Than
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	IllegalOperand:		An illegal operand trap has occurred:
+ * 							Invalid Operation
+ */
+AXP_EXCEPTIONS AXP_CMPGLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	int				raised = 0;
+
+	/*
+	 * Before we go too far, let's check the contents of the source registers.
+	 *
+	 * If either encoding turned up to be a dirty-zero or a reserved operand,
+	 * then we need to return an Invalid Operation.
+	 */
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
+	{
+		retVal = IllegalOperand;
+		raised = FE_INVALID;
+	}
+	else if ((instr->src1v.fp.fpr.sign > instr->src2v.fp.fpr.sign) ||
+			 (((instr->src1v.fp.uq == instr->src2v.fp.uq) ^
+			   instr->src1v.fp.fpr.sign) != 0))
+		instr->destv.fp.uq = AXP_G_HALF;
+	else
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	if (raised != 0)
+		AXP_FP_SetExcSum(instr, raised, false);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

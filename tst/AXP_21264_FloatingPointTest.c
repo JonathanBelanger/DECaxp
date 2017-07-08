@@ -1087,13 +1087,26 @@ int main()
 					switch (oper)
 					{
 						case addAction:
-							printf("%7d: ADDS(%d): Ra: %f, Rb: %f; expecting %f (0x%016llx) --> ",
-								testCnt+4, useResults, *Ra, *Rb, *expectedRc, *((u64 *) &FPCR));
+						case copySignAction:
+							printf("%7d: ", testCnt);
+							if (oper == addAction)
+								printf("ADDS");
+							else
+								printf("CPYS");
+							printf("(%d): Ra: %f, Rb: %f; expecting %f (0x%016llx) --> ",
+								useResults, *Ra, *Rb, *expectedRc, *((u64 *) &FPCR));
 							instr.opcode = FLTI;
-							instr.function = AXP_FUNC_ADDS;
 							memset(&instr.insFpcr, 0, sizeof(u64));
-							retValIns = AXP_ADDS(cpu, &instr);
-
+							if (oper == addAction)
+							{
+								instr.function = AXP_FUNC_ADDS;
+								retValIns = AXP_ADDS(cpu, &instr);
+							}
+							else
+							{
+								instr.function = AXP_FUNC_CPYS;
+								retValIns = AXP_CPYS(cpu, &instr);
+							}
 							if (useResults == 2)
 							{
 
@@ -1362,7 +1375,6 @@ int main()
 						case copyAction:
 						case negateAction:
 						case absoluteValueAction:
-						case copySignAction:
 						case scalbAction:
 						case logbAction:
 						case nextAfterAction:
