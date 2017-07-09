@@ -40,7 +40,6 @@
  * Includes used throughout the code.
  */
 //#include <pthread.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -48,6 +47,7 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <fenv.h>
+#include <mpfr.h>
 
 /*
  * Define some regularly utilized definitions.

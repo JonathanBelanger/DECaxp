@@ -84,7 +84,7 @@ INCS = $(foreach d, $(INCDIRS), -I$d)
 # object and executable files.
 #
 CC = gcc
-CFLAGS = $(INCS) -Wall
+CFLAGS = $(INCS) -Wall -L/usr/lib -lmpfr -lgmp
 
 #
 # Debug adds to the compiler flags and then compiles everything that has not

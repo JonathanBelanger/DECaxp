@@ -54,6 +54,7 @@
  * 							Overflow
  * 							Underflow
  */
+#if 0
 AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
@@ -161,6 +162,102 @@ AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	return(retVal);
 }
+#else
+AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	double			*src1v = (double *) &instr->src1v.fp.uq;
+	double			*src2v = (double *) &instr->src2v.fp.uq;
+	double			*destv = (double *) &instr->destv.fp.uq;;
+	int				raised = 0;
+	mpfr_t 			mpfrSrc1, mpfrSrc2, mpfrDest;
+	mpfr_rnd_t		rnd;
+
+	switch (fpFunc->rnd)
+	{
+		case AXP_FP_CHOPPED:
+			rnd = MPFR_RNDZ;
+			break;
+
+		case AXP_FP_MINUS_INF:
+			rnd = MPFR_RNDD;
+			break;
+
+		case AXP_FP_NORMAL:
+			rnd = MPFR_RNDN;
+			break;
+
+		case AXP_FP_DYNAMIC:
+			switch (cpu->fpcr.dyn)
+			{
+				case AXP_FP_CHOPPED:
+					rnd = MPFR_RNDZ;
+					break;
+
+				case AXP_FP_MINUS_INF:
+					rnd = MPFR_RNDD;
+					break;
+
+				case AXP_FP_NORMAL:
+					rnd = MPFR_RNDN;
+					break;
+
+				case AXP_FP_PLUS_INF:
+					rnd = MPFR_RNDU;
+					break;
+			}
+			break;
+
+	}
+	mpfr_clear_flags();
+	mpfr_inits2(23, mpfrSrc1, mpfrSrc2,mpfrDest, NULL);
+	mpfr_set_emin(-126);
+	mpfr_set_emax(127);
+	mpfr_set_d(mpfrSrc1, *src1v, rnd);
+	mpfr_set_d(mpfrSrc2, *src2v, rnd);
+	mpfr_add(mpfrDest, mpfrSrc1, mpfrSrc2, rnd);
+	*destv = mpfr_get_d(mpfrDest, rnd);
+	if (mpfr_underflow_p() != 0)
+		raised |= FE_UNDERFLOW;
+	if (mpfr_overflow_p () != 0)
+		raised |= FE_OVERFLOW;
+	if (mpfr_divby0_p() != 0)
+		raised |= FE_DIVBYZERO;
+	if (mpfr_nanflag_p() != 0)
+		raised |= FE_INVALID;
+	if (mpfr_inexflag_p() != 0)
+		raised |= FE_INEXACT;
+
+	/*
+	 * We only care about this set of exceptions.
+	 */
+	raised &= (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
+
+	/*
+	 * Set the return code, based on any raised exceptions
+	 */
+	if (raised & FE_INVALID)
+		retVal = IllegalOperand;
+	else if (raised & (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW))
+		retVal = ArithmeticTraps;
+
+	/*
+	 * Set the FPCR and ExcSum registers.
+	 */
+	AXP_FP_SetFPCR(cpu, instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+#endif
 
 /*
  * AXP_ADDT
@@ -327,7 +424,7 @@ AXP_EXCEPTIONS AXP_CMPTEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
 	if ((src1Enc == NotANumber) || (src2Enc == NotANumber))
 	{
-		if (fpFunc->trp == (AXP_FP_TRP_U | AXP_FP_TRP_S))
+		if ((fpFunc->trp & (AXP_FP_TRP_U | AXP_FP_TRP_S)) != 0)
 			raised = FE_INVALID;
 		instr->destv.fp.uq = AXP_FPR_ZERO;
 	}
@@ -391,7 +488,7 @@ AXP_EXCEPTIONS AXP_CMPTLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
 	if ((src1Enc == NotANumber) || (src2Enc == NotANumber))
 	{
-		if (fpFunc->trp == (AXP_FP_TRP_U | AXP_FP_TRP_S))
+		if ((fpFunc->trp & (AXP_FP_TRP_U | AXP_FP_TRP_S)) != 0)
 			raised = FE_INVALID;
 		instr->destv.fp.uq = AXP_FPR_ZERO;
 	}
@@ -455,7 +552,7 @@ AXP_EXCEPTIONS AXP_CMPTLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
 	if ((src1Enc == NotANumber) || (src2Enc == NotANumber))
 	{
-		if (fpFunc->trp == (AXP_FP_TRP_U | AXP_FP_TRP_S))
+		if ((fpFunc->trp & (AXP_FP_TRP_U | AXP_FP_TRP_S)) != 0)
 			raised = FE_INVALID;
 		instr->destv.fp.uq = AXP_FPR_ZERO;
 	}

@@ -191,7 +191,7 @@ typedef struct
 								 ((val) > AXP_R_LONG_LARGE))
 
 /*
- * Unpacked rounding constants
+ * Exploded rounding constants
  */
 #define AXP_F_RND				0x0000008000000000ll	/* F round */
 #define AXP_D_RND				0x0000000000000080ll	/* D round */
@@ -202,8 +202,28 @@ typedef struct
 #define AXP_T_INF				0x00000000000007ffll	/* T infinity round */
 #define AXP_F_DT				0						/* type F */
 #define AXP_G_DT				1						/* type G */
+#define AXP_D_DT				2						/* type D */
+#define AXP_L_DT				3						/* type L, Quadword Integer */
+#define AXP_Q_DT				4						/* type Q, Quadword Integer */
 #define AXP_S_DT				0						/* type S */
 #define AXP_T_DT				1						/* type T */
+#define AXP_X_DT				2						/* type X */
+
+/*
+ * This structure is used to extract a floating point value's (all forms)
+ * constituent parts into separate fields, that are actually the same size or
+ * larger, to be used in converting from one floating type to another
+ *
+ * TODO: 	Do we want to also utilize this structure for integers?  There is
+ * 			built-in support to do so.
+ */
+typedef struct
+{
+	u8		type;
+	bool	sign;
+	i32		exponent;
+	u128	fraction;
+} AXP_FP_FLOAT_COMPONENTS;;
 
 /*
  * VAX G/F and IEEE S/T returned values, returned on VAX and IEEE Floating

@@ -501,12 +501,12 @@ void AXP_FP_SetFPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr, int raised, bool
 			instr->insFpcr.ovf = 1;
 		excSet = true;
 	}
-    if ((raised & FE_INEXACT) && ((func->trp & AXP_FP_TRP_I) == 0))
+    if ((raised & FE_INEXACT) && ((func->trp & AXP_FP_TRP_I) != 0))
 	{
     	instr->insFpcr.ine = 1;
 		excSet = true;
 	}
-	if ((raised & FE_UNDERFLOW) && (func->trp & AXP_FP_TRP_U))
+	if ((raised & FE_UNDERFLOW) && ((func->trp & AXP_FP_TRP_U) != 0))
 	{
 		instr->insFpcr.unf = 1;
 		excSet = true;
@@ -573,13 +573,13 @@ void AXP_FP_SetExcSum(AXP_INSTRUCTION *instr, int raised, bool integerOverflow)
 	/*
 	 * If '/I' is present, then set excSum
 	 */
-	if ((raised & FE_INEXACT) && (func->trp & AXP_FP_TRP_I))
+	if ((raised & FE_INEXACT) && ((func->trp & AXP_FP_TRP_I) != 0))
 		axpExceptions |= AXP_EXC_INEXACT_RES;
 
 	/*
 	 * If '/U', which is the same as '/V' is present, then set excSum
 	 */
-	if ((raised & FE_UNDERFLOW) && (func->trp & AXP_FP_TRP_U))
+	if ((raised & FE_UNDERFLOW) && ((func->trp & AXP_FP_TRP_U)) != 0)
 		axpExceptions |= AXP_EXC_UNDERFLOW;
 
 	/*
@@ -592,7 +592,7 @@ void AXP_FP_SetExcSum(AXP_INSTRUCTION *instr, int raised, bool integerOverflow)
 		/*
 		 * If '/S' is present, then set the software completion bit.
 		 */
-		if (func->trp & AXP_FP_TRP_S)
+		if ((func->trp & AXP_FP_TRP_S) != 0)
 			axpExceptions |= AXP_EXC_SW_COMPL;
 		AXP_SetException(instr, axpExceptions);
 	}
