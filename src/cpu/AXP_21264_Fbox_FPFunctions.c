@@ -680,3 +680,67 @@ bool AXP_FP_CheckForIEEEInvalid(AXP_FP_REGISTER *src1, AXP_FP_REGISTER *src2)
 	 */
 	return(retVal);
 }
+
+
+/*
+ * AXP_FP_fpNormalize
+ * 	This function is called to normalize the supplied floating point value.
+ *
+ * Input Parameters:
+ * 	fpv:
+ * 		A pointer to a value to be normalized.
+ *
+ * Output Parameters:
+ * 	fpv:
+ * 		A pointer to the normalized value.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_FP_fpNormalize(AXP_FPR_REGISTER *fpv)
+{
+#define AXP_FP_NORM_MASK_LEN	5
+#define AXP_FP_NORM_SHIFT_LEN	6
+	static u64 normalizationMask[AXP_FP_NORM_MASK_LEN] =
+	{
+		0xc000000000000000,
+		0xf000000000000000,
+		0xff00000000000000,
+		0xffff000000000000,
+		0xffffffff00000000
+    };
+	static u32 normalizationShift[AXP_FP_NORM_SHIFT_LEN] =
+		{1, 2, 4, 8, 16, 32};
+	int ii;
+
+	/*
+	 * If the fraction is zero, the just set everything to zero.  Otherwise, we
+	 * need to normalize the floating point value.
+	 */
+	if (fpv->fraction == 0)
+		fpv->sign = fpv->exponent = 0;
+	else
+	{
+
+		/*
+		 * Keep looping until the floating point number is normalized.
+		 */
+		while ((fpv->fraction & AXP_R_NM) == 0)
+		{
+			for (ii = 0; ii < AXP_FP_NORM_MASK_LEN; ii++)
+				if (fpv->fraction & normalizationMask[ii])
+					break;
+
+			/*
+			 * Perform the fraction shifts and exponent adjustment.
+			 */
+			fpv->fraction = fpv->fraction << normalizationShift[ii];
+			fpv->exponent = fpv->exponent - normalizationShift[ii];
+		}
+    }
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}

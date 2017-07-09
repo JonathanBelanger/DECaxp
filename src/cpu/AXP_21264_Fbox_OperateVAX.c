@@ -490,3 +490,352 @@ AXP_EXCEPTIONS AXP_CMPGLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	return(retVal);
 }
+
+/*
+ * AXP_CVTGQ
+ *	This function implements the convert from VAX G Format Floating-Point to
+ *	Integer instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	IllegalOperand:		An illegal operand trap has occurred:
+ * 							Invalid Operation
+ * 							Integer Overflow
+ */
+AXP_EXCEPTIONS AXP_CVTGQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	i32				unbiasedExp = instr->src1v.fp.fpr.exponent - AXP_G_BIAS;
+	u64				convertedValue = 0;
+	u32				sign = instr->src1v.fp.fpr.sign;
+	int				raised = 0;
+
+	/*
+	 * Before we go too far, let's check the contents of the source registers.
+	 *
+	 * If either encoding turned up to be a dirty-zero or a reserved operand,
+	 * then we need to return an Invalid Operation.
+	 */
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, NULL))
+	{
+		retVal = IllegalOperand;
+		raised = FE_INVALID;
+	}
+	else
+	{
+
+		/*
+		 * If the unbiased exponent is less then zero, then its too small to be
+		 * converted to an integer, just set the fraction to zero and make sure
+		 * the sign is "+".
+		 */
+		if (unbiasedExp < 0)
+		{
+			convertedValue = 0;
+			sign = 0;
+		}
+
+		/*
+		 * If the unbiased exponent is in range, then  perform the conversion.
+		 */
+		else if (unbiasedExp <= AXP_R_NMBIT)
+		{
+
+			/*
+			 * Use the unbiased exponent, offset by the normalized bit location
+			 * to shift the fraction to its integer representation.
+			 */
+			convertedValue =
+				instr->src1v.fp.fpr.fraction >> (AXP_R_NMBIT - unbiasedExp);
+
+			/*
+			 * If rounding mode is not chopped, then add 1 to the converted
+			 * value.
+			 */
+			if (fpFunc->rnd != AXP_FP_CHOPPED)
+				convertedValue++;
+
+			/*
+			 * Justify the converted value, after rounding.
+			 */
+			convertedValue = convertedValue >> 1;
+
+			/*
+			 * If the converted value is too large to store in an integer, then
+			 * we have an Overflow condition.
+			 */
+			if ((convertedValue > (sign == 1 ? AXP_Q_NEGMAX : AXP_Q_POSMAX)) &&
+				((fpFunc->trp & AXP_FP_TRP_V) != 0))
+			{
+				retVal = ArithmeticTraps;
+				raised = FE_OVERFLOW;
+			}
+		}
+		else
+		{
+
+			/*
+			 * If the unbiased exponent is out of range, then the converted
+			 * value is set to zero.  Otherwise, shift the fraction the other
+			 * way.  No matter what, we have an overflow condition.
+			 */
+			if (unbiasedExp > (AXP_R_NMBIT + 64))
+				convertedValue = 0;
+			else
+				convertedValue =
+					instr->src1v.fp.fpr.fraction <<
+						(unbiasedExp - AXP_R_NMBIT - 1);
+			if ((fpFunc->trp & AXP_FP_TRP_V) != 0)
+			{
+				retVal = ArithmeticTraps;
+				raised = FE_OVERFLOW;
+			}
+		}
+
+		/*
+		 * Store the converted value into the destination register.
+		 */
+		instr->destv.fp.uq =
+			((sign == 1) ? ((~convertedValue) + 1) : convertedValue);
+	}
+
+	/*
+	 * Set the exception bits.
+	 */
+	if (raised != 0)
+		AXP_FP_SetExcSum(instr, raised, true);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_CVTQF
+ *	This function implements the convert from Quadword integer to VAX F Format
+ *	Floating-Point instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_CVTQF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * Initialize various fields in the destination register.
+	 */
+	instr->destv.fp.fpr32.sign = instr->src2v.fp.q.sign;
+	instr->destv.fp.fpr32.zero = 0;
+
+	/*
+	 * If the value to convert is already zero, then just set it and forget it.
+	 * Otherwise, if it is signed, complement the value, else copy it into the
+	 * destination register.
+	 */
+	if (instr->src1v.fp.uq == 0)
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+	else if (instr->src2v.fp.q.sign == 1)
+		instr->destv.fp.fpr32.fraction = ~instr->src1v.fp.q.integer;
+	else
+		instr->destv.fp.fpr32.fraction = instr->src1v.fp.q.integer;
+
+	/*
+	 * Normalize the destination register.
+	 */
+	AXP_FP_fpNormalize(&instr->destv.fp.fpr);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_CVTQG
+ *	This function implements the convert from Quadword integer to VAX G Format
+ *	Floating-Point instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_CVTQG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * Initialize various fields in the destination register.
+	 */
+	instr->destv.fp.fpr.sign = instr->src2v.fp.q.sign;
+
+	/*
+	 * If the value to convert is already zero, then just set it and forget it.
+	 * Otherwise, if it is signed, complement the value, else copy it into the
+	 * destination register.
+	 */
+	if (instr->src1v.fp.uq == 0)
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+	else if (instr->src2v.fp.q.sign == 1)
+		instr->destv.fp.fpr.fraction = ~instr->src1v.fp.q.integer;
+	else
+		instr->destv.fp.fpr.fraction = instr->src1v.fp.q.integer;
+
+	/*
+	 * Normalize the destination register.
+	 */
+	AXP_FP_fpNormalize(&instr->destv.fp.fpr);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_CVTDG
+ *	This function implements the convert from VAX D Format Floating-Point to
+ *	VAX G Float instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	IllegalOperand:		An illegal operand trap has occurred:
+ * 							Invalid Operation
+ * 							Overflow
+ * 							Underflow
+ */
+AXP_EXCEPTIONS AXP_CVTDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS		retVal = NoException;
+	AXP_FP_FUNC			*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	AXP_FP_ENCODING 	encoding;
+	u64					fraction = instr->src1v.fp.fdr.fraction;
+	i32					exponent = instr->src1v.fp.fdr.exponent;
+	int					raised = 0;
+
+	/*
+	 * Before we go too far, let's check the contents of the source registers.
+	 *
+	 * If either encoding turned up to be a dirty-zero or a reserved operand,
+	 * then we need to return an Invalid Operation.
+	 */
+	encoding = AXP_FP_ENCODE(&instr->src1v.fp.fdr, false);
+	if ((encoding == Reserved) || (encoding == DirtyZero))
+	{
+		retVal = IllegalOperand;
+		raised = FE_INVALID;
+	}
+	else if (instr->src1v.fp.uq == 0)
+		instr->destv.fp.uq = AXP_FPR_ZERO;
+	else
+	{
+		u32 sign = instr->src1v.fp.fdr.sign;
+
+		if (fpFunc->rnd != AXP_FP_CHOPPED)
+		{
+
+			fraction += AXP_G_RND;
+			if ((fraction & AXP_R_NM) == 0)
+			{
+				fraction = (fraction >> 1) | AXP_R_NM;
+				exponent++;
+			}
+		}
+		if (exponent > AXP_G_EXP_MASK)		// the mask also is the max
+		{
+			retVal = ArithmeticTraps;
+			raised = FE_OVERFLOW;
+			exponent = AXP_G_EXP_MASK;
+		}
+		else if (exponent < 0)
+		{
+			if ((fpFunc->trp & AXP_FP_TRP_U) != 0)
+			{
+				retVal = ArithmeticTraps;
+				raised = FE_UNDERFLOW;
+			}
+			sign = fraction = exponent = 0;
+		}
+		instr->destv.fp.fpr.sign = sign;
+		instr->destv.fp.fpr.exponent = exponent;
+		instr->destv.fp.fpr.fraction = fraction >> 3;	// Drop the last 3 bits
+	}
+
+	/*
+	 * Set the exception bits.
+	 */
+	if (raised != 0)
+		AXP_FP_SetExcSum(instr, raised, true);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}

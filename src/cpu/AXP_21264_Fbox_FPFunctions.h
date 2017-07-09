@@ -51,5 +51,6 @@ void AXP_FP_CvtX2G(
 		AXP_FPR_REGISTER *,
 		AXP_FPR_REGISTER *);
 int AXP_FP_CvtX2GOverUnderflow(long double *, AXP_FPR_REGISTER *);
+void AXP_FP_fpNormalize(AXP_FPR_REGISTER *);
 
 #endif	/* _AXP_21264_FBOX_FPFUNCTIONS_DEFS_ */

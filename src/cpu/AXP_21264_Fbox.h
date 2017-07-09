@@ -82,6 +82,10 @@ AXP_EXCEPTIONS AXP_CMPTEQ(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_CMPTLE(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_CMPTLT(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_CMPTUN(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_CVTGQ(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_CVTQF(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_CVTQG(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_CVTDG(AXP_21264_CPU *, AXP_INSTRUCTION *);
 
 /*
  * FP Operate Function Field Format
@@ -135,13 +139,17 @@ typedef struct
 #define AXP_FP_TRP_I	0x2							/* /I trap - IEEE only */
 #define AXP_FP_TRP_S	0x4							/* /S trap */
 
+/*
+ * Floating-point macros used for returning and testing various values.
+ */
 #define AXP_R_SIGN				0x8000000000000000ll
 #define AXP_R_EXP				0x7ff0000000000000ll
 #define AXP_R_FRAC				0x000fffffffffffffll
 #define AXP_R_NM 				0x8000000000000000ll	/* normalized */
+#define AXP_R_NMBIT				63
 #define AXP_R_HB				0x0010000000000000ll
 #define AXP_R_NAN				0x7ff
-#define AXP_R_GUARD				(63 - 52)
+#define AXP_R_GUARD				(AXP_R_NMBIT - 52)
 #define AXP_R_LONG_SMALL		0xffffffff00000000ll
 #define AXP_R_LONG_LARGE		0x000000007fffffffll
 #define AXP_R_QNAN				0x0008000000000000ll
@@ -155,8 +163,10 @@ typedef struct
 
 #define AXP_F_BIAS				0x080
 #define AXP_F_EXP_MASK			0xff
+#define AXP_F_RND				0x0000008000000000ll 		/* F rounding bit */
 #define AXP_G_BIAS				0x400
 #define AXP_G_EXP_MASK			0x7ff
+#define AXP_G_RND				0x0000000000000400ll		/* G rounding bit */
 #define AXP_S_BIAS				0x7f
 #define AXP_S_NAN				0xff
 #define AXP_S_EXP_MASK			0xff
@@ -168,10 +178,13 @@ typedef struct
 #define AXP_T_CQ_NAN			0xfff8000000000001ll
 #define AXP_T_CS_NAN			0x7ff0000000000001ll
 #define AXP_D_BIAS				0x80
-#define AXP_D_EXP_MASK
-#define AXP_D_GUARD				(63 - 55)
-
+#define AXP_D_EXP_MASK			0xff
+#define AXP_D_GUARD				(AXP_R_NMBIT - 55)
+#define AXP_D_RND				0x0000000000000080ll	/* D rounding bit */
 #define AXP_X_BIAS				0x3fff
+
+#define AXP_Q_POSMAX			0x7fffffffffffffffll
+#define AXP_Q_NEGMAX			0x8000000000000000ll
 
 #define AXP_R_Q2L_OVERFLOW(val)	(((val) & AXP_R_SIGN) ? 					\
 								 ((val) < AXP_R_LONG_SMALL) :				\
