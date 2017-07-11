@@ -32,6 +32,14 @@
  *
  *	V01.003		05-Jul-2017	Jonathan D. Belanger
  *	Added definitions for unsigned/signed 128-bit values.
+ *
+ *	V01.004		10-Jul-2017	Jonathan D. Belanger
+ *	I tried to utilize the MPFR - Multi-Precision Float Rounding utility,
+ *	but had problems getting it to link in correctly.  Additionally, this
+ *	utility did not support subnormal values directly (there was a way to
+ *	emulate it, but was not very efficient), as well as the performance
+ *	of this utlity has been questioned.  Therefore, I'm reverting to what
+ *	I was doing before.
  */
 #ifndef _AXP_UTIL_DEFS_
 #define _AXP_UTIL_DEFS_
@@ -47,7 +55,6 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <fenv.h>
-#include <mpfr.h>
 
 /*
  * Define some regularly utilized definitions.
