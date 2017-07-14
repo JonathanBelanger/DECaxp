@@ -180,7 +180,6 @@ typedef struct
 #define AXP_D_BIAS				0x80
 #define AXP_D_EXP_MASK			0xff
 #define AXP_D_GUARD				(AXP_R_NMBIT - 55)
-#define AXP_D_RND				0x0000000000000080ll	/* D rounding bit */
 #define AXP_X_BIAS				0x3fff
 
 #define AXP_Q_POSMAX			0x7fffffffffffffffll
