@@ -180,7 +180,6 @@ typedef struct
 #define AXP_D_BIAS				0x80
 #define AXP_D_EXP_MASK			0xff
 #define AXP_D_GUARD				(AXP_R_NMBIT - 55)
-#define AXP_D_RND				0x0000000000000080ll	/* D rounding bit */
 #define AXP_X_BIAS				0x3fff
 
 #define AXP_Q_POSMAX			0x7fffffffffffffffll
@@ -270,11 +269,16 @@ typedef enum
 						Zero :												\
 						DirtyZero))) :										\
 		Finite))
-
+/*
+ * TODO: The following code has been intentionally broken because the formula does not
+ *	take into account the fact the IEEE's hidden bit is 0.1 and VAX's hidden bit
+ *	is 1.0.  This causes a factor of 4 issue when converting from one bias to the
+ *	other.  This needs to be fixed.
+ */
 #define AXP_FP_CVT_EXP_G2X(fp)												\
-	((fp).exponent ? (fp).exponent + AXP_X_BIAS - AXP_G_BIAS : 0)
+	((fp).expo nent ? (fp).exponent + AXP_X_BIAS - AXP_G_BIAS : 0)
 
 #define AXP_FP_CVT_EXP_X2G(fp)												\
-	((fp).exponent ? (fp).exponent - AXP_X_BIAS + AXP_G_BIAS : 0) & AXP_G_EXP_MASK
+	((fp).expo nent ? (fp).exponent - AXP_X_BIAS + AXP_G_BIAS : 0) & AXP_G_EXP_MASK
 
 #endif /* _AXP_21264_FBOX_DEFS_ */

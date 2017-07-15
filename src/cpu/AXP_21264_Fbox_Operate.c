@@ -797,10 +797,6 @@ AXP_EXCEPTIONS AXP_CVTDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		{
 
 			fraction += AXP_G_RND;
-
-			/*
-			 * TODO: This code seems wrong to me.
-			 */
 			if ((fraction & AXP_R_NM) == 0)
 			{
 				fraction = (fraction >> 1) | AXP_R_NM;
@@ -813,7 +809,7 @@ AXP_EXCEPTIONS AXP_CVTDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			raised = FE_OVERFLOW;
 			exponent = AXP_G_EXP_MASK;
 		}
-		else if (exponent < 0)
+		else if (exponent <= 0)
 		{
 			if ((fpFunc->trp & AXP_FP_TRP_U) != 0)
 			{
@@ -824,7 +820,7 @@ AXP_EXCEPTIONS AXP_CVTDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		}
 		instr->destv.fp.fpr.sign = sign;
 		instr->destv.fp.fpr.exponent = exponent;
-		instr->destv.fp.fpr.fraction = (fraction >> 3) & AXP_R_FRAC;
+		instr->destv.fp.fpr.fraction = fraction >> 3;	// Drop the last 3 bits
 	}
 
 	/*
@@ -873,8 +869,9 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_EXCEPTIONS		retVal = NoException;
 	AXP_FP_FUNC			*fpFunc = (AXP_FP_FUNC *) &instr->function;
 	AXP_FP_ENCODING 	encoding;
-	u64					fraction = instr->src1v.fp.fdr.fraction;
-	i32					exponent = instr->src1v.fp.fdr.exponent;
+	u64					fraction = instr->src1v.fp.fpr.fraction;
+	i32					exponent = instr->src1v.fp.fpr.exponent +
+							AXP_D_BIAS - AXP_G_BIAS;
 	int					raised = 0;
 
 	/*
@@ -889,33 +886,19 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		retVal = IllegalOperand;
 		raised = FE_INVALID;
 	}
-	else if (instr->src1v.fp.uq == 0)
-		instr->destv.fp.uq = AXP_FPR_ZERO;
+	else if (instr->src1v.fp.fpr.fraction == 0)
+		instr->destv.fp.uq = AXP_FDR_ZERO;
 	else
 	{
 		u32 sign = instr->src1v.fp.fpr.sign;
 
-		if (fpFunc->rnd != AXP_FP_CHOPPED)
-		{
-
-			fraction += AXP_D_RND;
-
-			/*
-			 * TODO: This code seems wrong to me.
-			 */
-			if ((fraction & AXP_D_NM) == 0)
-			{
-				fraction = (fraction >> 1) | AXP_D_NM;
-				exponent++;
-			}
-		}
 		if (exponent > AXP_D_EXP_MASK)		// the mask also is the max
 		{
 			retVal = ArithmeticTraps;
 			raised = FE_OVERFLOW;
 			exponent = AXP_D_EXP_MASK;
 		}
-		else if (exponent < 0)
+		else if (exponent <= 0)
 		{
 			if ((fpFunc->trp & AXP_FP_TRP_U) != 0)
 			{
@@ -926,7 +909,7 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		}
 		instr->destv.fp.fdr.sign = sign;
 		instr->destv.fp.fdr.exponent = exponent;
-		instr->destv.fp.fdr.fraction = (fraction << 3) & AXP_D_FRAC;
+		instr->destv.fp.fdr.fraction = fraction;
 	}
 
 	/*
@@ -970,13 +953,13 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 							Overflow
  * 							Underflow
  */
-AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+AXP_EXCEPTIONS AXP_CVTGF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS		retVal = NoException;
 	AXP_FP_FUNC			*fpFunc = (AXP_FP_FUNC *) &instr->function;
 	AXP_FP_ENCODING 	encoding;
-	u64					fraction = instr->src1v.fp.fdr.fraction;
-	i32					exponent = instr->src1v.fp.fdr.exponent;
+	u64					fraction = instr->src1v.fp.fpr.fraction;
+	i32					exponent = instr->src1v.fp.fpr.exponent;
 	int					raised = 0;
 
 	/*
@@ -991,33 +974,19 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		retVal = IllegalOperand;
 		raised = FE_INVALID;
 	}
-	else if (instr->src1v.fp.uq == 0)
+	else if (instr->src1v.fp.fpr.fraction == 0)
 		instr->destv.fp.uq = AXP_FPR_ZERO;
 	else
 	{
 		u32 sign = instr->src1v.fp.fpr.sign;
 
-		if (fpFunc->rnd != AXP_FP_CHOPPED)
-		{
-
-			fraction += AXP_F_RND;
-
-			/*
-			 * TODO: This code seems wrong to me.
-			 */
-			if ((fraction & AXP_F_NM) == 0)
-			{
-				fraction = (fraction >> 1) | AXP_F_NM;
-				exponent++;
-			}
-		}
 		if (exponent > AXP_F_EXP_MASK)		// the mask also is the max
 		{
 			retVal = ArithmeticTraps;
 			raised = FE_OVERFLOW;
 			exponent = AXP_F_EXP_MASK;
 		}
-		else if (exponent < 0)
+		else if (exponent <= 0)
 		{
 			if ((fpFunc->trp & AXP_FP_TRP_U) != 0)
 			{
@@ -1026,10 +995,10 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			}
 			sign = fraction = exponent = 0;
 		}
-		instr->destv.fp.fpr32.sign = sign;
-		instr->destv.fp.fpr32.exponent = exponent;
-		instr->destv.fp.fpr32.fraction = fraction & AXP_F_FRAC;
-		instr->destc.fp.fpr32.zero = 0;
+		instr->destv.fp.fpr.sign = sign;
+		instr->destv.fp.fpr.exponent = exponent;
+		instr->destv.fp.fpr.fraction = fraction;
+		instr->destv.fp.fpr32.zero = 0;	// the low order bits should be zero
 	}
 
 	/*
@@ -1070,7 +1039,6 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 	NoException:		Normal successful completion.
  * 	ArithmeticTraps:	An arithmetic trap has occurred:
  * 							Invalid Operation
- *							Division By Zero
  * 							Overflow
  * 							Underflow
  */
@@ -1093,12 +1061,12 @@ AXP_EXCEPTIONS AXP_DIVF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		retVal = IllegalOperand;
 		raised = FE_INVALID;
 	}
-
-	/*
-	 * If we are trying to divide by zero, there is nothing else really to do.
-	 * Just set the reason and move on.
-	 */
-	else if (instr->src2v.fp.uq != 0)
+	if (instr->src2v.fp.fpr32.fraction == 0)
+	{
+		retVal = ArithmeticTraps;
+		raised = FE_DIVBYZERO;
+	}
+	else
 	{
 
 		/*
@@ -1190,18 +1158,13 @@ AXP_EXCEPTIONS AXP_DIVF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				retVal = ArithmeticTraps;
 		}
 	}
-	else
-	{
-		raised = FE_DIVBYZERO;
-		retVal = ArithmeticTraps;
-	}
 
 	/*
 	 * Set the exception bits (I probably don't have to do this, but I will
 	 * anyway, just so that unexpected results get returned for this
 	 * instruction).
 	 */
-	raised &= (FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID | FE_DIVBYZERO);
+	raised &= (FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
 	AXP_FP_SetExcSum(instr, raised, false);
 
 	/*
@@ -1218,7 +1181,7 @@ AXP_EXCEPTIONS AXP_DIVF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 /*
  * AXP_DIVG
  *	This function implements the VAX G Format Floating-Point DIVide instruction
- *	by the Alpha AXP processor.
+ *	of the Alpha AXP processor.
  *
  * Input Parameters:
  *	cpu:
@@ -1239,7 +1202,7 @@ AXP_EXCEPTIONS AXP_DIVF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 							Overflow
  * 							Underflow
  */
-AXP_EXCEPTIONS AXP_DIVG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
 	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
@@ -1258,7 +1221,12 @@ AXP_EXCEPTIONS AXP_DIVG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		retVal = IllegalOperand;
 		raised = FE_INVALID;
 	}
-	else if (instr->src2v.fp.uq != 0)
+	if (instr->src2v.fp.fpr.fraction == 0)
+	{
+		retVal = ArithmeticTraps;
+		raised = FE_DIVBYZERO;
+	}
+	else
 	{
 
 		/*
@@ -1284,7 +1252,7 @@ AXP_EXCEPTIONS AXP_DIVG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		/*
 	 	 * Execute the instruction.
 	 	 */
-		destv = src1v / src2v;
+		destv = src1v + src2v;
 
 		/*
 	 	 * Test to see what exceptions were raised.
@@ -1310,18 +1278,13 @@ AXP_EXCEPTIONS AXP_DIVG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				retVal = ArithmeticTraps;
 		}
 	}
-	else
-	{
-		raise = FE_DIVBYZERO;
-		retVal = ArithmeticTraps;
-	}
 
 	/*
 	 * Set the exception bits (I probably don't have to do this, but I will
 	 * anyway, just so that unexpected results get returned for this
 	 * instruction).
 	 */
-	raised &= (FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID | FE_DIVBYZERO);
+	raised &= (FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
 	AXP_FP_SetExcSum(instr, raised, false);
 
 	/*

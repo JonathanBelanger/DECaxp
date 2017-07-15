@@ -22,6 +22,9 @@
  *
  *	V01.000		26-Jun-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		12-Jul-2017	Jonathan D. Belanger
+ *	Added a skipped test counter.
  */
 #include <math.h>
 #include <float.h>
@@ -1016,7 +1019,7 @@ int main()
 	int				useResults;
 	bool			results;
 	AXP_FBOX_FPCR	FPCR;
-	int				testCnt = 0, passed = 0, failed = 0;
+	int				testCnt = 0, passed = 0, failed = 0, skipped = 0;
 	int				retVal;
 	double			*Ra, *Rb, *Rc, *expectedRc;
 
@@ -1397,6 +1400,7 @@ int main()
 						case nextUpAction:
 						case nextDownAction:
 						case equivalentAction:
+							skipped++;
 							break;
 					}
 					break;
@@ -1421,12 +1425,15 @@ int main()
 	 * Display the results of the test.
 	 */
 	 if (pass == true)
-		 printf("\n% d tests passed.  %d test cases executed.\n", passed,
+		 printf("\n% d tests passed, %d tests skipped, and %d test cases executed.\n",
+			passed,
+			skipped,
 			testCnt);
 	 else
-		 printf("\n%d tests passed and %d failed, with a total of %d tests.\n",
+		 printf("\n%d tests passed, %d failed, and %d skipped, with a total of %d tests.\n",
 			passed,
 			failed,
+			skipped,
 			testCnt);
 	
 	/*
