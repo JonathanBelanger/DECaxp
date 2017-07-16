@@ -275,7 +275,7 @@ AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			 * Convert the result back into a VAX G format and see if we got
 			 * an overflow or underflow.
 			 */
-			raised = AXP_FP_CvtX2GOverUnderflow(&destv, &instr->destv.fp.fpr);
+			raised = AXP_FP_CvtX2G(&destv, NULL, &instr->destv.fp.fpr, NULL);
 			if (raised != 0)
 				retVal = ArithmeticTraps;
 		}
@@ -873,8 +873,8 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_EXCEPTIONS		retVal = NoException;
 	AXP_FP_FUNC			*fpFunc = (AXP_FP_FUNC *) &instr->function;
 	AXP_FP_ENCODING 	encoding;
-	u64					fraction = instr->src1v.fp.fdr.fraction;
-	i32					exponent = instr->src1v.fp.fdr.exponent;
+	u64					fraction = instr->src1v.fp.fpr.fraction;
+	i32					exponent = instr->src1v.fp.fpr.exponent;
 	int					raised = 0;
 
 	/*
@@ -903,9 +903,9 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			/*
 			 * TODO: This code seems wrong to me.
 			 */
-			if ((fraction & AXP_D_NM) == 0)
+			if ((fraction & AXP_R_NM) == 0)
 			{
-				fraction = (fraction >> 1) | AXP_D_NM;
+				fraction = (fraction >> 1) | AXP_R_NM;
 				exponent++;
 			}
 		}
@@ -926,7 +926,7 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		}
 		instr->destv.fp.fdr.sign = sign;
 		instr->destv.fp.fdr.exponent = exponent;
-		instr->destv.fp.fdr.fraction = (fraction << 3) & AXP_D_FRAC;
+		instr->destv.fp.fdr.fraction = (fraction << 3) & AXP_R_FRAC;
 	}
 
 	/*
@@ -970,7 +970,7 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 							Overflow
  * 							Underflow
  */
-AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+AXP_EXCEPTIONS AXP_CVTGF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_EXCEPTIONS		retVal = NoException;
 	AXP_FP_FUNC			*fpFunc = (AXP_FP_FUNC *) &instr->function;
@@ -1005,9 +1005,9 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			/*
 			 * TODO: This code seems wrong to me.
 			 */
-			if ((fraction & AXP_F_NM) == 0)
+			if ((fraction & AXP_R_NM) == 0)
 			{
-				fraction = (fraction >> 1) | AXP_F_NM;
+				fraction = (fraction >> 1) | AXP_R_NM;
 				exponent++;
 			}
 		}
@@ -1028,8 +1028,8 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		}
 		instr->destv.fp.fpr32.sign = sign;
 		instr->destv.fp.fpr32.exponent = exponent;
-		instr->destv.fp.fpr32.fraction = fraction & AXP_F_FRAC;
-		instr->destc.fp.fpr32.zero = 0;
+		instr->destv.fp.fpr32.fraction = fraction & AXP_R_FRAC;
+		instr->destv.fp.fpr32.zero = 0;
 	}
 
 	/*
@@ -1305,14 +1305,14 @@ AXP_EXCEPTIONS AXP_DIVG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			 * Convert the result back into a VAX G format and see if we got
 			 * an overflow or underflow.
 			 */
-			raised = AXP_FP_CvtX2GOverUnderflow(&destv, &instr->destv.fp.fpr);
+			raised = AXP_FP_CvtX2G(&destv, NULL, &instr->destv.fp.fpr, NULL);
 			if (raised != 0)
 				retVal = ArithmeticTraps;
 		}
 	}
 	else
 	{
-		raise = FE_DIVBYZERO;
+		raised = FE_DIVBYZERO;
 		retVal = ArithmeticTraps;
 	}
 

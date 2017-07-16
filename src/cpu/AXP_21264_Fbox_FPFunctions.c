@@ -54,7 +54,7 @@
  */
 float AXP_FP_CvtFPRToFloat(AXP_FP_REGISTER fpr)
 {
-	float				retVal = 0.0;
+	float			retVal = 0.0;
 	AXP_S_MEMORY	*sFloat = (AXP_S_MEMORY *) &retVal;
 
 	/*
@@ -148,26 +148,85 @@ void AXP_FP_CvtG2X(
 		long double *xSrc1,
 		long double *xSrc2)
 {
-	AXP_X_MEMORY *xSrc1Ptr = (AXP_X_MEMORY *) xSrc1;
-	AXP_X_MEMORY *xSrc2Ptr = (AXP_X_MEMORY *) xSrc2;
+	AXP_X_MEMORY	*xSrc1Ptr = (AXP_X_MEMORY *) xSrc1;
+	AXP_X_MEMORY	*xSrc2Ptr = (AXP_X_MEMORY *) xSrc2;
+	bool			sign = (src1->sign == 1);
+	u32				exponent= src1->exponent;
+	u128			fraction = src1->fraction;
 
 	/*
 	 * Convert the first float.
 	 */
-	xSrc1Ptr->sign = src1->sign;
-	xSrc1Ptr->exponent = AXP_FP_CVT_EXP_G2X(*src1);
-	xSrc1Ptr->fraction = src1->fraction;
-	xSrc1Ptr->zero = 0;
+	if (exponent == 0)
+	{
+		*xSrc1 = 0.0;
+	}
+	else
+	{
+		xSrc1Ptr->sign = (sign ? 1 : 0);
+		exponent -= (1 + AXP_G_BIAS - AXP_X_BIAS);
+
+		/*
+		 * If the value being converted will still be normalized, then just
+		 * move the rest of the floating point value into the destination.
+		 */
+		if (exponent > 0)
+		{
+			xSrc1Ptr->exponent = exponent & AXP_X_EXP_MASK;
+			xSrc1Ptr->fraction = fraction;
+		}
+
+		/*
+		 * Otherwise, we have a denormalized value.  Insert the hidden bit and
+		 * shift the result to compensate.
+		 */
+		else
+		{
+			xSrc1Ptr->exponent = 0;
+			xSrc1Ptr->fraction = (fraction | AXP_G_HIDDEN_BIT) >> (1 - exponent);
+		}
+		xSrc1Ptr->zero = 0;
+	}
 
 	/*
 	 * If the second float was specified, then convert it as well.
 	 */
 	if (src2 != NULL)
 	{
-		xSrc2Ptr->sign = src2->sign;
-		xSrc2Ptr->exponent = AXP_FP_CVT_EXP_G2X(*src2);
-		xSrc2Ptr->fraction = src2->fraction;
-		xSrc2Ptr->zero = 0;
+		sign = (src2->sign == 1);
+		exponent= src2->exponent;
+		fraction = src2->fraction;
+		if (exponent == 0)
+		{
+			*xSrc2 = 0.0;
+		}
+		else
+		{
+			xSrc2Ptr->sign = (sign ? 1 : 0);
+			exponent -= (1 + AXP_G_BIAS - AXP_X_BIAS);
+
+			/*
+			 * If the value being converted will still be normalized, then just
+			 * move the rest of the floating point value into the destination.
+			 */
+			if (exponent > 0)
+			{
+				xSrc2Ptr->exponent = exponent;
+				xSrc2Ptr->fraction = fraction;
+			}
+
+			/*
+			 * Otherwise, we have a denormalized value.  Insert the hidden bit and
+			 * shift the result to compensate.
+			 */
+			else
+			{
+				xSrc2Ptr->exponent = 0;
+				xSrc2Ptr->fraction = (fraction | AXP_G_HIDDEN_BIT) >>
+					(1 - exponent);
+			}
+			xSrc2Ptr->zero = 0;
+		}
 	}
 
 	/*
@@ -177,7 +236,7 @@ void AXP_FP_CvtG2X(
 }
 
 /*
- * AXP_FP_Cvt2G
+ * AXP_FP_CvtX2G
  * 	This function is called to convert a 128-bit IEEE X Floating value to a
  * 	64-bit VAX G Floating value.  It can convert one or two parameters.
  *
@@ -195,107 +254,119 @@ void AXP_FP_CvtG2X(
  * 		parameter is ignored if 'src2' is NULL.
  *
  * Return Value:
- * 	None.
+ * 	0:				Normal successful completion.
+ * 	FE_OVERFLOW:	An overflow occurred.
+ * 	FE_UNDERFLOW:	An underflow occurred.
+ * 	FE_INVALID:		The number to be converted is Not-A-Number.
  */
-void AXP_FP_CvtX2G(
+int AXP_FP_CvtX2G(
 		long double *src1,
 		long double *src2,
 		AXP_FPR_REGISTER *gSrc1,
 		AXP_FPR_REGISTER *gSrc2)
 {
-	AXP_X_MEMORY *xSrc1Ptr = (AXP_X_MEMORY *) src1;
-	AXP_X_MEMORY *xSrc2Ptr = (AXP_X_MEMORY *) src2;
+	int				retVal = 0;
+	AXP_X_MEMORY	*xSrc1Ptr = (AXP_X_MEMORY *) src1;
+	AXP_X_MEMORY	*xSrc2Ptr = (AXP_X_MEMORY *) src2;
+	bool			sign = (xSrc1Ptr->sign == 1);
+	u32				exponent= xSrc1Ptr->exponent;
+	u128			fraction = xSrc1Ptr->fraction;
 
 	/*
 	 * Convert the first float.
 	 */
-	gSrc1->sign = xSrc1Ptr->sign;
-	gSrc1->exponent = AXP_FP_CVT_EXP_X2G(*xSrc1Ptr);
-	gSrc1->fraction = xSrc1Ptr->fraction;
+	if ((exponent == 0) && (fraction == 0))
+	{
+		gSrc1->sign = gSrc1->exponent = gSrc1->fraction = 0;
+	}
+	else if (exponent == AXP_X_EXP_MAX)	// Both Infinity and NaN
+	{
+		retVal = FE_OVERFLOW;
+		if (fraction == 0)
+			retVal = (sign ? FE_UNDERFLOW : FE_OVERFLOW);
+		else
+			retVal = FE_INVALID;
+	}
+	else
+	{
+
+		/*
+		 * If this is a denormalized value, we need to do some shifting to try
+		 * and normalize it for a VAX G Float.  We start with
+		 */
+		if (exponent == 0)
+		{
+			fraction <<= 1;
+			while ((fraction & AXP_G_HIDDEN_BIT) == 0)
+			{
+				fraction <<= 1;
+				exponent--;
+			}
+			fraction &= (AXP_G_HIDDEN_BIT - 1);		// remove the hidden bit.
+		}
+		exponent += (1 + AXP_G_BIAS + AXP_X_BIAS);
+		if (exponent < 0)
+			retVal = FE_UNDERFLOW;
+		else if (exponent >= AXP_G_EXP_MAX)
+			retVal = FE_OVERFLOW;
+		else
+		{
+			gSrc1->sign = (sign) ? 1 : 0;
+			gSrc1->exponent = exponent & AXP_G_EXP_MASK;
+			gSrc1->fraction = fraction & AXP_R_FRAC;
+		}
+	}
 
 	/*
 	 * If the second float was specified, then convert it as well.
 	 */
 	if (src2 != NULL)
 	{
-		gSrc2->sign = xSrc2Ptr->sign;
-		gSrc2->exponent = AXP_FP_CVT_EXP_G2X(*xSrc2Ptr);
-		gSrc2->fraction = xSrc2Ptr->fraction;
-	}
-
-	/*
-	 * Return back to the caller.
-	 */
-	return;
-}
-
-/*
- * AXP_FP_Cvt2GOverUnderflow
- * 	This function is called to convert a 128-bit IEEE X Floating value to a
- * 	64-bit VAX G Floating value.  It only converts one.  It tests the the value
- * 	in the IEEE X Float does not overflow the VAX G Float.
- *
- * Input Parameter:
- * 	src1:
- * 		A pointer to the IEEE X Float to be converted.
- *
- * Output Parameters:
- * 	xSrc1:
- * 		A pointer to the VAX G Float to receive the converted value.
- *
- * Return Value:
- * 	0:	If the IEEE X Float did not over/underflow the VAX G FLoat.
- */
-int AXP_FP_CvtX2GOverUnderflow(long double *src1, AXP_FPR_REGISTER *gSrc1)
-{
-	AXP_X_MEMORY *xSrc1Ptr = (AXP_X_MEMORY *) src1;
-	int retVal;
-
-	/*
-	 * Convert the first float.
-	 */
-	gSrc1->sign = xSrc1Ptr->sign;
-	gSrc1->exponent = AXP_FP_CVT_EXP_X2G(*xSrc1Ptr);
-	gSrc1->fraction = xSrc1Ptr->fraction;
-	/*
-	 * Before we can simply return back to the caller, we need to
-	 * determine if an overflow condition may have occurred.
-	 */
-	if ((xSrc1Ptr->exponent - AXP_X_BIAS) > AXP_S_BIAS)
-		retVal = FE_OVERFLOW;
-	else
-		switch (AXP_FP_ENCODE(gSrc1, false))
+		sign = (xSrc2Ptr->sign == 1);
+		exponent= xSrc2Ptr->exponent;
+		fraction = xSrc2Ptr->fraction;
+		if ((exponent == 0) && (fraction == 0))
+		{
+			gSrc2->sign = gSrc2->exponent = gSrc2->fraction = 0;
+		}
+		else if (exponent == AXP_X_EXP_MAX)	// Both Infinity and NaN
+		{
+			retVal = FE_OVERFLOW;
+			if (fraction == 0)
+				retVal = (sign ? FE_UNDERFLOW : FE_OVERFLOW);
+			else
+				retVal = FE_INVALID;
+		}
+		else
 		{
 
 			/*
-			 * These 2 cases are the same as Denormal for IEEE.
-			 * Basically, these are values that cannot be represented
-			 * in VAX Float.
+			 * If this is a denormalized value, we need to do some shifting to try
+			 * and normalize it for a VAX G Float.  We start with
 			 */
-			case DirtyZero:
-			case Reserved:
+			if (exponent == 0)
+			{
+				fraction <<= 1;
+				while ((fraction & AXP_G_HIDDEN_BIT) == 0)
+				{
+					fraction <<= 1;
+					exponent--;
+				}
+				fraction &= (AXP_G_HIDDEN_BIT - 1);		// remove the hidden bit.
+			}
+			exponent += (1 + AXP_G_BIAS + AXP_X_BIAS);
+			if (exponent < 0)
 				retVal = FE_UNDERFLOW;
-				break;
-
-			/*
-			 * These are just fine.  Nothing more to do here.
-			 */
-			case Finite:
-			case Zero:
-				break;
-
-			/*
-			 * These are not returned when IEEE is set to false above.
-			 * So, there's nothing we can do here.  This is done to
-			 * keep the compiler happy (it does not like switch
-			 * statements with an enumeration and not all the values
-			 * are present).
-			 */
-			case Denormal:
-			case Infinity:
-			case NotANumber:
-				break;
+			else if (exponent >= AXP_G_EXP_MAX)
+				retVal = FE_OVERFLOW;
+			else
+			{
+				gSrc2->sign = (sign) ? 1 : 0;
+				gSrc2->exponent = exponent & AXP_G_EXP_MASK;
+				gSrc2->fraction = fraction & AXP_R_FRAC;
+			}
 		}
+	}
 
 	/*
 	 * Return back to the caller.

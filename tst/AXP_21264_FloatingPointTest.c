@@ -804,7 +804,22 @@ i32 parseNextLine(
 		/*
 		 * First things first, set the trapped exception to 'none'.
 		 */
-		memset(expectedFPCR, 0, sizeof(AXP_FBOX_FPCR));
+		expectedFPCR->sum = 0;
+		expectedFPCR->ined = 0;
+		expectedFPCR->unfd = 0;
+		expectedFPCR->undz = 0;
+		expectedFPCR->dyn = 0;
+		expectedFPCR->iov = 0;
+		expectedFPCR->ine = 0;
+		expectedFPCR->unf = 0;
+		expectedFPCR->ovf = 0;
+		expectedFPCR->dze = 0;
+		expectedFPCR->inv = 0;
+		expectedFPCR->ovfd = 0;
+		expectedFPCR->dzed = 0;
+		expectedFPCR->invd = 0;
+		expectedFPCR->dnz = 0;
+		expectedFPCR->res = 0;
 
 		/*
 		 * OK, the trapped expression may or may not be present.  If it is
@@ -1420,6 +1435,15 @@ int main()
 		printf("Unable to open test data file: %s\n", fileName);
 		pass = false;
 	}
+
+	float			sVal = 3.1415926;
+	AXP_S_MEMORY	*Sbits = (AXP_S_MEMORY *) & sVal;
+	double			tVal = -3.1415926;
+	AXP_T_MEMORY	*Tbits = (AXP_T_MEMORY *) &tVal;
+	printf("S: 0x%08x (s: %d, exp: 0x%02x, frac: 0x%06x)\n",
+		*((u32 *) &sVal), Sbits->sign, Sbits->exponent, Sbits->fraction);
+	printf("T: 0x%016llx (s: %d, exp: 0x%03x, frac: 0x%013llx)\n",
+		*((u64 *) &tVal), Tbits->sign, Tbits->exponent, (u64) Tbits->fraction);
 
 	/*
 	 * Display the results of the test.

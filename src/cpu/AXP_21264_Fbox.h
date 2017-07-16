@@ -32,7 +32,70 @@
 #include "AXP_21264_CPU.h"
 
 /*
- * Ebox Instruction Prototypes
+ * IMPLEMENTATION NOTES:
+ *
+ *	The following definitions, other than the prototypes, are used throughout
+ *	the Fbox code.  One of the things these definitions do is to determine what
+ *	the value in a floating point value represents (Infinity, Zero, Finite,
+ *	Denormal, Dirty-Zero, and NotANumber), as well as being able to mask out
+ *	and convert one floating point to another.  Here are some of the possible
+ *	conversions:
+ *
+ *	Conversion			Exponent Bias	Total Bits		Mantissa Bits
+ *	FltA		FltB	FltA	FltB	FltA	FltB	FltA	FltB
+ *	------		------	----	-----	----	----	----	----
+ *	VAX F  <-> 	VAG G	128		1024	32		64		23		52
+ *	VAX F  <-> 	IEEE T	128		1023	32		64		23		52
+ *	VAX G  <-> 	VAX D	1024	128		64		64		52		55
+ *	VAX G  <-> 	IEEE X	1024	16383	64		128		52		112
+ *	IEEE S <-> 	IEEE T	127		1023	32		64		23		52
+ *
+ *	VAX hidden bit is	0.1m
+ *	IEEE hidden bit is	1.m
+ *	m = mantissa without hidden bit.
+ *
+ *	For exponent conversions VAX to VAX is simply a Bias A minus Bias B. For
+ *	exponent conversions IEEE to IEEE is also the same conversion as VAX to
+ *	VAX.  For VAX to IEEE, the location of the hidden bit needs to be
+ *	considered, so the bias conversion VAX to IEEE is the exponent minus the
+ *	total of one plus the VAX bias minus the IEEE bias.  The conversion from
+ *	IEEE is the same as the VAX to IEEE, except the above formula is subtracted
+ *	from the exponent.  The special cases, exponent all zeros or all ones, for
+ *	IEEE only, need to be handled separately.  Therefore, the following rules
+ *	are utilized:
+ *
+ *		IEEE Special		VAX Special
+ *		------------		------------------------
+ *		+Zero		<->		+Zero
+ *		-Zero		-->		+Zero
+ *		Denormal	-->		+Zero
+ *		Finite		-->		Finite
+ *		NotANumber	-->		Invalid Operation error*
+ *		+Infinity	-->		Overflow*
+ *		-Infinity	-->		Underflow*
+ *		-Zero		<--		Dirty Zero*
+ *	*Effort will be made to not allow these to occur.
+ *
+ *	For fraction conversions, the only consideration is the change in accuracy.
+ *	When going from a fraction with a larger number of bits to one with a
+ *	smaller number of bits, the bits from bit 0 up until bit 'x', where 'x' is
+ *	the difference in number of bits, simply dropped (effectively a shift right
+ *	of 'x' bits).  When going from a fraction with fewer bits to one with more,
+ *	the opposite is performed and 'x' zero bits are inserted starting at bit 0.
+ *	(effectively a shift left of 'x' bits).
+ *
+ *	For all the VAX floating-point operations, the VAX Float is converted to an
+ *	IEEE float of higher exponent and fraction size (see above).  Then the
+ *	operation is executed using the IEEE compliant functions provided by the
+ *	GCC compiler and operating system.  Finally, the result is converted back
+ *	into the VAX Float.  This prevents Infinity from coming into play, as well
+ *	as any overflow and underflow considerations (at least as far as the
+ *	operation is concerned).  When converting from the larger IEEE float to the
+ *	smaller VAX float, then both overflow and underflow do come into play.
+ */
+
+/*
+ * Fbox Instruction Prototypes
  *
  * Floating-Point Control
  */
@@ -161,26 +224,61 @@ typedef struct
 #define AXP_R_MMAX				0xffefffffffffffffll	/* minus maximum */
 #define AXP_R_EXP_MAX			0x7ff
 
-#define AXP_F_BIAS				0x080
+#define AXP_F_EXP_SIZE			8
+#define AXP_F_FRAC_SIZE			23
+#define AXP_F_BIAS				(1UL << (AXP_F_EXP_SIZE - 1))
+#define AXP_F_HIDDEN_BIT		(1UL << AXP_F_FRAC_SIZE)
 #define AXP_F_EXP_MASK			0xff
-#define AXP_F_RND				0x0000008000000000ll 		/* F rounding bit */
-#define AXP_G_BIAS				0x400
+#define AXP_F_EXP_MAX			0xff
+#define AXP_F_RND				0x0000008000000000ll 	/* F rounding bit */
+
+#define AXP_D_EXP_SIZE			8
+#define AXP_D_FRAC_SIZE			55
+#define AXP_D_BIAS				(1UL << (AXP_D_EXP_SIZE - 1))
+#define AXP_D_HIDDEN_BIT		(1UL << AXP_D_FRAC_SIZE)
+#define AXP_D_EXP_MASK			0xff
+#define AXP_D_EXP_MAX			0xff
+#define AXP_D_GUARD				(AXP_R_NMBIT - AXP_D_FRAC_SIZE)
+#define AXP_D_RND				0x0000000000000080ll	/* D round */
+
+#define AXP_G_EXP_SIZE			11
+#define AXP_G_FRAC_SIZE			52
+#define AXP_G_BIAS				(1UL << (AXP_G_EXP_SIZE - 1))
+#define AXP_G_HIDDEN_BIT		(1UL << AXP_G_FRAC_SIZE)
 #define AXP_G_EXP_MASK			0x7ff
-#define AXP_G_RND				0x0000000000000400ll		/* G rounding bit */
-#define AXP_S_BIAS				0x7f
+#define AXP_G_EXP_MAX			0x7ff
+#define AXP_G_RND				0x0000000000000400ll	/* G rounding bit */
+
+#define AXP_S_EXP_SIZE			8
+#define AXP_S_FRAC_SIZE			23
+#define AXP_S_BIAS				((1 << (AXP_S_EXP_SIZE - 1)) - 1)
+#define AXP_S_HIDDEN_BIT		(1 << AXP_S_FRAC_SIZE)
 #define AXP_S_NAN				0xff
 #define AXP_S_EXP_MASK			0xff
+#define AXP_S_EXP_MAX			0xff
 #define AXP_S_CQ_NAN			0xfff8000020000000ll
 #define AXP_S_CS_NAN			0x7ff0000020000000ll
-#define AXP_T_BIAS				0x3ff
+#define AXP_S_RND				0x0000008000000000ll	/* S normal round */
+#define AXP_S_INF				0x000000ffffffffffll	/* S infinity round */
+
+#define AXP_T_EXP_SIZE			11
+#define AXP_T_FRAC_SIZE			52
+#define AXP_T_BIAS				((1UL << (AXP_T_EXP_SIZE - 1)) - 1)
+#define AXP_T_HIDDEN_BIT		(1UL << AXP_T_FRAC_SIZE)
 #define AXP_T_NAN				0x7ff
 #define AXP_T_EXP_MASK			0x7ff
+#define AXP_T_EXP_MAX			0x7ff
 #define AXP_T_CQ_NAN			0xfff8000000000001ll
 #define AXP_T_CS_NAN			0x7ff0000000000001ll
-#define AXP_D_BIAS				0x80
-#define AXP_D_EXP_MASK			0xff
-#define AXP_D_GUARD				(AXP_R_NMBIT - 55)
-#define AXP_X_BIAS				0x3fff
+#define AXP_T_RND				0x0000000000000400ll	/* T normal round */
+#define AXP_T_INF				0x00000000000007ffll	/* T infinity round */
+
+#define AXP_X_EXP_SIZE			15
+#define AXP_X_FRAC_SIZE			112
+#define AXP_X_BIAS				((1LL << (AXP_X_EXP_SIZE - 1))- 1)
+#define AXP_X_HIDDEN_BIT		(1LL << AXP_X_FRAC_SIZE)
+#define AXP_X_EXP_MASK			0x7fff
+#define AXP_X_EXP_MAX			0x7fff
 
 #define AXP_Q_POSMAX			0x7fffffffffffffffll
 #define AXP_Q_NEGMAX			0x8000000000000000ll
@@ -192,29 +290,19 @@ typedef struct
 /*
  * Exploded rounding constants
  */
-#define AXP_F_RND				0x0000008000000000ll	/* F round */
-#define AXP_D_RND				0x0000000000000080ll	/* D round */
-#define AXP_G_RND				0x0000000000000400ll	/* G round */
-#define AXP_S_RND				0x0000008000000000ll	/* S normal round */
-#define AXP_S_INF				0x000000ffffffffffll	/* S infinity round */
-#define AXP_T_RND				0x0000000000000400ll	/* T normal round */
-#define AXP_T_INF				0x00000000000007ffll	/* T infinity round */
-#define AXP_F_DT				0						/* type F */
-#define AXP_G_DT				1						/* type G */
-#define AXP_D_DT				2						/* type D */
-#define AXP_L_DT				3						/* type L, Quadword Integer */
-#define AXP_Q_DT				4						/* type Q, Quadword Integer */
-#define AXP_S_DT				0						/* type S */
-#define AXP_T_DT				1						/* type T */
-#define AXP_X_DT				2						/* type X */
+//#define AXP_F_DT				0						/* type F */
+//#define AXP_G_DT				1						/* type G */
+//#define AXP_D_DT				2						/* type D */
+//#define AXP_L_DT				3						/* type L, Quadword Integer */
+//#define AXP_Q_DT				4						/* type Q, Quadword Integer */
+//#define AXP_S_DT				0						/* type S */
+//#define AXP_T_DT				1						/* type T */
+//#define AXP_X_DT				2						/* type X */
 
 /*
  * This structure is used to extract a floating point value's (all forms)
  * constituent parts into separate fields, that are actually the same size or
  * larger, to be used in converting from one floating type to another
- *
- * TODO: 	Do we want to also utilize this structure for integers?  There is
- * 			built-in support to do so.
  */
 typedef struct
 {
@@ -269,16 +357,30 @@ typedef enum
 						Zero :												\
 						DirtyZero))) :										\
 		Finite))
-/*
- * TODO: The following code has been intentionally broken because the formula does not
- *	take into account the fact the IEEE's hidden bit is 0.1 and VAX's hidden bit
- *	is 1.0.  This causes a factor of 4 issue when converting from one bias to the
- *	other.  This needs to be fixed.
- */
-#define AXP_FP_CVT_EXP_G2X(fp)												\
-	((fp).expo nent ? (fp).exponent + AXP_X_BIAS - AXP_G_BIAS : 0)
 
+#define AXP_FP_CVT_EXP_F2T(fp)												\
+	((fp).exponent ? (fp).exponent - (1 + AXP_F_BIAS - AXP_T_BIAS) : 0) & AXP_T_EXP_MASK
+#define AXP_FP_CVT_EXP_T2F(fp)												\
+	((fp).exponent ? (fp).exponent + (1 + AXP_F_BIAS - AXP_T_BIAS) : 0)
+
+#define AXP_FP_CVT_EXP_G2F(fp)												\
+	((fp).exponent ? (fp).exponent - (AXP_G_BIAS - AXP_F_BIAS) : 0)
+#define AXP_FP_CVT_EXP_F2G(fp)												\
+	((fp).exponent ? (fp).exponent + (AXP_G_BIAS - AXP_F_BIAS) : 0) & AXP_G_EXP_MASK
+
+#define AXP_FP_CVT_EXP_G2D(fp)												\
+	((fp).exponent ? (fp).exponent - (AXP_G_BIAS - AXP_D_BIAS) : 0)
+#define AXP_FP_CVT_EXP_D2G(fp)												\
+	((fp).exponent ? (fp).exponent + (AXP_G_BIAS - AXP_D_BIAS) : 0) & AXP_G_EXP_MASK
+
+#define AXP_FP_CVT_EXP_G2X(fp)												\
+	((fp).exponent ? (fp).exponent - (1 + AXP_G_BIAS - AXP_X_BIAS) : 0) & AXP_X_EXP_MASK
 #define AXP_FP_CVT_EXP_X2G(fp)												\
-	((fp).expo nent ? (fp).exponent - AXP_X_BIAS + AXP_G_BIAS : 0) & AXP_G_EXP_MASK
+	((fp).exponent ? (fp).exponent + (1 + AXP_G_BIAS + AXP_X_BIAS) : 0)
+
+#define AXP_FP_CVT_EXP_S2T(fp)												\
+	((fp).exponent ? (fp).exponent + (AXP_S_BIAS - AXP_T_BIAS) : 0) & AXP_T_EXP_MASK
+#define AXP_FP_CVT_EXP_T2S(fp)												\
+	((fp).exponent ? (fp).exponent - (AXP_S_BIAS - AXP_T_BIAS) : 0)
 
 #endif /* _AXP_21264_FBOX_DEFS_ */
