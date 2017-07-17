@@ -1334,3 +1334,786 @@ AXP_EXCEPTIONS AXP_DIVG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	return(retVal);
 }
+
+/*
+ * AXP_ITOFF
+ *	This function implements the Integer Move to VAX F Format Floating-Point
+ *	Register instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_ITOFF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_S_MEMORY	*src1v = (AXP_S_MEMORY *) &instr->src1v.r.ul;
+	u64 			exp	= src1v->exponent;
+
+	/*
+	 * Map the exponent from its 8-bit value to its 11-bit value.
+	 */
+	if (exp != 0)
+		exp += (AXP_G_BIAS - AXP_F_BIAS);
+
+	/*
+	 * Move all the right parts into the right places.
+	 */
+	instr->destv.fp.sCvt.sign = src1v->sign;
+	instr->destv.fp.sCvt.exponent = exp;
+	instr->destv.fp.sCvt.fraction = src1v->fraction;
+	instr->destv.fp.sCvt.zero = 0;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_MULF
+ *	This function implements the VAX F Format Floating-Point MULtiply
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Invalid Operation
+ * 							Overflow
+ * 							Underflow
+ */
+AXP_EXCEPTIONS AXP_MULF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	double			src1v, src2v, destv;
+	int				oldRndMode =0;
+	int				raised = 0;
+
+	/*
+	 * Before we go too far, let's check the contents of the source registers.
+	 *
+	 * If either encoding turned up to be a dirty-zero or a reserved operand,
+	 * then we need to return an Invalid Operation.
+	 */
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
+	{
+		retVal = IllegalOperand;
+		raised = FE_INVALID;
+	}
+
+	/*
+	 * OK, no Illegal Operand, so let's go and perform the calculation.
+	 */
+	else
+	{
+
+		/*
+	 	 * Cast the register values into doubles (no conversion required).
+	 	 */
+		src1v = (double) instr->src1v.fp.uq;
+		src2v = (double) instr->src2v.fp.uq;
+
+		// TODO: We need to have a mutex starting at this point.
+
+		/*
+	 	 * Set the rounding mode, based on the function code and/or the FPCR.
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+
+		/*
+	 	 * Clear the current set of exceptions.
+	 	 */
+		feclearexcept(FE_ALL_EXCEPT);
+
+		/*
+	 	 * Execute the instruction.
+	 	 */
+		destv = src1v * src2v;
+
+		/*
+	 	 * Test to see what exceptions were raised.
+	 	 */
+		raised = fetestexcept(FE_ALL_EXCEPT);
+
+		/*
+	 	 * Reset the rounding mode
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+
+		// TODO: We need to have a mutex ending at this point.
+
+		if (raised == 0)
+		{
+
+			/*
+			 * Recast the result into the destination register.  Since this is
+			 * a 32-bit value, don't forget to clear the bits that are supposed
+			 * to be zero.
+			 */
+			instr->destv.fp.uq = (u64) destv;
+			instr->destv.fp.fpr32.zero = 0;
+
+			/*
+			 * Before we can simply return back to the caller, we need to
+			 * determine if an overflow condition may have occurred.
+			 */
+			if ((instr->destv.fp.fpr.exponent - AXP_T_BIAS) > AXP_F_BIAS)
+				raised = FE_OVERFLOW;
+			else
+				switch (AXP_FP_ENCODE(&instr->destv.fp.fpr, false))
+				{
+
+					/*
+					 * These 2 cases are the same as Denormal for IEEE.
+					 * Basically, these are values that cannot be represented
+					 * in VAX Float.
+					 */
+					case DirtyZero:
+					case Reserved:
+						raised = FE_UNDERFLOW;
+						break;
+
+					/*
+					 * These are just fine.  Nothing more to do here.
+					 */
+					case Finite:
+					case Zero:
+						break;
+
+					/*
+					 * These are not returned when IEEE is set to false above.
+					 * So, there's nothing we can do here.  This is done to
+					 * keep the compiler happy (it does not like switch
+					 * statements with an enumeration and not all the values
+					 * are present).
+					 */
+					case Denormal:
+					case Infinity:
+					case NotANumber:
+						break;
+				}
+			if (raised != 0)
+				retVal = ArithmeticTraps;
+		}
+	}
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	raised &= (FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
+	AXP_FP_SetExcSum(instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_MULG
+ *	This function implements the VAX G Format Floating-Point MULtiply
+ *	instruction by the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Invalid Operation
+ * 							Overflow
+ * 							Underflow
+ */
+AXP_EXCEPTIONS AXP_MULG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	long double		src1v, src2v, destv;
+	int				oldRndMode =0;
+	int				raised = 0;
+
+	/*
+	 * Before we go too far, let's check the contents of the source registers.
+	 *
+	 * If either encoding turned up to be a dirty-zero or a reserved operand,
+	 * then we need to return an Invalid Operation.
+	 */
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
+	{
+		retVal = IllegalOperand;
+		raised = FE_INVALID;
+	}
+	else
+	{
+
+		/*
+	 	 * Need to convert from 64-bit to 128-bit.  We need to do this because,
+	 	 * the VAX G exponent can go up to 1024, but the IEEE T exponent can
+	 	 * only go up to 1023.  We need to expand the exponent to a 15-bit
+	 	 * representation from an 11-bit one, to accommodate this difference.
+	 	 */
+		AXP_FP_CvtG2X(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr, &src1v, &src2v);
+
+		// TODO: We need to have a mutex starting at this point.
+
+		/*
+	 	 * Set the rounding mode, based on the function code and/or the FPCR.
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+
+		/*
+	 	 * Clear the current set of exceptions.
+	 	 */
+		feclearexcept(FE_ALL_EXCEPT);
+
+		/*
+	 	 * Execute the instruction.
+	 	 */
+		destv = src1v * src2v;
+
+		/*
+	 	 * Test to see what exceptions were raised.
+	 	 */
+		raised = fetestexcept(FE_ALL_EXCEPT);
+
+		/*
+	 	 * Reset the rounding mode
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+
+		// TODO: We need to have a mutex ending at this point.
+
+		if (raised == 0)
+		{
+
+			/*
+			 * Convert the result back into a VAX G format and see if we got
+			 * an overflow or underflow.
+			 */
+			raised = AXP_FP_CvtX2G(&destv, NULL, &instr->destv.fp.fpr, NULL);
+			if (raised != 0)
+				retVal = ArithmeticTraps;
+		}
+	}
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	raised &= (FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
+	AXP_FP_SetExcSum(instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_SQRTF
+ *	This function implements the VAX F Format Floating-Point SQuare RooT
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Invalid Operation
+ */
+AXP_EXCEPTIONS AXP_SQRTF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	double			src1v, destv;
+	int				oldRndMode =0;
+	int				raised = 0;
+
+	/*
+	 * Before we go too far, let's check the contents of the source registers.
+	 *
+	 * If either encoding turned up to be a dirty-zero or a reserved operand,
+	 * then we need to return an Invalid Operation.
+	 */
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, NULL))
+	{
+		retVal = IllegalOperand;
+		raised = FE_INVALID;
+	}
+
+	/*
+	 * OK, no Illegal Operand, so let's go and perform the calculation.
+	 */
+	else
+	{
+
+		/*
+	 	 * Cast the register values into doubles (no conversion required).
+	 	 */
+		src1v = (double) instr->src1v.fp.uq;
+
+		/*
+	 	 * Set the rounding mode, based on the function code and/or the FPCR.
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+
+		/*
+	 	 * Execute the instruction.
+	 	 */
+		destv = sqrt(src1v);
+
+		/*
+	 	 * Reset the rounding mode
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+
+		/*
+		 * Recast the result into the destination register.  Since this is
+		 * a 32-bit value, don't forget to clear the bits that are supposed
+		 * to be zero.
+		 */
+		instr->destv.fp.uq = (u64) destv;
+		instr->destv.fp.fpr32.zero = 0;
+	}
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	AXP_FP_SetExcSum(instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_SQRTG
+ *	This function implements the VAX G Format Floating-Point SQuare RooT
+ *	instruction by the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Invalid Operation
+ */
+AXP_EXCEPTIONS AXP_SQRTG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	long double		src1v, destv;
+	int				oldRndMode =0;
+	int				raised = 0;
+
+	/*
+	 * Before we go too far, let's check the contents of the source registers.
+	 *
+	 * If either encoding turned up to be a dirty-zero or a reserved operand,
+	 * then we need to return an Invalid Operation.
+	 */
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, NULL))
+	{
+		retVal = IllegalOperand;
+		raised = FE_INVALID;
+	}
+	else
+	{
+
+		/*
+	 	 * Need to convert from 64-bit to 128-bit.  We need to do this because,
+	 	 * the VAX G exponent can go up to 1024, but the IEEE T exponent can
+	 	 * only go up to 1023.  We need to expand the exponent to a 15-bit
+	 	 * representation from an 11-bit one, to accommodate this difference.
+	 	 */
+		AXP_FP_CvtG2X(&instr->src1v.fp.fpr, NULL, &src1v, NULL);
+
+		/*
+	 	 * Set the rounding mode, based on the function code and/or the FPCR.
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+
+		/*
+	 	 * Execute the instruction.
+	 	 */
+		destv = sqrt(src1v);
+
+		/*
+	 	 * Reset the rounding mode
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+
+		/*
+		 * Convert the result back into a VAX G format and see if we got
+		 * an overflow or underflow.
+		 */
+		raised = AXP_FP_CvtX2G(&destv, NULL, &instr->destv.fp.fpr, NULL);
+		if (raised != 0)
+			retVal = ArithmeticTraps;
+	}
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	AXP_FP_SetExcSum(instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_SUBF
+ *	This function implements the VAX F Format Floating-Point SUBtract
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Invalid Operation
+ * 							Overflow
+ * 							Underflow
+ */
+AXP_EXCEPTIONS AXP_SUBF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	double			src1v, src2v, destv;
+	int				oldRndMode =0;
+	int				raised = 0;
+
+	/*
+	 * Before we go too far, let's check the contents of the source registers.
+	 *
+	 * If either encoding turned up to be a dirty-zero or a reserved operand,
+	 * then we need to return an Invalid Operation.
+	 */
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
+	{
+		retVal = IllegalOperand;
+		raised = FE_INVALID;
+	}
+	else
+	{
+
+		/*
+	 	 * Cast the register values into doubles (no conversion required).
+	 	 */
+		src1v = (double) instr->src1v.fp.uq;
+		src2v = (double) instr->src2v.fp.uq;
+
+		// TODO: We need to have a mutex starting at this point.
+
+		/*
+	 	 * Set the rounding mode, based on the function code and/or the FPCR.
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+
+		/*
+	 	 * Clear the current set of exceptions.
+	 	 */
+		feclearexcept(FE_ALL_EXCEPT);
+
+		/*
+	 	 * Execute the instruction.
+	 	 */
+		destv = src1v - src2v;
+
+		/*
+	 	 * Test to see what exceptions were raised.
+	 	 */
+		raised = fetestexcept(FE_ALL_EXCEPT);
+
+		/*
+	 	 * Reset the rounding mode
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+
+		// TODO: We need to have a mutex ending at this point.
+
+		if (raised == 0)
+		{
+
+			/*
+			 * Recast the result into the destination register.  Since this is
+			 * a 32-bit value, don't forget to clear the bits that are supposed
+			 * to be zero.
+			 */
+			instr->destv.fp.uq = (u64) destv;
+			instr->destv.fp.fpr32.zero = 0;
+
+			/*
+			 * Before we can simply return back to the caller, we need to
+			 * determine if an overflow condition may have occurred.
+			 */
+			if ((instr->destv.fp.fpr.exponent - AXP_T_BIAS) > AXP_F_BIAS)
+				raised = FE_OVERFLOW;
+			else
+				switch (AXP_FP_ENCODE(&instr->destv.fp.fpr, false))
+				{
+
+					/*
+					 * These 2 cases are the same as Denormal for IEEE.
+					 * Basically, these are values that cannot be represented
+					 * in VAX Float.
+					 */
+					case DirtyZero:
+					case Reserved:
+						raised = FE_UNDERFLOW;
+						break;
+
+					/*
+					 * These are just fine.  Nothing more to do here.
+					 */
+					case Finite:
+					case Zero:
+						break;
+
+					/*
+					 * These are not returned when IEEE is set to false above.
+					 * So, there's nothing we can do here.  This is done to
+					 * keep the compiler happy (it does not like switch
+					 * statements with an enumeration and not all the values
+					 * are present).
+					 */
+					case Denormal:
+					case Infinity:
+					case NotANumber:
+						break;
+				}
+			if (raised != 0)
+				retVal = ArithmeticTraps;
+		}
+	}
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	raised &= (FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
+	AXP_FP_SetExcSum(instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_SUBG
+ *	This function implements the VAX G Format Floating-Point SUBtract
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ * 	ArithmeticTraps:	An arithmetic trap has occurred:
+ * 							Invalid Operation
+ * 							Overflow
+ * 							Underflow
+ */
+AXP_EXCEPTIONS AXP_SUBG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_FP_FUNC		*fpFunc = (AXP_FP_FUNC *) &instr->function;
+	long double		src1v, src2v, destv;
+	int				oldRndMode =0;
+	int				raised = 0;
+
+	/*
+	 * Before we go too far, let's check the contents of the source registers.
+	 *
+	 * If either encoding turned up to be a dirty-zero or a reserved operand,
+	 * then we need to return an Invalid Operation.
+	 */
+	if (AXP_FP_CheckForVAXInvalid(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr))
+	{
+		retVal = IllegalOperand;
+		raised = FE_INVALID;
+	}
+	else
+	{
+
+		/*
+	 	 * Need to convert from 64-bit to 128-bit.  We need to do this because,
+	 	 * the VAX G exponent can go up to 1024, but the IEEE T exponent can
+	 	 * only go up to 1023.  We need to expand the exponent to a 15-bit
+	 	 * representation from an 11-bit one, to accommodate this difference.
+	 	 */
+		AXP_FP_CvtG2X(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr, &src1v, &src2v);
+
+		// TODO: We need to have a mutex starting at this point.
+
+		/*
+	 	 * Set the rounding mode, based on the function code and/or the FPCR.
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+
+		/*
+	 	 * Clear the current set of exceptions.
+	 	 */
+		feclearexcept(FE_ALL_EXCEPT);
+
+		/*
+	 	 * Execute the instruction.
+	 	 */
+		destv = src1v - src2v;
+
+		/*
+	 	 * Test to see what exceptions were raised.
+	 	 */
+		raised = fetestexcept(FE_ALL_EXCEPT);
+
+		/*
+	 	 * Reset the rounding mode
+	 	 */
+		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+
+		// TODO: We need to have a mutex ending at this point.
+
+		if (raised == 0)
+		{
+
+			/*
+			 * Convert the result back into a VAX G format and see if we got
+			 * an overflow or underflow.
+			 */
+			raised = AXP_FP_CvtX2G(&destv, NULL, &instr->destv.fp.fpr, NULL);
+			if (raised != 0)
+				retVal = ArithmeticTraps;
+		}
+	}
+
+	/*
+	 * Set the exception bits (I probably don't have to do this, but I will
+	 * anyway, just so that unexpected results get returned for this
+	 * instruction).
+	 */
+	raised &= (FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
+	AXP_FP_SetExcSum(instr, raised, false);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(retVal);
+}

@@ -95,6 +95,7 @@ typedef enum
  */
 typedef enum
 {
+	NoOp,
 	addAction,
 	subtractAction,
 	multiplyAction,
@@ -517,12 +518,26 @@ i32 parseNextLine(
 	int				ii;
 
 	/*
+	 * First things first, set all the return variables to an initial value.
+	 */
+	*operation = NoOp;
+	*operandFmt = *resultFmt = ieeeUnknown;
+	*roundMode = zero;
+	*exception = none;
+	src1->uq = 0;
+	src2->uq = 0;
+	src3->uq = 0;
+	*useResult = 0;
+	dest->uq = 0;
+	*result = false;
+	memset(expectedFPCR, 0, sizeof(AXP_FBOX_FPCR));
+
+	/*
 	 * Get the format information.  One or two of:
 	 * 		b32		IEEE S
 	 * 		b64		IEEE T
 	 * 		b128	IEEE X
 	 */
-	*operandFmt = *resultFmt = ieeeUnknown;
 	getC = fgetc(fp);
 	while (getC == 'b')
 	{
@@ -709,11 +724,6 @@ i32 parseNextLine(
 	{
 
 		/*
-		 * First things first, set the trapped exception to 'none'.
-		 */
-		*exception = none;
-
-		/*
 		 * OK, the trapped expression may or may not be present.  If it is
 		 * present, then parse it an read in the next space character, so that
 		 * we are ready to parse the input parameters.  IF it is not present,
@@ -753,7 +763,6 @@ i32 parseNextLine(
 	/*
 	 * Get the input operands (may be up to 3).
 	 */
-	src1->uq = src2->uq = src3->uq = 0;
 	if (retVal == 1)
 	{
 		int		tmpBoolResults;
@@ -776,8 +785,6 @@ i32 parseNextLine(
 	/*
 	 * Get the output operand.
 	 */
-	dest->uq = 0;
-	*useResult = 0;
 	if (retVal == 1)
 	{
 		retVal = readNextToken(fp, workingStr, sizeof(workingStr));
@@ -800,26 +807,6 @@ i32 parseNextLine(
 	 */
 	if (retVal == 1)
 	{
-
-		/*
-		 * First things first, set the trapped exception to 'none'.
-		 */
-		expectedFPCR->sum = 0;
-		expectedFPCR->ined = 0;
-		expectedFPCR->unfd = 0;
-		expectedFPCR->undz = 0;
-		expectedFPCR->dyn = 0;
-		expectedFPCR->iov = 0;
-		expectedFPCR->ine = 0;
-		expectedFPCR->unf = 0;
-		expectedFPCR->ovf = 0;
-		expectedFPCR->dze = 0;
-		expectedFPCR->inv = 0;
-		expectedFPCR->ovfd = 0;
-		expectedFPCR->dzed = 0;
-		expectedFPCR->invd = 0;
-		expectedFPCR->dnz = 0;
-		expectedFPCR->res = 0;
 
 		/*
 		 * OK, the trapped expression may or may not be present.  If it is
@@ -1019,6 +1006,8 @@ int main()
 {
 	FILE			*fp;
 	char			*fileName = "../tst/fpTestData/Basic-Types-Inputs.fptest";
+	char			outStr[1024];
+	int				offset;
 	bool			pass = true;
 	AXP_21264_CPU	*cpu;
 	AXP_INSTRUCTION	instr;
@@ -1032,11 +1021,12 @@ int main()
 	AXP_FP_REGISTER	expectedResults;
 	AXP_FP_ENCODING encoding;
 	int				useResults;
-	bool			results;
+	bool			results, printOut;
 	AXP_FBOX_FPCR	FPCR;
 	int				testCnt = 0, passed = 0, failed = 0, skipped = 0;
 	int				retVal;
-	double			*Ra, *Rb, *Rc, *expectedRc;
+	double			*Ra, *Rb, *Rc, *Rd, *expectedRc;
+	int				ii;
 
 	/*
 	 * NOTE: 	The current simulation takes in one instruction at a time.  The
@@ -1080,6 +1070,7 @@ int main()
 	{
 		Ra = (double *) &instr.src1v.fp.uq;
 		Rb = (double *) &instr.src2v.fp.uq;
+		Rd = (double *) &src3v.uq;
 		Rc = (double *) &instr.destv.fp.uq;
 		expectedRc = (double *) &expectedResults;
 		while ((retVal = parseNextLine(
@@ -1098,6 +1089,8 @@ int main()
 								&FPCR)) != 0)
 		{
 			testCnt++;
+			offset = 0;
+			printOut = false;
 			switch (retVal)
 			{
 				case 1:
@@ -1115,25 +1108,67 @@ int main()
 						 */
 						case addAction:
 						case copySignAction:
-							printf("%7d: ", testCnt);
+						case subtractAction:
+						case multiplyAction:
+						case divideAction:
+						case squareRootAction:
+							offset += sprintf(&outStr[offset], "%7d: ", testCnt+4);
 							if (oper == addAction)
-								printf("ADDS");
-							else
-								printf("CPYS");
-							printf("(%d): Ra: %f, Rb: %f; expecting %f (0x%016llx) --> ",
+							{
+								offset += sprintf(&outStr[offset], "ADDS");
+								instr.function = AXP_FUNC_ADDS;
+								if (FPCR.ine == 1)
+									instr.function |= AXP_FUNC_ADDS_SUI;
+							}
+							else if (oper == copySignAction)
+							{
+								offset += sprintf(&outStr[offset], "CPYS");
+								instr.function = AXP_FUNC_CPYS;
+							}
+							else if (oper == subtractAction)
+							{
+								offset += sprintf(&outStr[offset], "SUBS");
+								instr.function = AXP_FUNC_SUBS;
+								if (FPCR.ine == 1)
+									instr.function |= AXP_FUNC_SUBS_SUI;
+							}
+							else if (oper == multiplyAction)
+							{
+								offset += sprintf(&outStr[offset], "MULS");
+								instr.function = AXP_FUNC_MULS;
+								if (FPCR.ine == 1)
+									instr.function |= AXP_FUNC_MULS_SUI;
+							}
+							else if (oper == divideAction)
+							{
+								offset += sprintf(&outStr[offset], "DIVS");
+								instr.function = AXP_FUNC_DIVS;
+								if (FPCR.ine == 1)
+									instr.function |= AXP_FUNC_DIVS_SUI;
+							}
+							else if (oper == squareRootAction)
+							{
+								offset += sprintf(&outStr[offset], "SQRTS");
+								instr.function = AXP_FUNC_SQRTS;
+								if (FPCR.ine == 1)
+									instr.function |= AXP_FUNC_SQRTS_SUI;
+							}
+							offset += sprintf(&outStr[offset], "(%d): Ra: %f, Rb: %f; expecting %f (0x%016llx) --> ",
 								useResults, *Ra, *Rb, *expectedRc, *((u64 *) &FPCR));
 							instr.opcode = FLTI;
 							memset(&instr.insFpcr, 0, sizeof(u64));
 							if (oper == addAction)
-							{
-								instr.function = AXP_FUNC_ADDS;
 								retValIns = AXP_ADDS(cpu, &instr);
-							}
-							else
-							{
-								instr.function = AXP_FUNC_CPYS;
+							else if (oper == copySignAction)
 								retValIns = AXP_CPYS(cpu, &instr);
-							}
+							else if (oper == subtractAction)
+								retValIns = AXP_SUBS(cpu, &instr);
+							else if (oper == multiplyAction)
+								retValIns = AXP_MULS(cpu, &instr);
+							else if (oper == divideAction)
+								retValIns = AXP_DIVS(cpu, &instr);
+							else if (oper == squareRootAction)
+								retValIns = AXP_SQRTS(cpu, &instr);
 							if (useResults == 2)
 							{
 
@@ -1146,14 +1181,15 @@ int main()
 								if (memcmp(&FPCR, &instr.insFpcr, sizeof(FPCR)) == 0)
 								{
 									passed++;
-									printf("passed");
+									offset += sprintf(&outStr[offset], "passed");
 								}
 								else
 								{
 									pass = false;
 									failed++;
-									printf(" failed FPCR: 0x%016llx",
+									offset += sprintf(&outStr[offset], " failed FPCR: 0x%016llx",
 										*((u64 *) &instr.insFpcr));
+									printOut = true;
 								}
 							}
 							else if ((useResults == 1) || (useResults == 3))
@@ -1174,15 +1210,16 @@ int main()
 									if (memcmp(&FPCR, &instr.insFpcr, sizeof(FPCR)) == 0)
 									{
 										passed++;
-										printf("passed");
+										offset += sprintf(&outStr[offset], "passed");
 									}
 									else
 									{
 										pass = false;
 										failed++;
-										printf(
+										offset += sprintf(&outStr[offset],
 											"Rc values matched, exception failed FPCR: 0x%016llx",
 											*((u64 *) &instr.insFpcr));
+										printOut = true;
 									}
 								}
 								else
@@ -1208,26 +1245,28 @@ int main()
 										{
 											pass = false;
 											failed++;
-											printf(
+											offset += sprintf(&outStr[offset],
 												"Rc %f, FPCRs matched.", *Rc);
 										}
 										else
 										{
 											pass = false;
 											failed++;
-											printf(
+											offset += sprintf(&outStr[offset],
 												"Nothing matched, Rc: %f, FPCR: 0x%016llx",
 												*Rc,
 												*((u64 *) &instr.insFpcr));
 										}
-
+										printOut = true;
 									}
 									else
 									{
 										pass = false;
 										failed++;
-										printf(" failed Rc: %f ( 0x%016llx)",
+										offset += sprintf(&outStr[offset],
+											" failed Rc: %f (0x%016llx)",
 											*Rc, *((u64 *) &instr.insFpcr));
+										printOut = true;
 									}
 								}
 							}
@@ -1241,155 +1280,175 @@ int main()
 								 * going to blindly assume we passed.
 								 */
 								passed++;
-								printf("passed");
+								offset += sprintf(&outStr[offset], "passed");
 							}
-							printf(", AXP Exception: %d\n", retValIns);
+							offset += sprintf(&outStr[offset], ", AXP Exception: %d\n", retValIns);
 							break;
 
 						case isSignedAction:
-							printf("%7d: isSigned: %f, expecting %d --> ",
+							offset += sprintf(&outStr[offset],
+							    "%7d: isSigned: %f, expecting %d --> ",
 								testCnt+4, *Ra, results);
 							if (isSigned(*Ra) == results)
 							{
 								passed++;
-								printf("passed\n");
+								offset += sprintf(&outStr[offset], "passed\n");
 							}
 							else
 							{
 								pass = false;
 								failed++;
-								printf("failed (0x%016llx)\n",
+								offset += sprintf(&outStr[offset],
+									"failed (0x%016llx)\n",
 									instr.src1v.fp.uq);
+								printOut = true;
 							}
 							break;
 
 						case isNormalAction:
-							printf("%7d: isNormal (%s): %f, expecting %d --> ",
+							offset += sprintf(&outStr[offset],
+								"%7d: isNormal (%s): %f, expecting %d --> ",
 								testCnt+4, cvtEncoding[encoding], *Ra, results);
 							if (isnormal(*Ra) == results)
 							{
 								passed++;
-								printf("passed\n");
+								offset += sprintf(&outStr[offset], "passed\n");
 							}
 							else
 							{
 								pass = false;
 								failed++;
-								printf("failed (0x%016llx)\n",
+								offset += sprintf(&outStr[offset],
+									"failed (0x%016llx)\n",
 									instr.src1v.fp.uq);
+								printOut = true;
 							}
 							break;
 
 						case isFiniteAction:
-							printf("%7d: isFinite (%s): %f, expecting %d --> ",
+							offset += sprintf(&outStr[offset],
+								"%7d: isFinite (%s): %f, expecting %d --> ",
 								testCnt+4, cvtEncoding[encoding], *Ra, results);
 							if (isfinite(*Ra) == results)
 							{
 								passed++;
-								printf("passed\n");
+								offset += sprintf(&outStr[offset], "passed\n");
 							}
 							else
 							{
 								pass = false;
 								failed++;
-								printf("failed (0x%016llx)\n",
+								offset += sprintf(&outStr[offset],
+									"failed (0x%016llx)\n",
 									instr.src1v.fp.uq);
+								printOut = true;
 							}
 							break;
 
 						case isZeroAction:
-							printf("%7d: isZero (%s): %f, expecting %d --> ",
+							offset += sprintf(&outStr[offset],
+								"%7d: isZero (%s): %f, expecting %d --> ",
 								testCnt+4, cvtEncoding[encoding], *Ra, results);
 							if ((*Ra == 0.0) == results)
 							{
 								passed++;
-								printf("passed\n");
+								offset += sprintf(&outStr[offset], "passed\n");
 							}
 							else
 							{
 								pass = false;
 								failed++;
-								printf("failed (0x%016llx)\n",
+								offset += sprintf(&outStr[offset],
+									"failed (0x%016llx)\n",
 									instr.src1v.fp.uq);
+								printOut = true;
 							}
 							break;
 
 						case isSubnormalAction:
-							printf("%7d: isSubnormal (%s): %f, expecting %d --> ",
-									testCnt+4, cvtEncoding[encoding], *Ra, results);
+							offset += sprintf(&outStr[offset],
+								"%7d: isSubnormal (%s): %f, expecting %d --> ",
+								testCnt+4, cvtEncoding[encoding], *Ra, results);
 							if ((fpclassify(*Ra) == FP_SUBNORMAL) == results)
 							{
 								passed++;
-								printf("passed\n");
+								offset += sprintf(&outStr[offset], "passed\n");
 							}
 							else
 							{
 								pass = false;
 								failed++;
-								printf("failed (0x%016llx)\n",
+								offset += sprintf(&outStr[offset],
+									"failed (0x%016llx)\n",
 									instr.src1v.fp.uq);
+								printOut = true;
 							}
 							break;
 
 						case isInfiniteAction:
-							printf("%7d: isInfinite (%s): %f, expecting %d --> ",
+							offset += sprintf(&outStr[offset],
+								"%7d: isInfinite (%s): %f, expecting %d --> ",
 								testCnt+4, cvtEncoding[encoding], *Ra, results);
 							if (isInf(*Ra) == results)
 							{
 								passed++;
-								printf("passed\n");
+								offset += sprintf(&outStr[offset], "passed\n");
 							}
 							else
 							{
 								pass = false;
 								failed++;
-								printf("failed (0x%016llx)\n",
+								offset += sprintf(&outStr[offset],
+									"failed (0x%016llx)\n",
 									instr.src1v.fp.uq);
+								printOut = true;
 							}
 							break;
 
 						case isNotANumberAction:
-							printf("%7d: isNotANumber (%s): %f, expecting %d --> ",
+							offset += sprintf(&outStr[offset],
+								"%7d: isNotANumber (%s): %f, expecting %d --> ",
 								testCnt+4, cvtEncoding[encoding], *Ra, results);
 							if (isnan(*Ra) == results)
 							{
 								passed++;
-								printf("passed\n");
+								offset += sprintf(&outStr[offset], "passed\n");
 							}
 							else
 							{
 								pass = false;
 								failed++;
-								printf("failed (0x%016llx)\n",
+								offset += sprintf(&outStr[offset],
+									"failed (0x%016llx)\n",
 									instr.src1v.fp.uq);
+								printOut = true;
 							}
 							break;
 
 						case isSignalingAction:
-							printf("%7d: isSignaling (%s): %f, expecting %d --> ",
+							offset += sprintf(&outStr[offset],
+								"%7d: isSignaling (%s): %f, expecting %d --> ",
 								testCnt+4, cvtEncoding[encoding], *Ra, results);
 							if (isSignaling(*Ra) == results)
 							{
 								passed++;
-								printf("passed\n");
+								offset += sprintf(&outStr[offset], "passed\n");
 							}
 							else
 							{
 								pass = false;
 								failed++;
-								printf("failed (0x%016llx)\n",
+								offset += sprintf(&outStr[offset],
+									"failed (0x%016llx)\n",
 									instr.src1v.fp.uq);
+								printOut = true;
 							}
 							break;
 
 						/*
 						 * These are not yet implemented.
 						 */
-						case subtractAction:
-						case multiplyAction:
-						case divideAction:
 						case multiplyAddAction:
-						case squareRootAction:
 						case remainderAction:
 						case roundFloatToIntAction:
 						case convertFloatToFloatAction:
@@ -1415,18 +1474,38 @@ int main()
 						case nextUpAction:
 						case nextDownAction:
 						case equivalentAction:
+							for (ii = 0; ii< AXP_NUM_OPER; ii++)
+								if (oper == cvtOperStr[ii].oper)
+									break;
+							offset += sprintf(&outStr[offset],
+								"%7d: %s (%s): Ra: %f, Rb: %f, Rd: %f, expecting useResults %d, results: %d, Rc: %f (0x%016llx)\n",
+								testCnt+4,
+								cvtOperStr[ii].humanReadable,
+								cvtEncoding[encoding],
+								*Ra, *Rb, *Rd,
+								useResults,
+								results,
+								*expectedRc,
+								*((u64 *) &instr.insFpcr));
 							skipped++;
+							break;
+
+						case NoOp:
 							break;
 					}
 					break;
 
 				case -1:
-					printf("%7d: >>>>>> ReadNextLine Failed <<<<<\n",
+					offset += sprintf(&outStr[offset],
+						"%7d: >>>>>> ReadNextLine Failed <<<<<\n",
 						testCnt+4);
 					pass = false;
 					failed++;
+					printOut = true;
 					break;
 			}
+			if (printOut)
+				printf(outStr);
 		}
 		fclose(fp);
 	}
@@ -1435,15 +1514,6 @@ int main()
 		printf("Unable to open test data file: %s\n", fileName);
 		pass = false;
 	}
-
-	float			sVal = 3.1415926;
-	AXP_S_MEMORY	*Sbits = (AXP_S_MEMORY *) & sVal;
-	double			tVal = -3.1415926;
-	AXP_T_MEMORY	*Tbits = (AXP_T_MEMORY *) &tVal;
-	printf("S: 0x%08x (s: %d, exp: 0x%02x, frac: 0x%06x)\n",
-		*((u32 *) &sVal), Sbits->sign, Sbits->exponent, Sbits->fraction);
-	printf("T: 0x%016llx (s: %d, exp: 0x%03x, frac: 0x%013llx)\n",
-		*((u64 *) &tVal), Tbits->sign, Tbits->exponent, (u64) Tbits->fraction);
 
 	/*
 	 * Display the results of the test.

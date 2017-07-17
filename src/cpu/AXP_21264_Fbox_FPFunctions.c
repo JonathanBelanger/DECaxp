@@ -735,16 +735,25 @@ bool AXP_FP_CheckForIEEEInvalid(AXP_FP_REGISTER *src1, AXP_FP_REGISTER *src2)
 	AXP_FP_ENCODING	src1Enc, src2Enc;
 
 	src1Enc = AXP_FP_ENCODE(&src1->fpr, true);
-	src2Enc = AXP_FP_ENCODE(&src2->fpr, true);
+	if (src2 != NULL)
+		src2Enc = AXP_FP_ENCODE(&src2->fpr, true);
+	else
+		src2Enc = Finite;
 	if ((src1Enc == Infinity) && (src2Enc == Infinity))
 	{
-		if (src1->fpr.sign != src2->fpr.sign)
-			retVal = true;
+		if (src2 != NULL)
+		{
+			if (src1->fpr.sign != src2->fpr.sign)
+				retVal = true;
+		}
 	}
 	else if ((src1Enc == NotANumber) && (src1->fprQ.quiet == 0))
 		retVal = true;
-	else if ((src2Enc == NotANumber) && (src2->fprQ.quiet == 0))
-		retVal = true;
+	else if (src2 != NULL)
+	{
+		if ((src2Enc == NotANumber) && (src2->fprQ.quiet == 0))
+			retVal = true;
+	}
 
 	/*
 	 * Return the results of the test back to the caller.
