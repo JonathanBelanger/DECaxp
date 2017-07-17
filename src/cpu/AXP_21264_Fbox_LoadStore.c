@@ -402,6 +402,8 @@ void AXP_LDS_COMPL(AXP_INSTRUCTION *instr)
  *	A prefetch is a hint to the processor that a cache block might be used in
  *	the future and should be brought into the cache now.
  *
+ *	NOTE: The PREFETCH_MEN is only supported on 21364 processors.
+ *
  * Input Parameters:
  *	cpu:
  *		A pointer to the structure containing the information needed to emulate

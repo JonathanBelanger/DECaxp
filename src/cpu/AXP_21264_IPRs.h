@@ -395,6 +395,8 @@ typedef struct
 #define AXP_I_CTL_BP_MODE_LOCAL		0x1		/* Local History Prediction */
 #define AXP_I_CTL_BP_MODE_CHOICE	0x0		/* Choice selected Local/Global */
 
+#define AXP_I_CTL_SDE_ENABLE		0x2		/* bit 0 does not affect 21264 operation */
+
 typedef struct
 {
 	u64 res_1 : 29;

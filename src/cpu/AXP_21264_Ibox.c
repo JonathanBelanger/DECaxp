@@ -218,7 +218,8 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 					   int nextInstr,
 					   AXP_INSTRUCTION *decodedInstr)
 {
-	AXP_REG_DECODE decodeRegisters;
+	AXP_REG_DECODE	decodeRegisters;
+	bool			callingPAL = false;
 
 	/*
 	 * Decode the next instruction.
@@ -259,6 +260,7 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 
 		case Pcd:
 			decodedInstr->function = next->instructions[nextInstr].pal.palcode_func;
+			callingPAL = true;
 			break;
 
 		case PAL:
@@ -332,7 +334,24 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 			break;
 
 		default:
-			decodedInstr->aDest = AXP_UNMAPPED_REG;
+
+			/*
+			 *  If the instruction being decoded is a CALL_PAL, then there is a
+			 *  linkage register (basically a return address after the CALL_PAL
+			 *  has completed).  For Jumps, the is usually specified in the
+			 *  register fields of the instruction.  For CALL_PAL, this is
+			 *  either R23 or R27, depending upon the setting of the
+			 *  call_pal_r23 in the I_CTL IPR.
+			 */
+			if (decodedInstr->opcode == PAL00)
+			{
+				if (cpu->iCtl.call_pal_r23 == 1)
+					decodedInstr->aDest = 23;
+				else
+					decodedInstr->aDest = 27;
+			}
+			else
+				decodedInstr->aDest = AXP_UNMAPPED_REG;
 			break;
 	}
 
@@ -371,7 +390,7 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 	}
 
 	/*
-	 * Decode destination register
+	 * Decode source2 register
 	 */
 	switch (decodeRegisters.bits.src2)
 	{
@@ -405,13 +424,23 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 	}
 
 	/*
+	 * When running in PALmode, the shadow registers may come into play.  If we
+	 * are in PALmode, then the PALshadow registers may come into play.  IF so,
+	 * we need to replace the specified register with the PALshadow one.
+	 */
+	decodedInstr->pc = next->instrPC[nextInstr];
+	callingPAL |= (decodedInstr->pc.pal == AXP_PAL_MODE);
+	decodedInstr->aSrc1 = AXP_REG(decodedInstr->aSrc1, callingPAL);
+	decodedInstr->aSrc2 = AXP_REG(decodedInstr->aSrc2, callingPAL);
+	decodedInstr->aDest = AXP_REG(decodedInstr->aDest, callingPAL);
+
+	/*
 	 * We need to rename the architectural registers to physical
 	 * registers, now that we know which one, if any, is the
 	 * destination register and which one(s) is(are) the source
 	 * register(s).
 	 */
 	AXP_RenameRegisters(cpu, decodedInstr, decodeRegisters.raw);
-	decodedInstr->pc = next->instrPC[nextInstr];
 
 	/*
 	 * Return back to the caller.
@@ -741,7 +770,7 @@ static u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT instr)
  * AXP_RenameRegisters
  *	This function is called to map the instruction registers from architectural
  *	to physical ones.  For the destination register, we get the next one off
- *	the freelist.  We also differentiate between integer and floating point
+ *	the free list.  We also differentiate between integer and floating point
  *	registers at this point (previously, we just noted it).
  *
  * Input Parameters:
@@ -764,7 +793,10 @@ static u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT instr)
  * Return Value:
  *	None.
  */
-static void AXP_RenameRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *decodedInstr, u16 decodedRegs)
+static void AXP_RenameRegisters(
+		AXP_21264_CPU *cpu,
+		AXP_INSTRUCTION *decodedInstr,
+		u16 decodedRegs)
 {
 	bool src1Float = ((decodedRegs & 0x0008) == 0x0008);
 	bool src2Float = ((decodedRegs & 0x0080) == 0x0080);
@@ -1336,7 +1368,7 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 	{
 
 		/*
-		 * Get the PC for the next set of insructions to be fetched from the
+		 * Get the PC for the next set of instructions to be fetched from the
 		 * Icache and Fetch those instructions.
 		 */
 		nextPC = AXP_21264_GetNextVPC(cpu);
