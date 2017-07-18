@@ -93,6 +93,12 @@
  *	way to "set" the PC, but other functions to calculate one, based on various
  *	criteria.
  *
+ *	V01.011		18-Jul-2017
+ *	Updated the instruction decoding code to replace instruction indicated
+ *	registers for PALshadow registers when we are in, or going to be in,
+ *	PALmode.  Also, do not include floating point registers, as there are no
+ *	PALshadow registers for these.
+ *
  *	TODO:	We need a retirement function to put the destination value into the
  *			physical register and indicate that the register value is Valid.
  */
@@ -102,20 +108,26 @@
 /*
  * A local structure used to calculate the PC for a CALL_PAL function.
  */
-struct palBaseBits
+struct palBaseBits21264
 {
-	u64	res_1 : 15;
+	u64	res : 15;
 	u64	highPC : 49;
+};
+struct palBaseBits21164
+{
+	u64	res : 14;
+	u64	highPC : 50;
 };
 
 typedef union
 {
-	 struct palBaseBits	bits;
-	 u64				palBaseAddr;
+	 struct palBaseBits21164	bits21164;
+	 struct palBaseBits21264	bits21264;
+	 u64						palBaseAddr;
 	 
 }AXP_IBOX_PALBASE_BITS;
 
-struct palPCBits
+struct palPCBits21264
 {
 	u64	palMode : 1;
 	u64 mbz_1 : 5;
@@ -125,11 +137,21 @@ struct palPCBits
 	u64 mbz_2 : 1;
 	u64 highPC : 49;
 };
+struct palPCBits21164
+{
+	u64	palMode : 1;
+	u64 mbz : 5;
+	u64 func_5_0 : 6;
+	u64 func_7 : 1;
+	u64 mbo : 1;
+	u64 highPC : 50;
+};
 
 typedef union
 {
-	struct palPCBits	bits;
-	AXP_PC				vpc;
+	struct palPCBits21164	bits21164;
+	struct palPCBits21264	bits21264;
+	AXP_PC					vpc;
 } AXP_IBOX_PAL_PC;
 
 struct palFuncBits
@@ -220,6 +242,9 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 {
 	AXP_REG_DECODE	decodeRegisters;
 	bool			callingPAL = false;
+	bool			src1Float = false;
+	bool			src2Float = false;
+	bool			destFloat = false;
 
 	/*
 	 * Decode the next instruction.
@@ -323,14 +348,17 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 
 		case AXP_REG_FA:
 			decodedInstr->aDest = next->instructions[nextInstr].fp.fa;
+			destFloat = true;
 			break;
 
 		case AXP_REG_FB:
 			decodedInstr->aDest = next->instructions[nextInstr].fp.fb;
+			destFloat = true;
 			break;
 
 		case AXP_REG_FC:
 			decodedInstr->aDest = next->instructions[nextInstr].fp.fc;
+			destFloat = true;
 			break;
 
 		default:
@@ -374,14 +402,17 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 
 		case AXP_REG_FA:
 			decodedInstr->aSrc1 = next->instructions[nextInstr].fp.fa;
+			src1Float = true;
 			break;
 
 		case AXP_REG_FB:
 			decodedInstr->aSrc1 = next->instructions[nextInstr].fp.fb;
+			src1Float = true;
 			break;
 
 		case AXP_REG_FC:
 			decodedInstr->aSrc1 = next->instructions[nextInstr].fp.fc;
+			src1Float = true;
 			break;
 
 		default:
@@ -408,14 +439,17 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 
 		case AXP_REG_FA:
 			decodedInstr->aSrc2 = next->instructions[nextInstr].fp.fa;
+			src2Float = true;
 			break;
 
 		case AXP_REG_FB:
 			decodedInstr->aSrc2 = next->instructions[nextInstr].fp.fb;
+			src2Float = true;
 			break;
 
 		case AXP_REG_FC:
 			decodedInstr->aSrc2 = next->instructions[nextInstr].fp.fc;
+			src2Float = true;
 			break;
 
 		default:
@@ -425,14 +459,21 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 
 	/*
 	 * When running in PALmode, the shadow registers may come into play.  If we
-	 * are in PALmode, then the PALshadow registers may come into play.  IF so,
+	 * are in PALmode, then the PALshadow registers may come into play.  If so,
 	 * we need to replace the specified register with the PALshadow one.
+	 *
+	 * There is no such thing as Floating Point PALshadow registers, so the
+	 * register specified on the instruction is the one to use.  Now need to
+	 * check.
 	 */
 	decodedInstr->pc = next->instrPC[nextInstr];
 	callingPAL |= (decodedInstr->pc.pal == AXP_PAL_MODE);
-	decodedInstr->aSrc1 = AXP_REG(decodedInstr->aSrc1, callingPAL);
-	decodedInstr->aSrc2 = AXP_REG(decodedInstr->aSrc2, callingPAL);
-	decodedInstr->aDest = AXP_REG(decodedInstr->aDest, callingPAL);
+	if (src1Float == false)
+		decodedInstr->aSrc1 = AXP_REG(decodedInstr->aSrc1, callingPAL);
+	if (src2Float == false)
+		decodedInstr->aSrc2 = AXP_REG(decodedInstr->aSrc2, callingPAL);
+	if (destFloat == false)
+		decodedInstr->aDest = AXP_REG(decodedInstr->aDest, callingPAL);
 
 	/*
 	 * We need to rename the architectural registers to physical
@@ -1122,12 +1163,25 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 	 * Now, let's compose the PC for the PALcode function we are being
 	 * requested to call.
 	 */
-	pc.bits.highPC = palBase.bits.highPC;
-	pc.bits.mbz_2 = 0;
-	pc.bits.mbo = 1;
-	pc.bits.func_7 = palFunc.bits.func_7;
-	pc.bits.mbz_1 = 0;
-	pc.bits.palMode = AXP_PAL_MODE;
+	if (cpu->majorType >= EV6)
+	{
+		pc.bits21264.highPC = palBase.bits21264.highPC;
+		pc.bits21264.mbz_2 = 0;
+		pc.bits21264.mbo = 1;
+		pc.bits21264.func_7 = palFunc.bits21264.func_7;
+		pc.bits22164.func_5_0 = palFunc.bits22164.func_5_0;
+		pc.bits21264.mbz_1 = 0;
+		pc.bits21264.palMode = AXP_PAL_MODE;
+	}
+	else
+	{
+		pc.bits21164.highPC = palBase.bits21164.highPC;
+		pc.bits21164.mbo = 1;
+		pc.bits21164.func_7 = palFunc.bits21164.func_7;
+		pc.bits21164.func_5_0 = palFunc.bits21164.func_5_0;
+		pc.bits21164.mbz = 0;
+		pc.bits21164.palMode = AXP_PAL_MODE;
+	}
 
 	/*
 	 * Return the composed VPC it back to the caller.
