@@ -47,6 +47,10 @@
  *	an unsigned 64-bit integer, and then stored back into the physical register
  *	when the instruction is retired, the physical registers are just an place
  *	to hold the value for the next instruction to copy.
+ *
+ *	V01.005		19-Jul-2017	Jonathan D. Belanger
+ *	Added the VAXintrFlag for support of the RC and RC VAX Compatibility
+ *	instructions.
  */
 #ifndef _AXP_21264_CPU_DEFS_
 #define _AXP_21264_CPU_DEFS_
@@ -353,6 +357,14 @@ typedef struct
 	 **************************************************************************/
 
 	/*
+	 * VAX Compatibility Interrupt Flag.  This flag is intended to be utilized
+	 * for VAX Compatibility.  It is intended to be utilized to determine if a
+	 * sequence of Alpha instructions between RS and RC, corresponding to a
+	 * single VAX instruction, were executed without interruption or exception.
+	 */
+	bool				VAXintrFlag;
+
+	/*
 	 * Load Lock/Store Conditional.
 	 *
 	 * The following fields are used for handling the LDx_L/STx_C instructions.
@@ -540,4 +552,3 @@ typedef struct
 	u32					minorType;	/* Processor Minor Type					*/
 } AXP_21264_CPU;
 #endif /* _AXP_21264_CPU_DEFS_ */
-
