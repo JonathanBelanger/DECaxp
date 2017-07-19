@@ -54,7 +54,7 @@ AXP_EXCEPTIONS AXP_RC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Read the flag and store it into the destination register (Ra) and then
 	 * clear it.
 	 */
-	instr->destv.r.uq = cpu->VAXintrFalg;
+	instr->destv.r.uq = cpu->VAXintrFlag;
 	cpu->VAXintrFalg = false;
 
 	/*
@@ -95,7 +95,7 @@ AXP_EXCEPTIONS AXP_RS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Read the flag and store it into the destination register (Ra) and then
 	 * set it.
 	 */
-	instr->destv.r.uq = cpu->VAXintrFalg;
+	instr->destv.r.uq = cpu->VAXintrFlag;
 	cpu->VAXintrFalg = true;
 
 	/*
