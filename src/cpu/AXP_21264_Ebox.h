@@ -26,6 +26,9 @@
  *
  *	V01.001		29-Jun-2017	Jonathan D. Belanger
  *	Added instruction function prototypes.
+ *
+ *  V01.002   19-Jul-2017 Jonathan D. Belanger
+ *  Added Vax Compatibility instruction prototypes.
  */
 #ifndef _AXP_21264_EBOX_DEFS_
 #define _AXP_21264_EBOX_DEFS_
@@ -154,5 +157,11 @@ AXP_EXCEPTIONS AXP_CMOVNE(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_SLL(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_SRL(AXP_21264_CPU *, AXP_INSTRUCTION *);
 AXP_EXCEPTIONS AXP_SRA(AXP_21264_CPU *, AXP_INSTRUCTION *);
+
+/*
+ * VAX Compatibility
+ */
+AXP_EXCEPTIONS AXP_RC(AXP_21264_CPU *, AXP_INSTRUCTION *);
+AXP_EXCEPTIONS AXP_RS(AXP_21264_CPU *, AXP_INSTRUCTION *);
 
 #endif /* _AXP_21264_EBOX_DEFS_ */
