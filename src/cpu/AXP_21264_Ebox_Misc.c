@@ -23,9 +23,38 @@
  *
  *	V01.000		19-Jun-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		20-Jul-2017	Jonathan D. Belanger
+ *	Implemented and coded the Miscellaneous Alpha AXP instructions.  Some
+ *	instructions are just placeholders until the Data Cache functionality
+ *	has been implemented.
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Ebox_Misc.h"
+
+/*
+ * DESIGN CONSIDERATIONS
+ *
+ *	In order to support the various Barrier instructions, they are implemented
+ *	as a real instruction but does not do anything to registers or other items.
+ *	They are used to indicate to which point in the instruction queue the Ebox
+ *	and Fbox should search until the barrier instruction has been completed.
+ *	In all cases a barrier instruction will be cloned and placed in both the
+ *	IQ and FQ, indicating the both queues should not process records past the
+ *	barrier or any other instructions in its queue until both instructions have
+ *	completed.  The barrier instructions are:
+ *
+ *		Instruction		Name						Description
+ *		-----------		--------------------		---------------------------
+ *		EXCB			Exception Barrier			All Arithmetic Exceptions
+ *		MB				Memory Barrier				Both Memory Writes & Stores
+ *		TRAPB			Trap Barrier				All Arithmetic Traps
+ *		WMB				Write Memory Barrier		Memory Writes only
+ *
+ *	NOTE: 	There is only one implementation of these instrctions (not one for
+ *			Ebox and one for the Fbox.  Both will call the same instructions
+ *			defined here.
+ */
 
 /*
  * AXP_AMASK
@@ -45,49 +74,20 @@
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_AMASK(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64	Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+	u64 *aMask = (u64 *) &cpu->amask;
 
 	/*
 	 * Return the masked off CPU Features.
 	 */
-	switch (cpu->majorType)
-	{
-		case EV3:
-		case Simulation:
-		case EV4:					// 21064
-		case EV45:					// 21064A
-		case LCAFamily:				// 21066, 21068, 20166A, 20168A
-		case EV5:					// 21164
-		case PCA56:					// 21164PC
-		case PCA57:
-			instr->destv.r.uq = Rbv;
-			break;
-
-		case EV56:					// 21164A
-		case EV6:					// 21264
-		case EV67:					// 21264
-		case EV68CB_DC:				// 21264
-		case EV68A:					// 21264
-		case EV68CX:				// 21264
-		case EV69A:					// 21264
-		case EV7:					// 21364
-		case EV79:					// 21364
-			switch (cpu->iCtl.chip_id)
-			{
-				case 3:
-					instr->destv.r.uq = Rbv & ~0x0000000000000001ll;
-					break;
-
-				case 4:
-					instr->destv.r.uq = Rbv & ~0x0000000000000303ll;
-					break;
-			}
-			break;
-	}
+	if (cpu->majorType < EV56)
+		instr->destv.r.uq = Rbv;
+	else
+		instr->destv.r.uq = Rbv & ~*aMask;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -118,7 +118,7 @@ AXP_EXCEPTIONS AXP_AMASK(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_CALL_PAL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -166,7 +166,7 @@ AXP_EXCEPTIONS AXP_CALL_PAL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * 		The contents of this structure are updated, as needed.
  *
  * Return Value:
- * 	An exception indicator.
+ * 	NoException		Normal successful completion.
  */
 AXP_EXCEPTIONS AXP_IMPLVER(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
@@ -174,40 +174,453 @@ AXP_EXCEPTIONS AXP_IMPLVER(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Return the Implementation Version value.
 	 */
-	switch (cpu->majorType)
+	instr->destv.r.uq = cpu->implVer;
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_ECB
+ *	This function implements the Evict Data Cache Block instruction of the
+ *	Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_ECB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * TODO:	We need to implement the evict data cache block instruction
+	 *			once the data cache code has been implemented.
+	 */
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_EXCB
+ *	This function implements the Exception Barrier instruction of the Alpha AXP
+ *	processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_EXCB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * There is nothing we have to do except get retired.
+	 *
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_FETCH
+ *	This function implements the Prefetch Data instruction of the Alpha AXP
+ *	processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_FETCH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * TODO:	We need to implement the prefetch data instruction
+	 *			once the data cache code has been implemented.
+	 *			Not sure if this needs to be handled by the Mbox or
+	 *			Cbox.
+	 */
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_FETCH_M
+ *	This function implements the Prefetch Data with Modify Intent instruction
+ *	of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_FETCH_M(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * TODO:	We need to implement the prefetch data instruction
+	 *			once the data cache code has been implemented.
+	 *			Not sure if this needs to be handled by the Mbox or
+	 *			Cbox.
+	 */
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_MB
+ *	This function implements the Memory Barrier instruction of the Alpha AXP
+ *	processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_MB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * TODO:	We need to make sure that the load and store queues are all
+	 *			completed and written out to or read from memory (the queues
+	 *			should be empty).  Not sure if we do it here or in the caller.
+	 */
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * The PREFETCHx instructions are implemented in the equivalent LDx
+ * instructions.  The PREFETCHx instructions just have R31/F31 specified on
+ * the instruction as the destination register.
+ */
+
+/*
+ * AXP_PRCC
+ *	This function implements the Read Processor Cycle Counter instruction of
+ *	the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_RPCC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * The definition of this instruction has the following requirement:
+	 *
+	 *	RPCC does not read the Processor Cycle Counter (PCC) any earlier than
+	 *	the generation of a result by the nearest preceding instruction that
+	 *	modifies register Rb. If R31 is used as the Rb operand, the PCC need
+	 *	not wait for any preceding computation.
+	 *
+	 * In this emulator, because we support register renaming, the RPCC
+	 * instruction will not be executed until the instruction modifying the
+	 * register indicated in Rb, then, by definition, the nearest preceding
+	 * instruction that modifies this register has already been retired.  We
+	 * should be good to go.
+	 */
+
+	/*
+	 * Return the Cycle Counter Counter and Offset values as 1 64-bit value.
+	 */
+	instr->destv.r.uq = *((u64 *) &cpu->cc);
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_TRAPB
+ *	This function implements the Trap Barrier instruction of the Alpha AXP
+ *	processor.  This instruction is specific to Arithmetic Traps (Integer and
+ *	Floating Point).  The EXCB instruction handles all Exceptions and is thus
+ *	a superset of TRAPB.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_TRAPB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * There is nothing we have to do except get retired.
+	 *
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_WH64
+ *	This function implements the Write Hint - 64 Bytes instruction of the
+ *	Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_WH64(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * TODO:	This instruction is used to provide a "hint" that the address
+	 *			specified in Rbv will not be read again, but will be
+	 *			overwritten shortly.  A cache resource/location may be
+	 *			allocated, but the contents of the memory location where this
+	 *			cached address resides, may not be read.  Any error that occurs
+	 *			(access violation, translation not valid, and so forth) will
+	 *			cause this instruction to behave like a NOOP.
+	 */
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_WH64EN
+ *	This function implements the Write Hint - 64 Bytes and Evict Next
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_WH64EN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * CPU implementations prior EV6x implement this instruction as a NOOP.
+	 * CPU implementations equal to EV6x implement this instruction as a WH64.
+	 * CPU implementations after EV6x fully implement this instruction.
+	 */
+	if ((cpu->majorType == EV6) || 					// 21264
+		(cpu->majorType == EV67) ||					// 21264
+		(cpu->majorType == EV68CB_DC) ||			// 21264
+		(cpu->majorType == EV68A) ||				// 21264
+		(cpu->majorType == EV68CX) ||				// 21264
+		(cpu->majorType == EV69A))					// 21264
 	{
-		case EV3:
-		case Simulation:
-			instr->destv.r.uq = 0xffffffffffffffffll;
-			break;
-
-		case EV4:					// 21064
-		case EV45:					// 21064A
-		case LCAFamily:				// 21066, 21068, 20166A, 20168A
-			instr->destv.r.uq = 0x0000000000000000ll;
-			break;
-
-		case EV5:					// 21164
-		case EV56:					// 21164A
-		case PCA56:					// 21164PC
-		case PCA57:
-			instr->destv.r.uq = 0x0000000000000001ll;
-			break;
-
-		case EV6:					// 21264
-		case EV67:					// 21264
-		case EV68CB_DC:				// 21264
-		case EV68A:					// 21264
-		case EV68CX:				// 21264
-		case EV69A:					// 21264
-			instr->destv.r.uq = 0x0000000000000002ll;
-			break;
-
-		case EV7:					// 21364
-		case EV79:					// 21364
-			instr->destv.r.uq = 0x0000000000000003ll;
-			break;
+		retVal = AXP_WH64(cpu, instr);
 	}
+	else if ((cpu->majorType == EV7) ||				// 21364
+			 (cpu->majorType == EV79))				// 21364
+	{
+
+		/*
+		 * TODO:	This instruction is used to provide a "hint" that the address
+		 *			specified in Rbv will not be read again, but will be
+		 *			overwritten shortly.  A cache resource/location may be
+		 *			allocated, but the contents of the memory location where this
+		 *			cached address resides, may not be read.  Any error that occurs
+		 *			(access violation, translation not valid, and so forth) will
+		 *			cause this instruction to behave like a NOOP.
+		 *
+		 *			The difference between this instruction and WH64 is that this
+		 *			one indicates that evction policy for the indicated 64 byte
+		 *			location is different than the other.
+		 */
+
+		/*
+		 * Indicate that the instruction is ready to be retired.
+		 */
+		instr->state = WaitingRetirement;
+	}
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_WMB
+ *	This function implements the Write Memory Barrier instruction of the Alpha
+ *	AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_WMB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * TODO:	We need to make sure that the store queue is all completed and
+	 *			written out to memory (the queue should be empty).  Not sure if
+	 *			we do it here or in the caller.
+	 */
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

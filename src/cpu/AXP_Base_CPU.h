@@ -29,6 +29,9 @@
  *	Move some base IPRs from the 21264 IPR definitions to here.  Added a
  *	definition for a Page Table Entry.  Also, changed the Stack Pointers to
  *	pointers that will point to other locations (KSP is either R30 or [HW]PCB).
+ *
+ *	V01.002		20-Jul-2017	Jonathan D. Belanger
+ *	Added a definition for the AMASK IPR.
  */
 #ifndef _AXP_BASE_CPU_DEFS_
 #define _AXP_BASE_CPU_DEFS_
@@ -598,6 +601,24 @@ typedef u64 AXP_BASE_VIRBND;
 typedef u64 AXP_BASE_VPTB;
 
 typedef u64 AXP_BASE_WHAMI;
+
+/*
+ * The following definition is used to respond to the AMASK instruction.  It
+ * is used to respond with an indicator of the Architectural Capabilities of
+ * the specific CPU (being emulated in our case).  This is initialized when
+ * when the CPU is first started.
+ */
+ typedef struct
+ {
+	 u64 bwx : 1;			/* Support for byte/word extensions				*/
+	 u64 fix : 1;			/* Support for SQRT and FP convert extensions	*/
+	 u64 cix : 1;			/* Support for count extensions					*/
+	 u64 mvi : 1;			/* Support for multimedia extensions			*/
+	 u64 patr : 1;			/* Support for precise arithmetic trap reporting*/
+	 u64 res_1 : 2;			/* Not available								*/
+	 u64 pwmi : 1;			/* Support for Prefetch with Modify Intent		*/
+	 u64 res_2 : 56;		/* Not used										*/
+ } AXP_BASE_AMASK;
 
 /*
  * The following definitions are used to convert addresses from to their

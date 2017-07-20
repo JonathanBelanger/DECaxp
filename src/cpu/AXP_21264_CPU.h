@@ -51,6 +51,10 @@
  *	V01.005		19-Jul-2017	Jonathan D. Belanger
  *	Added the VAXintrFlag for support of the RC and RC VAX Compatibility
  *	instructions.
+ *
+ *	V01.006		20-Jul-2017	Jonathan D. Belanger
+ *	Added locations for the Processor Cycle Counter, AMASK and IMPLVER
+ *	registers.
  */
 #ifndef _AXP_21264_CPU_DEFS_
 #define _AXP_21264_CPU_DEFS_
@@ -550,5 +554,7 @@ typedef struct
 	 */
 	AXP_PROC_MAJ_TYPE	majorType;	/* Processor Major Type					*/
 	u32					minorType;	/* Processor Minor Type					*/
+	AXP_BASE_AMASK		amask;		/* Architectural Extension Support Mask	*/
+	u64					implVer;	/* Implementation Version				*/
 } AXP_21264_CPU;
 #endif /* _AXP_21264_CPU_DEFS_ */
