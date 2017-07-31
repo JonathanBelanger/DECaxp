@@ -75,7 +75,7 @@ int findBlockNumber(CacheSet *cacheset, int setNumber, char* tag)
 	/*
 	 * Return what we found, if anything, back to the caller.
 	 */
-	return blockNo;
+	return(blockNo);
 }
 
 /*
@@ -101,7 +101,7 @@ int findVacantBlock(CacheSet *cacheset, int setNumber)
 	/*
 	 * Return what we found back to the caller (could be we found nothing).
 	 */
-	return blockNo;
+	return(blockNo);
 }
 
 /*
@@ -109,7 +109,7 @@ int findVacantBlock(CacheSet *cacheset, int setNumber)
  */
 int findMinimumLruBlock(CacheSet *cacheset, int setNumber)
 {
-	return cacheset[setNumber].minimumLRUBlock();
+	return(cacheset[setNumber].minimumLRUBlock());
 }
 
 void updateDataCache(
@@ -184,7 +184,7 @@ void writeBlock(
 	strcpy(
 		chacheAllocation[binaryToInteger(line.index)].set[blockNumber].tag,
 		line.tag);
-
+	return;
 }
 
 /*
@@ -204,7 +204,7 @@ int blockToWrite(CacheSet *cacheset, int setNumber, cacheline line)
 	/*
 	 * Return the block we found (available or LRU).
 	 */
-	return blockNo;
+	return(blockNo);
 }
 
 /*

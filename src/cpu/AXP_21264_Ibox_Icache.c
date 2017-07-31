@@ -28,6 +28,11 @@
 #include "AXP_21264_Ibox_Icache.h"
 
 /*
+ * TODO:	Model the ITB and Icache based on what is implemented for the DTB
+ *			and Dcache.
+ */
+
+/*
  * AXP_ICacheFetch
  * 	The instruction pre-fetcher (pre-decode) reads an octaword (16 bytes),
  * 	containing up to four naturally aligned instructions per cycle from the

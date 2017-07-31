@@ -497,7 +497,7 @@ typedef struct
 	u64 ere : 1;
 	u64 sre : 1;
 	u64 ure : 1;
-	u64 rwe : 1;
+	u64 kwe : 1;
 	u64 ewe : 1;
 	u64 swe : 1;
 	u64 uwe : 1;

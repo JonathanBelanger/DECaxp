@@ -68,7 +68,7 @@ u32 AXP_21264_Mbox_GetLQSlot(AXP_21264_CPU *cpu)
 /*
  * AXP_21264_Mbox_ReadMem
  *	This function is called to queue up a read from Dcache based on a virtual
- *	address, size of the data to be read and the instsruction that is queued up
+ *	address, size of the data to be read and the instruction that is queued up
  *	to be completed in order.  This function works with the AXP_Mbox_WriteMem
  *	function to ensure correct Alpha memory reference behavior.
  *
@@ -162,7 +162,7 @@ u32 AXP_21264_Mbox_GetSQSlot(AXP_21264_CPU *cpu)
  * AXP_21264_Mbox_WriteMem
  *	This function is called to queue up a write to the Dcache based on a
  *	virtual address, size of the data to be written, the value of the data and
- *	the instsruction that is queued up to be completed in order.  This function
+ *	the instruction that is queued up to be completed in order.  This function
  *	works with the AXP_Mbox_ReadMem function to ensure correct Alpha memory
  *	reference behavior.
  *

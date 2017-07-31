@@ -92,6 +92,7 @@
 #define AXP_TB_LEN			128
 #define AXP_ICB_INS_CNT		16
 #define AXP_21264_PAGE_SIZE	8192	// 8KB page size
+#define AXP_21264_MEM_BITS	44
 #define AXP_INT_PHYS_REG	AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1
 #define AXP_FP_PHYS_REG		AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1
 #define AXP_UNMAPPED_REG	31	/* R31 and F31 are never renamed/mapped */
@@ -316,6 +317,7 @@ typedef struct
 	 * Ibox Internal Processor Registers (IPRs)
 	 */
 	AXP_IBOX_ITB_TAG	itbTag;		/* ITB tag array write					*/
+	AXP_IBOX_ITB_PTE	itbPte;		/* ITB Page Table Entry					*/
 	AXP_IBOX_ITB_IS		itbIs;		/* ITB invalidate single				*/
 	AXP_IBOX_EXC_ADDR	excAddr;	/* Exception address					*/
 	AXP_IBOX_IVA_FORM	ivaForm;	/* Instruction VA format				*/
@@ -477,6 +479,8 @@ typedef struct
 	u32						sqNext;
 	u8						maf;
 	u8						dtb[AXP_TB_LEN];
+	u32						dtbStart;	/* round-robin, need to know start	*/
+	u32						dtbEnd;		/* and end entries in the DTB		*/
 
 	/*
 	 * Mbox IPRs
