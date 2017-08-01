@@ -164,11 +164,20 @@ void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
 }
 
 #define AXP_CM_KERNEL		0
+#define AXP_CM_EXEC			1
+#define AXP_CM_SUPER		2
+#define AXP_CM_USER			3
 #define AXP_SPE2_VA_MASK	0x00000fffffffe000ll
+#define AXP_SPE2_VA_VAL		0x2
+#define AXP_SPE2_BIT		0x4
 #define AXP_SPE1_VA_MASK	0x000001ffffffe000ll
 #define AXP_SPE1_PA_43_41	0x00000e0000000000ll
+#define AXP_SPE1_BIT		0x2
 #define AXP_SPE1_VA_40		0x0000010000000000ll
+#define AXP_SPE1_VA_VAL		0x7e
 #define AXP_SPE0_VA_MASK	0x000000003fffe000ll
+#define AXP_SPE0_VA_VAL		0x3fffe
+#define AXP_SPE0_BIT		0x1
 
 typedef struct
 {
@@ -196,7 +205,7 @@ typedef union
 	AXP_VA_SPE0	spe0;
 } AXP_VA_SPE;
 
-u64 AXP_va2pa(AXP_21264_CPU *cpu, u64 va, AXP_PC pc, bool dtb)
+u64 AXP_va2pa(AXP_21264_CPU *cpu, u64 va, AXP_PC pc, bool dtb, bool *_asm)
 {
 	AXP_VA_SPE		vaSpe = {.va = va};
 	AXP_21264_TLB	*tlb;
@@ -205,29 +214,33 @@ u64 AXP_va2pa(AXP_21264_CPU *cpu, u64 va, AXP_PC pc, bool dtb)
 
 	if (pc.pal == AXP_PAL_MODE)
 		pa = va;
-	else if ((spe != 0) && (cpu->ierCm.cm == AXP_CM_KERNEL))
+	else if (spe != 0)
 	{
-		if ((spe & 0x4) && (vaSpe.spe2 == 2))
+		if (cpu->ierCm.cm != AXP_CM_KERNEL)
+		{
+			/* access violation */
+		}
+		else if ((spe & AXP_SPE2_BIT) && (vaSpe.spe2 == AXP_SPE2_VA_VAL))
 		{
 			pa = va & AXP_SPE2_VA_MASK;
-			/* asm bit = false ? */
+			_asm = false;
 			return(pa);
 		}
-		else if ((spe & 0x2) && (vaSpe.spe1 == 0x7e))
+		else if ((spe & AXP_SPE1_BIT) && (vaSpe.spe1 == AXP_SPE1_VA_VAL))
 		{
 			pa = ((va & AXP_SPE1_VA_MASK) |
 				  (va & AXP_SPE1_VA_40 ? AXP_SPE1_PA_43_41 : 0));
-			/* asm bit = false ? */
+			_asm = false;
 			return(pa);
 		}
-		else if ((spe & 0x1) && (vaSpe.spe0 == 0x3fffe))
+		else if ((spe & AXP_SPE0_BIT) && (vaSpe.spe0 == AXP_SPE0_VA_VAL))
 		{
 			pa = va & AXP_SPE0_VA_MASK;
-			/* asm bit = false ? */
+			_asm = false;
 			return(pa);
 		}
 	}
-	// TODO: Need to determine ifg we need to do the following when in PAL mode
+	// TODO: Need to determine if we need to do the following when in PAL mode
 	tlb = AXP_findTLBEntry(cpu, va, dtb);
 	if (tlb == NULL)
 	{
@@ -245,22 +258,29 @@ u64 AXP_va2pa(AXP_21264_CPU *cpu, u64 va, AXP_PC pc, bool dtb)
 		{
 			if (double miss)
 			{
-				/* handle the double miss */
+				if (cpu->iCtrl.va_48 == 0)
+					/* handle the double miss (DTBM_DOUBLE_3) */
+				else
+					/* handle the double miss (DTBM_DOUBLE_4) */
 			}
 			else if (dtb == true)
 			{
-				/* handle the DTB miss */
+				/* handle the DTB miss (DTBM_SINGLE) */
 			}
 			else
 			{
-				/* handle the ITB miss */
+				/* handle the ITB miss (ITB_MISS) */
 			}
 			pa = AXP_va2pa(cpu, va, pc, dtb);
 		}
 	}
 	else
 	{
-		if (tlb->access != reqAccess)
+		// TODO: Look at using some other mechanism to determine memory access.
+		if (((cpu->ierCm.cm == AXP_CM_KERNEL) && ((tlb->kre != reqAccess) || (tlb->kwe != reaAccess))) ||
+			((cpu->ierCm.cm == AXP_CM_EXEC) && ((tlb->ere != reqAccess) || (tlb->ewe != reaAccess))) ||
+			((cpu->ierCm.cm == AXP_CM_SUPER) && ((tlb->sre != reqAccess) || (tlb->swe != reaAccess))) ||
+			((cpu->ierCm.cm == AXP_CM_USER) && ((tlb->ure != reqAccess) || (tlb->uwe != reaAccess))))
 		{
 			cpu->excAddr = pc;
 			if (dtb == true)
@@ -268,28 +288,18 @@ u64 AXP_va2pa(AXP_21264_CPU *cpu, u64 va, AXP_PC pc, bool dtb)
 				cpu->excSum.? = 1;
 				cpu->mmStat.? = 1;
 				cpu->va = va;
-				if (pc.pal == AXP_PAL_MODE)
-				{
-					/* handle this DFAULT in PALmode */
-				}
-				else
-				{
-					/* need to tell iBox to call the DFAULT PALcode */
-				}
+				/* need to tell iBox to call the DFAULT PALcode */
 			}
 			else
 			{
 				cpu->excSum = 0;
-				if (pc.pal == AXP_PAL_MODE)
-					/* handle this IACV in PALmode */
-				else
-					/* need to tell iBox to call the IACV PALcode */
+				/* need to tell iBox to call the IACV PALcode */
 			}
 		}
 		else
 		{
 			pa = tlb->physAddr | (va & tlb->keepMask)
-			/* asmBit? = tlb->asm; */
+			_asm = tlb->_asm;
 		}
 	}
 	return(pa);
