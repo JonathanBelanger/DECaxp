@@ -304,4 +304,12 @@ u64 AXP_va2pa(AXP_21264_CPU *cpu, u64 va, AXP_PC pc, bool dtb, bool *_asm)
 	}
 	return(pa);
 }
+#define MODE_K		0				// kernel mode
+#define MODE_E		1				// executive (UNIX user) mode
+#define MODE_S		2				// supervisor mode
+#define MODE_U		3				// user mode
+#define ACC_E(m)	((0x0100 << (m)) | 0x0009)	// ((PTE_KRE << (m)) | PTE_FOE | PTE_V)
+#define ACC_R(m)	((0x0100 << (m)) | 0x0003)	// ((PTE_KRE << (m)) | PTE_FOR | PTE_V)
+#define ACC_W(m)	((0x1000 << (m)) | 0x0005)	// ((PTE_KWE << (m)) | PTE_FOW | PTE_V)
+#define ACC_M(m)	((0x1100 << (m)) | 0x0007)	// (((PTE_KRE|PTE_KWE) << (m)) | PTE_FOR | PTE_FOW | PTE_V)
 #endif /* _AXP_21264_CACHE_DEFS_ */
