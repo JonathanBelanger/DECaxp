@@ -340,11 +340,21 @@ typedef struct
 	AXP_ICACHE_LINE 	iCache[AXP_21264_ICACHE_SIZE][AXP_2_WAY_ICACHE];
 
 	/*
+	 * This is the Instruction Cache.  It is 64K bytes in size (just counting
+	 * the actual instructions (16 of them) in the cache block and not the bits
+	 * needed to support it.  Each cache block contains 16 instructions, each 4
+	 * bytes long, for a total of 64 bytes.  There are 2 sets of cache, which
+	 * leaves us with 64KB / (16 * 4B) / 2 sets = 512 rows for each set.
+	 */
+	AXP_ICACHE_BLK		iCache2[512][2];
+
+	/*
 	 * This is the Instruction Address Translation (Look-aside) Table (ITB).
 	 * It is 128 entries in size, and is allocated in a round-robin scheme.
 	 * We, therefore, maintain a start and end index (both start at 0).
 	 */
 	AXP_ICACHE_ITB		itb[AXP_TB_LEN];
+	u32					nextITB;
 	u32					itbStart;	/* Since round-robin, need to know start */
 	u32					itbEnd;		/* and end entries in the ITB */
 
@@ -460,16 +470,26 @@ typedef struct
 	 *	Mbox Definitions													  *
 	 *																		  *
 	 *	The Mbox is responsible for providing data to the Ebox and Fbox.  The *
-	 *	Mbox maintins a Load and Stor Queue, as well as a Miss Address File.  *
+	 *	Mbox maintains a Load and Store Queue, as well as a Miss Address	  *
+	 *	File.  																  *
 	 *																		  *
 	 *	The Mbox interfaces with with the Cbox, Ebox, and Fbox (see above for *
 	 *	more information on the last 2).  The Cbox provides data when a		  *
 	 *	Dcache miss occurs.  The Mbox provides data to the Cbox to store in	  *
-	 *	memory when a store operation occirs.								  *
+	 *	memory when a store operation occurs.								  *
 	 **************************************************************************/
+
+	/*
+	 * This is the Data Cache.  It is 64K bytes in size (just counting the
+	 * actual data in the cache block and not the bits needed to support it.
+	 * Each cache block contains 64 bytes of data.  There are 2 sets of cache,
+	 * which leaves us with 64KB / 64B / 2 sets = 512 rows for each set.
+	 */
+	AXP_DCACHE_BLK		dCache2[512][2];
+
 	/*
 	 * The next 2 "queues" are actually going to be handled as a FIFO stack.
-	 * These queues handle the outstanding load and store operatings into the
+	 * These queues handle the outstanding load and store operations into the
 	 * Dcache (and ultimately memory), and need to be completed in order, to
 	 * ensure correct Alpha memory reference behavior.
 	 */
@@ -478,9 +498,14 @@ typedef struct
 	AXP_MBOX_QUEUE			sq[AXP_MBOX_QUEUE_LEN];
 	u32						sqNext;
 	u8						maf;
-	u8						dtb[AXP_TB_LEN];
-	u32						dtbStart;	/* round-robin, need to know start	*/
-	u32						dtbEnd;		/* and end entries in the DTB		*/
+	AXP_21264_TLB			dtb[AXP_TB_LEN];
+	u32						nextDTB;
+
+	/*
+	 * The following is used to detect when we have a TB Miss while processing
+	 * a previous TB Miss (a Double TB Miss).
+	 */
+	bool					tbMissOutstanding;
 
 	/*
 	 * Mbox IPRs

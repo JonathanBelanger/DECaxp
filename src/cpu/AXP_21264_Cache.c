@@ -28,11 +28,19 @@
 #include "AXP_21264_Cache.h"
 
 /*
+ * TODO:	When updating the DTB, we also need to inform the Cbox, as it has
+ *			a duplicate copy of the DTB (or we update it ourselves on behalf of
+ *			the Cbox).  The difference between the two is that the DTB is
+ *			virtually indexed and physically tagged and the Cbox version is
+ *			physically indexed and virtually tagged.
+ */
+
+/*
  * AXP_findTLBEntry
  *	This function is called to locate a TLB entry in either the Data or
  *	Instruction TLB, based off of the virtual address.
  *
- * Input Parameaters:
+ * Input Parameters:
  *	cpu:
  *		A pointer to the CPU structure where the ITB and DTB are located.
  *	virtAddr:
@@ -60,7 +68,7 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
 	 * Search through all valid TLB entries until we find the one we are being
 	 * asked to return.
 	 */
-	for (ii = 0; ii < AXP_TLB_LEN; ii++)
+	for (ii = 0; ii < AXP_TB_LEN; ii++)
 	{
 		if (tlbArray[ii].valid == true)
 		{
@@ -88,31 +96,92 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
  *	round-robin list.  We just find the first available, starting from the
  *	first entry.
  *
- *	TODO:	Determine if we want to have an index to the next available entry,
- *			instead of the first available entry.
+ *	NOTE:	This function will find the next available entry (valid == false)
+ *			or the next entry (valid == true) in the TLB array.  The way we
+ *			perform our search, in all likelihood where valid == true, this is
+ *			the oldest TLB entry (or close enough).
  *
  * Input Parameters:
  *	tlbArray:
  *		A pointer to the array to be searched.
+ *	nextTLB:
+ *		A pointer to a 32-bit value that is the next TLB entry to be selected.
  *
  * Output Parameters:
- *	None.
+ *	nextTLB:
+ *		A pointer to a 32-bit value that points to the next TLB entry to select
+ *		on the next call.
  *
  * Return Value:
  *	NULL:		An available entry was not found.
  *	Not NULL:	A pointer to an unused TLB entry.
  */
-AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray)
+AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
 {
 	AXP_21264_TLB 	*retVal = NULL;
 	int				ii;
+	int				start1, start2;
+	int				end1, end2;
 
-	for (ii = 0; ii < AXP_TLB_LEN; ii++)
-		if (tlbArray[ii].valid == false)
+	/*
+	 * The nextTLB index always points to the TLB entry to be selected (even if
+	 * it is already in-use (valid).
+	 */
+	retVal = &tlbArray[*nextTLB];
+	*nextTLB = (*nextTLB >= (AXP_TB_LEN - 1) ? 0 : *nextTLB + 1);
+
+	/*
+	 * If the next TLB items is marked in-use (valid), then see if there is one
+	 * somewhere in the array that is not in-use, and let's select that one.
+	 */
+	if (tlbArray[*nextTLB].valid == true)
+	{
+
+		/*
+		 * We start looking at the entry the TLB index was just moved to.
+		 */
+		start1 = *nextTLB;
+
+		/*
+		 * If we are starting at the first entry in the index, then we scan the
+		 * entire array starting at 0 and stopping at the end of the array.
+		 * Otherwise, we start from the current location to the end of the
+		 * array, and then go back to the start of the array and search until
+		 * the current location.
+		 */
+		if (start1 > 0)
 		{
-			retVal = tlbArray[ii];
-			break;
+			start2 = 0;
+			end1 = AXP_TB_LEN;
+			end2 = start1;
 		}
+		else
+			start2 = -1;	// Searching 0-end, no need to do second search.
+
+		/*
+		 * Perform the first, and possibly the only, search for a not-in-use
+		 * entry.
+		 */
+		for (ii = start1; ii < end1; ii ++)
+			if (tlbArray[ii].valid == false)
+			{
+				*nextTLB = ii;
+				start2 = -1;	// Don't do second search (either way).
+				break;
+			}
+
+		/*
+		 * The second start entry is -1, either when we are searching from the
+		 * start of the array, or when we found a not-in-use entry.
+		 */
+		if (start2 == 0)
+			for (ii = start2; ii < end2; ii ++)
+				if (tlbArray[ii].valid == false)
+				{
+					*nextTLB = ii;
+					break;
+				}
+	}
 
 	/*
 	 * Return what we found, or did not find, back to the caller.
@@ -126,7 +195,7 @@ AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray)
  *	Instruction TLB lists.  An available TLB entry will be used, if one is not
  *	already in the TLB list.  If the latter, then the entry will be updated.
  *
- * Input Parameaters:
+ * Input Parameters:
  *	cpu:
  *		A pointer to the CPU structure where the ITB and DTB are located.
  *	virtAddr:
@@ -156,10 +225,9 @@ void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
 	if (tlbEntry == NULL)
 	{
 		if (dtb)
-			tlbEntry = AXP_getNextFreeTLB(cpu->dtb);
+			tlbEntry = AXP_getNextFreeTLB(cpu->dtb, &cpu->nextDTB);
 		else
-			tlbEntry = AXP_getNextFreeTLB(cpu->itb);
-		// TODO:	What if there are no availebl TLB entries?
+			tlbEntry = AXP_getNextFreeTLB(cpu->itb, &cpu->nextITB);
 	}
 
 	/*
@@ -177,50 +245,29 @@ void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
 	{
 
 		/*
-		 * If we do not have an outstanding TLM Miss, then we need to use the
-		 * DTE_PTE0 and DTE_ASN0 IPRs.  Otherwise, we need to use the DTE_PTE1
-		 * and the DTE_ASN1 IPRs.
-		 *
-		 * TODO: Verify that the above it actually true.
+		 * We use the DTE_PTE0 and DTE_ASN0 IPRs to initialize the TLB entry.
 		 */
-		if (cpu->tbMissOutstanding == false)
-		{
-			tlbEntry->faultOnRead = cpu->dtbPte0._for;
-			tlbEntry->faultOnWrite = cpu->dtbPte0.fow;
-			tlbEntry->faultOnExecute = 0;
-			tlbEntry->kre = cpu->dtbPte0.kre;
-			tlbEntry->ere = cpu->dtbPte0.ere;
-			tlbEntry->sre = cpu->dtbPte0.sre;
-			tlbEntry->ure = cpu->dtbPte0.ure;
-			tlbEntry->kwe = cpu->dtbPte0.kwe;
-			tlbEntry->ewe = cpu->dtbPte0.ewe;
-			tlbEntry->swe = cpu->dtbPte0.swe;
-			tlbEntry->uwe = cpu->dtbPte0.uwe;
-			tlbEntry->asn = cpu->dtbAsn0.asn;
-			tlbEntry->_asm = cpu->dtbPte0._asm;
-		}
-		else
-		{
-			tlbEntry->faultOnRead = cpu->dtbPte1._for;
-			tlbEntry->faultOnWrite = cpu->dtbPte1.fow;
-			tlbEntry->faultOnExecute = 0;
-			tlbEntry->kre = cpu->dtbPte1.kre;
-			tlbEntry->ere = cpu->dtbPte1.ere;
-			tlbEntry->sre = cpu->dtbPte1.sre;
-			tlbEntry->ure = cpu->dtbPte1.ure;
-			tlbEntry->kwe = cpu->dtbPte1.kwe;
-			tlbEntry->ewe = cpu->dtbPte1.ewe;
-			tlbEntry->swe = cpu->dtbPte1.swe;
-			tlbEntry->uwe = cpu->dtbPte1.uwe;
-			tlbEntry->asn = cpu->dtbAsn1.asn;
-			tlbEntry->_asm = cpu->dtbPte1._asm;
-		}
+		tlbEntry->faultOnRead = cpu->dtbPte0._for;
+		tlbEntry->faultOnWrite = cpu->dtbPte0.fow;
+		tlbEntry->faultOnExecute = 0;
+		tlbEntry->kre = cpu->dtbPte0.kre;
+		tlbEntry->ere = cpu->dtbPte0.ere;
+		tlbEntry->sre = cpu->dtbPte0.sre;
+		tlbEntry->ure = cpu->dtbPte0.ure;
+		tlbEntry->kwe = cpu->dtbPte0.kwe;
+		tlbEntry->ewe = cpu->dtbPte0.ewe;
+		tlbEntry->swe = cpu->dtbPte0.swe;
+		tlbEntry->uwe = cpu->dtbPte0.uwe;
+		tlbEntry->_asm = cpu->dtbPte0._asm;
+		tlbEntry->asn = cpu->dtbAsn0.asn;
 	}
 	else
 	{
 
 		/*
-		 * The following fault-on-read/write/execute are hardcoded to keep the
+		 * We use the ITB_PTE and PCTX IPRs to initialize the TLB entry.
+		 *
+		 * The following fault-on-read/write/execute are hard coded to keep the
 		 * rest of the code happy.
 		 */
 		tlbEntry->faultOnRead = 1;
@@ -234,8 +281,8 @@ void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
 		tlbEntry->ewe = 0;
 		tlbEntry->swe = 0;
 		tlbEntry->uwe = 0;
-		tlbEntry->asn = cpu->pCtx.asn;	// TODO: Is this right?
 		tlbEntry->_asm = cpu->itbPte._asm;
+		tlbEntry->asn = cpu->pCtx.asn;
 	}
 	tlbEntry->valid = true;				// Mark the TLB entry as valid.
 
@@ -250,7 +297,7 @@ void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
  *	This function is called to Invalidate all TLB entries as the result of an
  *	instruction writing to the ITB_IA or DTB_IA IPR.
  *
- * Input Parameaters:
+ * Input Parameters:
  *	cpu:
  *		A pointer to the CPU structure where the ITB and DTB are located.
  *	dtb:
@@ -272,8 +319,13 @@ void AXP_tbia(AXP_21264_CPU *cpu, bool dtb)
 	 * Go through the entire TLB array and invalidate everything (even those
 	 * entries that are already invalidated).
 	 */
-	for (ii = 0; ii < AXP_TLB_LEN; ii++)
+	for (ii = 0; ii < AXP_TB_LEN; ii++)
 		tlbArray[ii].valid = false;
+
+	/*
+	 * Reset the next TLB entry to select to the start of the list.
+	 */
+	dtb ? cpu->nextDTB = 0 : cpu->nextITB = 0;
 
 	/*
 	 * Return back to the caller.
@@ -282,11 +334,11 @@ void AXP_tbia(AXP_21264_CPU *cpu, bool dtb)
 }
 
 /*
- * AXP_tbia
+ * AXP_tbiap
  * 	This function is called to invalidate all process-specific TLB entries (TLB
  *	entries that do not have the ASM bit set).
  *
- * Input Parameaters:
+ * Input Parameters:
  *	cpu:
  *		A pointer to the CPU structure where the ITB and DTB are located.
  *	dtb:
@@ -309,7 +361,7 @@ void AXP_tbiap(AXP_21264_CPU *cpu, bool dtb)
 	 * invalidate the entry.  Leaving the entries with the ASM bit set alone,
 	 * valid or otherwise.
 	 */
-	for (ii = 0; ii < AXP_TLB_LEN; ii++)
+	for (ii = 0; ii < AXP_TB_LEN; ii++)
 		if (tlbArray[ii]._asm == 0)
 			tlbArray[ii].valid = false;
 
@@ -323,7 +375,7 @@ void AXP_tbiap(AXP_21264_CPU *cpu, bool dtb)
  * AXP_tbis
  *	This function is called to invalidate a Single TLB Entry.
  *
- * Input Parameaters:
+ * Input Parameters:
  *	cpu:
  *		A pointer to the CPU structure where the ITB and DTB are located.
  *	virtAddr:
@@ -341,7 +393,7 @@ void AXP_tbiap(AXP_21264_CPU *cpu, bool dtb)
  */
 void AXP_tbis(AXP_21264_CPU *cpu, u64 va, bool dtb)
 {
-	AXP_21264_TLB	*tlb	tlb = AXP_findTLBEntry(cpu, va, dtb);
+	AXP_21264_TLB	*tlb = AXP_findTLBEntry(cpu, va, dtb);
 
 	/*
 	 * If we did not find the entry, then there is nothing to invalidate.
@@ -358,15 +410,15 @@ void AXP_tbis(AXP_21264_CPU *cpu, u64 va, bool dtb)
 
 /*
  * AXP_21264_check_memoryAccess
- *	This function is caller to detetermine if the process has the access needed
+ *	This function is caller to determine if the process has the access needed
  *	to the memory location the are trying to use (read/write/modify/execute).
  *
- * Input Parameaters:
+ * Input Parameters:
  *	cpu:
  *		A pointer to the CPU structure where the current process mode is
  *		located.
  *	tlb:
- *		A pointer to the Tramslation Lookaside Buffer that has the access
+ *		A pointer to the Translation Look-aside Buffer that has the access
  *		information for each of the processing modes.
  *	acc:
  *		An enumerated value, indicating the type of access being requested.
@@ -398,7 +450,7 @@ bool AXP_21264_checkMemoryAccess(
 	 * If the valid bit is not set, then by default, the process does not have
 	 * access.
 	 */
-	if (tlb->v == true)
+	if (tlb->valid == true)
 	{
 
 		/*
@@ -414,70 +466,70 @@ bool AXP_21264_checkMemoryAccess(
 						break;
 
 					case Read:
-						retVal = ((tlb->kre == 1) && (tlb->_for == 1));
+						retVal = ((tlb->kre == 1) && (tlb->faultOnRead == 1));
 						break;
 
 					case Write:
-						retVal = ((tlb->kwe == 1) && (tlb->fow == 1));
+						retVal = ((tlb->kwe == 1) && (tlb->faultOnWrite == 1));
 						break;
 
 					case Execute:
-						retVal = ((tlb->kre == 1) && (tlb->foe == 1));
+						retVal = ((tlb->kre == 1) && (tlb->faultOnExecute == 1));
 						break;
 
 					case Modify:
 						retVal = ((tlb->kwe == 1) && (tlb->kre) &&
-								  (tlb->fow == 1) && (tlb->_for == 1));
+								  (tlb->faultOnWrite == 1) && (tlb->faultOnRead == 1));
 						break;
 				}
 				break;
 
-			case AXP_CM_EXEC;
+			case AXP_CM_EXEC:
 				switch(acc)
 				{
 					case None:
 						break;
 
 					case Read:
-						retVal = ((tlb->ere == 1) && (tlb->_for == 1));
+						retVal = ((tlb->ere == 1) && (tlb->faultOnRead == 1));
 						break;
 
 					case Write:
-						retVal = ((tlb->ewe == 1) && (tlb->fow == 1));
+						retVal = ((tlb->ewe == 1) && (tlb->faultOnWrite == 1));
 						break;
 
 					case Execute:
-						retVal = ((tlb->ere == 1) && (tlb->foe == 1));
+						retVal = ((tlb->ere == 1) && (tlb->faultOnExecute == 1));
 						break;
 
 					case Modify:
 						retVal = ((tlb->ewe == 1) && (tlb->ere) &&
-								  (tlb->fow == 1) && (tlb->_for == 1));
+								  (tlb->faultOnWrite == 1) && (tlb->faultOnRead == 1));
 						break;
 				}
 				break;
 
-			case AXP_CM_SUPER;
+			case AXP_CM_SUPER:
 				switch(acc)
 				{
 					case None:
 						break;
 
 					case Read:
-						retVal = ((tlb->sre == 1) && (tlb->_for == 1));
+						retVal = ((tlb->sre == 1) && (tlb->faultOnRead == 1));
 						break;
 
 					case Write:
-						retVal = ((tlb->swe == 1) && (tlb->fow == 1));
+						retVal = ((tlb->swe == 1) && (tlb->faultOnWrite == 1));
 						break;
 
 					case Execute:
-						retVal = ((tlb->sre == 1) && (tlb->foe == 1));
+						retVal = ((tlb->sre == 1) && (tlb->faultOnExecute == 1));
 						break;
 
 					case Modify:
 						retVal = ((tlb->swe == 1) && (tlb->sre) &&
-								  (tlb->fow == 1) && (tlb->_for == 1));
+								  (tlb->faultOnWrite == 1) && (tlb->faultOnRead == 1));
 						break;
 				}
 				break;
@@ -489,24 +541,25 @@ bool AXP_21264_checkMemoryAccess(
 						break;
 
 					case Read:
-						retVal = ((tlb->ure == 1) && (tlb->_for == 1));
+						retVal = ((tlb->ure == 1) && (tlb->faultOnRead == 1));
 						break;
 
 					case Write:
-						retVal = ((tlb->uwe == 1) && (tlb->fow == 1));
+						retVal = ((tlb->uwe == 1) && (tlb->faultOnWrite == 1));
 						break;
 
 					case Execute:
-						retVal = ((tlb->ure == 1) && (tlb->foe == 1));
+						retVal = ((tlb->ure == 1) && (tlb->faultOnExecute == 1));
 						break;
 
 					case Modify:
 						retVal = ((tlb->uwe == 1) && (tlb->ure) &&
-								  (tlb->fow == 1) && (tlb->_for == 1));
+								  (tlb->faultOnWrite == 1) && (tlb->faultOnRead == 1));
 						break;
 				}
 				break;
-	}
+		}	// switch(cpu->ierCm.cm)
+	}		// if (tlb->valid == true)
 
 	/*
 	 * Return what we found back to the caller.
@@ -524,7 +577,7 @@ bool AXP_21264_checkMemoryAccess(
  *			defined for super pages.  If the virtual address does not have a
  *			specific value at a specific location within the virtual address,
  *			then normal virtual address translation is performed (Step 3).
- *		3)	A translation lookaside buffer (TLB) is located for the virtual
+ *		3)	A translation look-aside buffer (TLB) is located for the virtual
  *			address.  Information within the TLB is used to determined if the
  *			process has the needed access to the virtual address, and to also
  *			convert the virtual address to a physical address.
@@ -562,9 +615,9 @@ bool AXP_21264_checkMemoryAccess(
  *		A pointer to a boolean location to receive an indicator of whether the
  *		ASB bit is set for the TLB associated with the virtual address or not.
  *	fault:
- *		A pointe to an unsigned 32-bit integer location to receive an indicator
- *		of whether a fault should occur.  This will cause the CPU to call the
- *		approprirate PALcode to handle the fault.
+ *		A pointer to an unsigned 32-bit integer location to receive an
+ *		indicator of whether a fault should occur.  This will cause the CPU to
+ *		call the appropriate PALcode to handle the fault.
  *
  * Return Value:
  *	0:	The virtual address could not be converted (yet, usually because of
@@ -599,40 +652,36 @@ u64 AXP_va2pa(
 		pa = va;
 
 	/*
-	 * If we are using a super page, then we need to go down that translation
-	 * path.
+	 * If we are using a super page and are in Kernel mode, then we need to go
+	 * down that translation path.
 	 */
-	else if (spe != 0)
+	else if ((spe != 0) && (cpu->ierCm.cm == AXP_CM_KERNEL))
 	{
-		if (cpu->ierCm.cm != AXP_CM_KERNEL)
-		{
-			/* access violation */
-		}
-		else if ((spe & AXP_SPE2_BIT) && (vaSpe.spe2 == AXP_SPE2_VA_VAL))
+		if ((spe & AXP_SPE2_BIT) && (vaSpe.spe2 == AXP_SPE2_VA_VAL))
 		{
 			pa = va & AXP_SPE2_VA_MASK;
-			_asm = false;
+			*_asm = false;
 			return(pa);
 		}
 		else if ((spe & AXP_SPE1_BIT) && (vaSpe.spe1 == AXP_SPE1_VA_VAL))
 		{
 			pa = ((va & AXP_SPE1_VA_MASK) |
 				  (va & AXP_SPE1_VA_40 ? AXP_SPE1_PA_43_41 : 0));
-			_asm = false;
+			*_asm = false;
 			return(pa);
 		}
 		else if ((spe & AXP_SPE0_BIT) && (vaSpe.spe0 == AXP_SPE0_VA_VAL))
 		{
 			pa = va & AXP_SPE0_VA_MASK;
-			_asm = false;
+			*_asm = false;
 			return(pa);
 		}
 	}
 
 	/*
 	 * We need to see if we can find a TLB entry for this virtual address.  We
-	 * get here, either when we are not in PALmode, not using a Superpage, or
-	 * the virtual address did not contain the expected superpage values.
+	 * get here, either when we are not in PALmode, not using a Super page, or
+	 * the virtual address did not contain the expected Super page values.
 	 */
 	tlb = AXP_findTLBEntry(cpu, va, dtb);
 
@@ -644,7 +693,7 @@ u64 AXP_va2pa(
 	{
 
 		/*
-		 * TODO: The caller nees to set the following.
+		 * TODO: The caller needs to set the following.
 		 *	cpu->excAddr = pc;
 		 *	if (cpu->tbMissOutstanding == false)
 		 *		cpu->mmStat.? = 1;
@@ -653,7 +702,7 @@ u64 AXP_va2pa(
 		 */
 		if (cpu->tbMissOutstanding == true)
 		{
-			if (cpu->iCtrl.va_48 == 0)
+			if (cpu->iCtl.va_48 == 0)
 				*fault = AXP_DTBM_DOUBLE_3;
 			else
 				*fault = AXP_DTBM_DOUBLE_4;
@@ -684,7 +733,7 @@ u64 AXP_va2pa(
 			{
 
 				/*
-				 * TODO: The caller nees to set the following.
+				 * TODO: The caller needs to set the following.
 				 *	cpu->excSum.? = 1;
 				 *	cpu->mmStat.? = 1;
 				 *	cpu->va = va;
@@ -695,7 +744,7 @@ u64 AXP_va2pa(
 			{
 
 				/*
-				 * TODO: The caller nees to set the following.
+				 * TODO: The caller needs to set the following.
 				 *	cpu->excSum = 0;
 				 */
 				*fault = AXP_IACV;
@@ -703,8 +752,8 @@ u64 AXP_va2pa(
 		}
 		else
 		{
-			pa = tlb->physAddr | (va & tlb->keepMask)
-			_asm = tlb->_asm;
+			pa = tlb->physAddr | (va & tlb->keepMask);
+			*_asm = tlb->_asm;
 		}
 	}
 

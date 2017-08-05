@@ -29,6 +29,7 @@
 
 #include "AXP_Utility.h"
 #include "AXP_21264_CPU.h"
+#include "AXP_21264_Ibox.h"
 
 /*
  * The following definitions utilize the granularity hint information in the
@@ -38,7 +39,7 @@
 #define GH_PHYS(gh)		(((1 << AXP_21264_MEM_BITS) - 1) & ~(GH_KEEP(gh)))
 
 /*
- * Define the Translation Lookaside Buffer (TLB) for both the Instruction and
+ * Define the Translation Look-aside Buffer (TLB) for both the Instruction and
  * Data Streams.
  */
 typedef struct
@@ -139,14 +140,28 @@ typedef enum
 	Modify		// Read & Write
 } AXP_21264_ACCESS;
 
-#define AXP_21264_DCACHE_DATA_LEN	64
+typedef struct
+{
+	u64			pageOffset : 13;	// Offset within page
+	u64			vpn : 51;			// Virtual Page Number
+} AXP_21264_VA_FIELDS;
 
 typedef struct
 {
-	u64			res_1 : 13;
-	u64			tag : 33;
-	u64			res_2 : 18;
+	u16			blockOffset : 6;
+	u16			cacheIdx : 7;
+	u16			res : 3;
+} AXP_21264_PO_FIELDS;
+
+typedef struct
+{
+	u64			offset : 13;
+	u64			tag : 35;
+	u64			asn : 8;
+	u64			res : 8;
 } AXP_21264_PHYS_TAG;
+
+#define AXP_DCACHE_DATA_LEN	64
 
 /*
  * This structure is the definition for one data cache block.  A block contains
@@ -159,13 +174,47 @@ typedef struct
  */
 typedef struct
 {
-	u8					data[AXP_21264_DCACHE_DATA_LEN];
-	AXP_21264_PHYS_TAG	physTag;
+	u8					data[AXP_DCACHE_DATA_LEN];
+	u64					physTag;
 	bool				valid;
 	bool				dirty;
 	bool				shared;
 	bool				modified;
 	bool				set_0_1;
-} AXP_21264_DCACHE_BLK;
+} AXP_DCACHE_BLK;
+
+/*
+ * This structure is the definition of one instruction cache block.  A block
+ * contains the following:
+ *
+ *		16 Alpha instructions (64 bytes)
+ *		Virtual tag bits [47:15]
+ *		8-bit address space number (ASN) field
+ *		1-bit address space match (ASM) bit
+ *		1-bit PALcode bit to indicate physical addressing
+ *		Valid bit
+ *		Data and tag parity bits
+ *		Four access-check bits for the following modes (KESU):
+ *			kernel
+ *			executive
+ *			supervisor
+ *			user
+ *		Additional predecoded information to assist with instruction
+ *		processing and fetch control
+ */
+typedef struct
+{
+	u64 				kre : 1;			/* Kernel read/execute */
+	u64 				ere : 1;			/* Executive read/execute */
+	u64 				sre : 1;			/* Supervisor read/execute */
+	u64					ure : 1;			/* User read/execute */
+	u64					_asm : 1;			/* Address Space Match */
+	u64					asn : 8;			/* Address Space Number */
+	u64					pal : 1;			/* PALcode */
+	u64					vb : 1;				/* Valid Bit */
+	u64					tag : 33;			/* Tag */
+	u64					res_1 : 16;			/* align to the 64-bit boundary */
+	AXP_INS_FMT			instructions[AXP_ICACHE_LINE_INS];
+} AXP_ICACHE_BLK;
 
 #endif /* _AXP_21264_CACHE_DEFS_ */
