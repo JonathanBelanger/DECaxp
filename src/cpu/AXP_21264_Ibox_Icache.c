@@ -466,7 +466,7 @@ void AXP_ICacheAdd(AXP_21264_CPU *cpu,
 	cpu->iCache[index][set].sre = itb->pfn.sre;
 	cpu->iCache[index][set].ure = itb->pfn.ure;
 	cpu->iCache[index][set]._asm = itb->pfn._asm;
-	cpu->iCache[index][set].asn = cpu->pCtx.asn;		// TODO: Need to verify
+	cpu->iCache[index][set].asn = cpu->pCtx.asn;
 	cpu->iCache[index][set].pal = pc.pal;
 	cpu->iCache[index][set].vb = 1;
 	cpu->iCache[index][set].tag = tag;

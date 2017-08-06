@@ -764,3 +764,263 @@ u64 AXP_va2pa(
 	 */
 	return(pa);
 }
+
+/*
+ * AXP_DcacheAdd
+ * 	This function is called to add a cache entry into the Data Cache.  If the
+ * 	entry is already there, or in one of the four possible other locations,
+ * 	then there is nothing to do.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
+ * 		Data Cache (dCache) array.
+ * 	va:
+ * 		The virtual address of the data in virtual memory.
+ * 	pa:
+ * 		The physical address, as stored in the DTB (Data TLB).
+ * 	data:
+ * 		A pointer to the 64-bytes of data to be stored in the cache.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
+{
+	AXP_VA		virtAddr = {.va = va};
+	u32			oneChecked = virtAddr.vaIdxCntr.counter;
+	int			found = AXP_CACHE_ENTRIES;
+	int			ii;
+
+	/*
+	 * Check the index based solely on the Virtual Address (both sets).
+	 */
+	for (ii = 0; ii < AXP_2_WAY_CACHE; ii++)
+	{
+		if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
+			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
+		{
+			found = virtAddr.vaIdx.index;
+			break;
+		}
+	}
+
+	/*
+	 * If we did not find it, then check the other 3 possible places.
+	 */
+	if (found == AXP_CACHE_ENTRIES)
+	{
+		for (virtAddr.vaIdxCntr.counter = 0;
+			 ((virtAddr.vaIdxCntr.counter < 4) && (found == AXP_CACHE_ENTRIES));
+			 virtAddr.vaIdxCntr.counter++)
+		{
+			if (virtAddr.vaIdxCntr.counter != oneChecked)
+			{
+				for (ii = 0; ((ii < AXP_2_WAY_CACHE) && (found == 512)); ii++)
+				{
+					if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
+						(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
+						found = virtAddr.vaIdx.index;
+				}
+			}
+		}
+	}
+
+	/*
+	 * If we did not find it, then use the first value and determine which set
+	 * to use and store the information into the Dcache.
+	 */
+	if (found == AXP_CACHE_ENTRIES)
+	{
+		int setToUse;
+
+		virtAddr.va = va;
+		found = virtAddr.vaIdx.index;
+		if (cpu->dCache[found][0].valid == false)
+		{
+			setToUse = 0;
+			cpu->dCache[found][0].set_0_1 = true;
+		}
+		else if (cpu->dCache[found][1].valid == false)
+		{
+			setToUse = 1;
+			cpu->dCache[found][0].set_0_1 = false;
+		}
+		else	// We have to re-use one of the existing cache entries.
+		{
+			if (cpu->dCache[found][0].set_0_1)
+			{
+				setToUse = 1;
+				cpu->dCache[found][0].set_0_1 = false;
+			}
+			else
+			{
+				setToUse = 0;
+				cpu->dCache[found][0].set_0_1 = true;
+			}
+
+			/*
+			 * We are re-using a cache entry.  IF the modified bit it set,
+			 * then write the existing value to memory.
+			 */
+			if (cpu->dCache[found][setToUse].modified)
+			{
+				// Send to the Cbox to copy into memory.
+				cpu->dCache[found][setToUse].modified = false;
+				// TODO:	Need to determine what to do, if anything, with the
+				//			dirty bit
+			}
+		}
+
+		/*
+		 * OK, we now have the index and the set, store the data and set the
+		 * bits.
+		 */
+		memcpy(cpu->dCache[found][setToUse], data, AXP_DCACHE_DATA_LEN);
+		cpu->dCache[found][setToUse].physTag = pa;
+		cpu->dCache[found][setToUse].dirty = false;
+		cpu->dCache[found][setToUse].modified = false;
+		cpu->dCache[found][setToUse].shared = false;
+		cpu->dCache[found][setToUse].valid = true;
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_DcacheFlush
+ * 	This function is called to fluch the entire Data Cache.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
+ * 		Data Cache (dCache) array.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_DcacheFlush(AXP_21264_CPU *cpu)
+{
+	int			ii;
+
+	/*
+	 * Go through each cache item and invalidate and reset it.
+	 */
+	for (ii = 0; ii < AXP_CACHE_ENTRIES; ii++)
+	{
+
+		/*
+		 * Set Zero.
+		 */
+		if (cpu->dCache[ii][0].modified)
+		{
+			// Send to the Cbox to copy into memory.
+			cpu->dCache[ii][0].modified = false;
+			// TODO:	Need to determine what to do, if anything, with the
+			//			dirty bit
+		}
+		cpu->dCache[ii][0].set_0_1 = false;
+		cpu->dCache[ii][0].physTag = 0;
+		cpu->dCache[ii][0].dirty = false;
+		cpu->dCache[ii][0].modified = false;
+		cpu->dCache[ii][0].shared = false;
+		cpu->dCache[ii][0].valid = false;
+
+		/*
+		 * Set One.
+		 */
+		if (cpu->dCache[ii][1].modified)
+		{
+			// Send to the Cbox to copy into memory.
+			cpu->dCache[ii][1].modified = false;
+			// TODO:	Need to determine what to do, if anything, with the
+			//			dirty bit
+		}
+		cpu->dCache[ii][1].physTag = 0;
+		cpu->dCache[ii][1].dirty = false;
+		cpu->dCache[ii][1].modified = false;
+		cpu->dCache[ii][1].shared = false;
+		cpu->dCache[ii][1].valid = false;
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_DcacheFetch
+ * 	This function is called to fetch a cache entry from the Data Cache.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
+ * 		Data Cache (dCache) array.
+ * 	va:
+ * 		The virtual address of the data in virtual memory.
+ * 	pa:
+ * 		The physical address, as stored in the DTB (Data TLB).
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	NULL:	Entry not found.
+ * 	~NULL:	The entry that was requested.
+ */
+u8 *AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
+{
+	u8			*retVal = NULL;
+	AXP_VA		virtAddr = {.va = va};
+	u32			oneChecked = virtAddr.vaIdxCntr.counter;
+	int			ii;
+
+	/*
+	 * Check the index based solely on the Virtual Address (both sets).
+	 */
+	for (ii = 0; ii < AXP_2_WAY_CACHE; ii++)
+	{
+		if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
+			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
+		{
+			retVal = cpu->dCache[virtAddr.vaIdx.index][ii].data;
+			break;
+		}
+	}
+
+	/*
+	 * If we did not find it, then check the other 3 possible places.
+	 */
+	if (retVal == NULL)
+	{
+		for (virtAddr.vaIdxCntr.counter = 0;
+			 ((virtAddr.vaIdxCntr.counter < 4) && (retVal == NULL));
+			 virtAddr.vaIdxCntr.counter++)
+		{
+			if (virtAddr.vaIdxCntr.counter != oneChecked)
+			{
+				for (ii = 0; ((ii < AXP_2_WAY_CACHE) && (retVal == NULL)); ii++)
+				{
+					if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
+						(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
+						retVal = cpu->dCache[virtAddr.vaIdx.index][ii].data;
+				}
+			}
+		}
+	}
+
+	/*
+	 * Return what we found, if anything, back to the caller.
+	 */
+	return(retVal);
+}

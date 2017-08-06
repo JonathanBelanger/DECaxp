@@ -101,6 +101,8 @@
 #define AXP_INFLIGHT_FETCHES 20
 #define AXP_INFLIGHT_MAX	80
 #define AXP_MBOX_QUEUE_LEN	32
+#define AXP_CACHE_ENTRIES	512
+#define AXP_2_WAY_CACHE	2
 
 /*
  * This structure is a buffer to contain the next set of instructions to get
@@ -346,7 +348,7 @@ typedef struct
 	 * bytes long, for a total of 64 bytes.  There are 2 sets of cache, which
 	 * leaves us with 64KB / (16 * 4B) / 2 sets = 512 rows for each set.
 	 */
-	AXP_ICACHE_BLK		iCache2[512][2];
+	AXP_ICACHE_BLK		iCache2[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 
 	/*
 	 * This is the Instruction Address Translation (Look-aside) Table (ITB).
@@ -485,7 +487,7 @@ typedef struct
 	 * Each cache block contains 64 bytes of data.  There are 2 sets of cache,
 	 * which leaves us with 64KB / 64B / 2 sets = 512 rows for each set.
 	 */
-	AXP_DCACHE_BLK		dCache2[512][2];
+	AXP_DCACHE_BLK			dCache[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 
 	/*
 	 * The next 2 "queues" are actually going to be handled as a FIFO stack.

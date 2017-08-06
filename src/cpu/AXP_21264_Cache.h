@@ -33,8 +33,10 @@
 
 /*
  * The following definitions utilize the granularity hint information in the
+ * TLB initialization to determine the bits to keep for the physical address,
+ * and the match and keep masks.  The GH_KEEP formula only works for 8KB pages.
  */
-#define GH_KEEP(gh)		(AXP_21264_PAGE_SIZE < (3 * (gh)) - 1)
+#define GH_KEEP(gh)		((AXP_21264_PAGE_SIZE * (1 << (3 * (gh)))) - 1)
 #define GH_MATCH(gh)	(((1 << (AXP_21264_MEM_BITS - 1)) - 1) & ~(GH_KEEP(gh)))
 #define GH_PHYS(gh)		(((1 << AXP_21264_MEM_BITS) - 1) & ~(GH_KEEP(gh)))
 
@@ -140,27 +142,6 @@ typedef enum
 	Modify		// Read & Write
 } AXP_21264_ACCESS;
 
-typedef struct
-{
-	u64			pageOffset : 13;	// Offset within page
-	u64			vpn : 51;			// Virtual Page Number
-} AXP_21264_VA_FIELDS;
-
-typedef struct
-{
-	u16			blockOffset : 6;
-	u16			cacheIdx : 7;
-	u16			res : 3;
-} AXP_21264_PO_FIELDS;
-
-typedef struct
-{
-	u64			offset : 13;
-	u64			tag : 35;
-	u64			asn : 8;
-	u64			res : 8;
-} AXP_21264_PHYS_TAG;
-
 #define AXP_DCACHE_DATA_LEN	64
 
 /*
@@ -170,7 +151,8 @@ typedef struct
  *		64 data bytes
  *		Physical tag bits
  *		Valid, dirty, shared, and modified bits
- *		One bit to control round-robin set allocation (one bit per two cache blocks)
+ *		One bit to control round-robin set allocation (one bit per two cache
+ *		blocks)
  */
 typedef struct
 {
@@ -216,5 +198,69 @@ typedef struct
 	u64					res_1 : 16;			/* align to the 64-bit boundary */
 	AXP_INS_FMT			instructions[AXP_ICACHE_LINE_INS];
 } AXP_ICACHE_BLK;
+
+/*
+ * 2.1.5.2 Data Cache
+ *
+ *	 6       5         4         4         3         2         1
+ *	 3       6         8         0         2         4         6         8         0
+ *	+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+ *	|    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |
+ *	+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+ *	|                                                            |           |      | 64 bytes
+ *	|                                                            |           | 512 rows
+ *	|                                                               |               | 8KB page
+ *	|                                                               | Virtual Page Number (VPN)
+ *
+ * The Dcache contains 512 rows, with 2 sets each.  Each block within the data
+ * cache contains 64 bytes.  The offset within these 64 bytes requires 6 bits.
+ * The index for 512 rows requires 9 bits.  Therefore, the first 15 bits of a
+ * virtual address are utilizing in indexing into the Dcache.  The offset
+ * within an 8KB page requires 13 bits, leaving the 14th up to the 64th bits
+ * for the  Virtual Page Number (VPN).  The overlapping for these 2 needs means
+ * that any particular VPN may be in 4 unique locations depending upon the
+ * virtual-to-physical translation of those 2 bits.  The 21264 prevents this
+ * aliasing by keeping only one of the four possible translated addresses in
+ * the cache at any time.
+ *
+ * NOTE:	Both the Data and Instruction Caches have 2 sets of 512 rows of 64
+ *			bytes of data/instructions.  What works for the data cache will
+ *			also work for the instruction cache.  Therefore, the data structure
+ *			below is for both Dcache and Icache.
+ *
+ * The following structure is used for Cache indexing:
+ */
+typedef struct
+{
+	u64			offset : 6;			// offset within 64 bytes
+	u64			index : 9;			// Cache index
+	u64			res : 49;
+} AXP_CACHE_IDX;
+
+
+/*
+ * The following data structure is used to parse out the VPN.
+ */
+typedef struct
+{
+	u64			offset : 13;		// Offset within page
+	u64			vpn : 51;			// Virtual Page Number
+} AXP_VA_FIELDS;
+
+typedef struct
+{
+	u64			offset : 6;			// Offset within 64 bytes
+	u64			index : 7;
+	u64			counter : 2;
+	u64			res : 49;
+} AXP_IDX_COUNTER;
+
+typedef union
+{
+	u64				va;
+	AXP_CACHE_IDX	vaIdx;
+	AXP_VA_FIELDS	vaInfo;
+	AXP_IDX_COUNTER	vaIdxCntr;
+} AXP_VA;
 
 #endif /* _AXP_21264_CACHE_DEFS_ */
