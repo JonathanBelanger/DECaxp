@@ -810,6 +810,9 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 
 	/*
 	 * If we did not find it, then check the other 3 possible places.
+	 * TODO:	I'm not sure I'm selecting the cache line correct based on the
+	 *			2 extra bits at the top of the index that are beyond the 8K
+	 *			page.
 	 */
 	if (found == AXP_CACHE_ENTRIES)
 	{
@@ -876,9 +879,17 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 		}
 
 		/*
-		 * OK, we now have the index and the set, store the data and set the
-		 * bits.
+		 * OK, we now have the index and the set, check to see if we are
+		 * evicting an existing cache entry that also needs to be pushed out to
+		 * memory, store the data and set the bits.
 		 */
+		if (cpu->dCache[found][set].valid == true &&
+			(cpu->dCache[found][set].dirty || cpu->dCache[found][set].modified))
+		{
+			// Send to the Cbox to copy into memory.
+#pragma message "Write-back Cache code needs to be completed: ", __FILE__, __LINE__, __FUNCTION__
+			cpu->dCache[ii][0].modified = false;
+		}
 		memcpy(cpu->dCache[found][setToUse], data, AXP_DCACHE_DATA_LEN);
 		cpu->dCache[found][setToUse].physTag = pa;
 		cpu->dCache[found][setToUse].dirty = false;
@@ -921,12 +932,11 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 		/*
 		 * Set Zero.
 		 */
-		if (cpu->dCache[ii][0].modified)
+		if (cpu->dCache[ii][0].dirty || cpu->dCache[ii][0].modified)
 		{
 			// Send to the Cbox to copy into memory.
+#pragma message "Write-back Cache code needs to be completed: ", __FILE__, __LINE__, __FUNCTION__
 			cpu->dCache[ii][0].modified = false;
-			// TODO:	Need to determine what to do, if anything, with the
-			//			dirty bit
 		}
 		cpu->dCache[ii][0].set_0_1 = false;
 		cpu->dCache[ii][0].physTag = 0;

@@ -153,6 +153,20 @@ typedef enum
  *		Valid, dirty, shared, and modified bits
  *		One bit to control round-robin set allocation (one bit per two cache
  *		blocks)
+ *
+ *	NOTE:	This is what the individual bits represent:
+ *
+ *				valid:		The cache block is in use and contains valid cache
+ *							data.
+ *				dirty:		The cache block has been written to/updated and
+ *							needs to be written back to memory upon eviction.
+ *				shared:		The cache block can be found in more than one
+ *							system component (such as another CPU)
+ *				modified:	The cache block has just been retreived from memory
+ *							and needs to be written out to the Bcache upon
+ *							eviction.
+ *				set_0_1:	Is used to determine if the cache block should be
+ *							stored in set 0 or set 1 in a round-robin fashion.
  */
 typedef struct
 {
