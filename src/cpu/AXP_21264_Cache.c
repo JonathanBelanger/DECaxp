@@ -771,6 +771,9 @@ u64 AXP_va2pa(
  * 	entry is already there, or in one of the four possible other locations,
  * 	then there is nothing to do.
  *
+ *	This function is called as a result of a request to the Cbox to perform a
+ *	Dcache fill.
+ *
  * Input Parameters:
  * 	cpu:
  * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
@@ -794,11 +797,33 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 	u32			oneChecked = virtAddr.vaIdxCntr.counter;
 	int			found = AXP_CACHE_ENTRIES;
 	int			ii;
+	int			sets;
+
+	/*
+	 * 5.3.10 Determine how manby sets are enabled.
+	 *
+	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
+	 * determine the number of cache sets to use.  The description for
+	 * SET_EN[1:0] says that at least 1 set must be enabled.  The equivalent
+	 * field for the Icache, IC_EN[1:0], has the following more detailed
+	 * destcription:
+	 *
+	 *		At least one set must be enabled. The entire cache may be
+	 *		enabled by setting both bits. Zero, one, or two Icache sets
+	 *		can be enabled.
+	 *		This bit does not clear the Icache, but only disables fills to
+	 *		the affected set.
+	 *
+	 * I'm nost sure why it first says that at least one set must be enabled,
+	 * but the says that "Zero, one, or two Icache sets can be enabled."  I'm
+	 * going to assume thatif zero bits are set, the default is 2 (both sets).
+	 */
+	sets = (cpu->dcCtl.set_en == 1) ? 1 : 2;
 
 	/*
 	 * Check the index based solely on the Virtual Address (both sets).
 	 */
-	for (ii = 0; ii < AXP_2_WAY_CACHE; ii++)
+	for (ii = 0; ii < sets; ii++)
 	{
 		if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
 			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
@@ -822,7 +847,7 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 		{
 			if (virtAddr.vaIdxCntr.counter != oneChecked)
 			{
-				for (ii = 0; ((ii < AXP_2_WAY_CACHE) && (found == 512)); ii++)
+				for (ii = 0; ((ii < sets) && (found == AXP_CACHE_ENTRIES)); ii++)
 				{
 					if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
 						(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
@@ -842,10 +867,10 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 
 		virtAddr.va = va;
 		found = virtAddr.vaIdx.index;
-		if (cpu->dCache[found][0].valid == false)
+		if ((cpu->dCache[found][0].valid == false) || sets == 1))
 		{
 			setToUse = 0;
-			cpu->dCache[found][0].set_0_1 = true;
+			cpu->dCache[found][0].set_0_1 = (sets == 1 ? false : true);
 		}
 		else if (cpu->dCache[found][1].valid == false)
 		{
@@ -864,18 +889,18 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 				setToUse = 0;
 				cpu->dCache[found][0].set_0_1 = true;
 			}
+		}
 
-			/*
-			 * We are re-using a cache entry.  IF the modified bit it set,
-			 * then write the existing value to memory.
-			 */
-			if (cpu->dCache[found][setToUse].modified)
-			{
-				// Send to the Cbox to copy into memory.
-				cpu->dCache[found][setToUse].modified = false;
-				// TODO:	Need to determine what to do, if anything, with the
-				//			dirty bit
-			}
+		/*
+		 * We are re-using a cache entry.  IF the modified bit it set,
+		 * then write the existing value to memory.
+		 */
+		if (cpu->dCache[found][setToUse].modified)
+		{
+			// Send to the Cbox to copy into memory.
+			cpu->dCache[found][setToUse].modified = false;
+			// TODO:	Need to determine what to do, if anything, with the
+			//			dirty bit
 		}
 
 		/*
@@ -907,6 +932,10 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 /*
  * AXP_DcacheFlush
  * 	This function is called to fluch the entire Data Cache.
+ *
+ *	NOTE:	There currently is no write to a register to flush the cache like
+ *			there is for the Icache.  This code is here as an example, if there
+ *			ever is a need to flush the Dcache.
  *
  * Input Parameters:
  * 	cpu:
@@ -947,10 +976,15 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 
 		/*
 		 * Set One.
+		 *
+		 * NOTE:	We are not going to avoid clearing the second cache set
+		 *			based on the Dcache control field.  Not doing this
+		 *			simplifies the code.
 		 */
 		if (cpu->dCache[ii][1].modified)
 		{
 			// Send to the Cbox to copy into memory.
+#pragma message "Write-back Cache code needs to be completed: ", __FILE__, __LINE__, __FUNCTION__
 			cpu->dCache[ii][1].modified = false;
 			// TODO:	Need to determine what to do, if anything, with the
 			//			dirty bit
@@ -988,17 +1022,39 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
  * 	NULL:	Entry not found.
  * 	~NULL:	The entry that was requested.
  */
-u8 *AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
+u8 *AXP_DcacheFetch(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 {
 	u8			*retVal = NULL;
 	AXP_VA		virtAddr = {.va = va};
 	u32			oneChecked = virtAddr.vaIdxCntr.counter;
 	int			ii;
+	int			sets;
+
+	/*
+	 * 5.3.10 Determine how manby sets are enabled.
+	 *
+	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
+	 * determine the number of cache sets to use.  The description for
+	 * SET_EN[1:0] says that at least 1 set must be enabled.  The equivalent
+	 * field for the Icache, IC_EN[1:0], has the following more detailed
+	 * destcription:
+	 *
+	 *		At least one set must be enabled. The entire cache may be
+	 *		enabled by setting both bits. Zero, one, or two Icache sets
+	 *		can be enabled.
+	 *		This bit does not clear the Icache, but only disables fills to
+	 *		the affected set.
+	 *
+	 * I'm nost sure why it first says that at least one set must be enabled,
+	 * but the says that "Zero, one, or two Icache sets can be enabled."  I'm
+	 * going to assume thatif zero bits are set, the default is 2 (both sets).
+	 */
+	sets = (cpu->dcCtl.set_en == 1) ? 1 : 2;
 
 	/*
 	 * Check the index based solely on the Virtual Address (both sets).
 	 */
-	for (ii = 0; ii < AXP_2_WAY_CACHE; ii++)
+	for (ii = 0; ii < sets; ii++)
 	{
 		if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
 			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
@@ -1019,7 +1075,7 @@ u8 *AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 		{
 			if (virtAddr.vaIdxCntr.counter != oneChecked)
 			{
-				for (ii = 0; ((ii < AXP_2_WAY_CACHE) && (retVal == NULL)); ii++)
+				for (ii = 0; ((ii < sets) && (retVal == NULL)); ii++)
 				{
 					if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
 						(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
@@ -1031,6 +1087,10 @@ u8 *AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 
 	/*
 	 * Return what we found, if anything, back to the caller.
+	 *
+	 * NOTE:	The caller will have to handle the condition where the cache
+	 *			block they expected to be there, was not, and submit a request
+	 *			to the Cbox to file the Dcache block.
 	 */
 	return(retVal);
 }
