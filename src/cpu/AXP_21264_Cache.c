@@ -1094,3 +1094,350 @@ u8 *AXP_DcacheFetch(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 	 */
 	return(retVal);
 }
+
+/*
+ * AXP_IcacheAdd
+ *	This function is called to add a set of instructions (16 32-bit
+ *	instructions (64B)) to the Instruction Cache (Icache).
+ *
+ *	This function is called as a result of a request to the Cbox to perform an
+ *	Icache fill.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
+ * 		Instruction Cache (iCache2) array.	TODO: Rename iCache2 to iCache.
+ *	pc:
+ *		The Program Counter (PC) associated with the first instruciton being
+ *		loaded into the Icache.
+ *	nextInst:
+ *		A pointer to the next set of instructions (16 of them) to be loaded
+ *		into the Icache.
+ *	tlb:
+ *		A pointer to the Instruction Translation Look-aside Buffer (ITB)
+ *		associated with these instructions.
+ *		NOTE:	We have this supplied by the caller, rather than looking it
+ *				up in this function, because handing not finding the ITB
+ *				should not be done here, but it better done in the caller even
+ *				before calling this function.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	None.
+ */
+void AXP_IcacheAdd(
+				AXP_21264_CPU *CPU,
+				AXP_PC pc,
+				AXP_INS_FMT *nextInst,
+				AXP_21264_TLB *itb)
+{
+	AXP_VPC		vpc = {.pc = pc};
+	u32			index = vpc.vpcFields.index;
+	u64			tag = vpc.vpcFields.tag
+	int			ii;
+	int			sets, whichSet;
+
+	/*
+	 * 5.3.10 Determine how manby sets are enabled.
+	 *
+	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
+	 * determine the number of cache sets to use.  The description for
+	 * SET_EN[1:0] says that at least 1 set must be enabled.  The equivalent
+	 * field for the Icache, IC_EN[1:0], has the following more detailed
+	 * destcription:
+	 *
+	 *		At least one set must be enabled. The entire cache may be
+	 *		enabled by setting both bits. Zero, one, or two Icache sets
+	 *		can be enabled.
+	 *		This bit does not clear the Icache, but only disables fills to
+	 *		the affected set.
+	 *
+	 * I'm nost sure why it first says that at least one set must be enabled,
+	 * but the says that "Zero, one, or two Icache sets can be enabled."  I'm
+	 * going to assume thatif zero bits are set, the default is 2 (both sets).
+	 */
+	sets = (cpu->iCtl.ic_en == 1) ? 1 : 2;
+	if (sets == 2)
+	{
+
+		/*
+		 * First see if set zero or set one are not currently in use.  If so,
+		 * then use the first one found.  If both are currnetly in use, we need
+		 * to evict one.  Use the set_0_1 bit in set zero to determine which
+		 * one to select.  If set_0_1 equals 1, then use set zero.  Otherwise,
+		 * use set one.  This is kind of a round-robin methodology.
+		 */
+		if (cpu->iCache2[index][0].vb == 0)
+		{
+			whichSet = 0;
+			cpu->iCache2[index][0].set_0_1 = 1;
+		}
+		else if (cpu->iCache2[index][1].vb = 0)
+		{
+			whichSet = 1;
+			cpu->iCache2[index][0].set_0_1 = 0;
+		}
+		else if (cpu->iCache2[index][0].set_0_1 == 0)
+		{
+			whichSet = 0;
+			cpu->iCache2[index][0].set_0_1 = 1;
+		}
+		else
+		{
+			whichSet = 1;
+			cpu->iCache2[index][0].set_0_1 = 0;
+		}
+	}
+	else
+	{
+		whichSet = 0;	// just one set in use.
+		cpu->iCache2[index][0].set_0_1 = 0;
+	}
+
+	/*
+	 * Intialize the cache entry with the supplied information.
+	 */
+	cpu->iCache2[index][whichSet].kre = itb->kre;
+	cpu->iCache2[index][whichSet].ere = itb->ere;
+	cpu->iCache2[index][whichSet].sre = itb->sre;
+	cpu->iCache2[index][whichSet].ure = itb->ure;
+	cpu->iCache2[index][whichSet]._asm = itb->_asm;
+	cpu->iCache2[index][whichSet].asn = itb->asn;
+	cpu->iCache2[index][whichSet].pal = pc.pal;
+	cpu->iCache2[index][whichSet].vb = 1;
+	cpu->iCache2[index][whichSet].tag = tag;
+	for (ii = 0; ii < AXP_ICACHE_LINE_INS; ii++)
+		cpu->iCache2[index][whichSet].instructions[ii] = nextInst[ii];
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_IcacheFlush
+ * 	This function is called to fluch the entire or specific Instruction Cache.
+ *	Retiring a write to the IPRs IC_FLUSH or IC_FLUSH_ASM will call this
+ *	function to purge the Instruction Cache.
+ *
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
+ * 		Instruction Cache (iCache2) array.	TODO: Rename iCache2 to iCache.
+ *	purgeAsm:
+ *		A boolean to indicate that only entries with the _asm bit not set will
+ *		be purged.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	None.
+ */
+void AXP_IcacheFlush(AXP_21264_CPU *CPU, bool purgeAsm)
+{
+	int			ii, jj;
+
+	for (ii = 0; ii < AXP_CACHE_ENTRIES; ii++)
+	{
+
+		/*
+		 * Purge the cache entry based on the setting of the purgeAsm flag.
+		 *
+		 * Set Zero
+		 */
+		if (cpu->iCache2[ii][0].vb == 1)
+		{
+			if (((purgeAsm == true) && (cpu->iCache2[ii][0]._asm == 0)) ||
+				(purgeAsm == false))
+			{
+				cpu->iCache2[ii][0].kre = 0;
+				cpu->iCache2[ii][0].ere = 0;
+				cpu->iCache2[ii][0].sre = 0;
+				cpu->iCache2[ii][0].ure = 0;
+				cpu->iCache2[ii][0]._asm = 0;
+				cpu->iCache2[ii][0].asn = 0;
+				cpu->iCache2[ii][0].pal = 0;
+				cpu->iCache2[ii][0].vb = 0;
+				cpu->iCache2[ii][0].tag = 0;
+				for (jj = 0; jj < AXP_ICACHE_LINE_INS; jj++)
+					cpu->iCache2[ii][0].instructions[jj] = 0;
+			}
+		}
+
+		/*
+		 * Set One
+		 */
+		if (cpu->iCache2[ii][1].vb == 1)
+		{
+			if (((purgeAsm == true) && (cpu->iCache2[ii][1]._asm == 0)) ||
+				(purgeAsm == false))
+			{
+				cpu->iCache2[ii][1].kre = 0;
+				cpu->iCache2[ii][1].ere = 0;
+				cpu->iCache2[ii][1].sre = 0;
+				cpu->iCache2[ii][1].ure = 0;
+				cpu->iCache2[ii][1]._asm = 0;
+				cpu->iCache2[ii][1].asn = 0;
+				cpu->iCache2[ii][1].pal = 0;
+				cpu->iCache2[ii][1].vb = 0;
+				cpu->iCache2[ii][1].tag = 0;
+				for (jj = 0; jj < AXP_ICACHE_LINE_INS; jj++)
+					cpu->iCache2[ii][1].instructions[jj] = 0;
+			}
+		}
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_IcacheFetch
+ * 	The instruction pre-fetcher (pre-decode) reads an octaword (16 bytes), 
+ * 	containing up to four naturally aligned instructions per cycle from the 
+ * 	Icache.  Branch prediction and line prediction bits accompany the four 
+ * 	instructions.  The branch prediction scheme operates most efficiently when 
+ * 	there is only one branch instruction is contained in the four fetched 
+ * 	instructions. 
+ * 
+ * 	An entry from the subroutine prediction stack, together with set 
+ * 	prediction bits for use by the Icache stream controller, are fetched along 
+ * 	with the octaword.  The Icache stream controller generates fetch requests 
+ * 	for additional cache lines and stores the Istream data in the Icache. There 
+ * 	is no separate buffer to hold Istream requests. 
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
+ * 		Instruction Cache (iCache2) array.	TODO: Rename iCache2 to iCache.
+ *	pc:
+ *		The Program Counter (PC) associated with the first instruciton being
+ *		loaded into the Icache.
+ *
+ * Output Parameters:
+ *	next:
+ *		A pointer to a location to receive the next 4 instructions to be
+ *		executed.
+ *
+ * Return Value:
+ *	True:	Instructions were returned.
+ *	False:	Instructions were not found.
+ */
+bool AXP_IcacheFetch(AXP_21264_CPU *CPU, AXP_PC pc, AXP_INS_LINE *next)
+{
+	bool		retVal = false;
+	AXP_VPC		vpc = {.pc = pc};
+	AXP_PC		tmpPC;
+	u32			index = vpc.vpcFields.index;
+	u64			tag = vpc.vpcFields.tag
+	int			offset = vpc.vpcFields.offset % AXP_ICACHE_LINE_INS;
+	int			ii;
+	int			sets, whichSet;
+
+	/*
+	 * 5.3.10 Determine how manby sets are enabled.
+	 *
+	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
+	 * determine the number of cache sets to use.  The description for
+	 * SET_EN[1:0] says that at least 1 set must be enabled.  The equivalent
+	 * field for the Icache, IC_EN[1:0], has the following more detailed
+	 * destcription:
+	 *
+	 *		At least one set must be enabled. The entire cache may be
+	 *		enabled by setting both bits. Zero, one, or two Icache sets
+	 *		can be enabled.
+	 *		This bit does not clear the Icache, but only disables fills to
+	 *		the affected set.
+	 *
+	 * I'm nost sure why it first says that at least one set must be enabled,
+	 * but the says that "Zero, one, or two Icache sets can be enabled."  I'm
+	 * going to assume thatif zero bits are set, the default is 2 (both sets).
+	 */
+	sets = (cpu->iCtl.ic_en == 1) ? 1 : 2;
+
+	if ((cpu->iCache2[index][next->setPrediction].vb == 1) &&
+		(cpu->iCache2[index][next->setPrediction].tag == tag))
+	{
+		whichSet = next->setPrediction;
+		retVal = true;
+	}
+	else if ((cpu->iCache2[index][(next->setPrediction + 1) & 1].vb == 1) &&
+			 (cpu->iCache2[index][(next->setPrediction + 1) & 1].tag == tag))
+	{
+		whichSet = (next->setPrediction + 1) & 1;
+		retVal = true;
+	}
+
+	/*
+	 * If we found what were were asked to find, then get the next set of
+	 * instructions and return them to the caller
+	 */
+	if (retVal == true)
+	{
+		tmpPC = pc;
+		for (ii = 0; ii < AXP_ICACHE_LINE_INS; ii++)
+		{
+			next->instructions[ii] =
+				cpu->iCache2[index][whichSet].instructions[offset + ii];
+			next->instrType[ii] =
+				AXP_InstructionFormat(next->instructions[ii]);
+			next->instrPC[ii] = tmpPC;
+			tmpPC.pc++;
+		}
+
+		/* 
+ 		 * Line (index) and Set prediction, at this point, should indicate the 
+ 		 * next instruction to be read from the cache (it could be the current 
+ 		 * list and set).  The following logic is used: 
+ 		 * 
+ 		 * If there are instructions left in the current cache line, then we 
+ 		 * 		use the same line and set 
+ 		 * Otherwise, 
+ 		 * 	If we are only utilizing a single set, then we go to the next line 
+ 		 * 		and the same set 
+ 		 * 	Otherwise, 
+ 		 * 		If we are at the first set, then we go to the next set on the 
+ 		 * 			same line 
+ 		 * 		Otherwise, 
+ 		 * 			We go to the next line and the first set. 
+ 		 * 
+ 		 * NOTE: When the prediction code is run, it may recalculate these 
+ 		 * 		 values. 
+ 		 */ 
+ 		if ((offset + AXP_NUM_FETCH_INS + 1) < AXP_ICACHE_LINE_INS)
+ 		{
+ 			next->linePrediction = index;			/* same line */
+ 			next->setPrediction = whichSet;			/* same set */
+ 		}
+ 		else
+ 		{
+ 			if (sets == 1)
+ 			{
+ 				next->linePrediction = index + 1;	/* next line */
+ 				next->setPrediction = 0;			/* only set */
+ 			}
+ 			else if (whichSet == 0)
+ 			{
+ 				next->linePrediction = index + 1;	/* same line */
+ 				next->setPrediction = 1;			/* second set */
+ 			}
+			else
+ 			{
+ 				next->linePrediction = index + 1;	/* next line */
+ 				next->setPrediction = 0;			/* first set */
+ 			}
+ 		}
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(retVal);
+}

@@ -209,7 +209,8 @@ typedef struct
 	u64					pal : 1;			/* PALcode */
 	u64					vb : 1;				/* Valid Bit */
 	u64					tag : 33;			/* Tag */
-	u64					res_1 : 16;			/* align to the 64-bit boundary */
+	u64					set_0_1 : 1;		/* When set 0 was last used */
+	u64					res_1 : 15;			/* align to the 64-bit boundary */
 	AXP_INS_FMT			instructions[AXP_ICACHE_LINE_INS];
 } AXP_ICACHE_BLK;
 
@@ -253,7 +254,7 @@ typedef struct
 
 
 /*
- * The following data structure is used to parse out the VPN.
+ * The following data structures are used to parse out the VPN.
  */
 typedef struct
 {
@@ -276,5 +277,24 @@ typedef union
 	AXP_VA_FIELDS	vaInfo;
 	AXP_IDX_COUNTER	vaIdxCntr;
 } AXP_VA;
+
+/*
+ * The following data structures are used to parse the VPC.
+ */
+typedef struct
+{
+	u64				res_1 : 2;	// PALmode and reserved bits
+	u64				offset : 4;
+	u64				index : 9;
+	u64				tag : 33;
+	u64				res_2 : 16;
+} AXP_VPC_FIELDS;
+
+typedef union
+{
+	u64				address;
+	AXP_PC			pc;
+	AXP_VPC_FIELDS	vpcFields;
+} AXP_VPC;
 
 #endif /* _AXP_21264_CACHE_DEFS_ */
