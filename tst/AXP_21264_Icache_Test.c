@@ -23,6 +23,9 @@
  *
  *	V01.000		31-May-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		11-Aug-2017	Jonathan D. Belanger
+ *	Updated to utilize the new, combined, cache and TLB functionality.
  */
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
@@ -240,10 +243,8 @@ int main()
 	int jj;
 	u64 ii;
 	u64 pages;
-	AXP_IBOX_ITB_TAG itbTag;
-	AXP_IBOX_ITB_PTE pte;
 	AXP_ICACHE_TAG_IDX vpc;
-	AXP_ICACHE_ITB *itb;
+	AXP_21264_TLB *itb;
 	struct
 	{
 		u64 address;
@@ -272,10 +273,9 @@ int main()
 	{
 		u64 	pc;
 		AXP_PC	vpc;
-		AXP_IBOX_ITB_TAG itbPC;
 	} pc = { .pc = 0x0000000000000004UL };
 	AXP_21264_CPU *cpu;
-	AXP_CACHE_FETCH retStatus;
+	bool retStatus;
 	AXP_INS_LINE nextLine;
 
 	printf("\nAXP 21264 I-Cache Unit Tester\n\n");
@@ -293,154 +293,127 @@ int main()
 		/*
 		 * Attempt to get the next set of instructions for the Icache.
 		 */
-		retStatus = AXP_ICacheFetch(cpu, pc.vpc, &nextLine);
-		switch (retStatus)
+		if (AXP_IcacheFetch(cpu, pc.vpc, &nextLine) == true)
 		{
+			hitCnt++;
+			branchTaken = false;
+			for (ii = (pc.vpc.pc % sizeof(AXP_INS_FMT));
+				 ((ii < AXP_NUM_FETCH_INS) && !done && !branchTaken);
+				 ii++)
+			{
 
-			/*
-			 * The instruction line we were looking for was found in the
-			 * Icache.  Increment the hit counter, then "simulate" the CPU
-			 * processing.
-			 */
-			case Hit:
-				hitCnt++;
-				branchTaken = false;
-				for (ii = (pc.vpc.pc % sizeof(AXP_INS_FMT));
-					 ((ii < AXP_NUM_FETCH_INS) && !done && !branchTaken);
-					 ii++)
+				/*
+				 * If the next instruction does not have an opcode of 0,
+				 * then we have something to process.  Otherwise, we are
+				 * done processing.
+				 */
+				if (nextLine.instructions[ii].pal.opcode != 0x00)
 				{
+					instrCnt++;
+					pc.vpc.pc++;	/* increment the pc */
 
 					/*
-					 * If the next instruction does not have an opcode of 0,
-					 * then we have something to process.  Otherwise, we are
-					 * done processing.
+					 * If the next instruction to process is a branch, then
+					 * we may need to jump to a different destination.
 					 */
-					if (nextLine.instructions[ii].pal.opcode != 0x00)
+					if ((nextLine.instrType[ii] == Bra) ||
+						(nextLine.instrType[ii] == Mbr))
 					{
-						instrCnt++;
-						pc.vpc.pc++;	/* increment the pc */
 
 						/*
-						 * If the next instruction to process is a branch, then
-						 * we may need to jump to a different destination.
+						 * Look through the list of branch instructions in
+						 * the array of branch addresses and determine if
+						 * we are to branch to a new address or not.
 						 */
-						if ((nextLine.instrType[ii] == Bra) ||
-							(nextLine.instrType[ii] == Mbr))
-						{
+						for (jj = 0; jj < AXP_NUMBER_OR_BRANCHES; jj++)
+							if (brCntArr[jj].address == (pc.pc - sizeof(AXP_INS_FMT)))
+							{
 
-							/*
-							 * Look through the list of branch instructions in
-							 * the array of branch addresses and determine if
-							 * we are to branch to a new address or not.
-							 */
-							for (jj = 0; jj < AXP_NUMBER_OR_BRANCHES; jj++)
-								if (brCntArr[jj].address == (pc.pc - sizeof(AXP_INS_FMT)))
+								/*
+								 * If the taken cound is zero, then if the
+								 * default action is to not have taken the
+								 * branch, then do so now.
+								 */
+								if (brCntArr[jj].taken == 0)
 								{
-
-									/*
-									 * If the taken cound is zero, then if the
-									 * default action is to not have taken the
-									 * branch, then do so now.
-									 */
-									if (brCntArr[jj].taken == 0)
+									if (brCntArr[jj].defaultTake == false)
 									{
-										if (brCntArr[jj].defaultTake == false)
-										{
-											printf("Taking branch 0x%08llx -->",
-												   (pc.pc - sizeof(AXP_INS_FMT)));
-											pc.pc = brCntArr[jj].destination;
-											branchTaken = true;
-											printf("0x%08llx\n", pc.pc);
-										}
-										else if (pc.pc == 0x00000000000002e0UL)  // pc + 4
-										{
-											printf("Taking branch 0x%08llx -->",
-												   (pc.pc - sizeof(AXP_INS_FMT)));
-											pc.pc = 0x00000000000000d8UL;
-											branchTaken = true;
-											printf("0x%08llx\n", pc.pc);
-										}
+										printf("Taking branch 0x%08llx -->",
+											   (pc.pc - sizeof(AXP_INS_FMT)));
+										pc.pc = brCntArr[jj].destination;
+										branchTaken = true;
+										printf("0x%08llx\n", pc.pc);
 									}
-									
-									/*
-									 * Otherwise, decrement the taken counter
-									 * and if the default is to take the
-									 * branch, then do so now.
-									 */
-									else
+									else if (pc.pc == 0x00000000000002e0UL)  // pc + 4
 									{
-										brCntArr[jj].taken--;
-										if (brCntArr[jj].defaultTake == true)
-										{
-											printf("Taking branch 0x%08llx -->",
-												   (pc.pc - sizeof(AXP_INS_FMT)));
-											pc.pc = brCntArr[jj].destination;
-											branchTaken = true;
-											printf("0x%08llx\n", pc.pc);
-										}
+										printf("Taking branch 0x%08llx -->",
+											   (pc.pc - sizeof(AXP_INS_FMT)));
+										pc.pc = 0x00000000000000d8UL;
+										branchTaken = true;
+										printf("0x%08llx\n", pc.pc);
 									}
-									break;		/* We're done here. */
 								}
-						}
-					}
-					else
-					{
-						printf("Done!!!\n");
-						done = true;
-						continue;
+
+								/*
+								 * Otherwise, decrement the taken counter
+								 * and if the default is to take the
+								 * branch, then do so now.
+								 */
+								else
+								{
+									brCntArr[jj].taken--;
+									if (brCntArr[jj].defaultTake == true)
+									{
+										printf("Taking branch 0x%08llx -->",
+											   (pc.pc - sizeof(AXP_INS_FMT)));
+										pc.pc = brCntArr[jj].destination;
+										branchTaken = true;
+										printf("0x%08llx\n", pc.pc);
+									}
+								}
+							}
 					}
 				}
-				break;
+				else
+				{
+					printf("Done!!!\n");
+					done = true;
+					continue;
+				}
+			}
 
 			/*
 			 * The instructions were not in the cache, so we need to move the
 			 * next set of instructions into the iCache and then replay the
 			 * instruction.
 			 */
-			case Miss:
-				cacheMissCnt++;
-
-				/*
-				 * We need to find the ITB entry for the next set of
-				 * instructions.  The ITB entry has various piece of
-				 * information for the iCache entry.
-				 */
-				itb = NULL;
-				for (ii = cpu->itbStart; ((ii < cpu->itbEnd) && (itb == NULL)); ii++)
+			else
+			{
+				if ((itb = AXP_findTLBEntry(cpu, pc.pc, false)) != NULL)
 				{
-					pages = AXP_21264_PAGE_SIZE * (1 << (cpu->itb[ii].pfn.gh * 3));
+					cacheMissCnt++;
 
 					/*
-					 * If the pc is within the ITB entry's page range, then we
-					 * have what we came looking for.
+					 * We need to find the ITB entry for the next set of
+					 * instructions.  The ITB entry has various piece of
+					 * information for the iCache entry.
 					 */
-					if ((cpu->itb[ii].tag.tag <= pc.itbPC.tag) &&
-						((cpu->itb[ii].tag.tag + pages) > pc.itbPC.tag) &&
-						(cpu->itb[ii].vb ==1))
-						itb = &cpu->itb[ii];
-				}
-				if (itb == NULL)
-				{
-					printf("%%AXPTST-F-NOITB, Unable to find ITB entry for pc 0x%016llx\n",
-							pc.pc);
-					abort();
-				}
-				AXP_ICacheAdd(cpu,
+					AXP_IcacheAdd(cpu,
 							  pc.vpc,
 							  &memory[(pc.vpc.pc&0xfffffffffffffff0UL)],
 							  itb);
-				break;
+				}
+				else
+				{
 
-			/*
-			 * The instructions were not in the Instruction Translation Buffer,
-			 * so we have to add an ITB entry and then replay the instruction/
-			 */
-			case WayMiss:
-				ITBMissCnt++;
-				vpc.address = pc.pc;
-				itbTag.tag = vpc.insAddr.tag;
-				AXP_ITBAdd(cpu, itbTag, &pte);
-				break;
+					/*
+					 * The instructions were not in the Instruction Translation Buffer,
+					 * so we have to add an ITB entry and then replay the instruction/
+					 */
+					ITBMissCnt++;
+					AXP_addTLBEntry(cpu, pc.pc, pc.pc, false);
+				}
+			}
 		}
 		cycleCnt++;
 	}
