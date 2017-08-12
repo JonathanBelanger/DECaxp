@@ -51,7 +51,7 @@ AXP_EXCEPTIONS AXP_MINUB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u8	*Rav = (u8 *) &instr->src1v.r.uq;
 	u8	*Rbv = (u8 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
-	u8	*Rcv = (u8 *) &instr->destv.r.uq
+	u8	*Rcv = (u8 *) &instr->destv.r.uq;
 	int	ii;
 
 	/*
@@ -95,7 +95,7 @@ AXP_EXCEPTIONS AXP_MINSB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	i8	*Rav = (i8 *) &instr->src1v.r.uq;
 	i8	*Rbv = (i8 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
-	i8	*Rcv = (i8 *) &instr->destv.r.uq
+	i8	*Rcv = (i8 *) &instr->destv.r.uq;
 	int	ii;
 
 	/*
@@ -139,7 +139,7 @@ AXP_EXCEPTIONS AXP_MINUW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u16	*Rav = (u16 *) &instr->src1v.r.uq;
 	u16	*Rbv = (u16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
-	u16	*Rcv = (u16 *) &instr->destv.r.uq
+	u16	*Rcv = (u16 *) &instr->destv.r.uq;
 	int	ii;
 
 	/*
@@ -183,7 +183,7 @@ AXP_EXCEPTIONS AXP_MINSW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	i16	*Rav = (i16 *) &instr->src1v.r.uq;
 	i16	*Rbv = (i16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
-	i16	*Rcv = (i16 *) &instr->destv.r.uq
+	i16	*Rcv = (i16 *) &instr->destv.r.uq;
 	int	ii;
 
 	/*
@@ -227,7 +227,7 @@ AXP_EXCEPTIONS AXP_MAXUB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u8	*Rav = (u8 *) &instr->src1v.r.uq;
 	u8	*Rbv = (u8 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
-	u8	*Rcv = (u8 *) &instr->destv.r.uq
+	u8	*Rcv = (u8 *) &instr->destv.r.uq;
 	int	ii;
 
 	/*
@@ -271,7 +271,7 @@ AXP_EXCEPTIONS AXP_MAXSB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	i8	*Rav = (i8 *) &instr->src1v.r.uq;
 	i8	*Rbv = (i8 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
-	i8	*Rcv = (i8 *) &instr->destv.r.uq
+	i8	*Rcv = (i8 *) &instr->destv.r.uq;
 	int	ii;
 
 	/*
@@ -315,7 +315,7 @@ AXP_EXCEPTIONS AXP_MAXUW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u16	*Rav = (u16 *) &instr->src1v.r.uq;
 	u16	*Rbv = (u16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
-	u16	*Rcv = (u16 *) &instr->destv.r.uq
+	u16	*Rcv = (u16 *) &instr->destv.r.uq;
 	int	ii;
 
 	/*
@@ -359,7 +359,7 @@ AXP_EXCEPTIONS AXP_MAXSW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	i16	*Rav = (i16 *) &instr->src1v.r.uq;
 	i16	*Rbv = (i16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
-	i16	*Rcv = (i16 *) &instr->destv.r.uq
+	i16	*Rcv = (i16 *) &instr->destv.r.uq;
 	int	ii;
 
 	/*
@@ -410,7 +410,7 @@ AXP_EXCEPTIONS AXP_PERR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Execute the instruction.
 	 */
 	for (ii = 0; ii < (sizeof(u64)/sizeof(u8)); ii++)
-		temp += abs(Rav[ii - Rbv[ii]);
+		temp += abs(Rav[ii] - Rbv[ii]);
 	instr->destv.r.uq = temp;
 
 	/*
@@ -447,12 +447,12 @@ AXP_EXCEPTIONS AXP_PERR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_PKLB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u8	*Rbv = (u8 *) &instr->src2v.r.uq;
-	u8	*Rcv = (u8 *) &instr->destv.r.uq
+	u8	*Rcv = (u8 *) &instr->destv.r.uq;
 
 	/*
 	 * Execute the instruction.
 	 */
-	instr->destv.t.uq = 0;
+	instr->destv.r.uq = 0;
 	Rcv[0] = Rbv[0];
 	Rcv[1] = Rbv[8];
 
@@ -490,12 +490,12 @@ AXP_EXCEPTIONS AXP_PKLB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_PKWB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u8	*Rbv = (u8 *) &instr->src2v.r.uq;
-	u8	*Rcv = (u8 *) &instr->destv.r.uq
+	u8	*Rcv = (u8 *) &instr->destv.r.uq;
 
 	/*
 	 * Execute the instruction.
 	 */
-	instr->destv.t.uq = 0;
+	instr->destv.r.uq = 0;
 	Rcv[0] = Rbv[0];
 	Rcv[1] = Rbv[2];
 	Rcv[2] = Rbv[4];
@@ -535,12 +535,12 @@ AXP_EXCEPTIONS AXP_PKWB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_UNPKLB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u8	*Rbv = (u8 *) &instr->src2v.r.uq;
-	u8	*Rcv = (u8 *) &instr->destv.r.uq
+	u8	*Rcv = (u8 *) &instr->destv.r.uq;
 
 	/*
 	 * Execute the instruction.
 	 */
-	instr->destv.t.uq = 0;
+	instr->destv.r.uq = 0;
 	Rcv[0] = Rbv[0];
 	Rcv[8] = Rbv[1];
 
@@ -578,12 +578,12 @@ AXP_EXCEPTIONS AXP_UNPKLB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_UNPKWB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u8	*Rbv = (u8 *) &instr->src2v.r.uq;
-	u8	*Rcv = (u8 *) &instr->destv.r.uq
+	u8	*Rcv = (u8 *) &instr->destv.r.uq;
 
 	/*
 	 * Execute the instruction.
 	 */
-	instr->destv.t.uq = 0;
+	instr->destv.r.uq = 0;
 	Rcv[0] = Rbv[0];
 	Rcv[2] = Rbv[1];
 	Rcv[3] = Rbv[2];

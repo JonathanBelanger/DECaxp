@@ -77,8 +77,8 @@ void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry)
 		 */
 		if (entry->flink != (void *) &entry->flink)
 		{
-			((AXP_QUEUE_HDR *) entry->blink)->flink = entry->flink;	// entry after points to entry before
-			((AXP_QUEUE_HDR *) entry->flink)->blink = entry->blink;	// entry before points to entry after
+			((AXP_QUEUE_HDR *) entry->blink)->flink = entry->flink;	/* entry after points to entry before */
+			((AXP_QUEUE_HDR *) entry->flink)->blink = entry->blink;	/* entry before points to entry after */
 		}
 
 		/*
@@ -89,10 +89,10 @@ void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry)
 		 * in the queue, point its forward-link and the header's backward-link
 		 * to us.
 		 */
-		entry->flink = (void *) &lruQ->flink;			// entry flink points to queue header
-		entry->blink = lruQ->blink;						// entry blink points to last item in queue
-		((AXP_QUEUE_HDR *) lruQ->blink)->flink = (void *) &entry->flink;	// flink of last item in queue points to entry
-		lruQ->blink = (void *) &entry->flink;			// queue header blink points to entry
+		entry->flink = (void *) &lruQ->flink;			/* entry flink points to queue header */
+		entry->blink = lruQ->blink;						/* entry blink points to last item in queue */
+		((AXP_QUEUE_HDR *) lruQ->blink)->flink = (void *) &entry->flink;	/* flink of last item in queue points to entry */
+		lruQ->blink = (void *) &entry->flink;			/* queue header blink points to entry */
 	}
 	return;
 }
@@ -117,9 +117,9 @@ void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry)
  */
 void AXP_LRURemove(AXP_QUEUE_HDR *entry)
 {
-	((AXP_QUEUE_HDR *) entry->blink)->flink = entry->flink;	// entry after points to entry before
-	((AXP_QUEUE_HDR *) entry->flink)->blink = entry->blink;	// entry before points to entry after
-	AXP_INIT_QUEP(entry);				// make the entry point to itself
+	((AXP_QUEUE_HDR *) entry->blink)->flink = entry->flink;	/* entry after points to entry before */
+	((AXP_QUEUE_HDR *) entry->flink)->blink = entry->blink;	/* entry before points to entry after */
+	AXP_INIT_QUEP(entry);				/* make the entry point to itself */
 
 	/*
 	 * Return back to the caller.

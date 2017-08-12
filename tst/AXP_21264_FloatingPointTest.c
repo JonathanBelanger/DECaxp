@@ -1035,13 +1035,13 @@ int main()
 	 */
 	printf("\nAXP 21264 IEEE Floating Point Tester\n");
 	cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
-	instr.uniqueID = 0;		// This will be incremented for each test.
-	instr.aSrc1 = 5;		// Architectural Register (F05).
-	instr.src1 = 40;		// Physical Register.
-	instr.aSrc2 = 6;		// Architectural Register (F06).
-	instr.src2 = 41;		// Physical Register.
-	instr.aDest = 29;		// Architectural Register (F29).
-	instr.dest = 31;		// Physical Register.
+	instr.uniqueID = 0;		/* This will be incremented for each test. */
+	instr.aSrc1 = 5;		/* Architectural Register (F05). */
+	instr.src1 = 40;		/* Physical Register. */
+	instr.aSrc2 = 6;		/* Architectural Register (F06). */
+	instr.src2 = 41;		/* Physical Register. */
+	instr.aDest = 29;		/* Architectural Register (F29). */
+	instr.dest = 31;		/* Physical Register. */
 	instr.type_hint_index = 0;
 	instr.scbdMask = 0;
 	instr.len_stall = 0;
@@ -1052,16 +1052,16 @@ int main()
 	instr.literal = 0;
 	instr.lockPhysAddrPending = 0;
 	instr.lockVirtAddrPending = 0;
-	instr.format = FP;		// Memory formatted instruction.
-	instr.type = Other;		// Load operation.
+	instr.format = FP;		/* Memory formatted instruction. */
+	instr.type = Other;		/* Load operation. */
 	instr.pc.pc = 0x000000007ffe000ll;
-	instr.pc.pal = 0;		// not PALmode.
+	instr.pc.pal = 0;		/* not PALmode. */
 	instr.branchPC.pc = 0;
 	instr.branchPC.pal = 0;
-	instr.state = Retired;	// All instructions are initially Retired.
+	instr.state = Retired;	/* All instructions are initially Retired. */
 	*((u64 *) &instr.insFpcr) = 0;
 	*((u64 *) &instr.excSum) = 0;
-	instr.excRegMask = 0;	// Exception Register Mask
+	instr.excRegMask = 0;	/* Exception Register Mask */
 	instr.loadCompletion = NULL;
 
 	fp = openNextFile(fileName);

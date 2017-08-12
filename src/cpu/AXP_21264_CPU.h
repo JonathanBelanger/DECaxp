@@ -35,7 +35,7 @@
  *
  *	V01.003		12-Jun-2017	Jonathan D. Belanger
  *	Forgot the Unique ID counter to be assigned to each instruction.  Also, I'm
- *	rethinking the use of queues for the IQ and FQ.  I'm thinking a wraparound
+ *	rethinking the use of queues for the IQ and FQ.  I'm thinking a wrap-around
  *	list would be just as good and also avoid the need to allocate and
  *	initialize memory every time we have to decode an instruction.
  *
@@ -43,7 +43,7 @@
  *	Added an include for the Mbox Load/Store Queue structure definitions.
  *	Changed the physical registers (pr and pf) back to a u64 type.  Because of
  *	the out-of-order instruction execution, register values are copied out of
- *	the register into a location where it is utilized, and interpretted beyond
+ *	the register into a location where it is utilized, and interpreted beyond
  *	an unsigned 64-bit integer, and then stored back into the physical register
  *	when the instruction is retired, the physical registers are just an place
  *	to hold the value for the next instruction to copy.
@@ -65,7 +65,7 @@
 #include "AXP_21264_Instructions.h"
 #include "AXP_21264_Predictions.h"
 #include "AXP_21264_IPRs.h"
-#include "AXP_21264_ICache.h"
+#include "AXP_21264_CacheDefs.h"
 #include "AXP_21264_RegisterRenaming.h"
 #include "AXP_21264_Mbox_Queues.h"
 #include "AXP_Exceptions.h"
@@ -75,14 +75,14 @@
 #define AXP_IQ_LEN			20
 #define AXP_FQ_LEN			15
 #define AXP_SHADOW_REG		8
-#define AXP_R04_SHADOW		(AXP_MAX_REGISTERS + 0)		// R32
-#define AXP_R05_SHADOW		(AXP_MAX_REGISTERS + 1)		// R33
-#define AXP_R06_SHADOW		(AXP_MAX_REGISTERS + 2)		// R34
-#define AXP_R07_SHADOW		(AXP_MAX_REGISTERS + 3)		// R35
-#define AXP_R20_SHADOW		(AXP_MAX_REGISTERS + 4)		// R36
-#define AXP_R21_SHADOW		(AXP_MAX_REGISTERS + 5)		// R37
-#define AXP_R22_SHADOW		(AXP_MAX_REGISTERS + 6)		// R38
-#define AXP_R23_SHADOW		(AXP_MAX_REGISTERS + 7)		// R39
+#define AXP_R04_SHADOW		(AXP_MAX_REGISTERS + 0)		/* R32 */
+#define AXP_R05_SHADOW		(AXP_MAX_REGISTERS + 1)		/* R33 */
+#define AXP_R06_SHADOW		(AXP_MAX_REGISTERS + 2)		/* R34 */
+#define AXP_R07_SHADOW		(AXP_MAX_REGISTERS + 3)		/* R35 */
+#define AXP_R20_SHADOW		(AXP_MAX_REGISTERS + 4)		/* R36 */
+#define AXP_R21_SHADOW		(AXP_MAX_REGISTERS + 5)		/* R37 */
+#define AXP_R22_SHADOW		(AXP_MAX_REGISTERS + 6)		/* R38 */
+#define AXP_R23_SHADOW		(AXP_MAX_REGISTERS + 7)		/* R39 */
 #define AXP_REG(regNum, palMode)											\
 		((palMode) ?														\
 		 (((cpu->iCtl.sde & AXP_I_CTL_SDE_ENABLE) != 0) ?					\
@@ -91,7 +91,7 @@
 			((regNum) + 16) : (regNum))) : (regNum)) : (regNum))
 #define AXP_TB_LEN			128
 #define AXP_ICB_INS_CNT		16
-#define AXP_21264_PAGE_SIZE	8192	// 8KB page size
+#define AXP_21264_PAGE_SIZE	8192	/* 8KB page size */
 #define AXP_21264_MEM_BITS	44
 #define AXP_INT_PHYS_REG	AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1
 #define AXP_FP_PHYS_REG		AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1
@@ -103,6 +103,60 @@
 #define AXP_MBOX_QUEUE_LEN	32
 #define AXP_CACHE_ENTRIES	512
 #define AXP_2_WAY_CACHE	2
+
+/*
+ * PALcode Exception Entry Points
+ * 	When hardware encounters an exception, Ibox execution jumps to a PALcode
+ * 	entry point at a PC determined by the type of exception.  The return PC of
+ * 	the instruction the triggered the exception is placed in the EXC_ADDR
+ * 	register and onto the return prediction stack.  The entry points are listed
+ * 	in decreasing order of priority.
+ *
+ *		Entry Name		Type		Offset	Description
+ *		DTBM_DOUBLE_3	Fault		0x100	Dstream TB miss on virtual page table
+ *											entry fetch.  Use three-level flow.
+ *		DTBM_DOUBLE_4	Fault		0x180	Dstream TB miss on virtual page table
+ *											entry fetch.  Use four-level flow.
+ *		FEN				Fault		0x200	Floating point disabled.
+ *		UNALIGNED		Fault		0x280	Unaligned Dstream reference.
+ *		DTBM_SINGLE		Fault		0x300	Dstream TB miss.
+ *		DFAULT			Fault		0x380	Dstream fault or virtual address sign
+ *											check error.
+ *		OPCDEC			Fault		0x400	Illegal opcode or function field:
+ *											- Opcode 1, 2, 3, 4, 5, 6 or 7
+ *											- Opcode 0x19, 0x1b, 0x1d, 0x1e or
+ *											  0x1f not PALmode or not
+ *											  I_CTL[HWE]
+ *											- Extended precision IEEE format
+ *											- Unimplemented function field of
+ *											  opcodes 0x14 or 0x1c.
+ *		IACV			Fault		0x480	Istream access violation or virtual
+ *											address sign check error.
+ *		MCHK			Interrupt	0x500	Machine check.
+ *		ITB_MISS		Fault		0x580	Istream TB miss.
+ *		ARITH			Synch. Trap	0x600	Arithmetic exception or update to
+ *											FPCR.
+ *		INTERRUPT		Interrupt	0x680	Interrupt: hardware, software, and
+ *											AST.
+ *		MT_FPCR			Synch. Trap	0x700	Invoked when an MT_FPCR instruction
+ *											is issued.
+ *		RESET/WAKEUP	Interrupt	0x780	Chip reset or wake-up from sleep
+ *											mode.
+ */
+#define AXP_DTBM_DOUBLE_3	0x0100
+#define AXP_DTBM_DOUBLE_4	0x0180
+#define AXP_FEN				0x0200
+#define AXP_UNALIGNED		0x0280
+#define AXP_DTBM_SINGLE		0x0300
+#define AXP_DFAULT			0x0380
+#define AXP_OPCDEC			0x0400
+#define AXP_IACV			0x0480
+#define AXP_MCHK			0x0500
+#define AXP_ITB_MISS		0x0580
+#define AXP_ARITH			0x0600
+#define AXP_INTERRUPT		0x0680
+#define AXP_MT_FPCR_TRAP	0x0700
+#define AXP_RESET_WAKEUP	0x0780
 
 /*
  * This structure is a buffer to contain the next set of instructions to get
@@ -173,49 +227,49 @@ typedef enum
 typedef enum
 {
 	EV3 = 1,
-	EV4,					// 21064
+	EV4,					/* 21064 */
 	Simulation,
-	LCAFamily,				// 21066, 21068, 20166A, 20168A
-	EV5,					// 21164
-	EV45,					// 21064A
-	EV56,					// 21164A
-	EV6,					// 21264
-	PCA56,					// 21164PC
+	LCAFamily,				/* 21066, 21068, 20166A, 20168A */
+	EV5,					/* 21164 */
+	EV45,					/* 21064A */
+	EV56,					/* 21164A */
+	EV6,					/* 21264 */
+	PCA56,					/* 21164PC */
 	PCA57,
-	EV67,					// 21264
-	EV68CB_DC,				// 21264
-	EV68A,					// 21264
-	EV68CX,					// 21264
-	EV7,					// 21364
-	EV79,					// 21364
-	EV69A					// 21264
+	EV67,					/* 21264 */
+	EV68CB_DC,				/* 21264 */
+	EV68A,					/* 21264 */
+	EV68CX,					/* 21264 */
+	EV7,					/* 21364 */
+	EV79,					/* 21364 */
+	EV69A					/* 21264 */
 } AXP_PROC_MAJ_TYPE;
-#define	AXP_PASS_2_21_EV4		0	// EV4
+#define	AXP_PASS_2_21_EV4		0	/* EV4 */
 #define AXP_PASS_3_EV4			1
-#define AXP_RESERVED			0	// LCA Family
+#define AXP_RESERVED			0	/* LCA Family */
 #define AXP_PASS_1_11_66		1
 #define AXP_PASS_2_66			2
 #define AXP_PASS_1_11_68		3
 #define AXP_PASS_2_68			4
 #define AXP_PASS_1_66A			5
 #define AXP_PASS_1_68A			6
-#define AXP_PASS_2_22			1	// EV5
+#define AXP_PASS_2_22			1	/* EV5 */
 #define AXP_PASS_23_EV5			2
 #define AXP_PASS_3_EV5			3
 #define AXP_PASS_32				4
 #define AXP_PASS_4_EV5			5
-#define AXP_PASS_1				1	// EV45
+#define AXP_PASS_1				1	/* EV45 */
 #define AXP_PASS_11				2
 #define AXP_PASS_1_11			6
 #define AXP_PASS_2_EV45			3
 #define AXP_PASS_2_EV56			2
-#define	AXP_PASS_2_21			2	// EV6
+#define	AXP_PASS_2_21			2	/* EV6 */
 #define AXP_PASS_22_EV6			3
 #define AXP_PASS_23_EV6			4
 #define AXP_PASS_3_EV6			5
 #define AXP_PASS_24_EV6			6
 #define AXP_PASS_25_EV6			7
-#define AXP_PASS_21				2	// EV67
+#define AXP_PASS_21				2	/* EV67 */
 #define AXP_PASS_211			4
 #define AXP_PASS_221			5
 #define AXP_PASS_23_24			6
@@ -227,14 +281,14 @@ typedef enum
 #define AXP_PASS_241			12
 #define AXP_PASS_251			13
 #define AXP_PASS_26				14
-#define AXP_PASS_22_23			3	// EV68CB
+#define AXP_PASS_22_23			3	/* EV68CB */
 #define AXP_PASS_3_31			4
 #define AXP_PASS_24				5
 #define AXP_PASS_4				6
-#define AXP_PASS_2_EV68DC		2	// EV68DC
+#define AXP_PASS_2_EV68DC		2	/* EV68DC */
 #define AXP_PASS_231			3
 #define AXP_PASS_214_EV68DC		4
-#define AXP_PASS_2_EV68A		2	// EV68A
+#define AXP_PASS_2_EV68A		2	/* EV68A */
 #define AXP_PASS_21_21A_3		3
 #define AXP_PASS_22_EV68A		4
 
@@ -335,27 +389,20 @@ typedef struct
 	AXP_IBOX_PCTR_CTL	pCtrCtl;	/* Performance counter control			*/
 
 	/*
-	 * This is the Instruction Cache.  It is 64K bytes in size.  For this emulation
-	 * each line/block is 128 bytes in size, which makes for 512 total entries, with
-	 * 256 for each association (this is a 2-way cache).
-	 */
-	AXP_ICACHE_LINE 	iCache[AXP_21264_ICACHE_SIZE][AXP_2_WAY_ICACHE];
-
-	/*
 	 * This is the Instruction Cache.  It is 64K bytes in size (just counting
 	 * the actual instructions (16 of them) in the cache block and not the bits
 	 * needed to support it.  Each cache block contains 16 instructions, each 4
 	 * bytes long, for a total of 64 bytes.  There are 2 sets of cache, which
 	 * leaves us with 64KB / (16 * 4B) / 2 sets = 512 rows for each set.
 	 */
-	AXP_ICACHE_BLK		iCache2[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
+	AXP_ICACHE_BLK		iCache[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 
 	/*
 	 * This is the Instruction Address Translation (Look-aside) Table (ITB).
 	 * It is 128 entries in size, and is allocated in a round-robin scheme.
 	 * We, therefore, maintain a start and end index (both start at 0).
 	 */
-	AXP_ICACHE_ITB		itb[AXP_TB_LEN];
+	AXP_21264_TLB		itb[AXP_TB_LEN];
 	u32					nextITB;
 	u32					itbStart;	/* Since round-robin, need to know start */
 	u32					itbEnd;		/* and end entries in the ITB */
@@ -588,4 +635,5 @@ typedef struct
 	AXP_BASE_AMASK		amask;		/* Architectural Extension Support Mask	*/
 	u64					implVer;	/* Implementation Version				*/
 } AXP_21264_CPU;
+
 #endif /* _AXP_21264_CPU_DEFS_ */

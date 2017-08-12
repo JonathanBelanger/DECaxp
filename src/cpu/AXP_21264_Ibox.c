@@ -1168,8 +1168,8 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 		pc.bits21264.highPC = palBase.bits21264.highPC;
 		pc.bits21264.mbz_2 = 0;
 		pc.bits21264.mbo = 1;
-		pc.bits21264.func_7 = palFunc.bits21264.func_7;
-		pc.bits22164.func_5_0 = palFunc.bits22164.func_5_0;
+		pc.bits21264.func_7 = palFunc.bits.func_7;
+		pc.bits21264.func_5_0 = palFunc.bits.func_5_0;
 		pc.bits21264.mbz_1 = 0;
 		pc.bits21264.palMode = AXP_PAL_MODE;
 	}
@@ -1177,8 +1177,8 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 	{
 		pc.bits21164.highPC = palBase.bits21164.highPC;
 		pc.bits21164.mbo = 1;
-		pc.bits21164.func_7 = palFunc.bits21164.func_7;
-		pc.bits21164.func_5_0 = palFunc.bits21164.func_5_0;
+		pc.bits21164.func_7 = palFunc.bits.func_7;
+		pc.bits21164.func_5_0 = palFunc.bits.func_5_0;
 		pc.bits21164.mbz = 0;
 		pc.bits21164.palMode = AXP_PAL_MODE;
 	}
@@ -1383,7 +1383,6 @@ AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, i64 displacement)
  */
 void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 {
-	AXP_CACHE_FETCH cacheStatus;
 	AXP_PC nextPC, branchPC;
 	AXP_INS_LINE nextCacheLine;
 	AXP_INSTRUCTION *decodedInstr;
@@ -1426,113 +1425,117 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 		 * Icache and Fetch those instructions.
 		 */
 		nextPC = AXP_21264_GetNextVPC(cpu);
-		cacheStatus = AXP_ICacheFetch(cpu, nextPC, &nextCacheLine);
 
 		/*
-		 * The cache fetch will return one or Hit, Miss, or WayMiss.  If Hit,
-		 * we received the next four instructions.  If Miss, the virtual
-		 * address mapping for the next instructions is in the ITB, but not the
-		 * Icache.  We need to get the Cbox to fill the iCache.  If WayMiss,
-		 * then the instructions are not in the Icache and the mapping does not
-		 * exist in the ITB.  Store the faulting PC and generate an exception.
+		 * The cache fetch will return true or false.  If true, we received the
+		 * next four instructions.  If false, we need to to determine if we
+		 * need to call the PALcode to add a TLB entry to the ITB and/or then
+		 * get the Cbox to fill the iCache.  If the former, store the faulting
+		 * PC and generate an exception.
 		 */
-		switch (cacheStatus)
+		if (AXP_IcacheFetch(cpu, nextPC, &nextCacheLine) == true)
 		{
-			case Hit:
-				for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
+			for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
+			{
+				decodedInstr = &cpu->rob[cpu->robEnd];
+				cpu->robEnd = (cpu->robEnd + 1) % AXP_INFLIGHT_MAX;
+				if (cpu->robEnd == cpu->robStart)
+					cpu->robStart = (cpu->robStart + 1) % AXP_INFLIGHT_MAX;
+				AXP_Decode_Rename(cpu, &nextCacheLine, ii, decodedInstr);
+				if (decodedInstr->type == Branch)
 				{
-					decodedInstr = &cpu->rob[cpu->robEnd];
-					cpu->robEnd = (cpu->robEnd + 1) % AXP_INFLIGHT_MAX;
-					if (cpu->robEnd == cpu->robStart)
-						cpu->robStart = (cpu->robStart + 1) % AXP_INFLIGHT_MAX;
-					AXP_Decode_Rename(cpu, &nextCacheLine, ii, decodedInstr);
-					if (decodedInstr->type == Branch)
-					{
-						decodedInstr->branchPredict = AXP_Branch_Prediction(
+					decodedInstr->branchPredict = AXP_Branch_Prediction(
 								cpu,
 								nextPC,
 								&local,
 								&global,
 								&choice);
 
-						/*
-						 * TODO:	First, we can use the PC handling functions
-						 *			to calculate the branch PC.
-						 * TODO:	Second, we need to make sure that we are
-						 *			calculating the branch address correctly.
-						 * TODO:	Third, We need to be able to handle
-						 *			returns, and utilization of the, yet to be
-						 *			implemented, prediction stack.
-						 * TODO:	Finally, we need to flush the remaining
-						 *			instructions to be decoded and go get the
-						 *			predicted instructions.
-						 */
-						if (decodedInstr->branchPredict == true)
-						{
-							branchPC.pc = nextPC.pc + 1 + decodedInstr->displacement;
-							cacheStatus = AXP_ICacheValid(
+					/*
+					 * TODO:	First, we can use the PC handling functions
+					 *			to calculate the branch PC.
+					 * TODO:	Second, we need to make sure that we are
+					 *			calculating the branch address correctly.
+					 * TODO:	Third, We need to be able to handle
+					 *			returns, and utilization of the, yet to be
+					 *			implemented, prediction stack.
+					 * TODO:	Finally, we need to flush the remaining
+					 *			instructions to be decoded and go get the
+					 *			predicted instructions.
+					 */
+					if (decodedInstr->branchPredict == true)
+					{
+						/* bool cacheStatus; TODO: uncomment*/
+
+						branchPC.pc = nextPC.pc + 1 + decodedInstr->displacement;
+						/* cacheStatus = */ AXP_IcacheValid(
 												cpu,
-												branchPC,
-												&nextCacheLine.linePrediction,
-												&nextCacheLine.setPrediction);
+												branchPC);
 
-							/*
-							 * TODO:	If we get a Hit, there is nothing else
-							 * 			to do.  If we get a Miss, we probably
-							 * 			should have someone fill the Icache
-							 * 			with the next set of instructions.  If
-							 * 			a WayMiss, we don't do anything either.
-							 * 			In this last case, we will end up
-							 * 			generating an ITB_MISS event to be
-							 * 			handled by the PALcode.
-							 */
-						}
+						/*
+						 * TODO:	If we get a Hit, there is nothing else
+						 * 			to do.  If we get a Miss, we probably
+						 * 			should have someone fill the Icache
+						 * 			with the next set of instructions.  If
+						 * 			a WayMiss, we don't do anything either.
+						 * 			In this last case, we will end up
+						 * 			generating an ITB_MISS event to be
+						 * 			handled by the PALcode.
+						 */
 					}
-					whichQueue = AXP_InstructionQueue(decodedInstr->opcode);
-					if(whichQueue == AXP_COND)
-					{
-						if (decodedInstr->opcode == ITFP)
-						{
-							if ((decodedInstr->function == AXP_FUNC_ITOFS) ||
-								(decodedInstr->function == AXP_FUNC_ITOFF) ||
-								(decodedInstr->function == AXP_FUNC_ITOFT))
-								whichQueue = AXP_IQ;
-							else
-								whichQueue = AXP_FQ;
-						}
-						else	/* FPTI */
-						{
-							if ((decodedInstr->function == AXP_FUNC_FTOIT) ||
-								(decodedInstr->function == AXP_FUNC_FTOIS))
-								whichQueue = AXP_FQ;
-							else
-								whichQueue = AXP_IQ;
-
-						}
-					}
-					if (whichQueue == AXP_IQ)
-					{
-						xqEntry = AXP_GetNextIQEntry(cpu);
-						xqEntry->ins = decodedInstr;
-						AXP_InsertCountedQueue(&cpu->iq.header, &xqEntry->header);
-					}
-					else	/* FQ */
-					{
-						xqEntry = AXP_GetNextFQEntry(cpu);
-						xqEntry->ins = decodedInstr;
-						AXP_InsertCountedQueue(&cpu->fq.header, &xqEntry->header);
-					}
-					decodedInstr->state = Queued;
-					nextPC = AXP_21264_IncrementVPC(cpu);
 				}
-				break;
+				whichQueue = AXP_InstructionQueue(decodedInstr->opcode);
+				if(whichQueue == AXP_COND)
+				{
+					if (decodedInstr->opcode == ITFP)
+					{
+						if ((decodedInstr->function == AXP_FUNC_ITOFS) ||
+							(decodedInstr->function == AXP_FUNC_ITOFF) ||
+							(decodedInstr->function == AXP_FUNC_ITOFT))
+							whichQueue = AXP_IQ;
+						else
+							whichQueue = AXP_FQ;
+					}
+					else	/* FPTI */
+					{
+						if ((decodedInstr->function == AXP_FUNC_FTOIT) ||
+							(decodedInstr->function == AXP_FUNC_FTOIS))
+							whichQueue = AXP_FQ;
+						else
+							whichQueue = AXP_IQ;
+						}
+				}
+				if (whichQueue == AXP_IQ)
+				{
+					xqEntry = AXP_GetNextIQEntry(cpu);
+					xqEntry->ins = decodedInstr;
+					AXP_InsertCountedQueue(&cpu->iq.header, &xqEntry->header);
+				}
+				else	/* FQ */
+				{
+					xqEntry = AXP_GetNextFQEntry(cpu);
+					xqEntry->ins = decodedInstr;
+					AXP_InsertCountedQueue(&cpu->fq.header, &xqEntry->header);
+				}
+				decodedInstr->state = Queued;
+				nextPC = AXP_21264_IncrementVPC(cpu);
+			}
+		}
+		else
+		{
+			AXP_21264_TLB *itb;
 
-			case Miss:
-				AXP_ReturnIQEntry(cpu, xqEntry);	// TODO: Remove
-				AXP_ReturnFQEntry(cpu, xqEntry);	// TODO: Remove
-				break;
+			itb = AXP_findTLBEntry(cpu, *((u64 *) &nextPC), false);
 
-			case WayMiss:
+			/*
+			 * If we didn't get an ITB, then we got to a virtual address that
+			 * has not yet to be mapped.  We need to call the PALcode to get
+			 * this mapping for us, at which time we'll attempt to fetch the
+			 * instructions again, which will cause us to get here again, but
+			 * this time the ITB will be found.
+			 */
+			if (itb == NULL)
+			{
 
 				/*
 				 * TODO:	Calling PALcode implies waiting for outstanding
@@ -1542,7 +1545,25 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 				 */
 				cpu->excAddr.exc_pc = nextPC;
 				nextPC = AXP_21264_GetPALBaseVPC(cpu, AXP_ITB_MISS);
-				break;
+			}
+
+			/*
+			 * We failed to get the next set of instructions from the Icache.
+			 * We need to request the Cbox to get them and put them into the
+			 * cache.  We are going to have some kind of pending Cbox indicator
+			 * to know when the Cbox has actually filled in the cache block.
+			 *
+			 * TODO:	We may want to try and utilize the branch predictor to
+			 * 			"look ahead" and request the Cbox fill in the Icache
+			 * 			before we have a cache miss, in oder to avoid this
+			 * 			waiting on the Cbox (at least for too long a period of
+			 * 			time).
+			 */
+			else
+			{
+				AXP_ReturnIQEntry(cpu, xqEntry);	/* TODO: Remove - keep gcc happy */
+				AXP_ReturnFQEntry(cpu, xqEntry);	/* TODO: Remove - keep gcc happy */
+			}
 		}
 	}
 	return;

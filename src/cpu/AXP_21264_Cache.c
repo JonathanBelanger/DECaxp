@@ -61,7 +61,7 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
 {
 	AXP_21264_TLB	*retVal = NULL;
 	AXP_21264_TLB	*tlbArray = (dtb ? cpu->dtb : cpu->itb);
-	u8				asn = (dtb ? cpu->dtbAsn0 : cpu->pCtx.asn);
+	u8				asn = (dtb ? cpu->dtbAsn0.asn : cpu->pCtx.asn);
 	int				ii;
 
 	/*
@@ -156,7 +156,7 @@ AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
 			end2 = start1;
 		}
 		else
-			start2 = -1;	// Searching 0-end, no need to do second search.
+			start2 = -1;	/* Searching 0-end, no need to do second search. */
 
 		/*
 		 * Perform the first, and possibly the only, search for a not-in-use
@@ -166,7 +166,7 @@ AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
 			if (tlbArray[ii].valid == false)
 			{
 				*nextTLB = ii;
-				start2 = -1;	// Don't do second search (either way).
+				start2 = -1;	/* Don't do second search (either way). */
 				break;
 			}
 
@@ -284,7 +284,7 @@ void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
 		tlbEntry->_asm = cpu->itbPte._asm;
 		tlbEntry->asn = cpu->pCtx.asn;
 	}
-	tlbEntry->valid = true;				// Mark the TLB entry as valid.
+	tlbEntry->valid = true;				/* Mark the TLB entry as valid. */
 
 	/*
 	 * Return back to the caller.
@@ -325,7 +325,10 @@ void AXP_tbia(AXP_21264_CPU *cpu, bool dtb)
 	/*
 	 * Reset the next TLB entry to select to the start of the list.
 	 */
-	dtb ? cpu->nextDTB = 0 : cpu->nextITB = 0;
+	if (dtb)
+		cpu->nextDTB = 0;
+	else
+		cpu->nextITB = 0;
 
 	/*
 	 * Return back to the caller.
@@ -558,8 +561,8 @@ bool AXP_21264_checkMemoryAccess(
 						break;
 				}
 				break;
-		}	// switch(cpu->ierCm.cm)
-	}		// if (tlb->valid == true)
+		}	/* switch(cpu->ierCm.cm) */
+	}		/* if (tlb->valid == true) */
 
 	/*
 	 * Return what we found back to the caller.
@@ -657,20 +660,20 @@ u64 AXP_va2pa(
 	 */
 	else if ((spe != 0) && (cpu->ierCm.cm == AXP_CM_KERNEL))
 	{
-		if ((spe & AXP_SPE2_BIT) && (vaSpe.spe2 == AXP_SPE2_VA_VAL))
+		if ((spe & AXP_SPE2_BIT) && (vaSpe.spe2.spe2 == AXP_SPE2_VA_VAL))
 		{
 			pa = va & AXP_SPE2_VA_MASK;
 			*_asm = false;
 			return(pa);
 		}
-		else if ((spe & AXP_SPE1_BIT) && (vaSpe.spe1 == AXP_SPE1_VA_VAL))
+		else if ((spe & AXP_SPE1_BIT) && (vaSpe.spe1.spe1 == AXP_SPE1_VA_VAL))
 		{
 			pa = ((va & AXP_SPE1_VA_MASK) |
 				  (va & AXP_SPE1_VA_40 ? AXP_SPE1_PA_43_41 : 0));
 			*_asm = false;
 			return(pa);
 		}
-		else if ((spe & AXP_SPE0_BIT) && (vaSpe.spe0 == AXP_SPE0_VA_VAL))
+		else if ((spe & AXP_SPE0_BIT) && (vaSpe.spe0.spe0 == AXP_SPE0_VA_VAL))
 		{
 			pa = va & AXP_SPE0_VA_MASK;
 			*_asm = false;
@@ -728,7 +731,7 @@ u64 AXP_va2pa(
 		cpu->tbMissOutstanding = false;
 		if (AXP_21264_checkMemoryAccess(cpu, tlb, acc) == false)
 		{
-			cpu->excAddr = pc;
+			/* TODO: The caller need to do this: cpu->excAddr = pc; */
 			if (dtb == true)
 			{
 
@@ -800,13 +803,13 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 	int			sets;
 
 	/*
-	 * 5.3.10 Determine how manby sets are enabled.
+	 * 5.3.10 Determine how many sets are enabled.
 	 *
 	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
 	 * determine the number of cache sets to use.  The description for
 	 * SET_EN[1:0] says that at least 1 set must be enabled.  The equivalent
 	 * field for the Icache, IC_EN[1:0], has the following more detailed
-	 * destcription:
+	 * description:
 	 *
 	 *		At least one set must be enabled. The entire cache may be
 	 *		enabled by setting both bits. Zero, one, or two Icache sets
@@ -814,9 +817,9 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 	 *		This bit does not clear the Icache, but only disables fills to
 	 *		the affected set.
 	 *
-	 * I'm nost sure why it first says that at least one set must be enabled,
+	 * I'm not sure why it first says that at least one set must be enabled,
 	 * but the says that "Zero, one, or two Icache sets can be enabled."  I'm
-	 * going to assume thatif zero bits are set, the default is 2 (both sets).
+	 * going to assume that if zero bits are set, the default is 2 (both sets).
 	 */
 	sets = (cpu->dcCtl.set_en == 1) ? 1 : 2;
 
@@ -867,7 +870,7 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 
 		virtAddr.va = va;
 		found = virtAddr.vaIdx.index;
-		if ((cpu->dCache[found][0].valid == false) || sets == 1))
+		if ((cpu->dCache[found][0].valid == false) || (sets == 1))
 		{
 			setToUse = 0;
 			cpu->dCache[found][0].set_0_1 = (sets == 1 ? false : true);
@@ -877,7 +880,7 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 			setToUse = 1;
 			cpu->dCache[found][0].set_0_1 = false;
 		}
-		else	// We have to re-use one of the existing cache entries.
+		else	/* We have to re-use one of the existing cache entries. */
 		{
 			if (cpu->dCache[found][0].set_0_1)
 			{
@@ -897,10 +900,10 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 		 */
 		if (cpu->dCache[found][setToUse].modified)
 		{
-			// Send to the Cbox to copy into memory.
+			/* Send to the Cbox to copy into memory. */
 			cpu->dCache[found][setToUse].modified = false;
-			// TODO:	Need to determine what to do, if anything, with the
-			//			dirty bit
+			/* TODO:	Need to determine what to do, if anything, with the */
+			/*			dirty bit											*/
 		}
 
 		/*
@@ -908,14 +911,15 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 		 * evicting an existing cache entry that also needs to be pushed out to
 		 * memory, store the data and set the bits.
 		 */
-		if (cpu->dCache[found][set].valid == true &&
-			(cpu->dCache[found][set].dirty || cpu->dCache[found][set].modified))
+		if ((cpu->dCache[found][setToUse].valid == true) &&
+			(cpu->dCache[found][setToUse].dirty ||
+			 cpu->dCache[found][setToUse].modified))
 		{
-			// Send to the Cbox to copy into memory.
-#pragma message "Write-back Cache code needs to be completed: ", __FILE__, __LINE__, __FUNCTION__
+			/* Send to the Cbox to copy into memory. */
+#pragma message "Write-back Cache code needs to be completed."
 			cpu->dCache[ii][0].modified = false;
 		}
-		memcpy(cpu->dCache[found][setToUse], data, AXP_DCACHE_DATA_LEN);
+		memcpy(cpu->dCache[found][setToUse].data, data, AXP_DCACHE_DATA_LEN);
 		cpu->dCache[found][setToUse].physTag = pa;
 		cpu->dCache[found][setToUse].dirty = false;
 		cpu->dCache[found][setToUse].modified = false;
@@ -931,7 +935,7 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 
 /*
  * AXP_DcacheFlush
- * 	This function is called to fluch the entire Data Cache.
+ * 	This function is called to flush the entire Data Cache.
  *
  *	NOTE:	There currently is no write to a register to flush the cache like
  *			there is for the Icache.  This code is here as an example, if there
@@ -963,8 +967,8 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 		 */
 		if (cpu->dCache[ii][0].dirty || cpu->dCache[ii][0].modified)
 		{
-			// Send to the Cbox to copy into memory.
-#pragma message "Write-back Cache code needs to be completed: ", __FILE__, __LINE__, __FUNCTION__
+			/* Send to the Cbox to copy into memory. */
+#pragma message "Write-back Cache code needs to be completed."
 			cpu->dCache[ii][0].modified = false;
 		}
 		cpu->dCache[ii][0].set_0_1 = false;
@@ -983,11 +987,11 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 		 */
 		if (cpu->dCache[ii][1].modified)
 		{
-			// Send to the Cbox to copy into memory.
-#pragma message "Write-back Cache code needs to be completed: ", __FILE__, __LINE__, __FUNCTION__
+			/* Send to the Cbox to copy into memory. */
+#pragma message "Write-back Cache code needs to be completed."
 			cpu->dCache[ii][1].modified = false;
-			// TODO:	Need to determine what to do, if anything, with the
-			//			dirty bit
+			/* TODO:	Need to determine what to do, if anything, with the */
+			/*			dirty bit											*/
 		}
 		cpu->dCache[ii][1].physTag = 0;
 		cpu->dCache[ii][1].dirty = false;
@@ -1031,13 +1035,13 @@ u8 *AXP_DcacheFetch(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 	int			sets;
 
 	/*
-	 * 5.3.10 Determine how manby sets are enabled.
+	 * 5.3.10 Determine how many sets are enabled.
 	 *
 	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
 	 * determine the number of cache sets to use.  The description for
 	 * SET_EN[1:0] says that at least 1 set must be enabled.  The equivalent
 	 * field for the Icache, IC_EN[1:0], has the following more detailed
-	 * destcription:
+	 * description:
 	 *
 	 *		At least one set must be enabled. The entire cache may be
 	 *		enabled by setting both bits. Zero, one, or two Icache sets
@@ -1045,9 +1049,9 @@ u8 *AXP_DcacheFetch(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 	 *		This bit does not clear the Icache, but only disables fills to
 	 *		the affected set.
 	 *
-	 * I'm nost sure why it first says that at least one set must be enabled,
+	 * I'm not sure why it first says that at least one set must be enabled,
 	 * but the says that "Zero, one, or two Icache sets can be enabled."  I'm
-	 * going to assume thatif zero bits are set, the default is 2 (both sets).
+	 * going to assume that if zero bits are set, the default is 2 (both sets).
 	 */
 	sets = (cpu->dcCtl.set_en == 1) ? 1 : 2;
 
@@ -1106,9 +1110,9 @@ u8 *AXP_DcacheFetch(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
  * Input Parameters:
  * 	cpu:
  * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
- * 		Instruction Cache (iCache2) array.	TODO: Rename iCache2 to iCache.
+ * 		Instruction Cache (iCache) array.
  *	pc:
- *		The Program Counter (PC) associated with the first instruciton being
+ *		The Program Counter (PC) associated with the first instruction being
  *		loaded into the Icache.
  *	nextInst:
  *		A pointer to the next set of instructions (16 of them) to be loaded
@@ -1128,25 +1132,25 @@ u8 *AXP_DcacheFetch(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
  *	None.
  */
 void AXP_IcacheAdd(
-				AXP_21264_CPU *CPU,
+				AXP_21264_CPU *cpu,
 				AXP_PC pc,
 				AXP_INS_FMT *nextInst,
 				AXP_21264_TLB *itb)
 {
 	AXP_VPC		vpc = {.pc = pc};
 	u32			index = vpc.vpcFields.index;
-	u64			tag = vpc.vpcFields.tag
+	u64			tag = vpc.vpcFields.tag;
 	int			ii;
 	int			sets, whichSet;
 
 	/*
-	 * 5.3.10 Determine how manby sets are enabled.
+	 * 5.3.10 Determine how many sets are enabled.
 	 *
 	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
 	 * determine the number of cache sets to use.  The description for
 	 * SET_EN[1:0] says that at least 1 set must be enabled.  The equivalent
 	 * field for the Icache, IC_EN[1:0], has the following more detailed
-	 * destcription:
+	 * description:
 	 *
 	 *		At least one set must be enabled. The entire cache may be
 	 *		enabled by setting both bits. Zero, one, or two Icache sets
@@ -1154,9 +1158,9 @@ void AXP_IcacheAdd(
 	 *		This bit does not clear the Icache, but only disables fills to
 	 *		the affected set.
 	 *
-	 * I'm nost sure why it first says that at least one set must be enabled,
+	 * I'm not sure why it first says that at least one set must be enabled,
 	 * but the says that "Zero, one, or two Icache sets can be enabled."  I'm
-	 * going to assume thatif zero bits are set, the default is 2 (both sets).
+	 * going to assume that if zero bits are set, the default is 2 (both sets).
 	 */
 	sets = (cpu->iCtl.ic_en == 1) ? 1 : 2;
 	if (sets == 2)
@@ -1164,52 +1168,52 @@ void AXP_IcacheAdd(
 
 		/*
 		 * First see if set zero or set one are not currently in use.  If so,
-		 * then use the first one found.  If both are currnetly in use, we need
+		 * then use the first one found.  If both are currently in use, we need
 		 * to evict one.  Use the set_0_1 bit in set zero to determine which
 		 * one to select.  If set_0_1 equals 1, then use set zero.  Otherwise,
 		 * use set one.  This is kind of a round-robin methodology.
 		 */
-		if (cpu->iCache2[index][0].vb == 0)
+		if (cpu->iCache[index][0].vb == 0)
 		{
 			whichSet = 0;
-			cpu->iCache2[index][0].set_0_1 = 1;
+			cpu->iCache[index][0].set_0_1 = 1;
 		}
-		else if (cpu->iCache2[index][1].vb = 0)
+		else if (cpu->iCache[index][1].vb == 0)
 		{
 			whichSet = 1;
-			cpu->iCache2[index][0].set_0_1 = 0;
+			cpu->iCache[index][0].set_0_1 = 0;
 		}
-		else if (cpu->iCache2[index][0].set_0_1 == 0)
+		else if (cpu->iCache[index][0].set_0_1 == 0)
 		{
 			whichSet = 0;
-			cpu->iCache2[index][0].set_0_1 = 1;
+			cpu->iCache[index][0].set_0_1 = 1;
 		}
 		else
 		{
 			whichSet = 1;
-			cpu->iCache2[index][0].set_0_1 = 0;
+			cpu->iCache[index][0].set_0_1 = 0;
 		}
 	}
 	else
 	{
-		whichSet = 0;	// just one set in use.
-		cpu->iCache2[index][0].set_0_1 = 0;
+		whichSet = 0;	/* just one set is in use. */
+		cpu->iCache[index][0].set_0_1 = 0;
 	}
 
 	/*
-	 * Intialize the cache entry with the supplied information.
+	 * Initialize the cache entry with the supplied information.
 	 */
-	cpu->iCache2[index][whichSet].kre = itb->kre;
-	cpu->iCache2[index][whichSet].ere = itb->ere;
-	cpu->iCache2[index][whichSet].sre = itb->sre;
-	cpu->iCache2[index][whichSet].ure = itb->ure;
-	cpu->iCache2[index][whichSet]._asm = itb->_asm;
-	cpu->iCache2[index][whichSet].asn = itb->asn;
-	cpu->iCache2[index][whichSet].pal = pc.pal;
-	cpu->iCache2[index][whichSet].vb = 1;
-	cpu->iCache2[index][whichSet].tag = tag;
+	cpu->iCache[index][whichSet].kre = itb->kre;
+	cpu->iCache[index][whichSet].ere = itb->ere;
+	cpu->iCache[index][whichSet].sre = itb->sre;
+	cpu->iCache[index][whichSet].ure = itb->ure;
+	cpu->iCache[index][whichSet]._asm = itb->_asm;
+	cpu->iCache[index][whichSet].asn = itb->asn;
+	cpu->iCache[index][whichSet].pal = pc.pal;
+	cpu->iCache[index][whichSet].vb = 1;
+	cpu->iCache[index][whichSet].tag = tag;
 	for (ii = 0; ii < AXP_ICACHE_LINE_INS; ii++)
-		cpu->iCache2[index][whichSet].instructions[ii] = nextInst[ii];
+		cpu->iCache[index][whichSet].instructions[ii] = nextInst[ii];
 
 	/*
 	 * Return back to the caller.
@@ -1219,7 +1223,7 @@ void AXP_IcacheAdd(
 
 /*
  * AXP_IcacheFlush
- * 	This function is called to fluch the entire or specific Instruction Cache.
+ * 	This function is called to flush the entire or specific Instruction Cache.
  *	Retiring a write to the IPRs IC_FLUSH or IC_FLUSH_ASM will call this
  *	function to purge the Instruction Cache.
  *
@@ -1227,7 +1231,7 @@ void AXP_IcacheAdd(
  * Input Parameters:
  * 	cpu:
  * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
- * 		Instruction Cache (iCache2) array.	TODO: Rename iCache2 to iCache.
+ * 		Instruction Cache (iCache) array.
  *	purgeAsm:
  *		A boolean to indicate that only entries with the _asm bit not set will
  *		be purged.
@@ -1238,7 +1242,7 @@ void AXP_IcacheAdd(
  * Return Value:
  *	None.
  */
-void AXP_IcacheFlush(AXP_21264_CPU *CPU, bool purgeAsm)
+void AXP_IcacheFlush(AXP_21264_CPU *cpu, bool purgeAsm)
 {
 	int			ii, jj;
 
@@ -1250,44 +1254,50 @@ void AXP_IcacheFlush(AXP_21264_CPU *CPU, bool purgeAsm)
 		 *
 		 * Set Zero
 		 */
-		if (cpu->iCache2[ii][0].vb == 1)
+		if (cpu->iCache[ii][0].vb == 1)
 		{
-			if (((purgeAsm == true) && (cpu->iCache2[ii][0]._asm == 0)) ||
+			if (((purgeAsm == true) && (cpu->iCache[ii][0]._asm == 0)) ||
 				(purgeAsm == false))
 			{
-				cpu->iCache2[ii][0].kre = 0;
-				cpu->iCache2[ii][0].ere = 0;
-				cpu->iCache2[ii][0].sre = 0;
-				cpu->iCache2[ii][0].ure = 0;
-				cpu->iCache2[ii][0]._asm = 0;
-				cpu->iCache2[ii][0].asn = 0;
-				cpu->iCache2[ii][0].pal = 0;
-				cpu->iCache2[ii][0].vb = 0;
-				cpu->iCache2[ii][0].tag = 0;
+				cpu->iCache[ii][0].kre = 0;
+				cpu->iCache[ii][0].ere = 0;
+				cpu->iCache[ii][0].sre = 0;
+				cpu->iCache[ii][0].ure = 0;
+				cpu->iCache[ii][0]._asm = 0;
+				cpu->iCache[ii][0].asn = 0;
+				cpu->iCache[ii][0].pal = 0;
+				cpu->iCache[ii][0].vb = 0;
+				cpu->iCache[ii][0].tag = 0;
 				for (jj = 0; jj < AXP_ICACHE_LINE_INS; jj++)
-					cpu->iCache2[ii][0].instructions[jj] = 0;
+					memset(
+						&cpu->iCache[ii][0].instructions[jj],
+						0,
+						sizeof(AXP_INS_FMT));
 			}
 		}
 
 		/*
 		 * Set One
 		 */
-		if (cpu->iCache2[ii][1].vb == 1)
+		if (cpu->iCache[ii][1].vb == 1)
 		{
-			if (((purgeAsm == true) && (cpu->iCache2[ii][1]._asm == 0)) ||
+			if (((purgeAsm == true) && (cpu->iCache[ii][1]._asm == 0)) ||
 				(purgeAsm == false))
 			{
-				cpu->iCache2[ii][1].kre = 0;
-				cpu->iCache2[ii][1].ere = 0;
-				cpu->iCache2[ii][1].sre = 0;
-				cpu->iCache2[ii][1].ure = 0;
-				cpu->iCache2[ii][1]._asm = 0;
-				cpu->iCache2[ii][1].asn = 0;
-				cpu->iCache2[ii][1].pal = 0;
-				cpu->iCache2[ii][1].vb = 0;
-				cpu->iCache2[ii][1].tag = 0;
+				cpu->iCache[ii][1].kre = 0;
+				cpu->iCache[ii][1].ere = 0;
+				cpu->iCache[ii][1].sre = 0;
+				cpu->iCache[ii][1].ure = 0;
+				cpu->iCache[ii][1]._asm = 0;
+				cpu->iCache[ii][1].asn = 0;
+				cpu->iCache[ii][1].pal = 0;
+				cpu->iCache[ii][1].vb = 0;
+				cpu->iCache[ii][1].tag = 0;
 				for (jj = 0; jj < AXP_ICACHE_LINE_INS; jj++)
-					cpu->iCache2[ii][1].instructions[jj] = 0;
+					memset(
+						&cpu->iCache[ii][1].instructions[jj],
+						0,
+						sizeof(AXP_INS_FMT));
 			}
 		}
 	}
@@ -1316,9 +1326,9 @@ void AXP_IcacheFlush(AXP_21264_CPU *CPU, bool purgeAsm)
  * Input Parameters:
  * 	cpu:
  * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
- * 		Instruction Cache (iCache2) array.	TODO: Rename iCache2 to iCache.
+ * 		Instruction Cache (iCache) array.
  *	pc:
- *		The Program Counter (PC) associated with the first instruciton being
+ *		The Program Counter (PC) associated with the first instruction being
  *		loaded into the Icache.
  *
  * Output Parameters:
@@ -1330,25 +1340,25 @@ void AXP_IcacheFlush(AXP_21264_CPU *CPU, bool purgeAsm)
  *	True:	Instructions were returned.
  *	False:	Instructions were not found.
  */
-bool AXP_IcacheFetch(AXP_21264_CPU *CPU, AXP_PC pc, AXP_INS_LINE *next)
+bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 {
 	bool		retVal = false;
 	AXP_VPC		vpc = {.pc = pc};
 	AXP_PC		tmpPC;
 	u32			index = vpc.vpcFields.index;
-	u64			tag = vpc.vpcFields.tag
+	u64			tag = vpc.vpcFields.tag;
 	int			offset = vpc.vpcFields.offset % AXP_ICACHE_LINE_INS;
 	int			ii;
 	int			sets, whichSet;
 
 	/*
-	 * 5.3.10 Determine how manby sets are enabled.
+	 * 5.3.10 Determine how many sets are enabled.
 	 *
 	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
 	 * determine the number of cache sets to use.  The description for
 	 * SET_EN[1:0] says that at least 1 set must be enabled.  The equivalent
 	 * field for the Icache, IC_EN[1:0], has the following more detailed
-	 * destcription:
+	 * description:
 	 *
 	 *		At least one set must be enabled. The entire cache may be
 	 *		enabled by setting both bits. Zero, one, or two Icache sets
@@ -1356,20 +1366,20 @@ bool AXP_IcacheFetch(AXP_21264_CPU *CPU, AXP_PC pc, AXP_INS_LINE *next)
 	 *		This bit does not clear the Icache, but only disables fills to
 	 *		the affected set.
 	 *
-	 * I'm nost sure why it first says that at least one set must be enabled,
+	 * I'm not sure why it first says that at least one set must be enabled,
 	 * but the says that "Zero, one, or two Icache sets can be enabled."  I'm
-	 * going to assume thatif zero bits are set, the default is 2 (both sets).
+	 * going to assume that if zero bits are set, the default is 2 (both sets).
 	 */
 	sets = (cpu->iCtl.ic_en == 1) ? 1 : 2;
 
-	if ((cpu->iCache2[index][next->setPrediction].vb == 1) &&
-		(cpu->iCache2[index][next->setPrediction].tag == tag))
+	if ((cpu->iCache[index][next->setPrediction].vb == 1) &&
+		(cpu->iCache[index][next->setPrediction].tag == tag))
 	{
 		whichSet = next->setPrediction;
 		retVal = true;
 	}
-	else if ((cpu->iCache2[index][(next->setPrediction + 1) & 1].vb == 1) &&
-			 (cpu->iCache2[index][(next->setPrediction + 1) & 1].tag == tag))
+	else if ((cpu->iCache[index][(next->setPrediction + 1) & 1].vb == 1) &&
+			 (cpu->iCache[index][(next->setPrediction + 1) & 1].tag == tag))
 	{
 		whichSet = (next->setPrediction + 1) & 1;
 		retVal = true;
@@ -1385,7 +1395,7 @@ bool AXP_IcacheFetch(AXP_21264_CPU *CPU, AXP_PC pc, AXP_INS_LINE *next)
 		for (ii = 0; ii < AXP_ICACHE_LINE_INS; ii++)
 		{
 			next->instructions[ii] =
-				cpu->iCache2[index][whichSet].instructions[offset + ii];
+				cpu->iCache[index][whichSet].instructions[offset + ii];
 			next->instrType[ii] =
 				AXP_InstructionFormat(next->instructions[ii]);
 			next->instrPC[ii] = tmpPC;
@@ -1434,6 +1444,69 @@ bool AXP_IcacheFetch(AXP_21264_CPU *CPU, AXP_PC pc, AXP_INS_LINE *next)
  				next->setPrediction = 0;			/* first set */
  			}
  		}
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_IcacheValid
+ * 	This function is called to determine if a specific VPC is already in the
+ * 	Icache.  It just returns the same Hit/Miss/WayMiss.
+ *
+ * Input Parameters:
+ * 	cpu:
+ *		A pointer to the structure containing all the fields needed to
+ *		emulate an Alpha AXP 21264 CPU.
+ *	pc:
+ *		A value that represents the program counter of the instruction being
+ *		requested.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	True:	Instructions are in the Icache.
+ *	False:	Instructions are not in the Icache.
+ */
+bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
+{
+	bool		retVal = false;
+	AXP_VPC		vpc = {.pc = pc};
+	u32			index = vpc.vpcFields.index;
+	u64			tag = vpc.vpcFields.tag;
+	int			ii;
+	int			sets;
+
+	/*
+	 * 5.3.10 Determine how many sets are enabled.
+	 *
+	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
+	 * determine the number of cache sets to use.  The description for
+	 * SET_EN[1:0] says that at least 1 set must be enabled.  The equivalent
+	 * field for the Icache, IC_EN[1:0], has the following more detailed
+	 * description:
+	 *
+	 *		At least one set must be enabled. The entire cache may be
+	 *		enabled by setting both bits. Zero, one, or two Icache sets
+	 *		can be enabled.
+	 *		This bit does not clear the Icache, but only disables fills to
+	 *		the affected set.
+	 *
+	 * I'm not sure why it first says that at least one set must be enabled,
+	 * but the says that "Zero, one, or two Icache sets can be enabled."  I'm
+	 * going to assume that if zero bits are set, the default is 2 (both sets).
+	 */
+	sets = (cpu->iCtl.ic_en == 1) ? 1 : 2;
+
+	for (ii = 1; ((ii < sets) & (retVal == false)); ii++)
+	{
+		if ((cpu->iCache[index][ii].vb == 1) &&
+			(cpu->iCache[index][ii].tag == tag))
+			retVal = true;
 	}
 
 	/*

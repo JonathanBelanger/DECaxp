@@ -40,7 +40,7 @@
 #include "AXP_Base_CPU.h"
 #include "AXP_21264_IPRs.h"
 #include "AXP_21264_Predictions.h"
-#include "AXP_21264_ICache.h"
+#include "AXP_21264_Cache.h"
 #include "AXP_21264_Ibox.h"
 #include "AXP_21264_Cbox.h"
 #include "AXP_21264_Fbox.h"
@@ -188,10 +188,19 @@ int main()
 	PRINT_SIZE(LCLindex, 8, passed);
 	PRINT_SIZE(LPTIndex, 8, passed);
 
-	printf("\nAXP_21264_ICache.h\n");
-	PRINT_SIZE(AXP_ICACHE_VPC, 8, passed);
-	PRINT_SIZE(AXP_ICACHE_TAG_IDX, 8, passed);
-	PRINT_SIZE(AXP_ICACHE_LINE, 128, passed);
+	printf("\nAXP_21264_Cache.h\n");
+	PRINT_SIZE(AXP_VA_SPE2, 8, passed);
+	PRINT_SIZE(AXP_VA_SPE1, 8, passed);
+	PRINT_SIZE(AXP_VA_SPE0, 8, passed);
+	PRINT_SIZE(AXP_VA_SPE, 8, passed);
+	PRINT_SIZE(AXP_DCACHE_BLK, 77, passed);
+	PRINT_SIZE(AXP_ICACHE_BLK, 72, passed);
+	PRINT_SIZE(AXP_CACHE_IDX, 8, passed);
+	PRINT_SIZE(AXP_VA_FIELDS, 8, passed);
+	PRINT_SIZE(AXP_IDX_COUNTER, 8, passed);
+	PRINT_SIZE(AXP_VA, 8, passed);
+	PRINT_SIZE(AXP_VPC_FIELDS, 8, passed);
+	PRINT_SIZE(AXP_VPC, 8, passed);
 
 	printf("\nAXP_21264_Fbox.h\n");
 	PRINT_SIZE(AXP_FP_FUNC, 4, passed);

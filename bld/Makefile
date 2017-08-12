@@ -84,7 +84,7 @@ INCS = $(foreach d, $(INCDIRS), -I$d)
 # object and executable files.
 #
 CC = gcc
-CFLAGS = $(INCS) -Wall
+CFLAGS = $(INCS) -std=c99 -Wall
 
 #
 # Debug adds to the compiler flags and then compiles everything that has not

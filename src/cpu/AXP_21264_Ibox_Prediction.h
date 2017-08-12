@@ -30,7 +30,7 @@
 #include "AXP_Utility.h"
 #include "AXP_21264_CPU.h"
 #include "AXP_21264_Ibox_InstructionInfo.h"
-#include "AXP_21264_Icache.h"
+#include "AXP_21264_Cache.h"
 #include "AXP_21264_Instructions.h"
 #include "AXP_21264_RegisterRenaming.h"
 

@@ -141,13 +141,13 @@ int main()
 	 */
 	printf("\nAXP 21264 Integer Load/Store Tester\n");
 	cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
-	instr.uniqueID = 0;		// This will be incremented for each test.
-	instr.aSrc1 = 5;		// Architectural Register (R05).
-	instr.src1 = 40;		// Physical Register.
-	instr.aSrc2 = 31;		// Architectural Register (R31).
-	instr.src2 = 72;		// Physical Register.
-	instr.aDest = 29;		// Architectural Register (R29).
-	instr.dest = 31;		// Physical Register.
+	instr.uniqueID = 0;		/* This will be incremented for each test. */
+	instr.aSrc1 = 5;		/* Architectural Register (R05). */
+	instr.src1 = 40;		/* Physical Register. */
+	instr.aSrc2 = 31;		/* Architectural Register (R31). */
+	instr.src2 = 72;		/* Physical Register. */
+	instr.aDest = 29;		/* Architectural Register (R29). */
+	instr.dest = 31;		/* Physical Register. */
 	instr.type_hint_index = 0;
 	instr.scbdMask = 0;
 	instr.len_stall = 0;
@@ -156,24 +156,24 @@ int main()
 	instr.useLiteral = false;
 	instr.branchPredict = false;
 	instr.literal = 0;
-	instr.src2v.r.uq = 0;	// Only 2 registers (Ra = destination, Rb = source)
+	instr.src2v.r.uq = 0;	/* Only 2 registers (Ra = destination, Rb = source) */
 	instr.lockPhysAddrPending = 0;
 	instr.lockVirtAddrPending = 0;
-	instr.format = Mem;		// Memory formatted instruction.
-	instr.type = Load;		// Load operation.
+	instr.format = Mem;		/* Memory formatted instruction. */
+	instr.type = Load;		/* Load operation. */
 	instr.pc.pc = 0x000000007ffe000ll;
-	instr.pc.pal = 0;		// not PALmode.
+	instr.pc.pal = 0;		/* not PALmode. */
 	instr.branchPC.pc = 0;
 	instr.branchPC.pal = 0;
-	instr.state = Retired;	// All instructions are initially Retired.
+	instr.state = Retired;	/* All instructions are initially Retired. */
 
 	fp = fopen(fileName, "r");
 	if(fp != NULL)
 	{
 		printf("\n Processing Test Data File: %s\n", fileName);
-		fscanf(fp, "%80s", headerStr);		// read first line
-		headerStr[0] = (char) fgetc(fp);	// new-line
-		headerStr[0] = (char) fgetc(fp);	// carriage-return
+		fscanf(fp, "%80s", headerStr);		/* read first line */
+		headerStr[0] = (char) fgetc(fp);	/* new-line */
+		headerStr[0] = (char) fgetc(fp);	/* carriage-return */
 		if (readNextHex(fp, (u8 *) &ldahAddress, 8))
 		{
 			if (readNextHex(fp, (u8 *) &ldaAddress, 8))
@@ -200,7 +200,7 @@ int main()
 						0xffffffffffff0000 : 0);
 			instr.state = Executing;
 			testCnt++;
-			retVal = AXP_LDA(cpu, &instr);		// Call the LDA instruction.
+			retVal = AXP_LDA(cpu, &instr);		/* Call the LDA instruction. */
 			if (retVal == NoException)
 			{
 				if (instr.state == WaitingRetirement)
@@ -239,7 +239,7 @@ int main()
 				instr.destv.r.uq = 0;
 				instr.state = Executing;
 				testCnt++;
-				retVal = AXP_LDAH(cpu, &instr);		// Call the LDAH - Load Address High instruction.
+				retVal = AXP_LDAH(cpu, &instr);		/* Call the LDAH - Load Address High instruction. */
 				if (retVal == NoException)
 				{
 					if (instr.state == WaitingRetirement)
@@ -289,8 +289,8 @@ int main()
 			}
 			else
 				pass = false;
-		}	// while (!EOF && passing)
-		pass = (feof(fp) != 0);		// EOF is not a failure.
+		}	/* while (!EOF && passing) */
+		pass = (feof(fp) != 0);		/* EOF is not a failure. */
 		fclose(fp);
 	}
 	else

@@ -98,10 +98,10 @@ AXP_EXCEPTIONS AXP_LDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
-	// TODO: Check to see if we had an access fault (Access Violation)
-	// TODO: Check to see if we had an alignment fault (Alignment)
-	// TODO: Check to see if we had a read fault (Fault on Read)
-	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	/* TODO: Check to see if we had an access fault (Access Violation) */
+	/* TODO: Check to see if we had an alignment fault (Alignment) */
+	/* TODO: Check to see if we had a read fault (Fault on Read) */
+	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
 
 	/*
 	 * Get the value out of memory (it'll be in memory format and is 32-bits)
@@ -202,10 +202,10 @@ AXP_EXCEPTIONS AXP_LDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	va = instr->src1v.r.uq + instr->displacement;
 
-	// TODO: Check to see if we had an access fault (Access Violation)
-	// TODO: Check to see if we had an alignment fault (Alignment)
-	// TODO: Check to see if we had a read fault (Fault on Read)
-	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	/* TODO: Check to see if we had an access fault (Access Violation) */
+	/* TODO: Check to see if we had an alignment fault (Alignment) */
+	/* TODO: Check to see if we had a read fault (Fault on Read) */
+	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
 
 	/*
 	 * Get the value out of memory (it'll be in memory format and is 32-bits)
@@ -316,10 +316,10 @@ AXP_EXCEPTIONS AXP_LDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
-	// TODO: Check to see if we had an access fault (Access Violation)
-	// TODO: Check to see if we had an alignment fault (Alignment)
-	// TODO: Check to see if we had a read fault (Fault on Read)
-	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	/* TODO: Check to see if we had an access fault (Access Violation) */
+	/* TODO: Check to see if we had an alignment fault (Alignment) */
+	/* TODO: Check to see if we had a read fault (Fault on Read) */
+	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
 
 	/*
 	 * Get the value out of memory (it'll be in memory format and is 32-bits)
@@ -429,10 +429,10 @@ AXP_EXCEPTIONS AXP_LDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	va = instr->src1v.r.uq + instr->displacement;
 
-	// TODO: Check to see if we had an access fault (Access Violation)
-	// TODO: Check to see if we had an alignment fault (Alignment)
-	// TODO: Check to see if we had a read fault (Fault on Read)
-	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	/* TODO: Check to see if we had an access fault (Access Violation) */
+	/* TODO: Check to see if we had an alignment fault (Alignment) */
+	/* TODO: Check to see if we had a read fault (Fault on Read) */
+	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
 
 	/*
 	 * Get the value out of memory (it'll be in memory format and is 64-bits)
@@ -531,10 +531,10 @@ AXP_EXCEPTIONS AXP_STF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	tmpF->fractionHigh = instr->src1v.fp.fCvt.fractionHigh;
 	tmpF->fractionLow = instr->src1v.fp.fCvt.fractionLow;
 
-	// TODO: Check to see if we had an access fault (Access Violation)
-	// TODO: Check to see if we had an alignment fault (Alignment)
-	// TODO: Check to see if we had a read fault (Fault on Write)
-	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	/* TODO: Check to see if we had an access fault (Access Violation) */
+	/* TODO: Check to see if we had an alignment fault (Alignment) */
+	/* TODO: Check to see if we had a read fault (Fault on Write) */
+	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
 	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp, sizeof(tmp));
 
 	/*
@@ -591,10 +591,10 @@ AXP_EXCEPTIONS AXP_STG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	tmpG->fractionMidLow = instr->src1v.fp.gCvt.fractionMidLow;
 	tmpG->fractionLow = instr->src1v.fp.gCvt.fractionLow;
 
-	// TODO: Check to see if we had an access fault (Access Violation)
-	// TODO: Check to see if we had an alignment fault (Alignment)
-	// TODO: Check to see if we had a read fault (Fault on Write)
-	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	/* TODO: Check to see if we had an access fault (Access Violation) */
+	/* TODO: Check to see if we had an alignment fault (Alignment) */
+	/* TODO: Check to see if we had a read fault (Fault on Write) */
+	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
 	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, va, tmp, sizeof(tmp));
 
 	/*
@@ -665,10 +665,10 @@ AXP_EXCEPTIONS AXP_STS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	tmpS->exponent = exp;
 	tmpS->fraction = instr->src1v.fp.sCvt.fraction;
 
-	// TODO: Check to see if we had an access fault (Access Violation)
-	// TODO: Check to see if we had an alignment fault (Alignment)
-	// TODO: Check to see if we had a read fault (Fault on Write)
-	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	/* TODO: Check to see if we had an access fault (Access Violation) */
+	/* TODO: Check to see if we had an alignment fault (Alignment) */
+	/* TODO: Check to see if we had a read fault (Fault on Write) */
+	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
 	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp, sizeof(tmp));
 
 	/*
@@ -715,10 +715,10 @@ AXP_EXCEPTIONS AXP_STT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Put the value into memory (it'll be in memory format and is 64-bits)
 	 */
-	// TODO: Check to see if we had an access fault (Access Violation)
-	// TODO: Check to see if we had an alignment fault (Alignment)
-	// TODO: Check to see if we had a read fault (Fault on Read)
-	// TODO: Check to see if we had a translation fault (Translation Not Valid)
+	/* TODO: Check to see if we had an access fault (Access Violation) */
+	/* TODO: Check to see if we had an alignment fault (Alignment) */
+	/* TODO: Check to see if we had a read fault (Fault on Read) */
+	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
 	AXP_21264_Mbox_WriteMem(cpu,
 							instr,
 							instr->slot,

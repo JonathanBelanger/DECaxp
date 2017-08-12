@@ -55,7 +55,7 @@ AXP_EXCEPTIONS AXP_RC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * clear it.
 	 */
 	instr->destv.r.uq = cpu->VAXintrFlag;
-	cpu->VAXintrFalg = false;
+	cpu->VAXintrFlag = false;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -96,7 +96,7 @@ AXP_EXCEPTIONS AXP_RS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * set it.
 	 */
 	instr->destv.r.uq = cpu->VAXintrFlag;
-	cpu->VAXintrFalg = true;
+	cpu->VAXintrFlag = true;
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

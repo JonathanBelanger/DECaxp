@@ -381,8 +381,8 @@ AXP_EXCEPTIONS AXP_BR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 */
-	instr->branchPC = instr->pc;// This points to the PC for this instruction.
-	instr->branchPC.pc++;		// This points to the instruction after this.
+	instr->branchPC = instr->pc;/* This points to the PC for this instruction. */
+	instr->branchPC.pc++;		/* This points to the instruction after this. */
 	instr->destv.r.uq = *((u64 *) &instr->branchPC);
 	instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
@@ -426,8 +426,8 @@ AXP_EXCEPTIONS AXP_BSR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * TODO:	We need to use the hints for possible branch prediction and
 	 *			push the return address onto a branch-prediction stack.
 	 */
-	instr->branchPC = instr->pc;	// This points to the PC for this instruction.
-	instr->branchPC.pc++;			// This points to the instruction after this.
+	instr->branchPC = instr->pc;	/* This points to the PC for this instruction. */
+	instr->branchPC.pc++;			/* This points to the instruction after this. */
 	instr->destv.r.uq = *((u64 *) &instr->branchPC);
 	instr->branchPC = AXP_21264_DisplaceVPC(cpu, instr->displacement);
 
@@ -491,8 +491,8 @@ AXP_EXCEPTIONS AXP_JMP(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * TODO:	We need to use the hints for possible branch prediction and
 	 *			push/pop the return address onto a branch-prediction stack.
 	 */
-	instr->branchPC = instr->pc;	// This points to the PC for this instruction.
-	instr->branchPC.pc++;			// This points to the instruction after this.
+	instr->branchPC = instr->pc;	/* This points to the PC for this instruction. */
+	instr->branchPC.pc++;			/* This points to the instruction after this. */
 	instr->destv.r.uq = *((u64 *) &instr->branchPC);
 	instr->branchPC = AXP_21264_GetVPC(cpu, instr->src1v.r.uq, AXP_NORMAL_MODE);
 

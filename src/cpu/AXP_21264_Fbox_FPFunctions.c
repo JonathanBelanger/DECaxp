@@ -279,7 +279,7 @@ int AXP_FP_CvtX2G(
 	{
 		gSrc1->sign = gSrc1->exponent = gSrc1->fraction = 0;
 	}
-	else if (exponent == AXP_X_EXP_MAX)	// Both Infinity and NaN
+	else if (exponent == AXP_X_EXP_MAX)	/* Both Infinity and NaN */
 	{
 		retVal = FE_OVERFLOW;
 		if (fraction == 0)
@@ -302,7 +302,7 @@ int AXP_FP_CvtX2G(
 				fraction <<= 1;
 				exponent--;
 			}
-			fraction &= (AXP_G_HIDDEN_BIT - 1);		// remove the hidden bit.
+			fraction &= (AXP_G_HIDDEN_BIT - 1);		/* remove the hidden bit. */
 		}
 		exponent += (1 + AXP_G_BIAS + AXP_X_BIAS);
 		if (exponent < 0)
@@ -329,7 +329,7 @@ int AXP_FP_CvtX2G(
 		{
 			gSrc2->sign = gSrc2->exponent = gSrc2->fraction = 0;
 		}
-		else if (exponent == AXP_X_EXP_MAX)	// Both Infinity and NaN
+		else if (exponent == AXP_X_EXP_MAX)	/* Both Infinity and NaN */
 		{
 			retVal = FE_OVERFLOW;
 			if (fraction == 0)
@@ -352,7 +352,7 @@ int AXP_FP_CvtX2G(
 					fraction <<= 1;
 					exponent--;
 				}
-				fraction &= (AXP_G_HIDDEN_BIT - 1);		// remove the hidden bit.
+				fraction &= (AXP_G_HIDDEN_BIT - 1);		/* remove the hidden bit. */
 			}
 			exponent += (1 + AXP_G_BIAS + AXP_X_BIAS);
 			if (exponent < 0)

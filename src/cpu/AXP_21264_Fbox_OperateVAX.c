@@ -82,7 +82,7 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = (double) instr->src1v.fp.uq;
 		src2v = (double) instr->src2v.fp.uq;
 
-		// TODO: We need to have a mutex starting at this point.
+		/* TODO: We need to have a mutex starting at this point. */
 
 		/*
 	 	 * Set the rounding mode, based on the function code and/or the FPCR.
@@ -109,7 +109,7 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
-		// TODO: We need to have a mutex ending at this point.
+		/* TODO: We need to have a mutex ending at this point. */
 
 		if (raised == 0)
 		{
@@ -239,7 +239,7 @@ AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		AXP_FP_CvtG2X(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr, &src1v, &src2v);
 
-		// TODO: We need to have a mutex starting at this point.
+		/* TODO: We need to have a mutex starting at this point. */
 
 		/*
 	 	 * Set the rounding mode, based on the function code and/or the FPCR.
@@ -266,7 +266,7 @@ AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
-		// TODO: We need to have a mutex ending at this point.
+		/* TODO: We need to have a mutex ending at this point. */
 
 		if (raised == 0)
 		{
@@ -807,7 +807,7 @@ AXP_EXCEPTIONS AXP_CVTDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				exponent++;
 			}
 		}
-		if (exponent > AXP_G_EXP_MASK)		// the mask also is the max
+		if (exponent > AXP_G_EXP_MASK)		/* the mask also is the max */
 		{
 			retVal = ArithmeticTraps;
 			raised = FE_OVERFLOW;
@@ -909,7 +909,7 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				exponent++;
 			}
 		}
-		if (exponent > AXP_D_EXP_MASK)		// the mask also is the max
+		if (exponent > AXP_D_EXP_MASK)		/* the mask also is the max */
 		{
 			retVal = ArithmeticTraps;
 			raised = FE_OVERFLOW;
@@ -1011,7 +1011,7 @@ AXP_EXCEPTIONS AXP_CVTGF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				exponent++;
 			}
 		}
-		if (exponent > AXP_F_EXP_MASK)		// the mask also is the max
+		if (exponent > AXP_F_EXP_MASK)		/* the mask also is the max */
 		{
 			retVal = ArithmeticTraps;
 			raised = FE_OVERFLOW;
@@ -1107,7 +1107,7 @@ AXP_EXCEPTIONS AXP_DIVF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = (double) instr->src1v.fp.uq;
 		src2v = (double) instr->src2v.fp.uq;
 
-		// TODO: We need to have a mutex starting at this point.
+		/* TODO: We need to have a mutex starting at this point. */
 
 		/*
 	 	 * Set the rounding mode, based on the function code and/or the FPCR.
@@ -1134,7 +1134,7 @@ AXP_EXCEPTIONS AXP_DIVF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
-		// TODO: We need to have a mutex ending at this point.
+		/* TODO: We need to have a mutex ending at this point. */
 
 		if (raised == 0)
 		{
@@ -1269,7 +1269,7 @@ AXP_EXCEPTIONS AXP_DIVG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		AXP_FP_CvtG2X(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr, &src1v, &src2v);
 
-		// TODO: We need to have a mutex starting at this point.
+		/* TODO: We need to have a mutex starting at this point. */
 
 		/*
 	 	 * Set the rounding mode, based on the function code and/or the FPCR.
@@ -1296,7 +1296,7 @@ AXP_EXCEPTIONS AXP_DIVG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
-		// TODO: We need to have a mutex ending at this point.
+		/* TODO: We need to have a mutex ending at this point. */
 
 		if (raised == 0)
 		{
@@ -1441,7 +1441,7 @@ AXP_EXCEPTIONS AXP_MULF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = (double) instr->src1v.fp.uq;
 		src2v = (double) instr->src2v.fp.uq;
 
-		// TODO: We need to have a mutex starting at this point.
+		/* TODO: We need to have a mutex starting at this point. */
 
 		/*
 	 	 * Set the rounding mode, based on the function code and/or the FPCR.
@@ -1468,7 +1468,7 @@ AXP_EXCEPTIONS AXP_MULF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
-		// TODO: We need to have a mutex ending at this point.
+		/* TODO: We need to have a mutex ending at this point. */
 
 		if (raised == 0)
 		{
@@ -1598,7 +1598,7 @@ AXP_EXCEPTIONS AXP_MULG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		AXP_FP_CvtG2X(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr, &src1v, &src2v);
 
-		// TODO: We need to have a mutex starting at this point.
+		/* TODO: We need to have a mutex starting at this point. */
 
 		/*
 	 	 * Set the rounding mode, based on the function code and/or the FPCR.
@@ -1625,7 +1625,7 @@ AXP_EXCEPTIONS AXP_MULG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
-		// TODO: We need to have a mutex ending at this point.
+		/* TODO: We need to have a mutex ending at this point. */
 
 		if (raised == 0)
 		{
@@ -1900,7 +1900,7 @@ AXP_EXCEPTIONS AXP_SUBF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = (double) instr->src1v.fp.uq;
 		src2v = (double) instr->src2v.fp.uq;
 
-		// TODO: We need to have a mutex starting at this point.
+		/* TODO: We need to have a mutex starting at this point. */
 
 		/*
 	 	 * Set the rounding mode, based on the function code and/or the FPCR.
@@ -1927,7 +1927,7 @@ AXP_EXCEPTIONS AXP_SUBF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
-		// TODO: We need to have a mutex ending at this point.
+		/* TODO: We need to have a mutex ending at this point. */
 
 		if (raised == 0)
 		{
@@ -2057,7 +2057,7 @@ AXP_EXCEPTIONS AXP_SUBG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		AXP_FP_CvtG2X(&instr->src1v.fp.fpr, &instr->src2v.fp.fpr, &src1v, &src2v);
 
-		// TODO: We need to have a mutex starting at this point.
+		/* TODO: We need to have a mutex starting at this point. */
 
 		/*
 	 	 * Set the rounding mode, based on the function code and/or the FPCR.
@@ -2084,7 +2084,7 @@ AXP_EXCEPTIONS AXP_SUBG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
 
-		// TODO: We need to have a mutex ending at this point.
+		/* TODO: We need to have a mutex ending at this point. */
 
 		if (raised == 0)
 		{

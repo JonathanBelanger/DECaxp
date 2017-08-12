@@ -160,9 +160,9 @@ int main()
 					/*
 					 * Let's determine how the choice was determined.
 					 */
-					if (kk != 2)	// No prediction.  Always returns false (fall-through)
+					if (kk != 2)	/* No prediction.  Always returns false (fall-through) */
 					{
-						if (kk != 1)	// Local prediction only.
+						if (kk != 1)	/* Local prediction only. */
 						{
 							if (localTaken != globalTaken)
 							{

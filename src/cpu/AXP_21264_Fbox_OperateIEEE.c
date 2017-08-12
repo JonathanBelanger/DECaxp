@@ -89,8 +89,6 @@ AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
 		src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -126,8 +124,6 @@ AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 * Reset the rounding mode
 		 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	/*
@@ -221,8 +217,6 @@ AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = *((double *) &instr->src1v.fp.uq);
 		src2v = *((double *) &instr->src2v.fp.uq);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -258,8 +252,6 @@ AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 * Reset the rounding mode
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	raised &= (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
@@ -586,8 +578,6 @@ AXP_EXCEPTIONS AXP_CVTTQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 */
 		src1v = *((double *) &instr->src1v.fp.uq);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -623,8 +613,6 @@ AXP_EXCEPTIONS AXP_CVTTQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 * Reset the rounding mode
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	raised &= (FE_INEXACT | FE_OVERFLOW | FE_INVALID);
@@ -697,8 +685,6 @@ AXP_EXCEPTIONS AXP_CVTQS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	src1v = instr->src1v.fp.uq;
 
-	// TODO: We need to have a mutex starting at this point.
-
 	/*
 	 * Set the rounding mode, based on the function code and/or the FPCR.
 	 */
@@ -734,9 +720,6 @@ AXP_EXCEPTIONS AXP_CVTQS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  	 * Reset the rounding mode
  	 */
 	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-	// TODO: We need to have a mutex ending at this point.
-
 	raised &= FE_INEXACT;
 
 	/*
@@ -801,8 +784,6 @@ AXP_EXCEPTIONS AXP_CVTQT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	src1v = (u64) instr->src1v.fp.uq;
 
-	// TODO: We need to have a mutex starting at this point.
-
 	/*
 	 * Set the rounding mode, based on the function code and/or the FPCR.
 	 */
@@ -838,9 +819,6 @@ AXP_EXCEPTIONS AXP_CVTQT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  	 * Reset the rounding mode
  	 */
 	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-	// TODO: We need to have a mutex ending at this point.
-
 	raised &= FE_INEXACT;
 
 	/*
@@ -921,8 +899,6 @@ AXP_EXCEPTIONS AXP_CVTST(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 */
 		src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -958,8 +934,6 @@ AXP_EXCEPTIONS AXP_CVTST(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 * Reset the rounding mode
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	raised &= FE_INVALID;
@@ -1045,8 +1019,6 @@ AXP_EXCEPTIONS AXP_CVTTS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 */
 		src1v = *((double *) &instr->src1v.fp.uq);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -1082,8 +1054,6 @@ AXP_EXCEPTIONS AXP_CVTTS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 * Reset the rounding mode
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	raised &= (FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW | FE_INEXACT);
@@ -1176,8 +1146,6 @@ AXP_EXCEPTIONS AXP_DIVS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
 		src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -1213,8 +1181,6 @@ AXP_EXCEPTIONS AXP_DIVS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 * Reset the rounding mode
 		 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	/*
@@ -1309,8 +1275,6 @@ AXP_EXCEPTIONS AXP_DIVT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = *((double *) &instr->src1v.fp.uq);
 		src2v = *((double *) &instr->src2v.fp.uq);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -1346,8 +1310,6 @@ AXP_EXCEPTIONS AXP_DIVT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 * Reset the rounding mode
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	raised &= (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID | FE_DIVBYZERO);
@@ -1599,8 +1561,6 @@ AXP_EXCEPTIONS AXP_MULS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
 		src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -1636,8 +1596,6 @@ AXP_EXCEPTIONS AXP_MULS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 * Reset the rounding mode
 		 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	/*
@@ -1731,8 +1689,6 @@ AXP_EXCEPTIONS AXP_MULT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = *((double *) &instr->src1v.fp.uq);
 		src2v = *((double *) &instr->src2v.fp.uq);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -1768,8 +1724,6 @@ AXP_EXCEPTIONS AXP_MULT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 * Reset the rounding mode
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	raised &= (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
@@ -1858,8 +1812,6 @@ AXP_EXCEPTIONS AXP_SQRTS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 */
 		src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -1895,8 +1847,6 @@ AXP_EXCEPTIONS AXP_SQRTS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 * Reset the rounding mode
 		 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	/*
@@ -1988,8 +1938,6 @@ AXP_EXCEPTIONS AXP_SQRTT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 */
 		src1v = *((double *) &instr->src1v.fp.uq);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -2025,8 +1973,6 @@ AXP_EXCEPTIONS AXP_SQRTT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 * Reset the rounding mode
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	raised &= (FE_INEXACT | FE_INVALID);
@@ -2118,8 +2064,6 @@ AXP_EXCEPTIONS AXP_SUBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
 		src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -2155,8 +2099,6 @@ AXP_EXCEPTIONS AXP_SUBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 * Reset the rounding mode
 		 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	/*
@@ -2251,8 +2193,6 @@ AXP_EXCEPTIONS AXP_SUBT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1v = *((double *) &instr->src1v.fp.uq);
 		src2v = *((double *) &instr->src2v.fp.uq);
 
-		// TODO: We need to have a mutex starting at this point.
-
 		/*
 		 * Set the rounding mode, based on the function code and/or the FPCR.
 		 */
@@ -2288,8 +2228,6 @@ AXP_EXCEPTIONS AXP_SUBT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 	 * Reset the rounding mode
 	 	 */
 		oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
-
-		// TODO: We need to have a mutex ending at this point.
 	}
 
 	raised &= (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);

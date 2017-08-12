@@ -242,8 +242,6 @@ int main()
 	int hitCnt, cacheMissCnt, ITBMissCnt, cycleCnt, instrCnt;
 	int jj;
 	u64 ii;
-	u64 pages;
-	AXP_ICACHE_TAG_IDX vpc;
 	AXP_21264_TLB *itb;
 	struct
 	{
@@ -275,7 +273,6 @@ int main()
 		AXP_PC	vpc;
 	} pc = { .pc = 0x0000000000000004UL };
 	AXP_21264_CPU *cpu;
-	bool retStatus;
 	AXP_INS_LINE nextLine;
 
 	printf("\nAXP 21264 I-Cache Unit Tester\n\n");
@@ -344,7 +341,7 @@ int main()
 										branchTaken = true;
 										printf("0x%08llx\n", pc.pc);
 									}
-									else if (pc.pc == 0x00000000000002e0UL)  // pc + 4
+									else if (pc.pc == 0x00000000000002e0UL)  /* pc + 4 */
 									{
 										printf("Taking branch 0x%08llx -->",
 											   (pc.pc - sizeof(AXP_INS_FMT)));
@@ -381,38 +378,38 @@ int main()
 					continue;
 				}
 			}
+		}
 
-			/*
-			 * The instructions were not in the cache, so we need to move the
-			 * next set of instructions into the iCache and then replay the
-			 * instruction.
-			 */
+		/*
+		 * The instructions were not in the cache, so we need to move the
+		 * next set of instructions into the iCache and then replay the
+		 * instruction.
+		 */
+		else
+		{
+			if ((itb = AXP_findTLBEntry(cpu, pc.pc, false)) != NULL)
+			{
+				cacheMissCnt++;
+
+				/*
+				 * We need to find the ITB entry for the next set of
+				 * instructions.  The ITB entry has various piece of
+				 * information for the iCache entry.
+				 */
+				AXP_IcacheAdd(cpu,
+						  pc.vpc,
+						  &memory[(pc.vpc.pc&0xfffffffffffffff0UL)],
+						  itb);
+			}
 			else
 			{
-				if ((itb = AXP_findTLBEntry(cpu, pc.pc, false)) != NULL)
-				{
-					cacheMissCnt++;
 
-					/*
-					 * We need to find the ITB entry for the next set of
-					 * instructions.  The ITB entry has various piece of
-					 * information for the iCache entry.
-					 */
-					AXP_IcacheAdd(cpu,
-							  pc.vpc,
-							  &memory[(pc.vpc.pc&0xfffffffffffffff0UL)],
-							  itb);
-				}
-				else
-				{
-
-					/*
-					 * The instructions were not in the Instruction Translation Buffer,
-					 * so we have to add an ITB entry and then replay the instruction/
-					 */
-					ITBMissCnt++;
-					AXP_addTLBEntry(cpu, pc.pc, pc.pc, false);
-				}
+				/*
+				 * The instructions were not in the Instruction Translation Buffer,
+				 * so we have to add an ITB entry and then replay the instruction/
+				 */
+				ITBMissCnt++;
+				AXP_addTLBEntry(cpu, pc.pc, pc.pc, false);
 			}
 		}
 		cycleCnt++;

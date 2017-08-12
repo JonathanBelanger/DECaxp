@@ -316,14 +316,14 @@ typedef struct
 /*
  * Exploded rounding constants
  */
-//#define AXP_F_DT				0						/* type F */
-//#define AXP_G_DT				1						/* type G */
-//#define AXP_D_DT				2						/* type D */
-//#define AXP_L_DT				3						/* type L, Quadword Integer */
-//#define AXP_Q_DT				4						/* type Q, Quadword Integer */
-//#define AXP_S_DT				0						/* type S */
-//#define AXP_T_DT				1						/* type T */
-//#define AXP_X_DT				2						/* type X */
+/*#define AXP_F_DT				0						* type F */
+/*#define AXP_G_DT				1						* type G */
+/*#define AXP_D_DT				2						* type D */
+/*#define AXP_L_DT				3						* type L, Quadword Integer */
+/*#define AXP_Q_DT				4						* type Q, Quadword Integer */
+/*#define AXP_S_DT				0						* type S */
+/*#define AXP_T_DT				1						* type T */
+/*#define AXP_X_DT				2						* type X */
 
 /*
  * This structure is used to extract a floating point value's (all forms)
