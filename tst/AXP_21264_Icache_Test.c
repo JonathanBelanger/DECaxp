@@ -31,192 +31,192 @@
 #include "AXP_21264_CPU.h"
 #include "AXP_21264_Ibox.h"
 
-static AXP_INS_FMT memory[] =
+static u32 memory[] =
 {
-	{.instr = 0x4be0173f},		/* Address Offset: 0x0000000000000000 */
-	{.instr = 0x43ff0401},
-	{.instr = 0x43ff0521},
-	{.instr = 0x47ff0001},
-	{.instr = 0x47ff0401},
-	{.instr = 0x47ff0801},
-	{.instr = 0x47ff0501},
-	{.instr = 0x43ff09a1},
-	{.instr = 0x4be03721},
-	{.instr = 0x4be05681},
-	{.instr = 0x4be07781},
-	{.instr = 0x43ff0401},
-	{.instr = 0x43ff0521},
-	{.instr = 0x47ff0001},
-	{.instr = 0x47ff0401},
-	{.instr = 0x47ff0801},
-	{.instr = 0x47ff0501},		/* Address Offset: 0x0000000000000040 */
-	{.instr = 0x43ff09a1},
-	{.instr = 0x4be03721},
-	{.instr = 0x4be05681},
-	{.instr = 0x4be07781},
-	{.instr = 0x43e01401},
-	{.instr = 0xa03f0004},
-	{.instr = 0x303f0004},
-	{.instr = 0x303f0004},
-	{.instr = 0x283f0004},
-	{.instr = 0x283f0004},
-	{.instr = 0x203f0000},
-	{.instr = 0x47e01001},
-	{.instr = 0x47e01401},
-	{.instr = 0x47e01501},
-	{.instr = 0x43e019a1},
-	{.instr = 0x47e83408},		/* Address Offset: 0x0000000000000080 */
-	{.instr = 0x49021728},
-	{.instr = 0x45083408},
-	{.instr = 0xb11f0000},
-	{.instr = 0xa13f0000},
-	{.instr = 0x47e5d408},
-	{.instr = 0x351f0000},
-	{.instr = 0xa13f0000},
-	{.instr = 0x45083408},
-	{.instr = 0x391f0000},
-	{.instr = 0xa13f0000},
-	{.instr = 0x47e45408},
-	{.instr = 0x49021728},
-	{.instr = 0x45045408},
-	{.instr = 0xb11f0000},
-	{.instr = 0xa13f0000},
-	{.instr = 0x313f0004},		/* Address Offset: 0x00000000000000c0 */
-	{.instr = 0x313f0004},
-	{.instr = 0x293f0004},
-	{.instr = 0x293f0004},
-	{.instr = 0x43e15404},
-	{.instr = 0xc3e00066},		/* Branch: always taken */
-	{.instr = 0x43e15410},
-	{.instr = 0xa2100000},
-	{.instr = 0x4a039731},
-	{.instr = 0x43e03417},
-	{.instr = 0x43ff0401},
-	{.instr = 0x42e3b9b6},
-	{.instr = 0x42df05b6},
-	{.instr = 0xf6c00004},		/* Branch: 28 not taken, 1 taken */
-	{.instr = 0x4a203792},
-	{.instr = 0x4a203691},
-	{.instr = 0x47f10511},		/* Address Offset: 0x0000000000000100 */
-	{.instr = 0x42e01417},
-	{.instr = 0xc3fffff7},		/* Branch: always taken */
-	{.instr = 0x203f0001},
-	{.instr = 0x4823f721},
-	{.instr = 0x43e01404},
-	{.instr = 0x43e05401},
-	{.instr = 0x43e33402},
-	{.instr = 0x43e03403},
-	{.instr = 0x40230403},
-	{.instr = 0x43e6f408},
-	{.instr = 0x48205727},
-	{.instr = 0xb1070000},
-	{.instr = 0x41280409},
-	{.instr = 0x40230401},
-	{.instr = 0x47ff041f},
-	{.instr = 0x404105a2},		/* Address Offset: 0x0000000000000140 */
-	{.instr = 0x47ff041f},
-	{.instr = 0xf4400001},		/* Branch: 252 not taken, 1 taken */
-	{.instr = 0x47ff041f},
-	{.instr = 0xc3fffff6},		/* Branch: always taken */
-	{.instr = 0x203f0001},
-	{.instr = 0x4823f721},
-	{.instr = 0x43e01404},
-	{.instr = 0x43e05401},
-	{.instr = 0x43e33402},
-	{.instr = 0x43e03403},
-	{.instr = 0x40230401},
-	{.instr = 0x48205727},
-	{.instr = 0x40e60407},
-	{.instr = 0xa1070000},
-	{.instr = 0x41280409},
-	{.instr = 0x40230401},		/* Address Offset: 0x0000000000000180 */
-	{.instr = 0x404105a2},
-	{.instr = 0xf4400000},		/* Branch: 252 not taken, 1 taken */
-	{.instr = 0x47ff041f},
-	{.instr = 0xc3fffff7},		/* Branch: always taken */
-	{.instr = 0x49209689},
-	{.instr = 0x43e2340b},
-	{.instr = 0x412b052a},
-	{.instr = 0xa18a0000},
-	{.instr = 0x43e01404},
-	{.instr = 0x43e05401},
-	{.instr = 0x43e67402},
-	{.instr = 0x43e03403},
-	{.instr = 0x40230401},
-	{.instr = 0x48203727},
-	{.instr = 0x40e60407},
-	{.instr = 0x31070000},		/* Address Offset: 0x00000000000001c0 */
-	{.instr = 0x41280409},
-	{.instr = 0x40230401},
-	{.instr = 0x47ff041f},
-	{.instr = 0x404105a2},
-	{.instr = 0x47ff041f},
-	{.instr = 0xf4400001},		/* Branch: 508 not taken, 1 taken */
-	{.instr = 0x47ff041f},
-	{.instr = 0xc3fffff5},		/* Branch: always taken */
-	{.instr = 0x49209689},
-	{.instr = 0x43e9d40b},
-	{.instr = 0x412b052a},
-	{.instr = 0xa18a0000},
-	{.instr = 0x43e01404},
-	{.instr = 0x43e05401},
-	{.instr = 0x43e15402},
-	{.instr = 0x43e03403},		/* Address Offset: 0x0000000000000200 */
-	{.instr = 0x40230401},
-	{.instr = 0x48201727},
-	{.instr = 0x40e60407},
-	{.instr = 0x29070000},
-	{.instr = 0x41280409},
-	{.instr = 0x40230401},
-	{.instr = 0x47ff041f},
-	{.instr = 0x404105a2},
-	{.instr = 0x47ff041f},
-	{.instr = 0xf4400001},		/* Branch: 1020 not taken, 1 taken */
-	{.instr = 0x47ff041f},
-	{.instr = 0xc3fffff5},		/* Branch: always taken */
-	{.instr = 0x49209689},
-	{.instr = 0x43e1740b},
-	{.instr = 0x412b052a},
-	{.instr = 0xa18a001a},		/* Address Offset: 0x0000000000000240 */
-	{.instr = 0x47ff041f},
-	{.instr = 0x47ff041f},
-	{.instr = 0x47ff041f},
-	{.instr = 0x00000000},
-	{.instr = 0x00000000},
-	{.instr = 0x00000000},
-	{.instr = 0x00000000},
-	{.instr = 0x00000000},
-	{.instr = 0x00000000},
-	{.instr = 0x00000000},
-	{.instr = 0x00000000},
-	{.instr = 0x43ff0401},
-	{.instr = 0x43bf141d},
-	{.instr = 0xb01d0004},
-	{.instr = 0xb09d0000},
-	{.instr = 0x408039a2},		/* Address Offset: 0x0000000000000280 */
-	{.instr = 0xe4400005},		/* Branch: 10 taken, 1 not taken */
-	{.instr = 0xa0840000},
-	{.instr = 0xa01d0004},
-	{.instr = 0x43a1141d},
-	{.instr = 0x47e4040e},
-	{.instr = 0x6be00000},
-	{.instr = 0x47e4040e},
-	{.instr = 0x47e40510},
-	{.instr = 0x409ff404},
-	{.instr = 0x47e40411},
-	{.instr = 0x42110412},
-	{.instr = 0x42110533},
-	{.instr = 0x46110014},
-	{.instr = 0x46310415},
-	{.instr = 0x46110516},
-	{.instr = 0x46110017},		/* Address Offset: 0x00000000000002c0 */
-	{.instr = 0x404105a2},
-	{.instr = 0xc3ffffe9},		/* Branch: always taken */
-	{.instr = 0xa09d0000},
-	{.instr = 0xa01d0000},
-	{.instr = 0x43a1141d},
-	{.instr = 0x47e4040e},
-	{.instr = 0x6be00000}		/* Address Offset: 0x00000000000002dc */
+	0x4be0173f,		/* Address Offset: 0x0000000000000000 */
+	0x43ff0401,
+	0x43ff0521,
+	0x47ff0001,
+	0x47ff0401,
+	0x47ff0801,
+	0x47ff0501,
+	0x43ff09a1,
+	0x4be03721,
+	0x4be05681,
+	0x4be07781,
+	0x43ff0401,
+	0x43ff0521,
+	0x47ff0001,
+	0x47ff0401,
+	0x47ff0801,
+	0x47ff0501,		/* Address Offset: 0x0000000000000040 */
+	0x43ff09a1,
+	0x4be03721,
+	0x4be05681,
+	0x4be07781,
+	0x43e01401,
+	0xa03f0004,
+	0x303f0004,
+	0x303f0004,
+	0x283f0004,
+	0x283f0004,
+	0x203f0000,
+	0x47e01001,
+	0x47e01401,
+	0x47e01501,
+	0x43e019a1,
+	0x47e83408,		/* Address Offset: 0x0000000000000080 */
+	0x49021728,
+	0x45083408,
+	0xb11f0000,
+	0xa13f0000,
+	0x47e5d408,
+	0x351f0000,
+	0xa13f0000,
+	0x45083408,
+	0x391f0000,
+	0xa13f0000,
+	0x47e45408,
+	0x49021728,
+	0x45045408,
+	0xb11f0000,
+	0xa13f0000,
+	0x313f0004,		/* Address Offset: 0x00000000000000c0 */
+	0x313f0004,
+	0x293f0004,
+	0x293f0004,
+	0x43e15404,
+	0xc3e00066,		/* Branch: always taken */
+	0x43e15410,
+	0xa2100000,
+	0x4a039731,
+	0x43e03417,
+	0x43ff0401,
+	0x42e3b9b6,
+	0x42df05b6,
+	0xf6c00004,		/* Branch: 28 not taken, 1 taken */
+	0x4a203792,
+	0x4a203691,
+	0x47f10511,		/* Address Offset: 0x0000000000000100 */
+	0x42e01417,
+	0xc3fffff7,		/* Branch: always taken */
+	0x203f0001,
+	0x4823f721,
+	0x43e01404,
+	0x43e05401,
+	0x43e33402,
+	0x43e03403,
+	0x40230403,
+	0x43e6f408,
+	0x48205727,
+	0xb1070000,
+	0x41280409,
+	0x40230401,
+	0x47ff041f,
+	0x404105a2,		/* Address Offset: 0x0000000000000140 */
+	0x47ff041f,
+	0xf4400001,		/* Branch: 252 not taken, 1 taken */
+	0x47ff041f,
+	0xc3fffff6,		/* Branch: always taken */
+	0x203f0001,
+	0x4823f721,
+	0x43e01404,
+	0x43e05401,
+	0x43e33402,
+	0x43e03403,
+	0x40230401,
+	0x48205727,
+	0x40e60407,
+	0xa1070000,
+	0x41280409,
+	0x40230401,		/* Address Offset: 0x0000000000000180 */
+	0x404105a2,
+	0xf4400000,		/* Branch: 252 not taken, 1 taken */
+	0x47ff041f,
+	0xc3fffff7,		/* Branch: always taken */
+	0x49209689,
+	0x43e2340b,
+	0x412b052a,
+	0xa18a0000,
+	0x43e01404,
+	0x43e05401,
+	0x43e67402,
+	0x43e03403,
+	0x40230401,
+	0x48203727,
+	0x40e60407,
+	0x31070000,		/* Address Offset: 0x00000000000001c0 */
+	0x41280409,
+	0x40230401,
+	0x47ff041f,
+	0x404105a2,
+	0x47ff041f,
+	0xf4400001,		/* Branch: 508 not taken, 1 taken */
+	0x47ff041f,
+	0xc3fffff5,		/* Branch: always taken */
+	0x49209689,
+	0x43e9d40b,
+	0x412b052a,
+	0xa18a0000,
+	0x43e01404,
+	0x43e05401,
+	0x43e15402,
+	0x43e03403,		/* Address Offset: 0x0000000000000200 */
+	0x40230401,
+	0x48201727,
+	0x40e60407,
+	0x29070000,
+	0x41280409,
+	0x40230401,
+	0x47ff041f,
+	0x404105a2,
+	0x47ff041f,
+	0xf4400001,		/* Branch: 1020 not taken, 1 taken */
+	0x47ff041f,
+	0xc3fffff5,		/* Branch: always taken */
+	0x49209689,
+	0x43e1740b,
+	0x412b052a,
+	0xa18a001a,		/* Address Offset: 0x0000000000000240 */
+	0x47ff041f,
+	0x47ff041f,
+	0x47ff041f,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x43ff0401,
+	0x43bf141d,
+	0xb01d0004,
+	0xb09d0000,
+	0x408039a2,		/* Address Offset: 0x0000000000000280 */
+	0xe4400005,		/* Branch: 10 taken, 1 not taken */
+	0xa0840000,
+	0xa01d0004,
+	0x43a1141d,
+	0x47e4040e,
+	0x6be00000,
+	0x47e4040e,
+	0x47e40510,
+	0x409ff404,
+	0x47e40411,
+	0x42110412,
+	0x42110533,
+	0x46110014,
+	0x46310415,
+	0x46110516,
+	0x46110017,		/* Address Offset: 0x00000000000002c0 */
+	0x404105a2,
+	0xc3ffffe9,		/* Branch: always taken */
+	0xa09d0000,
+	0xa01d0000,
+	0x43a1141d,
+	0x47e4040e,
+	0x6be00000		/* Address Offset: 0x00000000000002dc */
 };
 
 #define AXP_NUMBER_OR_BRANCHES 15
@@ -271,7 +271,7 @@ int main()
 	{
 		u64 	pc;
 		AXP_PC	vpc;
-	} pc = { .pc = 0x0000000000000004UL };
+	} pc = { .pc = 0x0000000000000000UL };
 	AXP_21264_CPU *cpu;
 	AXP_INS_LINE nextLine;
 
@@ -283,6 +283,8 @@ int main()
 	ITBMissCnt = 0;
 	cycleCnt = 0;
 	instrCnt = 0;
+	nextLine.linePrediction = 0;
+	nextLine.setPrediction = 0;
 
 	while (!done)
 	{
@@ -327,7 +329,7 @@ int main()
 							{
 
 								/*
-								 * If the taken cound is zero, then if the
+								 * If the taken count is zero, then if the
 								 * default action is to not have taken the
 								 * branch, then do so now.
 								 */

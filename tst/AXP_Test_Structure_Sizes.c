@@ -52,7 +52,7 @@
 
 /*
  * main
- * 	This function is called to verify that certain critical data strcutures are
+ * 	This function is called to verify that certain critical data structures are
  * 	defined properly by size.
  *
  * Input Parameters:
@@ -193,7 +193,7 @@ int main()
 	PRINT_SIZE(AXP_VA_SPE1, 8, passed);
 	PRINT_SIZE(AXP_VA_SPE0, 8, passed);
 	PRINT_SIZE(AXP_VA_SPE, 8, passed);
-	PRINT_SIZE(AXP_DCACHE_BLK, 77, passed);
+	PRINT_SIZE(AXP_DCACHE_BLK, 80, passed);
 	PRINT_SIZE(AXP_ICACHE_BLK, 72, passed);
 	PRINT_SIZE(AXP_CACHE_IDX, 8, passed);
 	PRINT_SIZE(AXP_VA_FIELDS, 8, passed);

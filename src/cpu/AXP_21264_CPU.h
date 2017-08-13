@@ -404,8 +404,6 @@ typedef struct
 	 */
 	AXP_21264_TLB		itb[AXP_TB_LEN];
 	u32					nextITB;
-	u32					itbStart;	/* Since round-robin, need to know start */
-	u32					itbEnd;		/* and end entries in the ITB */
 
 	/**************************************************************************
 	 *	Ebox Definitions													  *

@@ -74,8 +74,7 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
 		{
 			if ((tlbArray[ii].virtAddr ==
 				(virtAddr & tlbArray[ii].matchMask)) &&
-			   (tlbArray[ii].asn == asn) &&
-			   (tlbArray[ii]._asm == true))
+			   (tlbArray[ii].asn == asn))
 			{
 				retVal = &tlbArray[ii];
 				break;
@@ -90,7 +89,7 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
 }
 
 /*
- * AXP_netNextFreeTLB
+ * AXP_getNextFreeTLB
  *	This function is called to find the first TLB entry that is not being used
  *	(invalid).  Unlike the 21264 ARM indicates, we do not do this as a
  *	round-robin list.  We just find the first available, starting from the
@@ -1134,7 +1133,7 @@ u8 *AXP_DcacheFetch(AXP_21264_CPU *cpu, u64 va, u64 pa, u8 *data)
 void AXP_IcacheAdd(
 				AXP_21264_CPU *cpu,
 				AXP_PC pc,
-				AXP_INS_FMT *nextInst,
+				u32 *nextInst,
 				AXP_21264_TLB *itb)
 {
 	AXP_VPC		vpc = {.pc = pc};
@@ -1213,7 +1212,7 @@ void AXP_IcacheAdd(
 	cpu->iCache[index][whichSet].vb = 1;
 	cpu->iCache[index][whichSet].tag = tag;
 	for (ii = 0; ii < AXP_ICACHE_LINE_INS; ii++)
-		cpu->iCache[index][whichSet].instructions[ii] = nextInst[ii];
+		cpu->iCache[index][whichSet].instructions[ii].instr = nextInst[ii];
 
 	/*
 	 * Return back to the caller.
@@ -1392,7 +1391,7 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 	if (retVal == true)
 	{
 		tmpPC = pc;
-		for (ii = 0; ii < AXP_ICACHE_LINE_INS; ii++)
+		for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
 		{
 			next->instructions[ii] =
 				cpu->iCache[index][whichSet].instructions[offset + ii];

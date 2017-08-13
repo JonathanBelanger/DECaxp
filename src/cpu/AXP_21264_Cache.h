@@ -55,11 +55,7 @@ u64 AXP_va2pa(
 void AXP_DcacheAdd(AXP_21264_CPU *, u64, u64, u8 *);
 void AXP_DcacheFlush(AXP_21264_CPU *);
 u8 *AXP_DcacheFetch(AXP_21264_CPU *, u64, u64, u8 *);
-void AXP_IcacheAdd(
-				AXP_21264_CPU *,
-				AXP_PC ,
-				AXP_INS_FMT *,
-				AXP_21264_TLB *);
+void AXP_IcacheAdd(AXP_21264_CPU *, AXP_PC , u32 *, AXP_21264_TLB *);
 void AXP_IcacheFlush(AXP_21264_CPU *, bool);
 bool AXP_IcacheFetch(AXP_21264_CPU *, AXP_PC, AXP_INS_LINE *);
 bool AXP_IcacheValid(AXP_21264_CPU *, AXP_PC);
