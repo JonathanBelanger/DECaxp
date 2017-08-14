@@ -189,7 +189,7 @@ static u32 memory[] =
 	0x00000000,
 	0x00000000,
 	0x00000000,
-	0x43ff0401,
+	0x43ff0401,		/* Jumped to from 0x00000000000000d4 */
 	0x43bf141d,
 	0xb01d0004,
 	0xb09d0000,
@@ -370,6 +370,7 @@ int main()
 										printf("0x%08llx\n", pc.pc);
 									}
 								}
+								break;
 							}
 					}
 				}
