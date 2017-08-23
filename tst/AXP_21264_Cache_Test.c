@@ -31,9 +31,11 @@
 int main()
 {
 	AXP_21264_CPU	*cpu = NULL;
-	AXP_21264_TLB	*dtb, *itb;
+	AXP_21264_TLB	*itb;
 	AXP_INS_LINE	nextIns;
 	AXP_PC			pc;
+	u64				zeroPCval = 0;
+	AXP_PC			zeroPC = *((AXP_PC *) &zeroPCval);
 	u32				noOp = 0x47ff041f;
 	u32				readIns[AXP_ICACHE_LINE_INS];
 	FILE			*fp = NULL;
@@ -45,7 +47,7 @@ int main()
 		NULL
 	};
 	char			*line = NULL;
-	int				lineLen = 0;
+	size_t			lineLen = 0;
 	int				ii = 0;
 	u32				oper, addr, data, items;
 	u64				va, pa, dataLoc;
@@ -91,6 +93,11 @@ int main()
 			{
 				totalOper++;
 				items = sscanf(line, "%d %06x %08x", &oper, &addr, &data);
+				if ((items != 2) || (items != 3))
+				{
+					printf("sscanf did not return the number of expected items %d\n", items);
+					abort();
+				}
 				switch (oper)
 				{
 					case 0:		/* Read from Memory */
@@ -102,7 +109,14 @@ int main()
 						 * test).
 						 */
 						va = addr;
-						pa = AXP_va2pa(cpu, va, 0, true, Read, &_asm, &fault);
+						pa = AXP_va2pa(
+									cpu,
+									va,
+									zeroPC,
+									true,
+									Read,
+									&_asm,
+									&fault);
 
 						/*
 						 * For all the reads, the call to convert from VA
@@ -139,7 +153,14 @@ int main()
 					 * code).
 					 */
 					va = addr;
-					pa = AXP_va2pa(cpu, va, 0, true, Write, &_asm, &fault);
+					pa = AXP_va2pa(
+								cpu,
+								va,
+								zeroPC,
+								true,
+								Write,
+								&_asm,
+								&fault);
 					if ((fault == AXP_DTBM_DOUBLE_3) ||
 						(fault == AXP_DTBM_DOUBLE_4) ||
 						(fault == AXP_DTBM_SINGLE))
@@ -155,7 +176,14 @@ int main()
 						 * Now try and convert the virtual address to a
 						 * physical one.
 						 */
-						pa = AXP_va2pa(cpu, va, 0, true, Write, &_asm, &fault);
+						pa = AXP_va2pa(
+									cpu,
+									va,
+									zeroPC,
+									true,
+									Write,
+									&_asm,
+									&fault);
 					}
 					else if (fault != 0)
 					{
@@ -165,14 +193,14 @@ int main()
 
 					/*
 					 * At this point one of the above calls to convert from
-					 * a virtual address to a physic al one.  If not, then
+					 * a virtual address to a physical one.  If not, then
 					 * we have an unexpected error.
 					 */
 					if (fault == 0)
 					{
 
 						/*
-						 * At this point we don't knoe if the data to be
+						 * At this point we don't know if the data to be
 						 * saved is already in the Data Cache or not.  We
 						 * first need to fetch it.  If that fails, then we
 						 * either add it or update it.
@@ -191,13 +219,13 @@ int main()
 									va,
 									pa,
 									sizeof(data),
-									data,
-									dataLoc);
+									&data,
+									&dataLoc);
 						}
 						else
 						{
 							writeMiss++;
-							AXP_DcacheAdd(cpu, va, pa, sizeof(data), data);
+							AXP_DcacheAdd(cpu, va, pa, sizeof(data), &data);
 						}
 					}
 					else
@@ -208,7 +236,7 @@ int main()
 					break;
 
 				case 2:		/* Read instruction from Memory */
-					readInstr++;
+					readInst++;
 
 					/*
 					 * This is just an emulation.  There is no attempt to
@@ -229,13 +257,19 @@ int main()
 					 * then we'll actually store 16 no-op instructions,
 					 * one a 64 byte boundary.
 					 */
-					va = addr;
-					if (AXP_IcacheFetch(cpu, va, &nextIns) == false)
+					va = addr;	/* We use this when searching for the TLB */
+					pc = *((AXP_PC *) &addr);
+					if (AXP_IcacheFetch(cpu, pc, &nextIns) == false)
 					{
 						itb = AXP_findTLBEntry(cpu, va, false);
 						if (itb == NULL)
 						{
+							AXP_PC boundaryPC;
+
 							instrWayMiss++;
+
+							addr &= 0x7ffffc0;	/* Round to 64 byte boundary */
+							boundaryPC = *((AXP_PC *) &addr);
 
 							/*
 							 * First create an Address Translation Buffer.
@@ -247,23 +281,22 @@ int main()
 								printf("AXP_findTLBNEntry(Icache) unexpectedly returned NULL\n");
 								abort();
 							}
-							va &= 0x7ffffc0;	/* Round to currrent/previous 64 byte boundary */
 							AXP_IcacheAdd(
 									cpu,
-									*((AXP_PC *) &va),
-									nextIns,
+									boundaryPC,
+									readIns,
 									itb);
 						}
 						else
 							instrMiss++;
-						if (AXP_IcacheFetch(cpu, va, &nextIns) == false)
+						if (AXP_IcacheFetch(cpu, pc, &nextIns) == false)
 						{
 							printf("AXP_IcacheFetch unexpectedly returned false\n");
 							abort();
 						}
 					}
 					else
-						instrHit++:
+						instrHit++;
 					break;
 				}
 			}

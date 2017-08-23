@@ -52,10 +52,10 @@ u64 AXP_va2pa(
 		AXP_21264_ACCESS,
 		bool *,
 		u32 *);
-void AXP_DcacheAdd(AXP_21264_CPU *, u64, u64, u8 *);
+void AXP_DcacheAdd(AXP_21264_CPU *, u64, u64, u32, void *);
 void AXP_DcacheFlush(AXP_21264_CPU *);
 bool AXP_DcacheFetch(AXP_21264_CPU *, u64, u64, u32, void *, u64 *);
-bool AXP_DcacheUpdate(AXP_21264_CPU *, u64, u64, u32, void *, u64);
+bool AXP_DcacheUpdate(AXP_21264_CPU *, u64, u64, u32, void *, u64 *);
 void AXP_IcacheAdd(AXP_21264_CPU *, AXP_PC , u32 *, AXP_21264_TLB *);
 void AXP_IcacheFlush(AXP_21264_CPU *, bool);
 bool AXP_IcacheFetch(AXP_21264_CPU *, AXP_PC, AXP_INS_LINE *);
