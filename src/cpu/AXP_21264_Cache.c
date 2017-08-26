@@ -24,6 +24,14 @@
  *
  *	V01.000		04-Aug-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		24-Aug-2017	Jonathan D. Belanger
+ *	I'm chancing the way the Dcache Add and Update functionality works.  These
+ *	functions are going to be combined into a single Dcache Write function.
+ *	The Dcache Fetch function will be changed to Dcache Read.  The Icache
+ *	functions will remain the same, as there is only one writter (the Cbox) and
+ *	only one reader, the Ibox.  Where as, the Dcache as potentially multiple
+ *	writers (the Cbox and the Mbox) and only one reader (the Mbox).
  */
 #include "AXP_21264_Cache.h"
 
@@ -48,6 +56,15 @@ typedef union
 		u32	set;
 	}		idxOrSet;
 } AXP_DCACHE_IDXSET;
+
+/****************************************************************************/
+/*																			*/
+/*	The following code handles both the ITB and DTB lists for the Digital	*/
+/*	Alpha AXP processors.  This implementation is consistent with the 21264	*/
+/*	generation of this processor.  It may also be valid for other			*/
+/*	generations.															*/
+/*																			*/
+/****************************************************************************/
 
 /*
  * AXP_findTLBEntry
@@ -424,6 +441,17 @@ void AXP_tbis(AXP_21264_CPU *cpu, u64 va, bool dtb)
 	return;
 }
 
+/****************************************************************************/
+/*																			*/
+/*	The following code handles the virtual address to physical address		*/
+/*	translation and the memory access checking associated with that			*/
+/*	translation.  It utilizes the ITB and DTB structures to perform this	*/
+/*	this translation, as well as the setting of the PALmode bit in the PC,	*/
+/*	and the super page settings within the Ibox Contol Register or the Mbox	*/
+/*	Dcache Control Register.												*/
+/*																			*/
+/****************************************************************************/
+
 /*
  * AXP_21264_check_memoryAccess
  *	This function is caller to determine if the process has the access needed
@@ -781,6 +809,14 @@ u64 AXP_va2pa(
 	return(pa);
 }
 
+/****************************************************************************/
+/*																			*/
+/*	The following code is utilized to manage the Dcache within the Digital	*/
+/*	Alpha AXP processor.  It is consistent with the 21264 generation of		*/
+/*	this CPU.  It may also be applicable for other generations.				*/
+/*																			*/
+/****************************************************************************/
+
 /*
  * AXP_DcacheAdd
  * 	This function is called to add a cache entry into the Data Cache.  If the
@@ -801,12 +837,14 @@ u64 AXP_va2pa(
  *	len:
  *		A value indicating the length of the input parameter 'data'.  This
  *		parameter must be one of the following values (assumed signed):
- *			1	= byte
- *			2	= word
- *			4	= longword
- *			8	= quadword
+ *			 1	= byte
+ *			 2	= word
+ *			 4	= longword
+ *			 8	= quadword
+ *			64	= 64 bytes of data being copied from memory to the Dcache
  * 	data:
- * 		A pointer to the 64-bytes of data to be stored in the cache.
+ * 		A pointer to the data to be stored in the Dcache, whose length is is
+ *		specified by the 'len' parameter.
  *
  * Output Parameters:
  * 	None.
@@ -960,6 +998,9 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u32 len, void *data)
 			case 8:
 				*((u64 *) cpu->dCache[found][setToUse].data) = *src64;
 				break;
+
+			case 64:
+				memcpy();
 		}
 		cpu->dCache[found][setToUse].physTag = pa;
 		cpu->dCache[found][setToUse].dirty = false;
@@ -1048,8 +1089,11 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 }
 
 /*
- * AXP_DcacheFetch
- * 	This function is called to fetch a cache entry from the Data Cache.
+ * AXP_DcacheRead
+ * 	This function is called to read a cache entry from the Data Cache.  This
+ *	function can read any of the natural values from the Dcache.  The natural
+ *	values are, in order of size, byte (8-bits), word (16-bits), longword
+ *	(32-bits), and quadword (64-bits).
  *
  * Input Parameters:
  * 	cpu:
@@ -1079,7 +1123,7 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
  * 	false:	Entry not found.
  * 	true:	Found the entry requested.
  */
-bool AXP_DcacheFetch(
+bool AXP_DcacheRead(
 			AXP_21264_CPU *cpu,
 			u64 va,
 			u64 pa,
@@ -1336,6 +1380,14 @@ bool AXP_DcacheUpdate(
 	}
 	return(retVal);
 }
+
+/****************************************************************************/
+/*																			*/
+/*	The following code is utilized for managing the Icache for the Digital	*/
+/*	Alpha AXP processor.  It is consistent with the 21264 generation of 	*/
+/*	this processor.  It may also be applicable to other generations.		*/
+/*																			*/
+/****************************************************************************/
 
 /*
  * AXP_IcacheAdd
