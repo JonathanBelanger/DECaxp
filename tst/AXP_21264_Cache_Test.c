@@ -28,6 +28,53 @@
 #include "AXP_21264_CPU.h"
 #include "AXP_21264_Ibox.h"
 
+int parseLine(char *line, u32 *oper, u32 *addr, u32 *data)
+{
+	int		retVal = 0;
+	int		ii = 0;
+	int		len = strlen(line);
+	bool	count;
+
+	while ((line[ii] != ' ') &&
+		   !(((line[ii] >= '0') && (line[ii] <= '9')) ||
+			 ((line[ii] >= 'a') && (line[ii] <= 'f'))))
+		ii++;
+	*oper = line[ii] - '0';
+	retVal++;
+	ii += 2;
+	*addr = 0;
+	count = false;
+	while ((ii < len) && (line[ii] != ' '))
+	{
+		*addr *= 16;
+		if ((line[ii] >= '0') && (line[ii] <= '9'))
+			*addr += (line[ii] - '0');
+		else
+			*addr += (10 + line[ii] - 'a');
+		ii++;
+		count = true;
+	}
+	if (count == true)
+		retVal++;
+	ii++;
+	*data = 0;
+	count = false;
+	while ((ii < len) && (line[ii] != 13))
+	{
+		*data *= 16;
+		if ((line[ii] >= '0') && (line[ii] <= '9'))
+			*data += (line[ii] - '0');
+		else
+			*data += (10 + line[ii] - 'a');
+		ii++;
+		count = true;
+	}
+	if (count == true)
+		retVal++;
+
+	return(retVal);
+}
+
 int main()
 {
 	AXP_21264_CPU	*cpu = NULL;
@@ -46,8 +93,8 @@ int main()
 		"../tst/cc.trace",
 		NULL
 	};
-	char			*line = NULL;
-	size_t			lineLen = 0;
+	char			*line;
+	size_t			lineLen = 32;
 	int				ii = 0;
 	u32				oper, addr, data, items;
 	u64				va, pa, dataLoc;
@@ -60,7 +107,8 @@ int main()
 	u32				readData, writeData, readInst;
 	u32				totalOper;
 
-	printf("\nAXP 21264 IEEE Floating Point Tester\n");
+	printf("\nAXP 21264 Data and Instruction Cache Tester\n");
+	line = (char *) calloc(lineLen, sizeof(char));
 	cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
 	cpu->iCtl.ic_en = 3;	/* Use both Icache sets */
 	cpu->dcCtl.set_en = 3;	/* Use both Dcache sets */
@@ -84,18 +132,22 @@ int main()
 	 */
 	for (ii = 0; ii < AXP_ICACHE_LINE_INS; ii++)
 		readIns[ii] = noOp;
-
+	ii = 0;
 	while ((fileNames[ii] != NULL) && (cpu != NULL))
 	{
+		printf("\n>>> Processing file: %s\n", fileNames[ii]);
 		if ((fp = fopen(fileNames[ii], "r")) != NULL)
 		{
 			while (getline(&line, &lineLen, fp) != -1)
 			{
+				printf("%s\n", line);
 				totalOper++;
-				items = sscanf(line, "%d %06x %08x", &oper, &addr, &data);
-				if ((items != 2) || (items != 3))
+				oper = addr = data = 0;
+				items = parseLine(line, &oper, &addr, &data);
+				if ((items != 2) && (items != 3))
 				{
-					printf("sscanf did not return the number of expected items %d\n", items);
+					printf("%d %08x %08x\n", oper, addr, data);
+					printf("parseLine did not return the number of expected items %d\n", items);
 					abort();
 				}
 				switch (oper)
@@ -187,7 +239,7 @@ int main()
 					}
 					else if (fault != 0)
 					{
-						printf("Got a va2pa(Read) fault 0x%04x\n", fault);
+						printf("Got a va2pa(Write 2) fault 0x%04x\n", fault);
 						abort();
 					}
 
@@ -205,7 +257,7 @@ int main()
 						 * first need to fetch it.  If that fails, then we
 						 * either add it or update it.
 						 */
-						if (AXP_DcacheFetch(
+						if (AXP_DcacheRead(
 									cpu,
 									va,
 									pa,
@@ -214,7 +266,7 @@ int main()
 									&dataLoc) == false)
 						{
 							writeHit++;
-							AXP_DcacheUpdate(
+							AXP_DcacheWrite(
 									cpu,
 									va,
 									pa,
@@ -225,12 +277,18 @@ int main()
 						else
 						{
 							writeMiss++;
-							AXP_DcacheAdd(cpu, va, pa, sizeof(data), &data);
+							AXP_DcacheWrite(
+									cpu,
+									va,
+									pa,
+									sizeof(data),
+									&data,
+									NULL);
 						}
 					}
 					else
 					{
-						printf("Got a va2pa(Read) fault 0x%04x\n", fault);
+						printf("Got a va2pa(Write 1) fault 0x%04x\n", fault);
 						abort();
 					}
 					break;

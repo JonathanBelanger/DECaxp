@@ -818,10 +818,10 @@ u64 AXP_va2pa(
 /****************************************************************************/
 
 /*
- * AXP_DcacheAdd
- * 	This function is called to add a cache entry into the Data Cache.  If the
- * 	entry is already there, or in one of the four possible other locations,
- * 	then there is nothing to do.
+ * AXP_DcacheWrite
+ * 	This function is called to add/update a cache entry into the Data Cache.
+ * 	If the entry is already there, or in one of the four possible other
+ * 	locations, then there is nothing to do.
  *
  *	This function is called as a result of a request to the Cbox to perform a
  *	Dcache fill.
@@ -845,21 +845,35 @@ u64 AXP_va2pa(
  * 	data:
  * 		A pointer to the data to be stored in the Dcache, whose length is is
  *		specified by the 'len' parameter.
+ *	idxSet:
+ *		An optional pointer to a 64-bit value to indicating the actual index
+ *		and set from where the data is written to in the Dcache.  If this is
+ *		NULL, then the virtual address (va) parameter will be used to determine
+ *		index and set, which we may have to search for.
  *
  * Output Parameters:
  * 	None.
  *
  * Return Value:
- * 	None.
+ * 	false:	Entry not found.
+ * 	true:	Found the entry requested.
  */
-void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u32 len, void *data)
+bool AXP_DcacheWrite(
+			AXP_21264_CPU *cpu,
+			u64 va,
+			u64 pa,
+			u32 len,
+			void *data,
+			u64 *idxSet)
 {
+	bool		retVal = false;
 	AXP_VA		virtAddr = {.va = va};
 	u8			*src8 = (u8 *) data;
 	u16			*src16 = (u16 *) data;
 	u32			*src32 = (u32 *) data;
 	u64			*src64 = (u64 *) data;
 	u32			oneChecked = virtAddr.vaIdxCntr.counter;
+	int 		setToUse;
 	int			found = AXP_CACHE_ENTRIES;
 	int			ii;
 	int			sets;
@@ -885,10 +899,19 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u32 len, void *data)
 	 */
 	sets = (cpu->dcCtl.set_en == 1) ? 1 : 2;
 
+	if (idxSet != NULL)
+	{
+		AXP_DCACHE_IDXSET	indexAndSet;
+
+		indexAndSet.idxSet = *idxSet;
+		found = indexAndSet.idxOrSet.index;
+		setToUse = indexAndSet.idxOrSet.set;
+	}
+
 	/*
 	 * Check the index based solely on the Virtual Address (both sets).
 	 */
-	for (ii = 0; ii < sets; ii++)
+	for (ii = 0; ((ii < sets) && (found == AXP_CACHE_ENTRIES)); ii++)
 	{
 		if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
 			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
@@ -928,8 +951,6 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u32 len, void *data)
 	 */
 	if (found == AXP_CACHE_ENTRIES)
 	{
-		int setToUse;
-
 		virtAddr.va = va;
 		found = virtAddr.vaIdx.index;
 		if ((cpu->dCache[found][0].valid == false) || (sets == 1))
@@ -955,64 +976,67 @@ void AXP_DcacheAdd(AXP_21264_CPU *cpu, u64 va, u64 pa, u32 len, void *data)
 				cpu->dCache[found][0].set_0_1 = true;
 			}
 		}
+	}
 
-		/*
-		 * We are re-using a cache entry.  IF the modified bit it set,
-		 * then write the existing value to memory.
-		 */
-		if (cpu->dCache[found][setToUse].modified)
-		{
-			/* Send to the Cbox to copy into memory. */
-			cpu->dCache[found][setToUse].modified = false;
-			/* TODO:	Need to determine what to do, if anything, with the */
-			/*			dirty bit											*/
-		}
-
-		/*
-		 * OK, we now have the index and the set, check to see if we are
-		 * evicting an existing cache entry that also needs to be pushed out to
-		 * memory, store the data and set the bits.
-		 */
-		if ((cpu->dCache[found][setToUse].valid == true) &&
-			(cpu->dCache[found][setToUse].dirty ||
-			 cpu->dCache[found][setToUse].modified))
-		{
-			/* Send to the Cbox to copy into memory. */
+	/*
+	 * OK, we now have the index and the set, check to see if we are
+	 * evicting an existing cache entry that also needs to be pushed out to
+	 * memory, store the data and set the bits.
+	 */
+	if ((cpu->dCache[found][setToUse].valid == true) &&
+		((cpu->dCache[found][setToUse].dirty == true) ||
+		 (cpu->dCache[found][setToUse].modified == true)))
+	{
+		/* Send to the Cbox to copy into memory. */
 #pragma message "Write-back Cache code needs to be completed."
-			cpu->dCache[ii][0].modified = false;
-		}
-		switch (len)
-		{
-			case 1:
-				*((u8 *) cpu->dCache[found][setToUse].data) = *src8;
-				break;
+		cpu->dCache[ii][0].modified = false;
+	}
 
-			case 2:
-				*((u16 *) cpu->dCache[found][setToUse].data) = *src16;
-				break;
+	/*
+	 * Write the supplied data to the Dcache (based on length).
+	 */
+	switch (len)
+	{
+		case 1:
+			*((u8 *) cpu->dCache[found][setToUse].data) = *src8;
+			break;
 
-			case 4:
-				*((u32 *) cpu->dCache[found][setToUse].data) = *src32;
-				break;
+		case 2:
+			*((u16 *) cpu->dCache[found][setToUse].data) = *src16;
+			break;
 
-			case 8:
-				*((u64 *) cpu->dCache[found][setToUse].data) = *src64;
-				break;
+		case 4:
+			*((u32 *) cpu->dCache[found][setToUse].data) = *src32;
+			break;
 
-			case 64:
-				memcpy();
-		}
+		case 8:
+			*((u64 *) cpu->dCache[found][setToUse].data) = *src64;
+			break;
+
+		case 64:
+			memcpy(cpu->dCache[found][setToUse].data, src8, len);
+			break;
+	}
+#pragma message "Need to determine when to use dirty/modified cache."
+	if (cpu->dCache[found][setToUse].valid == false)
+	{
 		cpu->dCache[found][setToUse].physTag = pa;
 		cpu->dCache[found][setToUse].dirty = false;
 		cpu->dCache[found][setToUse].modified = false;
 		cpu->dCache[found][setToUse].shared = false;
 		cpu->dCache[found][setToUse].valid = true;
 	}
+	else if (cpu->dCache[found][setToUse].valid == true)
+	{
+		cpu->dCache[found][setToUse].dirty = true;
+		cpu->dCache[found][setToUse].modified = true;
+	}
+	retVal = true;
 
 	/*
 	 * Return back to the caller.
 	 */
-	return;
+	return(retVal);
 }
 
 /*
@@ -1228,28 +1252,29 @@ bool AXP_DcacheRead(
 	 * into the location provided, based on size of the data.
 	 */
 	if (retVal == true)
+	{
+		u32		index = indexAndSet.idxOrSet.index;
+		u32		set = indexAndSet.idxOrSet.set;
+
 		switch (len)
 		{
 			case 1:
-				*dest8 = 
-					*((u8 *) cpu->dCache[indexAndSet.idxOrSet.index][indexAndSet.idxOrSet.set].data);
+				*dest8 = *((u8 *) cpu->dCache[index][set].data);
 				break;
 
 			case 2:
-				*dest16 =
-					*((u16 *) cpu->dCache[indexAndSet.idxOrSet.index][indexAndSet.idxOrSet.set].data);
+				*dest16 = *((u16 *) cpu->dCache[index][set].data);
 				break;
 
 			case 4:
-				*dest32 =
-					*((u32 *) cpu->dCache[indexAndSet.idxOrSet.index][indexAndSet.idxOrSet.set].data);
+				*dest32 = *((u32 *) cpu->dCache[index][set].data);
 				break;
 
 			case 8:
-				*dest64 =
-					*((u64 *) cpu->dCache[indexAndSet.idxOrSet.index][indexAndSet.idxOrSet.set].data);
+				*dest64 = *((u64 *) cpu->dCache[index][set].data);
 				break;
 		}
+	}
 
 	/*
 	 * Return what we found, if anything, back to the caller.
@@ -1258,126 +1283,6 @@ bool AXP_DcacheRead(
 	 *			block they expected to be there, was not, and submit a request
 	 *			to the Cbox to file the Dcache block.
 	 */
-	return(retVal);
-}
-
-/*
- * AXP_DcacheUpdate
- *	This function is called to update an entry in the Data Cache.
- *
- * Input Parameters:
- * 	cpu:
- * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
- * 		Data Cache (dCache) array.
- * 	va:
- * 		The virtual address of the data in virtual memory.
- * 	pa:
- * 		The physical address, as stored in the DTB (Data TLB).
- *	len:
- *		A value indicating the length of the input parameter 'data'.  This
- *		parameter must be one of the following values (assumed signed):
- *			1	= byte
- *			2	= word
- *			4	= longword
- *			8	= quadword
- * 	data:
- *		A pointer a location to receive the data from the data cache.  The size
- *		of this location is determined in the input parameter 'len'.
- *	idxSet:
- *		A pointer to a 64-bit value to indicating the actual index and set from
- *		where the data is stored in the Dcache.  If this is NULL, then the
- *		virtual address (va) parameter will be used to determine index and set,
- *		which we may have to search for.
- *
- * Return Value:
- * 	false:	Entry not updated (usually not found).
- * 	true:	The entry was successfully updated.
- */
-bool AXP_DcacheUpdate(
-			AXP_21264_CPU *cpu,
-			u64 va,
-			u64 pa,
-			u32 len,
-			void *data,
-			u64 *idxSet)
-{
-	bool				retVal = false;
-	AXP_DCACHE_IDXSET	indexAndSet;
-	u64					*src64 = (u64 *) data;
-	u32					*src32 = (u32 *) data;
-	u16					*src16 = (u16 *) data;
-	u8					*src8 = (u8 *) data;
-	int					index;
-	int					set;
-
-	if (idxSet != NULL)
-	{
-		indexAndSet.idxSet = *idxSet;
-		index = indexAndSet.idxOrSet.index;
-		set = indexAndSet.idxOrSet.set;
-		retVal = true;
-	}
-	else
-	{
-		u64 tmpData;	/* We don't care what data is returned.  */
-		u64 tmpIdxSet;	/* We need this value for the index and set values */
-
-		retVal = AXP_DcacheFetch(
-						cpu,
-						va,
-						pa,
-						len,
-						(void  *) &tmpData,
-						&tmpIdxSet);
-
-		/*
-		 * We can only get an index and set value if we were able to find the
-		 * item we are looking for in the Dcache.  If not, we'll return a false
-		 * and the caller can handle what it wants to do with this information.
-		 */
-		if (retVal == true)
-		{
-			indexAndSet.idxSet = tmpIdxSet;
-			index = indexAndSet.idxOrSet.index;
-			set = indexAndSet.idxOrSet.set;
-		}
-	}
-
-	if (retVal == true)
-	{
-
-		/*
-		 * In order to be able to update the Dcache, the valid bit should be set
-		 * and the physical tag match the one specified on the call.  If the do
-		 * not, then don't update anything.  Otherwise, make the update and set
-		 * the appropriate bits indicating that the value was modified.
-		 */
-		if ((cpu->dCache[index][set].valid == true) &&
-			(cpu->dCache[index][set].physTag == pa))
-		{
-			switch (len)
-			{
-				case 1:
-					*((u8 *) cpu->dCache[index][set].data) = *src8;
-					break;
-
-				case 2:
-					*((u16 *) cpu->dCache[index][set].data) = *src16;
-					break;
-
-				case 4:
-					*((u32 *) cpu->dCache[index][set].data) = *src32;
-					break;
-
-				case 8:
-					*((u64 *) cpu->dCache[index][set].data) = *src64;
-					break;
-			}
-			cpu->dCache[index][set].modified = true;
-		}
-		else
-			retVal = false;
-	}
 	return(retVal);
 }
 
