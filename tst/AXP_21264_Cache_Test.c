@@ -44,7 +44,9 @@ int parseLine(char *line, u32 *oper, u32 *addr, u32 *data)
 	ii += 2;
 	*addr = 0;
 	count = false;
-	while ((ii < len) && (line[ii] != ' '))
+	while ((ii < len) &&
+		   (((line[ii] >= '0') && (line[ii] <= '9')) ||
+		    ((line[ii] >= 'a') && line[ii] <= 'f')))
 	{
 		*addr *= 16;
 		if ((line[ii] >= '0') && (line[ii] <= '9'))
@@ -89,7 +91,6 @@ int main()
 	char			*fileNames[] =
 	{
 		"../tst/compress.trace",
-		NULL,
 		"../tst/tex.trace",
 		"../tst/cc.trace",
 		NULL
@@ -133,13 +134,13 @@ int main()
 	 */
 	for (ii = 0; ii < AXP_ICACHE_LINE_INS; ii++)
 		readIns[ii] = noOp;
+	memset(&nextIns, 0, sizeof(nextIns));
 	ii = 0;
 	while ((fileNames[ii] != NULL) && (cpu != NULL))
 	{
 		printf("\n>>> Processing file: %s\n", fileNames[ii]);
 		if ((fp = fopen(fileNames[ii], "r")) != NULL)
 		{
-			printf("%s\n", line);
 			while (getline(&line, &lineLen, fp) != -1)
 			{
 				totalOper++;
@@ -147,6 +148,7 @@ int main()
 				items = parseLine(line, &oper, &addr, &data);
 				if ((items != 2) && (items != 3))
 				{
+					printf("%s\n", line);
 					printf("%d %08x %08x\n", oper, addr, data);
 					printf("parseLine did not return the number of expected items %d\n", items);
 					abort();
@@ -174,19 +176,40 @@ int main()
 						/*
 						 * For all the reads, the call to convert from VA
 						 * to PA should not generate a fault.
-						 *
-						 * TODO: On a read miss, we have to create the DTB
-						 * 		 entry, and simulate reading from memory and
-						 * 		 into the cache, then reading from the cache.
 						 */
-						if (fault != 0)
+						if ((fault == AXP_DTBM_DOUBLE_3) ||
+							(fault == AXP_DTBM_DOUBLE_4) ||
+							(fault == AXP_DTBM_SINGLE))
 						{
 							readMiss++;
-							printf(
-								"Got a va2pa(Read) fault 0x%04x on page 0x%016llx\n",
-								fault,
-								(va & 0xffffffffffffe000ll));
-							/* abort();	*/
+
+							/*
+							 * First create an Address Translation Buffer.
+							 */
+							AXP_addTLBEntry(cpu, va, va, true);
+
+							/*
+							 * Now try and convert the virtual address to a
+							 * physical one.
+							 */
+							pa = AXP_va2pa(
+										cpu,
+										va,
+										zeroPC,
+										true,
+										Read,
+										&_asm,
+										&fault);
+							if (fault != 0)
+							{
+								printf("Got a va2pa(Read 2) fault 0x%04x\n", fault);
+								abort();
+							}
+						}
+						else if (fault != 0)
+						{
+							printf("Got a va2pa(Read 1) fault 0x%04x\n", fault);
+							abort();
 						}
 						else
 						{
@@ -324,18 +347,20 @@ int main()
 					 * one a 64 byte boundary.
 					 */
 					va = addr;	/* We use this when searching for the TLB */
-					pc = *((AXP_PC *) &addr);
+					pc = *((AXP_PC *) &va);
 					if (AXP_IcacheFetch(cpu, pc, &nextIns) == false)
 					{
+						AXP_PC	boundaryPC;
+						u64		tmpAddr = addr;
+
+						tmpAddr &= 0x7ffffc0;	/* Round to 64 byte boundary */
+						boundaryPC = *((AXP_PC *) &tmpAddr);
+
 						itb = AXP_findTLBEntry(cpu, va, false);
 						if (itb == NULL)
 						{
-							AXP_PC boundaryPC;
 
 							instrWayMiss++;
-
-							addr &= 0x7ffffc0;	/* Round to 64 byte boundary */
-							boundaryPC = *((AXP_PC *) &addr);
 
 							/*
 							 * First create an Address Translation Buffer.
@@ -354,7 +379,14 @@ int main()
 									itb);
 						}
 						else
+						{
 							instrMiss++;
+							AXP_IcacheAdd(
+									cpu,
+									boundaryPC,
+									readIns,
+									itb);
+						}
 						if (AXP_IcacheFetch(cpu, pc, &nextIns) == false)
 						{
 							printf("AXP_IcacheFetch unexpectedly returned false\n");
@@ -366,6 +398,8 @@ int main()
 					break;
 				}
 			}
+			AXP_DcacheFlush(cpu);
+			AXP_IcacheFlush(cpu, false);
 		}
 		fclose(fp);
 		fp = NULL;
