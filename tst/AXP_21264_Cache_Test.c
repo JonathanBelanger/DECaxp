@@ -89,6 +89,7 @@ int main()
 	char			*fileNames[] =
 	{
 		"../tst/compress.trace",
+		NULL,
 		"../tst/tex.trace",
 		"../tst/cc.trace",
 		NULL
@@ -138,9 +139,9 @@ int main()
 		printf("\n>>> Processing file: %s\n", fileNames[ii]);
 		if ((fp = fopen(fileNames[ii], "r")) != NULL)
 		{
+			printf("%s\n", line);
 			while (getline(&line, &lineLen, fp) != -1)
 			{
-				printf("%s\n", line);
 				totalOper++;
 				oper = addr = data = 0;
 				items = parseLine(line, &oper, &addr, &data);
@@ -173,12 +174,19 @@ int main()
 						/*
 						 * For all the reads, the call to convert from VA
 						 * to PA should not generate a fault.
+						 *
+						 * TODO: On a read miss, we have to create the DTB
+						 * 		 entry, and simulate reading from memory and
+						 * 		 into the cache, then reading from the cache.
 						 */
 						if (fault != 0)
 						{
 							readMiss++;
-							/* printf("Got a va2pa(Read) fault 0x%04x\n", fault);
-							abort();	*/
+							printf(
+								"Got a va2pa(Read) fault 0x%04x on page 0x%016llx\n",
+								fault,
+								(va & 0xffffffffffffe000ll));
+							/* abort();	*/
 						}
 						else
 						{
@@ -263,7 +271,7 @@ int main()
 									pa,
 									sizeof(fetchedData),
 									&fetchedData,
-									&dataLoc) == false)
+									&dataLoc) == true)
 						{
 							writeHit++;
 							AXP_DcacheWrite(
@@ -371,7 +379,7 @@ int main()
 	printf("Total writes to Dcache: %d\n", writeData);
 	printf("Total writes that Hit the Dcache (updates): %d\n", writeHit);
 	printf("Total writes that Missed the Dcache (adds): %d\n", writeMiss);
-	printf("Total writes that Missed the Dcache and DLB: %d\n\n", writeWayMiss);
+	printf("Total writes that Missed the Dcache and DTB: %d\n\n", writeWayMiss);
 
 	printf("Total reads from Icache: %d\n", readInst);
 	printf("Total reads that Hit in the Icache: %d\n", instrHit);

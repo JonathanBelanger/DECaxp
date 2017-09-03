@@ -510,20 +510,22 @@ bool AXP_21264_checkMemoryAccess(
 						break;
 
 					case Read:
-						retVal = ((tlb->kre == 1) && (tlb->faultOnRead == 1));
+						retVal = ((tlb->kre == 0) || (tlb->faultOnRead == 1));
 						break;
 
 					case Write:
-						retVal = ((tlb->kwe == 1) && (tlb->faultOnWrite == 1));
+						retVal = ((tlb->kwe == 0) || (tlb->faultOnWrite == 1));
 						break;
 
 					case Execute:
-						retVal = ((tlb->kre == 1) && (tlb->faultOnExecute == 1));
+						retVal = ((tlb->kre == 0) || (tlb->faultOnExecute == 1));
 						break;
 
 					case Modify:
-						retVal = ((tlb->kwe == 1) && (tlb->kre) &&
-								  (tlb->faultOnWrite == 1) && (tlb->faultOnRead == 1));
+						retVal = (((tlb->kwe == 0) ||
+								   (tlb->kre == 0)) ||
+								  ((tlb->faultOnWrite == 1) ||
+								   (tlb->faultOnRead == 1)));
 						break;
 				}
 				break;
@@ -535,20 +537,22 @@ bool AXP_21264_checkMemoryAccess(
 						break;
 
 					case Read:
-						retVal = ((tlb->ere == 1) && (tlb->faultOnRead == 1));
+						retVal = ((tlb->ere == 0) || (tlb->faultOnRead == 1));
 						break;
 
 					case Write:
-						retVal = ((tlb->ewe == 1) && (tlb->faultOnWrite == 1));
+						retVal = ((tlb->ewe == 0) || (tlb->faultOnWrite == 1));
 						break;
 
 					case Execute:
-						retVal = ((tlb->ere == 1) && (tlb->faultOnExecute == 1));
+						retVal = ((tlb->ere == 0) || (tlb->faultOnExecute == 1));
 						break;
 
 					case Modify:
-						retVal = ((tlb->ewe == 1) && (tlb->ere) &&
-								  (tlb->faultOnWrite == 1) && (tlb->faultOnRead == 1));
+						retVal = (((tlb->ewe == 0) ||
+								   (tlb->ere == 0)) ||
+								  ((tlb->faultOnWrite == 1) ||
+								   (tlb->faultOnRead == 1)));
 						break;
 				}
 				break;
@@ -560,20 +564,22 @@ bool AXP_21264_checkMemoryAccess(
 						break;
 
 					case Read:
-						retVal = ((tlb->sre == 1) && (tlb->faultOnRead == 1));
+						retVal = ((tlb->sre == 0) || (tlb->faultOnRead == 1));
 						break;
 
 					case Write:
-						retVal = ((tlb->swe == 1) && (tlb->faultOnWrite == 1));
+						retVal = ((tlb->swe == 0) || (tlb->faultOnWrite == 1));
 						break;
 
 					case Execute:
-						retVal = ((tlb->sre == 1) && (tlb->faultOnExecute == 1));
+						retVal = ((tlb->sre == 0) || (tlb->faultOnExecute == 1));
 						break;
 
 					case Modify:
-						retVal = ((tlb->swe == 1) && (tlb->sre) &&
-								  (tlb->faultOnWrite == 1) && (tlb->faultOnRead == 1));
+						retVal = (((tlb->swe == 0) ||
+								   (tlb->sre == 0)) ||
+								  ((tlb->faultOnWrite == 1) ||
+								   (tlb->faultOnRead == 1)));
 						break;
 				}
 				break;
@@ -585,20 +591,22 @@ bool AXP_21264_checkMemoryAccess(
 						break;
 
 					case Read:
-						retVal = ((tlb->ure == 1) && (tlb->faultOnRead == 1));
+						retVal = ((tlb->ure == 0) || (tlb->faultOnRead == 1));
 						break;
 
 					case Write:
-						retVal = ((tlb->uwe == 1) && (tlb->faultOnWrite == 1));
+						retVal = ((tlb->uwe == 0) || (tlb->faultOnWrite == 1));
 						break;
 
 					case Execute:
-						retVal = ((tlb->ure == 1) && (tlb->faultOnExecute == 1));
+						retVal = ((tlb->ure == 0) || (tlb->faultOnExecute == 1));
 						break;
 
 					case Modify:
-						retVal = ((tlb->uwe == 1) && (tlb->ure) &&
-								  (tlb->faultOnWrite == 1) && (tlb->faultOnRead == 1));
+						retVal = (((tlb->uwe == 0) ||
+								   (tlb->ure == 0)) ||
+								  ((tlb->faultOnWrite == 1) ||
+								   (tlb->faultOnRead == 1)));
 						break;
 				}
 				break;
@@ -873,10 +881,10 @@ bool AXP_DcacheWrite(
 	u32			*src32 = (u32 *) data;
 	u64			*src64 = (u64 *) data;
 	u32			oneChecked = virtAddr.vaIdxCntr.counter;
-	int 		setToUse;
-	int			found = AXP_CACHE_ENTRIES;
-	int			ii;
-	int			sets;
+	u32 		setToUse;
+	u32			found = AXP_CACHE_ENTRIES;
+	u32			ii;
+	u32			sets;
 
 	/*
 	 * 5.3.10 Determine how many sets are enabled.
@@ -929,9 +937,10 @@ bool AXP_DcacheWrite(
 	 */
 	if (found == AXP_CACHE_ENTRIES)
 	{
-		for (virtAddr.vaIdxCntr.counter = 0;
-			 ((virtAddr.vaIdxCntr.counter < 4) && (found == AXP_CACHE_ENTRIES));
-			 virtAddr.vaIdxCntr.counter++)
+		bool		done = false;
+
+		virtAddr.vaIdxCntr.counter = 0;
+		while ((done == false) && (found == AXP_CACHE_ENTRIES))
 		{
 			if (virtAddr.vaIdxCntr.counter != oneChecked)
 			{
@@ -942,6 +951,10 @@ bool AXP_DcacheWrite(
 						found = virtAddr.vaIdx.index;
 				}
 			}
+			if (virtAddr.vaIdxCntr.counter < 3)
+				virtAddr.vaIdxCntr.counter++;
+			else
+				done = true;
 		}
 	}
 
@@ -1060,7 +1073,7 @@ bool AXP_DcacheWrite(
  */
 void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 {
-	int			ii;
+	u32			ii;
 
 	/*
 	 * Go through each cache item and invalidate and reset it.
@@ -1163,8 +1176,8 @@ bool AXP_DcacheRead(
 	u16					*dest16 = (u16 *) data;
 	u8					*dest8 = (u8 *) data;
 	u32					oneChecked = virtAddr.vaIdxCntr.counter;
-	int					ii;
-	int					sets;
+	u32					ii;
+	u32					sets;
 
 	/*
 	 * 5.3.10 Determine how many sets are enabled.
@@ -1217,9 +1230,10 @@ bool AXP_DcacheRead(
 	 */
 	if (retVal == false)
 	{
-		for (virtAddr.vaIdxCntr.counter = 0;
-			 ((virtAddr.vaIdxCntr.counter < 4) && (retVal == false));
-			 virtAddr.vaIdxCntr.counter++)
+		bool	done = false;
+
+		virtAddr.vaIdxCntr.counter = 0;
+		while ((done == false) && (retVal == false))
 		{
 			if (virtAddr.vaIdxCntr.counter != oneChecked)
 			{
@@ -1244,6 +1258,10 @@ bool AXP_DcacheRead(
 					}
 				}
 			}
+			if (virtAddr.vaIdxCntr.counter == 3)
+				done = true;
+			else
+				virtAddr.vaIdxCntr.counter++;
 		}
 	}
 
@@ -1335,8 +1353,8 @@ void AXP_IcacheAdd(
 	AXP_VPC		vpc = {.pc = pc};
 	u32			index = vpc.vpcFields.index;
 	u64			tag = vpc.vpcFields.tag;
-	int			ii;
-	int			sets, whichSet;
+	u32			ii;
+	u32			sets, whichSet;
 
 	/*
 	 * 5.3.10 Determine how many sets are enabled.
@@ -1439,7 +1457,7 @@ void AXP_IcacheAdd(
  */
 void AXP_IcacheFlush(AXP_21264_CPU *cpu, bool purgeAsm)
 {
-	int			ii, jj;
+	u32			ii, jj;
 
 	for (ii = 0; ii < AXP_CACHE_ENTRIES; ii++)
 	{
@@ -1542,9 +1560,9 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 	AXP_PC		tmpPC;
 	u32			index = vpc.vpcFields.index;
 	u64			tag = vpc.vpcFields.tag;
-	int			offset = vpc.vpcFields.offset % AXP_ICACHE_LINE_INS;
-	int			ii;
-	int			sets, whichSet;
+	u32			offset = vpc.vpcFields.offset % AXP_ICACHE_LINE_INS;
+	u32			ii;
+	u32			sets, whichSet;
 
 	/*
 	 * 5.3.10 Determine how many sets are enabled.
@@ -1673,8 +1691,8 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
 	AXP_VPC		vpc = {.pc = pc};
 	u32			index = vpc.vpcFields.index;
 	u64			tag = vpc.vpcFields.tag;
-	int			ii;
-	int			sets;
+	u32			ii;
+	u32			sets;
 
 	/*
 	 * 5.3.10 Determine how many sets are enabled.
