@@ -27,4 +27,23 @@
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
 
+#include "AXP_Utility.h"
+#include "AXP_21264_CacheDefs.h"
+
+
+/*
+ * This structure is the definition for one Duplicate Dcache Tag.  A block
+ * contains the following:
+ *
+ *		Virtual tag bits
+ *		Valid bit
+ *			The DTAG array entry is in use.
+ */
+typedef struct
+{
+	u64					virtTag;
+	bool				valid;
+} AXP_DTAG_BLK;
+
+
 #endif /* _AXP_21264_CBOX_DEFS_ */

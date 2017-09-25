@@ -161,7 +161,7 @@ typedef enum
  *							needs to be written back to memory upon eviction.
  *				shared:		The cache block can be found in more than one
  *							system component (such as another CPU)
- *				modified:	The cache block has just been retreived from memory
+ *				modified:	The cache block has just been retrieved from memory
  *							and needs to be written out to the Bcache upon
  *							eviction.
  *				set_0_1:	Is used to determine if the cache block should be

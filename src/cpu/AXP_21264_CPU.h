@@ -69,6 +69,7 @@
 #include "AXP_21264_RegisterRenaming.h"
 #include "AXP_21264_Mbox_Queues.h"
 #include "AXP_Exceptions.h"
+#include "AXP_21264_Cbox.h"
 
 #define AXP_RESULTS_REG		41
 #define AXP_NUM_FETCH_INS	4
@@ -587,7 +588,7 @@ typedef struct
 	u8			vdf;
 	u8			iowb;
 	u8			pq;
-	u8			dtag;
+	AXP_DTAG_BLK			dtag[AXP_CACHE_ENTRIES*AXP_2_WAY_CACHE];
 
 	/*
 	 * Cbox IPRs
@@ -604,7 +605,7 @@ typedef struct
 	AXP_BASE_ASN		asn;		/* Address Space Number					*/
 	AXP_BASE_ASTEN		astEn;		/* AST Enable							*/
 	AXP_BASE_ASTSR		astSr;		/* AST Summary Register					*/
-	AXP_BASE_DATFX		datFx;		/* Data Alignment Trap Fixup			*/
+	AXP_BASE_DATFX		datFx;		/* Data Alignment Trap Fix-up			*/
 	AXP_BASE_ESP		esp;		/* Executive Stack Pointer				*/
 	AXP_BASE_FEN		fen;		/* Floating-point Enable				*/
 	AXP_BASE_IPIR		ipIr;		/* Interprocessor Interrupt Request		*/
