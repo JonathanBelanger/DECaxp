@@ -811,17 +811,18 @@ AXP_EXCEPTIONS AXP_STB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (cpu->vaCtl.b_endian == 1)
 		vaPrime = AXP_BIG_ENDIAN_BYTE(va);
-		AXP_21264_Mbox_WriteMem(
-			cpu,
-			instr,
-			instr->slot,
-			vaPrime,
-			instr->src1v.r.ub,
-			sizeof(instr->src1v.r.ub));
-		/* TODO: Check to see if we had an access fault (Access Violation) */
-		/* TODO: Check to see if we had an alignment fault (Alignment) */
-		/* TODO: Check to see if we had a write fault (Fault on Write) */
-		/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
+
+	AXP_21264_Mbox_WriteMem(
+		cpu,
+		instr,
+		instr->slot,
+		vaPrime,
+		instr->src1v.r.ub,
+		sizeof(instr->src1v.r.ub));
+	/* TODO: Check to see if we had an access fault (Access Violation) */
+	/* TODO: Check to see if we had an alignment fault (Alignment) */
+	/* TODO: Check to see if we had a write fault (Fault on Write) */
+	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

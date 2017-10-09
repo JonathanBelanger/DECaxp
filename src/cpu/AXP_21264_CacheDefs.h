@@ -166,6 +166,10 @@ typedef enum
  *							eviction.
  *				set_0_1:	Is used to determine if the cache block should be
  *							stored in set 0 or set 1 in a round-robin fashion.
+ *				locked:		Is used when a store operation that is writable is
+ *							pending until the store instruction that issued it
+ *							retires.  This restriction assists in STx_C
+ *							instruction.
  */
 typedef struct
 {
@@ -176,7 +180,22 @@ typedef struct
 	bool				shared;
 	bool				modified;
 	bool				set_0_1;
+	bool				locked;
 } AXP_DCACHE_BLK;
+
+/*
+ * This structure is the definition for one Duplicate Dcache Tag Entry.  A
+ * block contains the following:
+ *
+ *		Physical tag bits
+ *		Valid bit
+ *			The DTAG array entry is in use.
+ */
+typedef struct
+{
+	u64					physTag;
+	bool				valid;
+} AXP_DTAG_BLK;
 
 #define AXP_ICACHE_LINE_INS		16
 

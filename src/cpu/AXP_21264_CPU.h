@@ -534,6 +534,7 @@ typedef struct
 	 * which leaves us with 64KB / 64B / 2 sets = 512 rows for each set.
 	 */
 	AXP_DCACHE_BLK			dCache[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
+	AXP_DTAG_BLK			dtag[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 
 	/*
 	 * The next 2 "queues" are actually going to be handled as a FIFO stack.
@@ -584,11 +585,11 @@ typedef struct
 	 *	The Cbox is responsible for the interfaces between the system and the *
 	 *	CPU.																  *
 	 **************************************************************************/
-	u8			vaf;
-	u8			vdf;
-	u8			iowb;
-	u8			pq;
-	AXP_DTAG_BLK			dtag[AXP_CACHE_ENTRIES*AXP_2_WAY_CACHE];
+	u8						vaf;
+	u8						vdf;
+	u8						iowb;
+	u8						pq;
+	AXP_CTAG_BLK			ctag[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 
 	/*
 	 * Cbox IPRs

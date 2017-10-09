@@ -52,12 +52,12 @@
  *	Started working on the instruction decode and register renaming code.
  *
  *	V01.007		12-Jun-2017	Jonathan D. Belanger
- *	Forogot to include the generation of a unique ID (8-bits long) to associate
+ *	Forgot to include the generation of a unique ID (8-bits long) to associate
  *	with each decoded instruction.
  *	BTW: We need a better way to decode an instruction.  The decoded
  *	instruction does not require the architectural register number, so we
  *	should not save them.  Also, renaming can be done while we are decoding the
- *	instruction.  We are also going to have to special calse some instructions,
+ *	instruction.  We are also going to have to special case some instructions,
  *	such as PAL instructions, CMOVE, and there are exceptions for instruction
  *	types (Ra is a destination register for a Load, but a source register for a
  *	store.
@@ -67,15 +67,15 @@
  *	used in an instruction.  Generally speaking, register 'c' (Rc or Fc) is a
  *	destination register.  In load operations, register 'a' (Ra or Fa) is the
  *	destination register.  Register 'b' (Rb or Fb) is never used as a
- *	desination (through I have implemented provisions for this).
- *	Unforunately, sometimes a register is not used, or 'b' may be source 1 and
+ *	designation (through I have implemented provisions for this).
+ *	Unfortunately, sometimes a register is not used, or 'b' may be source 1 and
  *	other times it is source 2.  Sometimes not register is utilized (e.g. MB).
  *	The array structures assist in these differences so that in the end we end
- *	up with a destingation (not not), a source 1 (or not), and/or a source 2
+ *	up with a destination (not not), a source 1 (or not), and/or a source 2
  *	(or not) set of registers.  If we have a destination register, then
  *	register renaming needs to allocate a new register.  IF we have source
- *	register, then renaming needs to assocaite the current register mapping to
- *	thos register.
+ *	register, then renaming needs to associate the current register mapping to
+ *	this register.
  *
  *	V01.009		16-Jun-2017	Jonathan D. Belanger
  *	Finished the implementation of normalizing registers, as indicated above,

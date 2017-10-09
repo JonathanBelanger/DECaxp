@@ -633,7 +633,7 @@ bool AXP_21264_checkMemoryAccess(
  *			address.  Information within the TLB is used to determined if the
  *			process has the needed access to the virtual address, and to also
  *			convert the virtual address to a physical address.
- *	If a tlb cannot be located, or access is not allowed, then a fault is
+ *	If a TLB cannot be located, or access is not allowed, then a fault is
  *	returned back to the caller to be handled (it will cause a call to PALcode
  *	to handle the fault).
  *
@@ -880,11 +880,55 @@ bool AXP_DcacheWrite(
 	u16			*src16 = (u16 *) data;
 	u32			*src32 = (u32 *) data;
 	u64			*src64 = (u64 *) data;
-	u32			oneChecked = virtAddr.vaIdxCntr.counter;
+	i32			lenOver = ((va % AXP_DCACHE_DATA_LEN) + len - 1) -
+						  (AXP_DCACHE_DATA_LEN - 1);
+/*	u32			oneChecked = virtAddr.vaIdxCntr.counter;	*/
 	u32 		setToUse;
 	u32			found = AXP_CACHE_ENTRIES;
 	u32			ii;
 	u32			sets;
+
+	/*
+	 * Does this write cross the 64 byte boundary.  If so, we have to do this
+	 * in 2 steps.
+	 *
+	 *		1) Write to the Dcache for the 'other' index.
+	 *		2) Write to the Dcache for the 'current' index.
+	 *
+	 * If the data does not cross the 64 byte boundary, then just proceed
+	 * normally.
+	 *
+	 * The steps needed to do this are as follows:
+	 *
+	 *		1) First determine if the number of bytes to be written cross that
+	 *		   64 byte boundary.
+	 *		2) If step 1 is true, then perform the following sub-steps:
+	 *			a) Determine how many bytes are on this page.
+	 *			b) Call this function with the subset of data and the length of
+	 *			   this data to be written to the 'other'.
+	 *			c) Subtract the length in step b from the length supplied on
+	 *			   this call
+	 *		3) Write the length of the data to be written to the 'current'
+	 *		   index
+	 *
+	 * NOTE: We may have to consider the effect of big-endian vs little-endian.
+	 * The code below assumes little-endian.
+	 *
+	 * NOTE: The length of 64 bytes is used to fill the cache.  The address is
+	 * the base of this 64-byte data.  Therefore, this length and the data to
+	 * be written will never cross from one index to the next.
+	 */
+	if ((len < 64) && (lenOver > 0))
+	{
+		retVal = AXP_DcacheWrite(
+			cpu,
+			va + AXP_DCACHE_DATA_LEN,
+			pa + AXP_DCACHE_DATA_LEN,
+			(u32) lenOver,
+			(void *) (data + len - lenOver),
+			NULL);
+		len -= lenOver;
+	}
 
 	/*
 	 * 5.3.10 Determine how many sets are enabled.
@@ -898,7 +942,7 @@ bool AXP_DcacheWrite(
 	 *		At least one set must be enabled. The entire cache may be
 	 *		enabled by setting both bits. Zero, one, or two Icache sets
 	 *		can be enabled.
-	 *		This bit does not clear the Icache, but only disables fills to
+	 *		This bit does not clear the Dcache, but only disables fills to
 	 *		the affected set.
 	 *
 	 * I'm not sure why it first says that at least one set must be enabled,
@@ -929,9 +973,17 @@ bool AXP_DcacheWrite(
 		}
 	}
 
+/*
+ * I don't think that there is an issue with the 2 bits beyond the 8K for a
+ * Virtual Page Number (VPN).  I don't see how the determination of the index
+ * from the virtual address (VA), means anything with a particular VA.  On the
+ * other hand, a particular VPN hosts 128 (out of the possible 512) consecutive
+ * entries in the Dcache.
+ */
+#if 0
 	/*
 	 * If we did not find it, then check the other 3 possible places.
-	 * TODO:	I'm not sure I'm selecting the cache line correct based on the
+	 * NOTE:	I'm not sure I'm selecting the cache line correct based on the
 	 *			2 extra bits at the top of the index that are beyond the 8K
 	 *			page.
 	 */
@@ -957,6 +1009,7 @@ bool AXP_DcacheWrite(
 				done = true;
 		}
 	}
+#endif
 
 	/*
 	 * If we did not find it, then use the first value and determine which set
@@ -1026,7 +1079,7 @@ bool AXP_DcacheWrite(
 			*((u64 *) cpu->dCache[found][setToUse].data) = *src64;
 			break;
 
-		case 64:
+		default:	/* for 64 bytes and any of the possible sub-lengths */
 			memcpy(cpu->dCache[found][setToUse].data, src8, len);
 			break;
 	}
@@ -1175,9 +1228,51 @@ bool AXP_DcacheRead(
 	u32					*dest32 = (u32 *) data;
 	u16					*dest16 = (u16 *) data;
 	u8					*dest8 = (u8 *) data;
-	u32					oneChecked = virtAddr.vaIdxCntr.counter;
+	i32					lenOver = ((va % AXP_DCACHE_DATA_LEN) + len - 1) -
+						  	  	   (AXP_DCACHE_DATA_LEN - 1);
+/*	u32					oneChecked = virtAddr.vaIdxCntr.counter;	*/
 	u32					ii;
 	u32					sets;
+
+	/*
+	 * Does this read cross the 64 byte boundary.  If so, we have to do this
+	 * in 3 steps.
+	 *
+	 *		1) Read from the Dcache for the 'other' index.
+	 *		2) Read from the Dcache for the 'current' index.
+	 *		3) Merge the 2 reads
+	 *
+	 * If the data does not cross the 64 byte boundary, then just proceed
+	 * normally.
+	 *
+	 * The steps needed to do this are as follows:
+	 *
+	 *		1) First determine if the number of bytes to be read cross that
+	 *		   64 byte boundary.
+	 *		2) If step 1 is true, then perform the following sub-steps:
+	 *			a) Determine how many bytes are on this page.
+	 *			b) Call this function with the subset of data and the length of
+	 *			   this data to be read to the 'other'.
+	 *			c) Subtract the length in step b from the length supplied on
+	 *			   this call
+	 *		3) Read the length of the data to be read to the 'current'
+	 *		   index
+	 *		4) Merge Anything from step 2 into what was read from step 3.
+	 *
+	 * NOTE: We may have to consider the effect of big-endian vs little-endian.
+	 * The code below assumes little-endian.
+	 */
+	if ((len < 64) && (lenOver > 0))
+	{
+		retVal = AXP_DcacheRead(
+			cpu,
+			va + AXP_DCACHE_DATA_LEN,
+			pa + AXP_DCACHE_DATA_LEN,
+			(u32) lenOver,
+			(void *) (data + len - lenOver),
+			NULL);
+		len -= lenOver;
+	}
 
 	/*
 	 * 5.3.10 Determine how many sets are enabled.
@@ -1225,6 +1320,14 @@ bool AXP_DcacheRead(
 		}
 	}
 
+/*
+ * I don't think that there is an issue with the 2 bits beyond the 8K for a
+ * Virtual Page Number (VPN).  I don't see how the determination of the index
+ * from the virtual address (VA), means anything with a particular VA.  On the
+ * other hand, a particular VPN hosts 128 (out of the possible 512) consecutive
+ * entries in the Dcache.
+ */
+#if 0
 	/*
 	 * If we did not find it, then check the other 3 possible places.
 	 */
@@ -1264,6 +1367,7 @@ bool AXP_DcacheRead(
 				virtAddr.vaIdxCntr.counter++;
 		}
 	}
+#endif
 
 	/*
 	 * If we found what we were looking for, so save the value requested
@@ -1290,6 +1394,10 @@ bool AXP_DcacheRead(
 
 			case 8:
 				*dest64 = *((u64 *) cpu->dCache[index][set].data);
+				break;
+
+			default:
+				memcpy(dest8, cpu->dCache[index][set].data, len);
 				break;
 		}
 	}

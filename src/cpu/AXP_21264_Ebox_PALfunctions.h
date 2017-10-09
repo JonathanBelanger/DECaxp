@@ -17,31 +17,20 @@
  * Description:
  *
  *	This header file contains the function definitions implemented in the
- *	AXP_21264_Cbox.c module.
+ *	AXP_21264_Ebox_LoadStore.c module.
  *
  * Revision History:
  *
- *	V01.000		14-May-2017	Jonathan D. Belanger
+ *	V01.000		19-Jun-2017	Jonathan D. Belanger
  *	Initially written.
  */
-#ifndef _AXP_21264_CBOX_DEFS_
-#define _AXP_21264_CBOX_DEFS_
+#ifndef _AXP_21264_EBOX_PAL_FUNCTIONS_DEFS_
+#define _AXP_21264_EBOX_PAL_FUNCTIONS_DEFS_
 
 #include "AXP_Utility.h"
+#include "AXP_Base_CPU.h"
+#include "AXP_21264_Instructions.h"
+#include "AXP_21264_CPU.h"
+#include "AXP_21264_Mbox.h"
 
-/*
- * This structure is the definition for one Cbox copy of Dcache Tag Array.  A
- * block contains the following:
- *
- *		Virtual tag bits
- *		Valid bit
- *			The CTAG array entry is in use.
- */
-typedef struct
-{
-	u64					virtTag;
-	bool				valid;
-} AXP_CTAG_BLK;
-
-
-#endif /* _AXP_21264_CBOX_DEFS_ */
+#endif /* _AXP_21264_EBOX_PAL_FUNCTION_DEFS_ */
