@@ -131,6 +131,6 @@ straighten:
 # Make all the dependencies.
 #
 depend:
-	makedepend -p$(OBJDIR) -I/usr/lib/gcc/x86_64-pc-cygwin/5.4.0/include -- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PROGS)
+	makedepend -p$(OBJDIR) -I/usr/lib/gcc/x86_64-pc-cygwin/6.4.0/include -- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PROGS)
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
