@@ -188,12 +188,14 @@ typedef struct
  * block contains the following:
  *
  *		Physical tag bits
+ *		Index into corresponding CTAG array
  *		Valid bit
  *			The DTAG array entry is in use.
  */
 typedef struct
 {
 	u64					physTag;
+	u32					ctagIndex;
 	bool				valid;
 } AXP_DTAG_BLK;
 
@@ -285,18 +287,27 @@ typedef struct
 typedef struct
 {
 	u64			offset : 6;			/* Offset within 64 bytes */
-	u64			index : 7;
-	u64			counter : 2;
-	u64			res : 49;
-} AXP_IDX_COUNTER;
+	u64			index : 9;			/* Index from 0-511 */
+	u64			tag : 49;
+} AXP_IDX_FIELDS;
 
 typedef union
 {
 	u64				va;
 	AXP_CACHE_IDX	vaIdx;
 	AXP_VA_FIELDS	vaInfo;
-	AXP_IDX_COUNTER	vaIdxCntr;
+	AXP_IDX_FIELDS	vaIdxInfo;
 } AXP_VA;
+
+/*
+ * The following macros are used to clear out the 2-bits in a virtual and
+ * physical address that are beyond that address by a virtual page, and be able
+ * increment through them.  These are utilized to anti-alias addresses that
+ * could be in multiple locations within the dCache, DTAG, and CTAG structures.
+ */
+#define AXP_MASK_2_HIGH_INDEX_BITS	0xffffffffffff9fffll
+#define AXP_2_HIGH_INDEX_BITS_INCR	0x2000
+#define AXP_2_HIGH_INDEX_BITS_MAX	0x8000
 
 /*
  * The following data structures are used to parse the VPC.

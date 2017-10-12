@@ -23,6 +23,11 @@
  *
  *	V01.000		14-May-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		12-Oct-2017	Jonathan D. Belanger
+ *	Change the CTAG structure to contain the DTAG index for the corresponding
+ *	entry.  This should make keeping these 2 arrays, along with the Dcahe
+ *	itself, in synch.  NOTE: The set information is the same for all.
  */
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
@@ -34,12 +39,14 @@
  * block contains the following:
  *
  *		Virtual tag bits
+ *		Index into corresponding DTAG array (which is the same as the Dcache)
  *		Valid bit
  *			The CTAG array entry is in use.
  */
 typedef struct
 {
 	u64					virtTag;
+	u32					dtagIndex;
 	bool				valid;
 } AXP_CTAG_BLK;
 

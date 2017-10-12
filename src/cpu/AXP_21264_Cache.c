@@ -32,6 +32,15 @@
  *	functions will remain the same, as there is only one writter (the Cbox) and
  *	only one reader, the Ibox.  Where as, the Dcache as potentially multiple
  *	writers (the Cbox and the Mbox) and only one reader (the Mbox).
+ *
+ *	V01.002		11-Oct-2017	Jonathan D. Belanger
+ *	Added code to keep the Dcache Duplicate Tag (DTAG) in synch with the
+ *	Dcache entries.
+ *
+ *	V01.003		12-Oct-2017	Jonathan D. Belanger
+ *	Added code to anti-alias the possibility that a particular virtual/physical
+ *	address pair could be in up to four possible locations.  We use the obvious
+ *	address and just flush the other ones, if in use.
  */
 #include "AXP_21264_Cache.h"
 
@@ -834,6 +843,9 @@ u64 AXP_va2pa(
  *	This function is called as a result of a request to the Cbox to perform a
  *	Dcache fill.
  *
+ *	Refer to Section 2.8.3 in the HRM for more information about processing
+ *	Memory Address Space Store Instructions from the Store Queue (SQ).
+ *
  * Input Parameters:
  * 	cpu:
  * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
@@ -876,17 +888,21 @@ bool AXP_DcacheWrite(
 {
 	bool		retVal = false;
 	AXP_VA		virtAddr = {.va = va};
+	AXP_VA		physAddr = {.va = pa};
+	AXP_VA		workingVa;
+	AXP_VA		workingPa;
+	u64			oneChecked = va;
 	u8			*src8 = (u8 *) data;
 	u16			*src16 = (u16 *) data;
 	u32			*src32 = (u32 *) data;
 	u64			*src64 = (u64 *) data;
 	i32			lenOver = ((va % AXP_DCACHE_DATA_LEN) + len - 1) -
 						  (AXP_DCACHE_DATA_LEN - 1);
-/*	u32			oneChecked = virtAddr.vaIdxCntr.counter;	*/
 	u32 		setToUse;
 	u32			found = AXP_CACHE_ENTRIES;
 	u32			ii;
 	u32			sets;
+	u32			ctagIndex;
 
 	/*
 	 * Does this write cross the 64 byte boundary.  If so, we have to do this
@@ -966,50 +982,78 @@ bool AXP_DcacheWrite(
 	for (ii = 0; ((ii < sets) && (found == AXP_CACHE_ENTRIES)); ii++)
 	{
 		if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
-			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
+			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == physAddr.vaIdxInfo.tag))
 		{
 			found = virtAddr.vaIdx.index;
 			break;
 		}
 	}
 
-/*
- * I don't think that there is an issue with the 2 bits beyond the 8K for a
- * Virtual Page Number (VPN).  I don't see how the determination of the index
- * from the virtual address (VA), means anything with a particular VA.  On the
- * other hand, a particular VPN hosts 128 (out of the possible 512) consecutive
- * entries in the Dcache.
- */
-#if 0
 	/*
-	 * If we did not find it, then check the other 3 possible places.
-	 * NOTE:	I'm not sure I'm selecting the cache line correct based on the
-	 *			2 extra bits at the top of the index that are beyond the 8K
-	 *			page.
+	 * Because the index for the Dcache and DTAG includes 2-bits of the virtual
+	 * Page Number and the index for the CTAG includes 2 translated bits from the
+	 * Physical Page Number, it is possible for these 2 bits to clober either an
+	 * entry in the Dcache/DTAG or the CTAG.  Therefore, we need to make sure that
+	 * the combination of Dcache/DTAG index/physical tag and CTAG index/virtual
+	 * tag will not cause an issue.  How we do this is is as follows:
+	 *
+	 *		for each of the possible virtual addresses
+	 *		begin
+	 *			for each of the possible translated (physical) addresses
+	 *			begin
+	 *				if (the physTag in the dtag entry using the new index =
+	 *					new tag from loop physical address)
+	 *				then
+	 *					flush this entry
+	 *				endif
+	 *			end
+	 *		end
+	 *			where address = xxxxxxxxxxxxyyzz
+	 *					   zz = 0-63	(2 bits if high order z)
+	 *					  yyz = 0-512	(2 bits of z; 3 bits of low order y)
+	 *			xxxxxxxxxxxxy =  tag	(1 bit of y)
 	 */
-	if (found == AXP_CACHE_ENTRIES)
+	for (ii = (va & AXP_MASK_2_HIGH_INDEX_BITS);
+			   ii < (va + AXP_2_HIGH_INDEX_BITS_MAX);
+			   ii += AXP_2_HIGH_INDEX_BITS_INCR)
 	{
-		bool		done = false;
-
-		virtAddr.vaIdxCntr.counter = 0;
-		while ((done == false) && (found == AXP_CACHE_ENTRIES))
+		if (ii != oneChecked)
 		{
-			if (virtAddr.vaIdxCntr.counter != oneChecked)
+			workingVa.va = ii;
+			for (jj = (pa & AXP_MASK_2_HIGH_INDEX_BITS);
+			     jj < (pa + AXP_2_HIGH_INDEX_BITS_MAX);
+				 jj += AXP_2_HIGH_INDEX_BITS_INCR)
 			{
-				for (ii = 0; ((ii < sets) && (found == AXP_CACHE_ENTRIES)); ii++)
+				workingPa.va = jj;
+				for (kk = 0; kk < sets; kk++)
 				{
-					if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
-						(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
-						found = virtAddr.vaIdx.index;
+					if ((cpu->dtag[workingVa.vaIdx.index][kk].physTag ==
+						 workingPa.vaIdxInfo.tag) &&
+						(cpu->dtag[workingVa.vaIdx.index][kk].valid == true))
+					{
+						ctagIndex = cpu->dtag[workingVa.vaIdx.index][kk].ctagIndex;
+						if ((cpu->dCache[workingVa.vaIdx.index][kk].modified ==
+						     true) ||
+							(cpu->dCache[workingVa.vaIdx.index][kk].dirty ==
+							 true))
+						{
+							/* Send to the Cbox to copy into memory. */
+#pragma message "Write-back Cache code needs to be completed."
+							cpu->dCache[workingVa.vaIdx.index][kk].modified =
+								false;
+						}
+
+						/*
+						 * Now invalidate the Dcache, DTAG, and CTAG entries.
+						 */
+						cpu->dCache[workingVa.vaIdx.index][kk].valid = false;
+						cpu->dtag[workingVa.vaIdx.index][kk].valid = false;
+						cpu->ctag[ctagIndex][kk].valid = false;
+					}
 				}
 			}
-			if (virtAddr.vaIdxCntr.counter < 3)
-				virtAddr.vaIdxCntr.counter++;
-			else
-				done = true;
 		}
 	}
-#endif
 
 	/*
 	 * If we did not find it, then use the first value and determine which set
@@ -1055,7 +1099,14 @@ bool AXP_DcacheWrite(
 	{
 		/* Send to the Cbox to copy into memory. */
 #pragma message "Write-back Cache code needs to be completed."
-		cpu->dCache[ii][0].modified = false;
+		cpu->dCache[found][setToUse].modified = false;
+
+		/*
+		 * Now invalidate the Dcache, DTAG, and CTAG entries.
+		 */
+		cpu->dCache[found][setToUse].valid = false;
+		cpu->dtag[found][setToUse].valid = false;
+		cpu->ctag[found][setToUse].valid = false;
 	}
 
 	/*
@@ -1084,24 +1135,33 @@ bool AXP_DcacheWrite(
 			break;
 	}
 #pragma message "Need to determine when to use dirty/modified cache."
-	if (cpu->dCache[found][setToUse].valid == false)
-	{
-		cpu->dCache[found][setToUse].physTag = pa;
-		cpu->dCache[found][setToUse].dirty = false;
-		cpu->dCache[found][setToUse].modified = false;
-		cpu->dCache[found][setToUse].shared = false;
-		cpu->dCache[found][setToUse].valid = true;
-	}
-	else if (cpu->dCache[found][setToUse].valid == true)
-	{
-		cpu->dCache[found][setToUse].dirty = true;
-		cpu->dCache[found][setToUse].modified = true;
-	}
-	retVal = true;
+
+	cpu->dCache[found][setToUse].physTag = physAddr.vaIdxInfo.tag;
+	cpu->dCache[found][setToUse].dirty = false;
+	cpu->dCache[found][setToUse].modified = false;
+	cpu->dCache[found][setToUse].shared = false;
+	cpu->dCache[found][setToUse].valid = true;
+
+	/*
+	 * Duplicate the tag information in the DTAG array.
+	 */
+	ctagIndex = physAddr.vaIdxInfo.index;
+	cpu->dtag[found][setToUse].physTag = physAddr.vaIdxInfo.tag;
+	cpu->dtag[found][setToUse].ctagIndex = ctagIndex;
+	cpu->dtag[found][setToUse].valid = false;
+
+	/*
+	 * At this point we do not have to worry about aliases clashing.  They
+	 * have been taken are of above.
+	 */
+	cpu->ctag[ctagIndex][setToUse].virtTag = virtAddr.vaIdxInfo.tag;
+	cpu->ctag[ctagIndex][setToUse].dtagIndex = found;
+	cpu->ctag[ctagIndex][setToUse].valid = true;
 
 	/*
 	 * Return back to the caller.
 	 */
+	retVal = true;
 	return(retVal);
 }
 
@@ -1126,51 +1186,28 @@ bool AXP_DcacheWrite(
  */
 void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 {
-	u32			ii;
+	int			ii, jj;
 
 	/*
 	 * Go through each cache item and invalidate and reset it.
 	 */
 	for (ii = 0; ii < AXP_CACHE_ENTRIES; ii++)
-	{
-
-		/*
-		 * Set Zero.
-		 */
-		if (cpu->dCache[ii][0].dirty || cpu->dCache[ii][0].modified)
+		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
 		{
-			/* Send to the Cbox to copy into memory. */
+			if (cpu->dCache[ii][jj].dirty || cpu->dCache[ii][jj].modified)
+			{
+				/* Send to the Cbox to copy into memory. */
 #pragma message "Write-back Cache code needs to be completed."
-			cpu->dCache[ii][0].modified = false;
+				cpu->dCache[ii][jj].modified = false;
+			}
+			cpu->dCache[ii][jj].set_0_1 = false;
+			cpu->dCache[ii][jj].physTag = 0;
+			cpu->dCache[ii][jj].dirty = false;
+			cpu->dCache[ii][jj].modified = false;
+			cpu->dCache[ii][jj].shared = false;
+			cpu->dCache[ii][jj].valid = false;
+			cpu->dtag[ii][jj].valid = false;		/* Don't forget the DTAG */
 		}
-		cpu->dCache[ii][0].set_0_1 = false;
-		cpu->dCache[ii][0].physTag = 0;
-		cpu->dCache[ii][0].dirty = false;
-		cpu->dCache[ii][0].modified = false;
-		cpu->dCache[ii][0].shared = false;
-		cpu->dCache[ii][0].valid = false;
-
-		/*
-		 * Set One.
-		 *
-		 * NOTE:	We are not going to avoid clearing the second cache set
-		 *			based on the Dcache control field.  Not doing this
-		 *			simplifies the code.
-		 */
-		if (cpu->dCache[ii][1].modified)
-		{
-			/* Send to the Cbox to copy into memory. */
-#pragma message "Write-back Cache code needs to be completed."
-			cpu->dCache[ii][1].modified = false;
-			/* TODO:	Need to determine what to do, if anything, with the */
-			/*			dirty bit											*/
-		}
-		cpu->dCache[ii][1].physTag = 0;
-		cpu->dCache[ii][1].dirty = false;
-		cpu->dCache[ii][1].modified = false;
-		cpu->dCache[ii][1].shared = false;
-		cpu->dCache[ii][1].valid = false;
-	}
 
 	/*
 	 * Return back to the caller.
@@ -1184,6 +1221,9 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
  *	function can read any of the natural values from the Dcache.  The natural
  *	values are, in order of size, byte (8-bits), word (16-bits), longword
  *	(32-bits), and quadword (64-bits).
+ *
+ *	Refer to Section 2.8.1 in the HRM for more information about processing
+ *	Memory Address Space Load Instructions from the Load Queue (LQ).
  *
  * Input Parameters:
  * 	cpu:
@@ -1224,13 +1264,13 @@ bool AXP_DcacheRead(
 	bool				retVal = false;
 	AXP_DCACHE_IDXSET	indexAndSet;
 	AXP_VA				virtAddr = {.va = va};
+	AXP_VA				physAddr = {.va = pa};
 	u64					*dest64 = (u64 *) data;
 	u32					*dest32 = (u32 *) data;
 	u16					*dest16 = (u16 *) data;
 	u8					*dest8 = (u8 *) data;
 	i32					lenOver = ((va % AXP_DCACHE_DATA_LEN) + len - 1) -
 						  	  	   (AXP_DCACHE_DATA_LEN - 1);
-/*	u32					oneChecked = virtAddr.vaIdxCntr.counter;	*/
 	u32					ii;
 	u32					sets;
 
@@ -1301,7 +1341,8 @@ bool AXP_DcacheRead(
 	for (ii = 0; ii < sets; ii++)
 	{
 		if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
-			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
+			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag ==
+			 physAddr.vaIdxInfo.tag))
 		{
 
 			/*
@@ -1319,55 +1360,6 @@ bool AXP_DcacheRead(
 			break;
 		}
 	}
-
-/*
- * I don't think that there is an issue with the 2 bits beyond the 8K for a
- * Virtual Page Number (VPN).  I don't see how the determination of the index
- * from the virtual address (VA), means anything with a particular VA.  On the
- * other hand, a particular VPN hosts 128 (out of the possible 512) consecutive
- * entries in the Dcache.
- */
-#if 0
-	/*
-	 * If we did not find it, then check the other 3 possible places.
-	 */
-	if (retVal == false)
-	{
-		bool	done = false;
-
-		virtAddr.vaIdxCntr.counter = 0;
-		while ((done == false) && (retVal == false))
-		{
-			if (virtAddr.vaIdxCntr.counter != oneChecked)
-			{
-				for (ii = 0; ((ii < sets) && (retVal == false)); ii++)
-				{
-					if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
-						(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == pa))
-					{
-
-						/*
-						 * Combine the index and set associated with this data
-						 * and return that into the caller supplied parameter.
-						 */
-						indexAndSet.idxOrSet.index = virtAddr.vaIdx.index;
-						indexAndSet.idxOrSet.set = ii;
-						*idxSet = indexAndSet.idxSet;
-
-						/*
-						 * Indicate that we are returning the data requested.
-						 */
-						retVal = true;
-					}
-				}
-			}
-			if (virtAddr.vaIdxCntr.counter == 3)
-				done = true;
-			else
-				virtAddr.vaIdxCntr.counter++;
-		}
-	}
-#endif
 
 	/*
 	 * If we found what we were looking for, so save the value requested
