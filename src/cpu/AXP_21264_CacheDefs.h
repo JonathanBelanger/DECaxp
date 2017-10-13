@@ -143,6 +143,14 @@ typedef enum
 
 #define AXP_DCACHE_DATA_LEN	64
 
+typedef enum
+{
+	Invalid,				/* Initial State */
+	Pending,				/* Waiting to be filled */
+	Writeable,				/* Block is writeable */
+	Readable				/* Block is readable */
+} AXP_21264_CACHE_ST;
+
 /*
  * This structure is the definition for one data cache block.  A block contains
  * the following:
@@ -159,6 +167,7 @@ typedef enum
  *							data.
  *				dirty:		The cache block has been written to/updated and
  *							needs to be written back to memory upon eviction.
+ *							A valid block without the 'dirty' bit set is 'clean'.
  *				shared:		The cache block can be found in more than one
  *							system component (such as another CPU)
  *				modified:	The cache block has just been retrieved from memory
@@ -181,6 +190,7 @@ typedef struct
 	bool				modified;
 	bool				set_0_1;
 	bool				locked;
+	AXP_21264_CACHE_ST	state;
 } AXP_DCACHE_BLK;
 
 /*
