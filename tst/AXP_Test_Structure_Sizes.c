@@ -183,7 +183,9 @@ int main()
 	PRINT_SIZE(AXP_MBOX_DC_STAT, 8, passed);
 	PRINT_SIZE(AXP_CBOX_C_DATA, 8, passed);
 	PRINT_SIZE(AXP_CBOX_C_SHFT, 8, passed);
-
+	PRINT_SIZE(AXP_CBOX_READ_IPR, 16, passed);
+	PRINT_SIZE(AXP_21264_CBOX_CSRS, 40, passed);
+	PRINT_SIZE(AXP_CBOX_IOWB, 16, passed);
 	printf("\nAXP_21264_Predictions.h\n");
 	PRINT_SIZE(LCLindex, 8, passed);
 	PRINT_SIZE(LPTIndex, 8, passed);
@@ -197,7 +199,6 @@ int main()
 	PRINT_SIZE(AXP_ICACHE_BLK, 72, passed);
 	PRINT_SIZE(AXP_CACHE_IDX, 8, passed);
 	PRINT_SIZE(AXP_VA_FIELDS, 8, passed);
-	PRINT_SIZE(AXP_IDX_COUNTER, 8, passed);
 	PRINT_SIZE(AXP_VA, 8, passed);
 	PRINT_SIZE(AXP_VPC_FIELDS, 8, passed);
 	PRINT_SIZE(AXP_VPC, 8, passed);

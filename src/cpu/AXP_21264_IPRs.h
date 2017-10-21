@@ -584,4 +584,76 @@ typedef struct
 	u64 res : 63;
 } AXP_CBOX_C_SHFT;
 
+/*
+ * HRM Table 5–25 Cbox Read IPR Fields Description
+ *
+ * These IPRs are read via he C_DATA IPR.
+ *
+ * Name					Description
+ * -----------------	-------------------------------------------------------
+ * C_SYNDROME_1[7:0]	Syndrome for upper QW in OW of victim that was scrubbed.
+ * C_SYNDROME_0[7:0]	Syndrome for lower QW in OW of victim that was scrubbed.
+ * C_STAT[4:0]			Bits	Error Status
+ *						-----	-----------------------------------------------
+ *						00000	Either no error, or error on a speculative
+ *								load, or a Bcache victim read due to a
+ *								Dcache/Bcache miss
+ *						00001	BC_PERR (Bcache tag parity error)
+ *						00010	DC_PERR (duplicate tag parity error)
+ *						00011	DSTREAM_MEM_ERR
+ *						00100	DSTREAM_BC_ERR
+ *						00101	DSTREAM_DC_ERR
+ *						0011x	PROBE_BC_ERR
+ *						01000	Reserved
+ *						01001	Reserved
+ *						01010	Reserved
+ *						01011	ISTREAM_MEM_ERR
+ *						01100	ISTREAM_BC_ERR
+ *						01101	Reserved
+ *						1xxxx	DOUBLE_BIT_ERROR
+ * C_STS[3:0]			If C_STAT equals xxx_MEM_ERR or xxx_BC_ERR, then C_STS
+ *						contains the status of the block as follows; otherwise,
+ *						the value of C_STS is x:
+ *						Bit Value	Status of Block
+ *						---------	---------------
+ *						7:4			Reserved
+ *						3			Parity
+ *						2			Valid
+ *						1			Dirty
+ *						0			Shared
+ * C_ADDR[6:42]			Address of last reported ECC or parity error. If C_STAT
+ *						value is DSTREAM_DC_ERR, only bits 6:19 are valid.
+ */
+typedef struct
+{
+	u8	c_syndrome_1;
+	u8	c_syndrome_2;
+	u32	c_stat : 5;
+	u32	c_sts : 4;
+	u64	c_addr;
+} AXP_CBOX_READ_IPR;
+
+/*
+ * C_STAT values
+ */
+#define AXP_C_STAT_NOERR			0	/* Either no error, or speculative error */
+#define AXP_C_STAT_BC_PERR			1	/* Bcache Parity Error */
+#define AXP_C_STAT_DC_PERR			2	/* Dcache Parity Error */
+#define AXP_C_STAT_DSTREAM_MEM_ERR	3	/* Dstream Memory Error */
+#define AXP_C_STAT_DSTREAM_BC_ERR	4	/* Dstream Bcache Error */
+#define AXP_C_STAT_DSTREAM_DC_ERR	5	/* Dstream Dcache Error */
+#define AXP_C_STAT_PROBE_BC_ERR1	6	/* Probe Bcache Error 1 */
+#define AXP_C_STAT_PROBE_BC_ERR2	7	/* Probe Bcache Error 2 */
+#define AXP_C_STAT_ISTREAM_MEM_ERR	11	/* Istream Memory Error */
+#define AXP_C_STAT_ISTREAM_BC_ERR	12	/* Istream Bcache Error */
+#define AXP_C_STAT_DOUBLE_BIT_ERROR	16	/* Double Bit Error */
+
+/*
+ * C_STS values
+ */
+#define AXP_C_STS_PARITY	3
+#define AXP_C_STS_VALID		2
+#define AXP_C_STS_DIRTY		1
+#define AXP_C_STS_SHARED	0
+
 #endif /*_AXP_21264_IPR_DEFS_ */

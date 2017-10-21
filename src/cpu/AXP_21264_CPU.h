@@ -292,6 +292,7 @@ typedef enum
 #define AXP_PASS_2_EV68A		2	/* EV68A */
 #define AXP_PASS_21_21A_3		3
 #define AXP_PASS_22_EV68A		4
+#define AXP_IOWB_LEN			4
 
 /*
  * This structure contains all the fields required to emulate an Alpha AXP
@@ -587,7 +588,7 @@ typedef struct
 	 **************************************************************************/
 	u8						vaf;
 	u8						vdf;
-	u8						iowb;
+	AXP_CBOX_IOWB			iowb[AXP_IOWB_LEN];
 	u8						pq;
 	AXP_CTAG_BLK			ctag[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 
@@ -596,6 +597,8 @@ typedef struct
 	 */
 	AXP_CBOX_C_DATA		cData;		/* Cbox data							*/
 	AXP_CBOX_C_SHFT		cShft;		/* Cbox shift control					*/
+	AXP_21264_CBOX_CSRS	csr;		/* Control and Status Registers (CSR)	*/
+	u8					irqH : 6;	/* Six interrupt bits set by system		*/
 
 	/*
 	 * Alpha AXP Architectural IPRs
