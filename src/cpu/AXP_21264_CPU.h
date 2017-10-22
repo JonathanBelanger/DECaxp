@@ -295,6 +295,7 @@ typedef enum
 #define AXP_21264_IOWB_LEN		4
 #define AXP_21264_VDB_LEN		8
 #define AXP_21264_PQ_LEN		8
+#define AXP_21264_MAF_LEN		8
 
 /*
  * This structure contains all the fields required to emulate an Alpha AXP
@@ -549,9 +550,9 @@ typedef struct
 	u32						lqNext;
 	AXP_MBOX_QUEUE			sq[AXP_MBOX_QUEUE_LEN];
 	u32						sqNext;
-	u8						maf;
 	AXP_21264_TLB			dtb[AXP_TB_LEN];
 	u32						nextDTB;
+	AXP_MBOX_MAF			maf[AXP_21264_MAF_LEN];
 
 	/*
 	 * The following is used to detect when we have a TB Miss while processing
@@ -591,7 +592,7 @@ typedef struct
 	AXP_21264_CBOX_VIC_BUF	vdb[AXP_21264_VDB_LEN];
 	AXP_21264_CBOX_IOWB		iowb[AXP_21264_IOWB_LEN];
 	AXP_21264_CBOX_PQ		pq[AXP_21264_PQ_LEN];
-	AXP_CTAG_BLK			ctag[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
+	AXP_21264_CBOX_CTAG		ctag[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 
 	/*
 	 * Cbox IPRs

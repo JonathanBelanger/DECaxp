@@ -31,16 +31,16 @@
  *
  *	V01.002		14-Oct-2017	Jonathan D. Belanger
  *	Started defining the CPU to System and System to CPU messages.
+ *
+ *	V01.003		22-Oct-2017	Jonathan D. Belanger
+ *	Differentiated between messages that come over the SysAddIn_L[14:0] pins
+ *	and SysAddOut_L[14:0] pins.  Also defined a number of the remaining
+ *	structures needed by the Cbox,
  */
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
 
 #include "AXP_Utility.h"
-
-/*
- * TODO: Need to differentiate between the messages that are written on the
- * TODO: SysAddIn (to CPU) and SysAddOut (from CPU) pins.
- */
 
 /*
  * This structure is the definition for one Cbox copy of Dcache Tag Array.  A
@@ -56,7 +56,7 @@ typedef struct
 	u64					virtTag;
 	u32					dtagIndex;
 	bool				valid;
-} AXP_CTAG_BLK;
+} AXP_21264_CBOX_CTAG;
 
 /*
  * HRM Tables 5-23 and 5-24
@@ -253,7 +253,7 @@ typedef enum
 	ReadBytes,
 	ReadLWs,
 	ReadQWs,
-	WrBytes = 0x0c,
+	WrBytes = 0x0C,
 	WrLWs,
 	WrQWs,
 	ReadBlk = 0x10,

@@ -27,6 +27,8 @@
 #ifndef _AXP_21264_MBOX_QUEUES_DEFS_
 #define _AXP_21264_MBOX_QUEUES_DEFS_
 
+#include "AXP_21264_Cbox.h"
+
 typedef enum
 {
 	NotInUse,
@@ -43,5 +45,39 @@ typedef struct
 	AXP_INSTRUCTION			*instr;
 	AXP_MBOX_QUEUE_STATE	state;
 } AXP_MBOX_QUEUE;
+
+typedef enum
+{
+	Dcache,
+	Icache,
+	IOread			/* These are not stored in the Dcache */
+} AXP_MBOX_MAF_TYPE;
+
+typedef enum
+{
+	LDx,
+	STx,
+	STx_C,
+	WH64,
+	ECB,
+	Istream
+} AXP_MBOX_MERGE_INS;
+
+/*
+ * In HRM Section 2, the MAF is documented as being in the Mbox/Memory
+ * Reference Unit.  In HRM Section 4.1.1.1, it states the following:
+ *
+ *		The Cbox contains an 8-entry miss buffer (MAF) and an 8-entry victim
+ *		buffer (VAF).
+ */
+typedef struct
+{
+	AXP_MBOX_MAF_TYPE			type;
+	AXP_21264_SYSADD_OUT_CMD	rq;
+	AXP_21264_SYSADD_IN_SYSDC	rsp;
+	u64							pa;
+	bool						valid;
+	bool						complete;	/* cleared by Mbox, set by Cbox */
+} AXP_MBOX_MAF;
 
 #endif /* _AXP_21264_MBOX_QUEUES_DEFS_ */
