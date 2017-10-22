@@ -292,7 +292,9 @@ typedef enum
 #define AXP_PASS_2_EV68A		2	/* EV68A */
 #define AXP_PASS_21_21A_3		3
 #define AXP_PASS_22_EV68A		4
-#define AXP_IOWB_LEN			4
+#define AXP_21264_IOWB_LEN		4
+#define AXP_21264_VDB_LEN		8
+#define AXP_21264_PQ_LEN		8
 
 /*
  * This structure contains all the fields required to emulate an Alpha AXP
@@ -586,10 +588,9 @@ typedef struct
 	 *	The Cbox is responsible for the interfaces between the system and the *
 	 *	CPU.																  *
 	 **************************************************************************/
-	u8						vaf;
-	u8						vdf;
-	AXP_CBOX_IOWB			iowb[AXP_IOWB_LEN];
-	u8						pq;
+	AXP_21264_CBOX_VIC_BUF	vdb[AXP_21264_VDB_LEN];
+	AXP_21264_CBOX_IOWB		iowb[AXP_21264_IOWB_LEN];
+	AXP_21264_CBOX_PQ		pq[AXP_21264_PQ_LEN];
 	AXP_CTAG_BLK			ctag[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 
 	/*

@@ -188,28 +188,6 @@ typedef struct
 #define	AXP_BCACHE_16MB				15
 
 /*
- * HRM 2.1.4.1
- * This structure is the definition for one of the Victim Address File (VAF)
- * and Victim Data File (VDF).  Together these structures form an 8-entry
- * victim buffer used for holding:
- *
- * 		Dcache blocks to be written to the Bcache
- * 		Istream cache blocks from memory to the Bcache
- * 		Bcache blocks to be written to memory
- * 		Cache blocks sent to the system in response to probe commands
- *
- * NOTE: This current implementation does not have a Bcache.  Therefore, the
- * 		 writes to the Bcache are actually writes to memory.  What this means
- * 		 is that the two middle items above are not implemented, as they are
- * 		 redundant in with the lack of Bcache.
- */
-typedef struct
-{
-	bool				validVictim;
-	bool				validProbe;
-} AXP_CBLOCK_VDB;
-
-/*
  * HRM 2.12
  * Each IOWB entry has the following:
  * 		64 bytes of data
@@ -221,7 +199,7 @@ typedef struct
 {
 	u64					pa;
 	u8					data[AXP_21264_IOWB_SIZE];
-} AXP_CBOX_IOWB;
+} AXP_21264_CBOX_IOWB;
 
 /*
  * HRM Table 4-5
@@ -399,5 +377,44 @@ typedef struct
 	u64								pa;
 	u8								SysData[sizeof(u64)]; /* when ProbeData=false */
 } AXP_21264_SYSADD_IN;
+
+/*
+ * HRM 2.1.4.1
+ * This structure is the definition for one of the Victim Address File (VAF)
+ * and Victim Data File (VDF).  Together these structures form an 8-entry
+ * victim buffer used for holding:
+ *
+ * 		Dcache blocks to be written to the Bcache
+ * 		Istream cache blocks from memory to the Bcache
+ * 		Bcache blocks to be written to memory
+ * 		Cache blocks sent to the system in response to probe commands
+ *
+ * NOTE: This current implementation does not have a Bcache.  Therefore, the
+ * 		 writes to the Bcache are actually writes to memory.  What this means
+ * 		 is that the two middle items above are not implemented, as they are
+ * 		 redundant in with the lack of Bcache.
+ */
+typedef struct
+{
+	bool							validVictim;
+	bool							validProbe;
+	bool							inOut;		/* true = out; false = in */
+	union
+	{
+		AXP_21264_SYSADD_IN			SysAddIn;
+		AXP_21264_SYSADD_OUT		SysAddOut;
+	};
+} AXP_21264_CBOX_VIC_BUF;
+
+/*
+ * HRM 2.1.4.3
+ * This structure is the definition for a single entry in the probe queue (PQ)
+ */
+typedef struct
+{
+	AXP_21264_SYSADD_IN_PROBE_CMD	Command;
+	bool							marked;
+	u64								pa;
+} AXP_21264_CBOX_PQ;
 
 #endif /* _AXP_21264_CBOX_DEFS_ */
