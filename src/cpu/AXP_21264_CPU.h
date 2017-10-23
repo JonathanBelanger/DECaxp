@@ -55,6 +55,11 @@
  *	V01.006		20-Jul-2017	Jonathan D. Belanger
  *	Added locations for the Processor Cycle Counter, AMASK and IMPLVER
  *	registers.
+ *
+ *	V01.007		23-Oct-2017	Jonathan D. Belanger
+ *	Redefined some Cbox definitions, added a CTAG definition, and added a
+ *	definition to be able to determine if a physical address is for I/O
+ *	Address Space or Memory Address Space.
  */
 #ifndef _AXP_21264_CPU_DEFS_
 #define _AXP_21264_CPU_DEFS_
@@ -641,4 +646,14 @@ typedef struct
 	u64					implVer;	/* Implementation Version				*/
 } AXP_21264_CPU;
 
+/*
+ * The following macros will return true if an address is in the I/O Address
+ * Space and false if it is in the Memory Address Space.  The first macro
+ * masks out everything but the 44th bit, which if set is for I/O Address
+ * Space.
+ */
+#define AXP_21264_IO_ADDR_SPACE		0x0000080000000000ll
+#define AXP_21264_IS_IO_ADDR(addr)	(((addr) & AXP_21264_IO_ADDR_SPACE) != 0)
+
 #endif /* _AXP_21264_CPU_DEFS_ */
+
