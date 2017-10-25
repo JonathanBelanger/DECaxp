@@ -7,6 +7,8 @@ DECemu Interfaces
 			FQ - Floating-Point Issue Queue
 		Cbox
 			MAF - Miss Address File (for iCache fills)
+		Ibox
+			EQ - Event Queue (Icache Miss and ITB miss)
 	Ebox
 		L0
 			Mbox
@@ -46,9 +48,12 @@ DECemu Interfaces
 			CTAG - Cbox Duplicate Tag (Physically Indexed, Virtually Tagged)
 			VB - Victim Buffer
 			Dcache - (Write dirty to Memory)
+		Ibox
+			EQ - Dchace miss and DTB miss
 	Cbox
 		Ibox
 			Icache - (Istream Fill - Virtually Indexed, Virtually Tagged)
+			EQ - IRQ events
 		Mbox
 			DTAG - Duplicate Dcache Tag (Virtually Indexed, Physically Tagged)
 			Dcache - (Dstream Fill - Virtually Indexed, Physically Tagged)
@@ -56,3 +61,9 @@ DECemu Interfaces
 			PQ - (Probe Queue)
 			SysAddIn - SysAddIn_L[14:0] pins (Messages and Data received from System)
 			SysAddOut - SysAddOut_L[14:0] pins (Messages and Data sent to the System)
+			IRQ - IRQ_H[5:0] pins for Interrupts from System
+	System
+		Cbox
+			SysAddOut - SysAddOut_L[14:0] pins (Messages and Data received from CPU)
+			SysAddIn - SysAddIn_L[14:0] pins (Messages and Data sent to CPU)
+			IRQ - IRQ_H[5:0] pins for Interrupt to CPU
