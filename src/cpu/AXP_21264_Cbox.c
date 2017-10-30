@@ -35,6 +35,93 @@
 #include "AXP_21264_Cbox.h"
 
 /*
+ * Local Variables
+ */
+AXP_21264_CBOX_CSR_NAMES csrNames[] =
+	{
+		{"BcBankEnable", BcBankEnable},
+		{"BcBurstModeEnable", BcBurstModeEnable},
+		{"BcCleanVictim", BcCleanVictim},
+		{"BcClkfwdEnable", BcClkfwdEnable},
+		{"BcClockOut", BcClockOut},
+		{"BcDdmFallEn", BcDdmFallEn},
+		{"BcDdmfEnable", BcDdmfEnable},
+		{"BcDdmrEnable", BcDdmrEnable},
+		{"BcDdmRiseEn", BcDdmRiseEn},
+		{"BcEnable", BcEnable},
+		{"BcFrmClk", BcFrmClk},
+		{"BcLateWriteUpper", BcLateWriteUpper},
+		{"BcPentiumMode", BcPentiumMode},
+		{"BcRdRdBubble", BcRdRdBubble},
+		{"BcRdvictim", BcRdvictim},
+		{"BcSjBankEnable", BcSjBankEnable},
+		{"BcTagDdmFallEn", BcTagDdmFallEn},
+		{"BcTagDdmRiseEn", BcTagDdmRiseEn},
+		{"BcWrWrBubble", BcWrWrBubble},
+		{"ThirtyTwoByteIo", ThirtyTwoByteIo},
+		{"DupTagEnable", DupTagEnable},
+		{"EnableEvict", EnableEvict},
+		{"EnableProbeCheck", EnableProbeCheck},
+		{"EnableStcCommand", EnableStcCommand},
+		{"FastModeDisable", FastModeDisable},
+		{"InitMode", InitMode},
+		{"JitterCmd", JitterCmd},
+		{"MboxBcPrbStall", MboxBcPrbStall},
+		{"PrbTagOnly", PrbTagOnly},
+		{"RdvicAckInhibit", RdvicAckInhibit},
+		{"SkewedFillMode", SkewedFillMode},
+		{"SpecReadEnable", SpecReadEnable},
+		{"StcEnable", StcEnable},
+		{"SysbusFormat", SysbusFormat},
+		{"SysbusMbEnable", SysbusMbEnable},
+		{"SysClkfwdEnable", SysClkfwdEnable},
+		{"SysDdmFallEn", SysDdmFallEn},
+		{"SysDdmfEnable", SysDdmfEnable},
+		{"SysDdmrEnable", SysDdmrEnable},
+		{"SysDdmRdFallEn", SysDdmRdFallEn},
+		{"SysDdmRdRiseEn", SysDdmRdRiseEn},
+		{"SysDdmRiseEn", SysDdmRiseEn},
+		{"BcClkDelay", BcClkDelay},
+		{"BcCpuClkDelay", BcCpuClkDelay},
+		{"BcCpuLateWriteNum", BcCpuLateWriteNum},
+		{"BcRcvMuxCntPreset", BcRcvMuxCntPreset},
+		{"CfrFrmclkDelay", CfrFrmclkDelay},
+		{"DataValidDly", DataValidDly},
+		{"InvalToDirty", InvalToDirty},
+		{"InvalToDirtyEnable", InvalToDirtyEnable},
+		{"SysBusSize", SysBusSize},
+		{"SysClkDelay", SysClkDelay},
+		{"SysCpuClkDelay", SysCpuClkDelay},
+		{"SysRcvMuxCntPreset", SysRcvMuxCntPreset},
+		{"SysRcvMuxPreset", SysRcvMuxPreset},
+		{"BcLateWriteNum", BcLateWriteNum},
+		{"CfrEv6clkDelay", CfrEv6clkDelay},
+		{"SetDirtyEnable", SetDirtyEnable},
+		{"SysbusVicLimit", SysbusVicLimit},
+		{"BcBphaseLdVector", BcBphaseLdVector},
+		{"BcSize", BcSize},
+		{"BcWrRdBubbles", BcWrRdBubbles},
+		{"BcWrtSts", BcWrtSts},
+		{"CfrGclkDelay", CfrGclkDelay},
+		{"MbCnt", MbCnt},
+		{"SysBphaseLdVector", SysBphaseLdVector},
+		{"SysdcDelay", SysdcDelay},
+		{"SysbusAckLimit", SysbusAckLimit},
+		{"SysClkRatio", SysClkRatio},
+		{"SysFrameLdVector", SysFrameLdVector},
+		{"BcRdWrBubbles", BcRdWrBubbles},
+		{"BcLatTagPattern", BcLatTagPattern},
+		{"BcFdbkEn", BcFdbkEn},
+		{"DcvicThreshold", DcvicThreshold},
+		{"SysFdbkEn", SysFdbkEn},
+		{"BcClkLdVector", BcClkLdVector},
+		{"SysClkLdVector", SysClkLdVector},
+		{"BcLatDataPattern", BcLatDataPattern},
+		{NULL, LastCSR}
+	};
+
+
+/*
  * AXP_VictimBuffer
  *	This function is responsible for managing the Victim Buffer (VB).  The VB
  *	is comprised of the Victim Address File (VAF) and Victim Data File (VDF).
@@ -166,25 +253,410 @@ void AXP_FQArbiter()
  */
 bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 {
-	bool		retVal = false;
-	bool		readResult = true;
-	FILE		*fp;
-	const char	*configFile = "../dat/AXP_21264_Cbox_CSR.nvp";
-	char		name[32];
-	u32			value;
+	bool						retVal = false;
+	bool						readResult = true;
+	FILE						*fp;
+	const char					*configFile = "../dat/AXP_21264_Cbox_CSR.nvp";
+	char						name[32];
+	u32							value;
+	int							ii;
+	AXP_21264_CBOX_CSR_VALUES	csr;
 
+	/*
+	 * Open the file to configure the CSRs for the Cbox.
+	 */
 	fp = AXP_Open_NVP_File(configFile);
 	if (fp != NULL)
 	{
+
+		/*
+		 * While the read from the NVP file returns a name/value pair,
+		 * continue to process the file.
+		 */
 		while (readResult == true)
 		{
 			readResult = AXP_Read_NVP_File(fp, name, &value);
+
+			/*
+			 * If the above call failed, then set the retVal and get out of
+			 * the loop.
+			 */
 			if (readResult == false)
 			{
 				retVal = true;
 				continue;
 			}
+
+			/*
+			 * OK, if we get this far we have a name, in string format and a
+			 * 32-bit value.  We need to convert the string name to an
+			 * equivalent name value, so that we can use select to determine
+			 * which of the CSRs is being initialized with the value.
+			 */
+			csr = LastCSR;
+			for (ii = 0; ((csrNames[ii].name != NULL) && (csr != LastCSR)); ii++)
+			{
+				if (strcmp(csrNames[ii].name, name) == 0)
+					csr = csrNames[ii].value;
+			}
+
+			/*
+			 * Initialize the correct CSR.  If the above loop did not find
+			 * anything that matched, then csr will equal LastCSR, which will
+			 * be processed by the same code that would trip to the default
+			 * (both of which are errors).
+			 */
+			switch (csr)
+			{
+				case BcBankEnable:
+					cpu->csr.BcBankEnable = value;
+					break;
+
+				case BcBurstModeEnable:
+					cpu->csr.BcBurstModeEnable = value;
+					break;
+
+				case BcCleanVictim:
+					cpu->csr.BcCleanVictim = value;
+					break;
+
+				case BcClkfwdEnable:
+					cpu->csr.BcClkfwdEnable = value;
+					break;
+
+				case BcClockOut:
+					cpu->csr.BcClockOut = value;
+					break;
+
+				case BcDdmFallEn:
+					cpu->csr.BcDdmFallEn = value;
+					break;
+
+				case BcDdmfEnable:
+					cpu->csr.BcDdmfEnable = value;
+					break;
+
+				case BcDdmrEnable:
+					cpu->csr.BcDdmrEnable = value;
+					break;
+
+				case BcDdmRiseEn:
+					cpu->csr.BcDdmRiseEn = value;
+					break;
+
+				case BcEnable:
+					cpu->csr.BcEnable = value;
+					break;
+
+				case BcFrmClk:
+					cpu->csr.BcFrmClk = value;
+					break;
+
+				case BcLateWriteUpper:
+					cpu->csr.BcLateWriteUpper = value;
+					break;
+
+				case BcPentiumMode:
+					cpu->csr.BcPentiumMode = value;
+					break;
+
+				case BcRdRdBubble:
+					cpu->csr.BcRdRdBubble = value;
+					break;
+
+				case BcRdvictim:
+					cpu->csr.BcRdvictim = value;
+					break;
+
+				case BcSjBankEnable:
+					cpu->csr.BcSjBankEnable = value;
+					break;
+
+				case BcTagDdmFallEn:
+					cpu->csr.BcTagDdmFallEn = value;
+					break;
+
+				case BcTagDdmRiseEn:
+					cpu->csr.BcTagDdmRiseEn = value;
+					break;
+
+				case BcWrWrBubble:
+					cpu->csr.BcWrWrBubble = value;
+					break;
+
+				case ThirtyTwoByteIo:
+					cpu->csr.ThirtyTwoByteIo = value;
+					break;
+
+				case DupTagEnable:
+					cpu->csr.DupTagEnable = value;
+					break;
+
+				case EnableEvict:
+					cpu->csr.EnableEvict = value;
+					break;
+
+				case EnableProbeCheck:
+					cpu->csr.EnableProbeCheck = value;
+					break;
+
+				case EnableStcCommand:
+					cpu->csr.EnableStcCommand = value;
+					break;
+
+				case FastModeDisable:
+					cpu->csr.FastModeDisable = value;
+					break;
+
+				case InitMode:
+					cpu->csr.InitMode = value;
+					break;
+
+				case JitterCmd:
+					cpu->csr.JitterCmd = value;
+					break;
+
+				case MboxBcPrbStall:
+					cpu->csr.MboxBcPrbStall = value;
+					break;
+
+				case PrbTagOnly:
+					cpu->csr.PrbTagOnly = value;
+					break;
+
+				case RdvicAckInhibit:
+					cpu->csr.RdvicAckInhibit = value;
+					break;
+
+				case SkewedFillMode:
+					cpu->csr.SkewedFillMode = value;
+					break;
+
+				case SpecReadEnable:
+					cpu->csr.SpecReadEnable = value;
+					break;
+
+				case StcEnable:
+					cpu->csr.StcEnable = value;
+					break;
+
+				case SysbusFormat:
+					cpu->csr.SysbusFormat = value;
+					break;
+
+				case SysbusMbEnable:
+					cpu->csr.SysbusMbEnable = value;
+					break;
+
+				case SysClkfwdEnable:
+					cpu->csr.SysClkfwdEnable = value;
+					break;
+
+				case SysDdmFallEn:
+					cpu->csr.SysDdmFallEn = value;
+					break;
+
+				case SysDdmfEnable:
+					cpu->csr.SysDdmfEnable = value;
+					break;
+
+				case SysDdmrEnable:
+					cpu->csr.SysDdmrEnable = value;
+					break;
+
+				case SysDdmRdFallEn:
+					cpu->csr.SysDdmRdFallEn = value;
+					break;
+
+				case SysDdmRdRiseEn:
+					cpu->csr.SysDdmRdRiseEn = value;
+					break;
+
+				case SysDdmRiseEn:
+					cpu->csr.SysDdmRiseEn = value;
+					break;
+
+				case BcClkDelay:
+					cpu->csr.BcClkDelay = value;
+					break;
+
+				case BcCpuClkDelay:
+					cpu->csr.BcCpuClkDelay = value;
+					break;
+
+				case BcCpuClkDelay:
+					cpu->csr.BcCpuClkDelay = value;
+					break;
+
+				case BcRcvMuxCntPreset:
+					cpu->csr.BcRcvMuxCntPreset = value;
+					break;
+
+				case CfrFrmclkDelay:
+					cpu->csr.CfrFrmclkDelay = value;
+					break;
+
+				case DataValidDly:
+					cpu->csr.DataValidDly = value;
+					break;
+
+				case InvalToDirty:
+					cpu->csr.InvalToDirty = value;
+					break;
+
+				case InvalToDirtyEnable:
+					cpu->csr.InvalToDirtyEnable = value;
+					break;
+
+				case SysBusSize:
+					cpu->csr.SysBusSize = value;
+					break;
+
+				case SysClkDelay:
+					cpu->csr.SysClkDelay = value;
+					break;
+
+				case SysCpuClkDelay:
+					cpu->csr.SysCpuClkDelay = value;
+					break;
+
+				case SysRcvMuxCntPreset:
+					cpu->csr.SysRcvMuxCntPreset = value;
+					break;
+
+				case SysRcvMuxPreset:
+					cpu->csr.SysRcvMuxPreset = value;
+					break;
+
+				case BcLateWriteNum:
+					cpu->csr.BcLateWriteNum = value;
+					break;
+
+				case CfrEv6clkDelay:
+					cpu->csr.CfrEv6clkDelay = value;
+					break;
+
+				case SetDirtyEnable:
+					cpu->csr.SetDirtyEnable = value;
+					break;
+
+				case SysbusVicLimit:
+					cpu->csr.SysbusVicLimit = value;
+					break;
+
+				case BcBphaseLdVector:
+					cpu->csr.BcBphaseLdVector = value;
+					break;
+
+				case BcSize:
+					cpu->csr.BcSize = value;
+					break;
+
+				case BcWrRdBubbles:
+					cpu->csr.BcWrRdBubbles = value;
+					break;
+
+				case BcWrtSts:
+					cpu->csr.BcWrtSts = value;
+					break;
+
+				case CfrGclkDelay:
+					cpu->csr.CfrGclkDelay = value;
+					break;
+
+				case MbCnt:
+					cpu->csr.MbCnt = value;
+					break;
+
+				case SysBphaseLdVector:
+					cpu->csr.SysBphaseLdVector = value;
+					break;
+
+				case SysdcDelay:
+					cpu->csr.SysdcDelay = value;
+					break;
+
+				case SysbusAckLimit:
+					cpu->csr.SysbusAckLimit = value;
+					break;
+
+				case SysClkRatio:
+					cpu->csr.SysClkRatio = value;
+					break;
+
+				case SysFrameLdVector:
+					cpu->csr.SysFrameLdVector = value;
+					break;
+
+				case BcRdWrBubbles:
+					cpu->csr.BcRdWrBubbles = value;
+					break;
+
+				case BcLatTagPattern:
+					cpu->csr.BcLatTagPattern = value;
+					break;
+
+				case BcFdbkEn:
+					cpu->csr.BcFdbkEn = value;
+					break;
+
+				case DcvicThreshold:
+					cpu->csr.DcvicThreshold = value;
+					break;
+
+				case SysFdbkEn:
+					cpu->csr.SysFdbkEn = value;
+					break;
+
+				case BcClkLdVector:
+					cpu->csr.BcClkLdVector = value;
+					break;
+
+				case SysClkLdVector:
+					cpu->csr.SysClkLdVector = value;
+					break;
+
+				case BcLatDataPattern:
+					cpu->csr.BcLatDataPattern = value;
+					break;
+
+				default:
+					printf("Unexpected name/value pair: 'name' returned as \'%s\' at %s, line %s.\n", 
+ 						name, __FILE__, __LINE__); 
+					retVal = true;
+					readResult = false;
+					break;
+			}
 		}
+
+		/*
+		 * We successfully opened the file, now let's make sure we close it.
+		 */
+		AXP_Close_NVP_File(fp);
+	}
+
+	/*
+	 * If retVal is still false, then all our processing has been successful
+	 * thus far.  Go initialize the Cbox IPRs.  Also, this is as good a place
+	 * as any to initilize the AMASK and IMPLVER IPRs (which don't really have
+	 * one of the boxes (Cbox, Mbox, FBox, EBox, or Ibox) controlling them.
+	 */
+	if (retVal == false)
+	{
+		cpu->cData.cdata = 0;
+		cpu->cData.res = 0;
+		cpu->cShft.c_shift = 0;
+		cpu->cShft.res = 0;
+
+		cpu->amask.bwx = 1;
+		cpu->amask.fix = 1;
+		cpu->amask.cix = 0;
+		cpu->amask.mvi = 1;
+		cpu->amask.patr = 1;
+		cpu->amask.res_1 = 0;
+		cpu->amask.pwmi = 0;
+		cpu->amask.res_2 = 0;
+		cpu->implVer = AXP_PASS_2_EV68A;
 	}
 
 	return(retVal);
