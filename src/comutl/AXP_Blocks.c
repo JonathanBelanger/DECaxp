@@ -138,8 +138,8 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 					 */
 					for (ii = 0; ii < AXP_MBOX_QUEUE_LEN; ii++)
 					{
-						cpu->lq[ii].state = NotInUse;
-						cpu->sq[ii].state = NotInUse;
+						cpu->lq[ii].state = QNotInUse;
+						cpu->sq[ii].state = QNotInUse;
 					}
 				}
 			}

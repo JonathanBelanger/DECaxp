@@ -184,18 +184,21 @@ int main()
 	PRINT_SIZE(AXP_CBOX_C_DATA, 8, passed);
 	PRINT_SIZE(AXP_CBOX_C_SHFT, 8, passed);
 	PRINT_SIZE(AXP_CBOX_READ_IPR, 16, passed);
+
+	printf("\nAXP_21264_Cbox.h.h\n");
 	PRINT_SIZE(AXP_21264_CBOX_CSRS, 40, passed);
-	PRINT_SIZE(AXP_CBOX_IOWB, 16, passed);
+	PRINT_SIZE(AXP_21264_CBOX_IOWB, 72, passed);
+
 	printf("\nAXP_21264_Predictions.h\n");
 	PRINT_SIZE(LCLindex, 8, passed);
 	PRINT_SIZE(LPTIndex, 8, passed);
 
-	printf("\nAXP_21264_Cache.h\n");
+	printf("\nAXP_21264_CacheDefs.h\n");
 	PRINT_SIZE(AXP_VA_SPE2, 8, passed);
 	PRINT_SIZE(AXP_VA_SPE1, 8, passed);
 	PRINT_SIZE(AXP_VA_SPE0, 8, passed);
 	PRINT_SIZE(AXP_VA_SPE, 8, passed);
-	PRINT_SIZE(AXP_DCACHE_BLK, 80, passed);
+	PRINT_SIZE(AXP_DCACHE_BLK, 88, passed);
 	PRINT_SIZE(AXP_ICACHE_BLK, 72, passed);
 	PRINT_SIZE(AXP_CACHE_IDX, 8, passed);
 	PRINT_SIZE(AXP_VA_FIELDS, 8, passed);

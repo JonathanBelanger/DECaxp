@@ -211,8 +211,9 @@ typedef enum
 	Run,
 	FaultReset,
 	Sleep,
-	ShutingDown
+	ShuttingDown
 } AXP_21264_STATES;
+
 typedef enum
 {
 	InitializationComplete,
@@ -223,6 +224,14 @@ typedef enum
 	BiSIComplete,
 	Shutdown
 } AXP_21264_EVENTS;;
+
+typedef enum
+{
+	SystemReset,
+	BiSTRunning,
+	BiSTFailed,
+	BiSTSucceeded
+} AXP_21264_BIST_STATES;
 
 /*
  * The following enumerations should probably go someplace else.  See the
@@ -317,7 +326,8 @@ typedef struct
 	/*
 	 * CPU state.
 	 */
-	AXP_21264_STATES cpuState;
+	AXP_21264_STATES		cpuState;
+	AXP_21264_BIST_STATES	BiSTState;
 
 	/**************************************************************************
 	 *	Ibox Definitions													  *

@@ -40,7 +40,9 @@
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
 
-#include "AXP_Utility.h"
+#include "AXP_Base_CPU.h"
+#include "AXP_21264_Instructions.h"
+#include "AXP_21264_CPU.h"
 
 /*
  * This structure is the definition for one Cbox copy of Dcache Tag Array.  A
@@ -85,7 +87,6 @@ typedef struct
 		u64 BcWrWrBubble : 1;
 		u64 ThirtyTwoByteIo : 1;
 		u64 DupTagEnable : 1;
-		u64 DupTagMode : 1;
 		u64 EnableEvict : 1;
 		u64 EnableProbeCheck : 1;
 		u64 EnableStcCommand : 1;
@@ -112,13 +113,12 @@ typedef struct
 		u64 BcCpuLateWriteNum : 2;
 		u64 BcRcvMuxCntPreset : 2;
 		u64 CfrFrmclkDelay : 2;
-		u64 CpuClkDelay : 2;
 		u64 DataValidDly : 2;
 		u64 InvalToDirty : 2;
 		u64 InvalToDirtyEnable : 2;
 		u64 SysBusSize : 2;
-		u64 res_1 : 1;				/* Quadword align */
 		u64 SysClkDelay : 2;
+		u64 res_1 : 2;				/* Quadword align */
 		u64 SysCpuClkDelay : 2;
 		u64 SysRcvMuxCntPreset : 2;
 		u64 SysRcvMuxPreset : 2;
@@ -136,7 +136,7 @@ typedef struct
 		u64 SysdcDelay : 4;
 		u64 SysbusAckLimit : 5;
 		u64 SysClkRatio : 5;
-		u64 res_2 : 2;				/* Quadword align */
+		u64 res_2 : 4;				/* Quadword align */
 		u32 SysFrameLdVector : 5;
 		u32 BcRdWrBubbles : 6;
 		u32 res_3 : 21;				/* Longword Align */
@@ -149,8 +149,178 @@ typedef struct
 		u16 BcClkLdVector;
 		u16 SysClkLdVector;
 		u32 BcLatDataPattern;
-		u32 res_3;					/* Quadword align */
+		u32 res_6;					/* Quadword align */
 } AXP_21264_CBOX_CSRS;
+
+typedef enum
+{
+	BcBankEnable,
+	BcBurstModeEnable,
+	BcCleanVictim,
+	BcClkfwdEnable,
+	BcClockOut,
+	BcDdmFallEn,
+	BcDdmfEnable,
+	BcDdmrEnable,
+	BcDdmRiseEn,
+	BcEnable,
+	BcFrmClk,
+	BcLateWriteUpper,
+	BcPentiumMode,
+	BcRdRdBubble,
+	BcRdvictim,
+	BcSjBankEnable,
+	BcTagDdmFallEn,
+	BcTagDdmRiseEn,
+	BcWrWrBubble,
+	ThirtyTwoByteIo,
+	DupTagEnable,
+	EnableEvict,
+	EnableProbeCheck,
+	EnableStcCommand,
+	FastModeDisable,
+	InitMode,
+	JitterCmd,
+	MboxBcPrbStall,
+	PrbTagOnly,
+	RdvicAckInhibit,
+	SkewedFillMode,
+	SpecReadEnable,
+	StcEnable,
+	SysbusFormat,
+	SysbusMbEnable,
+	SysClkfwdEnable,
+	SysDdmFallEn,
+	SysDdmfEnable,
+	SysDdmrEnable,
+	SysDdmRdFallEn,
+	SysDdmRdRiseEn,
+	SysDdmRiseEn,
+	BcClkDelay,
+	BcCpuClkDelay,
+	BcCpuLateWriteNum,
+	BcRcvMuxCntPreset,
+	CfrFrmclkDelay,
+	DataValidDly,
+	InvalToDirty,
+	InvalToDirtyEnable,
+	SysBusSize,
+	SysClkDelay,
+	SysCpuClkDelay,
+	SysRcvMuxCntPreset,
+	SysRcvMuxPreset,
+	BcLateWriteNum,
+	CfrEv6clkDelay,
+	SetDirtyEnable,
+	SysbusVicLimit,
+	BcBphaseLdVector,
+	BcSize,
+	BcWrRdBubbles,
+	BcWrtSts,
+	CfrGclkDelay,
+	MbCnt,
+	SysBphaseLdVector,
+	SysdcDelay,
+	SysbusAckLimit,
+	SysClkRatio,
+	SysFrameLdVector,
+	BcRdWrBubbles,
+	BcLatTagPattern,
+	BcFdbkEn,
+	DcvicThreshold,
+	SysFdbkEn,
+	BcClkLdVector,
+	SysClkLdVector,
+	BcLatDataPattern,
+	LastCSR
+} AXP_21264_CBOX_CSR_VALUES;;
+
+typedef struct
+{
+	const char 						*name;
+	const AXP_21264_CBOX_CSR_VALUES	values;
+} AXP_21264_CBOX_CSR_NAMES =
+{
+	{"BcBankEnable", BcBankEnable},
+	{"BcBurstModeEnable", BcBurstModeEnable},
+	{"BcCleanVictim", BcCleanVictim},
+	{"BcClkfwdEnable", BcClkfwdEnable},
+	{"BcClockOut", BcClockOut},
+	{"BcDdmFallEn", BcDdmFallEn},
+	{"BcDdmfEnable", BcDdmfEnable},
+	{"BcDdmrEnable", BcDdmrEnable},
+	{"BcDdmRiseEn", BcDdmRiseEn},
+	{"BcEnable", BcEnable},
+	{"BcFrmClk", BcFrmClk},
+	{"BcLateWriteUpper", BcLateWriteUpper},
+	{"BcPentiumMode", BcPentiumMode},
+	{"BcRdRdBubble", BcRdRdBubble},
+	{"BcRdvictim", BcRdvictim},
+	{"BcSjBankEnable", BcSjBankEnable},
+	{"BcTagDdmFallEn", BcTagDdmFallEn},
+	{"BcTagDdmRiseEn", BcTagDdmRiseEn},
+	{"BcWrWrBubble", BcWrWrBubble},
+	{"ThirtyTwoByteIo", ThirtyTwoByteIo},
+	{"DupTagEnable", DupTagEnable},
+	{"EnableEvict", EnableEvict},
+	{"EnableProbeCheck", EnableProbeCheck},
+	{"EnableStcCommand", EnableStcCommand},
+	{"FastModeDisable", FastModeDisable},
+	{"InitMode", InitMode},
+	{"JitterCmd", JitterCmd},
+	{"MboxBcPrbStall", MboxBcPrbStall},
+	{"PrbTagOnly", PrbTagOnly},
+	{"RdvicAckInhibit", RdvicAckInhibit},
+	{"SkewedFillMode", SkewedFillMode},
+	{"SpecReadEnable", SpecReadEnable},
+	{"StcEnable", StcEnable},
+	{"SysbusFormat", SysbusFormat},
+	{"SysbusMbEnable", SysbusMbEnable},
+	{"SysClkfwdEnable", SysClkfwdEnable},
+	{"SysDdmFallEn", SysDdmFallEn},
+	{"SysDdmfEnable", SysDdmfEnable},
+	{"SysDdmrEnable", SysDdmrEnable},
+	{"SysDdmRdFallEn", SysDdmRdFallEn},
+	{"SysDdmRdRiseEn", SysDdmRdRiseEn},
+	{"SysDdmRiseEn", SysDdmRiseEn},
+	{"BcClkDelay", BcClkDelay},
+	{"BcCpuClkDelay", BcCpuClkDelay},
+	{"BcCpuLateWriteNum", BcCpuLateWriteNum},
+	{"BcRcvMuxCntPreset", BcRcvMuxCntPreset},
+	{"CfrFrmclkDelay", CfrFrmclkDelay},
+	{"DataValidDly", DataValidDly},
+	{"InvalToDirty", InvalToDirty},
+	{"InvalToDirtyEnable", InvalToDirtyEnable},
+	{"SysBusSize", SysBusSize},
+	{"SysClkDelay", SysClkDelay},
+	{"SysCpuClkDelay", SysCpuClkDelay},
+	{"SysRcvMuxCntPreset", SysRcvMuxCntPreset},
+	{"SysRcvMuxPreset", SysRcvMuxPreset},
+	{"BcLateWriteNum", BcLateWriteNum},
+	{"CfrEv6clkDelay", CfrEv6clkDelay},
+	{"SetDirtyEnable", SetDirtyEnable},
+	{"SysbusVicLimit", SysbusVicLimit},
+	{"BcBphaseLdVector", BcBphaseLdVector},
+	{"BcSize", BcSize},
+	{"BcWrRdBubbles", BcWrRdBubbles},
+	{"BcWrtSts", BcWrtSts},
+	{"CfrGclkDelay", CfrGclkDelay},
+	{"MbCnt", MbCnt},
+	{"SysBphaseLdVector", SysBphaseLdVector},
+	{"SysdcDelay", SysdcDelay},
+	{"SysbusAckLimit", SysbusAckLimit},
+	{"SysClkRatio", SysClkRatio},
+	{"SysFrameLdVector", SysFrameLdVector},
+	{"BcRdWrBubbles", BcRdWrBubbles},
+	{"BcLatTagPattern", BcLatTagPattern},
+	{"BcFdbkEn", BcFdbkEn},
+	{"DcvicThreshold", DcvicThreshold},
+	{"SysFdbkEn", SysFdbkEn},
+	{"BcClkLdVector", BcClkLdVector},
+	{"SysClkLdVector", SysClkLdVector},
+	{"BcLatDataPattern", BcLatDataPattern},
+	{NULL, LastCSR}
+};
 
 /*
  * HRM Table 4-15
@@ -214,10 +384,10 @@ typedef enum
 	ChangeToDirtyFail,
 	MBDone,
 	ReleaseBuffer,
-	WriteData,
-	WriteData,
-	WriteData,
-	WriteData,
+	WriteData0,
+	WriteData1,
+	WriteData2,
+	WriteData3,
 	ReadData0 = 0x10,
 	ReadData1,
 	ReadData2,
@@ -303,31 +473,35 @@ typedef enum
 	NopNop = 0x00,
 	NopClean,
 	NopCleanShared,
-	NopTransition3,
+	NopTransistion3,
 	NopDirtyShared,
 	NopInvalid,
-	NopTransition1,
-	ReadHitNop = 0x80,
+	NopTransistion1,
+	NopReserved,
+	ReadHitNop,
 	ReadHitClean,
 	ReadHitCleanShared,
-	ReadHitTransition3,
+	ReadHitTransistion3,
 	ReadHitDirtyShared,
 	ReadHitInvalid,
-	ReadDirtyTransition1,
-	ReadDirtyNop = 0x10,
+	ReadHitTransistion1,
+	ReadHitReserved,
+	ReadDirtyNop,
 	ReadDirtyClean,
 	ReadDirtyCleanShared,
-	ReadDirtyTransition3,
+	ReadDirtyTransistion3,
 	ReadDirtyDirtyShared,
 	ReadDirtyInvalid,
-	ReadDirtyTransition1,
-	ReadAnywayNop = 0x18,
+	ReadDirtyTransistion1,
+	ReadDirtyReserved,
+	ReadAnywayNop,
 	ReadAnywayClean,
 	ReadAnywayCleanShared,
-	ReadAnywayTransition3,
+	ReadAnywayTransistion3,
 	ReadAnywayDirtyShared,
 	ReadAnywayInvalid,
-	ReadAnywayTransition1,
+	ReadAnywayTransistion1,
+	ReadAnywayReserved
 } AXP_21264_SYSADD_IN_PROBE_CMD;
 
 /*

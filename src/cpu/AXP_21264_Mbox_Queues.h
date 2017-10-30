@@ -31,7 +31,7 @@
 
 typedef enum
 {
-	NotInUse,
+	QNotInUse,
 	Assigned,
 	ReadPending,
 	WritePending
@@ -48,6 +48,7 @@ typedef struct
 
 typedef enum
 {
+	MNotInUse,
 	Dcache,
 	Icache,
 	IOread			/* These are not stored in the Dcache */

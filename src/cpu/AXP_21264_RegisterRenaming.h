@@ -45,7 +45,7 @@
 typedef enum
 {
 	Free,
-	Pending,
+	PendingUpdate,
 	Valid
 } AXP_21264_REG_STATE;
 
