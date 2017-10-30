@@ -512,6 +512,11 @@ typedef struct
 	u64 res : 62;
 } AXP_MBOX_DTB_ALTMODE;
 
+#define AXP_MBOX_ALTMODE_KERNEL	0
+#define AXP_MBOX_ALTMODE_EXEC	1
+#define AXP_MBOX_ALTMODE_SUPER	2
+#define AXP_MBOX_ALTMODE_USER	3
+
 typedef AXP_IBOX_ITB_IS AXP_MBOX_DTB_IS;
 
 typedef struct
@@ -547,7 +552,7 @@ typedef struct
 	u64 f_bad_tpar : 1;
 	u64 f_bad_decc : 1;
 	u64 dctag_par_en : 1;
-	u64 dctab_err_en : 1;
+	u64 dcdat_err_en : 1;
 	u64 res_2 : 56;
 } AXP_MBOX_DC_CTL;
 
@@ -556,7 +561,7 @@ typedef struct
 	u64 tperr_p0 : 1;
 	u64 tperr_p1 : 1;
 	u64 ecc_err_st : 1;
-	u64 ecc_eff_ld : 1;
+	u64 ecc_err_ld : 1;
 	u64 seo : 1;
 	u64 res : 59;
 } AXP_MBOX_DC_STAT;

@@ -213,3 +213,189 @@ void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *cpu,
 	 */
 	return;
 }
+
+/*
+ * AXP_21264_Mbox_Init
+ *	This function is called by the Cbox to initialize the Mbox items.  These
+ *	items are:
+ *
+ *		- Dcache
+ *		- Dcache Tag
+ *		- Duplicate Tag
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	true:	Failed to initialize the Mbox
+ *	false:	Successful normal completion.
+ */
+bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
+{
+	bool retVal = false;
+	int ii, jj;
+
+	for (ii = 1; ii < AXP_CACHE_ENTRIES; ii++)
+	{
+		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
+		{
+			memset(cpu->dCache[ii][jj].data, 0, AXP_DCACHE_DATA_LEN);
+			cpu->dCache[ii][jj].physTag = 0;
+			cpu->dCache[ii][jj].valid = false;
+			cpu->dCache[ii][jj].dirty = false;
+			cpu->dCache[ii][jj].shared = false;
+			cpu->dCache[ii][jj].modified = false;
+			cpu->dCache[ii][jj].set_0_1 = false;;
+			cpu->dCache[ii][jj].locked = false;;
+			cpu->dCache[ii][jj].state = Invalid;
+		}
+	}
+	for (ii = 1; ii < AXP_CACHE_ENTRIES; ii++)
+	{
+		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
+		{
+			cpu->dtag[ii][jj].physTag = 0;
+			cpu->dtag[ii][jj].ctagIndex = AXP_CACHE_ENTRIES;
+			cpu->dtag[ii][jj].ctagSet = AXP_2_WAY_CACHE;
+			cpu->dtag[ii][jj].valid = false;
+		}
+	}
+	for (ii = 0; ii < AXP_MBOX_QUEUE_LEN; ii++)
+	{
+		cpu->lq[ii].value = 0;
+		cpu->lq[ii].length = 0;
+		cpu->lq[ii].virtAddress = 0;
+		cpu->lq[ii].instr = NULL;
+		cpu->lq[ii].state = QNotInUse;
+	}
+	cpu->lqNext = 0;
+	for (ii = 0; ii < AXP_MBOX_QUEUE_LEN; ii++)
+	{
+		cpu->sq[ii].value = 0;
+		cpu->sq[ii].length = 0;
+		cpu->sq[ii].virtAddress = 0;
+		cpu->sq[ii].instr = NULL;
+		cpu->sq[ii].state = QNotInUse;
+	}
+	cpu->sqNext = 0;
+	for (ii = 0; ii < AXP_TB_LEN; ii++)
+	{
+		cpu->dtb[ii].virtAddr = 0;
+		cpu->dtb[ii].physAddr = 0;
+		cpu->dtb[ii].matchMask = 0;
+		cpu->dtb[ii].keepMask = 0;
+		cpu->dtb[ii].kre = 0;
+		cpu->dtb[ii].ere = 0;
+		cpu->dtb[ii].sre = 0;
+		cpu->dtb[ii].ure = 0;
+		cpu->dtb[ii].kwe = 0;
+		cpu->dtb[ii].ewe = 0;
+		cpu->dtb[ii].swe = 0;
+		cpu->dtb[ii].uwe = 0;
+		cpu->dtb[ii].faultOnRead = 0;
+		cpu->dtb[ii].faultOnWrite = 0;
+		cpu->dtb[ii].faultOnExecute = 0;
+		cpu->dtb[ii].res_1 = 0;
+		cpu->dtb[ii].asn = 0;
+		cpu->dtb[ii]._asm = false;
+		cpu->dtb[ii].valid = false;
+	}
+	cpu->nextDTB = 0;
+	for (ii = 0; ii < AXP_21264_MAF_LEN; ii++)
+	{
+		cpu->maf[ii].type = MNotInUse;
+		cpu->maf[ii].rq = NOPcmd;
+		cpu->maf[ii].rsp = NOPsysdc;
+		cpu->maf[ii].pa = 0;
+		cpu->maf[ii].valid = false;
+		cpu->maf[ii].complete = false;
+	}
+	cpu->tbMissOutstanding = false;;
+	cpu->dtbTag0.res_1 = 0;
+	cpu->dtbTag0.va = 0;
+	cpu->dtbTag0.res_2 = 0;
+	cpu->dtbTag1.res_1 = 0;
+	cpu->dtbTag1.va = 0;
+	cpu->dtbTag1.res_2 = 0;
+	cpu->dtbPte0.res_1 = 0;
+	cpu->dtbPte0.pa = 0;
+	cpu->dtbPte0.res_2 = 0;
+	cpu->dtbPte0.uwe = 0;
+	cpu->dtbPte0.swe = 0;
+	cpu->dtbPte0.ewe = 0;
+	cpu->dtbPte0.kwe = 0;
+	cpu->dtbPte0.ure = 0;
+	cpu->dtbPte0.sre = 0;
+	cpu->dtbPte0.ere = 0;
+	cpu->dtbPte0.kre = 0;
+	cpu->dtbPte0.res_3 = 0;
+	cpu->dtbPte0.gh = 0;
+	cpu->dtbPte0._asm = 0;
+	cpu->dtbPte0.res_4 = 0;
+	cpu->dtbPte0.fow = 0;
+	cpu->dtbPte0._for = 0;
+	cpu->dtbPte0.res_5 = 0;
+	cpu->dtbPte1.res_1 = 0;
+	cpu->dtbPte1.pa = 0;
+	cpu->dtbPte1.res_2 = 0;
+	cpu->dtbPte1.uwe = 0;
+	cpu->dtbPte1.swe = 0;
+	cpu->dtbPte1.ewe = 0;
+	cpu->dtbPte1.kwe = 0;
+	cpu->dtbPte1.ure = 0;
+	cpu->dtbPte1.sre = 0;
+	cpu->dtbPte1.ere = 0;
+	cpu->dtbPte1.kre = 0;
+	cpu->dtbPte1.res_3 = 0;
+	cpu->dtbPte1.gh = 0;
+	cpu->dtbPte1._asm = 0;
+	cpu->dtbPte1.res_4 = 0;
+	cpu->dtbPte1.fow = 0;
+	cpu->dtbPte1._for = 0;
+	cpu->dtbPte1.res_5 = 0;
+	cpu->dtbAltMode = AXP_MBOX_ALTMODE_KERNEL;
+	cpu->dtbIs0.res_1 = 0;
+	cpu->dtbIs0.inval_itb = 0;
+	cpu->dtbIs0.res_2 = 0;
+	cpu->dtbIs1.res_1 = 0;
+	cpu->dtbIs1.inval_itb = 0;
+	cpu->dtbIs1.res_2 = 0;
+	cpu->dtbAsn0.res_1 = 0;
+	cpu->dtbAsn0.asn = 0;
+	cpu->dtbAsn0.res_2 = 0;
+	cpu->dtbAsn1.res_1 = 0;
+	cpu->dtbAsn1.asn = 0;
+	cpu->dtbAsn1.res_2 = 0;
+	cpu->mmStat.res = 0;
+	cpu->mmStat.dc_tag_perr = 0;
+	cpu->mmStat.opcodes = 0;
+	cpu->mmStat.fow = 0;
+	cpu->mmStat._for = 0;
+	cpu->mmStat.acv = 0;
+	cpu->mmStat.wr = 0;
+	cpu->mCtl.res_1 = 0;
+	cpu->mCtl.spe = 0;
+	cpu->mCtl.res_2 = 0;
+	cpu->dcCtl.dcdat_err_en = 0;
+	cpu->dcCtl.dctag_par_en = 0;
+	cpu->dcCtl.f_bad_decc = 0;
+	cpu->dcCtl.f_bad_tpar = 0;
+	cpu->dcCtl.f_hit = 0;
+	cpu->dcCtl.set_en = 3;				/* use both Dcache sets */
+	cpu->dcStat.res = 0;
+	cpu->dcStat.seo = 0;
+	cpu->dcStat.ecc_err_ld = 0;
+	cpu->dcStat.ecc_err_st = 0;
+	cpu->dcStat.tperr_p1 = 0;
+	cpu->dcStat.tperr_p1 = 0;
+
+	/*
+	 * All done, return to the caller.
+	 */
+	return(retVal);
+}

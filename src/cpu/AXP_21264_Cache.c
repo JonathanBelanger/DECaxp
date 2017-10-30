@@ -900,7 +900,7 @@ bool AXP_DcacheWrite(
 						  (AXP_DCACHE_DATA_LEN - 1);
 	u32 		setToUse;
 	u32			found = AXP_CACHE_ENTRIES;
-	u32			ii;
+	u32			ii, jj, kk;
 	u32			sets;
 	u32			ctagIndex;
 

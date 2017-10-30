@@ -206,6 +206,7 @@ typedef struct
 {
 	u64					physTag;
 	u32					ctagIndex;
+	u32					ctagSet;
 	bool				valid;
 } AXP_DTAG_BLK;
 
