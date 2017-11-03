@@ -63,7 +63,6 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 
 	/*
 	 * Set up the initial register map.  We do not map R31.
-	 * TODO: This code can be removed from the Blocks module.
 	 */
 	for (ii = 0; ii < (AXP_MAX_REGISTERS-1); ii++)
 	{
@@ -85,8 +84,6 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 	 */ 
 	cpu->prMap[AXP_MAX_REGISTERS-1].pr = AXP_INT_PHYS_REG + 1; 
 	cpu->prMap[AXP_MAX_REGISTERS-1].prevPr = AXP_INT_PHYS_REG + 1; 
-	cpu->pfMap[AXP_MAX_REGISTERS-1].pr = AXP_FP_PHYS_REG + 1; 
-	cpu->pfMap[AXP_MAX_REGISTERS-1].prevPr = AXP_FP_PHYS_REG + 1; 
 
 	/*
 	 * The remaining physical registers need to be put on the free list.
@@ -103,6 +100,17 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 	 * Initialize the instruction queue for the Ebox.
 	 */
 	AXP_INIT_CQUE(cpu->iq, AXP_IQ_LEN);
+
+	/*
+	 * Initialize the instruction queue cache.  These are pre-allocated queue
+	 * entries for the above.
+	 */
+	for (ii = 0; ii < AXP_IQ_LEN; ii++)
+	{
+		cpu->iqEFreelist[cpu->iqEFlEnd++] = ii;
+		AXP_INIT_CQENTRY(cpu->iqEntries[ii].header, cpu->iq);
+		cpu->iqEntries[ii].index = ii;
+	}
 
 	/*
 	 * Initialize the Ebox IPRs.

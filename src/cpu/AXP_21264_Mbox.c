@@ -265,6 +265,7 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 			cpu->dtag[ii][jj].valid = false;
 		}
 	}
+
 	for (ii = 0; ii < AXP_MBOX_QUEUE_LEN; ii++)
 	{
 		cpu->lq[ii].value = 0;

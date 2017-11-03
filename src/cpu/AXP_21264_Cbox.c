@@ -87,7 +87,7 @@ AXP_21264_CBOX_CSR_NAMES csrNames[] =
 		{"BcRcvMuxCntPreset", BcRcvMuxCntPreset},
 		{"CfrFrmclkDelay", CfrFrmclkDelay},
 		{"DataValidDly", DataValidDly},
-		{"InvalToDirty", InvalToDirty},
+		{"InvalToDirty", InvalToDirty1},
 		{"InvalToDirtyEnable", InvalToDirtyEnable},
 		{"SysBusSize", SysBusSize},
 		{"SysClkDelay", SysClkDelay},
@@ -196,7 +196,7 @@ void AXP_DuplicateDcacheTagArray()
  *	select two instructions from the 20 possible queued integer instructions.
  *	Priority is given to older requests over newer ones.  If one instruction
  *	requests both lower subclusters and there is no other requesting a lower
- *	subcluster, then L0 is selected.  The same, but for the upperclusters will
+ *	subcluster, then L0 is selected.  The same, but for the upper-clusters will
  *	select U1.
  *
  * Input Parameters:
@@ -297,7 +297,7 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 			for (ii = 0; ((csrNames[ii].name != NULL) && (csr != LastCSR)); ii++)
 			{
 				if (strcmp(csrNames[ii].name, name) == 0)
-					csr = csrNames[ii].value;
+					csr = csrNames[ii].values;
 			}
 
 			/*
@@ -500,7 +500,7 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 					cpu->csr.DataValidDly = value;
 					break;
 
-				case InvalToDirty:
+				case InvalToDirty1:
 					cpu->csr.InvalToDirty = value;
 					break;
 
@@ -638,7 +638,7 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 	/*
 	 * If retVal is still false, then all our processing has been successful
 	 * thus far.  Go initialize the Cbox IPRs.  Also, this is as good a place
-	 * as any to initilize the AMASK and IMPLVER IPRs (which don't really have
+	 * as any to initialize the AMASK and IMPLVER IPRs (which don't really have
 	 * one of the boxes (Cbox, Mbox, FBox, EBox, or Ibox) controlling them.
 	 */
 	if (retVal == false)

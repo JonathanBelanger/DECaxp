@@ -202,7 +202,7 @@ typedef enum
 	BcRcvMuxCntPreset,
 	CfrFrmclkDelay,
 	DataValidDly,
-	InvalToDirty,
+	InvalToDirty1,
 	InvalToDirtyEnable,
 	SysBusSize,
 	SysClkDelay,
