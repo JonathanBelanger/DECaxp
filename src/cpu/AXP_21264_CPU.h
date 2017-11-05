@@ -76,39 +76,43 @@
 #include "AXP_Exceptions.h"
 #include "AXP_21264_Cbox.h"
 
-#define AXP_RESULTS_REG		41
-#define AXP_NUM_FETCH_INS	4
-#define AXP_IQ_LEN			20
-#define AXP_FQ_LEN			15
-#define AXP_SHADOW_REG		8
-#define AXP_R04_SHADOW		(AXP_MAX_REGISTERS + 0)		/* R32 */
-#define AXP_R05_SHADOW		(AXP_MAX_REGISTERS + 1)		/* R33 */
-#define AXP_R06_SHADOW		(AXP_MAX_REGISTERS + 2)		/* R34 */
-#define AXP_R07_SHADOW		(AXP_MAX_REGISTERS + 3)		/* R35 */
-#define AXP_R20_SHADOW		(AXP_MAX_REGISTERS + 4)		/* R36 */
-#define AXP_R21_SHADOW		(AXP_MAX_REGISTERS + 5)		/* R37 */
-#define AXP_R22_SHADOW		(AXP_MAX_REGISTERS + 6)		/* R38 */
-#define AXP_R23_SHADOW		(AXP_MAX_REGISTERS + 7)		/* R39 */
+#define AXP_RESULTS_REG			41
+#define AXP_NUM_FETCH_INS		4
+#define AXP_IQ_LEN				20
+#define AXP_FQ_LEN				15
+#define AXP_SHADOW_REG			8
+#define AXP_R04_SHADOW			(AXP_MAX_REGISTERS + 0)		/* R32 */
+#define AXP_R05_SHADOW			(AXP_MAX_REGISTERS + 1)		/* R33 */
+#define AXP_R06_SHADOW			(AXP_MAX_REGISTERS + 2)		/* R34 */
+#define AXP_R07_SHADOW			(AXP_MAX_REGISTERS + 3)		/* R35 */
+#define AXP_R20_SHADOW			(AXP_MAX_REGISTERS + 4)		/* R36 */
+#define AXP_R21_SHADOW			(AXP_MAX_REGISTERS + 5)		/* R37 */
+#define AXP_R22_SHADOW			(AXP_MAX_REGISTERS + 6)		/* R38 */
+#define AXP_R23_SHADOW			(AXP_MAX_REGISTERS + 7)		/* R39 */
 #define AXP_REG(regNum, palMode)											\
 		((palMode) ?														\
 		 (((cpu->iCtl.sde & AXP_I_CTL_SDE_ENABLE) != 0) ?					\
 		  ((((regNum) >= 4) && ((regNum) <= 7)) ?							\
 		   ((regNum) + 28) : ((((regNum) >= 20) && ((regNum) <= 23)) ?		\
 			((regNum) + 16) : (regNum))) : (regNum)) : (regNum))
-#define AXP_TB_LEN			128
-#define AXP_ICB_INS_CNT		16
-#define AXP_21264_PAGE_SIZE	8192	/* 8KB page size */
-#define AXP_21264_MEM_BITS	44
-#define AXP_INT_PHYS_REG	AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1
-#define AXP_FP_PHYS_REG		AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1
-#define AXP_UNMAPPED_REG	31	/* R31 and F31 are never renamed/mapped */
-#define AXP_I_FREELIST_SIZE	AXP_INT_PHYS_REG - AXP_MAX_REGISTERS - 1
-#define AXP_F_FREELIST_SIZE	AXP_FP_PHYS_REG - AXP_MAX_REGISTERS - 1
-#define AXP_INFLIGHT_FETCHES 20
-#define AXP_INFLIGHT_MAX	80
-#define AXP_MBOX_QUEUE_LEN	32
-#define AXP_CACHE_ENTRIES	512
+#define AXP_TB_LEN				128
+#define AXP_ICB_INS_CNT			16
+#define AXP_21264_PAGE_SIZE		8192	/* 8KB page size */
+#define AXP_21264_MEM_BITS		44
+#define AXP_INT_PHYS_REG		AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1
+#define AXP_FP_PHYS_REG			AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1
+#define AXP_UNMAPPED_REG		31	/* R31 and F31 are never renamed/mapped */
+#define AXP_I_FREELIST_SIZE		AXP_INT_PHYS_REG - AXP_MAX_REGISTERS - 1
+#define AXP_F_FREELIST_SIZE		AXP_FP_PHYS_REG - AXP_MAX_REGISTERS - 1
+#define AXP_INFLIGHT_FETCHES	20
+#define AXP_INFLIGHT_MAX		80
+#define AXP_MBOX_QUEUE_LEN		32
+#define AXP_CACHE_ENTRIES		512
 #define AXP_2_WAY_CACHE	2
+#define AXP_21264_IOWB_LEN		4
+#define AXP_21264_VDB_LEN		8
+#define AXP_21264_PQ_LEN		8
+#define AXP_21264_MAF_LEN		8
 
 /*
  * PALcode Exception Entry Points
@@ -306,10 +310,6 @@ typedef enum
 #define AXP_PASS_2_EV68A		2	/* EV68A */
 #define AXP_PASS_21_21A_3		3
 #define AXP_PASS_22_EV68A		4
-#define AXP_21264_IOWB_LEN		4
-#define AXP_21264_VDB_LEN		8
-#define AXP_21264_PQ_LEN		8
-#define AXP_21264_MAF_LEN		8
 
 /*
  * This structure contains all the fields required to emulate an Alpha AXP
@@ -332,7 +332,7 @@ typedef struct
 	/**************************************************************************
 	 *	Ibox Definitions													  *
 	 *																		  *
-	 *	The Ibox is responsible for instuction processing.  It maintains the  *
+	 *	The Ibox is responsible for instruction processing.  It maintains the *
 	 *	VPC Queue, ITB, Branch Prediction, Instruction Predecode, Instruction *
 	 *	decode and register renaming, Instruction Cache, Instruction		  *
 	 *	Retirement, and the Integer and Floating-Point Instruction Queues.	  *

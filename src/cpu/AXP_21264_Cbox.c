@@ -232,12 +232,9 @@ void AXP_FQArbiter()
 }
 
 /*
- * AXP_21264_Cbox_Init
- * 	This function is called to initialize the Cbox.  It will read in the
- * 	initialization file, which contains the settings for the Cbox CSRs.  It
- * 	will then load the SROM data into the Icache and finally set the BiSTState
- * 	if all went well.  Otherwise, it will it will return a false (BiST
- * 	failure).
+ * AXP_21264_Cbox_Config
+ * 	This function is called to configure the Cbox from an initialization file
+ * 	(aka: SROM), which contains the settings for the Cbox CSRs.
  *
  * Input Parameters:
  * 	cpu:
@@ -245,13 +242,13 @@ void AXP_FQArbiter()
  * 		processor.
  *
  * Output Parameters:
- * 	Cbox CSRs will be set and Icache loaded with SROM initialization code.
+ * 	Cbox CSRs will be set with SROM initialization.
  *
  * Return Value:
  * 	true:	Failed to perform all initialization functions.
  * 	false:	Succeeded.
  */
-bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
+bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 {
 	bool						retVal = false;
 	bool						readResult = true;
@@ -636,28 +633,54 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 	}
 
 	/*
-	 * If retVal is still false, then all our processing has been successful
-	 * thus far.  Go initialize the Cbox IPRs.  Also, this is as good a place
-	 * as any to initialize the AMASK and IMPLVER IPRs (which don't really have
-	 * one of the boxes (Cbox, Mbox, FBox, EBox, or Ibox) controlling them.
+	 * Return back to the caller.
 	 */
-	if (retVal == false)
-	{
-		cpu->cData.cdata = 0;
-		cpu->cData.res = 0;
-		cpu->cShft.c_shift = 0;
-		cpu->cShft.res = 0;
+	return(retVal);
+}
 
-		cpu->amask.bwx = 1;
-		cpu->amask.fix = 1;
-		cpu->amask.cix = 0;
-		cpu->amask.mvi = 1;
-		cpu->amask.patr = 1;
-		cpu->amask.res_1 = 0;
-		cpu->amask.pwmi = 0;
-		cpu->amask.res_2 = 0;
-		cpu->implVer = AXP_PASS_2_EV68A;
-	}
+/*
+ * AXP_21264_Cbox_Init
+ * 	This function is called to initialize the Cbox.  It will read in the
+ * 	initialization file, which contains the settings for the Cbox CSRs.  It
+ * 	will then load the SROM data into the Icache and finally set the BiSTState
+ * 	if all went well.  Otherwise, it will it will return a false (BiST
+ * 	failure).
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *
+ * Output Parameters:
+ * 	Cbox CSRs will be set and Icache loaded with SROM initialization code.
+ *
+ * Return Value:
+ * 	true:	Failed to perform all initialization functions.
+ * 	false:	Succeeded.
+ */
+bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
+{
+	bool	retVal = false;
+
+	/*
+	 * Initialize the Cbox IPRs.  Also, this is as good a place as any to
+	 * initialize the AMASK and IMPLVER IPRs (which don't really have one of
+	 * the other boxes (Cbox, Mbox, FBox, EBox, or Ibox) controlling them.
+	 */
+	cpu->cData.cdata = 0;
+	cpu->cData.res = 0;
+	cpu->cShft.c_shift = 0;
+	cpu->cShft.res = 0;
+
+	cpu->amask.bwx = 1;
+	cpu->amask.fix = 1;
+	cpu->amask.cix = 0;
+	cpu->amask.mvi = 1;
+	cpu->amask.patr = 1;
+	cpu->amask.res_1 = 0;
+	cpu->amask.pwmi = 0;
+	cpu->amask.res_2 = 0;
+	cpu->implVer = AXP_PASS_2_EV68A;
 
 	return(retVal);
 }
@@ -681,6 +704,8 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
  */
 void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 {
+	bool	initFailure = false;
+	int		component = 0;
 
 	/*
 	 * The Cbox is very involved in the initialization of the CPU at power-up,
@@ -693,67 +718,126 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 	 */
 	while (cpu->cpuState != ShuttingDown)
 	{
-
-		/*
-		 * If we are waiting for BiST (Build-in SelfTest), we need to perform
-		 * some initialization on the various parts of the CPU (this is our
-		 * BiST processing).
-		 */
-		if ((cpu->cpuState != WaitBiST) && (cpu->BiSTState == SystemReset))
+		switch (cpu->cpuState)
 		{
-			bool initFailure = false;
-			int component = 0;
+			case Cold:
+				cpu->cpuState = WaitBiST;
+				cpu->BiSTState = SystemReset;
+				break;
 
-			/*
-			 * We have a SystemReset, set the BiSTState appropriately.
-			 */
-			cpu->BiSTState = BiSTRunning;
+			case WaitBiST:
+			case WaitBiSI:
 
-			/*
-			 * The other components (Ibox, Ebox, Fbox, and Mbox) should have
-			 * their initialization function called to perform the
-			 * initialization they need to do for themselves.  After this,
-			 * they'll all be waiting for the CPU to go into Running State,
-			 * which is set here after the Cbox finished its own
-			 * initialization.  If any of the initialization routines return
-			 * an error, an error should have been displayed and we'll change
-			 * the CPU state to ShuttingDown (which will cause all the other
-			 * components to shutdown as well).
-			 */
-			while (initFailure == false)
-			{
-				switch (component)
+				/*
+				 * HRM: 11.5.1
+				 *
+				 * We have a SystemReset, set the BiSTState appropriately.
+				 */
+				cpu->BiSTState = BiSTRunning;
+
+				/*
+				 * The other components (Ibox, Ebox, Fbox, and Mbox) should
+				 * have their initialization function called to perform the
+				 * initialization they need to do for themselves.  After this,
+				 * they'll all be waiting for the CPU to go into Running State,
+				 * which is set here after the Cbox finished its own
+				 * initialization.  If any of the initialization routines
+				 * return an error, an error should have been displayed and
+				 * we'll change the CPU state to ShuttingDown (which will cause
+				 * all the other components to shutdown as well).
+				 */
+				while (initFailure == false)
 				{
-					case 0:		/* Mbox */
-						initFailure = AXP_21264_Mbox_Init(cpu);
-						break;
+					switch (component)
+					{
+						case 0:		/* Mbox */
+							initFailure = AXP_21264_Mbox_Init(cpu);
+							break;
 
-					case 1:		/* Ebox */
-						initFailure = AXP_21264_Ebox_Init(cpu);
-						break;
+						case 1:		/* Ebox */
+							initFailure = AXP_21264_Ebox_Init(cpu);
+							break;
 
-					case 2:		/* Fbox */
-						initFailure = AXP_21264_Fbox_Init(cpu);
-						break;
+						case 2:		/* Fbox */
+							initFailure = AXP_21264_Fbox_Init(cpu);
+							break;
 
-					case 3:		/* Ibox */
-						initFailure = AXP_21264_Ibox_Init(cpu);
-						break;
+						case 3:		/* Ibox */
+							initFailure = AXP_21264_Ibox_Init(cpu);
+							break;
 
-					case 4:		/* Cbox */
-						initFailure = AXP_21264_Cbox_Init(cpu);
+						case 4:		/* Cbox */
+							initFailure = AXP_21264_Cbox_Init(cpu);
+
+						case 5:		/* Cbox Config*/
+
+							/*
+							 * HRM: 11.5.2
+							 *
+							 * All right, BiST passed, now we have to load the
+							 * SROM Cbox configuration.
+							 */
+							cpu->BiSTState = BiSTSucceeded;
+							initFailure = AXP_21264_Cbox_Config(cpu);
+							break;
+
+						case 6:
+
+							/*
+							 * HRM: 11.5.2.1
+							 *
+							 * Finally, load the Instruction Cache for the
+							 * initialization code.  This is where the console
+							 * is loaded.
+							 */
+							initFailure = AXP_21264_LoadFlashROM(cpu);
+							break;
+					}
+					if (initFailure == false)
+						component++;
 				}
-				if (initFailure == false)
-					component++;
-			}
 
-			/*
-			 * If any of the initializations failed, then the BiST failed.  We
-			 * will have to perform a bunch of shutdown logic outside the top
-			 * while loop.
-			 */
-			if (initFailure == true)
-				cpu->BiSTState = BiSTFailed;
+				/*
+				 * If any of the initializations failed, then the BiST failed.
+				 * We will have to perform a bunch of shutdown logic outside
+				 * the top while loop.
+				 */
+				if (initFailure == true)
+				{
+					cpu->BiSTState = BiSTFailed;
+					cpu->cpuState = ShuttingDown;
+				}
+				else
+				{
+
+					/*
+					 * TODO: Send Exception to the Ibox.
+					 *
+					 * Need to send a RESET/WAKEUP Exception to the Ibox.
+					 * Since the above initialization code set the PALBase to
+					 * 0x0, the RESET/WAKEUP event will cause the Ibox to jump
+					 * to the Offset in the PALcode for the code to finalize
+					 * the initialization and run the console.  This offset is
+					 * located at PAL_BASE + 0x780 (or 0x780, in PAL_MODE).
+					 */
+					cpu->cpuState = Run;
+				}
+				break;
+
+			case Run:
+				break;
+
+			case FaultReset:
+				cpu->cpuState = WaitBiSI;
+				cpu->BiSTState = SystemReset;
+				break;
+
+			case Sleep:
+				break;
+
+			case ShuttingDown:
+			default:
+				break;
 		}
 	}
 	return;

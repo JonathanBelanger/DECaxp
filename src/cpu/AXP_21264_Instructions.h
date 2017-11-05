@@ -61,13 +61,20 @@ typedef struct
 #define AXP_LDAH_MULT		65536
 
 /*
+ * These macros extract the JMP type and displacement from the disp field in
+ * the AXP_MEM_INS format of the Digital Alpha AXP architecture.
+ */
+#define	AXP_JMP_TYPE(disp)	(((disp) & 0xc000) >> 14)
+#define AXP_JMP_HINT(disp)	((disp) & 0x3fff)
+
+/*
  * Branch Instruction Format
  */
 typedef struct
 {
 	 i32	branch_disp : 21;		/* Branch displacement*4 from PC (SEXT) */
 	 u32	ra : 5;					/* Register a (destination)				*/
-	 u32	opcode : 6;				/* Operatoin code						*/
+	 u32	opcode : 6;				/* Operation code						*/
 } AXP_BR_INS;
 
 /*
@@ -261,7 +268,7 @@ typedef enum
 #define LDAH	0x09	/* Mem */
 #define LDBU	0x0a	/* Mem */
 #define LDQ_U	0x0b	/* Mem */
-#define LWW_U	0x0c	/* Mem */
+#define LDW_U	0x0c	/* Mem */
 #define STW		0x0d	/* Mem */
 #define STB		0x0e	/* Mem */
 #define STQ_U	0x0f	/* Mem */
@@ -275,7 +282,7 @@ typedef enum
 #define FLTL	0x17	/* FP */
 #define MISC	0x18	/* Mfc */
 #define HW_MFPR	0x19	/* reserved for PALcode */
-#define JSR		0x1a	/* Mbr */
+#define JMP		0x1a	/* Mbr */
 #define HW_LD	0x1b	/* reserved for PALcode */
 #define FPTI	0x1c	/* FP & Opr */
 #define HW_MTPR	0x1d	/* reserved for PALcode */
