@@ -1393,11 +1393,11 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 	for (ii = 0; ii < ONE_K; ii++)
 	{
 		cpu->localHistoryTable.lcl_history[ii] = 0;
-		cpu->localPredictor[ii] = 0;
-		cpu->choicePredictor[ii] = 0;
+		cpu->localPredictor.lcl_pred[ii] = 0;
+		cpu->choicePredictor.choice_pred[ii] = 0;
 	}
 	for (ii = 0; ii < FOUR_K; ii++)
-		cpu->globalPredictor[ii] = 0;
+		cpu->globalPredictor.gbl_pred[ii] = 0;
 	cpu->globalPathHistory = 0;
 
 	/*

@@ -40,6 +40,8 @@
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
 
+#include "AXP_Utility.h"
+#include "AXP_Configure.h"
 #include "AXP_Base_CPU.h"
 #include "AXP_21264_Instructions.h"
 #include "AXP_21264_CPU.h"

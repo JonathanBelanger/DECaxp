@@ -56,7 +56,7 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 	 * TODO:	The following flags and values may not be needed, as this
 	 *			functionality can be handled using the cache bits.
 	 */
-	cpu->VAXintrFlag false; 
+	cpu->VAXintrFlag = false;
 	cpu->lockFlag = false; 
 	cpu->lockedPhysicalAddress = 0; 
 	cpu->lockedVirtualAddress = 0; 
@@ -116,11 +116,21 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 	 * Initialize the Ebox IPRs.
 	 * NOTE: These will get real values from the PALcode.
 	 */
-	cpu->cc = 0;
-	cpu->ccCtl = 0;
+	cpu->cc.counter = 0;
+	cpu->cc.offset = 0;
+	cpu->ccCtl.res_1 = 0;
+	cpu->ccCtl.counter = 0;
+	cpu->ccCtl.cc_ena = 0;
+	cpu->ccCtl.res_2 = 0;
 	cpu->va = 0;
-	cpu->vaCtl = 0;
-	cpu->vaForm = 0;
+	cpu->vaCtl.b_endian = 0;
+	cpu->vaCtl.va_48 = 0;
+	cpu->vaCtl.va_form_32 = 0;
+	cpu->vaCtl.res = 0;
+	cpu->vaCtl.vptb = 0;
+	cpu->vaForm.form00.res = 0;
+	cpu->vaForm.form00.va = 0;
+	cpu->vaForm.form00.vptb = 0;
 
 	return(retVal);
 }
