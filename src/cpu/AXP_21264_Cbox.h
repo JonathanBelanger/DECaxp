@@ -35,16 +35,18 @@
  *	V01.003		22-Oct-2017	Jonathan D. Belanger
  *	Differentiated between messages that come over the SysAddIn_L[14:0] pins
  *	and SysAddOut_L[14:0] pins.  Also defined a number of the remaining
- *	structures needed by the Cbox,
+ *	structures needed by the Cbox.
+ *
+ *	V01.004		06-Nov-2017	Jonathan D. Belanger
+ *	Split this fine into 2 separate files.  One to include the definitions for
+ *	the Cbox CSRs and one to be included by AXP_21264_Cbox.c so that it will
+ *	compile cleanly.  This file is the one with the CSRs define within it.
  */
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
 
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
-#include "AXP_Base_CPU.h"
-#include "AXP_21264_Instructions.h"
-#include "AXP_21264_CPU.h"
 
 /*
  * This structure is the definition for one Cbox copy of Dcache Tag Array.  A
@@ -512,3 +514,4 @@ typedef struct
 } AXP_21264_CBOX_PQ;
 
 #endif /* _AXP_21264_CBOX_DEFS_ */
+
