@@ -24,10 +24,11 @@
  *	V01.000		04-Nov-2017	Jonathan D. Belanger
  *	Initially written.
  *
+ *	V01.001		06-Nov-2017	Jonathan D. Belanger
+ *	Included just a single file, that will contain all the includes needed
+ *	to successfully compile this file.
  */
-#include "AXP_Configure.h"
-#include "AXP_Blocks.h"
-#include "AXP_21264_Instructions.h"
+#include "AXP_DumpDefs.h"
 
 typedef struct
 {
