@@ -21,7 +21,7 @@
  *
  *	Revision History:
  *
- *	V01.000		26-May-2017	Jonathan D. Belanger
+ *	V01.000		29-Oct-2017	Jonathan D. Belanger
  *	Initially written.
  */
 #include "AXP_Utility.h"
