@@ -151,6 +151,17 @@ typedef struct
 	u32		opcode : 6;				/* Operation Code						*/
 } AXP_HW_LD;
 
+#define AXP_HW_LD_PHYS		0x0		/* Physical								*/
+#define AXP_HW_LD_PHYS_LOCK	0x1		/* Physical/Lock						*/
+#define AXP_HW_LD_VPTE		0x2		/* Virtual PTE (VPTE)					*/
+#define AXP_HW_LD_VIRT		0x4		/* Virtual								*/
+#define AXP_HW_LD_VIRT_WCHK	0x5		/* Virtual/WrChk						*/
+#define AXP_HW_LD_VIRT_ALT	0x6		/* Virtual/Alt access DTB_ALT_MODE IPR	*/
+#define AXP_HW_LD_VIRT_WALT	0x7		/* Virual/WrChk/Alt combination above 2	*/
+
+#define AXP_HW_LD_LONGWORD	0
+#define AXP_HW_LD_QUADWORD	1
+
 /*
  * HW_ST Instruction Format (opcode = 0x1f)
  *		For len:
@@ -172,6 +183,14 @@ typedef struct
 	u32		opcode : 6;				/* Operation Code						*/
 } AXP_HW_ST;
 
+#define AXP_HW_ST_PHYS		0x0		/* Physical								*/
+#define AXP_HW_ST_PHYS_LOCK	0x1		/* Physical/Conditional					*/
+#define AXP_HW_ST_VIRT		0x2		/* Virtual								*/
+#define AXP_HW_ST_VIRT_ALT	0x6		/* Virtual/Alt access DTB_ALT_MODE IPR	*/
+
+#define AXP_HW_ST_LONGWORD	0
+#define AXP_HW_ST_QUADWORD	1
+
 /*
  * HW_RET Instruction Format (opcode = 0x1e)
  *		For hint:
@@ -189,7 +208,12 @@ typedef struct
 	u32		rb : 5;					/* Base Register for Memory Address		*/
 	u32		ra : 5;					/* Write Data Register Number			*/
 	u32		opcode : 6;				/* Operation Code						*/
-} AXP_HW_RET;
+} AXP_HW_RET1;
+
+#define AXP_HW_JMP			0
+#define AXP_HW_JSR			1
+#define AXP_HW_RET			2
+#define AXP_HW_COROUTINE	3
 
 /*
  * HW_MFPR/HW_MTPR Instruction Format (opcode = 0x19/0x1d)
@@ -217,7 +241,7 @@ typedef union
 	AXP_PAL_INS		pal;			/* PALcode Instruction					*/
 	AXP_HW_LD		hw_ld;			/* PALcode Load Instruction				*/
 	AXP_HW_ST		hw_st;			/* PALcode Store Instruction			*/
-	AXP_HW_RET		hw_ret;			/* PALcode Return Instruction			*/
+	AXP_HW_RET1		hw_ret;			/* PALcode Return Instruction			*/
 	AXP_HW_MXPR		hw_mxpr;		/* PALcode Move From/To Processor Regis	*/
 } AXP_INS_FMT;
 

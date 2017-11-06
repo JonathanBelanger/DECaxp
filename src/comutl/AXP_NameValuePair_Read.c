@@ -166,7 +166,7 @@ bool AXP_Read_NVP_File(FILE *filePointer, char *name, u32 *value)
 				name = strtok(readLine, delim);
 				if (name != NULL)
 				{
-					char valueStr[17];
+					char *valueStr;
 
 					/*
 					 * Now pull out the value string.  If we don't find one,
@@ -185,14 +185,14 @@ bool AXP_Read_NVP_File(FILE *filePointer, char *name, u32 *value)
 					}
 					else
 					{
-						printf("Parsing error: 'value' not present error at %s, line %s.\n",
+						printf("Parsing error: 'value' not present error at %s, line %d.\n",
 							__FILE__, __LINE__);
 						done = -1;
 					}
 				}
 				else
 				{
-					printf("Parsing error: 'name' not present error at %s, line %s.\n",
+					printf("Parsing error: 'name' not present error at %s, line %d.\n",
 						__FILE__, __LINE__);
 					done = -1;
 				}
