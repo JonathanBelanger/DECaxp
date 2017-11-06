@@ -106,7 +106,7 @@ int main()
 	int	retVal = 0;
 	int	totalBytesRead = 0;
 	int totalInstructions = 0;
-	int ii, len;
+	int ii;
 	bool decodedResult = true;
 
 	printf("\nAXP 21264 Instruction Dumping Tester\n");
@@ -119,13 +119,12 @@ int main()
 			 ((ii < totalInstructions) && (decodedResult == true));
 			 ii++)
 		{
-			len = sprintf(decodedLine, "0x%016llx ", ii);
 			decodedResult = AXP_Decode_Instruction(
-								*((AXP_INS_FMT *) &memory[ii],
+								*((AXP_INS_FMT *) &memory[ii]),
 								true,
-								&decodedLine[len]);
+								decodedLine);
 			if (decodedResult == true)
-				printf("%s\n", decodedLine);
+				printf("0x%016llx: 0x%08x: %s\n", ii, *((u32 *) &memory[ii]), decodedLine);
 		}
 	}
 	else
