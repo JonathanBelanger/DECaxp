@@ -765,12 +765,14 @@ const char *hwRetStall[] =
 	"STALL"
 };
 
+const char *addrFmt		= "0x%016llx: ";
+const char *instBinFmt	= "; 0x%08x '%c%c%c%c'";
 const char *invOpcode	= "<INV-OPC>";
 const char *resOpcode	= "<RES-OPC>";
 const char *instrFmt 	= "%-13s ";
 const char *palFunc		= "%-21s ";
-const char *regRaDispRb = "R%02d, %10d(R%02d) ";	/* 'R01, -4294901760(R01) ' (22) */
-const char *regRaDispRbF= "%10d(R%02d)      ";		/* '-4294901760(R01)      ' (22) */
+const char *regRaDispRb = "R%02d, %6d(R%02d) ";	/* 'R01, -65535(R01)      ' (22) */
+const char *regRaDispRbF= "%10d(R%02d)      ";		/* '-65535(R01)           ' (22) */
 const char *regRaDisp 	= "R%02d, %7d         ";	/* 'R01, -2097151         ' (22) */
 const char *regRaRbHint = "R%02d, (R%02d), %4d     ";/* 'R01, (R01), -8191     ' (22) */
 const char *regRaRb     = "R%02d, (R%02d)          ";/* 'R01, (R01)            ' (22) */
@@ -784,8 +786,8 @@ const char *reg0Rb		= "0(R%02d)                ";/* '0(R01)                ' (22
 const char *regRc		= "R%02d                   ";/* 'R01                   ' (22) */
 const char *regFaFbFc	= "F%02f, F%02d, F%02d         ";/* 'F01, F01, F01         ' (22) */
 const char *regFbFc		= "F%02d, F%02d              ";/* 'F01, F01              ' (22) */
-const char *regFaDispRb = "F%02d, %10d(R%02d) ";	/* 'F01, -4294901760(R01) ' (22) */
-const char *regFaDisp	= "F%02d, %10d      ";		/* 'F01, -4294901760      ' (22) */
+const char *regFaDispRb = "F%02d, %10d(R%02d) ";	/* 'F01, -65535(R01)      ' (22) */
+const char *regFaDisp	= "F%02d, %10d      ";		/* 'F01, -65535           ' (22) */
 const char *regFaRc		= "F%02d, R%02d              ";/* 'F01, R01              ' (22) */
 const char *regNone		= "                      ";	/* '                      ' (22) */
 const char *mxprRegScbd	= "R%02d, %3d              ";/* 'R01, 127              ' (22) */
@@ -831,32 +833,35 @@ const char *AXP_Get_Func_Str(const AXP_FUNC_CMD *axpFuncCmd, u16 funcVal)
  * 	This function is called to decode a single instruction.
  *
  * Input Parameters:
+ *	pcAddr:
+ *		The value associated with the program counter (PC) for the instruction
+ *		to be decoded.
  * 	instr:
  * 		The value of a single Digital Alpha AXP instruction to be decoded.
- * 	PALmodeKernel:
+ * 	kernelMode:
  * 		A boolean indicating that the instruction can be decoded as if the
- * 		instruction was executing in PALmode or Kernel mode.
+ * 		instruction was executing in Kernel mode.
  *
  * Output Parameters:
  * 	instrStr:
  * 		A string containing the decoded instruction.
  *
  * Return Value:
- * 	true:	The instruction was successfully converted.
- * 	false:	The instruction was not a valid Digital Alpha AXP instruction.
+ *	None.
  */
-bool AXP_Decode_Instruction(
-			AXP_INS_FMT instr,
-			bool PALmodeKernel,
-			char *instrStr)
+void AXP_Decode_Instruction(
+			AXP_PC		pcAddr,
+			AXP_INS_FMT	instr,
+			bool 		kernelMode,
+			char 		*instrStr)
 {
-	bool		retVal = true;
 	int			strLoc = 0;
 	const char	*funcStr;
 	char		iprName[16];
 	char		funcName[24];
 	u16			index;
 
+	strLoc = sprintf(&instrStr[strLoc], addrFmt, *((u64 *) &pcAddr));
 	switch(instr.pal.opcode)
 	{
 		case PAL00:
@@ -885,7 +890,6 @@ bool AXP_Decode_Instruction(
 						&instrStr[strLoc],
 						"%s",
 						regNone);
-			retVal = false;
 			break;
 
 		case LDL:		/* PREFETCH */
@@ -1364,7 +1368,7 @@ bool AXP_Decode_Instruction(
 
 		case HW_MFPR:
 		case HW_MTPR:
-			if (PALmodeKernel == false)
+			if ((pcAddr.pal == 1) || (kernelMode == false))
 			{
 				strLoc = sprintf(
 							&instrStr[strLoc],
@@ -1374,7 +1378,6 @@ bool AXP_Decode_Instruction(
 							&instrStr[strLoc],
 							"%s",
 							regNone);
-				retVal = false;
 			}
 			else
 			{
@@ -1406,7 +1409,7 @@ bool AXP_Decode_Instruction(
 			break;
 
 		case HW_LD:
-			if (PALmodeKernel == false)
+			if ((pcAddr.pal == 1) || (kernelMode == false))
 			{
 				strLoc = sprintf(
 							&instrStr[strLoc],
@@ -1416,7 +1419,6 @@ bool AXP_Decode_Instruction(
 							&instrStr[strLoc],
 							"%s",
 							regNone);
-				retVal = false;
 			}
 			else
 			{
@@ -1440,7 +1442,7 @@ bool AXP_Decode_Instruction(
 			break;
 
 		case HW_ST:
-			if (PALmodeKernel == false)
+			if ((pcAddr.pal == 1) || (kernelMode == false))
 			{
 				strLoc = sprintf(
 							&instrStr[strLoc],
@@ -1450,7 +1452,6 @@ bool AXP_Decode_Instruction(
 							&instrStr[strLoc],
 							"%s",
 							regNone);
-				retVal = false;
 			}
 			else
 			{
@@ -1474,7 +1475,7 @@ bool AXP_Decode_Instruction(
 			break;
 
 		case HW_RET:
-			if (PALmodeKernel == false)
+			if ((pcAddr.pal == 1) || (kernelMode == false))
 			{
 				strLoc = sprintf(
 							&instrStr[strLoc],
@@ -1484,7 +1485,6 @@ bool AXP_Decode_Instruction(
 							&instrStr[strLoc],
 							"%s",
 							regNone);
-				retVal = false;
 			}
 			else
 			{
@@ -1618,9 +1618,18 @@ bool AXP_Decode_Instruction(
 			}
 			break;
 	}
+	funcStr = (const char *) &instr;
+	strLoc = sprintf(
+				&instrStr[strLoc],
+				instBinFmt,
+				*((u32 *) &instr),
+				(isprint(funcStr[3]) ? funcStr[3] : '.'),
+				(isprint(funcStr[2]) ? funcStr[2] : '.'),
+				(isprint(funcStr[1]) ? funcStr[1] : '.'),
+				(isprint(funcStr[0]) ? funcStr[0] : '.'));
 
 	/*
 	 * Return back to the caller.
 	 */
-	return(retVal);
+	return;
 }
