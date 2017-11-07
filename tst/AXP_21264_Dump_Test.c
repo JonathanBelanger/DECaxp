@@ -23,6 +23,10 @@
  *	V01.000		06-Nov-2017	Jonathan D. Belanger
  *	Initially written.
  *
+ *	V01.001		07-Nov-2017	Jonathan D. Belanger
+ *	Added functionality to the dump function that changes the functions
+ *	parameters and return value.
+ *
  */
 #include "AXP_Dumps.h"
 
@@ -107,24 +111,21 @@ int main()
 	int	totalBytesRead = 0;
 	int totalInstructions = 0;
 	int ii;
-	bool decodedResult = true;
 
 	printf("\nAXP 21264 Instruction Dumping Tester\n");
 	totalBytesRead = AXP_21264_LoadMemory("");
 	if (totalBytesRead > 0)
 	{
-		totalInstructions = totalBytesRead / sizeof(u32);
+		totalInstructions = totalBytesRead / sizeof(AXP_INS_FMT);
 		instr = (u32 *) &memory[0];
-		for (ii = 0;
-			 ((ii < totalInstructions) && (decodedResult == true));
-			 ii++)
+		for (ii = 0; ii < totalInstructions; ii++)
 		{
-			decodedResult = AXP_Decode_Instruction(
-								*((AXP_INS_FMT *) &memory[ii]),
-								true,
-								decodedLine);
-			if (decodedResult == true)
-				printf("0x%016llx: 0x%08x: %s\n", ii, *((u32 *) &memory[ii]), decodedLine);
+			AXP_Decode_Instruction(
+				(AXP_PC) ((ii*4)+1),					/* Set the PALmode bit */
+				*((AXP_INS_FMT *) &memory[ii]),
+				false,
+				decodedLine);
+			printf("%s\n", decodedLine);
 		}
 	}
 	else
