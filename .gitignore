@@ -1,11 +1,4 @@
 Debug
-Debug/DECemu.exe
-Debug/makefile
-Debug/objects.mk
-Debug/trace2.txt
-Debug/trace3.txt
-Debug/trace4.txt
-Debug/trace5.txt
 bin
 bld/Makefile.bak
 exe
