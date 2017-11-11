@@ -37,13 +37,13 @@
 #define EIGHT_M	(ONE_M * 8)
 
 /*
- * Allocate memory inwhich to store the instructions read from a file.
+ * Allocate memory in which to store the instructions read from a file.
  */
 u8	memory[EIGHT_M];
 
 /*
  * AXP_21264_LoadMemory
- *	This funciton is called to open a file containing binary data representing
+ *	This function is called to open a file containing binary data representing
  *	Alpha AXP code and load that data into the memory buffer.
  *
  * Input Parameters:
