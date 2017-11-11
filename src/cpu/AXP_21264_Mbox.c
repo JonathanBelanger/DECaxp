@@ -359,7 +359,8 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	cpu->dtbPte1.fow = 0;
 	cpu->dtbPte1._for = 0;
 	cpu->dtbPte1.res_5 = 0;
-	cpu->dtbAltMode = AXP_MBOX_ALTMODE_KERNEL;
+	cpu->dtbAltMode.alt_mode = AXP_MBOX_ALTMODE_KERNEL;
+	cpu->dtbAltMode.res = 0;
 	cpu->dtbIs0.res_1 = 0;
 	cpu->dtbIs0.inval_itb = 0;
 	cpu->dtbIs0.res_2 = 0;

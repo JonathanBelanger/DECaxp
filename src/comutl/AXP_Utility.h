@@ -38,7 +38,7 @@
  *	but had problems getting it to link in correctly.  Additionally, this
  *	utility did not support subnormal values directly (there was a way to
  *	emulate it, but was not very efficient), as well as the performance
- *	of this utlity has been questioned.  Therefore, I'm reverting to what
+ *	of this utility has been questioned.  Therefore, I'm reverting to what
  *	I was doing before.
  */
 #ifndef _AXP_UTIL_DEFS_
@@ -49,6 +49,7 @@
  */
 /* #include <pthread.h> */
 #include <stdio.h>
+#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>

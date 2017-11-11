@@ -35,7 +35,6 @@
 void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 {
 	void	*retBlock = NULL;
-	int		ii;
 
 	switch (blockType)
 	{

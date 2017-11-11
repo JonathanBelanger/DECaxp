@@ -61,10 +61,26 @@ int AXP_21264_LoadMemory(char *fileName)
 	bool	done = false;
 	FILE	*fp = NULL;
 	int		ii = 0;
+	u32		scratch;
 
 	fp = fopen(fileName, "r");
 	if (fp != NULL)
 	{
+
+		/*
+		 * Skip the fist 576 (0x240) bytes of the file.
+		 */
+		for (ii = 0; ii < 0x240; ii++)
+		{
+			if (feof(fp))
+				break;
+			fread(&scratch, 1, 1, fp);
+		}
+
+		/*
+		 * Now start reading the file.
+		 */
+		ii = 0;
 		while ((feof(fp) == 0) && (done == false))
 		{
 			fread(&memory[ii++], 1, 1, fp);
@@ -78,14 +94,14 @@ int AXP_21264_LoadMemory(char *fileName)
 				done = true;
 			}
 		}
-		flose(fp);
+		fclose(fp);
 	}
 	else
 	{
 		printf("Unable to open file: %s\n", fileName);
 		ii = 0;
 	}
-	return(ii);
+	return(ii-1);	/* remove the EOF */
 }
 
 /*
@@ -105,24 +121,28 @@ int AXP_21264_LoadMemory(char *fileName)
  */
 int main()
 {
-	char decodedLine[256];
-	u32	*instr;
-	int	retVal = 0;
-	int	totalBytesRead = 0;
-	int totalInstructions = 0;
-	int ii;
+	char 	decodedLine[256];
+	u32		*instr;
+	AXP_PC	pc;
+	int		retVal = 0;
+	int		totalBytesRead = 0;
+	int		totalInstructions = 0;
+	int		ii;
 
 	printf("\nAXP 21264 Instruction Dumping Tester\n");
-	totalBytesRead = AXP_21264_LoadMemory("");
+	totalBytesRead = AXP_21264_LoadMemory("../dat/cl67srmrom.exe");
 	if (totalBytesRead > 0)
 	{
 		totalInstructions = totalBytesRead / sizeof(AXP_INS_FMT);
 		instr = (u32 *) &memory[0];
+		pc.pal = 1;					/* Set the PALmode bit */
+		pc.res = 0;
 		for (ii = 0; ii < totalInstructions; ii++)
 		{
+			pc.pc = ii;
 			AXP_Decode_Instruction(
-				(AXP_PC) ((ii*4)+1),					/* Set the PALmode bit */
-				*((AXP_INS_FMT *) &memory[ii]),
+				&pc,
+				(AXP_INS_FMT) instr[ii],
 				false,
 				decodedLine);
 			printf("%s\n", decodedLine);
