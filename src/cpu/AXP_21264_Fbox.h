@@ -409,4 +409,8 @@ typedef enum
 #define AXP_FP_CVT_EXP_T2S(fp)												\
 	((fp).exponent ? (fp).exponent - (AXP_S_BIAS - AXP_T_BIAS) : 0)
 
+/*
+ * Initialization Function for Fbox.
+ */
+bool AXP_21264_Fbox_Init(AXP_21264_CPU *);
 #endif /* _AXP_21264_FBOX_DEFS_ */

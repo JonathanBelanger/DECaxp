@@ -32,7 +32,12 @@
  *	for processing.
  */
 #include "AXP_Configure.h"
-#include "AXP_21264_Cbox.h"
+#include "AXP_21264_CboxDefs.h"
+#include "AXP_NameValuePair_Read.h"
+#include "AXP_21264_Mbox.h"
+#include "AXP_21264_Ebox.h"
+#include "AXP_21264_Fbox.h"
+#include "AXP_21264_Ibox.h"
 
 /*
  * Local Variables
@@ -253,7 +258,7 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 	bool						retVal = false;
 	bool						readResult = true;
 	FILE						*fp;
-	const char					*configFile = "../dat/AXP_21264_Cbox_CSR.nvp";
+	char					*configFile = "../dat/AXP_21264_Cbox_CSR.nvp";
 	char						name[32];
 	u32							value;
 	int							ii;
@@ -481,8 +486,8 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 					cpu->csr.BcCpuClkDelay = value;
 					break;
 
-				case BcCpuClkDelay:
-					cpu->csr.BcCpuClkDelay = value;
+				case BcCpuLateWriteNum:
+					cpu->csr.BcCpuLateWriteNum = value;
 					break;
 
 				case BcRcvMuxCntPreset:
@@ -618,7 +623,7 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 					break;
 
 				default:
-					printf("Unexpected name/value pair: 'name' returned as \'%s\' at %s, line %s.\n", 
+					printf("Unexpected name/value pair: 'name' returned as \'%s\' at %s, line %d.\n",
  						name, __FILE__, __LINE__); 
 					retVal = true;
 					readResult = false;
@@ -790,7 +795,7 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 							 * initialization code.  This is where the console
 							 * is loaded.
 							 */
-							initFailure = AXP_21264_LoadFlashROM(cpu);
+/* TODO:					initFailure = AXP_21264_LoadFlashROM(cpu);	*/
 							break;
 					}
 					if (initFailure == false)

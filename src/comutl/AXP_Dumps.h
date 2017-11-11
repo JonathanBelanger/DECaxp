@@ -31,6 +31,6 @@
 #include "AXP_Utility.h"
 #include "AXP_21264_Instructions.h"
 
-void AXP_Decode_Instruction(u64, AXP_INS_FMT, bool, char *);
+void AXP_Decode_Instruction(AXP_PC *pc, AXP_INS_FMT, bool, char *);
 
 #endif	/* _AXP_DUMPS_DEFS_ */
