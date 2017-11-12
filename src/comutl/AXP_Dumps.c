@@ -724,8 +724,8 @@ static const AXP_FUNC_CMD iprFunc[] =
 
 static const AXP_FUNC_CMD hwLdCmd[] =
 {
-	{AXP_HW_LD_PHYS,		"P"},
-	{AXP_HW_LD_PHYS_LOCK,	"P_L"},
+	{AXP_HW_LD_PHYS,		"PHYS"},
+	{AXP_HW_LD_PHYS_LOCK,	"PHYS_LOCK"},
 	{AXP_HW_LD_VPTE,		"VPTE"},
 	{AXP_HW_LD_VIRT,		"VIRT"},
 	{AXP_HW_LD_VIRT_WCHK,	"VIRT_WRCHK"},
@@ -736,8 +736,8 @@ static const AXP_FUNC_CMD hwLdCmd[] =
 
 static const AXP_FUNC_CMD hwStCmd[] =
 {
-	{AXP_HW_ST_PHYS,		"P"},
-	{AXP_HW_ST_PHYS_LOCK,	"P_C"},
+	{AXP_HW_ST_PHYS,		"PHYS"},
+	{AXP_HW_ST_PHYS_LOCK,	"PHYS_COND"},
 	{AXP_HW_ST_VIRT,		"VIRT"},
 	{AXP_HW_ST_VIRT_ALT,	"VIRT_ALT"},
 	{0, NULL}
@@ -765,21 +765,18 @@ const char *hwRetStall[] =
 	"STALL"
 };
 
-const char *addrFmt		= "0x%016llx: ";
-const char *instBinFmt	= "; 0x%08x '%c%c%c%c'";
-const char *instrFmt 	= "%-21s ";
-const char *palFunc		= "%-21s ";
+const char *lineFmt		= "0x%016llx: %-22s %-22s ; 0x%08x '%c%c%c%c'";
 const char *Reg			= "R%02d";
 const char *DispReg 	= "#%-d(R%02d)";
-const char *Disp 		= "#%10d";
-const char *Hint		= "%-4d";
+const char *Disp 		= "#%-d";
+const char *Hint		= "%-d";
 const char *Reg2		= "(R%02d)";
-const char *Lit			= "#%2d";
+const char *Lit			= "#%-d";
 const char *ZeroReg		= "0(R%02d)";
 const char *Freg		= "F%02d";
-const char *Scbd		= "%3d";
-const char *Len			= "%-4s";
-const char *Stall		= "%-5s";
+const char *Scbd		= "%-d";
+const char *Len			= "%-s";
+const char *Stall		= "%-s";
 const char *Comma		= ", ";
 const char *Pad			= "%#s";
 const char *Space		= " ";
@@ -844,24 +841,28 @@ void AXP_Decode_Instruction(
 			bool 		kernelMode,
 			char 		*instrStr)
 {
-	int			strLoc = 0;
-	const char	*funcStr;
-	char		iprName[16];
-	char		funcName[24];
+	const char	*binFuncStr;
+	const char	*funcName = NULL;
+	const char	*iprName = NULL;
+	char		regStr[24];
+	char		funcStr[24];
 	u16			index;
+	int			strLoc;
 
-	strLoc = sprintf(&instrStr[strLoc], addrFmt, *((u64 *) pcAddr));
+	/*
+	 * Start by parsing out the opcode for the instruction.  Depending upon
+	 * this value, will determine how to parse the remaining instruction
+	 * encoding.
+	 */
 	switch(instr.pal.opcode)
 	{
 		case PAL00:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						instrCmd[instr.pal.opcode]);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						palFunc,
-						AXP_Get_Func_Str(palcodeCmd, instr.pal.palcode_func));
+			funcName = instrCmd[instr.pal.opcode];
+			iprName = AXP_Get_Func_Str(palcodeCmd, instr.pal.palcode_func);
+			if (iprName == NULL)
+				funcName = NULL;
+			else
+				strcpy(regStr, iprName);
 			break;
 
 		case OPC01:
@@ -871,11 +872,6 @@ void AXP_Decode_Instruction(
 		case OPC05:
 		case OPC06:
 		case OPC07:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						instrCmd[instr.pal.opcode]);
-			strLoc += sprintf(&instrStr[strLoc], "%22s", " ");
 			break;
 
 		case LDL:		/* PREFETCH */
@@ -883,33 +879,15 @@ void AXP_Decode_Instruction(
 			if (instr.mem.ra == 31)
 			{
 				if (instr.mem.opcode == LDL)
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								instrFmt,
-								prefetchCmd[AXP_LDL_PREFETCH]);
+					funcName = prefetchCmd[AXP_LDL_PREFETCH];
 				else
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								instrFmt,
-								prefetchCmd[AXP_LDQ_PREFETCH]);
+					funcName = prefetchCmd[AXP_LDQ_PREFETCH];
 			}
 			else
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							instrCmd[instr.mem.opcode]);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Reg,
-						instr.mem.ra);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Comma);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						DispReg,
-						instr.mem.mem.disp,
-						instr.mem.rb);
+				funcName = instrCmd[instr.mem.opcode];
+			strLoc = sprintf(regStr, Reg, instr.mem.ra);
+			strLoc += sprintf(&regStr[strLoc], Comma);
+			sprintf(&regStr[strLoc], DispReg, instr.mem.mem.disp, instr.mem.rb);
 			break;
 
 		case LDA:
@@ -926,821 +904,430 @@ void AXP_Decode_Instruction(
 		case STQ_U:
 		case STL_C:
 		case STQ_C:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						instrCmd[instr.mem.opcode]);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Reg,
-						instr.mem.ra);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Comma);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						DispReg,
-						instr.mem.mem.disp,
-						instr.mem.rb);
+			funcName = instrCmd[instr.mem.opcode];
+			strLoc = sprintf(regStr, Reg, instr.mem.ra);
+			strLoc += sprintf(&regStr[strLoc], Comma);
+			sprintf(&regStr[strLoc], DispReg, instr.mem.mem.disp, instr.mem.rb);
 			break;
 
 		case INTA:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						AXP_Get_Func_Str(instaCmd, instr.oper1.func));
-			if (instr.oper1.fmt == 0)
+			funcName = AXP_Get_Func_Str(instaCmd, instr.oper1.func);
+			if (funcName != NULL)
 			{
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.ra);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.rb);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.rc);
-			}
-			else
-			{
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.ra);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Lit,
-							instr.oper2.lit);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.rc);
+				strLoc = sprintf(regStr, Reg, instr.oper1.ra);
+				strLoc += sprintf(&regStr[strLoc], Comma);
+				if (instr.oper1.fmt == 0)
+					strLoc += sprintf(&regStr[strLoc], Reg, instr.oper1.rb);
+				else
+					strLoc += sprintf(&regStr[strLoc], Lit, instr.oper2.lit);
+				strLoc += sprintf(&regStr[strLoc], Comma);
+				sprintf(&regStr[strLoc], Reg, instr.oper1.rc);
 			}
 			break;
 
 		case INTL:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						AXP_Get_Func_Str(instlCmd, instr.oper1.func));
-			if (instr.oper1.func == AXP_FUNC_AMASK)
+			funcName = AXP_Get_Func_Str(instlCmd, instr.oper1.func);
+			if (funcName != NULL)
 			{
-				if (instr.oper1.fmt == 0)
+				switch (instr.oper1.func)
 				{
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.oper1.rb);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.oper1.rc);
+					case AXP_FUNC_AMASK:
+						if (instr.oper1.fmt == 0)
+							strLoc = sprintf(regStr, Reg, instr.oper1.rb);
+						else
+							strLoc = sprintf(regStr, Lit, instr.oper2.lit);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						break;
+
+					case AXP_FUNC_IMPLVER:
+						strLoc = 0;
+						break;
+
+					default:
+						strLoc = sprintf(regStr, Reg, instr.oper1.ra);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						if (instr.oper1.fmt == 0)
+							strLoc += sprintf(
+										&regStr[strLoc],
+										Reg,
+										instr.oper1.rb);
+						else
+							strLoc += sprintf(
+										&regStr[strLoc],
+										Lit,
+										instr.oper2.lit);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						break;
 				}
-				else
-				{
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Lit,
-								instr.oper2.lit);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.oper1.rc);
-				}
-			}
-			else if (instr.oper1.func == AXP_FUNC_IMPLVER)
-			{
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.rc);
-			}
-			else if (instr.oper1.fmt == 0)
-			{
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.ra);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.rb);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.rc);
-			}
-			else
-			{
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.ra);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Lit,
-							instr.oper2.lit);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.rc);
+				sprintf(&regStr[strLoc], Reg, instr.oper1.rc);
 			}
 			break;
 
 		case INTS:
 		case INTM:
 			if (instr.oper1.opcode == INTS)
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							AXP_Get_Func_Str(instsCmd, instr.oper1.func));
+				funcName = AXP_Get_Func_Str(instsCmd, instr.oper1.func);
 			else
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							AXP_Get_Func_Str(instmCmd, instr.oper1.func));
-			if (instr.oper1.fmt == 0)
+				funcName = AXP_Get_Func_Str(instmCmd, instr.oper1.func);
+			if (funcName != NULL)
 			{
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.ra);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.rb);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper1.rc);
-			}
-			else
-			{
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper2.ra);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Lit,
-							instr.oper2.lit);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.oper2.rc);
+				strLoc = sprintf(regStr, Reg, instr.oper1.ra);
+				strLoc += sprintf(&regStr[strLoc], Comma);
+				if (instr.oper1.fmt == 0)
+					strLoc += sprintf(&regStr[strLoc], Reg, instr.oper1.rb);
+				else
+					strLoc += sprintf(&regStr[strLoc], Lit, instr.oper2.lit);
+				strLoc += sprintf(&regStr[strLoc], Comma);
+				sprintf(&regStr[strLoc], Reg, instr.oper2.rc);
 			}
 			break;
 
 		case ITFP:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						AXP_Get_Func_Str(itfpCmd, instr.fp.func));
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Freg,
-						instr.fp.fb);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Comma);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Freg,
-						instr.fp.fc);
+			funcName = AXP_Get_Func_Str(itfpCmd, instr.fp.func);
+			strLoc = sprintf(regStr, Freg, instr.fp.fb);
+			strLoc += sprintf(&regStr[strLoc], Comma);
+			sprintf(&regStr[strLoc], Freg, instr.fp.fc);
 			break;
 
 		case FLTV:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						AXP_Get_Func_Str(fltvCmd, instr.fp.func));
-			switch (instr.fp.func)
+			funcName = AXP_Get_Func_Str(fltvCmd, instr.fp.func);
+			if (funcName != NULL)
 			{
-				case AXP_FUNC_CVTDG_C:
-				case AXP_FUNC_CVTGF_C:
-				case AXP_FUNC_CVTGD_C:
-				case AXP_FUNC_CVTGQ_C:
-				case AXP_FUNC_CVTQF_C:
-				case AXP_FUNC_CVTQG_C:
-				case AXP_FUNC_CVTDG:
-				case AXP_FUNC_CVTGF:
-				case AXP_FUNC_CVTGD:
-				case AXP_FUNC_CVTGQ:
-				case AXP_FUNC_CVTQF:
-				case AXP_FUNC_CVTQG:
-				case AXP_FUNC_CVTDG_UC:
-				case AXP_FUNC_CVTGF_UC:
-				case AXP_FUNC_CVTGD_UC:
-				case AXP_FUNC_CVTGQ_VC:
-				case AXP_FUNC_CVTDG_U:
-				case AXP_FUNC_CVTGF_U:
-				case AXP_FUNC_CVTGD_U:
-				case AXP_FUNC_CVTGQ_V:
-				case AXP_FUNC_CVTDG_SC:
-				case AXP_FUNC_CVTGF_SC:
-				case AXP_FUNC_CVTGD_SC:
-				case AXP_FUNC_CVTGQ_SC:
-				case AXP_FUNC_CVTDG_S:
-				case AXP_FUNC_CVTGF_S:
-				case AXP_FUNC_CVTGD_S:
-				case AXP_FUNC_CVTGQ_S:
-				case AXP_FUNC_CVTDG_SUC:
-				case AXP_FUNC_CVTGF_SUC:
-				case AXP_FUNC_CVTGD_SUC:
-				case AXP_FUNC_CVTGQ_SVC:
-				case AXP_FUNC_CVTDG_SU:
-				case AXP_FUNC_CVTGF_SU:
-				case AXP_FUNC_CVTGD_SU:
-				case AXP_FUNC_CVTGQ_SV:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fb);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fc);
-					break;
+				switch (instr.fp.func)
+				{
+					case AXP_FUNC_CVTDG_C:
+					case AXP_FUNC_CVTGF_C:
+					case AXP_FUNC_CVTGD_C:
+					case AXP_FUNC_CVTGQ_C:
+					case AXP_FUNC_CVTQF_C:
+					case AXP_FUNC_CVTQG_C:
+					case AXP_FUNC_CVTDG:
+					case AXP_FUNC_CVTGF:
+					case AXP_FUNC_CVTGD:
+					case AXP_FUNC_CVTGQ:
+					case AXP_FUNC_CVTQF:
+					case AXP_FUNC_CVTQG:
+					case AXP_FUNC_CVTDG_UC:
+					case AXP_FUNC_CVTGF_UC:
+					case AXP_FUNC_CVTGD_UC:
+					case AXP_FUNC_CVTGQ_VC:
+					case AXP_FUNC_CVTDG_U:
+					case AXP_FUNC_CVTGF_U:
+					case AXP_FUNC_CVTGD_U:
+					case AXP_FUNC_CVTGQ_V:
+					case AXP_FUNC_CVTDG_SC:
+					case AXP_FUNC_CVTGF_SC:
+					case AXP_FUNC_CVTGD_SC:
+					case AXP_FUNC_CVTGQ_SC:
+					case AXP_FUNC_CVTDG_S:
+					case AXP_FUNC_CVTGF_S:
+					case AXP_FUNC_CVTGD_S:
+					case AXP_FUNC_CVTGQ_S:
+					case AXP_FUNC_CVTDG_SUC:
+					case AXP_FUNC_CVTGF_SUC:
+					case AXP_FUNC_CVTGD_SUC:
+					case AXP_FUNC_CVTGQ_SVC:
+					case AXP_FUNC_CVTDG_SU:
+					case AXP_FUNC_CVTGF_SU:
+					case AXP_FUNC_CVTGD_SU:
+					case AXP_FUNC_CVTGQ_SV:
+						strLoc = 0;
+						break;
 
-				default:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fa);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fb);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fc);
-					break;
+					default:
+						strLoc = sprintf(regStr, Freg, instr.fp.fa);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						break;
+				}
+				strLoc += sprintf(&regStr[strLoc], Freg, instr.fp.fb);
+				strLoc += sprintf(&regStr[strLoc], Comma);
+				sprintf(&regStr[strLoc], Freg, instr.fp.fc);
 			}
 			break;
 
 		case FLTI:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						AXP_Get_Func_Str(fltiCmd, instr.fp.func));
-			switch(instr.fp.func)
+			funcName = AXP_Get_Func_Str(fltiCmd, instr.fp.func);
+			if (funcName != NULL)
 			{
-				case AXP_FUNC_CVTTS_UM:
-				case AXP_FUNC_CVTTQ_VM:
-				case AXP_FUNC_CVTTS_U:
-				case AXP_FUNC_CVTTQ_V:
-				case AXP_FUNC_CVTTS_UD:
-				case AXP_FUNC_CVTTQ_VD:
-				case AXP_FUNC_CVTST:
-				case AXP_FUNC_CVTTS_SUC:
-				case AXP_FUNC_CVTTQ_SVC:
-				case AXP_FUNC_CVTTS_SUM:
-				case AXP_FUNC_CVTTQ_SVM:
-				case AXP_FUNC_CVTTS_SU:
-				case AXP_FUNC_CVTTQ_SV:
-				case AXP_FUNC_CVTTS_SUD:
-				case AXP_FUNC_CVTTQ_SVD:
-				case AXP_FUNC_CVTST_S:
-				case AXP_FUNC_CVTTS_SUIC:
-				case AXP_FUNC_CVTTQ_SVIC:
-				case AXP_FUNC_CVTQS_SUIC:
-				case AXP_FUNC_CVTQT_SUIC:
-				case AXP_FUNC_CVTTS_SUIM:
-				case AXP_FUNC_CVTTQ_SVIM:
-				case AXP_FUNC_CVTQS_SUIM:
-				case AXP_FUNC_CVTQT_SUIM:
-				case AXP_FUNC_CVTTS_SUI:
-				case AXP_FUNC_CVTTQ_SVI:
-				case AXP_FUNC_CVTQS_SUI:
-				case AXP_FUNC_CVTQT_SUI:
-				case AXP_FUNC_CVTTS_SUID:
-				case AXP_FUNC_CVTTQ_SVID:
-				case AXP_FUNC_CVTQS_SUID:
-				case AXP_FUNC_CVTQT_SUID:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fb);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fc);
-					break;
+				switch(instr.fp.func)
+				{
+					case AXP_FUNC_CVTTS_UM:
+					case AXP_FUNC_CVTTQ_VM:
+					case AXP_FUNC_CVTTS_U:
+					case AXP_FUNC_CVTTQ_V:
+					case AXP_FUNC_CVTTS_UD:
+					case AXP_FUNC_CVTTQ_VD:
+					case AXP_FUNC_CVTST:
+					case AXP_FUNC_CVTTS_SUC:
+					case AXP_FUNC_CVTTQ_SVC:
+					case AXP_FUNC_CVTTS_SUM:
+					case AXP_FUNC_CVTTQ_SVM:
+					case AXP_FUNC_CVTTS_SU:
+					case AXP_FUNC_CVTTQ_SV:
+					case AXP_FUNC_CVTTS_SUD:
+					case AXP_FUNC_CVTTQ_SVD:
+					case AXP_FUNC_CVTST_S:
+					case AXP_FUNC_CVTTS_SUIC:
+					case AXP_FUNC_CVTTQ_SVIC:
+					case AXP_FUNC_CVTQS_SUIC:
+					case AXP_FUNC_CVTQT_SUIC:
+					case AXP_FUNC_CVTTS_SUIM:
+					case AXP_FUNC_CVTTQ_SVIM:
+					case AXP_FUNC_CVTQS_SUIM:
+					case AXP_FUNC_CVTQT_SUIM:
+					case AXP_FUNC_CVTTS_SUI:
+					case AXP_FUNC_CVTTQ_SVI:
+					case AXP_FUNC_CVTQS_SUI:
+					case AXP_FUNC_CVTQT_SUI:
+					case AXP_FUNC_CVTTS_SUID:
+					case AXP_FUNC_CVTTQ_SVID:
+					case AXP_FUNC_CVTQS_SUID:
+					case AXP_FUNC_CVTQT_SUID:
+						strLoc = 0;
+						break;
 
-				default:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fa);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fb);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fc);
-					break;
+					default:
+						strLoc = sprintf(regStr, Freg, instr.fp.fa);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						break;
+				}
+				strLoc += sprintf(&regStr[strLoc], Freg, instr.fp.fb);
+				strLoc += sprintf(&regStr[strLoc], Comma);
+				sprintf(&regStr[strLoc], Freg, instr.fp.fc);
 			}
 			break;
 
 		case FLTL:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						AXP_Get_Func_Str(fltlCmd, instr.fp.func));
-			switch(instr.fp.func)
+			funcName = AXP_Get_Func_Str(fltlCmd, instr.fp.func);
+			if (funcName != NULL)
 			{
-				case AXP_FUNC_CVTLQ:
-				case AXP_FUNC_CVTQL:
-				case AXP_FUNC_CVTQL_V:
-				case AXP_FUNC_CVTQL_SV:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fb);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fc);
-					break;
+				switch(instr.fp.func)
+				{
+					case AXP_FUNC_CVTLQ:
+					case AXP_FUNC_CVTQL:
+					case AXP_FUNC_CVTQL_V:
+					case AXP_FUNC_CVTQL_SV:
+						strLoc = 0;
+						break;
 
-				default:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fa);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fb);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fc);
-					break;
+					default:
+						strLoc = sprintf(regStr, Freg, instr.fp.fa);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						break;
+				}
+				strLoc += sprintf(&regStr[strLoc], Freg, instr.fp.fb);
+				strLoc += sprintf(&regStr[strLoc], Comma);
+				sprintf(&regStr[strLoc], Freg, instr.fp.fc);
 			}
 			break;
 
 		case MISC:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						AXP_Get_Func_Str(miscCmd, instr.mem.mem.func));
-			switch (instr.mem.mem.func)
+			funcName = AXP_Get_Func_Str(miscCmd, instr.mem.mem.func);
+			if (funcName != NULL)
 			{
-				case AXP_FUNC_ECB:
-				case AXP_FUNC_WH64:
-				case AXP_FUNC_WH64EN:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.mem.rb);
-					break;
+				switch (instr.mem.mem.func)
+				{
+					case AXP_FUNC_ECB:
+					case AXP_FUNC_WH64:
+					case AXP_FUNC_WH64EN:
+						sprintf(regStr, Reg, instr.mem.rb);
+						break;
 
-				case AXP_FUNC_EXCB:
-				case AXP_FUNC_MB:
-				case AXP_FUNC_TRAPB:
-				case AXP_FUNC_WMB:
-					break;				/* Don't have to do anything */
+					case AXP_FUNC_EXCB:
+					case AXP_FUNC_MB:
+					case AXP_FUNC_TRAPB:
+					case AXP_FUNC_WMB:
+						regStr[0] = ' ';
+						regStr[1] = '\0';
+						break;
 
-				case AXP_FUNC_FETCH:
-				case AXP_FUNC_FETCH_M:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								ZeroReg,
-								instr.mem.rb);
-					break;
+					case AXP_FUNC_FETCH:
+					case AXP_FUNC_FETCH_M:
+						sprintf(regStr, ZeroReg, instr.mem.rb);
+						break;
 
-				case AXP_FUNC_RPCC:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.mem.ra);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.mem.rb);
-					break;
+					case AXP_FUNC_RPCC:
+						strLoc = sprintf(regStr, Reg, instr.mem.ra);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						sprintf(&regStr[strLoc], Reg, instr.mem.rb);
+						break;
 
-				case AXP_FUNC_RC:
-				case AXP_FUNC_RS:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.oper1.ra);
-					break;
+					case AXP_FUNC_RC:
+					case AXP_FUNC_RS:
+						sprintf(regStr, Reg, instr.oper1.ra);
+						break;
+				}
 			}
 			break;
 
 		case FPTI:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						AXP_Get_Func_Str(fptiCmd, instr.oper1.func));
-			switch (instr.oper1.func)
+			funcName = AXP_Get_Func_Str(fptiCmd, instr.oper1.func);
+			if (funcName != NULL)
 			{
-				case AXP_FUNC_SEXTB:
-				case AXP_FUNC_SEXTW:
-					if (instr.oper1.fmt == 0)
-					{
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Reg,
-									instr.oper1.rb);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Comma);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Reg,
-									instr.oper1.rc);
-					}
-					else
-					{
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Lit,
-									instr.oper2.lit);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Comma);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Reg,
-									instr.oper1.rc);
-					}
-					break;
+				switch (instr.oper1.func)
+				{
+					case AXP_FUNC_SEXTB:
+					case AXP_FUNC_SEXTW:
+						if (instr.oper1.fmt == 0)
+							strLoc = sprintf(regStr, Reg, instr.oper1.rb);
+						else
+							strLoc = sprintf(regStr, Lit, instr.oper2.lit);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						break;
 
-				case AXP_FUNC_CTPOP:
-				case AXP_FUNC_CTLZ:
-				case AXP_FUNC_CTTZ:
-				case AXP_FUNC_PKLB:
-				case AXP_FUNC_PKWB:
-				case AXP_FUNC_UNPKBL:
-				case AXP_FUNC_UNPKBW:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.oper1.rb);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.oper1.rc);
-					break;
+					case AXP_FUNC_CTPOP:
+					case AXP_FUNC_CTLZ:
+					case AXP_FUNC_CTTZ:
+					case AXP_FUNC_PKLB:
+					case AXP_FUNC_PKWB:
+					case AXP_FUNC_UNPKBL:
+					case AXP_FUNC_UNPKBW:
+						strLoc = sprintf(regStr, Reg, instr.oper1.rb);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						break;
 
-				case AXP_FUNC_PERR:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.oper1.ra);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.oper1.rb);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.oper1.rc);
-					break;
+					case AXP_FUNC_PERR:
+						strLoc = sprintf(regStr, Reg, instr.oper1.ra);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, instr.oper1.rb);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						break;
 
-				case AXP_FUNC_FTOIS:
-				case AXP_FUNC_FTOIT:
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Freg,
-								instr.fp.fa);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Comma);
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.oper1.rc);
-					break;
+					case AXP_FUNC_FTOIS:
+					case AXP_FUNC_FTOIT:
+						strLoc = sprintf(regStr, Freg, instr.fp.fa);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						break;
 
-				case AXP_FUNC_MINUB8:
-				case AXP_FUNC_MINSB8:
-				case AXP_FUNC_MINUW4:
-				case AXP_FUNC_MINSW4:
-				case AXP_FUNC_MAXUB8:
-				case AXP_FUNC_MAXSB8:
-				case AXP_FUNC_MAXUW4:
-				case AXP_FUNC_MAXSW4:
-					if (instr.oper1.fmt == 0)
-					{
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Reg,
-									instr.oper1.ra);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Comma);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Reg,
-									instr.oper1.rb);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Comma);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Reg,
-									instr.oper1.rc);
-					}
-					else
-					{
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Reg,
-									instr.oper1.ra);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Comma);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Lit,
-									instr.oper2.lit);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Comma);
-						strLoc += sprintf(
-									&instrStr[strLoc],
-									Reg,
-									instr.oper2.rc);
-					}
-					break;
+					case AXP_FUNC_MINUB8:
+					case AXP_FUNC_MINSB8:
+					case AXP_FUNC_MINUW4:
+					case AXP_FUNC_MINSW4:
+					case AXP_FUNC_MAXUB8:
+					case AXP_FUNC_MAXSB8:
+					case AXP_FUNC_MAXUW4:
+					case AXP_FUNC_MAXSW4:
+						strLoc = sprintf(regStr, Reg, instr.oper1.ra);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						if (instr.oper1.fmt == 0)
+							strLoc += sprintf(
+										&regStr[strLoc],
+										Reg,
+										instr.oper1.rb);
+						else
+							strLoc += sprintf(
+										&regStr[strLoc],
+										Lit,
+										instr.oper2.lit);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						break;
+				}
+				sprintf(&regStr[strLoc], Reg, instr.oper2.rc);
 			}
 			break;
 
 		case HW_MFPR:
 		case HW_MTPR:
 			if ((pcAddr->pal == 0) && (kernelMode == false))
-			{
-				char opStr[6];
-
-				sprintf(opStr, "OPC%02X", instr.hw_mxpr.opcode);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							opStr);
-			}
+				funcName = NULL;
 			else
 			{
-				funcStr = instrCmd[instr.hw_mxpr.opcode];
+				funcName = instrCmd[instr.hw_mxpr.opcode];
 				if (((instr.hw_mxpr.index & AXP_IPR_PCXT0) == AXP_IPR_PCXT0) ||
 					((instr.hw_mxpr.index & AXP_IPR_PCXT1) == AXP_IPR_PCXT1))
 					index = instr.hw_mxpr.index & AXP_IPR_PCXT1;
 				else
 					index = instr.hw_mxpr.index;
-				strcpy(iprName, (char *) AXP_Get_Func_Str(iprFunc, index));
-				sprintf(funcName, "%s(%s)", funcStr, iprName);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							funcName);
-				if (instr.hw_mxpr.opcode == HW_MFPR)
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.hw_mxpr.ra);
+				iprName = AXP_Get_Func_Str(iprFunc, index);
+				if (iprName != NULL)
+				{
+					sprintf(funcStr, "%s(%s)", funcName, iprName);
+					funcName = funcStr;
+					if (instr.hw_mxpr.opcode == HW_MFPR)
+						strLoc = sprintf(regStr, Reg, instr.hw_mxpr.ra);
+					else
+						strLoc = sprintf(regStr, Reg, instr.hw_mxpr.rb);
+					strLoc += sprintf(&regStr[strLoc], Comma);
+					sprintf(&regStr[strLoc], Scbd, 	instr.hw_mxpr.scbd_mask);
+				}
 				else
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.hw_mxpr.rb);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Scbd,
-							instr.hw_mxpr.scbd_mask);
+					funcName = NULL;
 			}
 			break;
 
 		case HW_LD:
 			if ((pcAddr->pal == 0) && (kernelMode == false))
-			{
-				char opStr[6];
-
-				sprintf(opStr, "OPC%02X", instr.hw_ld.opcode);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							opStr);
-			}
+				funcName = NULL;
 			else
 			{
-				funcStr = instrCmd[instr.hw_ld.opcode];
-				strcpy(iprName,
-					(char *) AXP_Get_Func_Str(hwLdCmd, instr.hw_ld.type));
-				sprintf(funcName, "%s(%s)", funcStr, iprName);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							funcName);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.hw_ld.ra);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Disp,
-							instr.hw_ld.disp);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.hw_ld.rb);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Len,
-							AXP_Get_Func_Str(hwLen, instr.hw_ld.len));
+				funcName = instrCmd[instr.hw_ld.opcode];
+				iprName = AXP_Get_Func_Str(hwLdCmd, instr.hw_ld.type);
+				if (iprName != NULL)
+				{
+					sprintf(funcStr, "%s(%s)", funcName, iprName);
+					funcName = funcStr;
+					strLoc = sprintf(regStr, Reg, instr.hw_ld.ra);
+					strLoc += sprintf(&regStr[strLoc], Comma);
+					strLoc += sprintf(&regStr[strLoc], Disp, instr.hw_ld.disp);
+					strLoc += sprintf(&regStr[strLoc], Comma);
+					strLoc += sprintf(&regStr[strLoc], Reg, instr.hw_ld.rb);
+					strLoc += sprintf(&regStr[strLoc], Comma);
+					sprintf(
+						&regStr[strLoc],
+						Len,
+						AXP_Get_Func_Str(hwLen, instr.hw_ld.len));
+				}
+				else
+					funcName = NULL;
 			}
 			break;
 
 		case HW_ST:
 			if ((pcAddr->pal == 0) && (kernelMode == false))
-			{
-				char opStr[6];
-
-				sprintf(opStr, "OPC%02X", instr.hw_st.opcode);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							opStr);
-			}
+				funcName = NULL;
 			else
 			{
-				funcStr = instrCmd[instr.hw_st.opcode];
-				strcpy(iprName,
-					(char *) AXP_Get_Func_Str(hwStCmd, instr.hw_st.type));
-				sprintf(funcName, "%s(%s)", funcStr, iprName);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							funcName);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							funcName);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.hw_st.ra);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Disp,
-							instr.hw_st.disp);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Reg,
-							instr.hw_st.rb);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Len,
-							AXP_Get_Func_Str(hwLen, instr.hw_st.len));
+				funcName = instrCmd[instr.hw_st.opcode];
+				iprName = AXP_Get_Func_Str(hwStCmd, instr.hw_st.type);
+				if (iprName != NULL)
+				{
+					sprintf(funcStr, "%s(%s)", funcName, iprName);
+					funcName = funcStr;
+					strLoc = sprintf(regStr, Reg, instr.hw_st.ra);
+					strLoc += sprintf(&regStr[strLoc], Comma);
+					strLoc += sprintf(&regStr[strLoc], Disp, instr.hw_st.disp);
+					strLoc += sprintf(&regStr[strLoc], Comma);
+					strLoc += sprintf(&regStr[strLoc], Reg, instr.hw_st.rb);
+					strLoc += sprintf(&regStr[strLoc], Comma);
+					sprintf(
+						&instrStr[strLoc],
+						Len,
+						AXP_Get_Func_Str(hwLen, instr.hw_st.len));
+				}
+				else
+					funcName = NULL;
 			}
 			break;
 
 		case HW_RET:
 			if ((pcAddr->pal == 0) && (kernelMode == false))
-			{
-				char opStr[6];
-
-				sprintf(opStr, "OPC%02X", instr.hw_ret.opcode);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							opStr);
-			}
+				funcName = NULL;
 			else
 			{
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							AXP_Get_Func_Str(hwRet, instr.hw_ret.hint));
-				if ((instr.hw_ret.hint == AXP_HW_JMP) ||
-					(instr.hw_ret.hint == AXP_HW_JSR))
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Reg,
-								instr.hw_ret.rb);
-				else
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								Disp,
-								instr.hw_ret.disp);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Comma);
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							Stall,
-							hwRetStall[instr.hw_ret.stall]);
+				funcName = AXP_Get_Func_Str(hwRet, instr.hw_ret.hint);
+				if (funcName != NULL)
+				{
+					if ((instr.hw_ret.hint == AXP_HW_JMP) ||
+						(instr.hw_ret.hint == AXP_HW_JSR))
+						strLoc = sprintf(regStr, Reg, instr.hw_ret.rb);
+					else
+						strLoc = sprintf(regStr, Disp, instr.hw_ret.disp);
+					strLoc += sprintf(&regStr[strLoc], Comma);
+					sprintf(
+						&regStr[strLoc],
+						Stall,
+						hwRetStall[instr.hw_ret.stall]);
+				}
 			}
 			break;
 
@@ -1749,39 +1336,17 @@ void AXP_Decode_Instruction(
 			if (instr.mem.ra == 31)
 			{
 				if (instr.mem.opcode == LDS)
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								instrFmt,
-								prefetchCmd[AXP_LDS_PREFETCH]);
+					funcName = prefetchCmd[AXP_LDS_PREFETCH];
 				else
-					strLoc += sprintf(
-								&instrStr[strLoc],
-								instrFmt,
-								prefetchCmd[AXP_LDT_PREFETCH]);
+					funcName = prefetchCmd[AXP_LDT_PREFETCH];
 			}
 			else
-				strLoc += sprintf(
-							&instrStr[strLoc],
-							instrFmt,
-							instrCmd[instr.mem.opcode]);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Freg,
-						instr.mem.ra);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Comma);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Disp,
-						instr.mem.mem.disp);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Comma);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Reg,
-						instr.mem.rb);
+				funcName = instrCmd[instr.mem.opcode];
+			strLoc = sprintf(regStr, Freg, instr.mem.ra);
+			strLoc += sprintf(&regStr[strLoc], Comma);
+			strLoc += sprintf(&regStr[strLoc], Disp, instr.mem.mem.disp);
+			strLoc += sprintf(&regStr[strLoc], Comma);
+			sprintf(&regStr[strLoc], Reg, instr.mem.rb);
 			break;
 
 		case LDF:
@@ -1790,28 +1355,12 @@ void AXP_Decode_Instruction(
 		case STG:
 		case STS:
 		case STT:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						instrCmd[instr.mem.opcode]);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Freg,
-						instr.mem.ra);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Comma);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Disp,
-						instr.mem.mem.disp);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Comma);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Reg,
-						instr.mem.rb);
+			funcName = instrCmd[instr.mem.opcode];
+			strLoc = sprintf(regStr, Freg, instr.mem.ra);
+			strLoc += sprintf(&regStr[strLoc], Comma);
+			strLoc += sprintf(&regStr[strLoc], Disp, instr.mem.mem.disp);
+			strLoc += sprintf(&regStr[strLoc], Comma);
+			sprintf(&regStr[strLoc], Reg, instr.mem.rb);
 			break;
 
 		case FBEQ:
@@ -1820,21 +1369,10 @@ void AXP_Decode_Instruction(
 		case FBNE:
 		case FBGE:
 		case FBGT:
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						instrFmt,
-						instrCmd[instr.br.opcode]);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Freg,
-						instr.br.ra);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Comma);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Disp,
-						instr.br.branch_disp);
+			funcName = instrCmd[instr.br.opcode];
+			strLoc = sprintf(regStr, Freg, instr.br.ra);
+			strLoc += sprintf(&regStr[strLoc], Comma);
+			sprintf(&regStr[strLoc], Disp, instr.br.branch_disp);
 			break;
 
 		case BEQ:
@@ -1847,62 +1385,61 @@ void AXP_Decode_Instruction(
 		case BNE:
 		case BR:
 		case BSR:
-			strLoc += sprintf(&instrStr[strLoc],
-				instrFmt,
-				instrCmd[instr.br.opcode]);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Reg,
-						instr.br.ra);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Comma);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Disp,
-						instr.br.branch_disp);
+			funcName = instrCmd[instr.br.opcode];
+			strLoc = sprintf(regStr, Reg, instr.br.ra);
+			strLoc += sprintf(&regStr[strLoc], Comma);
+			sprintf(&regStr[strLoc], Disp, instr.br.branch_disp);
 			break;
 
 		case JMP:
-			strLoc += sprintf(
-				&instrStr[strLoc],
-				instrFmt,
-				jmpCmd[AXP_JMP_TYPE(instr.mem.mem.func)]);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Reg,
-						instr.mem.ra,
-						instr.mem.rb);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Comma);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Reg,
-						instr.mem.ra);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Comma);
-			strLoc += sprintf(
-						&instrStr[strLoc],
-						Hint,
-						AXP_JMP_HINT(instr.mem.mem.func));
+			funcName = jmpCmd[AXP_JMP_TYPE(instr.mem.mem.func)];
+			if (funcName != NULL)
+			{
+				strLoc = sprintf(regStr, Reg, instr.mem.ra);
+				strLoc += sprintf(&regStr[strLoc], Comma);
+				strLoc += sprintf(&regStr[strLoc], Reg, instr.mem.rb);
+				strLoc += sprintf(&regStr[strLoc], Comma);
+				sprintf(
+					&regStr[strLoc],
+					Hint,
+					AXP_JMP_HINT(instr.mem.mem.func));
+			}
 			break;
 	}
-	strLoc += sprintf(
-				&instrStr[strLoc],
-				Pad,
-				(44-strLoc),
-				Space);
-	funcStr = (const char *) &instr;
+
+	/*
+	 * So, if we did not find a function name, then we have a line that is not
+	 * instruction code.  We replace the function name and register string to
+	 * be filled with blanks.
+	 *
+	 * NOTE: We cannot always known when a 32-bit value is a real instruction
+	 *		 or not.  We do know when it is not, though, as the encoding cannot
+	 *		 be interpreted.
+	 */
+	if (funcName == NULL)
+	{
+		funcName = regStr;
+		regStr[0] = ' ';
+		regStr[1] = '\0';
+	}
+
+	/*
+	 * OK, we should now have everything we need to generate the string
+	 * representing the line of code.  Let's go generate it and get out of
+	 * here.
+	 */
+	binFuncStr = (const char *) &instr;
 	sprintf(
-		&instrStr[strLoc],
-		instBinFmt,
+		instrStr,
+		lineFmt,
+		*((u64 *) pcAddr),
+		funcName,
+		regStr,
 		*((u32 *) &instr),
-		(isprint(funcStr[0]) ? funcStr[0] : '.'),
-		(isprint(funcStr[1]) ? funcStr[1] : '.'),
-		(isprint(funcStr[2]) ? funcStr[2] : '.'),
-		(isprint(funcStr[3]) ? funcStr[3] : '.'));
+		(isprint(binFuncStr[0]) ? binFuncStr[0] : '.'),
+		(isprint(binFuncStr[1]) ? binFuncStr[1] : '.'),
+		(isprint(binFuncStr[2]) ? binFuncStr[2] : '.'),
+		(isprint(binFuncStr[3]) ? binFuncStr[3] : '.'));
 
 	/*
 	 * Return back to the caller.
