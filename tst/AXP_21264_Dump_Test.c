@@ -130,7 +130,10 @@ int main()
 	int		ii;
 
 	printf("\nAXP 21264 Instruction Dumping Tester\n");
-	totalBytesRead = AXP_21264_LoadMemory("../dat/cl67srmrom.exe");
+	totalBytesRead = AXP_LoadExecutable(
+							"../dat/cl67srmrom.exe",
+							memory,
+							sizeof(memory));
 	if (totalBytesRead > 0)
 	{
 		totalInstructions = totalBytesRead / sizeof(AXP_INS_FMT);

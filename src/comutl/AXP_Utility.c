@@ -271,3 +271,108 @@ i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
 	 */
 	return(retVal);
 }
+
+/*
+ * AXP_LoadExecutable
+ * 	This function is called to open an executable file and load the contents
+ * 	into the specified buffer.  The executable file is assumed to be an OpenVMS
+ * 	formatted file, so the first 576 (0x240) bytes are skipped (this is the
+ * 	image header and is not our concern).  The remaining file is read byte by
+ * 	byte into the supplied buffer.  The function returns the number of bytes
+ * 	read.
+ *
+ * Input Parameters:
+ * 	fineName:
+ * 		A string containing the name of the file to read.  It includes the file
+ * 		path (relative or explicit).
+ * 	bufferLen:
+ * 		A value indicating the size of the buffer parameter.  This is used to
+ * 		prevent us from writting past the end of the buffer.
+ *
+ * Output Parameters:
+ * 	buffer:
+ * 		A pointer to an array of unsigned chars in which the contents of the
+ * 		executable file are written.
+ *
+ * Return Values:
+ * 	AXP_E_FNF:			File not found.
+ * 	AXP_E_BUFTOOSMALL:	Buffer too small to receive contents of file.
+ * 	0:					No data in file.
+ * 	>0					Number of bytes read.
+ */
+int AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
+{
+	FILE	*fp;
+	int		retVal = 0;
+	int		ii;
+	bool	eofHit = false;
+	u32		scratch;
+
+	/*
+	 * First open the file to be loaded.
+	 */
+	fp = fopen(fileName, "r");
+	if (fp != NULL)
+	{
+
+		/*
+		 * Read past the executable image header.
+		 */
+		for (ii = 0; ii < 0x240; ii++)
+		{
+			if (feof(fp))
+			{
+				eofHit = true;
+				break;
+			}
+			fread(&scratch, 1, 1, fp);
+		}
+
+		/*
+		 * Continue looking, reading 1 byte at a time, until we either,
+		 * reach the end of file (we may already be there), or we run out of
+		 * buffer to write into.
+		 */
+		ii = 0;
+		while ((eofHit == false) && (retVal == 0))
+		{
+			fread(&buffer[ii], 1, 1, fp);
+			if (feof(fp))
+				eofHit = true;
+			else
+			{
+				ii++;
+
+				/*
+				 * Make sure there is still room for another byte of buffer for
+				 * another byte of data.
+				 */
+				if (ii >= bufferLen)
+					retVal = AXP_E_BUFTOOSMALL;
+			}
+		}
+
+		/*
+		 * If we did not detect and error, then return the number of bytes
+		 * read.
+		 */
+		if (retVal == 0)
+			retVal = ii;
+
+		/*
+		 * We opened the file, so now close it.
+		 */
+		fclose(fp);
+	}
+
+	/*
+	 * If the file was not found, return an appropriate error value.
+	 */
+	else
+		retVal = AXP_E_FNF;
+
+	/*
+	 * Return the result of this function to the caller.
+	 */
+	return(retVal);
+}
