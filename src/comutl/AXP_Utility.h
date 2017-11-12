@@ -143,6 +143,12 @@ typedef struct
 #define AXP_CQUEP_COUNT(queue)	(queue->count)
 
 /*
+ * Error returns for AXP_LoadExecutable
+ */
+#define AXP_E_FNF 			-1
+#define AXP_E_BUFTOOSMALL	-2
+
+/*
  * Prototype Definitions
  */
 void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry);
@@ -150,5 +156,6 @@ void AXP_LRURemove(AXP_QUEUE_HDR *entry);
 AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ);
 i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *, AXP_CQUE_ENTRY *);
 i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *);
+int AXP_LoadExecutable(char *, u8 *, u32);
 
 #endif /* _AXP_UTIL_DEFS_ */

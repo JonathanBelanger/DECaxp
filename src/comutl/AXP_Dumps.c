@@ -545,24 +545,24 @@ static const char *prefetchCmd[] =
 
 static const AXP_FUNC_CMD palcodeCmd[] =
 {
-	{VMS_HALT,			"HALT (halt)"},
-	{VMS_CFLUSH,		"CFLUSH (cflush)"},
-	{VMS_DRAINA,		"DRAINA (draina)"},
+	{VMS_HALT,			"HALT - halt"},
+	{VMS_CFLUSH,		"CFLUSH - cflush"},
+	{VMS_DRAINA,		"DRAINA - draina"},
 	{VMS_LDQP,			"LDQP"},
 	{VMS_STQP,			"STQP"},
 	{VMS_SWPCTX,		"SWPCTX"},
 	{VMS_MFPR_ASN,		"MFPR_ASN"},
 	{VMS_MTPR_ASTEN,	"MTPR_ASTEN"},
 	{VMS_MTPR_ASTSR,	"MTPR_ASTSR"},
-	{VMS_CSERVE,		"CSERVE (cserve)"},
-	{VMS_SWPPAL,		"SWPPAL (swppal)"},
+	{VMS_CSERVE,		"CSERVE - cserve"},
+	{VMS_SWPPAL,		"SWPPAL - swppal"},
 	{VMS_MFPR_FEN,		"MFPR_FEN"},
 	{VMS_MTPR_FEN,		"MTPR_FEN"},
-	{VMS_MTPR_IPIR,		"MTPR_IPIR (wripir)"},
+	{VMS_MTPR_IPIR,		"MTPR_IPIR - wripir"},
 	{VMS_MFPR_IPL,		"MFPR_IPL"},
 	{VMS_MTPR_IPL,		"MTPR_IPL"},
-	{VMS_MFPR_MCES,		"MFPR_MCES (rdmces)"},
-	{VMS_MTPR_MCES,		"MTPR_MCES (wrmces)"},
+	{VMS_MFPR_MCES,		"MFPR_MCES - rdmces"},
+	{VMS_MTPR_MCES,		"MTPR_MCES - wrmces"},
 	{VMS_MFPR_PCBB,		"MFPR_PCBB"},
 	{VMS_MFPR_PRBR,		"MFPR_PRBR"},
 	{VMS_MTPR_PRBR,		"MTPR_PRBR"},
@@ -587,9 +587,9 @@ static const AXP_FUNC_CMD palcodeCmd[] =
 	{VMS_MFPR_ASTSR,	"MFPR_ASTSR"},
 	{VMS_MFPR_VPTB,		"MFPR_VPTB"},
 	{VMS_MTPR_VPTB,		"MTPR_VPTB"},
-	{VMS_MTPR_PERFMON,	"MTPR_PERFMON (wrfen)"},
+	{VMS_MTPR_PERFMON,	"MTPR_PERFMON - wrfen"},
 	{OSF_WRVPTPTR,		"wrvptptr"},
-	{VMS_DATFX,			"DATFX"},
+	{VMS_MTPR_DATFX,	"MTPR_DATFX - wrasn"},
 	{OSF_SWPCTX,		"swpctx"},
 	{OSF_WRVAL,			"wrval"},
 	{OSF_RDVAL,			"rdval"},
@@ -603,40 +603,40 @@ static const AXP_FUNC_CMD palcodeCmd[] =
 	{OSF_RDUSP,			"rdusp"},
 	{OSF_WHAMI,			"whami"},
 	{OSF_RETSYS,		"retsys"},
-	{VMS_WTINT,			"WTINT (wtint)"},
-	{VMS_MFPR_WHAMI,	"MFPR_WHAMI (rti)"},
-	{VMS_BPT,			"BPT (bpt)"},
-	{VMS_BUGCHK,		"BUGCHK (bugchk)"},
+	{VMS_WTINT,			"WTINT - wtint"},
+	{VMS_MFPR_WHAMI,	"MFPR_WHAMI - rti"},
+	{VMS_BPT,			"BPT - bpt"},
+	{VMS_BUGCHK,		"BUGCHK - bugchk"},
 	{VMS_CHME,			"CHME"},
-	{VMS_CHMK,			"CHMK (callsys)"},
+	{VMS_CHMK,			"CHMK - callsys"},
 	{VMS_CHMS,			"CHMS"},
 	{VMS_CHMU,			"CHMU"},
-	{VMS_IMB,			"IMB (imb)"},
+	{VMS_IMB,			"IMB - imb"},
 	{VMS_INSQHIL,		"INSQHIL"},
 	{VMS_INSQTIL,		"INSQTIL"},
 	{VMS_INSQHIQ,		"INSQHIQ"},
 	{VMS_INSQTIQ,		"INSQTIQ"},
 	{VMS_INSQUEL,		"INSQUEL"},
 	{VMS_INSQUEQ,		"INSQUEQ"},
-	{VMS_INSQUEL_D,		"INSQUEL_D"},
-	{VMS_INSQUEQ_D,		"INSQUEQ_D"},
+	{VMS_INSQUEL_D,		"INSQUEL/D"},
+	{VMS_INSQUEQ_D,		"INSQUEQ/D"},
 	{VMS_PROBER,		"PROBER"},
 	{VMS_PROBEW,		"PROBEW"},
 	{VMS_RD_PS,			"RD_PS"},
-	{VMS_REI,			"REI (urti)"},
+	{VMS_REI,			"REI - urti"},
 	{VMS_REMQHIL,		"REMQHIL"},
 	{VMS_REMQTIL,		"REMQTIL"},
 	{VMS_REMQHIQ,		"REMQHIQ"},
 	{VMS_REMQTIQ,		"REMQTIQ"},
 	{VMS_REMQUEL,		"REMQUEL"},
 	{VMS_REMQUEQ,		"REMQUEQ"},
-	{VMS_REMQUEL_D,		"REMQUEL_D"},
-	{VMS_REMQUEQ_D,		"REMQUEQ_D"},
+	{VMS_REMQUEL_D,		"REMQUEL/D"},
+	{VMS_REMQUEQ_D,		"REMQUEQ/D"},
 	{VMS_SWASTEN,		"SWASTEN"},
 	{VMS_WR_PS_SW,		"WR_PS_SW"},
 	{VMS_RSCC,			"RSCC"},
-	{VMS_READ_UNQ,		"READ_UNQ (rduniue)"},
-	{VMS_WRITE_UNQ,		"WRITE_UNQ (wrunique)"},
+	{VMS_READ_UNQ,		"READ_UNQ - rduniue"},
+	{VMS_WRITE_UNQ,		"WRITE_UNQ - wrunique"},
 	{VMS_AMOVRR,		"AMOVRR"},
 	{VMS_AMOVRM,		"AMOVRM"},
 	{VMS_INSQHILR,		"INSQHILR"},
@@ -647,8 +647,8 @@ static const AXP_FUNC_CMD palcodeCmd[] =
 	{VMS_REMQTILR,		"REMQTILR"},
 	{VMS_REMQHIQR,		"REMQHIQR"},
 	{VMS_REMQTIQR,		"REMQTIQR"},
-	{VMS_GENTRAP,		"GENTRAP (gentrap)"},
-	{VMS_CLRFEN,		"CLRFEN (clrfen)"},
+	{VMS_GENTRAP,		"GENTRAP - gentrap"},
+	{VMS_CLRFEN,		"CLRFEN - clrfen"},
 	{0, NULL}
 };
 
@@ -765,7 +765,7 @@ const char *hwRetStall[] =
 	"STALL"
 };
 
-const char *lineFmt		= "0x%016llx: %-22s %-22s ; 0x%08x '%c%c%c%c'";
+const char *lineFmt		= "0x%016llx: %-31s %-31s ; 0x%08x '%c%c%c%c'";
 const char *Reg			= "R%02d";
 const char *DispReg 	= "#%-d(R%02d)";
 const char *Disp 		= "#%-d";
@@ -862,7 +862,220 @@ void AXP_Decode_Instruction(
 			if (iprName == NULL)
 				funcName = NULL;
 			else
-				strcpy(regStr, iprName);
+			{
+				sprintf(funcStr, "%s(%s)", funcName, iprName);
+				funcName = funcStr;
+				switch(instr.pal.palcode_func)
+				{
+
+					/*
+					 * R16 is used.
+					 */
+					case VMS_BUGCHK:
+					case VMS_CHME:
+					case VMS_CHMK:
+					case VMS_CHMS:
+					case VMS_CHMU:
+					case VMS_CSERVE:
+					case VMS_GENTRAP:
+					case VMS_WR_PS_SW:
+					case VMS_WRITE_UNQ:
+					case VMS_CFLUSH:
+					case VMS_SWPCTX:
+					case OSF_TBI:
+					case OSF_WRKGP:
+					case OSF_WRUSP:
+					case OSF_WRVAL:
+					case OSF_WRVPTPTR:
+						sprintf(regStr, Reg, 16);
+						break;
+
+					/*
+					 * R0 is used.
+					 */
+					case VMS_RD_PS:
+					case VMS_RSCC:
+					case VMS_READ_UNQ:
+					case VMS_MFPR_ASN:
+					case VMS_MFPR_ESP:
+					case VMS_MFPR_FEN:
+					case VMS_MFPR_IPL:
+					case VMS_MFPR_MCES:
+					case VMS_MFPR_PCBB:
+					case VMS_MFPR_PRBR:
+					case VMS_MFPR_PTBR:
+					case VMS_MFPR_SCBB:
+					case VMS_MFPR_SISR:
+					case VMS_MFPR_SSP:
+					case VMS_MFPR_TBCHK:
+					case VMS_MFPR_USP:
+					case VMS_MFPR_VPTB:
+					case VMS_MFPR_WHAMI:
+					case OSF_RDPS:
+					case OSF_RDUSP:
+					case OSF_RDVAL:
+					case OSF_WHAMI:
+						sprintf(regStr, Reg, 0);
+						break;
+
+					/*
+					 * R16, R17, and R0 are used.
+					 */
+					case VMS_MTPR_ASTEN:
+					case VMS_MTPR_ASTSR:
+					case VMS_MTPR_DATFX:
+					case VMS_MTPR_ESP:
+					case VMS_MTPR_FEN:
+					case VMS_MTPR_IPIR:
+					case VMS_MTPR_IPL:
+					case VMS_MTPR_MCES:
+					case VMS_MTPR_PERFMON:
+					case VMS_MTPR_PRBR:
+					case VMS_MTPR_SCBB:
+					case VMS_MTPR_SIRR:
+					case VMS_MTPR_SSP:
+					case VMS_MTPR_TBIA:
+					case VMS_MTPR_TBIAP:
+					case VMS_MTPR_TBIS:
+					case VMS_MTPR_TBISD:
+					case VMS_MTPR_TBISI:
+					case VMS_MTPR_USP:
+					case VMS_MTPR_VPTB:
+						strLoc = sprintf(regStr, Reg, 16);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 17);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						sprintf(&regStr[strLoc], Reg, 0);
+						break;
+
+					/*
+					 * R16, R17, R18, and R0 are used.
+					 */
+					case VMS_PROBER:
+					case VMS_PROBEW:
+						strLoc = sprintf(regStr, Reg, 16);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 17);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 18);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						sprintf(&regStr[strLoc], Reg, 0);
+						break;
+
+					/*
+					 * R16 and R0 are used.
+					 */
+					case VMS_SWASTEN:
+					case VMS_LDQP:
+					case VMS_WTINT:
+					case OSF_SWPCTX:
+					case OSF_SWPIPL:
+						strLoc = sprintf(regStr, Reg, 16);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						sprintf(&regStr[strLoc], Reg, 0);
+						break;
+
+					/*
+					 * R16, R17, and R0 are used.
+					 */
+					case VMS_INSQHIL:
+					case VMS_INSQHILR:
+					case VMS_INSQHIQ:
+					case VMS_INSQHIQR:
+					case VMS_INSQTIL:
+					case VMS_INSQTILR:
+					case VMS_INSQTIQ:
+					case VMS_INSQTIQR:
+					case VMS_INSQUEL:
+					case VMS_INSQUEL_D:
+					case VMS_INSQUEQ:
+					case VMS_INSQUEQ_D:
+					case OSF_WRPERFMON:
+						strLoc = sprintf(regStr, Reg, 16);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 17);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						sprintf(&regStr[strLoc], Reg, 0);
+						break;
+
+					/*
+					 * R16, R0, and R1 are used.
+					 */
+					case VMS_REMQHIL:
+					case VMS_REMQHILR:
+					case VMS_REMQHIQ:
+					case VMS_REMQHIQR:
+					case VMS_REMQTIL:
+					case VMS_REMQTILR:
+					case VMS_REMQTIQ:
+					case VMS_REMQTIQR:
+					case VMS_REMQUEL:
+					case VMS_REMQUEL_D:
+					case VMS_REMQUEQ:
+					case VMS_REMQUEQ_D:
+						strLoc = sprintf(regStr, Reg, 16);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 0);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						sprintf(&regStr[strLoc], Reg, 1);
+						break;
+
+					/*
+					 * R16, R17, R18, R19, R20, and R21 are used.
+					 */
+					case VMS_AMOVRR:
+					case VMS_AMOVRM:
+						strLoc = sprintf(regStr, Reg, 16);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 17);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 18);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 19);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 20);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						sprintf(&regStr[strLoc], Reg, 21);
+						break;
+
+					/*
+					 * R16 and R17 are used.
+					 */
+					case VMS_STQP:
+					case OSF_WRENT:
+						strLoc = sprintf(regStr, Reg, 16);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						sprintf(&regStr[strLoc], Reg, 17);
+						break;
+
+					/*
+					 * R16, R17, R18, R19, R20, R21, and R0 are used.
+					 */
+					case VMS_SWPPAL:
+						strLoc = sprintf(regStr, Reg, 16);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 17);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 18);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 19);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 20);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						strLoc += sprintf(&regStr[strLoc], Reg, 21);
+						strLoc += sprintf(&regStr[strLoc], Comma);
+						sprintf(&regStr[strLoc], Reg, 0);
+						break;
+
+					/*
+					 * No registers are used.
+					 */
+					default:
+						regStr[0] = ' ';
+						regStr[1] = '\0';
+						break;
+				}
+			}
 			break;
 
 		case OPC01:

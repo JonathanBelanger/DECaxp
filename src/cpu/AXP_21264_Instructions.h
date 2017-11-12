@@ -391,7 +391,7 @@ typedef enum
 #define VMS_MFPR_VPTB		0x0029
 #define VMS_MTPR_VPTB		0x002a
 #define VMS_MTPR_PERFMON	0x002b
-#define VMS_DATFX			0x002e
+#define VMS_MTPR_DATFX		0x002e
 #define VMS_WTINT			0x003e
 #define VMS_MFPR_WHAMI		0x003f
 #define VMS_BPT				0x0080
