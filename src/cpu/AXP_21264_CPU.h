@@ -612,10 +612,12 @@ typedef struct
 	/*
 	 * Cbox IPRs
 	 */
-	AXP_CBOX_C_DATA		cData;		/* Cbox data							*/
-	AXP_CBOX_C_SHFT		cShft;		/* Cbox shift control					*/
-	AXP_21264_CBOX_CSRS	csr;		/* Control and Status Registers (CSR)	*/
-	u8					irqH : 6;	/* Six interrupt bits set by system		*/
+	AXP_CBOX_C_DATA			cData;		/* Cbox data						*/
+	AXP_CBOX_C_SHFT			cShft;		/* Cbox shift control				*/
+	AXP_21264_CBOX_CSRS		csr;		/* Control and Status Registers (CSR)*/
+	u8						irqH : 6;	/* Six interrupt bits set by system	*/
+	AXP_21264_BCACHE_BLK	*bCache;	/* An array of 64-byte blocks		*/
+	AXP_21264_BCACHE_TAG	*bTag;		/* An array of tags for the Bcache	*/
 
 	/*
 	 * Alpha AXP Architectural IPRs
@@ -666,4 +668,3 @@ typedef struct
 #define AXP_21264_IS_IO_ADDR(addr)	(((addr) & AXP_21264_IO_ADDR_SPACE) != 0)
 
 #endif /* _AXP_21264_CPU_DEFS_ */
-

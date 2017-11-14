@@ -551,7 +551,74 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 					break;
 
 				case BcSize:
+					int bCacheArraySize;
+
 					cpu->csr.BcSize = value;
+
+					/*
+					 * Now that we know the Bcache size, go an allocate a
+					 * buffer large enough for it.  First, deallocate anything
+					 * that was previously allocated.
+					 */
+					if (cpu->bCache != NULL)
+						free(cpu->bCache);
+					if (cpu->bTag != NULL)
+						free(cpu->bTag);
+
+					/*
+					 * OK, now allocate a Bcache large enough for the size.
+					 * NOTE: Each Bcache block contains 64 bytes, so the array
+					 * size is the Bcache size divided by 64.
+					 */
+					switch (cpu->csr.BcSize)
+					{
+						case AXP_BCACHE_1MB:
+							bCacheArraySize =
+									AXP_21264_1MB / AXP_BCACHE_BLOCK_SIZE;
+							break;
+
+						case AXP_BCACHE_2MB:
+							bCacheArraySize =
+									AXP_21264_2MB / AXP_BCACHE_BLOCK_SIZE;
+							break;
+
+						case AXP_BCACHE_4MB:
+							bCacheArraySize =
+									AXP_21264_4MB / AXP_BCACHE_BLOCK_SIZE;
+							break;
+
+						case AXP_BCACHE_8MB:
+							bCacheArraySize =
+									AXP_21264_8MB / AXP_BCACHE_BLOCK_SIZE;
+							break;
+
+						case AXP_BCACHE_16MB:
+							bCacheArraySize =
+									AXP_21264_16MB / AXP_BCACHE_BLOCK_SIZE;
+							break;
+					}
+
+					/*
+					 * Go and actually allocate the 2 arrays needed for the
+					 * Bcache (the cache array and the tag array).
+					 */
+					cpu->bCache = calloc(
+									bCacheArraySize,
+									sizeof(AXP_21264_BCACHE_BLK);
+					cpu->bTag = calloc(
+									bCacheArraySize,
+									sizeof(AXP_21264_BCACHE_TAG);
+
+					/*
+					 * If we failed to allocate either, then we are done
+					 * here.  Returning true will cause the caller to
+					 * exit.
+					 */
+					if ((cpu->bCache == NULL) || (cpu->bTag == NULL))
+					{
+						retVal = true;
+						readResult = false;
+					}
 					break;
 
 				case BcWrRdBubbles:
