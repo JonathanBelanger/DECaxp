@@ -156,6 +156,24 @@ typedef struct
 		u32 res_6;					/* Quadword align */
 } AXP_21264_CBOX_CSRS;
 
+/*
+ * Bcache Size values.
+ */
+#define AXP_21264_BC_SIZE_1MB	0x0	/* 0000 */
+#define AXP_21264_BC_SIZE_2MB	0x1	/* 0001 */
+#define AXP_21264_BC_SIZE_4MB	0x3	/* 0011 */
+#define AXP_21264_BC_SIZE_8MB	0x7	/* 0111 */
+#define AXP_21264_BC_SIZE_16MB	0xf	/* 1111 */
+
+/*
+ * MB definitions.
+ */
+#define AXP_21264_1MB			1048576
+#define AXP_21264_2MB			2097152
+#define AXP_21264_4MB			4194304
+#define AXP_21264_8MB			8388608
+#define AXP_21264_16MB			16777216
+
 typedef enum
 {
 	BcBankEnable,
@@ -513,5 +531,17 @@ typedef struct
 	u64								pa;
 } AXP_21264_CBOX_PQ;
 
-#endif /* _AXP_21264_CBOX_DEFS_ */
+#define AXP_BCACHE_BLOCK_SIZE	64
 
+/*
+ * Bcache definitions
+ */
+typedef u8 AXP_21264_BCACHE_BLK[AXP_BCACHE_BLOCK_SIZE];
+typedef struct
+{
+	bool							valid;
+	bool							shared;
+	u64								tag;
+} AXP_21264_BCACHE_TAG;
+
+#endif /* _AXP_21264_CBOX_DEFS_ */
