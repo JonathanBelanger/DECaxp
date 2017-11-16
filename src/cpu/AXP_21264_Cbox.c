@@ -30,6 +30,10 @@
  *	all the requests needed by the CPU of the system (from Mbox, Ibox, and
  *	Cbox).  Additionally, IRQ_H interrupt signals from the System to the Ibox
  *	for processing.
+ *
+ *	V01.002		16-Nov-2017	Jonathan D. Belanger
+ *	Added functions to Flush, Read, Write, and Check for a Valid record for
+ *	the Bcache.
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_CboxDefs.h"
@@ -912,5 +916,189 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 				break;
 		}
 	}
+	return;
+}
+
+/*
+ * AXP_21264_Bcache_Flush
+ *	This function is called to Flush everything from the Bcache.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure where the Bcache is stored.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	None.
+ */
+void AXP_21264_Bcache_Flush(AXP_21264_CPU *cpu)
+{
+	int		ii;
+	int		bCacheArraySize;
+
+	/*
+	 * First we need to determine the size of the Bcache.
+	 */
+	switch (cpu->csr.BcSize)
+	{
+		case AXP_BCACHE_1MB:
+			bCacheArraySize = AXP_21264_1MB / AXP_BCACHE_BLOCK_SIZE;
+			break;
+
+		case AXP_BCACHE_2MB:
+			bCacheArraySize = AXP_21264_2MB / AXP_BCACHE_BLOCK_SIZE;
+			break;
+
+		case AXP_BCACHE_4MB:
+			bCacheArraySize = AXP_21264_4MB / AXP_BCACHE_BLOCK_SIZE;
+			break;
+
+		case AXP_BCACHE_8MB:
+			bCacheArraySize = AXP_21264_8MB / AXP_BCACHE_BLOCK_SIZE;
+			break;
+
+		case AXP_BCACHE_16MB:
+			bCacheArraySize = AXP_21264_16MB / AXP_BCACHE_BLOCK_SIZE;
+			break;
+	}
+
+	/*
+	 * NOTE: We only have to mark the array enry invalid in the Bcache Tag
+	 * array.  What is in the Bcache Block array is only relevant when the Tag
+	 * array indicates that it is valid.  When the valid flag is set, the data
+	 * was just written to the block array.
+	 */
+	for (ii = 0; ii < bCacheArraySize; ii++)
+		cpu->bTag[ii].valid = false;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_Bcache_Valid
+ *	This funciton is called to determine if a physical address has a valid
+ *	location within the Bcache.  We don't actually look in the Bcache, but do
+ *	look in the Bcache Tag array.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure where the Bcache is stored.
+ *	pa:
+ *		A value containing the physical address to be checked for validity.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	false:	The physical address is not in the Bcache.
+ *	true:	The physical address is in the Bcache.
+ */
+bool AXP_21264_Bcache_Valid(AXP_21264 *cpu, u64 pa)
+{
+	int		index = AXP_BCACHE_INDEX(cpu, pa);
+
+	/*
+	 * If the entry at the index, based on the physical address, is valid and
+	 * the tag associated with that entry matches the tag out of the physcal
+	 * address, then we have a valid entry.  Otherwise, we do not.
+	 */
+	return((cpu->bTag[index].valid == true) &&
+		   (cpu->bTag[index].tag == AXP_BCACHE_TAG(cpu, pa))
+}
+
+/*
+ * AXP_21264_Bcache_Read
+ *	This funciton is called to read the contents of a Bcache location and
+ *	return them to the caller.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure where the Bcache is stored.
+ *	pa:
+ *		A value containing the physical address to be checked for validity.
+ *
+ * Output Parameters:
+ *	data:
+ *		A pointer to a properly size buffer (64 bytes) to receive the contents
+ *		of the Bcache, if found (valid).
+ *
+ * Return Values:
+ *	false:	The physical address is not in the Bcache.
+ *	true:	The physical address is in the Bcache.
+ */
+bool AXP_21264_Bcache_Read(AXP_21264 *cpu, u64 pa, u8 *data)
+{
+	bool	retVal = AXP_21264_Bcache_Valid(cpu, pa);
+
+	/*
+	 * If the physical address is in the Bcache, then we can copy the data to
+	 * the caller's buffer.
+	 */
+	if (retVal == true)
+	{
+		memcpy(
+			data,
+			cpu->bCache[AXP_BCACHE_INDEX(cpu, pa)],
+			AXP_BCACHE_BLOCK_SIZE);
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_21264_Bcache_Write
+ *	This funciton is called to write the contents of a buffer into a Bcache
+ *	location.  This function always succeeds.  If a location is already in use
+ *	and we are updating it, then we will also write the values to memory.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure where the Bcache is stored.
+ *	pa:
+ *		A value containing the physical address to be checked for validity.
+ *	data:
+ *		A pointer to a properly size buffer (64 bytes) containing the data to
+ *		be written to the Bcache.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Bcache_Write(AXP_21264 *cpu, u64 pa, u8 *data)
+{
+	int		index = AXP_BCACHE_INDEX(cpu, pa);
+	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+
+	/*
+	 * First copy the buffer into the Bcache, then update the associated tag
+	 * with the tag value and setting the valid bit.
+	 *
+	 * TODO: What do we do with the shared bit.
+	 */
+	memcpy(cpu->bCache[index], data, AXP_BCACHE_BLOCK_SIZE);
+	cpu->bTag[index].tag = AXP_BCACHE_TAG(cpu, pa);
+	cpu->bTag[index].valid = true;
+
+	/*
+	 * If the buffer was already valid, then we have to update memory as well.
+	 */
+	if (valid == true)
+	{
+		/* TODO: Write the updated buffer out to memory. */
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
 	return;
 }
