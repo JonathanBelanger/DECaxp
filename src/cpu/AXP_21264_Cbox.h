@@ -41,6 +41,10 @@
  *	Split this fine into 2 separate files.  One to include the definitions for
  *	the Cbox CSRs and one to be included by AXP_21264_Cbox.c so that it will
  *	compile cleanly.  This file is the one with the CSRs define within it.
+ *
+ *	V01.005		16-Nov-2017	Jonathan D. Belanger
+ *	Added code to manage the Bcache.  We still need to figure out how to do
+ *	the write-though to memory when updating a location in the Bcache.
  */
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
@@ -291,11 +295,30 @@ typedef struct
  *
  * An easy calculation is the value of BC_SIZE + 1 in MB.
  */
-#define	AXP_BCACHE_1MB				0
-#define	AXP_BCACHE_2MB				1
-#define	AXP_BCACHE_4MB				3
-#define	AXP_BCACHE_8MB				7
-#define	AXP_BCACHE_16MB				15
+#define	AXP_BCACHE_1MB				0					/* b000000 */
+#define	AXP_BCACHE_2MB				1					/* b000001 */
+#define	AXP_BCACHE_4MB				3					/* b000011 */
+#define	AXP_BCACHE_8MB				7					/* b000111 */
+#define	AXP_BCACHE_16MB				15					/* b001111 */
+
+/*
+ * Mask bits for the offset, index, and tag information for the Bcache.  The
+ * size of the index bits is dependent upon the size of the cache.  The offset
+ * and tag bits are always the same.
+ */
+#define AXP_BCACHE_OFF_BITS		0x000000000000003fll	/* bits  5 -  0 */
+#define AXP_BCACHE_TAG_BITS		0x00000fffffffffffll	/* bits 63 - 20 */
+#define AXP_BCACHE_IDX_FILL		0x0000000000003fffll
+#define AXP_BCACHE_IDX_SHIFT	6
+#define AXP_BCACHE_TAG_SHIFT	20
+
+/*
+ * Macros to extract the index and tag bits from a physical address.
+ */
+#define AXP_BCACHE_INDEX(cpu, pa)	(((pa) >> AXP_BCACHE_IDX_SHIFT) &		\
+									 (((cpu)->BcSize << 14) || AXP_BCACHE_IDX_FILL))
+#define AXP_BCACHE_TAG(cpu, pa)		(((pa) >> AXP_BCACHE_TAG_SHIFT) &		\
+									 AXP_BCACHE_TAG_BITS)
 
 /*
  * HRM 2.12
