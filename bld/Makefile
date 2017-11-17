@@ -42,6 +42,10 @@
 #	V01.004		11-Nov-2017	Jonathan D. Belanger
 #	Change the project name from DECemu to DECaxp.
 #
+#	V01.004		17-Nov-2017	Jonathan D. Belanger
+#	Updated the compiler switches to include -pthread, because we are making
+#	this program multithreaded.
+#
 PROJDIR = /cygdrive/g/git/DECaxp/
 
 #
@@ -87,7 +91,7 @@ INCS = $(foreach d, $(INCDIRS), -I$d)
 # object and executable files.
 #
 CC = gcc
-CFLAGS = $(INCS) -std=c99 -Wall
+CFLAGS = $(INCS) -std=c99 -Wall -pthread
 
 #
 # Debug adds to the compiler flags and then compiles everything that has not
