@@ -172,11 +172,11 @@ typedef struct
 /*
  * MB definitions.
  */
-#define AXP_21264_1MB			1048576
-#define AXP_21264_2MB			2097152
-#define AXP_21264_4MB			4194304
-#define AXP_21264_8MB			8388608
-#define AXP_21264_16MB			16777216
+#define AXP_21264_1MB			(1 * ONE_M)
+#define AXP_21264_2MB			(2 * ONE_M)
+#define AXP_21264_4MB			(4 * ONE_M)
+#define AXP_21264_8MB			(8 * ONE_M)
+#define AXP_21264_16MB			(16 * ONE_M)
 
 typedef enum
 {

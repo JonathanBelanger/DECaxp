@@ -326,6 +326,8 @@ typedef struct
 	/*
 	 * CPU state.
 	 */
+	pthread_mutex_t			cpuMutex;
+	pthread_cond_t			cpuCond;
 	AXP_21264_STATES		cpuState;
 	AXP_21264_BIST_STATES	BiSTState;
 
@@ -344,6 +346,12 @@ typedef struct
 	 *	Issue Queue (IQ) into upto 4 integer processors.  The Fbox reads	  *
 	 *	instructions from the FP Issue Queue (FQ) into upto 2 FP processors.  *
 	 **************************************************************************/
+
+	/*
+	 * The following definitions are used to support utilizing pthreads for the
+	 * Ibox.
+	 */
+	pthread_t	iBoxThreadID;
 
 	/*
 	 * The following definitions are used by the branch prediction code.
@@ -440,26 +448,22 @@ typedef struct
 	 **************************************************************************/
 
 	/*
+	 * The following definitions are used to support utilizing pthreads for the
+	 * Ebox.
+	 */
+	pthread_t	eBoxThreadID;
+	pthread_t	eBoxU0ThreadID;
+	pthread_t	eBoxU1ThreadID;
+	pthread_t	eBoxL0ThreadID;
+	pthread_t	eBoxL1ThreadID;
+
+	/*
 	 * VAX Compatibility Interrupt Flag.  This flag is intended to be utilized
 	 * for VAX Compatibility.  It is intended to be utilized to determine if a
 	 * sequence of Alpha instructions between RS and RC, corresponding to a
 	 * single VAX instruction, were executed without interruption or exception.
 	 */
 	bool				VAXintrFlag;
-
-	/*
-	 * Load Lock/Store Conditional.
-	 *
-	 * The following fields are used for handling the LDx_L/STx_C instructions.
-	 * The first field is a true/false indicator (locked/not locked,
-	 * respectively).  The second field is the Locked Physical Address location
-	 * to receive the address locked by the LDx_L instruction.  The STx_C
-	 * instruction must reference the same 16-byte naturally aligned block as
-	 * the LDx_L instruction.
-	 */
-	bool				lockFlag;
-	u64					lockedPhysicalAddress;
-	u64					lockedVirtualAddress;
 
 	/*
 	 * Physical registers.
@@ -512,6 +516,14 @@ typedef struct
 	 **************************************************************************/
 
 	/*
+	 * The following definitions are used to support utilizing pthreads for the
+	 * Fbox.
+	 */
+	pthread_t	fBoxThreadID;
+	pthread_t	fBoxMulThreadID;
+	pthread_t	fBoxOthThreadID;
+
+	/*
 	 * Physical registers.
 	 *
 	 * There are 72 register file entries for the floating-point registers.
@@ -545,6 +557,12 @@ typedef struct
 	 *	Dcache miss occurs.  The Mbox provides data to the Cbox to store in	  *
 	 *	memory when a store operation occurs.								  *
 	 **************************************************************************/
+
+	/*
+	 * The following definitions are used to support utilizing pthreads for the
+	 * Mbox.
+	 */
+	pthread_t	mBoxThreadID;
 
 	/*
 	 * This is the Data Cache.  It is 64K bytes in size (just counting the
@@ -604,6 +622,13 @@ typedef struct
 	 *	The Cbox is responsible for the interfaces between the system and the *
 	 *	CPU.																  *
 	 **************************************************************************/
+
+	/*
+	 * The following definitions are used to support utilizing pthreads for the
+	 * Cbox.
+	 */
+	pthread_t	cBoxThreadID;
+
 	AXP_21264_CBOX_VIC_BUF	vdb[AXP_21264_VDB_LEN];
 	AXP_21264_CBOX_IOWB		iowb[AXP_21264_IOWB_LEN];
 	AXP_21264_CBOX_PQ		pq[AXP_21264_PQ_LEN];

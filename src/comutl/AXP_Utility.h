@@ -40,6 +40,9 @@
  *	emulate it, but was not very efficient), as well as the performance
  *	of this utility has been questioned.  Therefore, I'm reverting to what
  *	I was doing before.
+ *
+ *	V01.004		18-Nov-2017	Jonathan D. Belanger
+ *	Uncommented the pthread.h include.  We are going threading.
  */
 #ifndef _AXP_UTIL_DEFS_
 #define _AXP_UTIL_DEFS_
@@ -47,7 +50,7 @@
 /*
  * Includes used throughout the code.
  */
-/* #include <pthread.h> */
+#include <pthread.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -61,9 +64,10 @@
 /*
  * Define some regularly utilized definitions.
  */
-#define ONE_K				1024
-#define FOUR_K				4096
-#define EIGHT_K				8192
+#define ONE_K				1024	/* 1K */
+#define FOUR_K				4096	/* 4K */
+#define EIGHT_K				8192	/* 8K */
+#define ONE_M				1048576	/* 1M */
 
 /*
  * Define some standard data types.
@@ -122,7 +126,7 @@ typedef struct
 {
 	AXP_QUEUE_HDR		header;
 	AXP_COUNTED_QUEUE	*parent;
-} AXP_CQUE_ENTRY;;
+} AXP_CQUE_ENTRY;
 
 #define AXP_INIT_CQUE(queue, maximum)	\
 	AXP_INIT_QUE(queue.header);			\
@@ -143,6 +147,55 @@ typedef struct
 #define AXP_CQUEP_COUNT(queue)	(queue->count)
 
 /*
+ * Conditional queues (using pthreads)
+ *
+ * Unlike the above, we are not going to use macros to initialize these queues.
+ * We'll use function calls.
+ */
+typedef enum
+{
+	AXPCondQueue,
+	AXPCountedCondQueue
+} AXP_COND_Q_TYPE;
+
+typedef struct
+{
+	void			*flink;
+	void			*blink;
+	void			*parent;
+	AXP_COND_Q_TYPE type;
+} AXP_COND_Q_HDR;
+
+typedef struct
+{
+	void			*flink;
+	void			*blink;
+	void			*parent;
+	AXP_COND_Q_TYPE type;
+	pthread_mutex_t	qMutex;
+	pthread_cond_t	qCond;
+} AXP_COND_Q_ROOT;
+
+typedef struct
+{
+	void			*flink;
+	void			*blink;
+	void			*parent;
+} AXP_COND_Q_LEAF;
+
+typedef struct
+{
+	void			*flink;
+	void			*blink;
+	void			*parent;
+	AXP_COND_Q_TYPE type;
+	pthread_mutex_t	qMutex;
+	pthread_cond_t	qCond;
+	u32				count;
+	u32				max;
+} AXP_COND_Q_ROOT_CNT;
+
+/*
  * Error returns for AXP_LoadExecutable
  */
 #define AXP_E_FNF 			-1
@@ -150,12 +203,29 @@ typedef struct
 
 /*
  * Prototype Definitions
+ *
+ * Least Recently Used (LRU) queue functions.
  */
 void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry);
 void AXP_LRURemove(AXP_QUEUE_HDR *entry);
 AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ);
+
+/*
+ * Counted queue functions.
+ */
 i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *, AXP_CQUE_ENTRY *);
 i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *);
+
+/*
+ * Conditional queue (non-counted and counted) Functions.
+ */
+bool AXP_CondQueue_Init(AXP_COND_Q_ROOT *queue);
+bool AXP_CondQueueCnt_Init(AXP_COND_Q_ROOT_CNT *queue, u32 max);
+int AXP_CondQueue_Insert(AXP_COND_Q_LEAF *where, AXP_COND_Q_LEAF *what);
+bool AXP_CondQueue_Remove(AXP_COND_Q_LEAF *from, AXP_COND_Q_LEAF **to);
+bool AXP_CondQueue_Wait(AXP_COND_Q_HDR *root);
+bool AXP_CondQueue_Empty(AXP_COND_Q_HDR *queue);
+
 int AXP_LoadExecutable(char *, u8 *, u32);
 
 #endif /* _AXP_UTIL_DEFS_ */
