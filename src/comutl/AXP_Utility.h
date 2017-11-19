@@ -199,7 +199,9 @@ typedef struct
  * Error returns for AXP_LoadExecutable
  */
 #define AXP_E_FNF 			-1
-#define AXP_E_BUFTOOSMALL	-2
+#define AXP_E_FNCU 			-2
+#define AXP_E_BUFTOOSMALL	-3
+#define AXP_F_BADROMFILE	-4
 
 /*
  * Prototype Definitions
@@ -219,13 +221,15 @@ i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *);
 /*
  * Conditional queue (non-counted and counted) Functions.
  */
-bool AXP_CondQueue_Init(AXP_COND_Q_ROOT *queue);
-bool AXP_CondQueueCnt_Init(AXP_COND_Q_ROOT_CNT *queue, u32 max);
-int AXP_CondQueue_Insert(AXP_COND_Q_LEAF *where, AXP_COND_Q_LEAF *what);
-bool AXP_CondQueue_Remove(AXP_COND_Q_LEAF *from, AXP_COND_Q_LEAF **to);
-bool AXP_CondQueue_Wait(AXP_COND_Q_HDR *root);
-bool AXP_CondQueue_Empty(AXP_COND_Q_HDR *queue);
+bool AXP_CondQueue_Init(AXP_COND_Q_ROOT *);
+bool AXP_CondQueueCnt_Init(AXP_COND_Q_ROOT_CNT *, u32);
+int AXP_CondQueue_Insert(AXP_COND_Q_LEAF *, AXP_COND_Q_LEAF *);
+bool AXP_CondQueue_Remove(AXP_COND_Q_LEAF *, AXP_COND_Q_LEAF **);
+bool AXP_CondQueue_Wait(AXP_COND_Q_HDR *);
+bool AXP_CondQueue_Empty(AXP_COND_Q_HDR *);
 
 int AXP_LoadExecutable(char *, u8 *, u32);
+int AXP_LoadROM(char *, u8 *, u32);
+int AXP_UnloadROM(char *, u8 *, u32);
 
 #endif /* _AXP_UTIL_DEFS_ */

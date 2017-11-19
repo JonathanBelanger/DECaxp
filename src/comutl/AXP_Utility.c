@@ -24,7 +24,7 @@
  *	V01.000		29-May-2017	Jonathan D. Belanger
  *	Initially written.
  *
- *	V01.001		01-Jun-2017	Jonathan D. Belaanger
+ *	V01.001		01-Jun-2017	Jonathan D. Belanger
  *	Added an LRU function to return the least recently used set with a
  *	particular index.
  */
@@ -287,7 +287,7 @@ i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
  * 		path (relative or explicit).
  * 	bufferLen:
  * 		A value indicating the size of the buffer parameter.  This is used to
- * 		prevent us from writting past the end of the buffer.
+ * 		prevent us from writing past the end of the buffer.
  *
  * Output Parameters:
  * 	buffer:
@@ -353,7 +353,7 @@ int AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 		}
 
 		/*
-		 * If we did not detect and error, then return the number of bytes
+		 * If we did not detect an error, then return the number of bytes
 		 * read.
 		 */
 		if (retVal == 0)
@@ -370,6 +370,250 @@ int AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 	 */
 	else
 		retVal = AXP_E_FNF;
+
+	/*
+	 * Return the result of this function to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_LoadROM
+ * 	This function is called to open a ROM file and load the contents
+ * 	into the specified buffer.  The ROM file must have been written out by
+ * 	the companion AXP_UnloadROM function.  There is information in the header
+ * 	and trailer of the file that is verified.
+ *
+ * Input Parameters:
+ * 	fineName:
+ * 		A string containing the name of the file to read.  It includes the file
+ * 		path (relative or explicit).
+ * 	bufferLen:
+ * 		A value indicating the size of the buffer parameter.  This is used to
+ * 		prevent us from writing past the end of the buffer.
+ *
+ * Output Parameters:
+ * 	buffer:
+ * 		A pointer to an array of unsigned chars in which the contents of the
+ * 		ROM file are written.
+ *
+ * Return Values:
+ * 	AXP_E_FNF:			File not found.
+ * 	AXP_E_BUFTOOSMALL:	Buffer too small to receive contents of file.
+ * 	0:					No data in file.
+ * 	>0					Number of bytes read.
+ */
+int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
+{
+	FILE	*fp;
+	int		retVal = 0;
+	int		ii;
+	bool	eofHit = false;
+	u32		ROMfileNameLen;
+	char	ROMfileName[80];
+	int		fileLen;
+	u32		guardValue;
+
+	/*
+	 * First open the file to be loaded.
+	 */
+	fp = fopen(fileName, "r");
+	if (fp != NULL)
+	{
+
+		/*
+		 * Read the length of the embedded filename, followed by the embedded
+		 * filename.
+		 */
+		fread(&ROMfileNameLen, sizeof(ROMfileNameLen), 1, fp);
+		if (feof(fp) == 0)
+			fread(ROMfileName, 1, ROMfileNameLen, fp);
+		else
+		{
+			retVal = AXP_F_BADROMFILE;
+			eofHit = true;
+		}
+
+		/*
+		 * Read the guardValue.
+		 */
+		if ((feof(fp) == 0) && (retVal == 0))
+			fread(&guardValue, sizeof(guardValue), 1, fp);
+		else if (retVal == 0)
+		{
+			retVal = AXP_F_BADROMFILE;
+			eofHit = true;
+		}
+
+		/*
+		 * Read length of the ROM data in the file.
+		 */
+		if ((feof(fp) == 0) && (retVal == 0))
+			fread(&fileLen, sizeof(fileLen), 1, fp);
+		else if (retVal == 0)
+		{
+			retVal = AXP_F_BADROMFILE;
+			eofHit = true;
+		}
+
+		/*
+		 * OK, if we don't have any issues at this point, then check the values
+		 * read in and compare them to the expected values.  If they don't
+		 * match, then we cannot trust the contents of this file.
+		 */
+		if ((retVal == 0) &&
+			((strcmp(fileName, ROMfileName) != 0) ||
+			 (guardValue != 0xdeadbeef)))
+			retVal = AXP_F_BADROMFILE;
+
+		/*
+		 * Finally, if we are still OK, then read in the contents of the file.
+		 */
+		for (ii = 0;
+			((ii < fileLen) && (eofHit == false) && (retVal == 0));
+			ii++)
+		{
+			fread(&buffer[ii], 1, 1, fp);
+			if (feof(fp) != 0)
+				eofHit = true;
+			else if (ii >= bufferLen)
+			{
+				retVal = AXP_E_BUFTOOSMALL;
+				break;
+			}
+		}
+
+		/*
+		 * If we did not detect an error, then check for the guardVaue and the
+		 * filename.  If they are OK return the number of bytes read.
+		 */
+		if (retVal == 0)
+		{
+			if (eofHit == false)
+			{
+				fread(&guardValue, sizeof(guardValue), 1, fp);
+				if ((guardValue == 0xdeadbeef) && (feof(fp) == 0))
+				{
+					memset(ROMfileName, '\0', sizeof(ROMfileName));
+					fread(ROMfileName, 1, ROMfileNameLen, fp);
+					if (strcmp(fileName, ROMfileName) == 0)
+						retVal = ii;
+					else
+						retVal = AXP_F_BADROMFILE;
+				}
+				else
+					retVal = AXP_F_BADROMFILE;
+			}
+			else
+				retVal = AXP_F_BADROMFILE;
+		}
+
+		/*
+		 * We opened the file, so now close it.
+		 */
+		fclose(fp);
+	}
+
+	/*
+	 * If the file was not found, return an appropriate error value.
+	 */
+	else
+		retVal = AXP_E_FNF;
+
+	/*
+	 * Return the result of this function to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_UnloadROM
+ * 	This function is called to open a ROM file and unload the contents of the
+ * 	specified buffer into the file.  The ROM file will be written out for
+ * 	consumption by the companion AXP_LoadROM function.  There will be
+ * 	information in the header and trailer of the file that will be verified.
+ *
+ * Input Parameters:
+ * 	fineName:
+ * 		A string containing the name of the file to write.  It includes the
+ * 		file path (relative or explicit).
+ * 	buffer:
+ * 		A pointer to an array of unsigned chars in which the contents of the
+ * 		ROM file are written.
+ * 	bufferLen:
+ * 		A value indicating the size of the buffer parameter.  This is used to
+ * 		only write out what we need.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Values:
+ * 	AXP_E_FNCU:			File not created/updated.
+ * 	0:					No data to be written to the file.
+ * 	>0					Number of bytes written.
+ */
+int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
+{
+	FILE	*fp;
+	int		retVal = 0;
+	int		ii;
+	u32		guardValue = 0xdeadbeef;
+	u32		fileNameLen = strlen(fileName) + 1;  /* include '\0' */
+
+	/*
+	 * First open the file to be loaded.
+	 */
+	fp = fopen(fileName, "w");
+	if (fp != NULL)
+	{
+
+		/*
+		 * Write the length of the filename into the file, followed by the
+		 * filename.
+		 */
+		fwrite(&fileNameLen, sizeof(fileNameLen), 1, fp);
+		fwrite(fileName, 1, fileNameLen, fp);
+
+		/*
+		 * Write the guardValue.
+		 */
+		fwrite(&guardValue, sizeof(guardValue), 1, fp);
+
+		/*
+		 * Write length of the ROM data in the file.
+		 */
+		fwrite(&bufferLen, sizeof(bufferLen), 1, fp);
+
+		/*
+		 * Finally, if we are still OK, then read in the contents of the file.
+		 */
+		for (ii = 0; ii < bufferLen; ii++)
+			fwrite(&buffer[ii], 1, 1, fp);
+
+		/*
+		 * Write the guardVaue and the filename again, then return the number
+		 * of bytes written.
+		 */
+		fwrite(&guardValue, sizeof(guardValue), 1, fp);
+		fwrite(fileName, 1, fileNameLen, fp);
+
+		/*
+		 * Set the retVal to the number of bytes written to the file (not
+		 * including the header and trailer information).
+		 */
+		retVal = bufferLen;
+
+		/*
+		 * We opened the file, so now close it.
+		 */
+		fclose(fp);
+	}
+
+	/*
+	 * If the file was not created/updated, return an appropriate error value.
+	 */
+	else
+		retVal = AXP_E_FNCU;
 
 	/*
 	 * Return the result of this function to the caller.
@@ -451,6 +695,9 @@ bool AXP_CondQueue_Init(AXP_COND_Q_ROOT *queue)
  * 	queue:
  * 		A pointer to the counted conditional queue root that needs to be
  * 		initialized.
+ * 	max:
+ * 		A value indicating the total number of items that can actually be
+ * 		inserted into the queue.
  *
  * Output Parameters:
  * 	queue:
