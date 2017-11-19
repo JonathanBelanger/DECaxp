@@ -757,7 +757,6 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 {
 	bool	initFailure = false;
 	int		component = 0;
-	int		ROMret;
 
 	/*
 	 * The Cbox is very involved in the initialization of the CPU at power-up,
@@ -821,7 +820,7 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 						case 4:		/* Cbox */
 							initFailure = AXP_21264_Cbox_Init(cpu);
 
-						case 5:		/* Cbox Config*/
+						case 5:		/* Cbox Config */
 
 							/*
 							 * HRM: 11.5.2
@@ -841,18 +840,11 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 							 * Finally, load the Instruction Cache for the
 							 * initialization code.  This is where the console
 							 * is loaded.
+							 *
+							 * TODO: Get the ROM filename from the
+							 *		 configuration.
 							 */
-							ROMret = AXP_21264_LoadROM(cpu->iCache);
-							if (ROMret <= 0)
-							{
-								 * 	AXP_E_FNF:			File not found.
-								 * 	AXP_E_BUFTOOSMALL:	Buffer too small to receive contents of file.
-								 * 	0:					No data in file.
-								 * 	>0					Number of bytes read.
-								 */
-								int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
-
-							}
+							initFailure = AXP_21264_LoadROM(cpu, "", 0, 0);
 							break;
 					}
 					if (initFailure == false)
