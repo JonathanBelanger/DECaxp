@@ -380,22 +380,26 @@ int AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 /*
  * AXP_LoadROM
  * 	This function is called to open a ROM file and load the contents
- * 	into the specified buffer.  The ROM file must have been written out by
- * 	the companion AXP_UnloadROM function.  There is information in the header
- * 	and trailer of the file that is verified.
+ * 	into the iCache.  The ROM file must have been written out by the companion
+ * 	AXP_UnloadROM function.  There is information in the header and trailer of
+ * 	the file that is verified.
  *
  * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure containing the iCache buffer to load.
  * 	fineName:
  * 		A string containing the name of the file to read.  It includes the file
  * 		path (relative or explicit).
- * 	bufferLen:
- * 		A value indicating the size of the buffer parameter.  This is used to
- * 		prevent us from writing past the end of the buffer.
+ * 	iCacheStart:
+ * 		A value indicating the starting index in the iCache to load.
+ * 	iCacheEnd:
+ * 		A value indicating the ending index in the iCache to load.  If this
+ * 		parameter is zero, then we load upto the end of the file, unless we
+ * 		run out of iCache locations.
  *
  * Output Parameters:
- * 	buffer:
- * 		A pointer to an array of unsigned chars in which the contents of the
- * 		ROM file are written.
+ * 	cpu->iCahce:
+ * 		A pointer to an array of iCache entries to be loaded with the ROM data.
  *
  * Return Values:
  * 	false:	Normal successful completion.
@@ -554,24 +558,22 @@ bool AXP_LoadROM(AXP_21264_CPU *cpu, char *fileName, u32 iCacheStart, u32 iCache
  * 	consumption by the companion AXP_LoadROM function.  There will be
  * 	information in the header and trailer of the file that will be verified.
  *
- * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure containing the iCache buffer to unload.
  * 	fineName:
  * 		A string containing the name of the file to write.  It includes the
  * 		file path (relative or explicit).
- * 	buffer:
- * 		A pointer to an array of unsigned chars in which the contents of the
- * 		ROM file are written.
- * 	bufferLen:
- * 		A value indicating the size of the buffer parameter.  This is used to
- * 		only write out what we need.
+ * 	iCacheStart:
+ * 		A value indicating the starting index in the iCache to unload.
+ * 	iCacheEnd:
+ * 		A value indicating the ending index in the iCache to unload.
  *
  * Output Parameters:
- * 	None.
+ *	None.
  *
  * Return Values:
- * 	AXP_E_FNCU:			File not created/updated.
- * 	0:					No data to be written to the file.
- * 	>0					Number of bytes written.
+ * 	false:	Normal successful completion.
+ * 	true:	Error reading in ROM file.
  */
 bool AXP_UnloadROM(AXP_21264_CPU *cpu, char *fileName, u32 iCacheStart, u32 iCacheEnd)
 {
