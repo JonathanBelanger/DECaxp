@@ -398,21 +398,20 @@ int AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
  * 		ROM file are written.
  *
  * Return Values:
- * 	AXP_E_FNF:			File not found.
- * 	AXP_E_BUFTOOSMALL:	Buffer too small to receive contents of file.
- * 	0:					No data in file.
- * 	>0					Number of bytes read.
+ * 	false:	Normal successful completion.
+ * 	true:	Error reading in ROM file.
  */
-int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
+bool AXP_LoadROM(AXP_21264_CPU *cpu, char *fileName, u32 iCacheStart, u32 iCacheEnd)
 {
-	FILE	*fp;
-	int		retVal = 0;
-	int		ii;
-	bool	eofHit = false;
-	u32		ROMfileNameLen;
-	char	ROMfileName[80];
-	int		fileLen;
-	u32		guardValue;
+	FILE		*fp;
+	const char	*badRomfile  = "%%DECAXP-E-BADROMFILE, ROM file '%s' is not valid (%s).\n";
+	bool		retVal = false;
+	int			ii, jj, kk;
+	bool		eofHit = false;
+	u32			ROMfileNameLen;
+	char		ROMfileName[80];
+	int			fileLen;
+	u32			guardValue;
 
 	/*
 	 * First open the file to be loaded.
@@ -430,29 +429,32 @@ int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
 			fread(ROMfileName, 1, ROMfileNameLen, fp);
 		else
 		{
-			retVal = AXP_F_BADROMFILE;
+			printf(badRomfile, fileName, "no name length");
+			retVal = true;
 			eofHit = true;
 		}
 
 		/*
 		 * Read the guardValue.
 		 */
-		if ((feof(fp) == 0) && (retVal == 0))
+		if ((feof(fp) == 0) && (retVal == false))
 			fread(&guardValue, sizeof(guardValue), 1, fp);
-		else if (retVal == 0)
+		else if (retVal == false)
 		{
-			retVal = AXP_F_BADROMFILE;
+			printf(badRomfile, fileName, "no header guard data");
+			retVal = true;
 			eofHit = true;
 		}
 
 		/*
 		 * Read length of the ROM data in the file.
 		 */
-		if ((feof(fp) == 0) && (retVal == 0))
+		if ((feof(fp) == 0) && (retVal == false))
 			fread(&fileLen, sizeof(fileLen), 1, fp);
-		else if (retVal == 0)
+		else if (retVal == false)
 		{
-			retVal = AXP_F_BADROMFILE;
+			printf(badRomfile, fileName, "no file name");
+			retVal = true;
 			eofHit = true;
 		}
 
@@ -461,24 +463,33 @@ int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
 		 * read in and compare them to the expected values.  If they don't
 		 * match, then we cannot trust the contents of this file.
 		 */
-		if ((retVal == 0) &&
+		if ((retVal == false) &&
 			((strcmp(fileName, ROMfileName) != 0) ||
 			 (guardValue != 0xdeadbeef)))
-			retVal = AXP_F_BADROMFILE;
+		{
+			printf(badRomfile, fileName, "bad header verification data");
+			retVal = true;
+		}
 
 		/*
 		 * Finally, if we are still OK, then read in the contents of the file.
+		 *
+		 * TODO: Starting at iCacheStart and ending at iCacheEnd, read the
+		 * 		 instructions, 64-bytes at a time, for each of the iCache
+		 * 		 indexes and always assume all sets.
 		 */
+		jj = iCacheStart;
 		for (ii = 0;
-			((ii < fileLen) && (eofHit == false) && (retVal == 0));
+			((ii < fileLen) && (eofHit == false) && (retVal == false));
 			ii++)
 		{
 			fread(&buffer[ii], 1, 1, fp);
 			if (feof(fp) != 0)
 				eofHit = true;
-			else if (ii >= bufferLen)
+			else if (ii >= fileLen)
 			{
-				retVal = AXP_E_BUFTOOSMALL;
+				printf(badRomfile, fileName, "data too large");
+				retVal = true;
 				break;
 			}
 		}
@@ -487,7 +498,7 @@ int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
 		 * If we did not detect an error, then check for the guardVaue and the
 		 * filename.  If they are OK return the number of bytes read.
 		 */
-		if (retVal == 0)
+		if (retVal == false)
 		{
 			if (eofHit == false)
 			{
@@ -496,16 +507,23 @@ int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
 				{
 					memset(ROMfileName, '\0', sizeof(ROMfileName));
 					fread(ROMfileName, 1, ROMfileNameLen, fp);
-					if (strcmp(fileName, ROMfileName) == 0)
-						retVal = ii;
-					else
-						retVal = AXP_F_BADROMFILE;
+					if (strcmp(fileName, ROMfileName) != 0)
+					{
+						printf(badRomfile, fileName, "bad trailer verification info");
+						retVal = true;
+					}
 				}
 				else
-					retVal = AXP_F_BADROMFILE;
+				{
+					printf(badRomfile, fileName, "bad trailer verification data");
+					retVal = true;
+				}
 			}
 			else
-				retVal = AXP_F_BADROMFILE;
+			{
+				printf(badRomfile, fileName, "no trailer guard data");
+				retVal = true;
+			}
 		}
 
 		/*
@@ -518,7 +536,10 @@ int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
 	 * If the file was not found, return an appropriate error value.
 	 */
 	else
-		retVal = AXP_E_FNF;
+	{
+		printf("%%DECAXP-E-FNF, ROM file '%s' not found.\n", fileName);
+		retVal = true;
+	}
 
 	/*
 	 * Return the result of this function to the caller.
@@ -552,13 +573,14 @@ int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
  * 	0:					No data to be written to the file.
  * 	>0					Number of bytes written.
  */
-int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
+bool AXP_UnloadROM(AXP_21264_CPU *cpu, char *fileName, u32 iCacheStart, u32 iCacheEnd)
 {
 	FILE	*fp;
 	int		retVal = 0;
-	int		ii;
+	int		ii, jj;
 	u32		guardValue = 0xdeadbeef;
 	u32		fileNameLen = strlen(fileName) + 1;  /* include '\0' */
+	u32		iCacheLen = ((iCacheEnd - iCacheStart) + 1) * AXP_ICACHE_LINE_INS;
 
 	/*
 	 * First open the file to be loaded.
@@ -582,12 +604,16 @@ int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
 		/*
 		 * Write length of the ROM data in the file.
 		 */
-		fwrite(&bufferLen, sizeof(bufferLen), 1, fp);
+		fwrite(&iCacheLen, sizeof(iCacheLen), 1, fp);
 
 		/*
 		 * Finally, if we are still OK, then read in the contents of the file.
+		 *
+		 * TODO: Starting at iCacheStart and ending at iCacheEnd, write the
+		 * 		 instructions, 64-bytes at a time, for each of the iCache
+		 * 		 indexes and always assume all sets.
 		 */
-		for (ii = 0; ii < bufferLen; ii++)
+		for (ii = 0; ii < iCacheLen; ii++)
 			fwrite(&buffer[ii], 1, 1, fp);
 
 		/*
@@ -601,7 +627,7 @@ int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
 		 * Set the retVal to the number of bytes written to the file (not
 		 * including the header and trailer information).
 		 */
-		retVal = bufferLen;
+		retVal = false;
 
 		/*
 		 * We opened the file, so now close it.
@@ -613,7 +639,10 @@ int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
 	 * If the file was not created/updated, return an appropriate error value.
 	 */
 	else
-		retVal = AXP_E_FNCU;
+	{
+		printf("%%DECAXP-E-FNCU, ROM file '%s' not created or updated.\n", fileName);
+		retVal = true;
+	}
 
 	/*
 	 * Return the result of this function to the caller.

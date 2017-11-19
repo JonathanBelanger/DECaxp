@@ -48,6 +48,7 @@
 
 #include "AXP_Configure.h"
 #include "AXP_21264_CPU.h"
+#include "AXP_21264_Cbox.h"
 
 #endif /* _AXP_21264_CBOX_DEFS_DEFS_ */
 

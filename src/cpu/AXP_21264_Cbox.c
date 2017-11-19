@@ -574,33 +574,8 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 					 * NOTE: Each Bcache block contains 64 bytes, so the array
 					 * size is the Bcache size divided by 64.
 					 */
-					switch (cpu->csr.BcSize)
-					{
-						case AXP_BCACHE_1MB:
-							bCacheArraySize =
-									AXP_21264_1MB / AXP_BCACHE_BLOCK_SIZE;
-							break;
-
-						case AXP_BCACHE_2MB:
-							bCacheArraySize =
-									AXP_21264_2MB / AXP_BCACHE_BLOCK_SIZE;
-							break;
-
-						case AXP_BCACHE_4MB:
-							bCacheArraySize =
-									AXP_21264_4MB / AXP_BCACHE_BLOCK_SIZE;
-							break;
-
-						case AXP_BCACHE_8MB:
-							bCacheArraySize =
-									AXP_21264_8MB / AXP_BCACHE_BLOCK_SIZE;
-							break;
-
-						case AXP_BCACHE_16MB:
-							bCacheArraySize =
-									AXP_21264_16MB / AXP_BCACHE_BLOCK_SIZE;
-							break;
-					}
+					bCacheArraySize = ((cpu->csr.BcSize + 1) * ONE_M) /
+							AXP_BCACHE_BLOCK_SIZE;
 
 					/*
 					 * Go and actually allocate the 2 arrays needed for the
@@ -608,10 +583,10 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 					 */
 					cpu->bCache = calloc(
 									bCacheArraySize,
-									sizeof(AXP_21264_BCACHE_BLK);
+									sizeof(AXP_21264_BCACHE_BLK));
 					cpu->bTag = calloc(
 									bCacheArraySize,
-									sizeof(AXP_21264_BCACHE_TAG);
+									sizeof(AXP_21264_BCACHE_TAG));
 
 					/*
 					 * If we failed to allocate either, then we are done
@@ -782,6 +757,7 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 {
 	bool	initFailure = false;
 	int		component = 0;
+	int		ROMret;
 
 	/*
 	 * The Cbox is very involved in the initialization of the CPU at power-up,
@@ -866,7 +842,17 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 							 * initialization code.  This is where the console
 							 * is loaded.
 							 */
-/* TODO:					initFailure = AXP_21264_LoadFlashROM(cpu);	*/
+							ROMret = AXP_21264_LoadROM(cpu->iCache);
+							if (ROMret <= 0)
+							{
+								 * 	AXP_E_FNF:			File not found.
+								 * 	AXP_E_BUFTOOSMALL:	Buffer too small to receive contents of file.
+								 * 	0:					No data in file.
+								 * 	>0					Number of bytes read.
+								 */
+								int AXP_LoadROM(char *fileName, u8 *buffer, u32 bufferLen)
+
+							}
 							break;
 					}
 					if (initFailure == false)
@@ -965,7 +951,7 @@ void AXP_21264_Bcache_Flush(AXP_21264_CPU *cpu)
 	}
 
 	/*
-	 * NOTE: We only have to mark the array enry invalid in the Bcache Tag
+	 * NOTE: We only have to mark the array entry invalid in the Bcache Tag
 	 * array.  What is in the Bcache Block array is only relevant when the Tag
 	 * array indicates that it is valid.  When the valid flag is set, the data
 	 * was just written to the block array.
@@ -981,7 +967,7 @@ void AXP_21264_Bcache_Flush(AXP_21264_CPU *cpu)
 
 /*
  * AXP_21264_Bcache_Valid
- *	This funciton is called to determine if a physical address has a valid
+ *	This function is called to determine if a physical address has a valid
  *	location within the Bcache.  We don't actually look in the Bcache, but do
  *	look in the Bcache Tag array.
  *
@@ -998,22 +984,22 @@ void AXP_21264_Bcache_Flush(AXP_21264_CPU *cpu)
  *	false:	The physical address is not in the Bcache.
  *	true:	The physical address is in the Bcache.
  */
-bool AXP_21264_Bcache_Valid(AXP_21264 *cpu, u64 pa)
+bool AXP_21264_Bcache_Valid(AXP_21264_CPU *cpu, u64 pa)
 {
 	int		index = AXP_BCACHE_INDEX(cpu, pa);
 
 	/*
 	 * If the entry at the index, based on the physical address, is valid and
-	 * the tag associated with that entry matches the tag out of the physcal
+	 * the tag associated with that entry matches the tag out of the physical
 	 * address, then we have a valid entry.  Otherwise, we do not.
 	 */
 	return((cpu->bTag[index].valid == true) &&
-		   (cpu->bTag[index].tag == AXP_BCACHE_TAG(cpu, pa))
+		   (cpu->bTag[index].tag == AXP_BCACHE_TAG(cpu, pa)));
 }
 
 /*
  * AXP_21264_Bcache_Read
- *	This funciton is called to read the contents of a Bcache location and
+ *	This function is called to read the contents of a Bcache location and
  *	return them to the caller.
  *
  * Input Parameters:
@@ -1031,7 +1017,7 @@ bool AXP_21264_Bcache_Valid(AXP_21264 *cpu, u64 pa)
  *	false:	The physical address is not in the Bcache.
  *	true:	The physical address is in the Bcache.
  */
-bool AXP_21264_Bcache_Read(AXP_21264 *cpu, u64 pa, u8 *data)
+bool AXP_21264_Bcache_Read(AXP_21264_CPU *cpu, u64 pa, u8 *data)
 {
 	bool	retVal = AXP_21264_Bcache_Valid(cpu, pa);
 
@@ -1055,7 +1041,7 @@ bool AXP_21264_Bcache_Read(AXP_21264 *cpu, u64 pa, u8 *data)
 
 /*
  * AXP_21264_Bcache_Write
- *	This funciton is called to write the contents of a buffer into a Bcache
+ *	This function is called to write the contents of a buffer into a Bcache
  *	location.  This function always succeeds.  If a location is already in use
  *	and we are updating it, then we will also write the values to memory.
  *
@@ -1074,7 +1060,7 @@ bool AXP_21264_Bcache_Read(AXP_21264 *cpu, u64 pa, u8 *data)
  * Return Values:
  *	None.
  */
-void AXP_21264_Bcache_Write(AXP_21264 *cpu, u64 pa, u8 *data)
+void AXP_21264_Bcache_Write(AXP_21264_CPU *cpu, u64 pa, u8 *data)
 {
 	int		index = AXP_BCACHE_INDEX(cpu, pa);
 	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
