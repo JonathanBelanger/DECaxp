@@ -764,4 +764,77 @@ typedef struct
 	u64				R05;
 } AXP_EXCEPT_INFO;
 
+/*
+ * The following enumerations should probably go someplace else.  See the
+ * Miscellaneous section in the SPU structure, that should probably also be
+ * relocated.
+ */
+typedef enum
+{
+	EV3 = 1,
+	EV4,					/* 21064 */
+	Simulation,
+	LCAFamily,				/* 21066, 21068, 20166A, 20168A */
+	EV5,					/* 21164 */
+	EV45,					/* 21064A */
+	EV56,					/* 21164A */
+	EV6,					/* 21264 */
+	PCA56,					/* 21164PC */
+	PCA57,
+	EV67,					/* 21264 */
+	EV68CB_DC,				/* 21264 */
+	EV68A,					/* 21264 */
+	EV68CX,					/* 21264 */
+	EV7,					/* 21364 */
+	EV79,					/* 21364 */
+	EV69A					/* 21264 */
+} AXP_PROC_MAJ_TYPE;
+#define	AXP_PASS_2_21_EV4		0	/* EV4 */
+#define AXP_PASS_3_EV4			1
+#define AXP_RESERVED			0	/* LCA Family */
+#define AXP_PASS_1_11_66		1
+#define AXP_PASS_2_66			2
+#define AXP_PASS_1_11_68		3
+#define AXP_PASS_2_68			4
+#define AXP_PASS_1_66A			5
+#define AXP_PASS_1_68A			6
+#define AXP_PASS_2_22			1	/* EV5 */
+#define AXP_PASS_23_EV5			2
+#define AXP_PASS_3_EV5			3
+#define AXP_PASS_32				4
+#define AXP_PASS_4_EV5			5
+#define AXP_PASS_1				1	/* EV45 */
+#define AXP_PASS_11				2
+#define AXP_PASS_1_11			6
+#define AXP_PASS_2_EV45			3
+#define AXP_PASS_2_EV56			2
+#define	AXP_PASS_2_21			2	/* EV6 */
+#define AXP_PASS_22_EV6			3
+#define AXP_PASS_23_EV6			4
+#define AXP_PASS_3_EV6			5
+#define AXP_PASS_24_EV6			6
+#define AXP_PASS_25_EV6			7
+#define AXP_PASS_21				2	/* EV67 */
+#define AXP_PASS_211			4
+#define AXP_PASS_221			5
+#define AXP_PASS_23_24			6
+#define AXP_PASS_212			7
+#define AXP_PASS_222			8
+#define AXP_PASS_223_225		9
+#define AXP_PASS_224			10
+#define AXP_PASS_25_EV67		11
+#define AXP_PASS_241			12
+#define AXP_PASS_251			13
+#define AXP_PASS_26				14
+#define AXP_PASS_22_23			3	/* EV68CB */
+#define AXP_PASS_3_31			4
+#define AXP_PASS_24				5
+#define AXP_PASS_4				6
+#define AXP_PASS_2_EV68DC		2	/* EV68DC */
+#define AXP_PASS_231			3
+#define AXP_PASS_214_EV68DC		4
+#define AXP_PASS_2_EV68A		2	/* EV68A */
+#define AXP_PASS_21_21A_3		3
+#define AXP_PASS_22_EV68A		4
+
 #endif /* _AXP_BASE_CPU_DEFS_ */

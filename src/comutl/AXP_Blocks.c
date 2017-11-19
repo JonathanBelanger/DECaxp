@@ -47,8 +47,7 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 				{
 
 					/*
-					 * The calloc cleared all the memory.  We just have to set
-					 * the non-zero values.
+					 * The calloc cleared all the memory.
 					 */
 					cpu = (AXP_21264_CPU *) retBlock;
 					cpu->header.type = blockType;

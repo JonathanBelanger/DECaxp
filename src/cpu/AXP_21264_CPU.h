@@ -60,6 +60,10 @@
  *	Redefined some Cbox definitions, added a CTAG definition, and added a
  *	definition to be able to determine if a physical address is for I/O
  *	Address Space or Memory Address Space.
+ *
+ *	V01.008		19-Nov-2017	Jonathan D. Belanger
+ *	Started adding pthread definitions.  Also moved some definitions from this
+ *	header file to be Base CPU header file.
  */
 #ifndef _AXP_21264_CPU_DEFS_
 #define _AXP_21264_CPU_DEFS_
@@ -108,7 +112,7 @@
 #define AXP_INFLIGHT_MAX		80
 #define AXP_MBOX_QUEUE_LEN		32
 #define AXP_CACHE_ENTRIES		512
-#define AXP_2_WAY_CACHE	2
+#define AXP_2_WAY_CACHE			2
 #define AXP_21264_IOWB_LEN		4
 #define AXP_21264_VDB_LEN		8
 #define AXP_21264_PQ_LEN		8
@@ -152,6 +156,9 @@
  *											is issued.
  *		RESET/WAKEUP	Interrupt	0x780	Chip reset or wake-up from sleep
  *											mode.
+ *
+ * NOTE: These are CPU generation specific.  The ones below are for the 21264
+ * 		 generation of the Digital Alpha AXP CPU.
  */
 #define AXP_DTBM_DOUBLE_3	0x0100
 #define AXP_DTBM_DOUBLE_4	0x0180
@@ -238,80 +245,6 @@ typedef enum
 } AXP_21264_BIST_STATES;
 
 /*
- * The following enumerations should probably go someplace else.  See the
- * Miscellaneous section in the SPU structure, that should probably also be
- * relocated.
- * TODO: Find the real home for these definitions.
- */
-typedef enum
-{
-	EV3 = 1,
-	EV4,					/* 21064 */
-	Simulation,
-	LCAFamily,				/* 21066, 21068, 20166A, 20168A */
-	EV5,					/* 21164 */
-	EV45,					/* 21064A */
-	EV56,					/* 21164A */
-	EV6,					/* 21264 */
-	PCA56,					/* 21164PC */
-	PCA57,
-	EV67,					/* 21264 */
-	EV68CB_DC,				/* 21264 */
-	EV68A,					/* 21264 */
-	EV68CX,					/* 21264 */
-	EV7,					/* 21364 */
-	EV79,					/* 21364 */
-	EV69A					/* 21264 */
-} AXP_PROC_MAJ_TYPE;
-#define	AXP_PASS_2_21_EV4		0	/* EV4 */
-#define AXP_PASS_3_EV4			1
-#define AXP_RESERVED			0	/* LCA Family */
-#define AXP_PASS_1_11_66		1
-#define AXP_PASS_2_66			2
-#define AXP_PASS_1_11_68		3
-#define AXP_PASS_2_68			4
-#define AXP_PASS_1_66A			5
-#define AXP_PASS_1_68A			6
-#define AXP_PASS_2_22			1	/* EV5 */
-#define AXP_PASS_23_EV5			2
-#define AXP_PASS_3_EV5			3
-#define AXP_PASS_32				4
-#define AXP_PASS_4_EV5			5
-#define AXP_PASS_1				1	/* EV45 */
-#define AXP_PASS_11				2
-#define AXP_PASS_1_11			6
-#define AXP_PASS_2_EV45			3
-#define AXP_PASS_2_EV56			2
-#define	AXP_PASS_2_21			2	/* EV6 */
-#define AXP_PASS_22_EV6			3
-#define AXP_PASS_23_EV6			4
-#define AXP_PASS_3_EV6			5
-#define AXP_PASS_24_EV6			6
-#define AXP_PASS_25_EV6			7
-#define AXP_PASS_21				2	/* EV67 */
-#define AXP_PASS_211			4
-#define AXP_PASS_221			5
-#define AXP_PASS_23_24			6
-#define AXP_PASS_212			7
-#define AXP_PASS_222			8
-#define AXP_PASS_223_225		9
-#define AXP_PASS_224			10
-#define AXP_PASS_25_EV67		11
-#define AXP_PASS_241			12
-#define AXP_PASS_251			13
-#define AXP_PASS_26				14
-#define AXP_PASS_22_23			3	/* EV68CB */
-#define AXP_PASS_3_31			4
-#define AXP_PASS_24				5
-#define AXP_PASS_4				6
-#define AXP_PASS_2_EV68DC		2	/* EV68DC */
-#define AXP_PASS_231			3
-#define AXP_PASS_214_EV68DC		4
-#define AXP_PASS_2_EV68A		2	/* EV68A */
-#define AXP_PASS_21_21A_3		3
-#define AXP_PASS_22_EV68A		4
-
-/*
  * This structure contains all the fields required to emulate an Alpha AXP
  * 21264 CPU.
  */
@@ -321,7 +254,7 @@ typedef struct
 	 * This field needs to be at the top of all data blocks/structures
 	 * that need to be specifically allocated by the Blocks module.
 	 */
-	AXP_BLOCK_DSC header;
+	AXP_BLOCK_DSC 			header;
 
 	/*
 	 * CPU state.
@@ -351,70 +284,71 @@ typedef struct
 	 * The following definitions are used to support utilizing pthreads for the
 	 * Ibox.
 	 */
-	pthread_t	iBoxThreadID;
+	pthread_t				iBoxThreadID;
 
 	/*
 	 * The following definitions are used by the branch prediction code.
 	 */
-	LHT			localHistoryTable;
-	LPT			localPredictor;
-	GPT			globalPredictor;
-	CPT			choicePredictor;
-	u16			globalPathHistory;
+	LHT						localHistoryTable;
+	LPT						localPredictor;
+	GPT						globalPredictor;
+	CPT						choicePredictor;
+	u16						globalPathHistory;
 
-	u8			instrCounter;		/* Unique ID for each instruction		*/
-	u8			res_1;				/* Align to 32-bit boundary				*/
+	u8						instrCounter;	/* Unique ID for each instruction */
+	u8						res_1;			/* Align to 32-bit boundary		*/
 
 	/*
 	 * This is equivalent to the VPC
 	 */
-	AXP_PC				vpc[AXP_INFLIGHT_MAX];
-	u32					vpcStart;
-	u32					vpcEnd;
+	AXP_PC					vpc[AXP_INFLIGHT_MAX];
+	u32						vpcStart;
+	u32						vpcEnd;
 
 	/*
 	 * Reorder Buffer
 	 */
-	AXP_INSTRUCTION 	rob[AXP_INFLIGHT_MAX];
-	u32					robStart;
-	u32					robEnd;
+	AXP_INSTRUCTION 		rob[AXP_INFLIGHT_MAX];
+	u32						robStart;
+	u32						robEnd;
 
 	/*
 	 * Instruction Queues (Integer and Floating-Point).
 	 */
-	AXP_COUNTED_QUEUE	iq;
-	AXP_COUNTED_QUEUE	fq;
+	AXP_COND_Q_ROOT_CNT		iq;
+	AXP_COND_Q_ROOT_CNT		fq;
 
 	/*
 	 * Instruction Queue Pre-allocated Cache.
 	 */
-	AXP_QUEUE_ENTRY		iqEntries[AXP_IQ_LEN];
-	u32					iqEFreelist[AXP_IQ_LEN];
-	u32					iqEFlStart;
-	u32					iqEFlEnd;
-	AXP_QUEUE_ENTRY		fqEntries[AXP_FQ_LEN];
-	u32					fqEFreelist[AXP_IQ_LEN];
-	u32					fqEFlStart;
-	u32					fqEFlEnd;
+	AXP_COND_Q_LEAF			iqEntries[AXP_IQ_LEN];
+	u32						iqEFreelist[AXP_IQ_LEN];
+	u32						iqEFlStart;
+	u32						iqEFlEnd;
+	AXP_COND_Q_LEAF			fqEntries[AXP_FQ_LEN];
+	u32						fqEFreelist[AXP_IQ_LEN];
+	u32						fqEFlStart;
+	u32						fqEFlEnd;
 
 	/*
 	 * Ibox Internal Processor Registers (IPRs)
 	 */
-	AXP_IBOX_ITB_TAG	itbTag;		/* ITB tag array write					*/
-	AXP_IBOX_ITB_PTE	itbPte;		/* ITB Page Table Entry					*/
-	AXP_IBOX_ITB_IS		itbIs;		/* ITB invalidate single				*/
-	AXP_IBOX_EXC_ADDR	excAddr;	/* Exception address					*/
-	AXP_IBOX_IVA_FORM	ivaForm;	/* Instruction VA format				*/
-	AXP_IBOX_IER_CM		ierCm;		/* Interrupt enable and current mode	*/
-	AXP_IBOX_SIRR		sirr;		/* Software interrupt request			*/
-	AXP_IBOX_ISUM		iSum;		/* Interrupt summary					*/
-	AXP_IBOX_HW_INT_CLR	hwIntClr;	/* Hardware interrupt clear				*/
-	AXP_IBOX_EXC_SUM	excSum;		/* Exception summary					*/
-	AXP_IBOX_PAL_BASE	palBase;	/* PAL base address						*/
-	AXP_IBOX_I_CTL		iCtl;		/* Ibox control							*/
-	AXP_IBOX_I_STAT		iStat;		/* Ibox status							*/
-	AXP_IBOX_PCTX		pCtx;		/* Process context register				*/
-	AXP_IBOX_PCTR_CTL	pCtrCtl;	/* Performance counter control			*/
+	pthread_mutex_t			iBoxIPRMutex;
+	AXP_IBOX_ITB_TAG		itbTag;		/* ITB tag array write				*/
+	AXP_IBOX_ITB_PTE		itbPte;		/* ITB Page Table Entry				*/
+	AXP_IBOX_ITB_IS			itbIs;		/* ITB invalidate single			*/
+	AXP_IBOX_EXC_ADDR		excAddr;	/* Exception address				*/
+	AXP_IBOX_IVA_FORM		ivaForm;	/* Instruction VA format			*/
+	AXP_IBOX_IER_CM			ierCm;		/* Interrupt enable and current mode */
+	AXP_IBOX_SIRR			sirr;		/* Software interrupt request		*/
+	AXP_IBOX_ISUM			iSum;		/* Interrupt summary				*/
+	AXP_IBOX_HW_INT_CLR		hwIntClr;	/* Hardware interrupt clear			*/
+	AXP_IBOX_EXC_SUM		excSum;		/* Exception summary				*/
+	AXP_IBOX_PAL_BASE		palBase;	/* PAL base address					*/
+	AXP_IBOX_I_CTL			iCtl;		/* Ibox control						*/
+	AXP_IBOX_I_STAT			iStat;		/* Ibox status						*/
+	AXP_IBOX_PCTX			pCtx;		/* Process context register			*/
+	AXP_IBOX_PCTR_CTL		pCtrCtl;	/* Performance counter control		*/
 
 	/*
 	 * This is the Instruction Cache.  It is 64K bytes in size (just counting
@@ -423,15 +357,17 @@ typedef struct
 	 * bytes long, for a total of 64 bytes.  There are 2 sets of cache, which
 	 * leaves us with 64KB / (16 * 4B) / 2 sets = 512 rows for each set.
 	 */
-	AXP_ICACHE_BLK		iCache[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
+	pthread_mutex_t			iCacheMutex;
+	AXP_ICACHE_BLK			iCache[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 
 	/*
 	 * This is the Instruction Address Translation (Look-aside) Table (ITB).
 	 * It is 128 entries in size, and is allocated in a round-robin scheme.
 	 * We, therefore, maintain a start and end index (both start at 0).
 	 */
-	AXP_21264_TLB		itb[AXP_TB_LEN];
-	u32					nextITB;
+	pthread_mutex_t			itbMutex;
+	AXP_21264_TLB			itb[AXP_TB_LEN];
+	u32						nextITB;
 
 	/**************************************************************************
 	 *	Ebox Definitions													  *
@@ -451,11 +387,10 @@ typedef struct
 	 * The following definitions are used to support utilizing pthreads for the
 	 * Ebox.
 	 */
-	pthread_t	eBoxThreadID;
-	pthread_t	eBoxU0ThreadID;
-	pthread_t	eBoxU1ThreadID;
-	pthread_t	eBoxL0ThreadID;
-	pthread_t	eBoxL1ThreadID;
+	pthread_t				eBoxU0ThreadID;
+	pthread_t				eBoxU1ThreadID;
+	pthread_t				eBoxL0ThreadID;
+	pthread_t				eBoxL1ThreadID;
 
 	/*
 	 * VAX Compatibility Interrupt Flag.  This flag is intended to be utilized
@@ -463,7 +398,7 @@ typedef struct
 	 * sequence of Alpha instructions between RS and RC, corresponding to a
 	 * single VAX instruction, were executed without interruption or exception.
 	 */
-	bool				VAXintrFlag;
+	bool					VAXintrFlag;
 
 	/*
 	 * Physical registers.
@@ -487,21 +422,22 @@ typedef struct
 	 * decoded.  The register mapping is used too determine which physical
 	 * register (PR) is defined to which AR.
 	 */
-	u64					pr[AXP_INT_PHYS_REG];
-	u32					prFreeList[AXP_I_FREELIST_SIZE];
-	u32					prFlStart;
-	u32					prFlEnd;
-	AXP_21264_REG_MAP	prMap[AXP_MAX_REGISTERS];
-	AXP_21264_REG_STATE	prState[AXP_INT_PHYS_REG];
+	u64						pr[AXP_INT_PHYS_REG];
+	u32						prFreeList[AXP_I_FREELIST_SIZE];
+	u32						prFlStart;
+	u32						prFlEnd;
+	AXP_21264_REG_MAP		prMap[AXP_MAX_REGISTERS];
+	AXP_21264_REG_STATE		prState[AXP_INT_PHYS_REG];
 
 	/*
 	 * Ebox IPRs
 	 */
-	AXP_EBOX_CC			cc;			/* Cycle counter						*/
-	AXP_EBOX_CC_CTL		ccCtl;		/* Cycle counter control				*/
-	AXP_EBOX_VA			va;			/* Virtual address						*/
-	AXP_EBOX_VA_CTL		vaCtl;		/* Virtual address control				*/
-	AXP_EBOX_VA_FORM	vaForm;		/* Virtual address format				*/
+	pthread_mutex_t			eBoxIPRMutex;
+	AXP_EBOX_CC				cc;			/* Cycle counter					*/
+	AXP_EBOX_CC_CTL			ccCtl;		/* Cycle counter control			*/
+	AXP_EBOX_VA				va;			/* Virtual address					*/
+	AXP_EBOX_VA_CTL			vaCtl;		/* Virtual address control			*/
+	AXP_EBOX_VA_FORM		vaForm;		/* Virtual address format			*/
 
 	/**************************************************************************
 	 *	Fbox Definitions													  *
@@ -519,9 +455,8 @@ typedef struct
 	 * The following definitions are used to support utilizing pthreads for the
 	 * Fbox.
 	 */
-	pthread_t	fBoxThreadID;
-	pthread_t	fBoxMulThreadID;
-	pthread_t	fBoxOthThreadID;
+	pthread_t				fBoxMulThreadID;
+	pthread_t				fBoxOthThreadID;
 
 	/*
 	 * Physical registers.
@@ -533,17 +468,18 @@ typedef struct
 	 * Since the floating-point execution unit only has 1 cluster, there is 
 	 * just 1 set of 72 registers.
 	 */
-	u64					pf[AXP_FP_PHYS_REG];
-	u32					pfFreeList[AXP_F_FREELIST_SIZE];
-	u32					pfFlStart;
-	u32					pfFlEnd;
-	AXP_21264_REG_MAP	pfMap[AXP_MAX_REGISTERS];
-	AXP_21264_REG_STATE	pfState[AXP_FP_PHYS_REG];
+	u64						pf[AXP_FP_PHYS_REG];
+	u32						pfFreeList[AXP_F_FREELIST_SIZE];
+	u32						pfFlStart;
+	u32						pfFlEnd;
+	AXP_21264_REG_MAP		pfMap[AXP_MAX_REGISTERS];
+	AXP_21264_REG_STATE		pfState[AXP_FP_PHYS_REG];
 
 	/*
 	 * Fbox IPRs
 	 */
-	AXP_FBOX_FPCR		fpcr;
+	pthread_mutex_t			fBoxIPRMutex;
+	AXP_FBOX_FPCR			fpcr;
 
 	/**************************************************************************
 	 *	Mbox Definitions													  *
@@ -562,7 +498,7 @@ typedef struct
 	 * The following definitions are used to support utilizing pthreads for the
 	 * Mbox.
 	 */
-	pthread_t	mBoxThreadID;
+	pthread_t				mBoxThreadID;
 
 	/*
 	 * This is the Data Cache.  It is 64K bytes in size (just counting the
@@ -570,7 +506,9 @@ typedef struct
 	 * Each cache block contains 64 bytes of data.  There are 2 sets of cache,
 	 * which leaves us with 64KB / 64B / 2 sets = 512 rows for each set.
 	 */
+	pthread_mutex_t			dCacheMutex;
 	AXP_DCACHE_BLK			dCache[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
+	pthread_mutex_t			dtagMutex;
 	AXP_DTAG_BLK			dtag[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 
 	/*
@@ -578,13 +516,21 @@ typedef struct
 	 * These queues handle the outstanding load and store operations into the
 	 * Dcache (and ultimately memory), and need to be completed in order, to
 	 * ensure correct Alpha memory reference behavior.
+	 *
+	 * NOTE: These queue are not mutex or conditional queues.  We do this
+	 * 		 because the index into the queue is reserved in the iBox during
+	 * 		 instruction decoding.
 	 */
 	AXP_MBOX_QUEUE			lq[AXP_MBOX_QUEUE_LEN];
+	pthread_mutex_t			lqMutex;
 	u32						lqNext;
 	AXP_MBOX_QUEUE			sq[AXP_MBOX_QUEUE_LEN];
+	pthread_mutex_t			sqMutex;
 	u32						sqNext;
+	pthread_mutex_t			dtbMutex;
 	AXP_21264_TLB			dtb[AXP_TB_LEN];
 	u32						nextDTB;
+	pthread_mutex_t			mafMutex;
 	AXP_MBOX_MAF			maf[AXP_21264_MAF_LEN];
 
 	/*
@@ -596,6 +542,7 @@ typedef struct
 	/*
 	 * Mbox IPRs
 	 */
+	pthread_mutex_t			mBoxIPRMutex;
 	AXP_MBOX_DTB_TAG		dtbTag0;	/* DTB tag array write 0			*/
 	AXP_MBOX_DTB_TAG		dtbTag1;	/* DTB tag array write 1			*/
 	AXP_MBOX_DTB_PTE		dtbPte0;	/* DTB PTE array write 0			*/
@@ -627,8 +574,13 @@ typedef struct
 	 * The following definitions are used to support utilizing pthreads for the
 	 * Cbox.
 	 */
-	pthread_t	cBoxThreadID;
+	pthread_t				cBoxThreadID;
 
+	/*
+	 * TODO: The code for the following structures is not yet complete.  These
+	 * 		 are the interfaces between the Mbox and Cbox, and the System and
+	 * 		 the Cbox.
+	 */
 	AXP_21264_CBOX_VIC_BUF	vdb[AXP_21264_VDB_LEN];
 	AXP_21264_CBOX_IOWB		iowb[AXP_21264_IOWB_LEN];
 	AXP_21264_CBOX_PQ		pq[AXP_21264_PQ_LEN];
@@ -637,9 +589,10 @@ typedef struct
 	/*
 	 * Cbox IPRs
 	 */
+	pthread_mutex_t			cBoxIPRMutex;
 	AXP_CBOX_C_DATA			cData;		/* Cbox data						*/
 	AXP_CBOX_C_SHFT			cShft;		/* Cbox shift control				*/
-	AXP_21264_CBOX_CSRS		csr;		/* Control and Status Registers (CSR)*/
+	AXP_21264_CBOX_CSRS		csr;		/* Control and Status Registers (CSR) */
 	u8						irqH : 6;	/* Six interrupt bits set by system	*/
 	AXP_21264_BCACHE_BLK	*bCache;	/* An array of 64-byte blocks		*/
 	AXP_21264_BCACHE_TAG	*bTag;		/* An array of tags for the Bcache	*/
@@ -650,37 +603,36 @@ typedef struct
 	 * NOTE:	Some or all of these may be deleted, as they are emulated in
 	 *			IPRs specific to the 21264 Alpha AXP CPU.
 	 */
-	AXP_BASE_ASN		asn;		/* Address Space Number					*/
-	AXP_BASE_ASTEN		astEn;		/* AST Enable							*/
-	AXP_BASE_ASTSR		astSr;		/* AST Summary Register					*/
-	AXP_BASE_DATFX		datFx;		/* Data Alignment Trap Fix-up			*/
-	AXP_BASE_ESP		esp;		/* Executive Stack Pointer				*/
-	AXP_BASE_FEN		fen;		/* Floating-point Enable				*/
-	AXP_BASE_IPIR		ipIr;		/* Interprocessor Interrupt Request		*/
-	AXP_BASE_IPL		ipl;		/* Interrupt Priority Level				*/
-	AXP_BASE_KSP		ksp;		/* Kernel Stack Pointer					*/
-	AXP_BASE_MCES		mces;		/* Machine Check Error Summary			*/
-	AXP_BASE_PCBB		pcbb;		/* Privileged Context Block Base		*/
-	AXP_BASE_PRBR		prbr;		/* Processor Base Register				*/
-	AXP_BASE_PTBR		ptbr;		/* Page Table Base Register				*/
-	AXP_BASE_SCBB		scbb;		/* System Control Block Base			*/
-	AXP_BASE_SISR		sisr;		/* Software Interrupt Summary Register	*/
-	AXP_BASE_SSP		ssp;		/* Supervisor Stack Pointer				*/
-	AXP_BASE_SYSPTBR	sysPtbr;	/* System Page Table Base				*/
-	AXP_BASE_TBCHK		tbChk;		/* TB Check								*/
-	AXP_BASE_USP		usp;		/* User Stack Pointer					*/
-	AXP_BASE_VIRBND		virBnd;		/* Virtual Address Boundary				*/
-	AXP_BASE_VPTB		vptb;		/* Virtual Page Table Base				*/
-	AXP_BASE_WHAMI		whami;		/* Who-Am-I								*/
+	AXP_BASE_ASN			asn;		/* Address Space Number				*/
+	AXP_BASE_ASTEN			astEn;		/* AST Enable						*/
+	AXP_BASE_ASTSR			astSr;		/* AST Summary Register				*/
+	AXP_BASE_DATFX			datFx;		/* Data Alignment Trap Fix-up		*/
+	AXP_BASE_ESP			esp;		/* Executive Stack Pointer			*/
+	AXP_BASE_FEN			fen;		/* Floating-point Enable			*/
+	AXP_BASE_IPIR			ipIr;		/* Interprocessor Interrupt Request	*/
+	AXP_BASE_IPL			ipl;		/* Interrupt Priority Level			*/
+	AXP_BASE_KSP			ksp;		/* Kernel Stack Pointer				*/
+	AXP_BASE_MCES			mces;		/* Machine Check Error Summary		*/
+	AXP_BASE_PCBB			pcbb;		/* Privileged Context Block Base	*/
+	AXP_BASE_PRBR			prbr;		/* Processor Base Register			*/
+	AXP_BASE_PTBR			ptbr;		/* Page Table Base Register			*/
+	AXP_BASE_SCBB			scbb;		/* System Control Block Base		*/
+	AXP_BASE_SISR			sisr;		/* Software Interrupt Summary Register */
+	AXP_BASE_SSP			ssp;		/* Supervisor Stack Pointer			*/
+	AXP_BASE_SYSPTBR		sysPtbr;	/* System Page Table Base			*/
+	AXP_BASE_TBCHK			tbChk;		/* TB Check							*/
+	AXP_BASE_USP			usp;		/* User Stack Pointer				*/
+	AXP_BASE_VIRBND			virBnd;		/* Virtual Address Boundary			*/
+	AXP_BASE_VPTB			vptb;		/* Virtual Page Table Base			*/
+	AXP_BASE_WHAMI			whami;		/* Who-Am-I							*/
 
 	/*
 	 * Miscellaneous stuff the should probably go someplace else.
-	 * TODO: Find the real home for these values.
 	 */
-	AXP_PROC_MAJ_TYPE	majorType;	/* Processor Major Type					*/
-	u32					minorType;	/* Processor Minor Type					*/
-	AXP_BASE_AMASK		amask;		/* Architectural Extension Support Mask	*/
-	u64					implVer;	/* Implementation Version				*/
+	AXP_PROC_MAJ_TYPE		majorType;	/* Processor Major Type				*/
+	u32						minorType;	/* Processor Minor Type				*/
+	AXP_BASE_AMASK			amask;		/* Architectural Extension Support Mask	*/
+	u64						implVer;	/* Implementation Version			*/
 } AXP_21264_CPU;
 
 /*
