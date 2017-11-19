@@ -30,6 +30,8 @@
  */
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
+#include "AXP_21264_CacheDefs.h"
+#include "AXP_21264_Ibox_InstructionInfo.h"
 
 /*
  * AXP_LRUAdd
@@ -77,8 +79,8 @@ void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry)
 		 */
 		if (entry->flink != (void *) &entry->flink)
 		{
-			((AXP_QUEUE_HDR *) entry->blink)->flink = entry->flink;	/* entry after points to entry before */
-			((AXP_QUEUE_HDR *) entry->flink)->blink = entry->blink;	/* entry before points to entry after */
+			((AXP_QUEUE_HDR *) entry->blink)->flink = entry->flink;
+			((AXP_QUEUE_HDR *) entry->flink)->blink = entry->blink;
 		}
 
 		/*
@@ -89,10 +91,10 @@ void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry)
 		 * in the queue, point its forward-link and the header's backward-link
 		 * to us.
 		 */
-		entry->flink = (void *) &lruQ->flink;			/* entry flink points to queue header */
-		entry->blink = lruQ->blink;						/* entry blink points to last item in queue */
-		((AXP_QUEUE_HDR *) lruQ->blink)->flink = (void *) &entry->flink;	/* flink of last item in queue points to entry */
-		lruQ->blink = (void *) &entry->flink;			/* queue header blink points to entry */
+		entry->flink = (void *) &lruQ->flink;
+		entry->blink = lruQ->blink;
+		((AXP_QUEUE_HDR *) lruQ->blink)->flink = (void *) &entry->flink;
+		lruQ->blink = (void *) &entry->flink;
 	}
 	return;
 }
@@ -117,8 +119,8 @@ void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry)
  */
 void AXP_LRURemove(AXP_QUEUE_HDR *entry)
 {
-	((AXP_QUEUE_HDR *) entry->blink)->flink = entry->flink;	/* entry after points to entry before */
-	((AXP_QUEUE_HDR *) entry->flink)->blink = entry->blink;	/* entry before points to entry after */
+	((AXP_QUEUE_HDR *) entry->blink)->flink = entry->flink;
+	((AXP_QUEUE_HDR *) entry->flink)->blink = entry->blink;
 	AXP_INIT_QUEP(entry);				/* make the entry point to itself */
 
 	/*
@@ -196,8 +198,8 @@ i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
 	{
 
 		/*
-		 * Let's first have the entry we are inserting into the queue point to its
-		 * predecessor and its successor.
+		 * Let's first have the entry we are inserting into the queue point to
+		 * its predecessor and its successor.
 		 */
 		entry->header.flink = pred->flink;
 		entry->header.blink = pred;
@@ -213,7 +215,7 @@ i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
 		 * parent.
 		 */
 		entry->parent->count++;
-		retVal = (entry->parent->count == 1) ? 1 : 0;	/* was the queue empty */
+		retVal = (entry->parent->count == 1) ? 1 : 0;	/* was queue empty */
 	}
 	else
 		retVal = -1;
@@ -227,7 +229,8 @@ i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
 /*
  * AXP_RemoveCountedQueue
  * 	This function is called to remove an entry out of a specific location
- * 	within a counted queue.  The counter at the queue parent (head) is incremented.
+ * 	within a counted queue.  The counter at the queue parent (head) is
+ * 	incremented.
  *
  * Input Parameters:
  * 	entry:
@@ -405,7 +408,11 @@ int AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
  * 	false:	Normal successful completion.
  * 	true:	Error reading in ROM file.
  */
-bool AXP_LoadROM(AXP_21264_CPU *cpu, char *fileName, u32 iCacheStart, u32 iCacheEnd)
+bool AXP_LoadROM(
+			AXP_21264_CPU *cpu,
+			char *fileName,
+			u32 iCacheStart,
+			u32 iCacheEnd)
 {
 	FILE		*fp;
 	const char	*badRomfile  = "%%DECAXP-E-BADROMFILE, ROM file '%s' is not valid (%s).\n";
@@ -483,18 +490,30 @@ bool AXP_LoadROM(AXP_21264_CPU *cpu, char *fileName, u32 iCacheStart, u32 iCache
 		 * 		 indexes and always assume all sets.
 		 */
 		jj = iCacheStart;
-		for (ii = 0;
-			((ii < fileLen) && (eofHit == false) && (retVal == false));
-			ii++)
+		iCacheEnd = (iCacheEnd == 0 ? AXP_CACHE_ENTRIES : iCacheEnd);
+		ii = 0;
+		while ((ii < fileLen) && (eofHit == false) && (retVal == false))
 		{
-			fread(&buffer[ii], 1, 1, fp);
-			if (feof(fp) != 0)
-				eofHit = true;
-			else if (ii >= fileLen)
+			for (kk = 0;
+				 ((kk < AXP_2_WAY_CACHE) &&
+				  (eofHit == false) &&
+				  (retVal == false));
+				 kk++)
 			{
-				printf(badRomfile, fileName, "data too large");
-				retVal = true;
-				break;
+				fread(
+					cpu->iCache[jj][kk].instructions,
+					sizeof(AXP_INS_FMT),
+					AXP_ICACHE_LINE_INS,
+					fp);
+				if (feof(fp) != 0)
+					eofHit = true;
+				else if (ii >= fileLen)
+				{
+					printf(badRomfile, fileName, "data too large");
+					retVal = true;
+					break;
+				}
+				ii += (sizeof(AXP_INS_FMT) * AXP_ICACHE_LINE_INS);
 			}
 		}
 
@@ -582,7 +601,10 @@ bool AXP_UnloadROM(AXP_21264_CPU *cpu, char *fileName, u32 iCacheStart, u32 iCac
 	int		ii, jj;
 	u32		guardValue = 0xdeadbeef;
 	u32		fileNameLen = strlen(fileName) + 1;  /* include '\0' */
-	u32		iCacheLen = ((iCacheEnd - iCacheStart) + 1) * AXP_ICACHE_LINE_INS;
+	u32		iCacheLen =
+				((iCacheEnd - iCacheStart) + 1) *
+				 AXP_ICACHE_LINE_INS *
+				 AXP_2_WAY_CACHE;
 
 	/*
 	 * First open the file to be loaded.
@@ -615,8 +637,13 @@ bool AXP_UnloadROM(AXP_21264_CPU *cpu, char *fileName, u32 iCacheStart, u32 iCac
 		 * 		 instructions, 64-bytes at a time, for each of the iCache
 		 * 		 indexes and always assume all sets.
 		 */
-		for (ii = 0; ii < iCacheLen; ii++)
-			fwrite(&buffer[ii], 1, 1, fp);
+		for (ii = iCacheStart; ii < iCacheEnd; ii++)
+			for(jj = 0; jj < AXP_2_WAY_CACHE; jj++)
+				fwrite(
+					cpu->iCache[ii][jj].instructions,
+					sizeof(AXP_INS_FMT),
+					AXP_ICACHE_LINE_INS,
+					fp);
 
 		/*
 		 * Write the guardVaue and the filename again, then return the number

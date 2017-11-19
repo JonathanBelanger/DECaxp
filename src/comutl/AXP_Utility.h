@@ -227,7 +227,7 @@ bool AXP_CondQueue_Wait(AXP_COND_Q_HDR *);
 bool AXP_CondQueue_Empty(AXP_COND_Q_HDR *);
 
 int AXP_LoadExecutable(char *, u8 *, u32);
-int AXP_LoadROM(char *, u8 *, u32);
-int AXP_UnloadROM(char *, u8 *, u32);
+bool AXP_LoadROM(AXP_21264_CPU *, char *, u32, u32);
+bool AXP_UnoadROM(AXP_21264_CPU *, char *, u32, u32);
 
 #endif /* _AXP_UTIL_DEFS_ */

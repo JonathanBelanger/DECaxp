@@ -46,13 +46,16 @@
 #	Updated the compiler switches to include -pthread, because we are making
 #	this program multithreaded.
 #
+#	V01.005		19-Nov-2017	Jonathan D. Belanger
+#	Moved the test folder (tst) into the src folder.
+#
 PROJDIR = /cygdrive/g/git/DECaxp/
 
 #
 # Create variables for the various top-level directories we care about.
 #
-SRCDIR = $(PROJDIR)src/
-TSTDIR = $(PROJDIR)tst/
+SRCDIR = $(PROJDIR)src/comutl $(PROJDIR)src/cpu
+TSTDIR = $(PROJDIR)src/tst/
 OBJDIR = $(PROJDIR)bin/
 EXEDIR = $(PROJDIR)exe/
 BLDDIR = $(PROJDIR)bld/
@@ -62,7 +65,7 @@ BLDDIR = $(PROJDIR)bld/
 # files that are created from compiling.  This definition will look in all
 # sub-directories under the top-level source directory.
 #
-CFILES = $(wildcard $(SRCDIR)*/*.c)
+CFILES = $(wildcard $(SRCDIR)*.c)
 SRCS = $(CFILES)
 OBJS = $(addprefix $(OBJDIR), $(notdir $(CFILES:.c=.o)))
 

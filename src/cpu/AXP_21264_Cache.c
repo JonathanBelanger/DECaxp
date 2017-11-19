@@ -29,7 +29,7 @@
  *	I'm chancing the way the Dcache Add and Update functionality works.  These
  *	functions are going to be combined into a single Dcache Write function.
  *	The Dcache Fetch function will be changed to Dcache Read.  The Icache
- *	functions will remain the same, as there is only one writter (the Cbox) and
+ *	functions will remain the same, as there is only one writer (the Cbox) and
  *	only one reader, the Ibox.  Where as, the Dcache as potentially multiple
  *	writers (the Cbox and the Mbox) and only one reader (the Mbox).
  *
