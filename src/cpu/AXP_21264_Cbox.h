@@ -161,15 +161,6 @@ typedef struct
 } AXP_21264_CBOX_CSRS;
 
 /*
- * Bcache Size values.
- */
-#define AXP_21264_BC_SIZE_1MB	0x0	/* 0000 */
-#define AXP_21264_BC_SIZE_2MB	0x1	/* 0001 */
-#define AXP_21264_BC_SIZE_4MB	0x3	/* 0011 */
-#define AXP_21264_BC_SIZE_8MB	0x7	/* 0111 */
-#define AXP_21264_BC_SIZE_16MB	0xf	/* 1111 */
-
-/*
  * MB definitions.
  */
 #define AXP_21264_1MB			(1 * ONE_M)
@@ -316,7 +307,7 @@ typedef struct
  * Macros to extract the index and tag bits from a physical address.
  */
 #define AXP_BCACHE_INDEX(cpu, pa)	(((pa) >> AXP_BCACHE_IDX_SHIFT) &		\
-									 (((cpu)->BcSize << 14) || AXP_BCACHE_IDX_FILL))
+									 (((cpu)->csr.BcSize << 14) || AXP_BCACHE_IDX_FILL))
 #define AXP_BCACHE_TAG(cpu, pa)		(((pa) >> AXP_BCACHE_TAG_SHIFT) &		\
 									 AXP_BCACHE_TAG_BITS)
 

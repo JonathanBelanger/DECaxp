@@ -199,9 +199,7 @@ typedef struct
  * Error returns for AXP_LoadExecutable
  */
 #define AXP_E_FNF 			-1
-#define AXP_E_FNCU 			-2
-#define AXP_E_BUFTOOSMALL	-3
-#define AXP_F_BADROMFILE	-4
+#define AXP_E_BUFTOOSMALL	-2
 
 /*
  * Prototype Definitions
