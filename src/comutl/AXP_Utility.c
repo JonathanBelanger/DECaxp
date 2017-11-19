@@ -376,3 +376,389 @@ int AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 	 */
 	return(retVal);
 }
+
+/*
+ * AXP_CondQueue_Init
+ * 	This function is called to initialize a conditional queue.  This just
+ * 	initializes the root of the queue, not the individual entries themselves.
+ * 	The initialization entails, setting the queue entry type, setting the flink
+ * 	and blink to the address of the header itself, and finally initializing the
+ * 	conditional and mutex variables.
+ *
+ * Input Parameters:
+ * 	queue:
+ * 		A pointer to the conditional queue root that needs to be initialized.
+ *
+ * Output Parameters:
+ * 	queue:
+ * 		The fields within this parameter are initialized.
+ *
+ * Return Value:
+ * 	false:	Something happened when trying to initialize the conditional and
+ * 			mutex variables.
+ * 	true:	Normal successful completion.
+ */
+bool AXP_CondQueue_Init(AXP_COND_Q_ROOT *queue)
+{
+	bool	retVal = false;
+
+	/*
+	 * Set the type of queue this is.  We will use this in other conditional
+	 * queue functions to determine how we are supposed to process each type
+	 * of queue.
+	 */
+	queue->type = AXPCondQueue;
+
+	/*
+	 * Set the flink and blink to the address of the header itself.
+	 */
+	queue->flink = queue->blink = (void *) queue;
+
+	/*
+	 * Go allocate the condition and mutex variables.  If either fails, then
+	 * deallocate anything that may have been allocated in here and return a
+	 * false to the caller.
+	 */
+	if (pthread_cond_init(&queue->qCond, NULL) == 0)
+	{
+		if (pthread_mutex_init(&queue->qMutex, NULL) != 0)
+		{
+			pthread_cond_destroy(&queue->qCond);
+			retVal = false;
+		}
+		else
+			retVal = true;		/* We succeeded with what we set out to do */
+	}
+	else
+		retVal = false;
+
+	/*
+	 * Return the result of this call back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_CondQueueCnt_Init
+ * 	This function is called to initialize a conditional queue.  This just
+ * 	initializes the root of the queue, not the individual entries themselves.
+ * 	The initialization entails, setting the queue entry type, setting the flink
+ * 	and blink to the address of the header itself, setting the maximum number
+ * 	of entries that can be in the queue and the count to zero, and finally
+ * 	initializing the conditional and mutex variables.
+ *
+ * Input Parameters:
+ * 	queue:
+ * 		A pointer to the counted conditional queue root that needs to be
+ * 		initialized.
+ *
+ * Output Parameters:
+ * 	queue:
+ * 		The fields within this parameter are initialized.
+ *
+ * Return Value:
+ * 	false:	Something happened when trying to initialize the conditional and
+ * 			mutex variables.
+ * 	true:	Normal successful completion.
+ */
+bool AXP_CondQueueCnt_Init(AXP_COND_Q_ROOT_CNT *queue, u32 max)
+{
+	bool	retVal = false;
+
+	/*
+	 * Set the type of queue this is.  We will use this in other conditional
+	 * queue functions to determine how we are supposed to process each type
+	 * of queue.
+	 */
+	queue->type = AXPCountedCondQueue;
+
+	/*
+	 * Set the flink and blink to the address of the header itself.
+	 */
+	queue->flink = queue->blink = (void *) queue;
+
+	/*
+	 * Initialize the max and count variables.
+	 */
+	queue->max = max;
+	queue->count = 0;
+
+	/*
+	 * Go allocate the condition and mutex variables.  If either fails, then
+	 * deallocate anything that may have been allocated in here and return a
+	 * false to the caller.
+	 */
+	if (pthread_cond_init(&queue->qCond, NULL) == 0)
+	{
+		if (pthread_mutex_init(&queue->qMutex, NULL) != 0)
+		{
+			pthread_cond_destroy(&queue->qCond);
+			retVal = false;
+		}
+		else
+			retVal = true;		/* We succeeded with what we set out to do */
+	}
+	else
+		retVal = false;
+
+	/*
+	 * Return the result of this call back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_CondQueue_Insert
+ * 	This function is called to insert a record (what) into the queue at a
+ * 	location after where.  This function will perform the following steps:
+ * 		1) Lock the mutex.
+ * 		2) If the queue is a counted queue, can it take an additional entry?
+ * 		3) If not a counted queue or #2 is true, then insert the record into
+ * 		   the queue.
+ * 		4) If a counted queue, then increment the counter.
+ * 		5) Signal the condition variable.
+ * 		6) Unlock the mutex.
+ * 		7) Return the results back to the caller.
+ *
+ * Input Parameters:
+ * 	where:
+ * 		A pointer to an entry in the queue (or possibly the header), after
+ * 		which the 'what' parameter is inserted.
+ * 	what:
+ * 		A pointer to the entry to be inserted into the queue.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	>0:		The queue cannot take another entry.
+ * 	=0:		Normal successful completion.
+ * 	<0:		An error occurred with the mutex or condition variable.
+ */
+int  AXP_CondQueue_Insert(AXP_COND_Q_LEAF *where, AXP_COND_Q_LEAF *what)
+{
+	int				retVal = 0;
+	AXP_COND_Q_ROOT	*parent = (AXP_COND_Q_ROOT *) where->parent;
+	AXP_COND_Q_ROOT_CNT *countedParent = (AXP_COND_Q_ROOT_CNT *) parent;
+
+	/*
+	 * First lock the mutex so that we can perform the rest of the processing
+	 * without being trampled upon.  If this lock fails, we will return a -1
+	 * value back to the caller.
+	 */
+	if (pthread_mutex_lock(&parent->qMutex) == 0)
+	{
+		AXP_COND_Q_LEAF *next = (AXP_COND_Q_LEAF *) where->blink;
+
+		/*
+		 * If this is a counted conditional queue, see if there is room for
+		 * another entry.  If not, we set the return value to 1.
+		 */
+		if ((parent->type == AXPCountedCondQueue) &&
+			(countedParent->count >= countedParent->max))
+			retVal = 1;
+
+		/*
+		 * OK, if everything thus far has worked out, then let's go and insert
+		 * the new entry into the existing queue and the location indicated.
+		 * We'll also need to increment the counter, if there is one, and
+		 * broadcast the condition variable.
+		 */
+		if (retVal == 0)
+		{
+			what->flink = where;
+			what->blink = where->blink;
+			next->blink = what;
+			where->flink = what;
+
+			/*
+			 * Now, let's broadcast the condition variable, waking everyone who
+			 * is waiting on it.  IF we have an error doing this, then set the
+			 * return value to -1.
+			 */
+			if (pthread_cond_broadcast(&parent->qCond) != 0)
+				retVal = -2;
+
+			/*
+			 * OK, if everything still worked out and the condition queue is a
+			 * counted one, then increment the counter.  If we got an error,
+			 * then we need to revert the queue back to its former self.
+			 */
+			if ((parent->type == AXPCountedCondQueue) && (retVal == 0))
+				countedParent->count++;
+			else if (retVal != 0)
+			{
+				where->flink = next;
+				next->blink = where;
+			}
+		}
+
+		/*
+		 * No matter what happens,, at this point we had successfully locked
+		 * the mutex, unlock it now (this will release all the threads waiting
+		 * on the condition variable to be able to execute).
+		 */
+		pthread_mutex_unlock(&parent->qMutex);
+	}
+	else
+		retVal = -1;
+
+	/*
+	 * Return the result of this call back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_CondQueue_Remove
+ * 	This function is called to remove a record (to) from the queue at a
+ * 	location at from.  This function will perform the following steps:
+ * 		1) Lock the mutex.
+ * 		2) If the queue is not empty remove the record from the queue.
+ * 		3) If a counted queue, then decrement the counter.
+ * 		4) Unlock the mutex.
+ * 		5) Return the results back to the caller.
+ *
+ * Input Parameters:
+ * 	from:
+ * 		A pointer to an entry in the queue that is to be removed.
+ *
+ * Output Parameters:
+ * 	to:
+ * 		A pointer to a location to receive the removed entry.
+ *
+ * Return Value:
+ * 	false:	The entry was not successfully removed.
+ * 	true:	The entry was successfully removed.
+ */
+bool AXP_CondQueue_Remove(AXP_COND_Q_LEAF *from, AXP_COND_Q_LEAF **to)
+{
+	bool	retVal = true;
+	AXP_COND_Q_ROOT	*parent = (AXP_COND_Q_ROOT *) from->parent;
+	AXP_COND_Q_ROOT_CNT *countedParent = (AXP_COND_Q_ROOT_CNT *) parent;
+
+	/*
+	 * First lock the mutex so that we can perform the rest of the processing
+	 * without being trampled upon.  If this lock fails, we will return a false
+	 * back to the caller.
+	 */
+	if (pthread_mutex_lock(&parent->qMutex) == 0)
+	{
+		if (AXP_CondQueue_Empty(parent) == false)
+		{
+			AXP_COND_Q_LEAF *before = (AXP_COND_Q_LEAF *) from->blink;
+			AXP_COND_Q_LEAF *after = (AXP_COND_Q_LEAF *) from->flink;
+
+			*to = from;
+			before->flink = after;
+			after->blink = before;
+		}
+		else
+			retVal = false;
+
+		/*
+		 * No matter what happens,, at this point we had successfully locked
+		 * the mutex, unlock it now.
+		 */
+		pthread_mutex_unlock(&parent->qMutex);
+	}
+	else
+		retVal = false;
+	return(retVal);
+}
+
+/*
+ * AXP_CondQueue_Wait
+ * 	This function is called to wait on the specified queue until has something
+ * 	in it.  If there is something in the queue when called, then there will be
+ * 	not waiting.
+ *
+ * Input Parameters:
+ * 	root:
+ * 		A pointer to the root of the condition queue.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Values:
+ * 	None.
+ */
+void AXP_CondQueue_Wait(void *root)
+{
+	AXP_COND_Q_ROOT	*parent = (AXP_COND_Q_ROOT *) root;
+
+	/*
+	 * First lock the mutex so that we can perform the rest of the processing
+	 * without being trampled upon.
+	 */
+	if (pthread_mutex_lock(&parent->qMutex) == 0)
+	{
+
+		/*
+		 * If the queue is empty, then let's wait for something to arrive.
+		 */
+		if (AXP_CondQueue_Empty(parent) == true)
+			pthread_cond_wait(&parent->qCond, &parent->qMutex);
+
+		/*
+		 * No matter what happens,, at this point we had successfully locked
+		 * the mutex, unlock it now.
+		 */
+		pthread_mutex_unlock(&parent->qMutex);
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_CondQueue_Empty
+ * 	This function is called to determine if the queue in question is empty.
+ * 	This is done by the flink pointing to is own queue.
+ *
+ * Input Parameters:
+ * 	queue:
+ * 		A pointer to void, which is actually either a Condition Queue or a
+ * 		Counted Condition Queue.  NOTE: Since the important layout between
+ * 		these two Condition Queue types is the same, we only have to cast to
+ * 		the simplest common format.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	false:	The condition queue is NOT empty.
+ * 	true:	The condition queue IS empty.
+ */
+bool AXP_CondQueue_Empty(void *queue)
+{
+	bool			retVal = false;
+	AXP_COND_Q_ROOT	*parent = (AXP_COND_Q_ROOT *) queue;
+	int				locked;
+
+	/*
+	 * Try locking the mutex.   If it fails, it is probably because it is
+	 * already locked by the caller.  This is OK.  If we did lock it, we will
+	 * unlock it before returning to the caller.
+	 */
+	locked = pthread_mutex_trylock(parent->qMutex);
+
+	/*
+	 * If the forward link equals the header, then there are no entries in the
+	 * queue (it is empty).
+	 */
+	retVal = parent->flink == parent;
+
+	/*
+	 * If we locked the mutex above, then unlock it now.
+	 */
+	if (locked == 0)
+		pthread_mutex_unlock(parent->qMutex);
+
+	/*
+	 * Return what we found back to the caller.
+	 */
+	return(retVal);
+}
