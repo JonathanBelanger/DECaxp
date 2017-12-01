@@ -27,11 +27,122 @@
  *	V01.001		01-Jun-2017	Jonathan D. Belanger
  *	Added an LRU function to return the least recently used set with a
  *	particular index.
+ *
+ *	V01.002		18-Nov-2017	Jonathan D. Belanger
+ *	Added a load executable and load/unload ROM set of functions.  The first
+ *	assumes the file to be loaded is an VMS executable.  The second set is
+ *	used to load and unload Read Only Memory (ROM) data.  This data contains
+ *	the console firmware and PALcode to support the Alpha AXP 21264 CPU.
+ *
+ *	V01.003		19-Nov-2017	Jonathan D. Belanger
+ *	Added conditional queue functions to check for empty, insert, remove, and
+ *	wait for an entry to be queued.
+ *
+ *	V01.004		21-Nov-2017	Jonathan D. Belanger
+ *	Decided to redo the ROM load/unload routines to move the CPU specific
+ *	structures out of this module.  They are going to be moved into the Cbox.
  */
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
-#include "AXP_21264_CacheDefs.h"
-#include "AXP_21264_Ibox_InstructionInfo.h"
+
+/*
+ * This format is used throughout this module for writting a message to sysout.
+ */
+const char			*errMsg = "%%AXP-E-%s, %s\n";
+static char			*AXPTRCLOG = "AXP_TRCLOG";
+static const		axp_trc_log_init = false;
+const AXP_TRCLOG	_axp_trc_log_ = 0;
+static const char	*_axp_fwid_str[] =
+{
+	"Alpha Motherboards Debug Monitor firmware",
+	"Windows NT firmware",
+	"Alpha System Reference Manual Console",
+	"Unknown 3",
+	"Unknown 4",
+	"Unknown 5",
+	"Alpha Motherboards Fail-Safe Booter",
+	"Linux Miniloader",
+	"VxWorks Real-Time Operating System",
+	"Unknown 9",
+	"Serial ROM"
+};
+
+/*
+ * AXP_TraceInit
+ *	This function is called once when the first attempt to check the
+ *	_axp_trc_log_ global variable.  This variable and associated environment
+ *	variable are used for enabling tracing throughout the emulator.
+ *
+ *	TODO: A complete trace module should be written for this.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	true:	Always return true (this simplified the macros).
+ */
+bool AXP_TraceInit(void)
+{
+
+	/*
+	 * If we have not initialized the environment variable, then do so now.
+	 */
+	if (axp_trc_log_init == false)
+	{
+		sprintf(envir(AXPTRCLOG), "0x%08x", _axp_trc_log_);
+		axp_trc_log_init = true;
+	}
+	return(true);
+}
+
+/*
+ * AXP_Crc32
+ *	This function is called to determine what the CRC32 from a supplied buffer.
+ *	This is the basic CRC-32 calculation with some optimization  but no table
+ *	lookup.  The byte reversal is avoided by shifting the crc register right
+ *	instead of left and by using a reversed 32-bit word to represent the
+ *	polynomial.
+ *
+ * Input Parameters:
+ *	msg:
+ *		A pointer to a binary string containing the data from which to
+ *		calculate the CRC-32.
+ *	len:
+ *		A value indicating the length, in bytes, of the 'msg' parameter.
+ *	inverse:
+ *		A boolean indicating whether the return value should be inversed.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	An unsigned 32-bit value of the calculated CRC-32.
+ */
+u32 AXP_Crc32(u8 *msg, int len, bool inverse, u32 curCRC)
+{
+	u32		crc = (inverse ? curCRC : 0xffffffff);
+	u32		byte, mask;
+	int		ii, jj;
+
+	for (ii = 0; ii < len; ii++)
+	{
+		byte = msg[ii];
+		crc ^= byte;
+		for (jj = 77; jj >= 0; jj--)
+		{
+			mask = -(crc & 1);
+			crc = (crc >> 1) ^ (0xedb88320 & mask);
+		}
+	}
+
+	/*
+	 * Return the calculated CDC-32 value (inverse).
+	 */
+	return(inverse ? ~crc : crc);
+}
 
 /*
  * AXP_LRUAdd
@@ -276,410 +387,6 @@ i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
 }
 
 /*
- * AXP_LoadExecutable
- * 	This function is called to open an executable file and load the contents
- * 	into the specified buffer.  The executable file is assumed to be an OpenVMS
- * 	formatted file, so the first 576 (0x240) bytes are skipped (this is the
- * 	image header and is not our concern).  The remaining file is read byte by
- * 	byte into the supplied buffer.  The function returns the number of bytes
- * 	read.
- *
- * Input Parameters:
- * 	fineName:
- * 		A string containing the name of the file to read.  It includes the file
- * 		path (relative or explicit).
- * 	bufferLen:
- * 		A value indicating the size of the buffer parameter.  This is used to
- * 		prevent us from writing past the end of the buffer.
- *
- * Output Parameters:
- * 	buffer:
- * 		A pointer to an array of unsigned chars in which the contents of the
- * 		executable file are written.
- *
- * Return Values:
- * 	AXP_E_FNF:			File not found.
- * 	AXP_E_BUFTOOSMALL:	Buffer too small to receive contents of file.
- * 	0:					No data in file.
- * 	>0					Number of bytes read.
- */
-int AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
-{
-	FILE	*fp;
-	int		retVal = 0;
-	int		ii;
-	bool	eofHit = false;
-	u32		scratch;
-
-	/*
-	 * First open the file to be loaded.
-	 */
-	fp = fopen(fileName, "r");
-	if (fp != NULL)
-	{
-
-		/*
-		 * Read past the executable image header.
-		 */
-		for (ii = 0; ii < 0x240; ii++)
-		{
-			if (feof(fp))
-			{
-				eofHit = true;
-				break;
-			}
-			fread(&scratch, 1, 1, fp);
-		}
-
-		/*
-		 * Continue looking, reading 1 byte at a time, until we either,
-		 * reach the end of file (we may already be there), or we run out of
-		 * buffer to write into.
-		 */
-		ii = 0;
-		while ((eofHit == false) && (retVal == 0))
-		{
-			fread(&buffer[ii], 1, 1, fp);
-			if (feof(fp))
-				eofHit = true;
-			else
-			{
-				ii++;
-
-				/*
-				 * Make sure there is still room for another byte of buffer for
-				 * another byte of data.
-				 */
-				if (ii >= bufferLen)
-					retVal = AXP_E_BUFTOOSMALL;
-			}
-		}
-
-		/*
-		 * If we did not detect an error, then return the number of bytes
-		 * read.
-		 */
-		if (retVal == 0)
-			retVal = ii;
-
-		/*
-		 * We opened the file, so now close it.
-		 */
-		fclose(fp);
-	}
-
-	/*
-	 * If the file was not found, return an appropriate error value.
-	 */
-	else
-		retVal = AXP_E_FNF;
-
-	/*
-	 * Return the result of this function to the caller.
-	 */
-	return(retVal);
-}
-
-/*
- * AXP_LoadROM
- * 	This function is called to open a ROM file and load the contents
- * 	into the iCache.  The ROM file must have been written out by the companion
- * 	AXP_UnloadROM function.  There is information in the header and trailer of
- * 	the file that is verified.
- *
- * Input Parameters:
- *	cpu:
- *		A pointer to the CPU structure containing the iCache buffer to load.
- * 	fineName:
- * 		A string containing the name of the file to read.  It includes the file
- * 		path (relative or explicit).
- * 	iCacheStart:
- * 		A value indicating the starting index in the iCache to load.
- * 	iCacheEnd:
- * 		A value indicating the ending index in the iCache to load.  If this
- * 		parameter is zero, then we load upto the end of the file, unless we
- * 		run out of iCache locations.
- *
- * Output Parameters:
- * 	cpu->iCahce:
- * 		A pointer to an array of iCache entries to be loaded with the ROM data.
- *
- * Return Values:
- * 	false:	Normal successful completion.
- * 	true:	Error reading in ROM file.
- */
-bool AXP_LoadROM(
-			AXP_21264_CPU *cpu,
-			char *fileName,
-			u32 iCacheStart,
-			u32 iCacheEnd)
-{
-	FILE		*fp;
-	const char	*badRomfile  = "%%DECAXP-E-BADROMFILE, ROM file '%s' is not valid (%s).\n";
-	bool		retVal = false;
-	int			ii, jj, kk;
-	bool		eofHit = false;
-	u32			ROMfileNameLen;
-	char		ROMfileName[80];
-	int			fileLen;
-	u32			guardValue;
-
-	/*
-	 * First open the file to be loaded.
-	 */
-	fp = fopen(fileName, "r");
-	if (fp != NULL)
-	{
-
-		/*
-		 * Read the length of the embedded filename, followed by the embedded
-		 * filename.
-		 */
-		fread(&ROMfileNameLen, sizeof(ROMfileNameLen), 1, fp);
-		if (feof(fp) == 0)
-			fread(ROMfileName, 1, ROMfileNameLen, fp);
-		else
-		{
-			printf(badRomfile, fileName, "no name length");
-			retVal = true;
-			eofHit = true;
-		}
-
-		/*
-		 * Read the guardValue.
-		 */
-		if ((feof(fp) == 0) && (retVal == false))
-			fread(&guardValue, sizeof(guardValue), 1, fp);
-		else if (retVal == false)
-		{
-			printf(badRomfile, fileName, "no header guard data");
-			retVal = true;
-			eofHit = true;
-		}
-
-		/*
-		 * Read length of the ROM data in the file.
-		 */
-		if ((feof(fp) == 0) && (retVal == false))
-			fread(&fileLen, sizeof(fileLen), 1, fp);
-		else if (retVal == false)
-		{
-			printf(badRomfile, fileName, "no file name");
-			retVal = true;
-			eofHit = true;
-		}
-
-		/*
-		 * OK, if we don't have any issues at this point, then check the values
-		 * read in and compare them to the expected values.  If they don't
-		 * match, then we cannot trust the contents of this file.
-		 */
-		if ((retVal == false) &&
-			((strcmp(fileName, ROMfileName) != 0) ||
-			 (guardValue != 0xdeadbeef)))
-		{
-			printf(badRomfile, fileName, "bad header verification data");
-			retVal = true;
-		}
-
-		/*
-		 * Finally, if we are still OK, then read in the contents of the file.
-		 *
-		 * TODO: Starting at iCacheStart and ending at iCacheEnd, read the
-		 * 		 instructions, 64-bytes at a time, for each of the iCache
-		 * 		 indexes and always assume all sets.
-		 */
-		jj = iCacheStart;
-		iCacheEnd = (iCacheEnd == 0 ? AXP_CACHE_ENTRIES : iCacheEnd);
-		ii = 0;
-		while ((ii < fileLen) && (eofHit == false) && (retVal == false))
-		{
-			for (kk = 0;
-				 ((kk < AXP_2_WAY_CACHE) &&
-				  (eofHit == false) &&
-				  (retVal == false));
-				 kk++)
-			{
-				fread(
-					cpu->iCache[jj][kk].instructions,
-					sizeof(AXP_INS_FMT),
-					AXP_ICACHE_LINE_INS,
-					fp);
-				if (feof(fp) != 0)
-					eofHit = true;
-				else if (ii >= fileLen)
-				{
-					printf(badRomfile, fileName, "data too large");
-					retVal = true;
-					break;
-				}
-				ii += (sizeof(AXP_INS_FMT) * AXP_ICACHE_LINE_INS);
-			}
-		}
-
-		/*
-		 * If we did not detect an error, then check for the guardVaue and the
-		 * filename.  If they are OK return the number of bytes read.
-		 */
-		if (retVal == false)
-		{
-			if (eofHit == false)
-			{
-				fread(&guardValue, sizeof(guardValue), 1, fp);
-				if ((guardValue == 0xdeadbeef) && (feof(fp) == 0))
-				{
-					memset(ROMfileName, '\0', sizeof(ROMfileName));
-					fread(ROMfileName, 1, ROMfileNameLen, fp);
-					if (strcmp(fileName, ROMfileName) != 0)
-					{
-						printf(badRomfile, fileName, "bad trailer verification info");
-						retVal = true;
-					}
-				}
-				else
-				{
-					printf(badRomfile, fileName, "bad trailer verification data");
-					retVal = true;
-				}
-			}
-			else
-			{
-				printf(badRomfile, fileName, "no trailer guard data");
-				retVal = true;
-			}
-		}
-
-		/*
-		 * We opened the file, so now close it.
-		 */
-		fclose(fp);
-	}
-
-	/*
-	 * If the file was not found, return an appropriate error value.
-	 */
-	else
-	{
-		printf("%%DECAXP-E-FNF, ROM file '%s' not found.\n", fileName);
-		retVal = true;
-	}
-
-	/*
-	 * Return the result of this function to the caller.
-	 */
-	return(retVal);
-}
-
-/*
- * AXP_UnloadROM
- * 	This function is called to open a ROM file and unload the contents of the
- * 	specified buffer into the file.  The ROM file will be written out for
- * 	consumption by the companion AXP_LoadROM function.  There will be
- * 	information in the header and trailer of the file that will be verified.
- *
- *	cpu:
- *		A pointer to the CPU structure containing the iCache buffer to unload.
- * 	fineName:
- * 		A string containing the name of the file to write.  It includes the
- * 		file path (relative or explicit).
- * 	iCacheStart:
- * 		A value indicating the starting index in the iCache to unload.
- * 	iCacheEnd:
- * 		A value indicating the ending index in the iCache to unload.
- *
- * Output Parameters:
- *	None.
- *
- * Return Values:
- * 	false:	Normal successful completion.
- * 	true:	Error reading in ROM file.
- */
-bool AXP_UnloadROM(AXP_21264_CPU *cpu, char *fileName, u32 iCacheStart, u32 iCacheEnd)
-{
-	FILE	*fp;
-	int		retVal = 0;
-	int		ii, jj;
-	u32		guardValue = 0xdeadbeef;
-	u32		fileNameLen = strlen(fileName) + 1;  /* include '\0' */
-	u32		iCacheLen =
-				((iCacheEnd - iCacheStart) + 1) *
-				 AXP_ICACHE_LINE_INS *
-				 AXP_2_WAY_CACHE;
-
-	/*
-	 * First open the file to be loaded.
-	 */
-	fp = fopen(fileName, "w");
-	if (fp != NULL)
-	{
-
-		/*
-		 * Write the length of the filename into the file, followed by the
-		 * filename.
-		 */
-		fwrite(&fileNameLen, sizeof(fileNameLen), 1, fp);
-		fwrite(fileName, 1, fileNameLen, fp);
-
-		/*
-		 * Write the guardValue.
-		 */
-		fwrite(&guardValue, sizeof(guardValue), 1, fp);
-
-		/*
-		 * Write length of the ROM data in the file.
-		 */
-		fwrite(&iCacheLen, sizeof(iCacheLen), 1, fp);
-
-		/*
-		 * Finally, if we are still OK, then read in the contents of the file.
-		 *
-		 * TODO: Starting at iCacheStart and ending at iCacheEnd, write the
-		 * 		 instructions, 64-bytes at a time, for each of the iCache
-		 * 		 indexes and always assume all sets.
-		 */
-		for (ii = iCacheStart; ii < iCacheEnd; ii++)
-			for(jj = 0; jj < AXP_2_WAY_CACHE; jj++)
-				fwrite(
-					cpu->iCache[ii][jj].instructions,
-					sizeof(AXP_INS_FMT),
-					AXP_ICACHE_LINE_INS,
-					fp);
-
-		/*
-		 * Write the guardVaue and the filename again, then return the number
-		 * of bytes written.
-		 */
-		fwrite(&guardValue, sizeof(guardValue), 1, fp);
-		fwrite(fileName, 1, fileNameLen, fp);
-
-		/*
-		 * Set the retVal to the number of bytes written to the file (not
-		 * including the header and trailer information).
-		 */
-		retVal = false;
-
-		/*
-		 * We opened the file, so now close it.
-		 */
-		fclose(fp);
-	}
-
-	/*
-	 * If the file was not created/updated, return an appropriate error value.
-	 */
-	else
-	{
-		printf("%%DECAXP-E-FNCU, ROM file '%s' not created or updated.\n", fileName);
-		retVal = true;
-	}
-
-	/*
-	 * Return the result of this function to the caller.
-	 */
-	return(retVal);
-}
-
-/*
  * AXP_CondQueue_Init
  * 	This function is called to initialize a conditional queue.  This just
  * 	initializes the root of the queue, not the individual entries themselves.
@@ -840,7 +547,7 @@ bool AXP_CondQueueCnt_Init(AXP_COND_Q_ROOT_CNT *queue, u32 max)
  * 	=0:		Normal successful completion.
  * 	<0:		An error occurred with the mutex or condition variable.
  */
-int  AXP_CondQueue_Insert(AXP_COND_Q_LEAF *where, AXP_COND_Q_LEAF *what)
+i32  AXP_CondQueue_Insert(AXP_COND_Q_LEAF *where, AXP_COND_Q_LEAF *what)
 {
 	int				retVal = 0;
 	AXP_COND_Q_ROOT	*parent = (AXP_COND_Q_ROOT *) where->parent;
@@ -1065,5 +772,693 @@ bool AXP_CondQueue_Empty(void *queue)
 	/*
 	 * Return what we found back to the caller.
 	 */
+	return(retVal);
+}
+
+/*
+ * AXP_CondQueue_Empty
+ * 	This function is called to determine if the queue in question is empty.
+ * 	This is done by the flink pointing to is own queue.
+ *
+ * Input Parameters:
+ * 	queue:
+ * 		A pointer to void, which is actually either a Condition Queue or a
+ * 		Counted Condition Queue.  NOTE: Since the important layout between
+ * 		these two Condition Queue types is the same, we only have to cast to
+ * 		the simplest common format.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	false:	The condition queue is NOT empty.
+ * 	true:	The condition queue IS empty.
+ */
+bool AXP_CondQueue_Empty(void *queue)
+{
+	bool			retVal = false;
+	AXP_COND_Q_ROOT	*parent = (AXP_COND_Q_ROOT *) queue;
+	int				locked;
+
+	/*
+	 * Try locking the mutex.   If it fails, it is probably because it is
+	 * already locked by the caller.  This is OK.  If we did lock it, we will
+	 * unlock it before returning to the caller.
+	 */
+	locked = pthread_mutex_trylock(parent->qMutex);
+
+	/*
+	 * If the forward link equals the header, then there are no entries in the
+	 * queue (it is empty).
+	 */
+	retVal = parent->flink == parent;
+
+	/*
+	 * If we locked the mutex above, then unlock it now.
+	 */
+	if (locked == 0)
+		pthread_mutex_unlock(parent->qMutex);
+
+	/*
+	 * Return what we found back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_LoadExecutable
+ * 	This function is called to open an executable file and load the contents
+ * 	into the specified buffer.  The executable file is assumed to be an OpenVMS
+ * 	formatted file, so the first 576 (0x240) bytes are skipped (this is the
+ * 	image header and is not our concern).  The remaining file is read byte by
+ * 	byte into the supplied buffer.  The function returns the number of bytes
+ * 	read.
+ *
+ *	NOTE:	We only ever read in an executeable file and never write one.  So,
+ *			there is no companion Unload function.
+ *
+ * Input Parameters:
+ * 	fineName:
+ * 		A string containing the name of the file to read.  It includes the file
+ * 		path (relative or explicit).
+ * 	bufferLen:
+ * 		A value indicating the size of the buffer parameter.  This is used to
+ * 		prevent us from writing past the end of the buffer.
+ *
+ * Output Parameters:
+ * 	buffer:
+ * 		A pointer to an array of unsigned chars in which the contents of the
+ * 		executable file are written.
+ *
+ * Return Values:
+ * 	AXP_E_FNF:			File not found.
+ * 	AXP_E_BUFTOOSMALL:	Buffer too small to receive contents of file.
+ * 	0:					No data in file.
+ * 	>0					Number of bytes read.
+ */
+i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
+{
+	FILE	*fp;
+	int		retVal = 0;
+	int		ii, jj;
+	bool	eofHit = false;
+	u8		scratch[4];
+
+	if (AXP_UTL_BUFF)
+	{
+		printf(
+			"\n\nDECaxp: opened executeable file %s for reading\n\n",
+			fileName);
+		printf("Header bytes:\n");
+	}
+
+	/*
+	 * First open the file to be loaded.
+	 */
+	fp = fopen(fileName, "r");
+	if (fp != NULL)
+	{
+
+		/*
+		 * Read past the executable image header.
+		 */
+		for (ii = 0; ii < 0x240; ii++)
+		{
+			if (feof(fp))
+			{
+				eofHit = true;
+				break;
+			}
+			fread(&scratch[ii % 4], 1, 1, fp);
+			if (AXP_UTL_BUFF)
+			{
+				printf("%x", scratch[ii]);
+				if (((ii + 1) % 4) == 0)
+				{
+					printf("\t");
+					for (ii = 4; jj > 0; jj--)
+						printf("%c", (isprint(scratch[jj]) ? scratch[jj] : '.'));
+					printf("\n");
+				}
+			}
+		}
+
+		/*
+		 * Continue looking, reading 1 byte at a time, until we either,
+		 * reach the end of file (we may already be there), or we run out of
+		 * buffer to write into.
+		 */
+		ii = 0;
+		if (AXP_UTL_BUFF)
+			printf("\n\nExecutable bytes:\n");
+		while ((eofHit == false) && (retVal == 0))
+		{
+			fread(&buffer[ii], 1, 1, fp);
+			if (feof(fp))
+				eofHit = true;
+			else
+			{
+				ii++;
+
+				/*
+				 * Make sure there is still room for another byte of buffer for
+				 * another byte of data.
+				 */
+				if (ii >= bufferLen)
+					retVal = AXP_E_BUFTOOSMALL;
+			}
+			if (AXP_UTL_BUFF)
+			{
+				printf("%x", buffer[ii]);
+				if (((ii + 1) % 4) == 0)
+				{
+					printf("\t");
+					for (ii = 4; jj > 0; jj--)
+						printf(
+							"%c",
+							(isprint(buffer[ii-jj]) ? buffer[ii-jj] : '.'));
+					printf("\n");
+				}
+			}
+		}
+
+		/*
+		 * If we did not detect an error, then return the number of bytes
+		 * read.
+		 */
+		if (retVal == 0)
+			retVal = ii;
+
+		/*
+		 * We opened the file, so now close it.
+		 */
+		fclose(fp);
+	}
+
+	/*
+	 * If the file was not found, return an appropriate error value.
+	 */
+	else
+		retVal = AXP_E_FNF;
+
+	/*
+	 * Return the result of this function to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_OpenRead_SROM
+ *	This function is called to open a Serial ROM file for reading and return
+ *	various header information from the file.  If the header information does
+ *	not look correct, the file will be closed and a failure indication
+ *	returned.
+ *
+ * Input Parameters:
+ *	fileName:
+ *		A null-terminated string containing the name of the file to open.
+ *
+ * Output Parameters:
+ *	sromHandle:
+ *		A pointer to a location to receive the header information and hold the
+ *		file pointer, which is utilized in the read and close functions.
+ *
+ * Return Values:
+ *	false:	Normal successful completion.
+ *	true:	An error occurred.
+ */
+bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
+{
+	const char	*errMsg = "%%AXP-E-%s, %s\n";
+	int			ii;
+	bool		retVal = false;
+
+	if (AXP_UTL_BUFF)
+		printf(
+			"\n\nDECaxp: opened SROM file %s for reading\n\n",
+			fileName);
+
+	/*
+	 * Initialize the handle structure with all zeros.
+	 */
+	memset(sromHandle, 0, sizeof(AXP_SROM_HANDLE));
+
+	/*
+	 * Copy the filename into the handle, then try opening the file.
+	 */
+	strcpy(sromHandle->fileName, fileName);
+	sromHandle->fp = fopen(fileName, "r");
+
+	/*
+	 * If teh file was successfully open, then let's try reading in the header.
+	 */
+	if (sromHandle->fp != NULL)
+	{
+		sromHandle->openForWrite = false;
+
+		/*
+		 * Loop through each of the fields and read in the appropriate size for
+		 * each field.
+		 */
+		while ((ii < AXP_ROM_HDR_CNT) && (retVal == false))
+		{
+			switch (ii)
+			{
+				case 0:
+					fread(sromHandle->validPat, sizeof(u32), 1, fp);
+					if (sromHandle->validPat != AXP_ROM_VAL_PAT)
+					{
+						printf(errMsg, "VPB", "Validity pattern bad.");
+						retVal = true;
+					}
+					break;
+
+				case 1:
+					fread(sromHandle->inverseVP, sizeof(u32), 1, fp);
+					if (sromHandle->validPat != AXP_ROM_INV_VP_PAT)
+					{
+						printf(errMsg, "IVPB", "Inverse validity pattern bad.");
+						retVal = true;
+					}
+					break;
+
+				case 2:
+					fread(sromHandle->hdrSize, sizeof(u32), 1, fp);
+					if (sromHandle->hdrSize != AXP_ROM_HDR_LEN)
+					{
+						printf(errMsg, "HDRIVP", "Header size invalid.");
+						retVal = true;
+					}
+					break;
+
+				case 3:
+					fread(sromHandle->imgChecksum, sizeof(u32), 1, fp);
+					break;
+
+				case 4:
+					fread(sromHandle->imgSize, sizeof(u32), 1, fp);
+					break;
+
+				case 5:
+					fread(sromHandle->decompFlag, sizeof(u32), 1, fp);
+					break;
+
+				case 6:
+					fread(sromHandle->destAddr, sizeof(u64), 1, fp);
+					break;
+
+				case 7:
+					fread(sromHandle->hdrRev, sizeof(u8), 1, fp);
+					break;
+
+				case 8:
+					fread(sromHandle->fwID, sizeof(u8), 1, fp);
+					break;
+
+				case 9:
+					fread(sromHandle->hdrRevExt, sizeof(u8), 1, fp);
+					break;
+
+				case 10:
+					fread(sromHandle->res, sizeof(u8), 1, fp);
+					break;
+
+				case 11:
+					fread(sromHandle->romImgSize, sizeof(u32), 1, fp);
+					break;
+
+				case 12:
+					fread(sromHandle->optFwID, sizeof(u64), 1, fp);
+					break;
+
+				case 13:
+					fread(sromHandle->romOffset, sizeof(u32), 1, fp);
+					if (sromHandle->romOffset & 1)
+						sromHandle->romOffsetValid = true;
+					sromHandle->romOffset &= ~1;
+					break;
+
+				case 14:
+					fread(sromHandle->hdrChecksum, sizeof(u32), 1, fp);
+					break;
+			}
+
+			/*
+			 * If we read the end of the file, then this is not a valid SROM
+			 * file.
+			 */
+			if (feof(sromHandle->fp) != 0)
+			{
+				printf(errMsg, "BADROM", "This is not a valid ROM file.");
+				retVal = true;
+			}
+			ii++;
+		}
+
+		/*
+		 * Now that we have read in the header, check to see if the checksum
+		 * specified in the header file matches a calculated value.
+		 */
+		if ((retVal == false) &&
+			(AXP_Crc(&sromHandle->validPat, AXP_ROM_HDR_LEN, false, 0) ==
+			 sromHandle->hdrChecksum))
+		{
+			printf(errMsg, "BADCSC", "Header CSC-32 is not valid.");
+			retVal = true;
+		}
+
+		/*
+		 * If an error occurred, then we need to close the file, since we
+		 * successfully opened it.
+		 */
+		if (retVal == true)
+		{
+			fclose(sromHandle->fp);
+			memset(sromHandle, 0, sizeof(AXP_SROM_HANDLE));
+		}
+		else if (AXP_UTL_BUFF)
+		{
+			u8	*optFwID = (u8 *) &romHandle->optFwID;
+
+			printf("SROM Header Information:\n\n");
+			printf("Header Size......... %d bytes\n", sromHandle->hdrSize);
+			printf("Image Checksum...... 0x%08x\n", sromHandle->imgChecksum);
+			printf("Image Size (Uncomp). %d (%d KB)\n", sromHandle->imgSize, sromHandle->imgSize/ONE_K);
+			printf("Compression Type.... %d\n", sromHandle->decompFlag);
+			printf("Image Destination... 0x%016llx\n", sromHandle->destAddr);
+			printf("Header Version...... %d\n", sromHandle->hdrRev);
+			printf("Firmware ID......... %d - %s\n", sromHandle->fwID, _axp_fwid_str[sromHandle->fwID]);
+			printf("ROM Image Size...... %d (%d KB)\n", sromHandle->romImgSize, sromHandle->romImgSize/ONE_K);
+			printf("Firmware ID (Opt.).. ");
+			for (ii = 0; ii < sizeof(sromHandle->optFwID); ii++)
+				printf("%02d", optFwID[ii]);
+			printf("\nHeader Checksum..... 0x%08x\n", sromHandle->hdrChecksum);
+		}
+	}
+	else
+	{
+		printf(errMsg, "FNF", "File not found.");
+		retVal = true;
+	}
+	return(retVal);
+}
+
+/*
+ * AXP_OpenWrite_SROM
+ *	This function is called to open a Serial ROM file for writing.
+ *
+ * Input Parameters:
+ *	fileName:
+ *		A null-terminated string containing the name of the file to open.
+ *
+ * Output Parameters:
+ *	sromHandle:
+ *		A pointer to a location to receive the header information and hold the
+ *		file pointer, which is utilized in the read and close functions.
+ *
+ * Return Values:
+ *	false:	Normal successful completion.
+ *	true:	An error occurred.
+ */
+bool AXP_OpenWrite_SROM(
+			char *fileName,
+			AXP_SROM_HANDLE *sromHandle,
+			u64 destAddr,
+			u32 fwID)
+{
+	const char	*errMsg = "%%AXP-E-%s, %s\n";
+	int			ii;
+	bool		retVal = false;
+
+	if (AXP_UTL_BUFF)
+		printf(
+			"\n\nDECaxp: opened SROM file %s for writing\n\n",
+			fileName);
+
+	/*
+	 * Initialize the handle structure with all zeros.
+	 */
+	memset(sromHandle, 0, sizeof(AXP_SROM_HANDLE));
+
+	/*
+	 * Copy the filename into the handle, then try opening the file.
+	 */
+	strcpy(sromHandle->fileName, fileName);
+	sromHandle->fp = fopen(fileName, "w");
+	if (sromHandle->fp != NULL)
+	{
+		sromHandle->openForWrite = true;
+		sromHandle->validPat = AXP_ROM_VAL_PAT;
+		sromHandle->validPat = AXP_ROM_INV_VP_PAT;
+		sromHandle->hdrSize = AXP_ROM_HDR_LEN;
+		sromHandle->decompFlag = 0;
+		sromHandle->destAddr = destAddr;
+		sromHandle->hdrRev = AXP_ROM_HDR_VER;
+		sromHandle->fwID = fwID;
+		sromHandle->hdrRevExt = 0;
+		sromHandle->romImgSize = 0;
+
+		/*
+		 * Firmware ID: V2.0.0 yymmdd hhmm = 0200001711212316
+		 */
+		sromHandle->optFwID = 0200001711212316;
+		sromHandle->romOffset = 0;	/* no ROM offset */
+	}
+	else
+		retVal = false;
+	return(retVal);
+}
+
+/*
+ * AXP_Read_SROM
+ *	This function is called to read data from the Serial ROM file opened by the
+ *	AXP_Open_SRM function.
+ *
+ * Input Parameters:
+ *	sromHandle:
+ *		A pointer to a location containing the file pointer to be closed.
+ *	bufLen:
+ *		A value specifying the maximum length of the 'buf' parameter.
+ *
+ * Output Parameters:
+ *	buf:
+ *		A pointer to a u8 buffer to receive the data next set of data from the
+ *		SROM file.
+ *
+ * Return Values:
+ *	AXP_E_EOF:			End-of-file reached.
+ *	AXP_E_READERR:		Error reading file.
+ *	AXP_E_BADSROMFILE:	Bad SROM file detected.
+ *	>0:					Number of bytes successfully read (up to bufLen unsigned
+ *						bytes)
+ */
+i32 AXP_Read_SROM(AXP_SROM_HANDLE *sromHandle, u8 *buf, u32 bufLen)
+{
+	i32		retVal = 0;
+
+	/*
+	 * Make sure we are not at the end of file before trying to read from the
+	 * SROM file.
+	 */
+	if (feof(sromHandle->fp) == 0)
+	{
+
+		/*
+		 * Read up to bufLen worth of unsigned bytes.
+		 */
+		retVal = fread(buf, bufLen, 1, sromHandle->fp);
+
+		/*
+		 * If an error was returned, the return one to the caller.  Otherwise,
+		 * update the running image CRC.
+		 */
+		if (retVal < 0)
+			retVal = AXP_E_READERR;
+		else
+		{
+			sromHandle->verImgChecksum = AXP_Crc(
+											buf,
+											retVal,
+											true,
+											sromHandle->verImgChecksum);
+
+			/*
+			 * If we hit the end-of-file, then inverse the CRC and check it
+			 * against the one from the file header.
+			 */
+			if (feof(sromHandle->fp) != 0)
+			{
+				sromHandle->verImgChecksum = ~sromHandle->verImgChecksum;
+
+				/*
+				 * If the newly calculated image checksum does not match the
+				 * one read in the header file.
+				 */
+				if (sromHandle->verImgChecksum != sromHandle->imgChecksum)
+					retVal = AXP_E_BADSROMFILE;
+			}
+		}
+	}
+	else
+		retVal = AXP_E_EOF;
+	return(retVal);
+}
+
+/*
+ * AXP_Write_SROM
+ *	This function is called to write data to the Serial ROM file opened by the
+ *	AXP_OpenWrite_SRM function.
+ *
+ * Input Parameters:
+ *	sromHandle:
+ *		A pointer to a location containing the file pointer to be closed.
+ *	buf:
+ *		A pointer to a u8 buffer to receive the data next set of data from the
+ *		SROM file.
+ *	bufLen:
+ *		A value specifying the maximum length of the 'buf' parameter.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ */
+bool AXP_Write_SROM(AXP_SROM_HANDLE *sromHandle, u8 *buf, u32 bufLen)
+{
+	bool		retVal = false;
+
+	/*
+	 * [re]allocate the write buffer to be able to store the next bit of data.
+	 */
+	sromHandle->writeBuf = realloc(
+								sromHandle->writeBuf,
+								sromHandle->imgSize + bufLen);
+
+	/*
+	 * If the buffer was reallocated, copy the next chunk of data.
+	 */
+	if (sromHandle->writeBuf != NULL)
+	{
+		memcpy(&sromHandle->writeBuf[sromHandle->imageSize], buf, bufLen);
+		sromHandle->imageSize += bufLen;
+	}
+	else
+		retVal = true;
+	return(retVal);
+}
+
+/*
+ * AXP_Close_SROM
+ *	This function is called to close the Serial ROM file opened by the
+ *	AXP_OpenRead_SROM or AXP_OpenWrite_SROM functions.
+ *
+ * Input Parameters:
+ *	sromHandle:
+ *		A pointer to a location containing the file pointer to be closed.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	false:	Normal successful completion.
+ *	true:	An error occurred.
+ */
+bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
+{
+	const char	*errMsg = "%%AXP-E-%s, %s\n";
+	bool		retVal = false;
+
+	/*
+	 * If we have a non-NULL file pointer, then we need to close it.
+	 */
+	if ((sromHandle->fp != NULL) &&
+		(sromHandle->validPat == AXP_ROM_VAL_PAT) &&
+		(sromHandle->validPat == AXP_ROM_INV_VP_PAT) &&
+		(sromHandle->hdrSize == AXP_ROM_HDR_LEN))
+	{
+
+		/*
+		 * If the file was opened for write, then we have been collecting the
+		 * information, but have not written it out, yet.  We need to first
+		 * calculate the image checksum, then the header checksum before
+		 * writing the header information, followed by the image data.
+		 */
+		if (sromHandle->openForWrite)
+		{
+
+			/*
+			 * Calculate the 2 checksums (header and image).
+			 */
+			sromHandle->imgChecksum = AXP_Crc32(
+										sromHandle->writeBuf,
+										sromHandle->imageSize,
+										true,
+										0);
+			sromHandle->hdrChecksum = AXP_Crc(
+										&sromHandle->validPat,
+										AXP_ROM_HDR_LEN,
+										false,
+										0);
+			if (AXP_UTL_BUFF)
+			{
+				u8	*optFwID = (u8 *) &romHandle->optFwID;
+
+				printf("SROM Header Information:\n\n");
+				printf("Header Size......... %d bytes\n", sromHandle->hdrSize);
+				printf("Image Checksum...... 0x%08x\n", sromHandle->imgChecksum);
+				printf("Image Size (Uncomp). %d (%d KB)\n", sromHandle->imgSize, sromHandle->imgSize/ONE_K);
+				printf("Compression Type.... %d\n", sromHandle->decompFlag);
+				printf("Image Destination... 0x%016llx\n", sromHandle->destAddr);
+				printf("Header Version...... %d\n", sromHandle->hdrRev);
+				printf("Firmware ID......... %d - %s\n", sromHandle->fwID, _axp_fwid_str[sromHandle->fwID]);
+				printf("ROM Image Size...... %d (%d KB)\n", sromHandle->romImgSize, sromHandle->romImgSize/ONE_K);
+				printf("Firmware ID (Opt.).. ");
+				for (ii = 0; ii < sizeof(sromHandle->optFwID); ii++)
+					printf("%02d", optFwID[ii]);
+				printf("\nHeader Checksum..... 0x%08x\n", sromHandle->hdrChecksum);
+			}
+
+			/*
+			 * Write out all the header data.
+			 */
+			fwrite(sromHandle->validPat, sizeof(u32), 1, fp);
+			fwrite(sromHandle->inverseVP, sizeof(u32), 1, fp);
+			fwrite(sromHandle->hdrSize, sizeof(u32), 1, fp);
+			fwrite(sromHandle->imgChecksum, sizeof(u32), 1, fp);
+			fwrite(sromHandle->imgSize, sizeof(u32), 1, fp);
+			fwrite(sromHandle->decompFlag, sizeof(u32), 1, fp);
+			fwrite(sromHandle->destAddr, sizeof(u64), 1, fp);
+			fwrite(sromHandle->hdrRev, sizeof(u8), 1, fp);
+			fwrite(sromHandle->fwID, sizeof(u8), 1, fp);
+			fwrite(sromHandle->hdrRevExt, sizeof(u8), 1, fp);
+			fwrite(sromHandle->res, sizeof(u8), 1, fp);
+			fwrite(sromHandle->romImgSize, sizeof(u32), 1, fp);
+			fwrite(sromHandle->optFwID, sizeof(u64), 1, fp);
+			fwrite(sromHandle->romOffset, sizeof(u32), 1, fp);
+			fwrite(sromHandle->hdrChecksum, sizeof(u32), 1, fp);
+
+			/*
+			 * Write out the image data.
+			 */
+			fwrite(sromHandle->writeBuf, 1, sromHandle->imageSize, fp);
+
+			/*
+			 * Free the buffer we allocated for the image data.  We no longer
+			 * need it.
+			 */
+			free(sromHandle->writeBuf);
+		}
+
+		/*
+		 * We are done with the file, so close it, then clear the handle.
+		 */
+		fclose(sromHandle->fp);
+		memset(sromHandle, 0, sizeof(AXP_SROM_HANDLE));
+	}
+	else
+	{
+		printf(errMsg, "FNO", "File not opened.");
+		retVal = true;
+	}
 	return(retVal);
 }

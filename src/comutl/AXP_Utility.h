@@ -94,6 +94,121 @@ typedef __int128			i128;	/* 16 bytes (128 bits) in length */
 #define AXP_LOW_3BITS		0x0000000000000007ll
 
 /*
+ * Let's defined a DEBUG environment variable that will turn on certain
+ * tracing options.
+ *
+ * BTW: The environment variable name and the typedef defined below is a
+ *		homage to my Digital SNA Development days (June 16, 1986 to December
+ *		31, 1994).
+ */
+typedef u32	AXP_TRCLOG;
+extern const AXP_TRCLOG		_axp_trc_log_;
+
+/*
+ * These bits are used in each of the nibbles within the AXPTRCLOG environment
+ * variable to trace differnet items.
+ */
+#define AXP_TRC_CALL	0x1		/* b0001 */
+#define AXP_TRC_BUFF	0x2		/* b0010 */
+#define AXP_TRC_OPT1	0x4		/* b0100 */
+#define AXP_TRC_OPT2	0x8		/* b1000 */
+
+/*
+ * These nibbles within the AXPTRCLOG environment variable are used in the
+ * emulation code to trace different parts.
+ */
+#define AXP_COMP_UTL	0x0000000f	/* COMUTL */
+#define AXP_SHIFT_UTL	0			/* bits to right shift */
+#define AXP_COMP_CPU	0x000000f0	/* CPU */
+#define AXP_SHIFT_CPU	4			/* bits to right shift */
+#define AXP_COMP_SYS	0x00000f00	/* System */
+#define AXP_SHIFT_SYS	8			/* bits to right shift */
+
+#define AXP_TRCLOG_INIT	((axp_trc_log_init == false) ? AXP_TraceInit() : true)
+
+/*
+ * These macros return true when a type of tracing is to be performed.
+ */
+#define AXP_UTL_CALL	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
+						    AXP_TRC_CALL) == AXP_TRC_CALL))
+#define AXP_UTL_BUFF	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
+						   AXP_TRC_BUFF) == AXP_TRC_BUFF))
+#define AXP_UTL_OPT1	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
+						   AXP_TRC_OPT1) == AXP_TRC_OPT1))
+#define AXP_UTL_OPT2	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
+						   AXP_TRC_OPT2) == AXP_TRC_OPT2))
+#define AXP_CPU_CALL	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
+						   AXP_TRC_CALL) == AXP_TRC_CALL))
+#define AXP_CPU_BUFF	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
+						   AXP_TRC_BUFF) == AXP_TRC_BUFF))
+#define AXP_CPU_OPT1	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) & 	\
+						   AXP_TRC_OPT1) == AXP_TRC_OPT1))
+#define AXP_CPU_OPT2	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) & 	\
+						   AXP_TRC_OPT2) == AXP_TRC_OPT2))
+#define AXP_SYS_CALL	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
+						   AXP_TRC_CALL) == AXP_TRC_CALL))
+#define AXP_SYS_BUFF	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
+						   AXP_TRC_BUFF) == AXP_TRC_BUFF))
+#define AXP_SYS_OPT1	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
+						   AXP_TRC_OPT1) == AXP_TRC_OPT1))
+#define AXP_SYS_OPT2	(AXP_TRCLOG_INIT &										\
+						 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
+						   AXP_TRC_OPT2) == AXP_TRC_OPT2))
+
+/*
+ * Define the SROM handle for reading in an SROM file.
+ */
+#define AXP_FILENAME_MAX	131
+typedef struct
+{
+	char					fileName[AXP_FILENAME_MAX+1];
+	u8						*writeBuf;
+	FILE					*fp;
+	u32						validPat;			/* must be 0x5a5ac3c3 */
+	u32						inverseVP;			/* must be 0xa5a53c3c */
+	u32						hdrSize;
+	u32						imgChecksum;
+	u32						imgSize;			/* memory footprint */
+	u32						decompFlag;
+	u64						destAddr;
+	u8						hdrRev;
+	u8						fwID;				/* Firmware ID */
+	u8						hdrRevExt;
+	u8						res;
+	u32						romImgSize;
+	u64						optFwID;			/* Optional Firmware ID */
+	u32						romOffset;
+	u32						hdrChecksum;
+	u32						verImgChecksum;
+	bool					romOffsetValid;
+	bool					openForWrite;
+} AXP_SROM_HANDLE;
+
+#define AXP_ROM_HDR_LEN		(14*4)
+#define AXP_ROM_HDR_CNT		15				/* romOffset[Valid] read as one */
+#define AXP_ROM_VAL_PAT		0x5a5ac3c3
+#define AXP_ROM_INV_VP_PAT	0xa5a53c3c
+#define AXP_ROM_HDR_VER		1
+#define AXP_ROM_FWID_DBM	0	/* Alpha Motherboards Debug Monitor firmware */
+#define AXP_ROM_FWID_WNT	1	/* Windows NT firmware */
+#define AXP_ROM_FWID_SRM	2	/* Alpha System Reference Manual Console */
+#define AXP_ROM_FWID_FSB	6	/* Alpha Motherboards Fail-Safe Booter */
+#define AXP_ROM_FWID_MILO	7	/* Linux Miniloader */
+#define AXP_ROM_FWID_VXWRKS	8	/* VxWorks Real-Time Operating System */
+#define AXP_ROM_FWID_SROM	10	/* Serial ROM */
+
+/*
  * Define a basic queue.  This will be used to define a number of other queue
  * types.
  */
@@ -106,8 +221,8 @@ typedef struct
 /*
  * Macros to use with the basic queue.
  */
-#define AXP_INIT_QUE(queue)		queue.flink = queue.blink = (void *) &queue.flink
-#define AXP_INIT_QUEP(queue)	queue->flink = queue->blink = (void *) &queue->flink
+#define AXP_INIT_QUE(queue)		queue.flink = queue.blink = (void *) &queue
+#define AXP_INIT_QUEP(queue)	queue->flink = queue->blink = (void *) queue
 #define AXP_QUE_EMPTY(queue)	(queue.flink == (void *) &queue.flink)
 #define AXP_QUEP_EMPTY(queue)	(queue->flink == (void *) &queue->flink)
 
@@ -117,14 +232,16 @@ typedef struct
  */
 typedef struct
 {
-	AXP_QUEUE_HDR	header;
+	void			*flink;
+	void			*blink;
 	u32				count;
 	u32				max;
 } AXP_COUNTED_QUEUE;
 
 typedef struct
 {
-	AXP_QUEUE_HDR		header;
+	void				*flink;
+	void				*blink;
 	AXP_COUNTED_QUEUE	*parent;
 } AXP_CQUE_ENTRY;
 
@@ -200,6 +317,9 @@ typedef struct
  */
 #define AXP_E_FNF 			-1
 #define AXP_E_BUFTOOSMALL	-2
+#define AXP_E_EOF			-3
+#define AXP_E_READERR		-4
+#define AXP_E_BADSROMFILE	-5
 
 /*
  * Prototype Definitions
@@ -227,7 +347,9 @@ bool AXP_CondQueue_Wait(AXP_COND_Q_HDR *);
 bool AXP_CondQueue_Empty(AXP_COND_Q_HDR *);
 
 int AXP_LoadExecutable(char *, u8 *, u32);
-bool AXP_LoadROM(AXP_21264_CPU *, char *, u32, u32);
-bool AXP_UnoadROM(AXP_21264_CPU *, char *, u32, u32);
-
+bool AXP_OpenRead_SROM(char *, AXP_SROM_HANDLE *);
+bool AXP_OpenWrite_SROM(char *, AXP_SROM_HANDLE *, u64, u32);
+i32 AXP_Read_SROM(AXP_SROM_HANDLE *, u8 *, u32);
+bool AXP_Write_SROM(AXP_SROM_HANDLE *, u8 *, u32);
+bool AXP_Close_SROM(AXP_SROM_HANDLE *);
 #endif /* _AXP_UTIL_DEFS_ */
