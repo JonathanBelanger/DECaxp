@@ -57,9 +57,9 @@
  * block contains the following:
  *
  *		Virtual tag bits
- *		Index into corresponding DTAG array (which is the same as the Dcache)
- *		Valid bit
- *			The CTAG array entry is in use.
+ *		Index and set into corresponding DTAG array (which is the same as the
+ *			Dcache)
+ *		Valid bit - the CTAG array entry is in use.
  */
 typedef struct
 {
@@ -318,11 +318,15 @@ typedef struct
  * 		physical address
  * 		control logic	(TBD)
  */
-#define AXP_21264_IOWB_SIZE		64
+#define AXP_21264_BLOCK_SIZE		64
 typedef struct
 {
-	u64					pa;
-	u8					data[AXP_21264_IOWB_SIZE];
+	bool	processed;
+	bool	valid;
+	u64		pa;
+	u8		sqEntry;
+	u8		data[AXP_21264_BLOCK_SIZE];
+	int		dataLen;
 } AXP_21264_CBOX_IOWB;
 
 /*
@@ -377,6 +381,7 @@ typedef enum
 	ReadBytes,
 	ReadLWs,
 	ReadQWs,
+	ReadWs,
 	WrBytes = 0x0C,
 	WrLWs,
 	WrQWs,
@@ -422,6 +427,24 @@ typedef enum
  * HRM Tables 4-21 and 4-22
  * Probe Command
  */
+#define AXP_21264_DM_NOP			0	/* b'00' */
+#define AXP_21264_DM_RDHIT			1	/* b'01' */
+#define AXP_21264_DM_RDDIRTY		2	/* b'10' */
+#define AXP_21264_DM_RDANY			3	/* b'00' */
+
+#define AXP_21264_NS_NOP			0	/* b'000' */
+#define AXP_21264_NS_CLEAN			1	/* b'001' */
+#define AXP_21264_NS_CLEAN_SHARED	2	/* b'010' */
+#define AXP_21264_NS_TRANS3			3	/* b'011' */
+#define AXP_21264_NS_DIRTY_SHARED	4	/* b'100' */
+#define AXP_21264_NS_INVALID		5	/* b'101' */
+#define AXP_21264_NS_TRANS1			6	/* b'110' */
+#define AXP_21264_NS_RES			7	/* b'111' */
+
+#define AXP_21264_GET_PROBE_DM(probe)	(((probe) & 0x18) >> 3)
+#define AXP_21264_GET_PROBE_NS(probe)	((probe) & 0x07)
+#define AXP_21264_SET_PROBE(dm, ns)		((((dm) & 0x03) << 3) || ((ns) & 0x07))
+
 typedef enum
 {
 	NopNop = 0x00,
@@ -459,6 +482,19 @@ typedef enum
 } AXP_21264_SYSADD_IN_PROBE_CMD;
 
 /*
+ * Mask field to indicate which bytes in the data returned from/supplied to the
+ * system are relevant.
+ */
+typedef enum
+{
+	Quad,
+	IOByte,
+	IOWord,
+	IOLong,
+	IOQuad
+} AXP_21264_SYSADD_MASK;
+
+/*
  * HRM 4.7.3 and 4.7.5
  * This structure is used for commands and ProbeResponses to be sent to the
  * System from the 21264.
@@ -471,19 +507,19 @@ typedef enum
  */
 typedef struct
 {
-	AXP_21264_SYSADD_OUT_CMD		Command;
-	AXP_21264_SYSADD_OUT_PROBE_STAT	Status;
-	bool							Miss1;				/* M1 */
-	bool							Miss2;				/* M2 */
-	bool							CacheHit;			/* CH */
-	bool							ReadValidate;		/* RV */
-	bool							DataMovement;		/* DM */
-	bool							VictimSent;			/* VS */
-	bool							MAFAddressSent;		/* MS */
-	u8								MAF;
-	u8								Mask;
-	u8								ID;
-	u8								SysData[sizeof(u64)]; /* when DM=true */
+	AXP_21264_SYSADD_OUT_CMD		command;
+	AXP_21264_SYSADD_OUT_PROBE_STAT	status;
+	AXP_21264_SYSADD_MASK			mask;
+	bool							miss1;				/* M1 */
+	bool							miss2;				/* M2 */
+	bool							cacheHit;			/* CH */
+	bool							readValidate;		/* RV */
+	bool							dataMovement;		/* DM */
+	bool							victimSent;			/* VS */
+	bool							mafAddressSent;		/* MS */
+	u8								maf;
+	u8								vdb;
+	u8								sysData[sizeof(u64)]; /* when DM=true */
 	u64								pa;
 } AXP_21264_SYSADD_OUT;
 
@@ -494,16 +530,16 @@ typedef struct
  */
 typedef struct
 {
-	AXP_21264_SYSADD_IN_PROBE_CMD	Command;
-	AXP_21264_SYSADD_IN_SYSDC		SysDc;
-	bool							ProbeData;	/* probe=true; data=false; */
-	bool							ResetVictimBuffer;	/* RVB */
-	bool							ResetProbeValidBit;	/* RPB */
-	bool							CommandAck;			/* A */
-	bool							Commit;				/* C */
+	AXP_21264_SYSADD_IN_PROBE_CMD	command;
+	AXP_21264_SYSADD_IN_SYSDC		sysDc;
+	bool							probeData;	/* probe=true; data=false; */
+	bool							resetVictimBuffer;	/* RVB */
+	bool							resetProbeValidBit;	/* RPB */
+	bool							commandAck;			/* A */
+	bool							commit;				/* C */
 	u8								ID;
 	u64								pa;
-	u8								SysData[sizeof(u64)]; /* when ProbeData=false */
+	u8								sysData[sizeof(u64)]; /* when ProbeData=false */
 } AXP_21264_SYSADD_IN;
 
 /*
@@ -516,22 +552,30 @@ typedef struct
  * 		Istream cache blocks from memory to the Bcache
  * 		Bcache blocks to be written to memory
  * 		Cache blocks sent to the system in response to probe commands
- *
- * NOTE: This current implementation does not have a Bcache.  Therefore, the
- * 		 writes to the Bcache are actually writes to memory.  What this means
- * 		 is that the two middle items above are not implemented, as they are
- * 		 redundant in with the lack of Bcache.
  */
+typedef enum
+{
+	toBcache,
+	toMemory
+	probeResponse
+} AXP_21264_VDB_TYPE;
+
 typedef struct
 {
-	bool							validVictim;
-	bool							validProbe;
-	bool							inOut;		/* true = out; false = in */
+	AXP_21264_VDB_TYPE			type;
+	u64							pa;
 	union
 	{
-		AXP_21264_SYSADD_IN			SysAddIn;
-		AXP_21264_SYSADD_OUT		SysAddOut;
+		AXP_21264_SYSADD_IN			rsp;
+		AXP_21264_SYSADD_OUT		rq;
 	};
+	bool						validVictim;
+	bool						validProbe;
+	bool						processed;
+	bool						valid;
+	bool						marked;
+	u8							data[AXP_21264_BLOCK_SIZE];
+	u8							dataLen;
 } AXP_21264_CBOX_VIC_BUF;
 
 /*
@@ -540,22 +584,54 @@ typedef struct
  */
 typedef struct
 {
-	AXP_21264_SYSADD_IN_PROBE_CMD	Command;
-	bool							marked;
+	int								probe;
+	AXP_21264_SYSADD_IN_SYSDC		sysDc;
+	u8								id;
+	bool							notJustSysDc;
+	bool							rvb;
+	bool							rpb;
+	bool							a;
+	bool							c;
+	bool							processed;
+	bool							valid;
 	u64								pa;
 } AXP_21264_CBOX_PQ;
 
-#define AXP_BCACHE_BLOCK_SIZE	64
+/*
+ * In HRM Section 2, the MAF is documented as being in the Mbox/Memory
+ * Reference Unit.  In HRM Section 4.1.1.1, it states the following:
+ *
+ *		The Cbox contains an 8-entry miss buffer (MAF) and an 8-entry victim
+ *		buffer (VAF).
+ */
+typedef enum
+{
+	MAFNotInUse,
+	Dcache,
+	Icache,
+	IOread			/* These are not stored in the Dcache */
+} AXP_CBOX_MAF_TYPE;
+
+typedef struct
+{
+	AXP_CBOX_MAF_TYPE			type;
+	AXP_21264_SYSADD_MASK		mask;
+	AXP_21264_SYSADD_OUT_CMD	rq;
+	AXP_21264_SYSADD_IN_SYSDC	rsp;
+	u64							pa;
+	bool						complete;	/* cleared by Mbox, set by Cbox */
+} AXP_21264_CBOX_MAF;
 
 /*
  * Bcache definitions
  */
+#define AXP_BCACHE_BLOCK_SIZE	64
 typedef u8 AXP_21264_BCACHE_BLK[AXP_BCACHE_BLOCK_SIZE];
 typedef struct
 {
-	bool							valid;
-	bool							shared;
-	u64								tag;
+	bool						valid;
+	bool						shared;
+	u64							tag;
 } AXP_21264_BCACHE_TAG;
 
 #endif /* _AXP_21264_CBOX_DEFS_ */

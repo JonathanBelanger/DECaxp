@@ -129,56 +129,6 @@ AXP_21264_CBOX_CSR_NAMES csrNames[] =
 		{NULL, LastCSR}
 	};
 
-
-/*
- * AXP_VictimBuffer
- *	This function is responsible for managing the Victim Buffer (VB).  The VB
- *	is comprised of the Victim Address File (VAF) and Victim Data File (VDF).
- *	There are a total of eight(8) entries in the VB.
- *
- * Input Parameters:
- *
- * Output Parameters:
- *
- * Return Value:
- */
-void AXP_VictimBuffer()
-{
-	return;
-}
-
-/*
- * AXP_IOWriteBuffer
- *	This function is responsible for managing the I/O Write Buffer (IOWB).
- *	There are a total of four(4) 64-byte entries in the IOWB.
- *
- * Input Parameters:
- *
- * Output Parameters:
- *
- * Return Value:
- */
-void AXP_IOWriteBuffer()
-{
-	return;
-}
-
-/*
- * AXP_ProbeQueue
- *	This function is responsible for managing the Probe Queue (PQ).
- *	There are a total of eight(8) entries in the PQ.
- *
- * Input Parameters:
- *
- * Output Parameters:
- *
- * Return Value:
- */
-void AXP_ProbeQueue()
-{
-	return;
-}
-
 /*
  * AXP_DuplicateDcacheTagArray
  *	This function is responsible for managing the duplicate Dcache Tag (DTAG)
@@ -626,6 +576,7 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 
 				case SysbusAckLimit:
 					cpu->csr.SysbusAckLimit = value;
+					cpu->cmdAck = 0;
 					break;
 
 				case SysClkRatio:
@@ -733,168 +684,17 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 	cpu->amask.res_2 = 0;
 	cpu->implVer = AXP_PASS_2_EV68A;
 
-	return(retVal);
-}
-
-/*
- * AXP_21264_Cbox_Main
- * 	This is the main function for the Cbox.  It looks at each of the queues to
- * 	determine if there is anything that needs to be processed for the various
- * 	queues from other CPU boxes and the System.
- *
- * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
- * 		processor.
- *
- * Output Parameters:
- * 	None.
- *
- * Return Value:
- * 	None.
- */
-void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
-{
-	bool	initFailure = false;
-	int		component = 0;
-
-	/*
-	 * The Cbox is very involved in the initialization of the CPU at power-up,
-	 * fault-resetting, and waking up from sleep.  The Cbox CSRs are
-	 * initialized at this point and the the SROM is loaded into the Icache.
-	 * Once all this has been done, then we put the CPU into a Running state,
-	 * at which point all hell can break lose.
-	 *
-	 * When we first come in the CPU should be in a Cold state.  We will be
-	 */
-	while (cpu->cpuState != ShuttingDown)
+	for (ii = 1; ii < AXP_CACHE_ENTRIES; ii++)
 	{
-		switch (cpu->cpuState)
+		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
 		{
-			case Cold:
-				cpu->cpuState = WaitBiST;
-				cpu->BiSTState = SystemReset;
-				break;
-
-			case WaitBiST:
-			case WaitBiSI:
-
-				/*
-				 * HRM: 11.5.1
-				 *
-				 * We have a SystemReset, set the BiSTState appropriately.
-				 */
-				cpu->BiSTState = BiSTRunning;
-
-				/*
-				 * The other components (Ibox, Ebox, Fbox, and Mbox) should
-				 * have their initialization function called to perform the
-				 * initialization they need to do for themselves.  After this,
-				 * they'll all be waiting for the CPU to go into Running State,
-				 * which is set here after the Cbox finished its own
-				 * initialization.  If any of the initialization routines
-				 * return an error, an error should have been displayed and
-				 * we'll change the CPU state to ShuttingDown (which will cause
-				 * all the other components to shutdown as well).
-				 */
-				while (initFailure == false)
-				{
-					switch (component)
-					{
-						case 0:		/* Mbox */
-							initFailure = AXP_21264_Mbox_Init(cpu);
-							break;
-
-						case 1:		/* Ebox */
-							initFailure = AXP_21264_Ebox_Init(cpu);
-							break;
-
-						case 2:		/* Fbox */
-							initFailure = AXP_21264_Fbox_Init(cpu);
-							break;
-
-						case 3:		/* Ibox */
-							initFailure = AXP_21264_Ibox_Init(cpu);
-							break;
-
-						case 4:		/* Cbox */
-							initFailure = AXP_21264_Cbox_Init(cpu);
-
-						case 5:		/* Cbox Config */
-
-							/*
-							 * HRM: 11.5.2
-							 *
-							 * All right, BiST passed, now we have to load the
-							 * SROM Cbox configuration.
-							 */
-							cpu->BiSTState = BiSTSucceeded;
-							initFailure = AXP_21264_Cbox_Config(cpu);
-							break;
-
-						case 6:
-
-							/*
-							 * HRM: 11.5.2.1
-							 *
-							 * Finally, load the Instruction Cache for the
-							 * initialization code.  This is where the console
-							 * is loaded.
-							 *
-							 * TODO: Get the ROM filename from the
-							 *		 configuration.
-							 */
-							initFailure = AXP_21264_LoadROM(cpu, "", 0, 0);
-							break;
-					}
-					if (initFailure == false)
-						component++;
-				}
-
-				/*
-				 * If any of the initializations failed, then the BiST failed.
-				 * We will have to perform a bunch of shutdown logic outside
-				 * the top while loop.
-				 */
-				if (initFailure == true)
-				{
-					cpu->BiSTState = BiSTFailed;
-					cpu->cpuState = ShuttingDown;
-				}
-				else
-				{
-
-					/*
-					 * TODO: Send Exception to the Ibox.
-					 *
-					 * Need to send a RESET/WAKEUP Exception to the Ibox.
-					 * Since the above initialization code set the PALBase to
-					 * 0x0, the RESET/WAKEUP event will cause the Ibox to jump
-					 * to the Offset in the PALcode for the code to finalize
-					 * the initialization and run the console.  This offset is
-					 * located at PAL_BASE + 0x780 (or 0x780, in PAL_MODE).
-					 */
-					cpu->cpuState = Run;
-				}
-				break;
-
-			case Run:
-				break;
-
-			case FaultReset:
-				cpu->cpuState = WaitBiSI;
-				cpu->BiSTState = SystemReset;
-				break;
-
-			case Sleep:
-				break;
-
-			case ShuttingDown:
-			default:
-				break;
+			cpu->ctag[ii][jj].physTag = 0;
+			cpu->ctag[ii][jj].dtagIndex = AXP_CACHE_ENTRIES;
+			cpu->ctag[ii][jj].valid = false;
 		}
 	}
-	return;
+
+	return(retVal);
 }
 
 /*
@@ -1078,5 +878,1289 @@ void AXP_21264_Bcache_Write(AXP_21264_CPU *cpu, u64 pa, u8 *data)
 	/*
 	 * Return back to the caller.
 	 */
+	return;
+}
+
+/*
+ * AXP_21264_MAF_Empty
+ *	This function is called to determine of there is a record in the Missed
+ *	Address File (MAF) that needs to be processed.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	-1:		No entries requiring processing.
+ *	>=0:	Index of next entry that can be processed.
+ */
+int AXP_21264_MAF_Empty(AXP_21264_CPU *cpu)
+{
+	int		retVal = -1;
+	int		ii;
+	int		start1 = -1, star2 = -1, end1 = -1, end2 = -1;
+
+	if (cpu->mafTop > cpu->mafBottom)
+	{
+		start1 = cpu->mafTop;
+		end1 = AXP_21264_MAF_LEN;
+		start2 = 0;
+		end2 = cpu->mafBottom;
+	}
+	else
+	{
+		start1 = cpu->mafTop;
+		end1 = cpu->mafBottom;
+	}
+
+	/*
+	 * Search through the list to find the first entry that can be processed.
+	 */
+	for (ii = start1; ((ii < end1) && (retVal == -1)); ii++)
+		if ((cpu->maf[ii].type != MAFNotInUse) && (cpu->maf[ii].complete == false))
+			retVal = ii;
+	if ((retVal == -1) && (start2 != -1))
+		for (ii = start2; ((ii < end2) && (retVal == -1)); ii++)
+			if ((cpu->maf[ii].type != MAFNotInUse) && (cpu->maf[ii].complete == false))
+				retVal = ii;
+
+	/*
+	 * Return what we found, if anything.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_21264_Process_MAF
+ *	This function is called to check the first unprocessed entry on the queue
+ *	containing the MAF records.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	entry:
+ *		An integer value that is the entry in the MAF to be processed.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Process_MAF(AXP_21264_CPU *cpu, int entry)
+{
+
+	/*
+	 * Process the next MAF entry that needs it.
+	 */
+	switch(cpu->maf[entry].type)
+	{
+		case Dcache:
+			cpu->maf[entry].rq.command = ReadBlk;
+			cpu->maf[entry].rq.miss1 = false;
+			cpu->maf[entry].rq.miss2 = false;
+			cpu->maf[entry].rq.cacheHit = false;
+			cpu->maf[entry].rq.readValidate = false;
+			cpu->maf[entry].rq.dataMovement = false;
+			cpu->maf[entry].rq.ID = entry;
+			cpu->maf[entry].rq.mask = Quad;
+			cpu->maf[entry].rq.pa = cpu->maf[entry].pa;
+			break;
+
+		case Icache:
+			cpu->maf[entry].rq.command = ReadBlkI;
+			cpu->maf[entry].rq.miss1 = false;
+			cpu->maf[entry].rq.miss2 = false;
+			cpu->maf[entry].rq.cacheHit = false;
+			cpu->maf[entry].rq.readValidate = false;
+			cpu->maf[entry].rq.dataMovement = false;
+			cpu->maf[entry].rq.ID = entry;
+			cpu->maf[entry].rq.mask = Quad;
+			cpu->maf[entry].rq.pa = cpu->maf[entry].pa;
+			break;
+
+		case IOread:
+			switch(cpu->maf[entry].mask)
+			{
+				case IOByte:
+					cpu->maf[entry].rq.command = ReadBytes;
+					break;
+
+				case IOWord:
+					cpu->maf[entry].rq.command = ReadWs;
+					break;
+
+				case IOLong:
+					cpu->maf[entry].rq.command = ReadLW;
+					break;
+
+				case IOQuad:
+					cpu->maf[entry].rq.command = ReadQW;
+					break;
+
+			}
+			cpu->maf[entry].rq.miss1 = false;
+			cpu->maf[entry].rq.miss2 = false;
+			cpu->maf[entry].rq.cacheHit = false;
+			cpu->maf[entry].rq.readValidate = false;
+			cpu->maf[entry].rq.dataMovement = false;
+			cpu->maf[entry].rq.ID = entry;
+			cpu->maf[entry].rq.mask = cpu->maf[entry].mask;
+			cpu->maf[entry].rq.pa = cpu->maf[entry].pa;
+			break;
+	}
+	AXP_SendToSystem(&cpu->maf[entry].rq);
+	
+	/*
+	 * Indicate that the entry is now processed and return back to the caller.
+	 */
+	cpu->maf[entry].complete = true;
+	return;
+}
+
+/*
+ * AXP_21264_Add_MAF
+ *	This function is called to add an Miss Address File (MAF) entry on to the
+ *	queue for processing.
+ *
+ *	NOTE:	The Ibox and Mbox call this function. They do this to add a fill
+ *			request to the for their associated caches.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	type:
+ *		An enumerated value for the type of MAF entry to add.
+ *	pa:
+ *		A value representing the physical address associated with this record.
+ *	rq:
+ *		An enumerated value for the request to sent to the System.
+ * 	rsp:
+ *		An enumerated value for the response to sent from the System.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Add_MAF(
+				AXP_21264_CPU *cpu,
+				AXP_CBOX_MAF_TYPE type,
+				AXP_21264_SYSADD_MASK mask,
+				u64 pa);
+{
+
+	/*
+	 * Before we do anything, lock the interface mutex to prevent multiple
+	 * accessors.
+	 */
+	pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+
+	/*
+	 * Add a record to the next available MAF.
+	 */
+	cpu->mafBottom = (cpu->mafBottom + 1) & 0x07;
+	cpu->maf[cpu->mafBottom].type = type;
+	cpu->maf[cpu->mafBottom].mask = mask;
+	cpu->maf[cpu->mafBottom].pa = pa;
+	cpu->maf[cpu->mafBottom].complete = false;
+
+	/*
+	 * Let the Cbox know there is something for it to process, then unlock the
+	 * mutex so it can.
+	 */
+	pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
+	pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
+	return;
+}
+
+/*
+ * AXP_21264_VDB_Empty
+ *	This function is called to determine of there is a record in the Victim
+ *	Data Buffer (VDB) that needs to be processed.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	-1:		No entries requiring processing.
+ *	>=0:	Index of next entry that can be processed.
+ */
+int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
+{
+	int		retVal = -1;
+	int		ii;
+	int		start1 = -1, end1 = -1, start2 = -1, end2 = -1;
+
+	if (cpu->vdbTop > cpu->vdbBottom)
+	{
+		start1 = cpu->vdbTop;
+		end1 = AXP_21264_VDB_LEN;
+		start2 = 0;
+		end2 = cpu->vdbBottom;
+	}
+	else
+	{
+		start1 = cpu->vdbTop;
+		end1 = cpu->vdbBottom;
+	}
+
+	/*
+	 * Search through the list to find the first entry that can be processed.
+	 */
+	for (ii = start1; ((ii < end1) && (retVal == -1)); ii++)
+		if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].processed == false))
+			retVal = ii;
+	if ((retVal == -1) && (start2 != -1))
+	for (ii = start2; ((ii < end2) && (retVal == -1)); ii++)
+		if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].processed == false))
+			retVal = ii;
+
+	/*
+	 * Return what we found, if anything.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_21264_Process_VDB
+ *	This function is called to check the first unprocessed entry on the queue
+ *	containing the VDB records.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	entry:
+ *		An integer value that is the entry in the VDB to be processed.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
+{
+
+	/*
+	 * Process the next VDB entry that needs it.
+	 */
+	switch(cpu->vdb[entry].type)
+	{
+
+		/*
+		 * Istream cache blocks from memory or Dcache blocks to be written to
+		 * the Bcache.
+		 */
+		case toBcache:
+
+			/*
+			 * This does not go off chip, but was stored directly into the
+			 * Bcache.
+			 */
+			break;
+
+		/*
+		 * We need to write a Bcache block out to memory.
+		 */
+		case toMemory:
+
+			/*
+			 * Send the Bcache block out to the system to store in memory.
+			 */
+			AXP_SendToSystem(&cpu->vdb[entry].rq);
+			break;
+
+		/*
+		 * Dcache or Bcache blocks send to the system in response to a
+		 * probe command.
+		 */
+		case probeResponse:
+
+			/*
+			 * Send the ProbeResponse to the system having sent a Probe
+			 * request.
+			 */
+			AXP_SendToSystem(&cpu->vdb[entry].rsp);
+			break;
+	}
+
+	/*
+	 * Indicate that the entry is now processed and return back to the caller.
+	 */
+	cpu->vdb[entry].processed = true;
+	return;
+}
+
+/*
+ * AXP_21264_Add_VDB
+ *	This function is called to add an Victim Data Buffer (VDB) entry on to the
+ *	queue for processing.
+ *
+ *	NOTE:	The Mbox and Cbox call this function.  The Mbox to have a Dcache
+ *			block to be written to the Bcache.  The Cbox to have Istream blocks
+ *			recently writtent to the Icache to the Bcache as well
+ *			(TODO: Determine if the Cbox can do both at the same time), Bcache
+ *			blocks that need to be written to memory, or cache blocks sent to
+ *			the system in response to probe commands.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	entry used.
+ */
+u8 AXP_21264_Add_VDB(
+				AXP_21264_CPU *cpu,
+				AXP_21264_VDB_TYPE type,
+				u64 pa,
+				u8 *buf,
+				u8 bufLen,
+				bool probe,
+				bool alreadyLocked)
+{
+	bool	locked = false;
+
+	/*
+	 * Before we do anything, lock the interface mutex to prevent multiple
+	 * accessors.
+	 */
+	if (alreadyLocked == false)
+	{
+		pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+		locked = true;
+	}
+
+	/*
+	 * Add a record to the next available VDB.
+	 */
+	cpu->vdbBottom = (cpu->vdbBottom + 1) & 0x07;
+	cpu->vdb[cpu->vdbBottom].type = type;
+	cpu->vdb[cpu->vdbBottom].pa = pa;
+	cpu->vdb[cpu->vdbBottom].validProbe = probe;
+	memset(cpu->vdb[cpu->vdbBottom].data, '\0', AXP_21264_BLOCK_SIZE);
+	memcpy(cpu->vdb[cpu->vdbBottom].data, buf, bufLen);
+	cpu->vdb[cpu->vdbBottom].dataLen = bufLen;
+	cpu->vdb[cpu->vdbBottom].valid = true;
+	cpu->vdb[cpu->vdbBottom].processed = false;
+
+	/*
+	 * Let the Cbox know there is something for it to process, then unlock the
+	 * mutex so it can.
+	 */
+	if (lcoked == true)
+	{
+		pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
+		pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
+	}
+	return(cpu->vdbBottom);
+}
+
+/*
+ * AXP_21264_IOWB_Empty
+ *	This function is called to determine of there is a record in the I/O
+ *	Write Buffer (IOWB) that needs to be processed.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	-1:		No entries requiring processing.
+ *	>=0:	Index of next entry that can be processed.
+ */
+int AXP_21264_IOWB_Empty(AXP_21264_CPU *cpu)
+{
+	int		retVal = -1;
+	int		ii;
+	int 	start1 = -1, end1 = -1, start2 = -1, end2 = -1;
+
+	if (cpu->iowbTop > cpu->iowbBottom)
+	{
+		start1 = cpu->iowbTop;
+		end1 = AXP_21264_IOWB_LEN;
+		start2 = 0;
+		end2 = cpu->iowbBottom;
+	}
+	else
+	{
+		start1 = cpu->iowbTop;
+		end1 = cpu->iowbBottom;
+	}
+
+	/*
+	 * Search through the list to find the first entry that can be processed.
+	 */
+	for (ii = start1; ((ii < end1) && (retVal == -1)); ii++)
+		if ((cpu->iowb[ii].valid == true) && (cpu->iowb[ii].processed == false))
+			retVal = ii;
+	if ((retVal == -1) && (start2 != -1))
+		for (ii = start2; ((ii < end2) && (retVal == -1)); ii++)
+			if ((cpu->iowb[ii].valid == true) && (cpu->iowb[ii].processed == false))
+				retVal = ii;
+
+	/*
+	 * Return what we found, if anything.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_21264_Process_IOWB
+ *	This function is called to check the first unprocessed entry on the queue
+ *	containing the IOWB records.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	entry:
+ *		An integer value that is the entry in the IOWB to be processed.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Process_IOWB(AXP_21264_CPU *cpu, int entry)
+{
+
+	/*
+	 * Process the next IOWB entry that needs it.
+	 */
+	
+	/*
+	 * Indicate that the entry is now processed and return back to the caller.
+	 */
+	cpu->iowb[entry].processed = true;
+	return;
+}
+
+/*
+ * AXP_21264_Add_IOWB
+ *	This function is called to add an I/O Write Block (IOWB) entry on to the
+ *	queue for processing.
+ *
+ *	NOTE:	The Mbox calls this function. It does so when it has a SQ entry
+ *			needs to be written to an I/O device.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	pa:
+ *		A value indicating the physical address of the device the I/O Buffer is
+ *		to be written.
+ *	data:
+ *		A pointer to the buffer to be written to the device.
+ *	dataLen:
+ *		A value indicating the length of the 'data' parameter.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Add_IOWB(AXP_21264_CPU *cpu, u64 pa, u8 sqEntry, u8 *data, int dataLen)
+{
+
+	/*
+	 * Before we do anything, lock the interface mutex to prevent multiple
+	 * accessors.
+	 */
+	pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+
+	/*
+	 * Add a record to the next available IOWB.
+	 */
+	cpu->iowbBottom = (cpu->iowbBottom + 1) & 0x03;
+	cpu->iowb[cpu->iowbBottom].pa = pa;
+	cpu->iowb[cpu->iowbBottom].sqEntry = sqEntry;
+	memcpy(cpu->iowb[cpu->iowbBottom].data, data, dataLen);
+	cpu->iowb[cpu->iowbBottom].dataLen = dataLen;
+	cpu->iowb[cpu->iowbBottom].valid = true;
+	cpu->iowb[cpu->iowbBottom].processed = false;
+
+	/*
+	 * Let the Cbox know there is something for it to process, then unlock the
+	 * mutex so it can.
+	 */
+	pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
+	pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
+	return;
+}
+
+/*
+ * AXP_21264_PQ_Empty
+ *	This function is called to determine of there is a record in the Probe
+ *	Queue (PQ) that needs to be processed.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	-1:		No entries requiring processing.
+ *	>=0:	Index of next entry that can be processed.
+ */
+int AXP_21264_PQ_Empty(AXP_21264_CPU *cpu)
+{
+	int		retVal = -1;
+	int		ii;
+	int 	start1 = -1, end1 = -1, start2 = -1, end2 = -1;
+
+	if (cpu->pqTop > cpu->pqBottom)
+	{
+		start1 = cpu->pqTop;
+		end1 = AXP_21264_PQ_LEN;
+		start2 = 0;
+		end2 = cpu->pqBottom;
+	}
+	else
+	{
+		start1 = cpu->pqTop;
+		end1 = cpu->pqBottom;
+	}
+
+	/*
+	 * Search through the list to find the first entry that can be processed.
+	 */
+	for (ii = start1; ((ii < end1) && (retVal == -1)); ii++)
+		if ((cpu->pq[ii].valid == true) && (cpu->pq[ii].processed == false))
+			retVal = ii;
+	if ((retVal == -1) && (start2 != -1))
+		for (ii = start2; ((ii < end2) && (retVal == -1)); ii++)
+			if ((cpu->pq[ii].valid == true) && (cpu->pq[ii].processed == false))
+				retVal = ii;
+
+	/*
+	 * Return what we found, if anything.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_21264_Process_PQ
+ *	This function is called to check the first unprocessed entry on the queue
+ *	containing the PQ records.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	entry:
+ *		An integer value that is the entry in the PQ to be processed.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
+{
+	AXP_21264_SYSADD_OUT_PROBE_STAT probeStatus;
+	AXP_VA			physAddr = {.va = pa};
+	u32				ctagIndex;
+	u32				dCacheIndex;
+	u32				bCacheIndex;
+	u32				dCacheIndex0;
+	u32				dCacheIndex1;
+	u32				setToUse;
+	int				ii;
+	bool			locked;
+	bool			bCacheValid = false;
+	bool			dCacheValid = false;
+	bool			dm = false;
+	bool			vs = false;
+	bool			ms = false;
+
+	/*
+	 * Between the time when a probe request was queued up and this queue
+	 * entry was considered for processing, it may have already been processed.
+	 * If so, there is no need to process it again.
+	 */
+	if ((cpu->pq[entry].valid == true) && (cpu->pq[entry].processed == false)
+	{
+		bCacheValid = AXP_21264_Bcache_Valid(cpu, cpu->pq[entry].pa);
+		/* TODO: Need Bcache data pointer */
+		physAddr.va = cpu->pq[entry].pa;
+		ctagIndex = physAddr.vaIdxInfo.index;
+
+		/*
+		 * We are going to be checking the dtag for a matching physical address
+		 * tag.  Once checked, we will no longer need this lock.  Also note, we
+		 * don't need to worry about whether one or two sets are enabled.  If
+		 * only one, then the second set's valid bit will not be set.
+		 */
+		pthread_mutex_lock(&cpu->dtagMutex);
+		dCacheIndex0 = cpu->ctag[ctagIndex][0].dtagIndex;
+		dCacheIndex1 = cpu->ctag[ctagIndex][1].dtagIndex;
+		if ((cpu->ctag[ctagIndex][0].valid = true) &&
+			(cpu->dtag[dCacheIndex][0].physTag == physAddr.vaIdxInfo.tag))
+		{
+			setToUse = 0;
+			dCacheIndex = dCacheIndex0;
+			dcacheValid = true;
+		}
+		else if ((cpu->ctag[ctagIndex][1].valid = true) &&)
+				 (cpu->dtag[dCacheIndex][1].physTag == physAddr.vaIdxInfo.tag))
+		{
+			setToUse = 1;
+			dCacheIndex = dCacheIndex1;
+			dcacheValid = true;
+		}
+		pthread_mutex_unlock(&cpu->dtagMutex);
+
+		/*
+		 * We are going to play with a couple of shared structures in the Cbox,
+		 * so we need to lock them down.
+		 *
+		 * NOTE:	If we need to lock down the Mbox shared structure, then we
+		 *			need to unlock this first, in order to avoid a deadlock.
+		 */
+		pthread_mutex_lock(&cBoxIPRMutex);
+		locked = true;
+
+		/*
+		 * If we have an A[cknowledge] from the system, decrement the
+		 * outstanding
+		 */
+		if ((cpu->csr.SysbusAckLimit > 0) &&
+			(cpu->pq[entry].a == true) &&
+			(cpu->cmdAck > 0))
+			cpu->cmdAck--;
+
+		/*
+		 * If the RVB bit is set, clear the VDB or IOWB specified in the ID
+		 * field.
+		 */
+		if (cpu->pq[entry].rvb == true)
+		{
+			if (cpu->pq[entry].ID = 0x08)
+			{
+				cpu->iowb[cpu->pq[entry].ID & 0x07].valid = false;
+				AXP_21264_Complete_SQ(cpu, cpu->pq[entry].ID & 0x07].sqEntry);
+			}
+			else
+				cpu->vdb[cpu->pq[entry].ID].valid = false;
+		}
+
+		/*
+		 * If the RPB bit is set, clear the Probe specified in the ID
+		 * field.
+		 */
+		if (cpu->pq[entry].rpb == true)
+		{
+			u32	oldPqTop = cpu->pqTop;
+
+			cpu->pq[cpu->pq[entry].ID & 0x07].valid = false;
+
+			/*
+			 * Reset the top of the queue to the first valid PQ entry.
+			 */
+			for (ii = oldPqTop; ii < oldPqTop+8; ii++)
+			{
+				if (cpu->pq[ii&0x07].valid == true)
+				{
+					cpu->pqTop = (cpu->pqTop + 1) & 0x07;
+					break;
+				}
+			}
+				
+		}
+
+		/*
+		 * We either have both a Probe and SysDc or just a SysDc.  The SysDc
+		 * controls data movement in and out of the CPU.
+		 */
+		if (cpu->pq[entry].notJustSysDc == true)
+		{
+			switch(AXP_21264_GET_PROBE_DM(cpu->pq[entry].probe))
+			{
+				case AXP_21264_DM_NOP:
+					/* Nothing to do here. */
+					break;
+
+				case AXP_21264_DM_RDHIT:
+					if (cpu->dCache[dCacheIndex][setToUse].state == Valid)
+					{
+						/* TODO: if the cache block is in any state send to system */
+						dm = true;
+					}
+					break;
+
+				case AXP_21264_DM_RDDIRTY:
+					if ((cpu->dCache[dCacheIndex][setToUse].state == Dirty) ||
+						(cpu->dCache[dCacheIndex][setToUse].state == Dirty))
+					{
+						/* TODO: if the cache block is in any state send to system */
+						dm = true;
+					}
+					break;
+
+				case AXP_21264_DM_RDANY:
+					/* TODO: if the cache block is in any state send to system */
+					dm = true;
+					break;
+			}
+		}
+
+		/*
+		 * Process the SysDc information.
+		 */
+		pthread_mutex_lock(&cpu->dCacheMutex);
+		switch(AXP_21264_GET_PROBE_NS(cpu->pq[entry].probe))
+		{
+			case AXP_21264_NS_NOP:
+			case AXP_21264_NS_RES:
+				/* Nothing to do here. */
+				break;
+
+			case AXP_21264_NS_CLEAN:
+				cpu->dCache[dCacheIndex][setToUse].state = Clean;
+				break;
+
+			case AXP_21264_NS_CLEAN_SHARED:
+				cpu->dCache[dCacheIndex][setToUse].state = CleanShared;
+				break;
+
+			case AXP_21264_NS_TRANS3:
+				switch (cpu->dCache[dCacheIndex][setToUse].state)
+				{
+					case Clean:
+					case DirtyShared:
+						cpu->dCache[dCacheIndex][setToUse].state = CleanShared;
+						break;
+
+					case Dirty:
+						cpu->dCache[dCacheIndex][setToUse].state = Invalid;
+						break;
+				}
+				break;
+
+			case AXP_21264_NS_DIRTY_SHARED:
+				cpu->dCache[dCacheIndex][setToUse].state = DirtyShared;
+				break;
+
+			case AXP_21264_NS_INVALID:
+				cpu->dCache[dCacheIndex][setToUse].state = Invalid;
+				break;
+
+			case AXP_21264_NS_TRANS1:
+				switch (cpu->dCache[dCacheIndex][setToUse].state)
+				{
+					case Clean:
+						cpu->dCache[dCacheIndex][setToUse].state = CleanShared;
+						break;
+
+					case Dirty:
+						cpu->dCache[dCacheIndex][setToUse].state = DirtyShared;
+						break;
+				}
+				break;
+		}
+		pthread_mutex_unlock(&cpu->dCacheMutex);
+
+		/*
+		 * If the we hit in the Bcache (which should be a superset of both the
+		 * Dcache and Icache), then we need to send a ProbeResponse.
+		 * TODO: Otherwise, we send what?
+		 */
+		if (BcacheValid == true)
+		{
+			u8	dataBuf[AXP_BCACHE_BLOCK_SIZE];
+			u8	vdbEntry;
+
+			AXP_21264_Bcache_Read(cpu, cpu->pq[entry].pa, dataBuf);
+			vdbEntry = AXP_21264_Add_VDB(
+								cpu,
+								probeResponse,
+								cpu->pq[entry].pa,
+								dataBuf,
+								AXP_BCACHE_BLOCK_SIZE,
+								true);
+			AXP_System_ProbeResponse(
+							dm,			/* DM */
+							false,		/* VS */
+							vdbEntry,
+							maf,
+							probeStatus);
+			
+		}
+		else
+		{
+		}
+
+		/*
+		 * Indicate that the entry is now processed, and unlock the Cbox IPR
+		 * lock, if it is still locked.
+		 */
+		cpu->pq[entry].processed = true;
+		if (locked == true)
+			pthread_mutex_unlock(&cBoxIPRMutex);
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_Add_PQ
+ *	This function is called to add an entry into the Probe Queue (PQ).
+ *
+ *	NOTE:	The system calls this function.  It does so when probing the Cbox
+ *			about information within the CPU's caches.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	probe:
+ *		A value indicating the probe command to queue up to the probe queue.
+ *	pa:
+ *		The physical address (PA) associated with the probe command.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Add_PQ(
+				AXP_21264_CPU *cpu,
+				int probe,
+				AXP_21264_SYSADD_IN_SYSDC sysDc,
+				u64 pa,
+				u8 id,
+				bool notJustSysDc,
+				bool rvb,
+				bool rpb,
+				bool a,
+				bool c)
+{
+
+	/*
+	 * Before we do anything, lock the interface mutex to prevent multiple
+	 * accessors.
+	 */
+	pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+
+	/*
+	 * Queue up the next PQ entry.
+	 */
+	cpu->pqBottom = (cpu->pqBottom + 1) & 0x07;
+	cpu->pq[cpu->pqBottom].command = probe;
+	cpu->pq[cpu->pqBottom].dmType = sysDc;
+	cpu->pq[cpu->pqBottom].pa = pa;
+	cpu->pq[cpu->pqBottom].notJustSysDc = notJustSysDc;
+	cpu->pq[cpu->pqBottom].rvb = rvb;
+	cpu->pq[cpu->pqBottom].rpb = rpb;
+	cpu->pq[cpu->pqBottom].a = a;
+	cpu->pq[cpu->pqBottom].c = c;
+	cpu->pq[cpu->pqBottom].marked = false;
+	cpu->pq[cpu->pqBottom].valid = true;
+	cpu->pq[cpu->pqBottom].processed = false;
+
+	/*
+	 * Let the Cbox know there is something for it to process, then unlock the
+	 * mutex so it can.
+	 */
+	pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
+	pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
+	return;
+}
+
+/*
+ * AXP_21264_Process_IRQ
+ *	This function is called process and any all Interrupt Request Queue (IRQ)
+ *	flags.  After processing, these flags are cleared.
+ *
+ *	NOTE:	The system calls this function.  It does so when one or more
+ *			devices is requesting interrupt processing.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_21264_Process_IRQ(AXP_21264_CPU *cpu)
+{
+
+	/*
+	 * Before we do anything, lock the interface mutex to prevent multiple
+	 * accessors.
+	 */
+	pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+
+	/*
+	 * The Ibox may not have processed all the previous interrupts we sent to
+	 * it, so OR the bits there with the ones set by the system.
+	 */
+	cpu->iBoxIrq |= cpu->irqH
+
+	/*
+	 * Clear the IRQ_H bits here to avoid an infinite loop.  Also, the system
+	 * will set the bits when there is one or more new interrupts to process.
+	 */
+	cpu->irqH = 0;
+
+	/*
+	 * Unlock the mutex so it can.
+	 */
+	pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_Set_IRQ
+ *	This function is called by the system to set Interrupt Request Queue (IRQ)
+ *	flags.
+ *
+ *	NOTE:	This function will lock the Cbox Interface Mutex, set the IRQ_H
+ *			flags, signal the Cbox Interface Condition variable, and finally
+ *			unlock the mutex.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	flags:
+ *		An unsigned byte value representing the falgs to be set.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_21264_Set_IRQ(AXP_21264_CPU *cpu, u8 flags)
+{
+
+	/*
+	 * Before we do anything, lock the interface mutex to prevent multiple
+	 * accessors.
+	 */
+	pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+
+	/*
+	 * The Cbox may not have processed all the previous interrupts the system
+	 * sent to the Cbox, so OR the bits here with the ones that may have been
+	 * set previously.
+	 */
+	cpu->irqH |= flags;
+
+	/*
+	 * Let the Cbox know there is something for it to process, then unlock the
+	 * mutex so it can.
+	 */
+	pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
+	pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_Cbox_Main
+ * 	This is the main function for the Cbox.  It looks at each of the queues to
+ * 	determine if there is anything that needs to be processed for the various
+ * 	queues from other CPU boxes and the System.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
+{
+	AXP_SROM_HANDLE	sromHdl;
+	int				component = 0, ii, jj, entry;
+	bool			initFailure = false, processed;
+
+	/*
+	 * The Cbox is very involved in the initialization of the CPU at power-up,
+	 * fault-resetting, and waking up from sleep.  The Cbox CSRs are
+	 * initialized at this point and the the SROM is loaded into the Icache.
+	 * Once all this has been done, then we put the CPU into a Running state,
+	 * at which point all hell can break lose.
+	 *
+	 * When we first come in the CPU should be in a Cold state.  We will be
+	 */
+	while (cpu->cpuState != ShuttingDown)
+	{
+		switch (cpu->cpuState)
+		{
+			case Cold:
+				pthread_mutex_lock(&cpu->cpuMutex);
+				cpu->cpuState = WaitBiST;
+				cpu->BiSTState = SystemReset;
+				pthread_mutex_unlock(&cpu->cpuMutex);
+				break;
+
+			case WaitBiST:
+			case WaitBiSI:
+				pthread_mutex_lock(&cpu->cpuMutex);
+
+				/*
+				 * HRM: 11.5.1
+				 *
+				 * We have a SystemReset, set the BiSTState appropriately.
+				 */
+				cpu->BiSTState = BiSTRunning;
+
+				/*
+				 * The other components (Ibox, Ebox, Fbox, and Mbox) should
+				 * have their initialization function called to perform the
+				 * initialization they need to do for themselves.  After this,
+				 * they'll all be waiting for the CPU to go into Running State,
+				 * which is set here after the Cbox finished its own
+				 * initialization.  If any of the initialization routines
+				 * return an error, an error should have been displayed and
+				 * we'll change the CPU state to ShuttingDown (which will cause
+				 * all the other components to shutdown as well).
+				 */
+				while (initFailure == false)
+				{
+					switch (component)
+					{
+						case 0:		/* Mbox */
+							initFailure = AXP_21264_Mbox_Init(cpu);
+							break;
+
+						case 1:		/* Ebox */
+							initFailure = AXP_21264_Ebox_Init(cpu);
+							break;
+
+						case 2:		/* Fbox */
+							initFailure = AXP_21264_Fbox_Init(cpu);
+							break;
+
+						case 3:		/* Ibox */
+							initFailure = AXP_21264_Ibox_Init(cpu);
+							break;
+
+						case 4:		/* Cbox */
+							initFailure = AXP_21264_Cbox_Init(cpu);
+
+						case 5:		/* Cbox Config */
+
+							/*
+							 * HRM: 11.5.2
+							 *
+							 * All right, BiST passed, now we have to load the
+							 * SROM Cbox configuration.
+							 */
+							cpu->BiSTState = BiSTSucceeded;
+							initFailure = AXP_21264_Cbox_Config(cpu);
+							break;
+
+						case 6:
+
+							/*
+							 * HRM: 11.5.2.1
+							 *
+							 * Finally, load the Instruction Cache for the
+							 * initialization code.  This is where the console
+							 * is loaded.
+							 *
+							 * TODO: Get the ROM filename from the
+							 *		 configuration.
+							 */
+							initFailure = AXP_OpenRead_SROM("", &sromHdl);
+							if (initFailure == false)
+							{
+								AXP_CACHE_IDX	destAddr =
+								{
+									.offset = 0;
+									.index = sromHdl.destAddr / 64;
+									.res = 0;
+								};
+								int retVal = 1;
+
+								/*
+								 * TODO: Which of these should we be using:
+								 *
+								 * cpu->palBase.pal_pase_pc = sromHdl,destAddr;
+								 * AXP_21264_AddVPC(
+								 *			cpu,
+								 *			AXP_21264_GetPALFuncvpc(
+								 *				cpu,
+								 *				AXP_RESET_WAKEUP));
+								 *	or
+								 * AXP_21264_AddVPC(cpu, (AXP_PC) sromHdl.destAddr);
+								 */
+								for (ii = destrAddr.index; retVal > 0; ii++)
+								{
+									for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
+										retVal = AXP_Read_SROM(
+											&sromHdl,
+											cpu->iCache[ii][jj].instructions,
+											(AXP_ICACHE_LINE_INS *
+											 sizeof(AXP_INS_FMT)));
+								}
+								initFailure = AXP_Close_SROM(&sromHdl);
+								if (((retVal == AXP_E_READERR) ||
+									 (retVal == AXP_E_BADSROMFILE)) &&
+									(initFailure == false))
+									initFailure = true;
+							}
+							break;
+					}
+					if (initFailure == false)
+						component++;
+				}
+
+				/*
+				 * If any of the initializations failed, then the BiST failed.
+				 * We will have to perform a bunch of shutdown logic outside
+				 * the top while loop.
+				 */
+				if (initFailure == true)
+				{
+					cpu->BiSTState = BiSTFailed;
+					cpu->cpuState = ShuttingDown;
+				}
+				else
+				{
+
+					/*
+					 * All the initialization work has been performed. Signal
+					 * all the other threads to start to do their processing.
+					 */
+					cpu->cpuState = Run;
+					pthread_cond_broadcast(&cpu->cpuCond);
+				}
+				pthread_mutex_unlock(&cpu->cpuMutex);
+				break;
+
+			case Run:
+
+				/*
+				 * We are now executing actual Alpha AXP instructions.  Monitor
+				 * the interface queues and process the requests from the Mbox,
+				 * Ibox and probes from the System, and responses from the
+				 * System to requests sent from the Cbox.
+				 */
+				pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+				processed = false;
+				if ((entry = AXP_21264_MAF_Empty(cpu)) != -1)
+				{
+					AXP_21264_Process_MAF(cpu, entry);
+					processed = true;
+				}
+				if ((entry = AXP_21264_VDB_Empty(cpu)) != -1)
+				{
+					AXP_21264_Process_VDB(cpu, entry);
+					processed = true;
+				}
+				if ((entry = AXP_21264_IOWB_Empty(cpu)) == -1)
+				{
+					AXP_21264_Process_IOWB(cpu, entry);
+					processed = true;
+				}
+				if ((entry = AXP_21264_PQ_Empty(cpu)) == -1)
+				{
+					AXP_21264_Process_PQ(cpu, entry);
+					processed = true;
+				}
+				if (irqH != 0)
+				{
+					AXP_21264_Process_IRQ(cpu);
+					processed = true;
+				}
+
+				/*
+				 * If all the queues were empty, then wait for something to get
+				 * queued up and the condition variable signaled.
+				 */
+				 if (processed == false)
+					pthread_cond_wait(
+							&cpu->cBoxInterfaceCond,
+							&cpu->cBoxInterfaceMutex);
+
+				/*
+				 * Unlock the mutex so that something else could get queued up
+				 * between now and when we get back into this section of code
+				 * (which should be the next time through the outter loop).
+				 */
+				pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
+				break;
+
+			case FaultReset:
+				pthread_mutex_lock(&cpu->cpuMutex);
+				cpu->cpuState = WaitBiSI;
+				cpu->BiSTState = SystemReset;
+				pthread_mutex_unlock(&cpu->cpuMutex);
+				break;
+
+			case Sleep:
+
+				/* 
+				 * Need to quiese everything and put the world to sleep waiting
+				 * just for the wake-up signal.
+				 */
+				break;
+
+			case ShuttingDown:
+
+				/*
+				 * We are shutting down.  Since we started everything, we need
+				 * to clean ourself up.  The main function will be joining to
+				 * all the threads it created and then freeing up the memory
+				 * and exiting the image.
+				 */
+				pthread_destroy(&cpu->cBoxThreadID);
+				break;
+		}
+	}
 	return;
 }
