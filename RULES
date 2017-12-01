@@ -1,4 +1,21 @@
 Project Notes:
+	The project structure is as follows:
+	1. Documentation is located in the doc/ folder.
+	2. Build (makefile) is located in the bld/ folder.
+	3. Source code is in the src/ folder with the following:
+		a. comutl/ contains a common set of utilities (used across multiple components).
+		b. cpu/ contains all the code that implements the emulation of the Digital Alpha AXP 21264 CPU.
+		c. sys/ contains all the code that implements the system and main function.
+		c. tst/ contains all the unit testing code.
+	4. Data files are located in the dat/ folder.
+	5. Binary files from compiling are placed in the bin/ folder (note: GIT ignores this folder and its contents)
+	6. Executeable files are placed in the exe/ folder (note: GIT ignores this folder and its contents)
+
+	When building the project:
+	1. Make sure the exe/ and bin/ folders exist.
+	2. From within the bld/ folder, run 'make depend' prior to trying to build the emulator code.
+	3. Prior to attempting to check in code, make sure that the binaries and executeables are cleaned out, and
+	   the makefile is restored to its check-in format by running 'make clean'
 
 Coding Rules:
 	The code is written entirely in the C language.  The ANSI C compiler option
