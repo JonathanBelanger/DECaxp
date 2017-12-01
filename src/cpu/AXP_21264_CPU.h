@@ -296,7 +296,13 @@ typedef struct
 	u16						globalPathHistory;
 
 	u8						instrCounter;	/* Unique ID for each instruction */
-	u8						res_1;			/* Align to 32-bit boundary		*/
+
+	/*
+	 * When the IRQ_H bits are set be the system and the Cbox detects it, the
+	 * Cbox copies (actually a logical AND) to this location for the iBox to
+	 * call the PALcode to process.
+	 */
+	u8						iBoxIrq : 6;	/* Six interrupt bits set by Cbox*/
 
 	/*
 	 * This is equivalent to the VPC
@@ -320,6 +326,10 @@ typedef struct
 
 	/*
 	 * Instruction Queue Pre-allocated Cache.
+	 *
+	 * TODO:	These should not be basic LEAF structures but a structure that
+	 *			has at the top of it a LEAF structure, and contains the rest of
+	 *			data needed for these entries.
 	 */
 	AXP_COND_Q_LEAF			iqEntries[AXP_IQ_LEN];
 	u32						iqEFreelist[AXP_IQ_LEN];
@@ -530,8 +540,6 @@ typedef struct
 	pthread_mutex_t			dtbMutex;
 	AXP_21264_TLB			dtb[AXP_TB_LEN];
 	u32						nextDTB;
-	pthread_mutex_t			mafMutex;
-	AXP_MBOX_MAF			maf[AXP_21264_MAF_LEN];
 
 	/*
 	 * The following is used to detect when we have a TB Miss while processing
@@ -578,22 +586,34 @@ typedef struct
 
 	/*
 	 * TODO: The code for the following structures is not yet complete.  These
-	 * 		 are the interfaces between the Mbox and Cbox, and the System and
-	 * 		 the Cbox.
+	 * 		 are the interfaces between the Ibox and Mbox to Cbox, and the
+	 *		 System and the Cbox.
 	 */
-	AXP_21264_CBOX_VIC_BUF	vdb[AXP_21264_VDB_LEN];
+	pthread_mutex_t			cBoxInterfaceMutex;
+	pthread_cond_t			cBoxInterfaceCond;
+	AXP_21264_CBOX_VDB		vdb[AXP_21264_VDB_LEN];
 	AXP_21264_CBOX_IOWB		iowb[AXP_21264_IOWB_LEN];
 	AXP_21264_CBOX_PQ		pq[AXP_21264_PQ_LEN];
-	AXP_21264_CBOX_CTAG		ctag[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
+	AXP_21264_CBOX_MAF		maf[AXP_21264_MAF_LEN];
+	u8						irqH : 6;	/* Six interrupt bits set by system	*/
+	u8						vdbTop, vdbBottom;
+	u8						iowbTop, iowbBottom;
+	u8						pqTop, pqBottom;
+	u8						mafTop, mafBottom;
+	u8						cmdAck;
 
 	/*
 	 * Cbox IPRs
 	 */
 	pthread_mutex_t			cBoxIPRMutex;
+	AXP_21264_CBOX_CTAG		ctag[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 	AXP_CBOX_C_DATA			cData;		/* Cbox data						*/
 	AXP_CBOX_C_SHFT			cShft;		/* Cbox shift control				*/
 	AXP_21264_CBOX_CSRS		csr;		/* Control and Status Registers (CSR) */
-	u8						irqH : 6;	/* Six interrupt bits set by system	*/
+
+	/*
+	 * Bcache data structures.
+	 */
 	AXP_21264_BCACHE_BLK	*bCache;	/* An array of 64-byte blocks		*/
 	AXP_21264_BCACHE_TAG	*bTag;		/* An array of tags for the Bcache	*/
 
