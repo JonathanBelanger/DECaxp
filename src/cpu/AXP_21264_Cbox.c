@@ -35,9 +35,10 @@
  *	Added functions to Flush, Read, Write, and Check for a Valid record for
  *	the Bcache.
  */
+#include "AXP_21264_Cbox.h"
 #include "AXP_Configure.h"
-#include "AXP_21264_CboxDefs.h"
 #include "AXP_NameValuePair_Read.h"
+#include "AXP_21264_CacheDefs.h"
 #include "AXP_21264_Mbox.h"
 #include "AXP_21264_Ebox.h"
 #include "AXP_21264_Fbox.h"
@@ -209,14 +210,14 @@ void AXP_FQArbiter()
  */
 bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 {
-	bool						retVal = false;
-	bool						readResult = true;
-	FILE						*fp;
+	bool					retVal = false;
+	bool					readResult = true;
+	FILE					*fp;
 	char					*configFile = "../dat/AXP_21264_Cbox_CSR.nvp";
-	char						name[32];
-	u32							value;
-	int							ii;
-	AXP_21264_CBOX_CSR_VALUES	csr;
+	char					name[32];
+	u32						value;
+	int						ii;
+	AXP_21264_CBOX_CSR_VAL	csr;
 
 	/*
 	 * Open the file to configure the CSRs for the Cbox.
@@ -662,6 +663,7 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
  */
 bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 {
+	u32		ii, jj;
 	bool	retVal = false;
 
 	/*
@@ -688,7 +690,7 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 	{
 		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
 		{
-			cpu->ctag[ii][jj].physTag = 0;
+			cpu->ctag[ii][jj].virtTag = 0;
 			cpu->ctag[ii][jj].dtagIndex = AXP_CACHE_ENTRIES;
 			cpu->ctag[ii][jj].valid = false;
 		}
@@ -902,7 +904,7 @@ int AXP_21264_MAF_Empty(AXP_21264_CPU *cpu)
 {
 	int		retVal = -1;
 	int		ii;
-	int		start1 = -1, star2 = -1, end1 = -1, end2 = -1;
+	int		start1 = -1, start2 = -1, end1 = -1, end2 = -1;
 
 	if (cpu->mafTop > cpu->mafBottom)
 	{
@@ -958,6 +960,7 @@ void AXP_21264_Process_MAF(AXP_21264_CPU *cpu, int entry)
 	/*
 	 * Process the next MAF entry that needs it.
 	 */
+#if 0
 	switch(cpu->maf[entry].type)
 	{
 		case Dcache:
@@ -1015,6 +1018,7 @@ void AXP_21264_Process_MAF(AXP_21264_CPU *cpu, int entry)
 			break;
 	}
 	AXP_SendToSystem(&cpu->maf[entry].rq);
+#endif
 	
 	/*
 	 * Indicate that the entry is now processed and return back to the caller.
@@ -1053,8 +1057,8 @@ void AXP_21264_Process_MAF(AXP_21264_CPU *cpu, int entry)
 void AXP_21264_Add_MAF(
 				AXP_21264_CPU *cpu,
 				AXP_CBOX_MAF_TYPE type,
-				AXP_21264_SYSADD_MASK mask,
-				u64 pa);
+				AXP_21264_IO_MASK mask,
+				u64 pa)
 {
 
 	/*
@@ -1181,7 +1185,9 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 			/*
 			 * Send the Bcache block out to the system to store in memory.
 			 */
+#if 0
 			AXP_SendToSystem(&cpu->vdb[entry].rq);
+#endif
 			break;
 
 		/*
@@ -1194,7 +1200,9 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 			 * Send the ProbeResponse to the system having sent a Probe
 			 * request.
 			 */
+#if 0
 			AXP_SendToSystem(&cpu->vdb[entry].rsp);
+#endif
 			break;
 	}
 
@@ -1212,7 +1220,7 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
  *
  *	NOTE:	The Mbox and Cbox call this function.  The Mbox to have a Dcache
  *			block to be written to the Bcache.  The Cbox to have Istream blocks
- *			recently writtent to the Icache to the Bcache as well
+ *			recently written to the Icache to the Bcache as well
  *			(TODO: Determine if the Cbox can do both at the same time), Bcache
  *			blocks that need to be written to memory, or cache blocks sent to
  *			the system in response to probe commands.
@@ -1266,7 +1274,7 @@ u8 AXP_21264_Add_VDB(
 	 * Let the Cbox know there is something for it to process, then unlock the
 	 * mutex so it can.
 	 */
-	if (lcoked == true)
+	if (locked == true)
 	{
 		pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
 		pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
@@ -1487,8 +1495,8 @@ int AXP_21264_PQ_Empty(AXP_21264_CPU *cpu)
  */
 void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 {
-	AXP_21264_SYSADD_OUT_PROBE_STAT probeStatus;
-	AXP_VA			physAddr = {.va = pa};
+	AXP_21264_PROBE_STAT probeStatus;
+	AXP_VA			physAddr;
 	u32				ctagIndex;
 	u32				dCacheIndex;
 	u32				bCacheIndex;
@@ -1508,7 +1516,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 	 * entry was considered for processing, it may have already been processed.
 	 * If so, there is no need to process it again.
 	 */
-	if ((cpu->pq[entry].valid == true) && (cpu->pq[entry].processed == false)
+	if ((cpu->pq[entry].valid == true) && (cpu->pq[entry].processed == false))
 	{
 		bCacheValid = AXP_21264_Bcache_Valid(cpu, cpu->pq[entry].pa);
 		/* TODO: Need Bcache data pointer */
@@ -1529,14 +1537,14 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 		{
 			setToUse = 0;
 			dCacheIndex = dCacheIndex0;
-			dcacheValid = true;
+			dCacheValid = true;
 		}
-		else if ((cpu->ctag[ctagIndex][1].valid = true) &&)
+		else if ((cpu->ctag[ctagIndex][1].valid = true) &&
 				 (cpu->dtag[dCacheIndex][1].physTag == physAddr.vaIdxInfo.tag))
 		{
 			setToUse = 1;
 			dCacheIndex = dCacheIndex1;
-			dcacheValid = true;
+			dCacheValid = true;
 		}
 		pthread_mutex_unlock(&cpu->dtagMutex);
 
@@ -1547,8 +1555,9 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 		 * NOTE:	If we need to lock down the Mbox shared structure, then we
 		 *			need to unlock this first, in order to avoid a deadlock.
 		 */
-		pthread_mutex_lock(&cBoxIPRMutex);
+		pthread_mutex_lock(&cpu->cBoxIPRMutex);
 		locked = true;
+		/* TODO: I'm not sure I like the above code.  Locking should be better */
 
 		/*
 		 * If we have an A[cknowledge] from the system, decrement the
@@ -1565,10 +1574,10 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 		 */
 		if (cpu->pq[entry].rvb == true)
 		{
-			if (cpu->pq[entry].ID = 0x08)
+			if ((cpu->pq[entry].ID &0x08) == 0x08)
 			{
 				cpu->iowb[cpu->pq[entry].ID & 0x07].valid = false;
-				AXP_21264_Complete_SQ(cpu, cpu->pq[entry].ID & 0x07].sqEntry);
+				AXP_21264_Complete_SQ(cpu, cpu->iowb[cpu->pq[entry].ID & 0x07].sqEntry);
 			}
 			else
 				cpu->vdb[cpu->pq[entry].ID].valid = false;
@@ -1611,7 +1620,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 					break;
 
 				case AXP_21264_DM_RDHIT:
-					if (cpu->dCache[dCacheIndex][setToUse].state == Valid)
+					if (cpu->dCache[dCacheIndex][setToUse].valid == true)
 					{
 						/* TODO: if the cache block is in any state send to system */
 						dm = true;
@@ -1619,8 +1628,8 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 					break;
 
 				case AXP_21264_DM_RDDIRTY:
-					if ((cpu->dCache[dCacheIndex][setToUse].state == Dirty) ||
-						(cpu->dCache[dCacheIndex][setToUse].state == Dirty))
+					if ((cpu->dCache[dCacheIndex][setToUse].valid == true) &&
+						(cpu->dCache[dCacheIndex][setToUse].dirty == true))
 					{
 						/* TODO: if the cache block is in any state send to system */
 						dm = true;
@@ -1636,6 +1645,15 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 
 		/*
 		 * Process the SysDc information.
+		 *
+		 * NOTE: A Block state is defined as follows:
+		 * 		State			Valid		Dirty		Shared
+		 * 		------------	-----		-----		------
+		 * 		Clean			true		false		false
+		 * 		Clean/Shared	true		false		true
+		 * 		Dirty			true		true		false
+		 * 		Dirty/Shared	true		true		true
+		 * 		Invalid			false		n/a			n/a
 		 */
 		pthread_mutex_lock(&cpu->dCacheMutex);
 		switch(AXP_21264_GET_PROBE_NS(cpu->pq[entry].probe))
@@ -1646,46 +1664,71 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 				break;
 
 			case AXP_21264_NS_CLEAN:
-				cpu->dCache[dCacheIndex][setToUse].state = Clean;
+				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
+				{
+					cpu->dCache[dCacheIndex][setToUse].dirty = false;
+					cpu->dCache[dCacheIndex][setToUse].shared = false;
+				}
 				break;
 
 			case AXP_21264_NS_CLEAN_SHARED:
-				cpu->dCache[dCacheIndex][setToUse].state = CleanShared;
+				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
+				{
+					cpu->dCache[dCacheIndex][setToUse].dirty = false;
+					cpu->dCache[dCacheIndex][setToUse].shared = true;
+				}
 				break;
 
 			case AXP_21264_NS_TRANS3:
-				switch (cpu->dCache[dCacheIndex][setToUse].state)
+				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
 				{
-					case Clean:
-					case DirtyShared:
-						cpu->dCache[dCacheIndex][setToUse].state = CleanShared;
-						break;
 
-					case Dirty:
-						cpu->dCache[dCacheIndex][setToUse].state = Invalid;
-						break;
+					/*
+					 * Clean
+					 */
+					if ((cpu->dCache[dCacheIndex][setToUse].dirty == false) &&
+						(cpu->dCache[dCacheIndex][setToUse].shared == false))
+						cpu->dCache[dCacheIndex][setToUse].shared = true;
+
+					/*
+					 * Dirty/Shared
+					 */
+					else if ((cpu->dCache[dCacheIndex][setToUse].dirty == true) &&
+							 (cpu->dCache[dCacheIndex][setToUse].shared == true))
+						cpu->dCache[dCacheIndex][setToUse].dirty = false;
+
+					/*
+					 * Dirty
+					 */
+					else if ((cpu->dCache[dCacheIndex][setToUse].dirty == true) &&
+							 (cpu->dCache[dCacheIndex][setToUse].shared == false))
+						cpu->dCache[dCacheIndex][setToUse].valid = false;
 				}
 				break;
 
 			case AXP_21264_NS_DIRTY_SHARED:
-				cpu->dCache[dCacheIndex][setToUse].state = DirtyShared;
+				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
+				{
+					cpu->dCache[dCacheIndex][setToUse].dirty = true;
+					cpu->dCache[dCacheIndex][setToUse].shared = true;
+				}
 				break;
 
 			case AXP_21264_NS_INVALID:
-				cpu->dCache[dCacheIndex][setToUse].state = Invalid;
+				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
+					cpu->dCache[dCacheIndex][setToUse].valid = false;
 				break;
 
 			case AXP_21264_NS_TRANS1:
-				switch (cpu->dCache[dCacheIndex][setToUse].state)
-				{
-					case Clean:
-						cpu->dCache[dCacheIndex][setToUse].state = CleanShared;
-						break;
 
-					case Dirty:
-						cpu->dCache[dCacheIndex][setToUse].state = DirtyShared;
-						break;
-				}
+				/*
+				 * If the block is valid then we are turning either a Clean or
+				 * Dirty block into a Clean/Shared or Dirty/Shared block.  The
+				 * only thing that is really changing is the shared bit (and
+				 * setting an already set bit is  really a no-op).
+				 */
+				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
+					cpu->dCache[dCacheIndex][setToUse].shared = true;
 				break;
 		}
 		pthread_mutex_unlock(&cpu->dCacheMutex);
@@ -1695,7 +1738,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 		 * Dcache and Icache), then we need to send a ProbeResponse.
 		 * TODO: Otherwise, we send what?
 		 */
-		if (BcacheValid == true)
+		if (bCacheValid == true)
 		{
 			u8	dataBuf[AXP_BCACHE_BLOCK_SIZE];
 			u8	vdbEntry;
@@ -1708,13 +1751,14 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 								dataBuf,
 								AXP_BCACHE_BLOCK_SIZE,
 								true);
+#if 0
 			AXP_System_ProbeResponse(
 							dm,			/* DM */
 							false,		/* VS */
 							vdbEntry,
 							maf,
 							probeStatus);
-			
+#endif
 		}
 		else
 		{
@@ -1726,7 +1770,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 		 */
 		cpu->pq[entry].processed = true;
 		if (locked == true)
-			pthread_mutex_unlock(&cBoxIPRMutex);
+			pthread_mutex_unlock(&cpu->cBoxIPRMutex);
 	}
 
 	/*
@@ -1760,7 +1804,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 void AXP_21264_Add_PQ(
 				AXP_21264_CPU *cpu,
 				int probe,
-				AXP_21264_SYSADD_IN_SYSDC sysDc,
+				AXP_21264_SYSDC_RSP sysDc,
 				u64 pa,
 				u8 id,
 				bool notJustSysDc,
@@ -1780,8 +1824,8 @@ void AXP_21264_Add_PQ(
 	 * Queue up the next PQ entry.
 	 */
 	cpu->pqBottom = (cpu->pqBottom + 1) & 0x07;
-	cpu->pq[cpu->pqBottom].command = probe;
-	cpu->pq[cpu->pqBottom].dmType = sysDc;
+	cpu->pq[cpu->pqBottom].probe = probe;
+	cpu->pq[cpu->pqBottom].sysDc = sysDc;
 	cpu->pq[cpu->pqBottom].pa = pa;
 	cpu->pq[cpu->pqBottom].notJustSysDc = notJustSysDc;
 	cpu->pq[cpu->pqBottom].rvb = rvb;
@@ -1833,7 +1877,7 @@ void AXP_21264_Process_IRQ(AXP_21264_CPU *cpu)
 	 * The Ibox may not have processed all the previous interrupts we sent to
 	 * it, so OR the bits there with the ones set by the system.
 	 */
-	cpu->iBoxIrq |= cpu->irqH
+	cpu->iBoxIrq |= cpu->irqH;
 
 	/*
 	 * Clear the IRQ_H bits here to avoid an infinite loop.  Also, the system
@@ -2018,12 +2062,7 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 							initFailure = AXP_OpenRead_SROM("", &sromHdl);
 							if (initFailure == false)
 							{
-								AXP_CACHE_IDX	destAddr =
-								{
-									.offset = 0;
-									.index = sromHdl.destAddr / 64;
-									.res = 0;
-								};
+								AXP_CACHE_IDX	destAddr;
 								int retVal = 1;
 
 								/*
@@ -2038,7 +2077,10 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 								 *	or
 								 * AXP_21264_AddVPC(cpu, (AXP_PC) sromHdl.destAddr);
 								 */
-								for (ii = destrAddr.index; retVal > 0; ii++)
+								destAddr.offset = 0;
+								destAddr.index = sromHdl.destAddr / 64;
+								destAddr.res = 0;
+								for (ii = destAddr.index; retVal > 0; ii++)
 								{
 									for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
 										retVal = AXP_Read_SROM(
@@ -2112,7 +2154,7 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 					AXP_21264_Process_PQ(cpu, entry);
 					processed = true;
 				}
-				if (irqH != 0)
+				if (cpu->irqH != 0)
 				{
 					AXP_21264_Process_IRQ(cpu);
 					processed = true;

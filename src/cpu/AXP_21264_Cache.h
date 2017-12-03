@@ -24,8 +24,8 @@
  *	V01.000		29-Jul-2017	Jonathan D. Belanger
  *	Initially written.
  */
-#ifndef _AXP_21264_CACHE_
-#define _AXP_21264_CACHE_
+#ifndef _AXP_21264_CACHE_DEFS_
+#define _AXP_21264_CACHE_DEFS_
 
 #include "AXP_Utility.h"
 #include "AXP_21264_CPU.h"
@@ -60,4 +60,4 @@ void AXP_IcacheFlush(AXP_21264_CPU *, bool);
 bool AXP_IcacheFetch(AXP_21264_CPU *, AXP_PC, AXP_INS_LINE *);
 bool AXP_IcacheValid(AXP_21264_CPU *, AXP_PC);
 
-#endif /* _AXP_21264_CACHE_ */
+#endif /* _AXP_21264_CACHE_DEFS_ */

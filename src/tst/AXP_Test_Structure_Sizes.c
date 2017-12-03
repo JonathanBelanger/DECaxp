@@ -29,6 +29,7 @@
 /*
  * Include comutl.
  */
+#include "../cpu/AXP_21264_Cbox.h"
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
 #include "AXP_Blocks.h"
@@ -42,7 +43,6 @@
 #include "AXP_21264_Predictions.h"
 #include "AXP_21264_Cache.h"
 #include "AXP_21264_Ibox.h"
-#include "AXP_21264_Cbox.h"
 #include "AXP_21264_Fbox.h"
 #include "AXP_21264_CPU.h"
 

@@ -75,10 +75,10 @@
 #include "AXP_21264_Predictions.h"
 #include "AXP_21264_IPRs.h"
 #include "AXP_21264_CacheDefs.h"
+#include "AXP_21264_CboxDefs.h"
+#include "AXP_21264_MboxDefs.h"
 #include "AXP_21264_RegisterRenaming.h"
-#include "AXP_21264_Mbox_Queues.h"
 #include "AXP_Exceptions.h"
-#include "AXP_21264_Cbox.h"
 
 #define AXP_RESULTS_REG			41
 #define AXP_NUM_FETCH_INS		4
@@ -192,7 +192,7 @@ typedef struct
 
 typedef struct
 {
-	AXP_CQUE_ENTRY		header;
+	AXP_COND_Q_LEAF		header;
 	AXP_INSTRUCTION		*ins;
 	u32					index;
 } AXP_QUEUE_ENTRY;
@@ -326,16 +326,12 @@ typedef struct
 
 	/*
 	 * Instruction Queue Pre-allocated Cache.
-	 *
-	 * TODO:	These should not be basic LEAF structures but a structure that
-	 *			has at the top of it a LEAF structure, and contains the rest of
-	 *			data needed for these entries.
 	 */
-	AXP_COND_Q_LEAF			iqEntries[AXP_IQ_LEN];
+	AXP_QUEUE_ENTRY			iqEntries[AXP_IQ_LEN];
 	u32						iqEFreelist[AXP_IQ_LEN];
 	u32						iqEFlStart;
 	u32						iqEFlEnd;
-	AXP_COND_Q_LEAF			fqEntries[AXP_FQ_LEN];
+	AXP_QUEUE_ENTRY			fqEntries[AXP_FQ_LEN];
 	u32						fqEFreelist[AXP_IQ_LEN];
 	u32						fqEFlStart;
 	u32						fqEFlEnd;
@@ -591,7 +587,7 @@ typedef struct
 	 */
 	pthread_mutex_t			cBoxInterfaceMutex;
 	pthread_cond_t			cBoxInterfaceCond;
-	AXP_21264_CBOX_VDB		vdb[AXP_21264_VDB_LEN];
+	AXP_21264_CBOX_VIC_BUF	vdb[AXP_21264_VDB_LEN];
 	AXP_21264_CBOX_IOWB		iowb[AXP_21264_IOWB_LEN];
 	AXP_21264_CBOX_PQ		pq[AXP_21264_PQ_LEN];
 	AXP_21264_CBOX_MAF		maf[AXP_21264_MAF_LEN];
