@@ -312,8 +312,8 @@ i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
 		 * Let's first have the entry we are inserting into the queue point to
 		 * its predecessor and its successor.
 		 */
-		entry->header.flink = pred->flink;
-		entry->header.blink = pred;
+		entry->flink = pred->flink;
+		entry->blink = pred;
 
 		/*
 		 * Now get the predecessor and successor point to the entry.
@@ -367,8 +367,8 @@ i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
 		/*
 		 * Let's first have the predecessor and successor point to each other.
 		 */
-		((AXP_QUEUE_HDR *) (entry->header.blink))->flink = entry->header.flink;
-		((AXP_QUEUE_HDR *) (entry->header.flink))->blink = entry->header.blink;
+		((AXP_QUEUE_HDR *) (entry->blink))->flink = entry->flink;
+		((AXP_QUEUE_HDR *) (entry->flink))->blink = entry->blink;
 
 		/*
 		 * Finally, since this is a counted queue, decrement the counter in the
@@ -834,7 +834,7 @@ bool AXP_CondQueue_Empty(void *queue)
  * 	byte into the supplied buffer.  The function returns the number of bytes
  * 	read.
  *
- *	NOTE:	We only ever read in an executeable file and never write one.  So,
+ *	NOTE:	We only ever read in an executable file and never write one.  So,
  *			there is no companion Unload function.
  *
  * Input Parameters:
@@ -867,7 +867,7 @@ i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 	if (AXP_UTL_BUFF)
 	{
 		printf(
-			"\n\nDECaxp: opened executeable file %s for reading\n\n",
+			"\n\nDECaxp: opened executable file %s for reading\n\n",
 			fileName);
 		printf("Header bytes:\n");
 	}
@@ -896,7 +896,7 @@ i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 				if (((ii + 1) % 4) == 0)
 				{
 					printf("\t");
-					for (ii = 4; jj > 0; jj--)
+					for (jj = sizeof(u32)-1; jj >= 0; jj--)
 						printf("%c", (isprint(scratch[jj]) ? scratch[jj] : '.'));
 					printf("\n");
 				}
@@ -990,7 +990,7 @@ i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 {
 	const char	*errMsg = "%%AXP-E-%s, %s\n";
-	int			ii;
+	int			ii = 0;
 	bool		retVal = false;
 
 	if (AXP_UTL_BUFF)
@@ -1025,7 +1025,11 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 			switch (ii)
 			{
 				case 0:
-					fread(sromHandle->validPat, sizeof(u32), 1, fp);
+					fread(
+						sromHandle->validPat,
+						sizeof(u32),
+						1,
+						sromHandle->fp);
 					if (sromHandle->validPat != AXP_ROM_VAL_PAT)
 					{
 						printf(errMsg, "VPB", "Validity pattern bad.");
@@ -1034,16 +1038,23 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 					break;
 
 				case 1:
-					fread(sromHandle->inverseVP, sizeof(u32), 1, fp);
+					fread(
+						sromHandle->inverseVP,
+						sizeof(u32),
+						1,
+						sromHandle->fp);
 					if (sromHandle->validPat != AXP_ROM_INV_VP_PAT)
 					{
-						printf(errMsg, "IVPB", "Inverse validity pattern bad.");
+						printf(
+							errMsg,
+							"IVPB",
+							"Inverse validity pattern bad.");
 						retVal = true;
 					}
 					break;
 
 				case 2:
-					fread(sromHandle->hdrSize, sizeof(u32), 1, fp);
+					fread(sromHandle->hdrSize, sizeof(u32), 1, sromHandle->fp);
 					if (sromHandle->hdrSize != AXP_ROM_HDR_LEN)
 					{
 						printf(errMsg, "HDRIVP", "Header size invalid.");
@@ -1052,54 +1063,82 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 					break;
 
 				case 3:
-					fread(sromHandle->imgChecksum, sizeof(u32), 1, fp);
+					fread(
+						sromHandle->imgChecksum,
+						sizeof(u32),
+						1,
+						sromHandle->fp);
 					break;
 
 				case 4:
-					fread(sromHandle->imgSize, sizeof(u32), 1, fp);
+					fread(sromHandle->imgSize, sizeof(u32), 1, sromHandle->fp);
 					break;
 
 				case 5:
-					fread(sromHandle->decompFlag, sizeof(u32), 1, fp);
+					fread(
+						sromHandle->decompFlag,
+						sizeof(u32),
+						1,
+						sromHandle->fp);
 					break;
 
 				case 6:
-					fread(sromHandle->destAddr, sizeof(u64), 1, fp);
+					fread(
+						sromHandle->destAddr,
+						sizeof(u64),
+						1,
+						sromHandle->fp);
 					break;
 
 				case 7:
-					fread(sromHandle->hdrRev, sizeof(u8), 1, fp);
+					fread(sromHandle->hdrRev, sizeof(u8), 1, sromHandle->fp);
 					break;
 
 				case 8:
-					fread(sromHandle->fwID, sizeof(u8), 1, fp);
+					fread(sromHandle->fwID, sizeof(u8), 1, sromHandle->fp);
 					break;
 
 				case 9:
-					fread(sromHandle->hdrRevExt, sizeof(u8), 1, fp);
+					fread(
+						sromHandle->hdrRevExt,
+						sizeof(u8),
+						1,
+						sromHandle->fp);
 					break;
 
 				case 10:
-					fread(sromHandle->res, sizeof(u8), 1, fp);
+					fread(sromHandle->res, sizeof(u8), 1, sromHandle->fp);
 					break;
 
 				case 11:
-					fread(sromHandle->romImgSize, sizeof(u32), 1, fp);
+					fread(
+						sromHandle->romImgSize,
+						sizeof(u32),
+						1,
+						sromHandle->fp);
 					break;
 
 				case 12:
-					fread(sromHandle->optFwID, sizeof(u64), 1, fp);
+					fread(sromHandle->optFwID, sizeof(u64), 1, sromHandle->fp);
 					break;
 
 				case 13:
-					fread(sromHandle->romOffset, sizeof(u32), 1, fp);
+					fread(
+						sromHandle->romOffset,
+						sizeof(u32),
+						1,
+						sromHandle->fp);
 					if (sromHandle->romOffset & 1)
 						sromHandle->romOffsetValid = true;
 					sromHandle->romOffset &= ~1;
 					break;
 
 				case 14:
-					fread(sromHandle->hdrChecksum, sizeof(u32), 1, fp);
+					fread(
+						sromHandle->hdrChecksum,
+						sizeof(u32),
+						1,
+						sromHandle->fp);
 					break;
 			}
 
@@ -1138,7 +1177,7 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 		}
 		else if (AXP_UTL_BUFF)
 		{
-			u8	*optFwID = (u8 *) &romHandle->optFwID;
+			u8	*optFwID = (u8 *) &sromHandle->optFwID;
 
 			printf("SROM Header Information:\n\n");
 			printf("Header Size......... %d bytes\n", sromHandle->hdrSize);
@@ -1339,8 +1378,8 @@ bool AXP_Write_SROM(AXP_SROM_HANDLE *sromHandle, u8 *buf, u32 bufLen)
 	 */
 	if (sromHandle->writeBuf != NULL)
 	{
-		memcpy(&sromHandle->writeBuf[sromHandle->imageSize], buf, bufLen);
-		sromHandle->imageSize += bufLen;
+		memcpy(&sromHandle->writeBuf[sromHandle->imgSize], buf, bufLen);
+		sromHandle->imgSize += bufLen;
 	}
 	else
 		retVal = true;
@@ -1391,7 +1430,7 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
 			 */
 			sromHandle->imgChecksum = AXP_Crc32(
 										sromHandle->writeBuf,
-										sromHandle->imageSize,
+										sromHandle->imgSize,
 										true,
 										0);
 			sromHandle->hdrChecksum = AXP_Crc(
@@ -1401,7 +1440,8 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
 										0);
 			if (AXP_UTL_BUFF)
 			{
-				u8	*optFwID = (u8 *) &romHandle->optFwID;
+				u8	*optFwID = (u8 *) &sromHandle->optFwID;
+				int	ii;
 
 				printf("SROM Header Information:\n\n");
 				printf("Header Size......... %d bytes\n", sromHandle->hdrSize);
@@ -1421,26 +1461,30 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
 			/*
 			 * Write out all the header data.
 			 */
-			fwrite(sromHandle->validPat, sizeof(u32), 1, fp);
-			fwrite(sromHandle->inverseVP, sizeof(u32), 1, fp);
-			fwrite(sromHandle->hdrSize, sizeof(u32), 1, fp);
-			fwrite(sromHandle->imgChecksum, sizeof(u32), 1, fp);
-			fwrite(sromHandle->imgSize, sizeof(u32), 1, fp);
-			fwrite(sromHandle->decompFlag, sizeof(u32), 1, fp);
-			fwrite(sromHandle->destAddr, sizeof(u64), 1, fp);
-			fwrite(sromHandle->hdrRev, sizeof(u8), 1, fp);
-			fwrite(sromHandle->fwID, sizeof(u8), 1, fp);
-			fwrite(sromHandle->hdrRevExt, sizeof(u8), 1, fp);
-			fwrite(sromHandle->res, sizeof(u8), 1, fp);
-			fwrite(sromHandle->romImgSize, sizeof(u32), 1, fp);
-			fwrite(sromHandle->optFwID, sizeof(u64), 1, fp);
-			fwrite(sromHandle->romOffset, sizeof(u32), 1, fp);
-			fwrite(sromHandle->hdrChecksum, sizeof(u32), 1, fp);
+			fwrite(sromHandle->validPat, sizeof(u32), 1, sromHandle->fp);
+			fwrite(sromHandle->inverseVP, sizeof(u32), 1, sromHandle->fp);
+			fwrite(sromHandle->hdrSize, sizeof(u32), 1, sromHandle->fp);
+			fwrite(sromHandle->imgChecksum, sizeof(u32), 1, sromHandle->fp);
+			fwrite(sromHandle->imgSize, sizeof(u32), 1, sromHandle->fp);
+			fwrite(sromHandle->decompFlag, sizeof(u32), 1, sromHandle->fp);
+			fwrite(sromHandle->destAddr, sizeof(u64), 1, sromHandle->fp);
+			fwrite(sromHandle->hdrRev, sizeof(u8), 1, sromHandle->fp);
+			fwrite(sromHandle->fwID, sizeof(u8), 1, sromHandle->fp);
+			fwrite(sromHandle->hdrRevExt, sizeof(u8), 1, sromHandle->fp);
+			fwrite(sromHandle->res, sizeof(u8), 1, sromHandle->fp);
+			fwrite(sromHandle->romImgSize, sizeof(u32), 1, sromHandle->fp);
+			fwrite(sromHandle->optFwID, sizeof(u64), 1, sromHandle->fp);
+			fwrite(sromHandle->romOffset, sizeof(u32), 1, sromHandle->fp);
+			fwrite(sromHandle->hdrChecksum, sizeof(u32), 1, sromHandle->fp);
 
 			/*
 			 * Write out the image data.
 			 */
-			fwrite(sromHandle->writeBuf, 1, sromHandle->imageSize, fp);
+			fwrite(
+				sromHandle->writeBuf,
+				1,
+				sromHandle->imgSize,
+				sromHandle->fp);
 
 			/*
 			 * Free the buffer we allocated for the image data.  We no longer

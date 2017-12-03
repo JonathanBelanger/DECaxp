@@ -24,8 +24,8 @@
  *	V01.000		29-Jul-2017	Jonathan D. Belanger
  *	Initially written.
  */
-#ifndef _AXP_21264_CACHE_DEFS_
-#define _AXP_21264_CACHE_DEFS_
+#ifndef _AXP_21264_CACHE_DEFS_DEFS_
+#define _AXP_21264_CACHE_DEFS_DEFS_
 
 #include "AXP_Utility.h"
 #include "AXP_21264_CPU.h"
@@ -147,7 +147,7 @@ typedef enum
 {
 	Invalid,				/* Initial State */
 	Pending,				/* Waiting to be filled */
-	Writeable,				/* Block is writeable */
+	Writeable,				/* Block is writable */
 	Readable				/* Block is readable */
 } AXP_21264_CACHE_ST;
 
@@ -339,4 +339,4 @@ typedef union
 	AXP_VPC_FIELDS	vpcFields;
 } AXP_VPC;
 
-#endif /* _AXP_21264_CACHE_DEFS_ */
+#endif /* _AXP_21264_CACHE_DEFS_DEFS_ */

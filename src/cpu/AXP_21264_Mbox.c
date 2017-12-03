@@ -102,13 +102,13 @@ void AXP_21264_Mbox_ReadMem(AXP_21264_CPU *cpu,
 							AXP_INSTRUCTION *instr,
 							u32 slot,
 							u64 virtAddr,
-							u32 length)
+							AXP_21264_IO_MASK type)
 {
 	
 	/*
 	 * Store the information in the
 	 */
-	cpu->lq[slot].length = length;
+	cpu->lq[slot].type = type;
 	cpu->lq[slot].virtAddress = virtAddr;
 	cpu->lq[slot].instr = instr;
 	cpu->lq[slot].state = ReadPending;
@@ -196,14 +196,14 @@ void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *cpu,
 							 u32 slot,
 							 u64 virtAddr,
 							 u64 value,
-							 u32 length)
+							 AXP_21264_IO_MASK type)
 {
 	
 	/*
 	 * Store the information in the
 	 */
 	cpu->sq[slot].value = value;
-	cpu->sq[slot].length = length;
+	cpu->sq[slot].type = type;
 	cpu->sq[slot].virtAddress = virtAddr;
 	cpu->sq[slot].instr = instr;
 	cpu->sq[slot].state = WritePending;
@@ -269,7 +269,7 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	for (ii = 0; ii < AXP_MBOX_QUEUE_LEN; ii++)
 	{
 		cpu->lq[ii].value = 0;
-		cpu->lq[ii].length = 0;
+		cpu->lq[ii].type = IOInvalid;
 		cpu->lq[ii].virtAddress = 0;
 		cpu->lq[ii].instr = NULL;
 		cpu->lq[ii].state = QNotInUse;
@@ -278,7 +278,7 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	for (ii = 0; ii < AXP_MBOX_QUEUE_LEN; ii++)
 	{
 		cpu->sq[ii].value = 0;
-		cpu->sq[ii].length = 0;
+		cpu->sq[ii].type = IOInvalid;
 		cpu->sq[ii].virtAddress = 0;
 		cpu->sq[ii].instr = NULL;
 		cpu->sq[ii].state = QNotInUse;
@@ -309,11 +309,10 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	cpu->nextDTB = 0;
 	for (ii = 0; ii < AXP_21264_MAF_LEN; ii++)
 	{
-		cpu->maf[ii].type = MNotInUse;
+		cpu->maf[ii].type = MAFNotInUse;
 		cpu->maf[ii].rq = NOPcmd;
 		cpu->maf[ii].rsp = NOPsysdc;
 		cpu->maf[ii].pa = 0;
-		cpu->maf[ii].valid = false;
 		cpu->maf[ii].complete = false;
 	}
 	cpu->tbMissOutstanding = false;;

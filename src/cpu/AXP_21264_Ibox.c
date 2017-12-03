@@ -1741,13 +1741,17 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 				{
 					xqEntry = AXP_GetNextIQEntry(cpu);
 					xqEntry->ins = decodedInstr;
-					AXP_InsertCountedQueue(&cpu->iq.header, &xqEntry->header);
+					AXP_CondQueue_Insert(
+							(AXP_COND_Q_LEAF *) &cpu->iq,
+							(AXP_COND_Q_LEAF *) xqEntry);
 				}
 				else	/* FQ */
 				{
 					xqEntry = AXP_GetNextFQEntry(cpu);
 					xqEntry->ins = decodedInstr;
-					AXP_InsertCountedQueue(&cpu->fq.header, &xqEntry->header);
+					AXP_CondQueue_Insert(
+							(AXP_COND_Q_LEAF *) &cpu->fq,
+							(AXP_COND_Q_LEAF *) xqEntry);
 				}
 				decodedInstr->state = Queued;
 				nextPC = AXP_21264_IncrementVPC(cpu);

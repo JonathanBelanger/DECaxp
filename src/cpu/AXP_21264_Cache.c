@@ -934,7 +934,7 @@ bool AXP_DcacheWrite(
 	 * the base of this 64-byte data.  Therefore, this length and the data to
 	 * be written will never cross from one index to the next.
 	 */
-	if ((len < 64) && (lenOver > 0))
+	if ((len < AXP_DCACHE_DATA_LEN) && (lenOver > 0))
 	{
 		retVal = AXP_DcacheWrite(
 			cpu,
@@ -945,6 +945,13 @@ bool AXP_DcacheWrite(
 			NULL);
 		len -= lenOver;
 	}
+
+	/*
+	 * We do this here to avoid a deadlock if the above recursive call is made.
+	 * Because the Dcache can be access by the Mbox and Cbox, we need to
+	 * prevent multiple accessors to these structures.
+	 */
+	pthread_mutex_lock(&cpu->dCacheMutex);
 
 	/*
 	 * 5.3.10 Determine how many sets are enabled.
@@ -982,7 +989,8 @@ bool AXP_DcacheWrite(
 	for (ii = 0; ((ii < sets) && (found == AXP_CACHE_ENTRIES)); ii++)
 	{
 		if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
-			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag == physAddr.vaIdxInfo.tag))
+			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag ==
+			 physAddr.vaIdxInfo.tag))
 		{
 			found = virtAddr.vaIdx.index;
 			break;
@@ -991,11 +999,12 @@ bool AXP_DcacheWrite(
 
 	/*
 	 * Because the index for the Dcache and DTAG includes 2-bits of the virtual
-	 * Page Number and the index for the CTAG includes 2 translated bits from the
-	 * Physical Page Number, it is possible for these 2 bits to clober either an
-	 * entry in the Dcache/DTAG or the CTAG.  Therefore, we need to make sure that
-	 * the combination of Dcache/DTAG index/physical tag and CTAG index/virtual
-	 * tag will not cause an issue.  How we do this is is as follows:
+	 * Page Number and the index for the CTAG includes 2 translated bits from
+	 * the Physical Page Number, it is possible for these 2 bits to clobber
+	 * either an entry in the Dcache/DTAG or the CTAG.  Therefore, we need to
+	 * make sure that the combination of Dcache/DTAG index/physical tag and
+	 * CTAG index/virtual tag will not cause an issue.  How we do this is is as
+	 * follows:
 	 *
 	 *		for each of the possible virtual addresses
 	 *		begin
@@ -1013,6 +1022,7 @@ bool AXP_DcacheWrite(
 	 *					  yyz = 0-512	(2 bits of z; 3 bits of low order y)
 	 *			xxxxxxxxxxxxy =  tag	(1 bit of y)
 	 */
+	pthread_mutex_lock(&cpu->dtagMutex);
 	for (ii = (va & AXP_MASK_2_HIGH_INDEX_BITS);
 			   ii < (va + AXP_2_HIGH_INDEX_BITS_MAX);
 			   ii += AXP_2_HIGH_INDEX_BITS_INCR)
@@ -1032,13 +1042,14 @@ bool AXP_DcacheWrite(
 						(cpu->dtag[workingVa.vaIdx.index][kk].valid == true))
 					{
 						ctagIndex = cpu->dtag[workingVa.vaIdx.index][kk].ctagIndex;
-						if ((cpu->dCache[workingVa.vaIdx.index][kk].modified ==
-						     true) ||
-							(cpu->dCache[workingVa.vaIdx.index][kk].dirty ==
-							 true))
+						if (cpu->dCache[workingVa.vaIdx.index][kk].modified ==
+						     true)
 						{
-							/* Send to the Cbox to copy into memory. */
-#pragma message "Write-back Cache code needs to be completed."
+							/* Update the Bcache with this modified block. */
+							AXP_21264_Bcache_Write(
+								cpu,
+								cpu->dCache[workingVa.vaIdx.index][kk].data,
+								AXP_DCACHE_DATA_LEN);
 							cpu->dCache[workingVa.vaIdx.index][kk].modified =
 								false;
 						}
@@ -1048,12 +1059,14 @@ bool AXP_DcacheWrite(
 						 */
 						cpu->dCache[workingVa.vaIdx.index][kk].valid = false;
 						cpu->dtag[workingVa.vaIdx.index][kk].valid = false;
+						/* TODO: Do we need a ctag mutex */
 						cpu->ctag[ctagIndex][kk].valid = false;
 					}
 				}
 			}
 		}
 	}
+	pthread_mutex_unlock(&cpu->dtagMutex);
 
 	/*
 	 * If we did not find it, then use the first value and determine which set
@@ -1061,7 +1074,6 @@ bool AXP_DcacheWrite(
 	 */
 	if (found == AXP_CACHE_ENTRIES)
 	{
-		virtAddr.va = va;
 		found = virtAddr.vaIdx.index;
 		if ((cpu->dCache[found][0].valid == false) || (sets == 1))
 		{
@@ -1075,7 +1087,7 @@ bool AXP_DcacheWrite(
 		}
 		else	/* We have to re-use one of the existing cache entries. */
 		{
-			if (cpu->dCache[found][0].set_0_1)
+			if (cpu->dCache[found][0].set_0_1 == true)
 			{
 				setToUse = 1;
 				cpu->dCache[found][0].set_0_1 = false;
@@ -1094,18 +1106,20 @@ bool AXP_DcacheWrite(
 	 * memory, store the data and set the bits.
 	 */
 	if ((cpu->dCache[found][setToUse].valid == true) &&
-		((cpu->dCache[found][setToUse].dirty == true) ||
-		 (cpu->dCache[found][setToUse].modified == true)))
+		(cpu->dCache[found][setToUse].physTag != physAddr.vaIdxInfo.tag) &&
+		(cpu->dCache[found][setToUse].modified == true))
 	{
-		/* Send to the Cbox to copy into memory. */
-#pragma message "Write-back Cache code needs to be completed."
+		/* Update the Bcache with this modified block. */
+		AXP_21264_Bcache_Write(
+			cpu,
+			cpu->dCache[found][setToUse].data,
+			AXP_DCACHE_DATA_LEN);
 		cpu->dCache[found][setToUse].modified = false;
-
-		/*
-		 * Now invalidate the Dcache, DTAG, and CTAG entries.
-		 */
 		cpu->dCache[found][setToUse].valid = false;
+		pthread_mutex_lock(&cpu->dtagMutex);
 		cpu->dtag[found][setToUse].valid = false;
+		pthread_mutex_unlock(&cpu->dtagMutex);
+		/* TODO: Do we need a ctag mutex */
 		cpu->ctag[found][setToUse].valid = false;
 	}
 
@@ -1134,33 +1148,52 @@ bool AXP_DcacheWrite(
 			memcpy(cpu->dCache[found][setToUse].data, src8, len);
 			break;
 	}
-#pragma message "Need to determine when to use dirty/modified cache."
-
-	cpu->dCache[found][setToUse].physTag = physAddr.vaIdxInfo.tag;
-	cpu->dCache[found][setToUse].dirty = false;
-	cpu->dCache[found][setToUse].modified = false;
-	cpu->dCache[found][setToUse].shared = false;
-	cpu->dCache[found][setToUse].valid = true;
 
 	/*
-	 * Duplicate the tag information in the DTAG array.
+	 * If the Dcache entry is valid, then we did not evict the cache block, so
+	 * we are modifying an existing one.  The state of the cache entry should
+	 * be dirty and not shared prior to calling this function.  If the cache is
+	 * not valid, then we have either evicted the previous tenant or using this
+	 * entry for the first time.  Either way, we need to set the entry to its
+	 * correct state.
 	 */
-	ctagIndex = physAddr.vaIdxInfo.index;
-	cpu->dtag[found][setToUse].physTag = physAddr.vaIdxInfo.tag;
-	cpu->dtag[found][setToUse].ctagIndex = ctagIndex;
-	cpu->dtag[found][setToUse].valid = false;
+	if ((cpu->dCache[found][setToUse].valid == true) &&
+		(cpu->dCache[found][setToUse].dirty == true))
+		cpu->dCache[found][setToUse].modified = true;
+	else
+	{
+		cpu->dCache[found][setToUse].physTag = physAddr.vaIdxInfo.tag;
+		cpu->dCache[found][setToUse].shared = false;
+		if (len == AXP_DCACHE_DATA_LEN)
+			cpu->dCache[found][setToUse].modified = true;
+		else
+			cpu->dCache[found][setToUse].modified = false;
+		cpu->dCache[found][setToUse].valid = true;
+
+		/*
+		 * Duplicate the tag information in the DTAG array.
+		 */
+		pthread_mutex_lock(&cpu->dtagMutex);
+		cpu->dtag[found][setToUse].physTag = physAddr.vaIdxInfo.tag;
+		cpu->dtag[found][setToUse].ctagIndex = ctagIndex;
+		cpu->dtag[found][setToUse].valid = true;
+		pthread_mutex_lock(&cpu->dtagMutex);
+
+		/*
+		 * At this point we do not have to worry about aliases clashing.  They
+		 * have been taken are of above.
+		 * TODO: Do we need a ctag mutex
+		 */
+		ctagIndex = physAddr.vaIdxInfo.index;
+		cpu->ctag[ctagIndex][setToUse].virtTag = virtAddr.vaIdxInfo.tag;
+		cpu->ctag[ctagIndex][setToUse].dtagIndex = found;
+		cpu->ctag[ctagIndex][setToUse].valid = true;
+	}
 
 	/*
-	 * At this point we do not have to worry about aliases clashing.  They
-	 * have been taken are of above.
+	 * Return back to the caller, but first unlock the Dcache mutex.
 	 */
-	cpu->ctag[ctagIndex][setToUse].virtTag = virtAddr.vaIdxInfo.tag;
-	cpu->ctag[ctagIndex][setToUse].dtagIndex = found;
-	cpu->ctag[ctagIndex][setToUse].valid = true;
-
-	/*
-	 * Return back to the caller.
-	 */
+	pthread_mutex_unlock(&cpu->dCacheMutex);
 	retVal = true;
 	return(retVal);
 }
@@ -1189,15 +1222,26 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 	int			ii, jj;
 
 	/*
+	 * First we need to lock access to the Dcache and Dtag.
+	 * TODO: Do we need a ctag mutex
+	 */
+	pthread_mutex_lock(&cpu->dCacheMutex);
+	pthread_mutex_lock(&cpu->dtagMutex);
+
+	/*
 	 * Go through each cache item and invalidate and reset it.
 	 */
 	for (ii = 0; ii < AXP_CACHE_ENTRIES; ii++)
 		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
 		{
-			if (cpu->dCache[ii][jj].dirty || cpu->dCache[ii][jj].modified)
+			if ((cpu->dCache[ii][jj].valid == true) &&
+				(cpu->dCache[ii][jj].modified == true))
 			{
-				/* Send to the Cbox to copy into memory. */
-#pragma message "Write-back Cache code needs to be completed."
+				/* Update the Bcache with this modified block. */
+				AXP_21264_Bcache_Write(
+					cpu,
+					cpu->dCache[ii][jj].data,
+					AXP_DCACHE_DATA_LEN);
 				cpu->dCache[ii][jj].modified = false;
 			}
 			cpu->dCache[ii][jj].set_0_1 = false;
@@ -1206,8 +1250,21 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 			cpu->dCache[ii][jj].modified = false;
 			cpu->dCache[ii][jj].shared = false;
 			cpu->dCache[ii][jj].valid = false;
-			cpu->dtag[ii][jj].valid = false;		/* Don't forget the DTAG */
+			if (cpu->dtag[ii][jj].valid == true) /* Don't forget the D/CTAGs */
+			{
+				cpu->ctag[cpu->dtag[ii][jj].ctagIndex][jj].valid = false;
+				cpu->dtag[ii][jj].valid = false;
+			}
 		}
+
+	/*
+	 * Finally we need to unlock access to the Dcache and Dtag.  Always unlock
+	 * in the reverse order of how they were locked.  Also,  always make sure
+	 * that these locks are locked in the same order where ever both are
+	 * locked.
+	 */
+	pthread_mutex_unlock(&cpu->dtagMutex);
+	pthread_mutex_unlock(&cpu->dCacheMutex);
 
 	/*
 	 * Return back to the caller.
@@ -1315,6 +1372,13 @@ bool AXP_DcacheRead(
 	}
 
 	/*
+	 * We do this here to avoid a deadlock if the above recursive call is made.
+	 * Because the Dcache can be access by the Mbox and Cbox, we need to
+	 * prevent multiple accessors to these structures.
+	 */
+	pthread_mutex_lock(&cpu->dCacheMutex);
+
+	/*
 	 * 5.3.10 Determine how many sets are enabled.
 	 *
 	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
@@ -1401,6 +1465,7 @@ bool AXP_DcacheRead(
 	 *			block they expected to be there, was not, and submit a request
 	 *			to the Cbox to file the Dcache block.
 	 */
+	pthread_mutex_unlock(&cpu->dCacheMutex);
 	return(retVal);
 }
 
@@ -1455,6 +1520,12 @@ void AXP_IcacheAdd(
 	u64			tag = vpc.vpcFields.tag;
 	u32			ii;
 	u32			sets, whichSet;
+
+	/*
+	 * First things first, we need to lock the Icache from being updated by
+	 * anyone but us.
+	 */
+	pthread_mutex_lock(&cpu->iCacheMutex);
 
 	/*
 	 * 5.3.10 Determine how many sets are enabled.
@@ -1531,6 +1602,7 @@ void AXP_IcacheAdd(
 	/*
 	 * Return back to the caller.
 	 */
+	pthread_mutex_unlock(&cpu->iCacheMutex);
 	return;
 }
 
@@ -1558,6 +1630,12 @@ void AXP_IcacheAdd(
 void AXP_IcacheFlush(AXP_21264_CPU *cpu, bool purgeAsm)
 {
 	u32			ii, jj;
+
+	/*
+	 * First things first, we need to lock the Icache from being updated by
+	 * anyone but us.
+	 */
+	pthread_mutex_lock(&cpu->iCacheMutex);
 
 	for (ii = 0; ii < AXP_CACHE_ENTRIES; ii++)
 	{
@@ -1618,6 +1696,7 @@ void AXP_IcacheFlush(AXP_21264_CPU *cpu, bool purgeAsm)
 	/*
 	 * Return back to the caller.
 	 */
+	pthread_mutex_unlock(&cpu->iCacheMutex);
 	return;
 }
 
@@ -1663,6 +1742,12 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 	u32			offset = vpc.vpcFields.offset % AXP_ICACHE_LINE_INS;
 	u32			ii;
 	u32			sets, whichSet;
+
+	/*
+	 * First things first, we need to lock the Icache from being updated by
+	 * anyone but us.
+	 */
+	pthread_mutex_lock(&cpu->iCacheMutex);
 
 	/*
 	 * 5.3.10 Determine how many sets are enabled.
@@ -1762,6 +1847,7 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 	/*
 	 * Return back to the caller.
 	 */
+	pthread_mutex_unlock(&cpu->iCacheMutex);
 	return(retVal);
 }
 
@@ -1795,6 +1881,12 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
 	u32			sets;
 
 	/*
+	 * First things first, we need to lock the Icache from being updated by
+	 * anyone but us.
+	 */
+	pthread_mutex_lock(&cpu->iCacheMutex);
+
+	/*
 	 * 5.3.10 Determine how many sets are enabled.
 	 *
 	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
@@ -1825,5 +1917,6 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
 	/*
 	 * Return back to the caller.
 	 */
+	pthread_mutex_unlock(&cpu->iCacheMutex);
 	return(retVal);
 }

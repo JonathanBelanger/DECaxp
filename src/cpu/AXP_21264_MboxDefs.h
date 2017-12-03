@@ -24,36 +24,29 @@
  *	V01.000		28-Jun-2017	Jonathan D. Belanger
  *	Initially written.
  */
-#ifndef _AXP_21264_MBOX_QUEUES_DEFS_
-#define _AXP_21264_MBOX_QUEUES_DEFS_
+#ifndef _AXP_21264_MBOX_DEFS_DEFS_
+#define _AXP_21264_MBOX_DEFS_DEFS_
 
-#include "AXP_21264_Cbox.h"
+#include "AXP_21264_CboxDefs.h"
 
 typedef enum
 {
 	QNotInUse,
 	Assigned,
 	ReadPending,
-	WritePending
+	WritePending,
+	Readable,
+	Writeable
 } AXP_MBOX_QUEUE_STATE;
 
 typedef struct
 {
 	u64						value;	/* Only used in a store operations */
-	u32						length;
+	AXP_21264_IO_MASK		type;
 	u64						virtAddress;
 	AXP_INSTRUCTION			*instr;
 	AXP_MBOX_QUEUE_STATE	state;
+	bool					lockCond;
 } AXP_MBOX_QUEUE;
 
-typedef enum
-{
-	LDx,
-	STx,
-	STx_C,
-	WH64,
-	ECB,
-	Istream
-} AXP_MBOX_MERGE_INS;
-
-#endif /* _AXP_21264_MBOX_QUEUES_DEFS_ */
+#endif /* _AXP_21264_MBOX_DEFS_DEFS_ */
