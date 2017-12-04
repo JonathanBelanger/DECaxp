@@ -886,7 +886,7 @@ bool AXP_DcacheWrite(
 			void *data,
 			u64 *idxSet)
 {
-	bool		retVal = false;
+	bool		retVal = true;
 	AXP_VA		virtAddr = {.va = va};
 	AXP_VA		physAddr = {.va = pa};
 	AXP_VA		workingVa;
@@ -946,255 +946,263 @@ bool AXP_DcacheWrite(
 		len -= lenOver;
 	}
 
-	/*
-	 * We do this here to avoid a deadlock if the above recursive call is made.
-	 * Because the Dcache can be access by the Mbox and Cbox, we need to
-	 * prevent multiple accessors to these structures.
-	 */
-	pthread_mutex_lock(&cpu->dCacheMutex);
-
-	/*
-	 * 5.3.10 Determine how many sets are enabled.
-	 *
-	 * The set_en field in the Dcache Control Register (DC_DTL) is used to
-	 * determine the number of cache sets to use.  The description for
-	 * SET_EN[1:0] says that at least 1 set must be enabled.  The equivalent
-	 * field for the Icache, IC_EN[1:0], has the following more detailed
-	 * description:
-	 *
-	 *		At least one set must be enabled. The entire cache may be
-	 *		enabled by setting both bits. Zero, one, or two Icache sets
-	 *		can be enabled.
-	 *		This bit does not clear the Dcache, but only disables fills to
-	 *		the affected set.
-	 *
-	 * I'm not sure why it first says that at least one set must be enabled,
-	 * but the says that "Zero, one, or two Icache sets can be enabled."  I'm
-	 * going to assume that if zero bits are set, the default is 2 (both sets).
-	 */
-	sets = (cpu->dcCtl.set_en == 1) ? 1 : 2;
-
-	if (idxSet != NULL)
+	if (retVal == true)
 	{
-		AXP_DCACHE_IDXSET	indexAndSet;
 
-		indexAndSet.idxSet = *idxSet;
-		found = indexAndSet.idxOrSet.index;
-		setToUse = indexAndSet.idxOrSet.set;
-	}
+		/*
+		 * We do this here to avoid a deadlock if the above recursive call is
+		 * made.  Because the Dcache can be access by the Mbox and Cbox, we
+		 * need to prevent multiple accessors to these structures.
+		 */
+		pthread_mutex_lock(&cpu->dCacheMutex);
 
-	/*
-	 * Check the index based solely on the Virtual Address (both sets).
-	 */
-	for (ii = 0; ((ii < sets) && (found == AXP_CACHE_ENTRIES)); ii++)
-	{
-		if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
-			(cpu->dCache[virtAddr.vaIdx.index][ii].physTag ==
-			 physAddr.vaIdxInfo.tag))
+		/*
+		 * 5.3.10 Determine how many sets are enabled.
+		 *
+		 * The set_en field in the Dcache Control Register (DC_DTL) is used to
+		 * determine the number of cache sets to use.  The description for
+		 * SET_EN[1:0] says that at least 1 set must be enabled.  The
+		 * equivalent field for the Icache, IC_EN[1:0], has the following more
+		 * detailed description:
+		 *
+		 *		At least one set must be enabled. The entire cache may be
+		 *		enabled by setting both bits. Zero, one, or two Icache sets
+		 *		can be enabled.
+		 *		This bit does not clear the Dcache, but only disables fills to
+		 *		the affected set.
+		 *
+		 * I'm not sure why it first says that at least one set must be enabled,
+		 * but the says that "Zero, one, or two Icache sets can be enabled."
+		 * I'm going to assume that if zero bits are set, the default is 2
+		 * (both sets).
+		 */
+		sets = (cpu->dcCtl.set_en == 1) ? 1 : 2;
+
+		if (idxSet != NULL)
 		{
-			found = virtAddr.vaIdx.index;
-			break;
+			AXP_DCACHE_IDXSET	indexAndSet;
+
+			indexAndSet.idxSet = *idxSet;
+			found = indexAndSet.idxOrSet.index;
+			setToUse = indexAndSet.idxOrSet.set;
 		}
-	}
 
-	/*
-	 * Because the index for the Dcache and DTAG includes 2-bits of the virtual
-	 * Page Number and the index for the CTAG includes 2 translated bits from
-	 * the Physical Page Number, it is possible for these 2 bits to clobber
-	 * either an entry in the Dcache/DTAG or the CTAG.  Therefore, we need to
-	 * make sure that the combination of Dcache/DTAG index/physical tag and
-	 * CTAG index/virtual tag will not cause an issue.  How we do this is is as
-	 * follows:
-	 *
-	 *		for each of the possible virtual addresses
-	 *		begin
-	 *			for each of the possible translated (physical) addresses
-	 *			begin
-	 *				if (the physTag in the dtag entry using the new index =
-	 *					new tag from loop physical address)
-	 *				then
-	 *					flush this entry
-	 *				endif
-	 *			end
-	 *		end
-	 *			where address = xxxxxxxxxxxxyyzz
-	 *					   zz = 0-63	(2 bits if high order z)
-	 *					  yyz = 0-512	(2 bits of z; 3 bits of low order y)
-	 *			xxxxxxxxxxxxy =  tag	(1 bit of y)
-	 */
-	pthread_mutex_lock(&cpu->dtagMutex);
-	for (ii = (va & AXP_MASK_2_HIGH_INDEX_BITS);
-			   ii < (va + AXP_2_HIGH_INDEX_BITS_MAX);
-			   ii += AXP_2_HIGH_INDEX_BITS_INCR)
-	{
-		if (ii != oneChecked)
+		/*
+		 * Check the index based solely on the Virtual Address (both sets).
+		 */
+		for (ii = 0; ((ii < sets) && (found == AXP_CACHE_ENTRIES)); ii++)
 		{
-			workingVa.va = ii;
-			for (jj = (pa & AXP_MASK_2_HIGH_INDEX_BITS);
-			     jj < (pa + AXP_2_HIGH_INDEX_BITS_MAX);
-				 jj += AXP_2_HIGH_INDEX_BITS_INCR)
+			if ((cpu->dCache[virtAddr.vaIdx.index][ii].valid == true) &&
+				(cpu->dCache[virtAddr.vaIdx.index][ii].physTag ==
+				 physAddr.vaIdxInfo.tag))
 			{
-				workingPa.va = jj;
-				for (kk = 0; kk < sets; kk++)
-				{
-					if ((cpu->dtag[workingVa.vaIdx.index][kk].physTag ==
-						 workingPa.vaIdxInfo.tag) &&
-						(cpu->dtag[workingVa.vaIdx.index][kk].valid == true))
-					{
-						ctagIndex = cpu->dtag[workingVa.vaIdx.index][kk].ctagIndex;
-						if (cpu->dCache[workingVa.vaIdx.index][kk].modified ==
-						     true)
-						{
-							/* Update the Bcache with this modified block. */
-							AXP_21264_Bcache_Write(
-								cpu,
-								cpu->dCache[workingVa.vaIdx.index][kk].data,
-								AXP_DCACHE_DATA_LEN);
-							cpu->dCache[workingVa.vaIdx.index][kk].modified =
-								false;
-						}
+				found = virtAddr.vaIdx.index;
+				break;
+			}
+		}
 
-						/*
-						 * Now invalidate the Dcache, DTAG, and CTAG entries.
-						 */
-						cpu->dCache[workingVa.vaIdx.index][kk].valid = false;
-						cpu->dtag[workingVa.vaIdx.index][kk].valid = false;
-						/* TODO: Do we need a ctag mutex */
-						cpu->ctag[ctagIndex][kk].valid = false;
+		/*
+		 * Because the index for the Dcache and DTAG includes 2-bits of the
+		 * virtual Page Number and the index for the CTAG includes 2 translated
+		 * bits from the Physical Page Number, it is possible for these 2 bits
+		 * to clobber either an entry in the Dcache/DTAG or the CTAG.
+		 * Therefore, we need to make sure that the combination of Dcache/DTAG
+		 * index/physical tag and CTAG index/virtual tag will not cause an
+		 * issue.  How we do this is is as follows:
+		 *
+		 *		for each of the possible virtual addresses
+		 *		begin
+		 *			for each of the possible translated (physical) addresses
+		 *			begin
+		 *				if (the physTag in the dtag entry using the new index =
+		 *					new tag from loop physical address)
+		 *				then
+		 *					flush this entry
+		 *				endif
+		 *			end
+		 *		end
+		 *			where address = xxxxxxxxxxxxyyzz
+		 *					   zz = 0-63	(2 bits if high order z)
+		 *					  yyz = 0-512	(2 bits of z; 3 bits of low order y)
+		 *			xxxxxxxxxxxxy =  tag	(1 bit of y)
+		 */
+		pthread_mutex_lock(&cpu->dtagMutex);
+		pthread_mutex_lock(&cpu->cBoxIPRMutex);
+		for (ii = (va & AXP_MASK_2_HIGH_INDEX_BITS);
+				   ii < (va + AXP_2_HIGH_INDEX_BITS_MAX);
+				   ii += AXP_2_HIGH_INDEX_BITS_INCR)
+		{
+			if (ii != oneChecked)
+			{
+				workingVa.va = ii;
+				for (jj = (pa & AXP_MASK_2_HIGH_INDEX_BITS);
+					 jj < (pa + AXP_2_HIGH_INDEX_BITS_MAX);
+					 jj += AXP_2_HIGH_INDEX_BITS_INCR)
+				{
+					workingPa.va = jj;
+					for (kk = 0; kk < sets; kk++)
+					{
+						if ((cpu->dtag[workingVa.vaIdx.index][kk].physTag ==
+							 workingPa.vaIdxInfo.tag) &&
+							(cpu->dtag[workingVa.vaIdx.index][kk].valid == true))
+						{
+							ctagIndex = cpu->dtag[workingVa.vaIdx.index][kk].ctagIndex;
+							if (cpu->dCache[workingVa.vaIdx.index][kk].modified ==
+								 true)
+							{
+								/* Update the Bcache with this modified block. */
+								AXP_21264_Bcache_Write(
+									cpu,
+									cpu->dCache[workingVa.vaIdx.index][kk].data,
+									AXP_DCACHE_DATA_LEN);
+								cpu->dCache[workingVa.vaIdx.index][kk].modified =
+									false;
+							}
+
+							/*
+							 * Now invalidate the Dcache, DTAG, and CTAG
+							 * entries.
+							 */
+							cpu->dCache[workingVa.vaIdx.index][kk].valid = false;
+							cpu->dtag[workingVa.vaIdx.index][kk].valid = false;
+							cpu->ctag[ctagIndex][kk].valid = false;
+						}
 					}
 				}
 			}
 		}
-	}
-	pthread_mutex_unlock(&cpu->dtagMutex);
 
-	/*
-	 * If we did not find it, then use the first value and determine which set
-	 * to use and store the information into the Dcache.
-	 */
-	if (found == AXP_CACHE_ENTRIES)
-	{
-		found = virtAddr.vaIdx.index;
-		if ((cpu->dCache[found][0].valid == false) || (sets == 1))
+		/*
+		 * If we did not find it, then use the first value and determine which
+		 * set to use and store the information into the Dcache.
+		 */
+		if (found == AXP_CACHE_ENTRIES)
 		{
-			setToUse = 0;
-			cpu->dCache[found][0].set_0_1 = (sets == 1 ? false : true);
-		}
-		else if (cpu->dCache[found][1].valid == false)
-		{
-			setToUse = 1;
-			cpu->dCache[found][0].set_0_1 = false;
-		}
-		else	/* We have to re-use one of the existing cache entries. */
-		{
-			if (cpu->dCache[found][0].set_0_1 == true)
+			found = virtAddr.vaIdx.index;
+			if ((cpu->dCache[found][0].valid == false) || (sets == 1))
+			{
+				setToUse = 0;
+				cpu->dCache[found][0].set_0_1 = (sets == 1 ? false : true);
+			}
+			else if (cpu->dCache[found][1].valid == false)
 			{
 				setToUse = 1;
 				cpu->dCache[found][0].set_0_1 = false;
 			}
-			else
+			else	/* We have to re-use one of the existing cache entries. */
 			{
-				setToUse = 0;
-				cpu->dCache[found][0].set_0_1 = true;
+				if (cpu->dCache[found][0].set_0_1 == true)
+				{
+					setToUse = 1;
+					cpu->dCache[found][0].set_0_1 = false;
+				}
+				else
+				{
+					setToUse = 0;
+					cpu->dCache[found][0].set_0_1 = true;
+				}
 			}
 		}
-	}
 
-	/*
-	 * OK, we now have the index and the set, check to see if we are
-	 * evicting an existing cache entry that also needs to be pushed out to
-	 * memory, store the data and set the bits.
-	 */
-	if ((cpu->dCache[found][setToUse].valid == true) &&
-		(cpu->dCache[found][setToUse].physTag != physAddr.vaIdxInfo.tag) &&
-		(cpu->dCache[found][setToUse].modified == true))
-	{
-		/* Update the Bcache with this modified block. */
-		AXP_21264_Bcache_Write(
-			cpu,
-			cpu->dCache[found][setToUse].data,
-			AXP_DCACHE_DATA_LEN);
-		cpu->dCache[found][setToUse].modified = false;
-		cpu->dCache[found][setToUse].valid = false;
-		pthread_mutex_lock(&cpu->dtagMutex);
-		cpu->dtag[found][setToUse].valid = false;
-		pthread_mutex_unlock(&cpu->dtagMutex);
-		/* TODO: Do we need a ctag mutex */
-		cpu->ctag[found][setToUse].valid = false;
-	}
-
-	/*
-	 * Write the supplied data to the Dcache (based on length).
-	 */
-	switch (len)
-	{
-		case 1:
-			*((u8 *) cpu->dCache[found][setToUse].data) = *src8;
-			break;
-
-		case 2:
-			*((u16 *) cpu->dCache[found][setToUse].data) = *src16;
-			break;
-
-		case 4:
-			*((u32 *) cpu->dCache[found][setToUse].data) = *src32;
-			break;
-
-		case 8:
-			*((u64 *) cpu->dCache[found][setToUse].data) = *src64;
-			break;
-
-		default:	/* for 64 bytes and any of the possible sub-lengths */
-			memcpy(cpu->dCache[found][setToUse].data, src8, len);
-			break;
-	}
-
-	/*
-	 * If the Dcache entry is valid, then we did not evict the cache block, so
-	 * we are modifying an existing one.  The state of the cache entry should
-	 * be dirty and not shared prior to calling this function.  If the cache is
-	 * not valid, then we have either evicted the previous tenant or using this
-	 * entry for the first time.  Either way, we need to set the entry to its
-	 * correct state.
-	 */
-	if ((cpu->dCache[found][setToUse].valid == true) &&
-		(cpu->dCache[found][setToUse].dirty == true))
-		cpu->dCache[found][setToUse].modified = true;
-	else
-	{
-		cpu->dCache[found][setToUse].physTag = physAddr.vaIdxInfo.tag;
-		cpu->dCache[found][setToUse].shared = false;
-		if (len == AXP_DCACHE_DATA_LEN)
-			cpu->dCache[found][setToUse].modified = true;
-		else
+		/*
+		 * OK, we now have the index and the set, check to see if we are
+		 * evicting an existing cache entry that also needs to be pushed out to
+		 * memory, store the data and set the bits.
+		 */
+		if ((cpu->dCache[found][setToUse].valid == true) &&
+			(cpu->dCache[found][setToUse].physTag != physAddr.vaIdxInfo.tag) &&
+			(cpu->dCache[found][setToUse].modified == true))
+		{
+			/* Update the Bcache with this modified block. */
+			AXP_21264_Bcache_Write(
+				cpu,
+				cpu->dCache[found][setToUse].data,
+				AXP_DCACHE_DATA_LEN);
 			cpu->dCache[found][setToUse].modified = false;
-		cpu->dCache[found][setToUse].valid = true;
+			cpu->dCache[found][setToUse].valid = false;
+			cpu->dtag[found][setToUse].valid = false;
+			cpu->ctag[found][setToUse].valid = false;
+		}
 
 		/*
-		 * Duplicate the tag information in the DTAG array.
+		 * Write the supplied data to the Dcache (based on length).
 		 */
-		pthread_mutex_lock(&cpu->dtagMutex);
-		cpu->dtag[found][setToUse].physTag = physAddr.vaIdxInfo.tag;
-		cpu->dtag[found][setToUse].ctagIndex = ctagIndex;
-		cpu->dtag[found][setToUse].valid = true;
-		pthread_mutex_lock(&cpu->dtagMutex);
+		switch (len)
+		{
+			case 1:
+				*((u8 *) cpu->dCache[found][setToUse].data) = *src8;
+				break;
+
+			case 2:
+				*((u16 *) cpu->dCache[found][setToUse].data) = *src16;
+				break;
+
+			case 4:
+				*((u32 *) cpu->dCache[found][setToUse].data) = *src32;
+				break;
+
+			case 8:
+				*((u64 *) cpu->dCache[found][setToUse].data) = *src64;
+				break;
+
+			default:	/* for 64 bytes and any of the possible sub-lengths */
+				memcpy(cpu->dCache[found][setToUse].data, src8, len);
+				break;
+		}
 
 		/*
-		 * At this point we do not have to worry about aliases clashing.  They
-		 * have been taken are of above.
-		 * TODO: Do we need a ctag mutex
+		 * If the Dcache entry is valid, then we did not evict the cache block,
+		 * so we are modifying an existing one.  The state of the cache entry
+		 * should be dirty and not shared prior to calling this function.  If
+		 * the cache is not valid, then we have either evicted the previous
+		 * tenant or using this entry for the first time.  Either way, we need
+		 * to set the entry to its correct state.
 		 */
-		ctagIndex = physAddr.vaIdxInfo.index;
-		cpu->ctag[ctagIndex][setToUse].virtTag = virtAddr.vaIdxInfo.tag;
-		cpu->ctag[ctagIndex][setToUse].dtagIndex = found;
-		cpu->ctag[ctagIndex][setToUse].valid = true;
+		if ((cpu->dCache[found][setToUse].valid == true) &&
+			(cpu->dCache[found][setToUse].dirty == true))
+		{
+			cpu->dCache[found][setToUse].modified = true;
+		}
+		else
+		{
+			cpu->dCache[found][setToUse].physTag = physAddr.vaIdxInfo.tag;
+			cpu->dCache[found][setToUse].shared = false;
+			if (len == AXP_DCACHE_DATA_LEN)
+				cpu->dCache[found][setToUse].modified = true;
+			else
+				cpu->dCache[found][setToUse].modified = false;
+			cpu->dCache[found][setToUse].valid = true;
+
+			/*
+			 * Duplicate the tag information in the DTAG array.
+			 */
+			cpu->dtag[found][setToUse].physTag = physAddr.vaIdxInfo.tag;
+			cpu->dtag[found][setToUse].ctagIndex = ctagIndex;
+			cpu->dtag[found][setToUse].valid = true;
+
+			/*
+			 * At this point we do not have to worry about aliases clashing.
+			 * They have been taken are of above.
+			 */
+			ctagIndex = physAddr.vaIdxInfo.index;
+			cpu->ctag[ctagIndex][setToUse].physTag = physAddr.vaIdxInfo.tag;
+			cpu->ctag[ctagIndex][setToUse].dtagIndex = found;
+			cpu->ctag[ctagIndex][setToUse].dirty = cpu->dCache[found][setToUse].dirty;
+			cpu->ctag[ctagIndex][setToUse].shared = cpu->dCache[found][setToUse].shared;
+			cpu->ctag[ctagIndex][setToUse].valid = true;
+		}
+
+		/*
+		 * Finally, unlock the Dcache, DTAG and CTAG mutexes.
+		 */
+		pthread_mutex_unlock(&cpu->cBoxIPRMutex);
+		pthread_mutex_unlock(&cpu->dtagMutex);
+		pthread_mutex_unlock(&cpu->dCacheMutex);
 	}
 
 	/*
-	 * Return back to the caller, but first unlock the Dcache mutex.
+	 * Return back to the caller, but first unlock the Dcache, DTAG and
 	 */
-	pthread_mutex_unlock(&cpu->dCacheMutex);
-	retVal = true;
 	return(retVal);
 }
 

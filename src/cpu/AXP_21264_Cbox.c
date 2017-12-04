@@ -1043,10 +1043,6 @@ void AXP_21264_Process_MAF(AXP_21264_CPU *cpu, int entry)
  *		An enumerated value for the type of MAF entry to add.
  *	pa:
  *		A value representing the physical address associated with this record.
- *	rq:
- *		An enumerated value for the request to sent to the System.
- * 	rsp:
- *		An enumerated value for the response to sent from the System.
  *
  * Output Parameters:
  *	None.
@@ -1519,7 +1515,6 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 	if ((cpu->pq[entry].valid == true) && (cpu->pq[entry].processed == false))
 	{
 		bCacheValid = AXP_21264_Bcache_Valid(cpu, cpu->pq[entry].pa);
-		/* TODO: Need Bcache data pointer */
 		physAddr.va = cpu->pq[entry].pa;
 		ctagIndex = physAddr.vaIdxInfo.index;
 
@@ -2063,19 +2058,33 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 							if (initFailure == false)
 							{
 								AXP_CACHE_IDX	destAddr;
-								int retVal = 1;
+								AXP_PC			palFuncPC;
+								int				retVal = 1;
 
 								/*
-								 * TODO: Which of these should we be using:
-								 *
-								 * cpu->palBase.pal_pase_pc = sromHdl,destAddr;
-								 * AXP_21264_AddVPC(
-								 *			cpu,
-								 *			AXP_21264_GetPALFuncvpc(
-								 *				cpu,
-								 *				AXP_RESET_WAKEUP));
-								 *	or
-								 * AXP_21264_AddVPC(cpu, (AXP_PC) sromHdl.destAddr);
+								 * First set the PAL_BASE IPR.
+								 */
+								cpu->palBase.pal_base_pc = sromHdl.destAddr;
+
+								/*
+								 * Get the PC for the RESET/WAKEUP PALcode.
+								 */
+						 		palFuncPC = AXP_21264_GetPALFuncvpc(
+						 									cpu,
+						 									AXP_RESET_WAKEUP);
+
+						 		/*
+						 		 * Set the PC to the PALcode to be called once
+						 		 * the SROM has been initialized.
+						 		 */
+								AXP_21264_AddVPC(cpu, palFuncPC);
+
+								/*
+								 * Finally, load the ROM code into the SROM.
+								 * Once we set the CPU state to Run, this will
+								 * cause the Ibox to start processing
+								 * instructions at the just set PC (where we
+								 * loaded the ROM code).
 								 */
 								destAddr.offset = 0;
 								destAddr.index = sromHdl.destAddr / 64;

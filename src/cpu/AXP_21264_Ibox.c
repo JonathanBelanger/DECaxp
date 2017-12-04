@@ -1697,12 +1697,32 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 					 */
 					if (decodedInstr->branchPredict == true)
 					{
-						/* bool cacheStatus; TODO: uncomment*/
-
 						branchPC.pc = nextPC.pc + 1 + decodedInstr->displacement;
-						/* cacheStatus = */ AXP_IcacheValid(
-												cpu,
-												branchPC);
+						if (AXP_IcacheValid(cpu, branchPC) == false)
+						{
+							u64		pa;
+							bool	_asm;
+							u32		fault;
+
+							/*
+							 * We are branching to a location that is not
+							 * currently in the Icache.  We have to do the
+							 * following:
+							 *	1) Convert the virtual address to a physical
+							 *	   address.
+							 * 	2) Request the Cbox fetch the next set of
+							 * 	   instructions.
+							 */
+							pa = AXP_va2pa(
+									cpu,
+									branchPC,
+									nextPC,
+									false,
+									Execute,
+									&_asm,
+									&fault);
+							AXP_21264_Add_MAF(cpu, Istream, IcacheFill, pa);
+						}
 
 						/*
 						 * TODO:	If we get a Hit, there is nothing else
@@ -1775,7 +1795,7 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 
 				/*
 				 * TODO:	Calling PALcode implies waiting for outstanding
-				 * 			instructions top complete, then performing a
+				 * 			instructions to complete, then performing a
 				 * 			branch/jump to the appropriate PC.  We need to get
 				 * 			this working, as well.
 				 */

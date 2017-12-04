@@ -456,7 +456,9 @@ typedef enum
 	IOInvalid,
 	IOByteWord,
 	IOLong,
-	IOQuad
+	IOQuad,
+	IcacheFill,
+	DcacheFill
 } AXP_21264_IO_MASK;
 
 #if 0
@@ -630,16 +632,14 @@ typedef struct
  * This structure is the definition for one Cbox copy of Dcache Tag Array.  A
  * block contains the following:
  *
- *		Virtual tag bits
+ *		Physical tag bits
  *		Index and set into corresponding DTAG array (which is the same as the
  *			Dcache)
  *		Valid bit - the CTAG array entry is in use.
- *
- * TODO: Should the CTAG use virtual or physical tagging.
  */
 typedef struct
 {
-	u64					virtTag;
+	u64					physTag;
 	u32					dtagIndex;
 	bool				valid;
 	bool				dirty;
