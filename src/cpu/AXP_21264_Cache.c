@@ -1423,7 +1423,8 @@ bool AXP_DcacheRead(
 			 */
 			indexAndSet.idxOrSet.index = virtAddr.vaIdx.index;
 			indexAndSet.idxOrSet.set = ii;
-			*idxSet = indexAndSet.idxSet;
+			if (idxSet != NULL)
+				*idxSet = indexAndSet.idxSet;
 
 			/*
 			 * Indicate that we are returning the data requested.

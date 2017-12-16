@@ -285,13 +285,8 @@ typedef struct
  *	4.	MB: Based on the Cbox CSR SYSBUS_MB_ENABLE, the MB command can be sent
  *		to the pins.
  */
-typedeef struct
-{
-	u8	DcHit : 1;	/* Block was found in the Dcache */
-	u8	DcW : 1;	/* Block was found Writable in the Dcache */
-	u8	BcHit : 1;	/* Block was found in the Bcache */
-	u8	BcW : 1;	/* Block was found Writable in the Bcache */
-} AXP_21264_CACHE_HITS;
+#define AXP_21264_CACHE_HIT		0x01
+#define AXP_21264_CACHE_WRITE	0x02
 
 /*
  * This structure is the definition for one Duplicate Dcache Tag Entry.  A

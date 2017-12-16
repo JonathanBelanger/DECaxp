@@ -31,9 +31,8 @@
 #include "AXP_21264_CPU.h"
 
 u32 AXP_21264_Mbox_GetLQSlot(AXP_21264_CPU *);
-void AXP_21264_Mbox_ReadMem(AXP_21264_CPU *, AXP_INSTRUCTION *, u32, u64, u32);
+void AXP_21264_Mbox_ReadMem(AXP_21264_CPU *, AXP_INSTRUCTION *, u32, u64);
 u32 AXP_21264_Mbox_GetSQSlot(AXP_21264_CPU *);
-void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *, AXP_INSTRUCTION *, u32, u64, u64, u32);
-bool AXP_21264_Mbox_Init(AXP_21264_CPU *);
+void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *, AXP_INSTRUCTION *, u32, u64, u64);
 bool AXP_21264_Mbox_Init(AXP_21264_CPU *);
 #endif /* _AXP_21264_MBOX_DEFS_ */

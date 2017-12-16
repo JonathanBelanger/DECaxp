@@ -61,6 +61,8 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 		 */
 		pthreadRet = pthread_mutex_init(&cpu->cpuMutex, NULL);
 		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&cpu->iBoxMutex, NULL);
+		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->iBoxIPRMutex, NULL);
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->iCacheMutex, NULL);
@@ -92,6 +94,8 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 		 */
 		if (pthreadRet == 0)
 			pthreadRet = pthread_cond_init(&cpu->cpuCond, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_cond_init(&cpu->iBoxCondition, NULL);
 		else
 			qRet = false;
 
@@ -105,16 +109,18 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 		if (qRet == true)
 			for(ii = 0; ii < AXP_IQ_LEN; ii++)
 			{
-				cpu->iqEntries[ii].flink = cpu->iqEntries[ii].blink = NULL;
-				cpu->iqEntries[ii].parent = cpu->iq;
+				cpu->iqEntries[ii].header.flink =
+						cpu->iqEntries[ii].header.blink = NULL;
+				cpu->iqEntries[ii].header.parent = cpu->iq;
 			}
 		if (qRet == true)
 			qRet = AXP_CondQueueCnt_Init(cpu->fq, AXP_FQ_LEN);
 		if (qRet == true)
 			for(ii = 0; ii < AXP_FQ_LEN; ii++)
 			{
-				cpu->fqEntries[ii].flink = cpu->fqEntries[ii].blink = NULL;
-				cpu->fqEntries[ii].parent = cpu->fq;
+				cpu->fqEntries[ii].header.flink =
+						cpu->fqEntries[ii].header.blink = NULL;
+				cpu->fqEntries[ii].header.parent = cpu->fq;
 			}
 
 		/*

@@ -285,6 +285,8 @@ typedef struct
 	 * Ibox.
 	 */
 	pthread_t				iBoxThreadID;
+	pthread_mutex_t			iBoxMutex;
+	pthread_cond_t			iBoxCondition;
 
 	/*
 	 * The following definitions are used by the branch prediction code.
@@ -296,13 +298,6 @@ typedef struct
 	u16						globalPathHistory;
 
 	u8						instrCounter;	/* Unique ID for each instruction */
-
-	/*
-	 * When the IRQ_H bits are set be the system and the Cbox detects it, the
-	 * Cbox copies (actually a logical AND) to this location for the iBox to
-	 * call the PALcode to process.
-	 */
-	u8						iBoxIrq : 6;	/* Six interrupt bits set by Cbox*/
 
 	/*
 	 * This is equivalent to the VPC
@@ -505,6 +500,8 @@ typedef struct
 	 * Mbox.
 	 */
 	pthread_t				mBoxThreadID;
+	pthread_mutex_t			mBoxMutex;
+	pthread_cond_t			mBoxCondition;
 
 	/*
 	 * This is the Data Cache.  It is 64K bytes in size (just counting the
@@ -527,9 +524,10 @@ typedef struct
 	 * 		 because the index into the queue is reserved in the iBox during
 	 * 		 instruction decoding.
 	 */
-	AXP_MBOX_QUEUE			lq[AXP_MBOX_QUEUE_LEN];
 	pthread_mutex_t			lqMutex;
+	AXP_MBOX_QUEUE			lq[AXP_MBOX_QUEUE_LEN];
 	u32						lqNext;
+	pthread_mutex_t			sqMutex;
 	AXP_MBOX_QUEUE			sq[AXP_MBOX_QUEUE_LEN];
 	pthread_mutex_t			sqMutex;
 	u32						sqNext;

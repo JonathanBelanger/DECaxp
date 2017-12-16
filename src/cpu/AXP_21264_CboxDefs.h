@@ -601,12 +601,13 @@ typedef enum
 
 typedef struct
 {
-	AXP_CBOX_MAF_TYPE		type;
-	AXP_21264_IO_MASK		mask;
-	AXP_21264_TO_SYS_CMD	rq;
-	AXP_21264_SYSDC_RSP		rsp;
-	u64						pa;
-	bool					complete;	/* cleared by Mbox, set by Cbox */
+	AXP_CBOX_MAF_TYPE	type;
+	u64					pa;
+	bool				valid;
+	u8					lqSqEntry;
+	u8					data[sizeof(u64)];
+	int					dataLen;
+	bool				complete;	/* cleared by Mbox, set by Cbox */
 } AXP_21264_CBOX_MAF;
 
 /*
@@ -622,8 +623,7 @@ typedef struct
 	bool				processed;
 	bool				valid;
 	u64					pa;
-	AXP_21264_IO_MASK	type;
-	u8					sqEntry;
+	u8					lqSqEntry;
 	u8					data[AXP_21264_BLOCK_SIZE];
 	int					dataLen;
 } AXP_21264_CBOX_IOWB;
@@ -655,6 +655,7 @@ typedef struct
 {
 	bool				valid;
 	bool				shared;
+	bool				dirty;
 	u64					tag;
 } AXP_21264_BCACHE_TAG;
 
