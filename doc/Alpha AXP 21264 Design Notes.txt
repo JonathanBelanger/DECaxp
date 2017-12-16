@@ -24,27 +24,27 @@ In PALmode:
  *	Ibox -> Ibox (ITB miss)
  *	Ibox -> Ebox (integer instructions and IPRs)
  *	Ibox -> Fbox (floating point instructions and IPRs)
- *	Ibox -> Cbox (IPRs and CSRs)
+ *	Ibox -> Cbox (IPRs, CSRs, MAF)
  *	Ibox -> Mbox (IPRs)
  *
- *	Ebox -> Mbox
- *	Ebox -> Fbox
- *	Ebox -> Ibox
+ *	Ebox -> Mbox (LQ, SQ)
+ *	Ebox -> Fbox (Integer -> FP)
+ *	Ebox -> Ibox (instrction ready to retire)
  *
- *	Fbox -> Mbox
- *	Fbox -> Ebox
- *	Fbox -> Ibox
+ *	Fbox -> Mbox (LQ, SQ)
+ *	Fbox -> Ebox (FP -> Integer)
+ *	Fbox -> Ibox (instruction ready to retire)
  *
- *	Mbox -> Ebox
- *	Mbox -> Fbox
+ *	Mbox -> Ebox (LQ, SQ complete)
+ *	Mbox -> Fbox (LQ, SQ complete)
  *	Mbox -> Ibox (DTB miss)
- *	Mbox -> Cbox
+ *	Mbox -> Cbox (MAF, VDB, IOWB)
  *
- *	Cbox -> Ibox
- *	Cbox -> Mbox
- *	Cbox -> System
+ *	Cbox -> Ibox (Icache fill)
+ *	Cbox -> Mbox (Dcache fill, update Dcache bits)
+ *	Cbox -> System (PQ rsp, Command rq)
  *
- *	System -> Cbox
+ *	System -> Cbox (PQ, IRQ)
  */
 
 /*

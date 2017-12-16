@@ -789,6 +789,7 @@ typedef enum
 	EV79,					/* 21364 */
 	EV69A					/* 21264 */
 } AXP_PROC_MAJ_TYPE;
+
 #define	AXP_PASS_2_21_EV4		0	/* EV4 */
 #define AXP_PASS_3_EV4			1
 #define AXP_RESERVED			0	/* LCA Family */

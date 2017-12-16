@@ -690,7 +690,7 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 	{
 		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
 		{
-			cpu->ctag[ii][jj].virtTag = 0;
+			cpu->ctag[ii][jj].physTag = 0;
 			cpu->ctag[ii][jj].dtagIndex = AXP_CACHE_ENTRIES;
 			cpu->ctag[ii][jj].valid = false;
 		}
@@ -1051,10 +1051,12 @@ void AXP_21264_Process_MAF(AXP_21264_CPU *cpu, int entry)
  *	None.
  */
 void AXP_21264_Add_MAF(
-				AXP_21264_CPU *cpu,
-				AXP_CBOX_MAF_TYPE type,
-				AXP_21264_IO_MASK mask,
-				u64 pa)
+		AXP_21264_CPU *cpu,
+		AXP_CBOX_MAF_TYPE type,
+		u64 pa,
+		u8 lqSqEntry,
+		u8 *data,
+		int dataLen)
 {
 
 	/*
@@ -1068,7 +1070,17 @@ void AXP_21264_Add_MAF(
 	 */
 	cpu->mafBottom = (cpu->mafBottom + 1) & 0x07;
 	cpu->maf[cpu->mafBottom].type = type;
-	cpu->maf[cpu->mafBottom].mask = mask;
+	cpu->maf[cpu->mafBottom].dataLen = dataLen;
+	if (data != NULL)
+		memcpy(
+			cpu->maf[cpu->mafBottom].data,
+			data,
+			dataLen);
+	else
+		memset(
+			cpu->maf[cpu->mafBottom].data,
+			0,
+			sizeof(cpu->maf[cpu->mafBottom].data));
 	cpu->maf[cpu->mafBottom].pa = pa;
 	cpu->maf[cpu->mafBottom].complete = false;
 
@@ -1389,7 +1401,12 @@ void AXP_21264_Process_IOWB(AXP_21264_CPU *cpu, int entry)
  * Return Values:
  *	None.
  */
-void AXP_21264_Add_IOWB(AXP_21264_CPU *cpu, u64 pa, u8 sqEntry, u8 *data, int dataLen)
+void AXP_21264_Add_IOWB(
+				AXP_21264_CPU *cpu,
+				u64 pa,
+				u8 lqSqEntry,
+				u8 *data,
+				int dataLen)
 {
 
 	/*
@@ -1403,8 +1420,14 @@ void AXP_21264_Add_IOWB(AXP_21264_CPU *cpu, u64 pa, u8 sqEntry, u8 *data, int da
 	 */
 	cpu->iowbBottom = (cpu->iowbBottom + 1) & 0x03;
 	cpu->iowb[cpu->iowbBottom].pa = pa;
-	cpu->iowb[cpu->iowbBottom].sqEntry = sqEntry;
-	memcpy(cpu->iowb[cpu->iowbBottom].data, data, dataLen);
+	cpu->iowb[cpu->iowbBottom].lqSqEntry = lqSqEntry;
+	if (data != NULL)	/* this is a store */
+		memcpy(cpu->iowb[cpu->iowbBottom].data, data, dataLen);
+	else
+		memset(
+			cpu->iowb[cpu->iowbBottom].data,
+			0,
+			sizeof(cpu->iowb[cpu->iowbBottom].data));
 	cpu->iowb[cpu->iowbBottom].dataLen = dataLen;
 	cpu->iowb[cpu->iowbBottom].valid = true;
 	cpu->iowb[cpu->iowbBottom].processed = false;
@@ -1863,27 +1886,19 @@ void AXP_21264_Process_IRQ(AXP_21264_CPU *cpu)
 {
 
 	/*
-	 * Before we do anything, lock the interface mutex to prevent multiple
-	 * accessors.
+	 * Queue this up to the Ibox.  We don't supply a PC or virtual address,
+	 * or opcode.  We do indicate that this is an interrupt, use the unmapped
+	 * register (31), this is not a write operation and we are not the Ibox.
 	 */
-	pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
-
-	/*
-	 * The Ibox may not have processed all the previous interrupts we sent to
-	 * it, so OR the bits there with the ones set by the system.
-	 */
-	cpu->iBoxIrq |= cpu->irqH;
-
-	/*
-	 * Clear the IRQ_H bits here to avoid an infinite loop.  Also, the system
-	 * will set the bits when there is one or more new interrupts to process.
-	 */
-	cpu->irqH = 0;
-
-	/*
-	 * Unlock the mutex so it can.
-	 */
-	pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+	AXP_21264_Ibox_Event(
+			cpu,
+			AXP_INTERRUPT,
+			0,
+			0,
+			0,
+			AXP_UNMAPPED_REG,
+			false,
+			false);
 
 	/*
 	 * Return back to the caller.
@@ -1905,7 +1920,7 @@ void AXP_21264_Process_IRQ(AXP_21264_CPU *cpu)
  * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
  * 		processor.
  *	flags:
- *		An unsigned byte value representing the falgs to be set.
+ *		An unsigned byte value representing the flags to be set.
  *
  * Output Parameters:
  * 	None.

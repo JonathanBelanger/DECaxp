@@ -1366,6 +1366,163 @@ AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, i64 displacement)
 }
 
 /*
+ * AXP_21264_Ibox_Event
+ *	This function is called from a number of places.  It receives information
+ *	about an event (interrupt) that just occurred.  We need to queue this event
+ *	up for the Ibox to process.  The callers to this function include not only
+ *	the Ibox, itself, but also the Mbox.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *		processor.
+ *	fault:
+ *		A value indicating the fault that occurred.
+ *	pc:
+ *		A value indicating the PC for the instruction being executed.
+ *	va:
+ *		A value indicating the Virtual Address where the fault occurred.
+ *	opcode:
+ *		A value for the opcode for with the instruction associated with the
+ *		fault
+ *	reg:
+ *		A value indicating the architectural register associated with the
+ *		fault.
+ *	write:
+ *		A boolean to indicate if it was a write operation associated with the
+ *		fault.
+ *	self:
+ *		A boolean too  indicate that the Ibox is actually calling this
+ *		function.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Values:
+ * 	None.
+ */
+void AXP_21264_Ibox_Event(
+			AXP_21264_CPU *cpu,
+			u32 fault,
+			AXP_PC pc,
+			u64 va,
+			u8 opcode,
+			u8 reg,
+			bool write,
+			bool self)
+{
+	u8	mmStatOpcode = opcode;
+
+	/*
+	 * We, the Ibox, did not call this function, then we need to lock down the
+	 * the Ibox mutex.
+	 */
+	if (self == false)
+		pthread_mutex_lock(&cpu->iBoxMutex);
+
+	/*
+	 * We always need to lock down the IPR mutex.
+	 */
+	pthread_mutex_lock(&cpu->iBoxIPRMutex);
+
+	/*
+	 * HW_LD (0x1b = 27 -> 3) and HW_ST (0x1f = 31 -> 7), subtract 0x18 = 24
+	 * from both.
+	 */
+	if ((opcode == HW_LD) || (opcode == HW_ST))
+		mmStatOpcode -= 0x18;
+	cpu->excAddr = pc;
+
+	/*
+	 * Clear out the fault IPRs.
+	 */
+	cpu->va = 0;
+	*((u64 *) &cpu->excSum) = 0;
+	*((u64 *) &cpu->mmStat) = 0;
+
+	/*
+	 * Based on the fault, set the appropriate IPRs.
+	 */
+	switch (fault)
+	{
+		case AXP_DTBM_DOUBLE_3:
+		case AXP_DTBM_DOUBLE_4:
+		case AXP_ITB_MISS:
+		case AXP_DTBM_SINGLE:
+			cpu->mmStat.opcodes = mmStatOpcode;
+			cpu->mmStat.wr = (write ? 1 : 0);
+			cpu->va = va;
+			cpu->excSum.reg = reg;
+			break;
+
+		case AXP_DFAULT:
+		case AXP_UNALIGNED:
+			cpu->excSum.reg = reg;
+			cpu->mmStat.opcodes = mmStatOpcode;
+			cpu->mmStat.wr = (write ? 1 : 0);
+			cpu->mmStat.fow = (write ? 1 : 0);
+			cpu->mmStat._for = (write ? 0 : 1);
+			cpu->mmStat.acv = 1;
+			cpu->va = va;
+			break;
+
+		case AXP_IACV:
+			cpu->excSum.bad_iva = 0;	/* VA contains the address */
+			cpu->va = va;
+			break;
+
+		case AXP_ARITH:
+		case AXP_FEN:
+			cpu->excSum.reg = reg;
+			break;
+
+		case AXP_OPCDEC:
+			cpu->mmStat.opcodes = mmStatOpcode;
+			break;
+
+		case AXP_INTERRUPT:
+			cpu->iSum.ei = cpu->irqH;
+			cpu->irqH = 0;
+			break;
+
+		case AXP_MCHK:
+		case AXP_MT_FPCR_TRAP:	/* TODO: Need to make sure we have this write */
+		case AXP_RESET_WAKEUP:
+			break;
+	}
+
+	/*
+	 * Sign-extend the set_iov bit.
+	 */
+	if (cpu->excSum.set_iov == 1)
+		cpu->excSum.sext_set_iov = 0xffff;
+
+	/*
+	 * TODO: Push the excAddr onto the prediction stack.
+	 */
+
+	/*
+	 * Make sure to unlock the IPR mutex.
+	 */
+	pthread_mutex_unlock(&cpu->iBoxIPRMutex);
+
+	/*
+	 * We, the Ibox, did not call this function, then we need signal the Ibox
+	 * to process this fault, aand then to unlock the Ibox mutex.
+	 */
+	if (self == false)
+	{
+		pthread_cond_signal(&cpu->iBoxCondition, &cpu->iBoxMutex);
+		pthread_mutex_unlock(&cpu->iBoxMutex);
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
  * AXP_21264_Ibox_Init
  *	This function is called to initialize the Ibox.  It will set the IPRs
  *	associated with the Ibox to their initial/reset values.

@@ -33,20 +33,23 @@ typedef enum
 {
 	QNotInUse,
 	Assigned,
-	ReadPending,
-	WritePending,
-	Readable,
-	Writeable
+	Initial,
+	LQReadPending,
+	SQWritePending,
+	LQComplete,
+	SQComplete,
 } AXP_MBOX_QUEUE_STATE;
 
 typedef struct
 {
-	u64						value;	/* Only used in a store operations */
-	AXP_21264_IO_MASK		type;
+	u64						value;
 	u64						virtAddress;
+	u64						physAddress;
 	AXP_INSTRUCTION			*instr;
 	AXP_MBOX_QUEUE_STATE	state;
+	u8						len;
 	bool					lockCond;
+	bool					IOflag;
 } AXP_MBOX_QUEUE;
 
 #endif /* _AXP_21264_MBOX_DEFS_DEFS_ */

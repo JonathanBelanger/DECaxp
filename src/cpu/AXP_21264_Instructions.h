@@ -264,7 +264,7 @@ typedef enum
 } AXP_INS_TYPE;
 
 /*
- * Operation Tyoe
+ * Operation Type
  */
 typedef enum
 {
