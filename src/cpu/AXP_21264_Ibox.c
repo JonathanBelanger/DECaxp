@@ -1564,7 +1564,7 @@ void AXP_21264_Ibox_MboxCompl(
 	/*
 	 * Store the exception, into the instruction entry.
 	 */
-	instr->excReg = exception;
+	instr->excRegMask = exception;
 
 	/*
 	 * Next, set the items in the instruction that need to be set so that the
