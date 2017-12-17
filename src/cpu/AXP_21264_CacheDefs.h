@@ -286,7 +286,8 @@ typedef struct
  *		to the pins.
  */
 #define AXP_21264_CACHE_HIT		0x01
-#define AXP_21264_CACHE_WRITE	0x02
+#define AXP_21264_CACHE_DIRTY	0x02
+#define AXP_21264_CACHE_SHARED	0x04
 
 /*
  * This structure is the definition for one Duplicate Dcache Tag Entry.  A

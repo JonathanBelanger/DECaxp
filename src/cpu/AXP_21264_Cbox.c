@@ -1056,7 +1056,8 @@ void AXP_21264_Add_MAF(
 		u64 pa,
 		u8 lqSqEntry,
 		u8 *data,
-		int dataLen)
+		int dataLen,
+		bool shared)
 {
 
 	/*
@@ -2143,8 +2144,8 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 					 * all the other threads to start to do their processing.
 					 */
 					cpu->cpuState = Run;
-					pthread_cond_broadcast(&cpu->cpuCond);
 				}
+				pthread_cond_broadcast(&cpu->cpuCond);
 				pthread_mutex_unlock(&cpu->cpuMutex);
 				break;
 

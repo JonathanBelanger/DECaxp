@@ -594,6 +594,8 @@ typedef enum
 	LDx,
 	STx,
 	STx_C,
+	STxChangeToDirty,
+	STxCChangeToDirty,
 	WH64,
 	ECB,
 	Istream

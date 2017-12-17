@@ -23,6 +23,9 @@
  *
  *	V01.000		19-Jun-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		16-Dec-2017	Jonathan D. Belanger
+ *	Updating extensively with threading, processing, and interfacing functions.
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Mbox.h"
@@ -348,7 +351,7 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 		 * If we did not get a DcHit (See HRM Table 4-1), then we need to check
 		 * the Bcache.
 		 */
-		if (cacheStatus != AXP_21264_CACHE_HIT)
+		if ((cacheStatus & AXP_21264_CACHE_HIT) != AXP_21264_CACHE_HIT)
 		{
 
 			/*
@@ -363,7 +366,7 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 			 * Missed Address File (MAF) for the Cbox to process.  There is
 			 * nothing else for us to do here.
 			 */
-			if (cacheStatus != AXP_21264_CACHE_HIT)
+			if ((cacheStatus & AXP_21264_CACHE_HIT) != AXP_21264_CACHE_HIT)
 			{
 				AXP_21264_Add_MAF(
 					cpu,
@@ -371,7 +374,8 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 					lqEntry->physAddress,
 					entry,
 					NULL,
-					lqEntry->len);
+					lqEntry->len,
+					false);
 			}
 
 			/*
@@ -564,6 +568,15 @@ void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
 	}
 	else
 	{
+
+		/*
+		 * We attempted to translate the Virtual Address to a Physical Address,
+		 * but failed.  The translation code returned an indicator as to the
+		 * fault that prevented the translation from succeeding.  Let the Ibox
+		 * know, so that it can call the PALcode that needs to resolve the
+		 * fault.  When the fault is resolved, this function will be called
+		 * again and should be able to complete the load.
+		 */
 		AXP_21264_Ibox_Event(
 					cpu,
 					fault,
@@ -575,24 +588,28 @@ void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
 					false);
 	}
 
+	/*
+	 * Return back to the caller.
+	 */
 	return;
 }
 
 /*
- * AXP_21264_Mbox_LQ_Pending
- *	This function is called to check if a pending the entry in the LQ can be
- *	completed.
+ * AXP_21264_Mbox_SQ_Pending
+ *	This function is called to determine if a store to memory (Dcache) can be
+ *	completed.  This is determined by the state of the cache block.
  *
  * Input Parameters:
  *	cpu:
  *		A pointer to the structure containing the information needed to emulate
  *		a single CPU.
  *	entry:
- *		The value of the index into the LQ.
+ *		The value of the index into the SQ.
  *
  * Output Parameters:
- *	lqEntry:
- *		A pointer to the entry which has been completed.
+ *	sqEntry:
+ *		A pointer to the entry which has been processed so a store can be
+ *		completed.
  *
  * Return Value:
  *	None.
@@ -600,14 +617,290 @@ void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
  * NOTE: When we are called, the Mbox mutex is already locked.  No need to lock
  * it here.
  */
-void AXP_21264_Mbox_LQ_Pending(AXP_21264_CPU *cpu, u8 entry)
+void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 {
+	AXP_MBOX_QUEUE		*sqEntry = &cpu->sq[entry];
+	AXP_CBOX_MAF_TYPE	type;
+	u8					cacheStatus;
+	bool				DcHit = false;
+	bool				DcW = false;
+	bool				shared;
 
 	/*
-	 * TODO: All of it.
+	 * First, get the status for the Dcache for the current VA/PA pair.
+	 */
+	cacheStatus = AXP_Dcache_Status(
+						cpu,
+						sqEntry->virtAddress,
+						sqEntry->physAddress);
+
+	/*
+	 * If we did not hit in the Dcache, go see if the information is in the
+	 * Bcache.
+	 */
+	if ((cacheStatus & AXP_21264_CACHE_HIT) != AXP_21264_CACHE_HIT)
+	{
+
+		/*
+		 * Get the status for the Bcache for the current PA.
+		 */
+		cacheStatus = AXP_21264_Bcache_Status(
+								cpu,
+								sqEntry->physAddress);
+
+		/*
+		 * Hit in the Bcache, move the data to the Dcache, which may
+		 * require evicting the current entry.
+		 */
+		if ((cacheStatus & AXP_21264_CACHE_HIT) == AXP_21264_CACHE_HIT)
+		{
+
+			/*
+			 * We found what we were looking for in the Bcache.  We may
+			 * need to evict the current block (possibly the same index and
+			 * set, but not the same physical tag).
+			 */
+			AXP_21264_CopyBcacheToDcache(
+									cpu,
+									sqEntry->virtAddress,
+									sqEntry->physAddress);
+			DcHit = true;
+
+			/*
+			 * If the cache status is Dirty and Not Shared, then it is
+			 * writable.
+			 */
+			if (((cacheStatus & AXP_21264_CACHE_DIRTY) == AXP_21264_CACHE_DIRTY) ||
+				((cacheStatus & AXP_21264_CACHE_SHARED) != AXP_21264_CACHE_SHARED))
+				DcW = true;
+		}
+
+	}
+	else
+	{
+		DcHit = true;
+		if (((cacheStatus & AXP_21264_CACHE_DIRTY) == AXP_21264_CACHE_DIRTY) ||
+			((cacheStatus & AXP_21264_CACHE_SHARED) != AXP_21264_CACHE_SHARED))
+			DcW = true;
+	}
+
+	/*
+	 * OK, we can finally determine what may need to happen next.  First, if we
+	 * did hit in either cache, then we need to go get the block from memory.
+	 */
+	shared = ((cacheStatus & AXP_21264_CACHE_SHARED) == AXP_21264_CACHE_SHARED);
+	if (DcHit == false)
+	{
+		if ((sqEntry->instr->opcode == STL_C) ||
+			(sqEntry->instr->opcode == STQ_C))
+			type = STx_C;
+		else
+			type = STx;
+
+		AXP_21264_Add_MAF(
+			cpu,
+			type,
+			sqEntry->physAddress,
+			entry,
+			sqEntry->value,
+			sqEntry->len,
+			shared);
+	}
+
+	/*
+	 * We hit the cache.  Depending upon the state, we either need to make it
+	 * writable or we are done.
+	 */
+	else
+	{
+		AXP_Dcache_Lock(cpu, sqEntry->virtAddress, sqEntry->physAddress);
+
+		/*
+		 * If the block is not writable, then we need to request the block be
+		 * changed to dirty and not shared (writable).
+		 */
+		if (DcW ==false)
+		{
+			if ((sqEntry->instr->opcode == STL_C) ||
+				(sqEntry->instr->opcode == STQ_C))
+				type = STxCChangeToDirty;
+			else
+				type = STxChangeToDirty;
+
+			AXP_21264_Add_MAF(
+				cpu,
+				type,
+				sqEntry->physAddress,
+				entry,
+				sqEntry->value,
+				sqEntry->len,
+				shared);
+		}
+
+		/*
+		 * We hit in the cache and the block is writable.  Therefore, we are
+		 * done here.
+		 */
+		else
+		{
+			sqEntry->state = SQComplete;
+			sqEntry->instr->loadCompletion(sqEntry->instr);	/* TODO: need for store */
+		}
+	}
+
+	/*
+	 * Return back to the caller.
 	 */
 	return;
 }
+
+/*
+ * AXP_21264_Mbox_SQ_Init
+ *	This function is called to initialize the entry.  This is a new entry in
+ *	in the SQ for processing.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ *	entry:
+ *		The value of the index into the SQ.
+ *
+ * Output Parameters:
+ *	sqEntry:
+ *		A pointer to the entry which has been initialized.
+ *
+ * Return Value:
+ *	None.
+ *
+ * NOTE: When we are called, the Mbox mutex is already locked.  No need to lock
+ * it here.
+ */
+void AXP_21264_Mbox_SQ_Init(AXP_21264_CPU *cpu, u8 entry)
+{
+	AXP_MBOX_QUEUE *sqEntry = &cpu->sq[entry];
+	u32		fault;
+	bool 	_asm;	/* TODO: What to do with this */
+
+	/*
+	 * First, determine the length of the store, and get the data to be stored.
+	 */
+	switch (sqEntry->instr->opcode)
+	{
+		case STB:
+			sqEntry->len = 1;
+			sqEntry->value = sqEntry->instr->src1v & AXP_LOW_BYTE;
+			break;
+
+		case STW:
+			sqEntry->len = 2;
+			sqEntry->value = sqEntry->instr->src1v & AXP_LOW_WORD;
+			break;
+
+		case STF:
+		case STS:
+		case STL:
+		case STL_C:
+			sqEntry->len = 4;
+			sqEntry->value = sqEntry->instr->src1v & AXP_LOW_LONG;
+			break;
+
+		case STQ_U:
+		case STG:
+		case STT:
+		case STQ:
+		case STQ_C:
+			sqEntry->len = 8;
+			sqEntry->value = sqEntry->instr->src1v;
+			break;
+
+		case HW_ST:
+			if (sqEntry->instr->len_stall = AXP_HW_LD_LONGWORD)
+			{
+				sqEntry->len = 4;
+				sqEntry->value = sqEntry->instr->src1v & AXP_LOW_LONG;
+			}
+			else
+			{
+				sqEntry->len = 8;
+				sqEntry->value = sqEntry->instr->src1v;
+			}
+			break;
+	}
+
+	/*
+	 * Then we need to do is translate the virtual address into its physical
+	 * equivalent.
+	 */
+	sqEntry->physAddress = AXP_va2pa(
+								cpu,
+								sqEntry->virtAddress,
+								sqEntry->instr->pc,
+								true,	/* use the DTB */
+								Write,
+								&_asm,
+								&fault);
+
+	/*
+	 * If a physical address was returned, then we have some more to do.
+	 */
+	if (sqEntry->physAddress != 0)
+	{
+
+		/*
+		 * Set a flag indicating the the address is for an I/O device (and not
+		 * memory)
+		 */
+		sqEntry->IOflag = AXP_21264_IS_IO_ADDR(sqEntry->physAddress);
+		sqEntry->state = SQWritePending;
+
+		/*
+		 * At this point we have 2 options.  First, this is a store to memory.
+		 * Second, this is a store to an I/O device.
+		 */
+		if (sqEntry->IOflag == false)
+			AXP_21264_Mbox_SQ_Pending(cpu, entry);
+
+		/*
+		 * OK, this is a store to an I/O device.  We just send the request to
+		 * the Cbox.
+		 */
+		else
+			AXP_21264_Add_IOWB(
+					cpu,
+					sqEntry->physAddress,
+					entry,
+					sqEntry->value,
+					sqEntry->len);
+	}
+	else
+	{
+
+		/*
+		 * We attempted to translate the Virtual Address to a Physical Address,
+		 * but failed.  The translation code returned an indicator as to the
+		 * fault that prevented the translation from succeeding.  Let the Ibox
+		 * know, so that it can call the PALcode that needs to resolve the
+		 * fault.  When the fault is resolved, this function will be called
+		 * again and should be able to complete the store.
+		 */
+		AXP_21264_Ibox_Event(
+					cpu,
+					fault,
+					sqEntry->instr->pc,
+					sqEntry->virtAddress,
+					sqEntry->instr->opcode,
+					sqEntry->instr->aSrc1,
+					true,
+					false);
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
 /*
  * AXP_21264_Mbox_Process_Q
  *	This function is called because we just received and indication that one or
@@ -645,7 +938,7 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 				break;
 
 			case LQReadPending:
-				AXP_21264_Mbox_LQ_Pending(cpu, ii);
+				AXP_21264_Mbox_TryCaches(cpu, ii);
 				break;
 
 			default:
@@ -660,11 +953,15 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 		 * or Fbox.
 		 */
 		if (cpu->lq[ii].state == LQComplete)
-			AXP_21264_Mbox_LQ_Complete(cpu, ii);
+			cpu->lq[ii].instr->loadCompletion(cpu->lq[ii].instr);
 	}
 
 	/*
 	 * Last the store Queue (SQ) entries.
+	 *
+	 * NOTE: We do not call the SQ equivalent of the LQ_Complete function,
+	 * because this is called from the Ibox at the moment the instruction is
+	 * retired.
 	 */
 	for (ii = 0; ii < AXP_MBOX_QUEUE_LEN; ii++)
 		switch (cpu->sq[ii].state)
@@ -673,12 +970,8 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 				AXP_21264_Mbox_SQ_Init(cpu, ii);
 				break;
 
-			case LQReadPending:
+			case SQWritePending:
 				AXP_21264_Mbox_SQ_Pending(cpu, ii);
-				break;
-
-			case LQReadable:
-				AXP_21264_Mbox_SQ_Complete(cpu, ii);
 				break;
 
 			default:
@@ -690,7 +983,50 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 }
 
 /*
- * AXP_21264_Mbox_Init
+ * AXP_21264_Mbox_WorkQueued
+ *	This function is called to determine if there is any work to be processed.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	true:	There is work to process.
+ *	false:	There is nothing to do.
+ *
+ */
+bool AXP_21264_Mbox_WorkQueued(AXP_21264_CPU *cpu)
+{
+	bool	retVal = false;
+	int		ii;
+
+	/*
+	 * If anything has been queued up for processing, then return true as soon
+	 * as one if found.
+	 */
+	for (ii = 0; ((ii < AXP_MBOX_QUEUE_LEN) && (retVal == false)); ii++)
+		if (cpu->lq[ii].state == Initial)
+			retVal = true;
+	for (ii = 0; ((ii < AXP_MBOX_QUEUE_LEN) && (retVal == false)); ii++)
+		if (cpu->sq[ii].state == Initial)
+			retVal = true;
+
+	/*
+	 * TODO: We need to know when stuff is coming from the Cbox.
+	 */
+
+	/*
+	 * Return the results back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+* AXP_21264_Mbox_Init
  *	This function is called by the Cbox to initialize the Mbox items.  These
  *	items are:
  *
@@ -876,4 +1212,55 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	 * All done, return to the caller.
 	 */
 	return(retVal);
+}
+
+/*
+ * AXP_21264_MboxMain
+ * 	This function is called to perform the emulation for the Mbox within the
+ * 	Alpha AXP 21264 CPU.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the structure holding the  fields required to emulate an
+ * 		Alpha AXP 21264 CPU.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_21264_MboxMain(AXP_21264_CPU *cpu)
+{
+
+	/*
+	 * The Mbox needs to wait until the u is in the 'run' state.
+	 */
+	pthread_mutex_lock(&cpu->cpuMutex);
+	while ((cpu->cpuState != Run) && (cpu->cpuState != ShuttingDown))
+		pthread_cont_wait(&cpu->cpuCond, &cpu->cpuMutex);
+	pthread_mutex_unlock(&cpu->cpuMutex);
+
+	/*
+	 * We moved to the 'run' state.  We continue to process until the state is
+	 * ShuttingDown.
+	 */
+	pthread_mutex_lock(&cpu->mBoxMutex);
+	while (cpu->cpuState == Run)
+	{
+
+		/*
+		 * If there is something to process, then process it.  Otherwise, wait
+		 * for something to get queued up.
+		 */
+		if (AXP_21264_Mbox_WorkQueued(cpu) == false)
+			pthread_cond_wait(&cpu->mBoxCondition, &cpu->mBoxMutex);
+		AXP_21264_Mbox_Process_Q(cpu);
+	}
+	pthread_mutex_unlock(&cpu->mBoxMutex);
+
+	/*
+	 * Return back to the caller (pthreads).
+	 */
+	return;
 }
