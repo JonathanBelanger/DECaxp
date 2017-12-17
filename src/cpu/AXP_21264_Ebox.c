@@ -53,13 +53,10 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 	int		ii;
 
 	/*
-	 * TODO:	The following flags and values may not be needed, as this
-	 *			functionality can be handled using the cache bits.
+	 * This bit us used when emulating the RC and BC VAX Compatibility
+	 * instructions used by VAX-to-Alpha translator software.  ARM 4.12
 	 */
 	cpu->VAXintrFlag = false;
-	cpu->lockFlag = false; 
-	cpu->lockedPhysicalAddress = 0; 
-	cpu->lockedVirtualAddress = 0; 
 
 	/*
 	 * Set up the initial register map.  We do not map R31.

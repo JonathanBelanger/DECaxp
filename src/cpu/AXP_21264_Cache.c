@@ -492,12 +492,12 @@ void AXP_tbis(AXP_21264_CPU *cpu, u64 va, bool dtb)
  *	false:	If the process does not have the requested access.
  *	true:	If the process does have the access requested.
  */
-bool AXP_21264_checkMemoryAccess(
-				AXP_21264_CPU *cpu,
-				AXP_21264_TLB *tlb,
-				AXP_21264_ACCESS acc)
+AXP_EXCEPTIONS AXP_21264_checkMemoryAccess(
+					AXP_21264_CPU *cpu,
+					AXP_21264_TLB *tlb,
+					AXP_21264_ACCESS acc)
 {
-	bool	retVal = false;
+	AXP_EXCEPTIONS	retVal = NoException;
 
 	/*
 	 * If the valid bit is not set, then by default, the process does not have
@@ -519,22 +519,25 @@ bool AXP_21264_checkMemoryAccess(
 						break;
 
 					case Read:
-						retVal = ((tlb->kre == 0) || (tlb->faultOnRead == 1));
+						if ((tlb->kre == 0) || (tlb->faultOnRead == 1))
+							retVal = FaultOnRead;
 						break;
 
 					case Write:
-						retVal = ((tlb->kwe == 0) || (tlb->faultOnWrite == 1));
+						if ((tlb->kwe == 0) || (tlb->faultOnWrite == 1))
+							retVal = FaultOnWrite;
 						break;
 
 					case Execute:
-						retVal = ((tlb->kre == 0) || (tlb->faultOnExecute == 1));
+						if ((tlb->kre == 0) || (tlb->faultOnExecute == 1))
+							retVal = FaultOnExecute;
 						break;
 
-					case Modify:
-						retVal = (((tlb->kwe == 0) ||
-								   (tlb->kre == 0)) ||
-								  ((tlb->faultOnWrite == 1) ||
-								   (tlb->faultOnRead == 1)));
+					case Modify:	/* TODO: Is this correct? */
+						if (((tlb->kwe == 0) || (tlb->kre == 0)) ||
+							((tlb->faultOnWrite == 1) ||
+							 (tlb->faultOnRead == 1)))
+						   retVal = AccessControlViolation;
 						break;
 				}
 				break;
@@ -546,22 +549,25 @@ bool AXP_21264_checkMemoryAccess(
 						break;
 
 					case Read:
-						retVal = ((tlb->ere == 0) || (tlb->faultOnRead == 1));
+						if ((tlb->ere == 0) || (tlb->faultOnRead == 1))
+							retVal = FaultOnRead;
 						break;
 
 					case Write:
-						retVal = ((tlb->ewe == 0) || (tlb->faultOnWrite == 1));
+						if ((tlb->ewe == 0) || (tlb->faultOnWrite == 1))
+							retVal = FaultOnWrite;
 						break;
 
 					case Execute:
-						retVal = ((tlb->ere == 0) || (tlb->faultOnExecute == 1));
+						if ((tlb->ere == 0) || (tlb->faultOnExecute == 1))
+							retVal = FaultOnExecute;
 						break;
 
 					case Modify:
-						retVal = (((tlb->ewe == 0) ||
-								   (tlb->ere == 0)) ||
-								  ((tlb->faultOnWrite == 1) ||
-								   (tlb->faultOnRead == 1)));
+						if (((tlb->ewe == 0) || (tlb->ere == 0)) ||
+							((tlb->faultOnWrite == 1) ||
+							 (tlb->faultOnRead == 1)))
+							retVal = AccessControlViolation;
 						break;
 				}
 				break;
@@ -573,22 +579,25 @@ bool AXP_21264_checkMemoryAccess(
 						break;
 
 					case Read:
-						retVal = ((tlb->sre == 0) || (tlb->faultOnRead == 1));
+						if ((tlb->sre == 0) || (tlb->faultOnRead == 1))
+							retVal = FaultOnRead;
 						break;
 
 					case Write:
-						retVal = ((tlb->swe == 0) || (tlb->faultOnWrite == 1));
+						if ((tlb->swe == 0) || (tlb->faultOnWrite == 1))
+							retVal = FaultOnWrite;
 						break;
 
 					case Execute:
-						retVal = ((tlb->sre == 0) || (tlb->faultOnExecute == 1));
+						if ((tlb->sre == 0) || (tlb->faultOnExecute == 1))
+							retVal = FaultOnExecute;
 						break;
 
 					case Modify:
-						retVal = (((tlb->swe == 0) ||
-								   (tlb->sre == 0)) ||
-								  ((tlb->faultOnWrite == 1) ||
-								   (tlb->faultOnRead == 1)));
+						if (((tlb->swe == 0) || (tlb->sre == 0)) ||
+							((tlb->faultOnWrite == 1) ||
+							 (tlb->faultOnRead == 1)))
+							retVal = AccessControlViolation;
 						break;
 				}
 				break;
@@ -600,27 +609,32 @@ bool AXP_21264_checkMemoryAccess(
 						break;
 
 					case Read:
-						retVal = ((tlb->ure == 0) || (tlb->faultOnRead == 1));
+						if ((tlb->ure == 0) || (tlb->faultOnRead == 1))
+							retVal = FaultOnRead;
 						break;
 
 					case Write:
-						retVal = ((tlb->uwe == 0) || (tlb->faultOnWrite == 1));
+						if ((tlb->uwe == 0) || (tlb->faultOnWrite == 1))
+							retVal = FaultOnWrite;
 						break;
 
 					case Execute:
-						retVal = ((tlb->ure == 0) || (tlb->faultOnExecute == 1));
+						if ((tlb->ure == 0) || (tlb->faultOnExecute == 1))
+							retVal = FaultOnExecute;
 						break;
 
 					case Modify:
-						retVal = (((tlb->uwe == 0) ||
-								   (tlb->ure == 0)) ||
-								  ((tlb->faultOnWrite == 1) ||
-								   (tlb->faultOnRead == 1)));
+						if (((tlb->uwe == 0) || (tlb->ure == 0)) ||
+							((tlb->faultOnWrite == 1) ||
+							 (tlb->faultOnRead == 1)))
+							retVal = AccessControlViolation;
 						break;
 				}
 				break;
 		}	/* switch(cpu->ierCm.cm) */
 	}		/* if (tlb->valid == true) */
+	else
+		retVal = AccessControlViolation;
 
 	/*
 	 * Return what we found back to the caller.
@@ -692,10 +706,11 @@ u64 AXP_va2pa(
 		bool dtb,
 		AXP_21264_ACCESS acc,
 		bool *_asm,
-		u32 *fault)
+		u32 *fault,
+		AXP_EXCEPTIONS *memChk)
 {
-	AXP_VA_SPE		vaSpe = {.va = va};
 	AXP_21264_TLB	*tlb;
+	AXP_VA_SPE		vaSpe = {.va = va};
 	u64				pa = 0x0ll;
 	u8				spe = (dtb ? cpu->mCtl.spe : cpu->iCtl.spe);
 
@@ -704,6 +719,7 @@ u64 AXP_va2pa(
 	 */
 	*_asm = false;
 	*fault = 0;
+	*memChk = NoException;
 
 	/*
 	 * If we are in PALmode, then the virtual address and physical address are
@@ -787,7 +803,8 @@ u64 AXP_va2pa(
 	else
 	{
 		cpu->tbMissOutstanding = false;
-		if (AXP_21264_checkMemoryAccess(cpu, tlb, acc) == false)
+		*memChk = AXP_21264_checkMemoryAccess(cpu, tlb, acc);
+		if (*memChk != NoException)
 		{
 			/* TODO: The caller need to do this: cpu->excAddr = pc; */
 			if (dtb == true)

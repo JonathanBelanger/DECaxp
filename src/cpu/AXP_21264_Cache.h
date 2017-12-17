@@ -51,7 +51,8 @@ u64 AXP_va2pa(
 		bool,
 		AXP_21264_ACCESS,
 		bool *,
-		u32 *);
+		u32 *,
+		AXP_EXCEPTIONS *);
 bool AXP_DcacheWrite(AXP_21264_CPU *, u64, u64, u32, void *, u64 *);
 void AXP_DcacheFlush(AXP_21264_CPU *);
 bool AXP_DcacheRead(AXP_21264_CPU *, u64, u64, u32, void *, u64 *);

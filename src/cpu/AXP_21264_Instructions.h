@@ -951,7 +951,7 @@ typedef enum
  *		U0 = Upper Sub-cluster of Integer Cluster 0
  *		L0 = Lower Sub-cluster of Integer Cluster 0
  *		U1 = Upper Sub-cluster of Integer Cluster 1
- *		L1 = Lower Sub-cluster of Integer Clueter 1
+ *		L1 = Lower Sub-cluster of Integer Cluster 1
  *		FA = ?
  *		FST0 = ?
  *		FST1 = ?
@@ -1022,8 +1022,6 @@ typedef struct
 	u8				type_hint_index; /* HW_LD/ST type, HW_RET hint, HW_MxPR idx */
 	u8				scbdMask;	/* HW_MxPR scbd_mask */
 	u8				len_stall : 1; /* HW_LD/ST len, HW_RET stall */
-	bool			lockFlagPending; /* set by the LDx_L instructions */
-	bool			clearLockPending; /* many instructions can clr the lock_flag */
 	bool			useLiteral;	/* Indicator that the literal value is valid */
 	bool			branchPredict; /* If this is a branch, predict to take it */
 	u32				function;	/* Function code for operation */
