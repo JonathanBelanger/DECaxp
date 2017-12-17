@@ -1550,7 +1550,7 @@ void AXP_21264_Ibox_Event(
  * NOTE:	This is also where, if an error occurred, will be set so that the
  * 			instruction is properly completed.
  */
-void AXP_21264_IBox_MboxCompl(
+void AXP_21264_Ibox_MboxCompl(
 					AXP_21264_CPU *cpu,
 					AXP_INSTRUCTION *instr,
 					AXP_EXCEPTIONS exception)
@@ -1562,14 +1562,15 @@ void AXP_21264_IBox_MboxCompl(
 	pthread_mutex_lock(&cpu->iBoxMutex);
 
 	/*
+	 * Store the exception, into the instruction entry.
+	 */
+	instr->excReg = exception;
+
+	/*
 	 * Next, set the items in the instruction that need to be set so that the
 	 * Ibox can complete the instruction.
 	 */
 	instr->state = WaitingRetirement;
-
-	/*
-	 * TODO: We need to do something with the exception value.
-	 */
 
 	/*
 	 * Finally, signal the Ibox that there is something to process (in this

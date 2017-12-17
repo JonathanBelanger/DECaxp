@@ -1040,7 +1040,7 @@ typedef struct
 	AXP_INS_STATE	state;
 	AXP_FBOX_FPCR	insFpcr;
 	AXP_IBOX_EXC_SUM excSum;
-	u64				excRegMask;	/* Exception Register Mask */
+	AXP_EXCEPTIONS	excRegMask;	/* Exception Register Mask */
 	void			(*loadCompletion)();
 } AXP_INSTRUCTION;
 

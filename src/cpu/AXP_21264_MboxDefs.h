@@ -34,6 +34,7 @@ typedef enum
 	QNotInUse,
 	Assigned,
 	Initial,
+	CboxPending,
 	LQReadPending,
 	SQWritePending,
 	LQComplete,
@@ -46,6 +47,7 @@ typedef struct
 	u64						virtAddress;
 	u64						physAddress;
 	AXP_INSTRUCTION			*instr;
+	AXP_EXCEPTIONS			exception;
 	AXP_MBOX_QUEUE_STATE	state;
 	u8						len;
 	bool					lockCond;

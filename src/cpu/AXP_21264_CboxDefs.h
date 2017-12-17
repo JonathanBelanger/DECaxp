@@ -606,7 +606,7 @@ typedef struct
 	AXP_CBOX_MAF_TYPE	type;
 	u64					pa;
 	bool				valid;
-	u8					lqSqEntry;
+	i8					lqSqEntry;
 	u8					data[sizeof(u64)];
 	int					dataLen;
 	bool				complete;	/* cleared by Mbox, set by Cbox */
@@ -625,7 +625,7 @@ typedef struct
 	bool				processed;
 	bool				valid;
 	u64					pa;
-	u8					lqSqEntry;
+	i8					lqSqEntry;
 	u8					data[AXP_21264_BLOCK_SIZE];
 	int					dataLen;
 } AXP_21264_CBOX_IOWB;
