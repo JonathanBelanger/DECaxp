@@ -478,9 +478,10 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
  */
 void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
 {
-	AXP_MBOX_QUEUE *lqEntry = &cpu->lq[entry];
-	u32		fault;
-	bool 	_asm;
+	AXP_MBOX_QUEUE	*lqEntry = &cpu->lq[entry];
+	AXP_EXCEPTIONS	exception;
+	u32				fault;
+	bool			_asm;
 
 	/*
 	 * First, determine the length of the load.
@@ -532,7 +533,8 @@ void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
 								true,	/* use the DTB */
 								Read,
 								&_asm,
-								&fault);
+								&fault,
+								&exception);
 
 	/*
 	 * If a physical address was returned, then we have some more to do.
@@ -568,6 +570,15 @@ void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
 	}
 	else
 	{
+
+		/*
+		 * OK, we had some sort of error related to memory access.  The current
+		 * instruction needs to fail with this exception.
+		 */
+		if (exception != NoException)
+		{
+
+		}
 
 		/*
 		 * We attempted to translate the Virtual Address to a Physical Address,
@@ -1234,33 +1245,68 @@ void AXP_21264_MboxMain(AXP_21264_CPU *cpu)
 {
 
 	/*
-	 * The Mbox needs to wait until the u is in the 'run' state.
+	 * While the CPU is not shutting down, we either have to wait before we can
+	 * do anything, or we are ready to do some work.
 	 */
-	pthread_mutex_lock(&cpu->cpuMutex);
-	while ((cpu->cpuState != Run) && (cpu->cpuState != ShuttingDown))
-		pthread_cont_wait(&cpu->cpuCond, &cpu->cpuMutex);
-	pthread_mutex_unlock(&cpu->cpuMutex);
-
-	/*
-	 * We moved to the 'run' state.  We continue to process until the state is
-	 * ShuttingDown.
-	 */
-	pthread_mutex_lock(&cpu->mBoxMutex);
-	while (cpu->cpuState == Run)
+	while (cpu->cpuState != ShuttingDown)
 	{
+		switch (cpu->cpuState)
+		{
 
-		/*
-		 * If there is something to process, then process it.  Otherwise, wait
-		 * for something to get queued up.
-		 */
-		if (AXP_21264_Mbox_WorkQueued(cpu) == false)
-			pthread_cond_wait(&cpu->mBoxCondition, &cpu->mBoxMutex);
-		AXP_21264_Mbox_Process_Q(cpu);
+			/*
+			 * The first 3 are the initial states when the cpu is being
+			 * initialized, by the Cbox.  The last one means that something
+			 * happened and we are basically resetting everything, also handled
+			 * by the Cbox.  We just need to wait until the CPU is in the 'run'
+			 * state again (or shutting down).
+			 */
+			case Cold:
+			case WaitBiST:
+			case WaitBiSI:
+			case FaultReset:
+
+				/*
+				 * The Mbox needs to wait until the cpu is in the 'run' state.
+				 */
+				pthread_mutex_lock(&cpu->cpuMutex);
+				while ((cpu->cpuState != Run) && (cpu->cpuState != ShuttingDown))
+					pthread_cont_wait(&cpu->cpuCond, &cpu->cpuMutex);
+				pthread_mutex_unlock(&cpu->cpuMutex);
+				break;
+
+			case Run:
+
+				/*
+				 * If there is something to process, then process it.
+				 * Otherwise, wait for something to get queued up.
+				 */
+				pthread_mutex_lock(&cpu->mBoxMutex);
+				if (AXP_21264_Mbox_WorkQueued(cpu) == false)
+					pthread_cond_wait(&cpu->mBoxCondition, &cpu->mBoxMutex);
+				AXP_21264_Mbox_Process_Q(cpu);
+				pthread_mutex_unlock(&cpu->mBoxMutex);
+				break;
+
+			case Sleep:
+
+				/*
+				 * Need to quiesce everything and put the world to sleep
+				 * waiting just for the wake-up signal.
+				 */
+				break;
+		}
 	}
-	pthread_mutex_unlock(&cpu->mBoxMutex);
 
 	/*
-	 * Return back to the caller (pthreads).
+	 * We are shutting down.  Since we started everything, we need to clean
+	 * ourself up.  The main function will be joining to all the threads it
+	 * created and then freeing up the memory and exiting the image.
+	 */
+	pthread_exit(NULL);
+
+	/*
+	 * Return back to the caller.  Because of the call to pthread_exit(), we'll
+	 * never get here.  We do this to keep the compiler happy.
 	 */
 	return;
 }

@@ -2212,7 +2212,7 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 			case Sleep:
 
 				/* 
-				 * Need to quiese everything and put the world to sleep waiting
+				 * Need to quiesce everything and put the world to sleep waiting
 				 * just for the wake-up signal.
 				 */
 				break;
@@ -2225,7 +2225,7 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 				 * all the threads it created and then freeing up the memory
 				 * and exiting the image.
 				 */
-				pthread_destroy(&cpu->cBoxThreadID);
+				pthread_exit(NULL);
 				break;
 		}
 	}
