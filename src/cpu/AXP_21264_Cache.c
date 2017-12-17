@@ -806,7 +806,7 @@ u64 AXP_va2pa(
 		*memChk = AXP_21264_checkMemoryAccess(cpu, tlb, acc);
 		if (*memChk != NoException)
 		{
-			/* TODO: The caller need to do this: cpu->excAddr = pc; */
+			/* TODO: The caller needs to do this: cpu->excAddr = pc; */
 			if (dtb == true)
 			{
 

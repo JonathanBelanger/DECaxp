@@ -1054,7 +1054,7 @@ void AXP_21264_Add_MAF(
 		AXP_21264_CPU *cpu,
 		AXP_CBOX_MAF_TYPE type,
 		u64 pa,
-		u8 lqSqEntry,
+		i8 lqSqEntry,
 		u8 *data,
 		int dataLen,
 		bool shared)
@@ -1405,7 +1405,7 @@ void AXP_21264_Process_IOWB(AXP_21264_CPU *cpu, int entry)
 void AXP_21264_Add_IOWB(
 				AXP_21264_CPU *cpu,
 				u64 pa,
-				u8 lqSqEntry,
+				i8 lqSqEntry,
 				u8 *data,
 				int dataLen)
 {
