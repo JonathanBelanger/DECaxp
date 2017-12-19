@@ -41,6 +41,10 @@
  *	Added code to anti-alias the possibility that a particular virtual/physical
  *	address pair could be in up to four possible locations.  We use the obvious
  *	address and just flush the other ones, if in use.
+ *
+ *	V01.004		18-Dec-2017	Jonathan D. Belanger
+ *	The code that stores data into the caches does not use the offset like they
+ *	should.  This needs to be fixed.
  */
 #include "AXP_21264_Cache.h"
 
@@ -854,6 +858,81 @@ u64 AXP_va2pa(
 /*
  * AXP_DcacheWrite
  * 	This function is called to add/update a cache entry into the Data Cache.
+ *
+ *	This function is called as a result of a request to the Cbox to perform a
+ *	Dcache fill.  In this case, the length is always 64 bytes and the address,
+ *	0xffffffffffffffc0.
+ *
+ *	Refer to Section 2.8.3 in the HRM for more information about processing
+ *	Memory Address Space Store Instructions from the Store Queue (SQ).
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
+ * 		Data Cache (dCache) array.
+ * 	va:
+ * 		The virtual address of the data in virtual memory.
+ * 	pa:
+ * 		The physical address, as stored in the DTB (Data TLB).
+ *	len:
+ *		A value indicating the length of the input parameter 'data'.  This
+ *		parameter must be one of the following values (assumed signed):
+ *			 1	= byte
+ *			 2	= word
+ *			 4	= longword
+ *			 8	= quadword
+ *			64	= 64 bytes of data being copied from memory to the Dcache
+ * 	data:
+ * 		A pointer to the data to be stored in the Dcache, whose length is is
+ *		specified by the 'len' parameter.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ *	NoException	= Normal Successful Completion
+ *	Unaligned	= Unaligned memory reference
+ */
+AXP_EXCEPTIONS AXP_DcacheWrite(
+					AXP_21264_CPU *cpu,
+					u64 va,
+					u64 pa,
+					u32 len,
+					void *data)
+{
+	AXP_EXCEPTIONS	retVal = NoException;
+
+	switch (len)
+	{
+		case 1:
+			break;
+
+		case 2:
+			if ((va & 0xfffffffffffffffe) != va)
+				retVal = Unaligned;
+			break;
+
+		case 4:
+			if ((va & 0xfffffffffffffffc) != va)
+				retVal = Unaligned;
+			break;
+
+		case 8:
+			if ((va & 0xfffffffffffffff8) != va)
+				retVal = Unaligned;
+			break;
+
+		case 64:
+			if ((va & 0xffffffffffffffc0) != va)
+				retVal = Unaligned;
+			break;
+	}
+	return(retVal);
+}
+
+/*
+ * AXP_DcacheWrite
+ * 	This function is called to add/update a cache entry into the Data Cache.
  * 	If the entry is already there, or in one of the four possible other
  * 	locations, then there is nothing to do.
  *
@@ -895,7 +974,7 @@ u64 AXP_va2pa(
  * 	false:	Entry not found.
  * 	true:	Found the entry requested.
  */
-bool AXP_DcacheWrite(
+bool AXP_DcacheWriteOLD(
 			AXP_21264_CPU *cpu,
 			u64 va,
 			u64 pa,
@@ -917,6 +996,7 @@ bool AXP_DcacheWrite(
 						  (AXP_DCACHE_DATA_LEN - 1);
 	u32 		setToUse;
 	u32			found = AXP_CACHE_ENTRIES;
+	u32			offset = virtAddr.vaIdx.offset;
 	u32			ii, jj, kk;
 	u32			sets;
 	u32			ctagIndex;
@@ -1147,19 +1227,19 @@ bool AXP_DcacheWrite(
 		switch (len)
 		{
 			case 1:
-				*((u8 *) cpu->dCache[found][setToUse].data) = *src8;
+				*((u8 *) &cpu->dCache[found][setToUse].data[offset]) = *src8;
 				break;
 
 			case 2:
-				*((u16 *) cpu->dCache[found][setToUse].data) = *src16;
+				*((u16 *) &cpu->dCache[found][setToUse].data[offset]) = *src16;
 				break;
 
 			case 4:
-				*((u32 *) cpu->dCache[found][setToUse].data) = *src32;
+				*((u32 *) &cpu->dCache[found][setToUse].data[offset]) = *src32;
 				break;
 
 			case 8:
-				*((u64 *) cpu->dCache[found][setToUse].data) = *src64;
+				*((u64 *) &cpu->dCache[found][setToUse].data[offset]) = *src64;
 				break;
 
 			default:	/* for 64 bytes and any of the possible sub-lengths */
@@ -1353,6 +1433,7 @@ bool AXP_DcacheRead(
 	u8					*dest8 = (u8 *) data;
 	i32					lenOver = ((va % AXP_DCACHE_DATA_LEN) + len - 1) -
 						  	  	   (AXP_DCACHE_DATA_LEN - 1);
+	u32					offset = virtAddr.vaIdx.offset;
 	u32					ii;
 	u32					sets;
 
@@ -1463,23 +1544,23 @@ bool AXP_DcacheRead(
 		switch (len)
 		{
 			case 1:
-				*dest8 = *((u8 *) cpu->dCache[index][set].data);
+				*dest8 = *((u8 *) &cpu->dCache[index][set].data[offset]);
 				break;
 
 			case 2:
-				*dest16 = *((u16 *) cpu->dCache[index][set].data);
+				*dest16 = *((u16 *) &cpu->dCache[index][set].data[offset]);
 				break;
 
 			case 4:
-				*dest32 = *((u32 *) cpu->dCache[index][set].data);
+				*dest32 = *((u32 *) &cpu->dCache[index][set].data[offset]);
 				break;
 
 			case 8:
-				*dest64 = *((u64 *) cpu->dCache[index][set].data);
+				*dest64 = *((u64 *) &cpu->dCache[index][set].data[offset]);
 				break;
 
 			default:
-				memcpy(dest8, cpu->dCache[index][set].data, len);
+				memcpy(dest8, &cpu->dCache[index][set].data[offset], len);
 				break;
 		}
 	}
