@@ -147,8 +147,7 @@ typedef enum
 {
 	Invalid,				/* Initial State */
 	Pending,				/* Waiting to be filled */
-	Writeable,				/* Block is writable */
-	Readable				/* Block is readable */
+	Ready					/* Block is ready */
 } AXP_21264_CACHE_ST;
 
 /*
@@ -156,41 +155,10 @@ typedef enum
  * the following:
  *
  *		64 data bytes
- *		Physical tag bits
- *		Valid, dirty, shared, and modified bits
- *		One bit to control round-robin set allocation (one bit per two cache
- *		blocks)
- *
- *	NOTE:	This is what the individual bits represent:
- *
- *				valid:		The cache block is in use and contains valid cache
- *							data.
- *				dirty:		The cache block has been written to/updated and
- *							needs to be written back to memory upon eviction.
- *							A valid block without the 'dirty' bit set is 'clean'.
- *				shared:		The cache block can be found in more than one
- *							system component (such as another CPU)
- *				modified:	The cache block has just been retrieved from memory
- *							and needs to be written out to the Bcache upon
- *							eviction.
- *				set_0_1:	Is used to determine if the cache block should be
- *							stored in set 0 or set 1 in a round-robin fashion.
- *				locked:		Is used when a store operation that is writable is
- *							pending until the store instruction that issued it
- *							retires.  This restriction assists in STx_C
- *							instruction.
  */
 typedef struct
 {
 	u8					data[AXP_DCACHE_DATA_LEN];
-	u64					physTag;
-	bool				valid;
-	bool				dirty;
-	bool				shared;
-	bool				modified;
-	bool				set_0_1;
-	bool				locked;
-	AXP_21264_CACHE_ST	state;
 } AXP_DCACHE_BLK;
 
 /*
@@ -285,6 +253,7 @@ typedef struct
  *	4.	MB: Based on the Cbox CSR SYSBUS_MB_ENABLE, the MB command can be sent
  *		to the pins.
  */
+#define AXP_21264_CACHE_MISS	0x00
 #define AXP_21264_CACHE_HIT		0x01
 #define AXP_21264_CACHE_DIRTY	0x02
 #define AXP_21264_CACHE_SHARED	0x04
@@ -295,15 +264,44 @@ typedef struct
  *
  *		Physical tag bits
  *		Index into corresponding CTAG array
- *		Valid bit
- *			The DTAG array entry is in use.
+ *		Valid, dirty, shared, and modified bits
+ *		One bit to control round-robin set allocation (one bit per two cache
+ *		blocks)
+ *
+ *	NOTE:	This is what the individual bits represent:
+ *
+ *				valid:		The cache block is in use and contains valid cache
+ *							data.
+ *				dirty:		The cache block has been written to/updated and
+ *							needs to be written back to memory upon eviction.
+ *							A valid block without the 'dirty' bit set is 'clean'.
+ *				shared:		The cache block can be found in more than one
+ *							system component (such as another CPU)
+ *				modified:	The cache block has just been retrieved from memory
+ *							and needs to be written out to the Bcache upon
+ *							eviction.
+ *				set_0_1:	Is used to determine if the cache block should be
+ *							stored in set 0 or set 1 in a round-robin fashion.
+ *				locked:		Is used when a store operation that is writable is
+ *							pending until the store instruction that issued it
+ *							retires.  This restriction assists in STx_C
+ *							instruction.
+ *
+ *	NOTE:	To simplify the cache functionality, the status and bits above have
+ *			been moved from the DCACHE structure above.
  */
 typedef struct
 {
 	u64					physTag;
 	u32					ctagIndex;
 	u32					ctagSet;
+	AXP_21264_CACHE_ST	state;
 	bool				valid;
+	bool				dirty;
+	bool				shared;
+	bool				modified;
+	bool				set_0_1;
+	bool				locked;
 } AXP_DTAG_BLK;
 
 #define AXP_ICACHE_LINE_INS		16
@@ -380,6 +378,19 @@ typedef struct
 	u64			index : 9;			/* Cache index */
 	u64			res : 49;
 } AXP_CACHE_IDX;
+
+/*
+ * The following definition is used with the Dcache when checking the status of
+ * a particular VA/PA.  Since we do the search for the status check, we might
+ * as well save this information and have it passed on the AXP_DchacheWrite and
+ * AXP_DcacheRead functions.
+ */
+typedef struct
+{
+	u8			set;		/* set 0 or 1 */
+	u8			offset;		/* offset within 64 bytes */
+	u16			index;		/* index into Dcache array */
+} AXP_DCACHE_LOC;
 
 
 /*
