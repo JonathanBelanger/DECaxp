@@ -45,6 +45,9 @@
  *	V01.004		18-Dec-2017	Jonathan D. Belanger
  *	The code that stores data into the caches does not use the offset like they
  *	should.  This needs to be fixed.
+ *
+ *	V01.005		20-Dec-2017	Jonathan D. Belanger
+ *	The Dcache code needs to be changed and simplified.
  */
 #include "AXP_21264_Cache.h"
 
@@ -856,6 +859,184 @@ u64 AXP_va2pa(
 /****************************************************************************/
 
 /*
+ * AXP_Dcache_Status
+ *	This function is called to determine the status of the Dcache block
+ *	associated with a particular Virtual Address (VA) and Physical Address (PA)
+ *	pair.  If a hit is detected, then information will be returned to the
+ *	caller to be used in a subsequent Dcache Read/Write so that we do not have
+ *	to search of the entry again.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the AXP 21264 CPU structure containing the current
+ *		execution mode and the DTB (for Data) and ITB (for Instructions)
+ *		arrays.
+ * 	va:
+ * 		The virtual address of the data in virtual memory.
+ * 	pa:
+ * 		The physical address, as stored in the DTB (Data TLB).
+ *	len:
+ *		A value indicating the length of the data to be stored/read from the
+ *		Dcache.  This parameter must be one of the following values
+ *		(assumed unsigned):
+ *			 1	= byte
+ *			 2	= word
+ *			 4	= longword
+ *			 8	= quadword
+ *			64	= 64 bytes of data being copied from memory to the Dcache
+ *	disableUnaligned:
+ *		A boolean to disable reporting unalign data faults.  This is to support
+ *		the STQ_U and HW_ST instructions.
+ *
+ * Output Parameters:
+ *	indexSetOffset:
+ *		A lcoation receive the index, set, and offet for the cache block to be
+ *		used by the AXP_DcacheWrite and AXP_DcacheRead functions.
+ *	status:
+ *		An unsigned 32-bit location to receive a masked value with the
+ *		following bits set as appropriate:
+ *			AXP_21264_CACHE_HIT
+ *			AXP_21264_CACHE_DIRTY
+ *			AXP_21264_CACHE_SHARED
+ *
+ * Return Value:
+ *	NoException	= Normal Successful Completion
+ *	Unaligned	= Unaligned memory reference
+ *
+ * NOTE:	This function should be called without the Mbox IPR mutex locked.
+ *			It'll temporarily lock the Mbox IPR mutex to retrieve the number
+ *			of sets in use and then unlock it.  Then it'll lock the DTAG
+ *			mutex, as the Dcache Mutex is not required, to find the entry in
+ *			the Dcache/DTAG to be tested, if found, and then unlock the DTAG
+ *			mutex.
+ */
+AXP_EXCEPTIONS AXP_Dcache_Status(
+						AXP_21264_CPU *cpu,
+						u64 va,
+						u64 pa,
+						u32 len,
+						bool disableUnaligned,
+						u32 *status,
+						u32 *indexSetOffset)
+{
+	AXP_VA			virtAddr = {.va = va};
+	AXP_VA			physAddr = {.va = pa};
+	AXP_EXCEPTIONS	retVal = NoException;
+	u64				tag = physAddr.vaIdxInfo.tag;
+	u32				index = virtAddr.vaIdx.index & 0x07f;
+	u32				set = 0;
+	u32				activeSets;
+	u32				offset = virtAddr.vaIdx.offset;
+	u32				ii, jj;
+
+	/*
+	 * Before we do anything, let's determine if the virtual address for the
+	 * data size is not properly aligned.  We don't do this for to of the store
+	 * instructions where they are indended to work on unaligned data.
+	 */
+	if (disableUnaligned == false)
+	{
+		switch (len)
+		{
+			case 1:
+				break;
+
+			case 2:
+				if ((va & 0xfffffffffffffffe) != va)
+					retVal = DataAlignmentTrap;
+				break;
+
+			case 4:
+				if ((va & 0xfffffffffffffffc) != va)
+					retVal = DataAlignmentTrap;
+				break;
+
+			case 8:
+				if ((va & 0xfffffffffffffff8) != va)
+					retVal = DataAlignmentTrap;
+				break;
+
+			case 64:
+				if ((va & 0xffffffffffffffc0) != va)
+					retVal = DataAlignmentTrap;
+				break;
+		}
+	}
+
+	/*
+	 * If not exc eption was detected, then let's go see if we can find the
+	 * entry in the Dcache for the specific VA/PA.
+	 */
+	if (retVal == NoException)
+	{
+
+		/*
+		 * Before we go too far, initialize the return values to "nothing".
+		 */
+		*indexSetOffset = 0;
+		*status = 0;
+
+		/*
+		 * Get the number of Dcache sets currently in play.  It is either 1 or
+		 * 2.  Don't forget to lock/unlock the Mbox IPR mutex around this, so
+		 * that it is not changed while we are looking at it.
+		 */
+		pthread_mutex_lock(&cpu->mBoxIPRMutex);
+		activeSets = (cpu->dcCtl.set_en == 1) ? 1 : 2;
+		pthread_mutex_unlock(&cpu->mBoxIPRMutex);
+
+		/*
+		 * Make sure we lock the DTAG mutex before we do anything else.  We
+		 * don't want to be interrupted while we are doing this work.
+		 */
+		pthread_mutex_lock(&cpu->dtagMutex);
+
+		/*
+		 * Because the number of Dcache entries is large enough that the index
+		 * shares 2 bits from the VPN, it is possible that a particualr
+		 * physical address may be in anyone of 4 locations.  Therefore, we
+		 * need to find the first location that actually contains the item for
+		 * which we are looking.  Since it is the high 2 bits, of a 9 bit value,
+		 * we just scroll through the setting of these 2 bits (note: the 2 bits
+		 * in question were cleared above, so that the code below is simpler).
+		 */
+		for (ii = index; ((ii < index + 0x180) & (*status == 0)); ii += 0x080)
+		{
+
+			/*
+			 * 
+			 */
+			for (jj = 0; ((jj < activeSets) & (*status == 0)); jj++)
+			{
+				if ((cpu->dtag[ii][jj].valid == true) &&
+					(cpu->dtag[ii][jj].tag == tag))
+				{
+					*status = AXP_21264_CACHE_HIT;
+					if (cpu->dtag[ii][jj].dirty == true)
+						*status |= AXP_21264_CACHE_DIRTY;
+					if (cpu->dtag[ii][jj].shared == true)
+						*status |= AXP_21264_CACHE_SHARED;
+					indexSetOffset.index = ii;
+					indexSetOffset.set = jj;
+					indexSetOffset.offset = offset;
+				}
+			}
+		}
+
+		/*
+		 * Last theing we need to do is unlock the DTAG mutex so other
+		 * accessors (Cbox) can to it's thing.
+		 */
+		pthread_mutex_unlock(&cpu->dtagMutex);
+	}
+
+	/*
+	 * Return what we found from checking out the Dcache.
+	 */
+	return(retVal);
+}
+
+/*
  * AXP_DcacheWrite
  * 	This function is called to add/update a cache entry into the Data Cache.
  *
@@ -886,6 +1067,10 @@ u64 AXP_va2pa(
  * 		A pointer to the data to be stored in the Dcache, whose length is is
  *		specified by the 'len' parameter.
  *
+ *	disableUnaligned:
+ *		A boolean to disable reporting unalign data faults.  This is to support
+ *		the STQ_U and HW_ST instructions.
+ *
  * Output Parameters:
  * 	None.
  *
@@ -898,35 +1083,93 @@ AXP_EXCEPTIONS AXP_DcacheWrite(
 					u64 va,
 					u64 pa,
 					u32 len,
-					void *data)
+					void *data,
+					bool disableUnaligned)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
 
-	switch (len)
+	/*
+	 * Before we do anything, let's determine if the virtual address for the
+	 * data size is not properly aligned.  We don't do this for to of the store
+	 * instructions where they are indended to work on unaligned data.
+	 */
+	if (disableUnaligned == false)
 	{
-		case 1:
-			break;
+		switch (len)
+		{
+			case 1:
+				break;
 
-		case 2:
-			if ((va & 0xfffffffffffffffe) != va)
-				retVal = Unaligned;
-			break;
+			case 2:
+				if ((va & 0xfffffffffffffffe) != va)
+					retVal = DataAlignmentTrap;
+				break;
 
-		case 4:
-			if ((va & 0xfffffffffffffffc) != va)
-				retVal = Unaligned;
-			break;
+			case 4:
+				if ((va & 0xfffffffffffffffc) != va)
+					retVal = DataAlignmentTrap;
+				break;
 
-		case 8:
-			if ((va & 0xfffffffffffffff8) != va)
-				retVal = Unaligned;
-			break;
+			case 8:
+				if ((va & 0xfffffffffffffff8) != va)
+					retVal = DataAlignmentTrap;
+				break;
 
-		case 64:
-			if ((va & 0xffffffffffffffc0) != va)
-				retVal = Unaligned;
-			break;
+			case 64:
+				if ((va & 0xffffffffffffffc0) != va)
+					retVal = DataAlignmentTrap;
+				break;
+		}
 	}
+
+	/*
+	 * If no data alignment exception occurred, then we need to continue to
+	 * locate where to store the data in the Dcache, updating the DTAG, as
+	 * necessary.
+	 */
+	if (retVal == NoException)
+	{
+		AXP_VA		virtAddr = {.va = va};
+		AXP_VA		physAddr = {.va = pa};
+
+		/*
+		 * At this point we are going to make a few of assumptions.  They are:
+		 *
+		 *		1) Any alignment fault has been detected and we will not be in
+		 *		   this section of code.
+		 *		2) The data to be stored in the Dcache line/set does not cross
+		 *		   to another line/set (is contained withing a single
+		 *		   line/set).
+		 *		3) We really don't care that the store is unaligned, the code
+		 *		   behaves exactly the same way, aligned or unaligned.
+		 *
+		 * First things first, get the tag (physical), index (virtual), set
+		 * (determined from the DTAG location), offset (virtual).  Already done
+		 * in the variable declaration above.
+		 *
+		 * Make sure we lock the DTAG mutex before we do anything else.  We
+		 * don't want to be interrupted while we are doing this work.
+		 */
+		pthread_mutex_lock(&cpu->dtagMutex);
+
+		/*
+		 * Because the number of Dcache entries is large enough that the index
+		 * shares 2 bits from the VPN, it is possible that a particualr
+		 * physical address may be in anyone of 4 locations.  Therefore, we
+		 * need to find the first location that actually contains the item for
+		 * which we are looking.
+		 */
+
+		/*
+		 * Last theing we need to do is unlock the DTAG mutex so other
+		 * accessors (Cbox) can to it's thing.
+		 */
+		pthread_mutex_unlock(&cpu->dtagMutex);
+	}
+
+	/*
+	 * Return the result back to the caller.
+	 */
 	return(retVal);
 }
 
