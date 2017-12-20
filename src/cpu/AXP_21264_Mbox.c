@@ -26,6 +26,12 @@
  *
  *	V01.001		16-Dec-2017	Jonathan D. Belanger
  *	Updating extensively with threading, processing, and interfacing functions.
+ *
+ *	V01.002		20-Dec-2017	Jonathan D. Belanger
+ *	The Mbox is effectively done.  The interfaces to the Ibox, Cbox, and Cache
+ *	have all be written.  there is one 'TO-DO' item that will need to be
+ *	resolved round whether the Cbox completing a IOWB versus a Dcache Fill
+ *	needs to be handled differently.
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Mbox.h"
@@ -387,6 +393,9 @@ void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *cpu,
  *	entry:
  *		The value of the signed index+1 into the LQ/SQ.  A value < 0 is for the
  *		SQ, otherwise the LQ.
+ *	data:
+ *		A pointer to the data that needs to be written to the Dcache.  The
+ *		length of this data is always 64 bytes.
  *
  * Output Parameters:
  *	lqEntry/sqEntry:
@@ -396,10 +405,13 @@ void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *cpu,
  * Return Value:
  *	None.
  *
- * NOTE: When we are called, the Mbox mutex is NOT locked.  We need to lock it
- * before we do anything, and unlock it when we are done.
+ * NOTE:	When we are called, the Mbox mutex is NOT locked.  We need to lock
+ *			it before we do anything, and unlock it when we are done.
+ *			TODO:	Do we need to differentiate between a Dcache fill and a
+ *					IOWB completion.
+ *
  */
-void AXP_21264_Mbox_CboxCompl(AXP_21264_CPU *cpu, i8 lqSqEntry)
+void AXP_21264_Mbox_CboxCompl(AXP_21264_CPU *cpu, i8 lqSqEntry, u8 *data)
 {
 	bool			signalCond = false;
 	u8				entry = abs(lqSqEntry) - 1;
@@ -418,9 +430,14 @@ void AXP_21264_Mbox_CboxCompl(AXP_21264_CPU *cpu, i8 lqSqEntry)
 	 * 			We did this because there is no such thing as -0, which is a
 	 * 			legitimate value.
 	 */
-	if (lqSqEntry >= 0)
+	if (lqSqEntry <= 0)
 	{
 		AXP_MBOX_QUEUE	*sqEntry = &cpu->sq[entry];
+
+		/*
+		 * Write the buffer into the Dcache.
+		 */
+		AXP_DcacheWrite(cpu, sqEntry->dcacheLoc, AXP_DCACHE_DATA_LEN, data);
 
 		/*
 		 * We need to signal the Mbox if the entry was in a pending Cbox state.
@@ -839,6 +856,7 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 {
 	AXP_MBOX_QUEUE		*sqEntry = &cpu->sq[entry];
 	AXP_CBOX_MAF_TYPE	type;
+	AXP_EXCEPTIONS		exception;
 	u8					cacheStatus;
 	bool				DcHit = false;
 	bool				DcW = false;
@@ -847,105 +865,98 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 	/*
 	 * First, get the status for the Dcache for the current VA/PA pair.
 	 */
-	cacheStatus = AXP_Dcache_Status(
+	exception = AXP_Dcache_Status(
 						cpu,
 						sqEntry->virtAddress,
-						sqEntry->physAddress);
+						sqEntry->physAddress,
+						sqEntry->len,
+						((sqEntry->instr->opcode == STQ_U) ||
+						 (sqEntry->instr->opcode == HW_ST)),
+						&cacheStatus,
+						&sqEntry->dcacheLoc,
+						false);
 
 	/*
-	 * If we did not hit in the Dcache, go see if the information is in the
-	 * Bcache.
+	 * If not exception was returned from the Dcache status call, then let's
+	 * try to determine what we need to do next.
 	 */
-	if ((cacheStatus & AXP_21264_CACHE_HIT) != AXP_21264_CACHE_HIT)
+	if (exception == NoException)
 	{
 
 		/*
-		 * Get the status for the Bcache for the current PA.
+		 * If we did not hit in the Dcache, go see if the information is in the
+		 * Bcache.
 		 */
-		cacheStatus = AXP_21264_Bcache_Status(
-								cpu,
-								sqEntry->physAddress);
-
-		/*
-		 * Hit in the Bcache, move the data to the Dcache, which may
-		 * require evicting the current entry.
-		 */
-		if ((cacheStatus & AXP_21264_CACHE_HIT) == AXP_21264_CACHE_HIT)
+		if ((cacheStatus & AXP_21264_CACHE_HIT) != AXP_21264_CACHE_HIT)
 		{
 
 			/*
-			 * We found what we were looking for in the Bcache.  We may
-			 * need to evict the current block (possibly the same index and
-			 * set, but not the same physical tag).
+			 * Because we may make 2 calls to check the Bcache and then to
+			 * copy a block from it, we need to lock the Bcache mutex, because
+			 * we don't want the Cbox to change anything between calls.
 			 */
-			AXP_21264_CopyBcacheToDcache(
-									cpu,
-									sqEntry->virtAddress,
-									sqEntry->physAddress);
-			DcHit = true;
+			pthread_mutex_lock(&cpu->bCacheMutex);
 
 			/*
-			 * If the cache status is Dirty and Not Shared, then it is
-			 * writable.
+			 * Get the status for the Bcache for the current PA.
 			 */
+			cacheStatus = AXP_21264_Bcache_Status(
+									cpu,
+									sqEntry->physAddress);
+
+			/*
+			 * Hit in the Bcache, move the data to the Dcache, which may
+			 * require evicting the current entry.
+			 */
+			if ((cacheStatus & AXP_21264_CACHE_HIT) == AXP_21264_CACHE_HIT)
+			{
+
+				/*
+				 * We found what we were looking for in the Bcache.  We may
+				 * need to evict the current block (possibly the same index and
+				 * set, but not the same physical tag).
+				 */
+				AXP_CopyBcacheToDcache(
+								cpu,
+								&sqEntry->dcacheLoc,
+								sqEntry->physAddress);
+				DcHit = true;
+
+				/*
+				 * If the cache status is Dirty and Not Shared, then it is
+				 * writable.
+				 */
+				if (((cacheStatus & AXP_21264_CACHE_DIRTY) == AXP_21264_CACHE_DIRTY) ||
+					((cacheStatus & AXP_21264_CACHE_SHARED) != AXP_21264_CACHE_SHARED))
+					DcW = true;
+			}
+
+			/*
+			 * Unlock the Bcache mutex, as we no longer need it.
+			 */
+			pthread_mutex_unlock(&cpu->bCacheMutex);
+		}
+		else
+		{
+			DcHit = true;
 			if (((cacheStatus & AXP_21264_CACHE_DIRTY) == AXP_21264_CACHE_DIRTY) ||
 				((cacheStatus & AXP_21264_CACHE_SHARED) != AXP_21264_CACHE_SHARED))
 				DcW = true;
 		}
 
-	}
-	else
-	{
-		DcHit = true;
-		if (((cacheStatus & AXP_21264_CACHE_DIRTY) == AXP_21264_CACHE_DIRTY) ||
-			((cacheStatus & AXP_21264_CACHE_SHARED) != AXP_21264_CACHE_SHARED))
-			DcW = true;
-	}
-
-	/*
-	 * OK, we can finally determine what may need to happen next.  First, if we
-	 * did hit in either cache, then we need to go get the block from memory.
-	 */
-	shared = ((cacheStatus & AXP_21264_CACHE_SHARED) == AXP_21264_CACHE_SHARED);
-	if (DcHit == false)
-	{
-		sqEntry->state = CboxPending;
-		if ((sqEntry->instr->opcode == STL_C) ||
-			(sqEntry->instr->opcode == STQ_C))
-			type = STx_C;
-		else
-			type = STx;
-
-		AXP_21264_Add_MAF(
-			cpu,
-			type,
-			sqEntry->physAddress,
-			-(entry + 1),	/* We need to take zero out of play */
-			sqEntry->value,
-			sqEntry->len,
-			shared);
-	}
-
-	/*
-	 * We hit the cache.  Depending upon the state, we either need to make it
-	 * writable or we are done.
-	 */
-	else
-	{
-		AXP_Dcache_Lock(cpu, sqEntry->virtAddress, sqEntry->physAddress);
-
 		/*
-		 * If the block is not writable, then we need to request the block be
-		 * changed to dirty and not shared (writable).
+		 * OK, we can finally determine what may need to happen next.  First, if we
+		 * did hit in either cache, then we need to go get the block from memory.
 		 */
-		if (DcW ==false)
+		shared = ((cacheStatus & AXP_21264_CACHE_SHARED) == AXP_21264_CACHE_SHARED);
+		if (DcHit == false)
 		{
 			sqEntry->state = CboxPending;
 			if ((sqEntry->instr->opcode == STL_C) ||
 				(sqEntry->instr->opcode == STQ_C))
-				type = STxCChangeToDirty;
+				type = STx_C;
 			else
-				type = STxChangeToDirty;
+				type = STx;
 
 			AXP_21264_Add_MAF(
 				cpu,
@@ -958,11 +969,63 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 		}
 
 		/*
-		 * We hit in the cache and the block is writable.  Therefore, we are
-		 * done here.
+		 * We hit the cache.  Depending upon the state, we either need to make it
+		 * writable or we are done.
 		 */
 		else
-			sqEntry->state = SQComplete;
+		{
+			AXP_Dcache_Lock(cpu, sqEntry->virtAddress, sqEntry->physAddress);
+
+			/*
+			 * If the block is not writable, then we need to request the block be
+			 * changed to dirty and not shared (writable).
+			 */
+			if (DcW ==false)
+			{
+				sqEntry->state = CboxPending;
+				if ((sqEntry->instr->opcode == STL_C) ||
+					(sqEntry->instr->opcode == STQ_C))
+					type = STxCChangeToDirty;
+				else
+					type = STxChangeToDirty;
+
+				AXP_21264_Add_MAF(
+					cpu,
+					type,
+					sqEntry->physAddress,
+					-(entry + 1),	/* We need to take zero out of play */
+					sqEntry->value,
+					sqEntry->len,
+					shared);
+			}
+
+			/*
+			 * We hit in the cache and the block is writable.  Therefore, we are
+			 * done here.
+			 */
+			else
+				sqEntry->state = SQComplete;
+		}
+	}
+	else
+	{
+
+		/*
+		 * The only exception we can get from the call to check the Dcache is
+		 * an alignment fault.  If we did, then we need to generate the correct
+		 * event for the Ibox to process (into the PALcode).  Also, there
+		 * is no more processing associated with this store instruction.
+		 */
+		AXP_21264_Ibox_Event(
+					cpu,
+					AXP_UNALIGNED,
+					sqEntry->instr->pc,
+					sqEntry->virtAddress,
+					sqEntry->instr->opcode,
+					sqEntry->instr->aSrc1,
+					true,
+					false);
+		sqEntry->state = SQComplete;
 	}
 
 	/*
@@ -1226,9 +1289,44 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 					cpu,
 					cpu->sq[ii].instr,
 					cpu->sq[ii].exception);
-			AXP_21264_Mbox_PutSQSlot(cpu, ii);
 		}
 	}
+	return;
+}
+
+/*
+ * AXP_21264_Mbox_RetireWrite
+ *	This function is called by the Ibox when retiring the associated Store.
+ *	We do this like a 2-phase commit.  The Mbox prepares the write for
+ *	retirement and informs the Ibox.  When the Ibox goes to retire the
+ *	instruction, it calls this function to commit the actual write into the
+ *	Dcache.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ *	slot:
+ *		A value indicating the assigned Store Queue (SQ) where this write entry
+ *		has to be stored.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Values:
+ * 	None.
+ *
+ * NOTE:	The Ibox calls this function with no Mbox mutexes locked.  Also,
+ *			this call does not result in a signal to the Mbox.
+ */
+void AXP_21264_Mbox_RetireWrite(AXP_21264_CPU *cpu, u8 slot)
+{
+	AXP_DcacheWrite(
+				cpu,
+				cpu->sq[slot].dcacheLoc,
+				cpu->sq[slot].len,
+				&cpu->sq[slot].value);
+	AXP_21264_Mbox_PutSQSlot(cpu, slot);
 	return;
 }
 
@@ -1302,24 +1400,17 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
 		{
 			memset(cpu->dCache[ii][jj].data, 0, AXP_DCACHE_DATA_LEN);
-			cpu->dCache[ii][jj].physTag = 0;
-			cpu->dCache[ii][jj].valid = false;
-			cpu->dCache[ii][jj].dirty = false;
-			cpu->dCache[ii][jj].shared = false;
-			cpu->dCache[ii][jj].modified = false;
-			cpu->dCache[ii][jj].set_0_1 = false;;
-			cpu->dCache[ii][jj].locked = false;;
-			cpu->dCache[ii][jj].state = Invalid;
-		}
-	}
-	for (ii = 1; ii < AXP_CACHE_ENTRIES; ii++)
-	{
-		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
-		{
 			cpu->dtag[ii][jj].physTag = 0;
 			cpu->dtag[ii][jj].ctagIndex = AXP_CACHE_ENTRIES;
 			cpu->dtag[ii][jj].ctagSet = AXP_2_WAY_CACHE;
+			cpu->dtag[ii][jj].physTag = 0;
 			cpu->dtag[ii][jj].valid = false;
+			cpu->dtag[ii][jj].dirty = false;
+			cpu->dtag[ii][jj].shared = false;
+			cpu->dtag[ii][jj].modified = false;
+			cpu->dtag[ii][jj].set_0_1 = false;;
+			cpu->dtag[ii][jj].locked = false;;
+			cpu->dtag[ii][jj].state = Invalid;
 		}
 	}
 
@@ -1369,8 +1460,6 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	for (ii = 0; ii < AXP_21264_MAF_LEN; ii++)
 	{
 		cpu->maf[ii].type = MAFNotInUse;
-		cpu->maf[ii].rq = NOPcmd;
-		cpu->maf[ii].rsp = NOPsysdc;
 		cpu->maf[ii].pa = 0;
 		cpu->maf[ii].complete = false;
 	}

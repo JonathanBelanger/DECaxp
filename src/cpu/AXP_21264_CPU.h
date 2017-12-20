@@ -608,6 +608,7 @@ typedef struct
 	/*
 	 * Bcache data structures.
 	 */
+	pthread_mutex_t			bCacheMutex;
 	AXP_21264_BCACHE_BLK	*bCache;	/* An array of 64-byte blocks		*/
 	AXP_21264_BCACHE_TAG	*bTag;		/* An array of tags for the Bcache	*/
 

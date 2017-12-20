@@ -38,7 +38,7 @@ typedef enum
 	LQReadPending,
 	SQWritePending,
 	LQComplete,
-	SQComplete,
+	SQComplete
 } AXP_MBOX_QUEUE_STATE;
 
 typedef struct
@@ -49,6 +49,7 @@ typedef struct
 	AXP_INSTRUCTION			*instr;
 	AXP_EXCEPTIONS			exception;
 	AXP_MBOX_QUEUE_STATE	state;
+	AXP_DCACHE_LOC			dcacheLoc;
 	u8						len;
 	bool					lockCond;
 	bool					IOflag;

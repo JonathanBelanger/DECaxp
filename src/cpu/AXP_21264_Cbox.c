@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) Jonathan D. Belanger 2017.
  * All Rights Reserved.
@@ -792,6 +793,55 @@ bool AXP_21264_Bcache_Valid(AXP_21264_CPU *cpu, u64 pa)
 }
 
 /*
+ * AXP_21264_Bcache_Status
+ * 	This function is called to return the status of a Bcache entry (if valid).
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure where the Bcache is stored.
+ *	pa:
+ *		A value containing the physical address to be checked for validity.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Values:
+ *	An unsigned 32-bit location to receive a masked value with the following
+ *	bits set as appropriate:
+ *			AXP_21264_CACHE_MISS
+ *			AXP_21264_CACHE_HIT
+ *			AXP_21264_CACHE_DIRTY
+ *			AXP_21264_CACHE_SHARED
+ *
+ * NOTE:	This is called from the Mbox, which already locked bCache mutex.
+ */
+u32 AXP_21264_Bcache_Status(AXP_21264_CPU *cpu, u64 pa)
+{
+	u8		retVal = AXP_21264_CACHE_MISS;
+	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+
+	/*
+	 * If there is no valid record, then this is a MISS.  Nothing else we need
+	 * to do.
+	 */
+	if (valid == true)
+	{
+		u32 index = AXP_BCACHE_INDEX(cpu, pa);
+
+		/*
+		 * Set the return value based on the fact that we hit in the Bcache and
+		 * the status bits associated with that entry.
+		 */
+		retVal = AXP_21264_CACHE_HIT;
+		if (cpu->bTag[index].dirty == true)
+			retVal |= AXP_21264_CACHE_DIRTY;
+		if (cpu->bTag[index].shared == true)
+			retVal |= AXP_21264_CACHE_SHARED;
+	}
+	return(retVal);
+}
+
+/*
  * AXP_21264_Bcache_Read
  *	This function is called to read the contents of a Bcache location and
  *	return them to the caller.
@@ -811,7 +861,12 @@ bool AXP_21264_Bcache_Valid(AXP_21264_CPU *cpu, u64 pa)
  *	false:	The physical address is not in the Bcache.
  *	true:	The physical address is in the Bcache.
  */
-bool AXP_21264_Bcache_Read(AXP_21264_CPU *cpu, u64 pa, u8 *data)
+bool AXP_21264_Bcache_Read(
+				AXP_21264_CPU *cpu,
+				u64 pa,
+				u8 *data,
+				bool *dirty,
+				bool *shared)
 {
 	bool	retVal = AXP_21264_Bcache_Valid(cpu, pa);
 
@@ -821,10 +876,23 @@ bool AXP_21264_Bcache_Read(AXP_21264_CPU *cpu, u64 pa, u8 *data)
 	 */
 	if (retVal == true)
 	{
+		u32 index = AXP_BCACHE_INDEX(cpu, pa);
+
+		/*
+		 * Copy the data.
+		 */
 		memcpy(
 			data,
-			cpu->bCache[AXP_BCACHE_INDEX(cpu, pa)],
+			cpu->bCache[index],
 			AXP_BCACHE_BLOCK_SIZE);
+
+		/*
+		 * If requested, return the dirty and shared bits.
+		 */
+		if (dirty != NULL)
+			*dirty = cpu->bTag[index].dirty;
+		if (shared != NULL)
+			*shared = cpu->bTag[index].shared;
 	}
 
 	/*

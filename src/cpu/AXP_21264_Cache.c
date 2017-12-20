@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) Jonathan D. Belanger 2017.
  * All Rights Reserved.
@@ -463,8 +464,8 @@ void AXP_tbis(AXP_21264_CPU *cpu, u64 va, bool dtb)
 /*	translation and the memory access checking associated with that			*/
 /*	translation.  It utilizes the ITB and DTB structures to perform this	*/
 /*	this translation, as well as the setting of the PALmode bit in the PC,	*/
-/*	and the super page settings within the Ibox Contol Register or the Mbox	*/
-/*	Dcache Control Register.												*/
+/*	and the super page settings within the Ibox Control Register or the		*/
+/*	Mbox Dcache Control Register.											*/
 /*																			*/
 /****************************************************************************/
 
@@ -885,16 +886,21 @@ u64 AXP_va2pa(
  *			 8	= quadword
  *			64	= 64 bytes of data being copied from memory to the Dcache
  *	disableUnaligned:
- *		A boolean to disable reporting unalign data faults.  This is to support
- *		the STQ_U and HW_ST instructions.
+ *		A boolean to disable reporting unaligned data faults.  This is to
+ *		support the STQ_U and HW_ST instructions.
+ *	evict:
+ *		A boolean to indicate if the bit should be set to allow this Dcache
+ *		entry to be evicted the next time we need this slot (the slot to use is
+ *		not updated).
  *
  * Output Parameters:
  *	indexSetOffset:
- *		A lcoation receive the index, set, and offet for the cache block to be
+ *		A location receive the index, set, and offset for the cache block to be
  *		used by the AXP_DcacheWrite and AXP_DcacheRead functions.
  *	status:
  *		An unsigned 32-bit location to receive a masked value with the
  *		following bits set as appropriate:
+ *			AXP_21264_CACHE_MISS
  *			AXP_21264_CACHE_HIT
  *			AXP_21264_CACHE_DIRTY
  *			AXP_21264_CACHE_SHARED
@@ -917,7 +923,8 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 						u32 len,
 						bool disableUnaligned,
 						u32 *status,
-						u32 *indexSetOffset)
+						AXP_DCACHE_LOC *indexSetOffset,
+						bool evict)
 {
 	AXP_VA			virtAddr = {.va = va};
 	AXP_VA			physAddr = {.va = pa};
@@ -932,7 +939,7 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 	/*
 	 * Before we do anything, let's determine if the virtual address for the
 	 * data size is not properly aligned.  We don't do this for to of the store
-	 * instructions where they are indended to work on unaligned data.
+	 * instructions where they are intended to work on unaligned data.
 	 */
 	if (disableUnaligned == false)
 	{
@@ -964,7 +971,7 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 	}
 
 	/*
-	 * If not exc eption was detected, then let's go see if we can find the
+	 * If not exception was detected, then let's go see if we can find the
 	 * entry in the Dcache for the specific VA/PA.
 	 */
 	if (retVal == NoException)
@@ -973,8 +980,10 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 		/*
 		 * Before we go too far, initialize the return values to "nothing".
 		 */
-		*indexSetOffset = 0;
-		*status = 0;
+		indexSetOffset->set = 0;
+		indexSetOffset->offset = 0;
+		indexSetOffset->index = 0;
+		*status = AXP_21264_CACHE_MISS;
 
 		/*
 		 * Get the number of Dcache sets currently in play.  It is either 1 or
@@ -993,7 +1002,7 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 
 		/*
 		 * Because the number of Dcache entries is large enough that the index
-		 * shares 2 bits from the VPN, it is possible that a particualr
+		 * shares 2 bits from the VPN, it is possible that a particular
 		 * physical address may be in anyone of 4 locations.  Therefore, we
 		 * need to find the first location that actually contains the item for
 		 * which we are looking.  Since it is the high 2 bits, of a 9 bit value,
@@ -1009,22 +1018,125 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 			for (jj = 0; ((jj < activeSets) & (*status == 0)); jj++)
 			{
 				if ((cpu->dtag[ii][jj].valid == true) &&
-					(cpu->dtag[ii][jj].tag == tag))
+					(cpu->dtag[ii][jj].physTag == tag))
 				{
 					*status = AXP_21264_CACHE_HIT;
 					if (cpu->dtag[ii][jj].dirty == true)
 						*status |= AXP_21264_CACHE_DIRTY;
 					if (cpu->dtag[ii][jj].shared == true)
 						*status |= AXP_21264_CACHE_SHARED;
-					indexSetOffset.index = ii;
-					indexSetOffset.set = jj;
-					indexSetOffset.offset = offset;
+					indexSetOffset->set = jj;
+					indexSetOffset->offset = offset;
+					indexSetOffset->index = ii;
 				}
 			}
 		}
 
 		/*
-		 * Last theing we need to do is unlock the DTAG mutex so other
+		 * HRM 4.5.5: If we did not get a Hit, then we need to see if we need
+		 * to evict someone.  We perform the following steps:
+		 *
+		 *		1.	First, see if the slot we are supposed to use it is use and
+		 *			the modified bit set.
+		 *		2.	If #1 is true, then evict it as necessary.
+		 *		3.	Either way, indicate that this location is waiting to be
+		 *			filled.
+		 *
+		 * NOTE:	If the block is evicted, then it is sent to the Cbox for
+		 *			processing.
+		 *			Also, we can evict the block here, even if it gets filled
+		 *			directly from the Bcache.  The Bcache is much larger, and
+		 *			this is possible, but we still need to evict the current
+		 *			block.
+		 */
+		if (*status == 0)
+		{
+			u32		ctagIndex = cpu->dtag[index][set].ctagIndex;
+			u32		ctagSet = cpu->dtag[index][set].ctagSet;
+
+			/*
+			 * First thing we need to do is determine which set we are to be
+			 * using.
+			 */
+			set = (cpu->dtag[index][0].set_0_1 == false) ? 0 : 1;
+
+			/*
+			 * If the entry we are to be using is valid and has been modified,
+			 * then we need to write it to the Bcache.
+			 */
+			if ((cpu->dtag[index][set].valid == true) &&
+				(cpu->dtag[index][set].modified == true))
+			{
+				pthread_mutex_lock(&cpu->dCacheMutex);
+				AXP_21264_Add_VDB(
+								cpu,
+								toBcache,
+								pa,
+								cpu->dCache[index][set].data,
+								AXP_DCACHE_DATA_LEN,
+								false,
+								false);
+				pthread_mutex_unlock(&cpu->dCacheMutex);
+			}
+
+			/*
+			 * No reset the DTAG to indicate that the block is valid but in a
+			 * pending state, until filled.  Then, unhook the associated CTAG
+			 * block, resetting it as well, then link the new CTAG with this
+			 * DTAG.
+			 */
+			cpu->dtag[index][set].valid = false;
+			cpu->dtag[index][set].dirty = false;
+			cpu->dtag[index][set].modified = false;
+			cpu->dtag[index][set].shared = false;
+			cpu->dtag[index][set].physTag = physAddr.vaIdxInfo.tag;
+			cpu->dtag[index][set].state = Pending;
+
+			/*
+			 * Before we reset the associated CTAG, lock the mutex for it.
+			 * We'll keep it lock while we link the new CTAG.
+			 */
+			pthread_mutex_lock(&cpu->cBoxIPRMutex);
+			cpu->ctag[ctagIndex][ctagSet].valid = false;
+			cpu->ctag[ctagIndex][ctagSet].dirty = false;
+			cpu->ctag[ctagIndex][ctagSet].shared = false;
+			cpu->ctag[ctagIndex][ctagSet].physTag = 0;
+			cpu->ctag[ctagIndex][ctagSet].dtagIndex = 0;
+
+			/*
+			 * The CTAG is physically indexed and tagged, unlike the Dcache,
+			 * which is virtually indexed, but physically cached.
+			 */
+			ctagIndex = physAddr.vaIdxInfo.index;
+			ctagSet = set;
+			cpu->ctag[ctagIndex][ctagSet].valid = true;
+			cpu->ctag[ctagIndex][ctagSet].dirty = false;
+			cpu->ctag[ctagIndex][ctagSet].shared = false;
+			cpu->ctag[ctagIndex][ctagSet].physTag = physAddr.vaIdxInfo.tag;
+			cpu->ctag[ctagIndex][ctagSet].dtagIndex = index;
+			pthread_mutex_unlock(&cpu->cBoxIPRMutex);
+
+			/*
+			 * If this "new" block should be evicted next time we need the
+			 * Dcache location, then don't change the flag on whether set 0 or
+			 * set 1 should be used.
+			 */
+			if ((evict == false) && (activeSets == 2))
+				cpu->dtag[index][0].set_0_1 = ~cpu->dtag[index][0].set_0_1;
+
+			/*
+			 * Even when we don't have a hit, we still return the location
+			 * where the Dcache data should be placed.  If the data is in the
+			 * Bcache, it is copied directly into this location.  If it is not,
+			 * then it is copied from memory into this location by the Cbox.
+			 */
+			indexSetOffset->set = set;
+			indexSetOffset->offset = offset;
+			indexSetOffset->index = index;
+		}
+
+		/*
+		 * Last thing we need to do is unlock the DTAG mutex so other
 		 * accessors (Cbox) can to it's thing.
 		 */
 		pthread_mutex_unlock(&cpu->dtagMutex);
@@ -1051,10 +1163,6 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
  * 	cpu:
  * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
  * 		Data Cache (dCache) array.
- * 	va:
- * 		The virtual address of the data in virtual memory.
- * 	pa:
- * 		The physical address, as stored in the DTB (Data TLB).
  *	len:
  *		A value indicating the length of the input parameter 'data'.  This
  *		parameter must be one of the following values (assumed signed):
@@ -1067,114 +1175,121 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
  * 		A pointer to the data to be stored in the Dcache, whose length is is
  *		specified by the 'len' parameter.
  *
- *	disableUnaligned:
- *		A boolean to disable reporting unalign data faults.  This is to support
- *		the STQ_U and HW_ST instructions.
- *
  * Output Parameters:
  * 	None.
  *
  * Return Value:
- *	NoException	= Normal Successful Completion
- *	Unaligned	= Unaligned memory reference
+ * 	true:	Normal Successful Completion.
+ * 	false:	An error occurred.
  */
-AXP_EXCEPTIONS AXP_DcacheWrite(
-					AXP_21264_CPU *cpu,
-					u64 va,
-					u64 pa,
-					u32 len,
-					void *data,
-					bool disableUnaligned)
+bool AXP_DcacheWrite(
+			AXP_21264_CPU *cpu,
+			AXP_DCACHE_LOC *indexSetOffset,
+			u32 len,
+			void *data)
 {
-	AXP_EXCEPTIONS	retVal = NoException;
+	bool	retVal = true;
+	u32		set = indexSetOffset->set;
+	u32		offset = indexSetOffset->offset;
+	u32		index = indexSetOffset->index;
 
 	/*
-	 * Before we do anything, let's determine if the virtual address for the
-	 * data size is not properly aligned.  We don't do this for to of the store
-	 * instructions where they are indended to work on unaligned data.
+	 * First, lock both the DTAG mutex and the Dcache mutex.
 	 */
-	if (disableUnaligned == false)
+	pthread_mutex_lock(&cpu->dtagMutex);
+	pthread_mutex_lock(&cpu->dCacheMutex);
+
+	switch (len)
 	{
-		switch (len)
-		{
-			case 1:
-				break;
+		case 1:
+			u8 *dest8 = (u8 *) &cpu->dCache[index][set].data[offset];
 
-			case 2:
-				if ((va & 0xfffffffffffffffe) != va)
-					retVal = DataAlignmentTrap;
-				break;
+			*dest8 = *((u8 *) data);
+			break;
 
-			case 4:
-				if ((va & 0xfffffffffffffffc) != va)
-					retVal = DataAlignmentTrap;
-				break;
+		case 2:
+			u16 *dest16 = (u16 *) &cpu->dCache[index][set].data[offset];
 
-			case 8:
-				if ((va & 0xfffffffffffffff8) != va)
-					retVal = DataAlignmentTrap;
-				break;
+			*dest16 = *((u16 *) data);
+			break;
 
-			case 64:
-				if ((va & 0xffffffffffffffc0) != va)
-					retVal = DataAlignmentTrap;
-				break;
-		}
-	}
+		case 4:
+			u8 *dest32 = (u32 *) &cpu->dCache[index][set].data[offset];
 
-	/*
-	 * If no data alignment exception occurred, then we need to continue to
-	 * locate where to store the data in the Dcache, updating the DTAG, as
-	 * necessary.
-	 */
-	if (retVal == NoException)
-	{
-		AXP_VA		virtAddr = {.va = va};
-		AXP_VA		physAddr = {.va = pa};
+			*dest32 = *((u32 *) data);
+			break;
 
-		/*
-		 * At this point we are going to make a few of assumptions.  They are:
-		 *
-		 *		1) Any alignment fault has been detected and we will not be in
-		 *		   this section of code.
-		 *		2) The data to be stored in the Dcache line/set does not cross
-		 *		   to another line/set (is contained withing a single
-		 *		   line/set).
-		 *		3) We really don't care that the store is unaligned, the code
-		 *		   behaves exactly the same way, aligned or unaligned.
-		 *
-		 * First things first, get the tag (physical), index (virtual), set
-		 * (determined from the DTAG location), offset (virtual).  Already done
-		 * in the variable declaration above.
-		 *
-		 * Make sure we lock the DTAG mutex before we do anything else.  We
-		 * don't want to be interrupted while we are doing this work.
-		 */
-		pthread_mutex_lock(&cpu->dtagMutex);
+		case 8:
+			u64 *dest64 = (u64 *) &cpu->dCache[index][set].data[offset];
 
-		/*
-		 * Because the number of Dcache entries is large enough that the index
-		 * shares 2 bits from the VPN, it is possible that a particualr
-		 * physical address may be in anyone of 4 locations.  Therefore, we
-		 * need to find the first location that actually contains the item for
-		 * which we are looking.
-		 */
+			*dest64 = *((u8 *) data);
+			break;
 
-		/*
-		 * Last theing we need to do is unlock the DTAG mutex so other
-		 * accessors (Cbox) can to it's thing.
-		 */
-		pthread_mutex_unlock(&cpu->dtagMutex);
+		case 64:
+			memcpy(cpu->dCache[index][set].data, len);
+			cpu->dtag[index][set].dirty = true;		/* TODO: Do we need more here? */
+			cpu->dtag[index][set].modified = true;
+			cpu->dtag[index][set].state = Ready;
+			break;
 	}
 
 	/*
 	 * Return the result back to the caller.
 	 */
+	pthread_mutex_unlock(&cpu->dCacheMutex);
+	pthread_mutex_unlock(&cpu->dtagMutex);
 	return(retVal);
 }
 
 /*
- * AXP_DcacheWrite
+ * AXP_CopyBcacheToDcache
+ * 	This function is called because we found a Bcache block that can be used
+ * 	to fill a Dcache reference.  We need to not only fetch the block of data
+ * 	but also the various bits.
+ *
+ * Input Parameters:
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Values:
+ * 	None.
+ *
+ * NOTE:	This function is called with the Bcache locked, but not the Dcache.
+ */
+void AXP_CopyBcacheToDcache(
+				AXP_21264_CPU *cpu,
+				AXP_DCACHE_LOC *indexSetOffset,
+				u64 pa)
+{
+	u32	index = indexSetOffset->index;
+	u32	set = indexSetOffset->set;
+
+	/*
+	 * We are going to play with the Dcache and DTAG arrays.  Make sure we lock
+	 * them down.
+	 */
+	pthread_mutex_lock(&cpu->dtagMutex);
+	pthread_mutex_lock(&cpu->dCacheMutex);
+	AXP_21264_Bcache_Read(
+					cpu,
+					pa,
+					cpu->dCache[index][set].data,
+					&cpu->dtag[index][set].dirty,
+					&cpu->dtag[index][set].shared);
+	cpu->dtag[index][set].modified = false;
+	cpu->dtag[index][set].state = Ready;
+
+	/*
+	 * We're done here, unlock the Dcache and DTAG mutexes.
+	 */
+	pthread_mutex_unlock(&cpu->dCacheMutex);
+	pthread_mutex_unlock(&cpu->dtagMutex);
+	return;
+}
+#if 0
+/*
+ * AXP_DcacheWriteOLD
  * 	This function is called to add/update a cache entry into the Data Cache.
  * 	If the entry is already there, or in one of the four possible other
  * 	locations, then there is nothing to do.
@@ -1545,6 +1660,7 @@ bool AXP_DcacheWriteOLD(
 	 */
 	return(retVal);
 }
+#endif
 
 /*
  * AXP_DcacheFlush

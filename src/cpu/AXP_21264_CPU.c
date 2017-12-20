@@ -83,11 +83,11 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->dtbMutex, NULL);
 		if (pthreadRet == 0)
-			pthreadRet = pthread_mutex_init(&cpu->mafMutex, NULL);
-		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->mBoxIPRMutex, NULL);
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->cBoxIPRMutex, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&cpu->bCacheMutex, NULL);
 
 		/*
 		 * Let's create the condition variables.
