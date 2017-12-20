@@ -1,6 +1,3 @@
-
-
-
 /*
  * Copyright (C) Jonathan D. Belanger 2017.
  * All Rights Reserved.
