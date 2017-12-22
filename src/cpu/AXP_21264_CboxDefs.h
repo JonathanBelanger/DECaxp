@@ -45,6 +45,11 @@
  *	V01.005		16-Nov-2017	Jonathan D. Belanger
  *	Added code to manage the Bcache.  We still need to figure out how to do
  *	the write-though to memory when updating a location in the Bcache.
+ *
+ *	V01.006		22-Dec-2017	Jonathan D. Belanger
+ *	We need a merge length a store length in each IOWB.  The store length is
+ *	used to determine how big the data was for the store that allocated the
+ *	IOWB.  This is used to make sure we merge like sizes only.
  */
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
@@ -451,15 +456,13 @@ typedef enum
  * Mask field to indicate which bytes in the data returned from/supplied to the
  * system are relevant.
  */
-typedef enum
-{
-	IOInvalid,
-	IOByteWord,
-	IOLong,
-	IOQuad,
-	IcacheFill,
-	DcacheFill
-} AXP_21264_IO_MASK;
+#define AXP_21264_IO_INV		0x0000
+#define AXP_21264_IO_BYTE		0x0001
+#define AXP_21264_IO_WORD		0x0003
+#define AXP_21264_IO_LONG		0x000f
+#define AXP_21264_IO_QUAD		0x00ff
+#define AXP_21264_ICACHE_FILL	0x0100
+#define AXP_21264_DCACHE_FILL	0x0200
 
 #if 0
 /*
@@ -575,18 +578,6 @@ typedef struct
  *
  *		The Cbox contains an 8-entry miss buffer (MAF) and an 8-entry victim
  *		buffer (VAF).
- *
- * The following are defined in HRM 2.9 and are used to determine the merging
- * rules.
- *
- *		MAF/New		LDx		STx		STx_C	WH64	ECB		Istream
- *		---------	-----	-----	-----	-----	-----	-------
- *		LDx			Merge	-		-		-		-		-
- *		STx			Merge	Merge	-		-		-		-
- *		STx_C		-		-		Merge	-		-		-
- *		WH64		-		-		-		Merge	-		-
- *		ECB			-		-		-		-		Merge	-
- *		Istream		-		-		-		-		-		Merge
  */
 typedef enum
 {
@@ -601,14 +592,13 @@ typedef enum
 	Istream
 } AXP_CBOX_MAF_TYPE;
 
+#define AXP_21264_MBOX_MAX		8
 typedef struct
 {
 	AXP_CBOX_MAF_TYPE	type;
 	u64					pa;
 	bool				valid;
-	i8					lqSqEntry;
-	u8					data[sizeof(u64)];
-	int					dataLen;
+	i8					lqSqEntry[AXP_21264_MBOX_MAX];
 	bool				complete;	/* cleared by Mbox, set by Cbox */
 } AXP_21264_CBOX_MAF;
 
@@ -619,16 +609,20 @@ typedef struct
  * 		physical address
  * 		control logic	(TBD)
  */
-#define AXP_21264_BLOCK_SIZE		64
+#define AXP_21264_SIZE_LONG		32
+#define AXP_21264_SIZE_QUAD		64
 typedef struct
 {
 	bool				processed;
 	bool				valid;
+	bool				aligned;
 	u64					pa;
-	i8					lqSqEntry;
-	u8					data[AXP_21264_BLOCK_SIZE];
+	i8					lqSqEntry[AXP_21264_MBOX_MAX];
+	u8					storeLen;
+	u8					data[AXP_21264_SIZE_QUAD];
 	int					dataLen;
 } AXP_21264_CBOX_IOWB;
+
 
 /*
  * This structure is the definition for one Cbox copy of Dcache Tag Array.  A

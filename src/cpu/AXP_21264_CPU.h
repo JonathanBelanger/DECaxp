@@ -659,4 +659,9 @@ typedef struct
 #define AXP_21264_IO_ADDR_SPACE		0x0000080000000000ll
 #define AXP_21264_IS_IO_ADDR(addr)	(((addr) & AXP_21264_IO_ADDR_SPACE) != 0)
 
+/*
+ * Bits associated with a naturally aligned 64-byte block of memory.
+ */
+#define AXP_21264_ALIGN_MEM_BLK		0xffffffffffffffc0ll
+
 #endif /* _AXP_21264_CPU_DEFS_ */

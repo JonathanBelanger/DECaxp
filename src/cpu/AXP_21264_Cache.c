@@ -980,9 +980,12 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 		/*
 		 * Before we go too far, initialize the return values to "nothing".
 		 */
-		indexSetOffset->set = 0;
-		indexSetOffset->offset = 0;
-		indexSetOffset->index = 0;
+		if (indexSetOffset != NULL)
+		{
+			indexSetOffset->set = 0;
+			indexSetOffset->offset = 0;
+			indexSetOffset->index = 0;
+		}
 		*status = AXP_21264_CACHE_MISS;
 
 		/*
@@ -1025,9 +1028,12 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 						*status |= AXP_21264_CACHE_DIRTY;
 					if (cpu->dtag[ii][jj].shared == true)
 						*status |= AXP_21264_CACHE_SHARED;
-					indexSetOffset->set = jj;
-					indexSetOffset->offset = offset;
-					indexSetOffset->index = ii;
+					if (indexSetOffset != NULL)
+					{
+						indexSetOffset->set = jj;
+						indexSetOffset->offset = offset;
+						indexSetOffset->index = ii;
+					}
 				}
 			}
 		}
@@ -1049,7 +1055,7 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 		 *			this is possible, but we still need to evict the current
 		 *			block.
 		 */
-		if (*status == 0)
+		if ((*status == 0) && (indexSetOffset != NULL))
 		{
 			u32		ctagIndex = cpu->dtag[index][set].ctagIndex;
 			u32		ctagSet = cpu->dtag[index][set].ctagSet;
@@ -1130,9 +1136,12 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 			 * Bcache, it is copied directly into this location.  If it is not,
 			 * then it is copied from memory into this location by the Cbox.
 			 */
-			indexSetOffset->set = set;
-			indexSetOffset->offset = offset;
-			indexSetOffset->index = index;
+			if (indexSetOffset != NULL)
+			{
+				indexSetOffset->set = set;
+				indexSetOffset->offset = offset;
+				indexSetOffset->index = index;
+			}
 		}
 
 		/*

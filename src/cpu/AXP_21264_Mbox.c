@@ -945,8 +945,9 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 		}
 
 		/*
-		 * OK, we can finally determine what may need to happen next.  First, if we
-		 * did hit in either cache, then we need to go get the block from memory.
+		 * OK, we can finally determine what may need to happen next.  First,
+		 * if we did hit in either cache, then we need to go get the block from
+		 * memory.
 		 */
 		shared = ((cacheStatus & AXP_21264_CACHE_SHARED) == AXP_21264_CACHE_SHARED);
 		if (DcHit == false)
