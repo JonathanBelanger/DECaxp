@@ -84,6 +84,14 @@ typedef long long			i64;	/* 8 bytes (64 bits) in length */
 typedef __int128			i128;	/* 16 bytes (128 bits) in length */
 
 /*
+ * Define some standard data type lengths (only the unique ones).
+ */
+#define BYTE_LEN			sizeof(u8)
+#define WORD_LEN			sizeof(u16)
+#define LONG_LEN			sizeof(u32)
+#define QUAD_LEN			sizeof(u64)
+
+/*
  * Various values that are used throughout the code.
  */
 #define AXP_LOW_BYTE		0x00000000000000ffll
