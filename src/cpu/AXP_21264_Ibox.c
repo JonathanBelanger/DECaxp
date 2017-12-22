@@ -1473,6 +1473,7 @@ void AXP_21264_Ibox_Event(
 
 		case AXP_ARITH:
 		case AXP_FEN:
+		case AXP_MT_FPCR_TRAP:
 			cpu->excSum.reg = reg;
 			break;
 
@@ -1486,7 +1487,6 @@ void AXP_21264_Ibox_Event(
 			break;
 
 		case AXP_MCHK:
-		case AXP_MT_FPCR_TRAP:	/* TODO: Need to make sure we have this write */
 		case AXP_RESET_WAKEUP:
 			break;
 	}
