@@ -416,42 +416,6 @@ typedef enum
 #define AXP_21264_GET_PROBE_NS(probe)	((probe) & 0x07)
 #define AXP_21264_SET_PROBE(dm, ns)		((((dm) & 0x03) << 3) || ((ns) & 0x07))
 
-typedef enum
-{
-	NopNop = 0x00,
-	NopClean,
-	NopCleanShared,
-	NopTransistion3,
-	NopDirtyShared,
-	NopInvalid,
-	NopTransistion1,
-	NopReserved,
-	ReadHitNop,
-	ReadHitClean,
-	ReadHitCleanShared,
-	ReadHitTransistion3,
-	ReadHitDirtyShared,
-	ReadHitInvalid,
-	ReadHitTransistion1,
-	ReadHitReserved,
-	ReadDirtyNop,
-	ReadDirtyClean,
-	ReadDirtyCleanShared,
-	ReadDirtyTransistion3,
-	ReadDirtyDirtyShared,
-	ReadDirtyInvalid,
-	ReadDirtyTransistion1,
-	ReadDirtyReserved,
-	ReadAnywayNop,
-	ReadAnywayClean,
-	ReadAnywayCleanShared,
-	ReadAnywayTransistion3,
-	ReadAnywayDirtyShared,
-	ReadAnywayInvalid,
-	ReadAnywayTransistion1,
-	ReadAnywayReserved
-} AXP_21264_SYSADD_IN_PROBE_CMD;
-
 /*
  * Mask field to indicate which bytes in the data returned from/supplied to the
  * system are relevant.
@@ -464,55 +428,8 @@ typedef enum
 #define AXP_21264_ICACHE_FILL	0x0100
 #define AXP_21264_DCACHE_FILL	0x0200
 
-#if 0
-/*
- * HRM 4.7.3 and 4.7.5
- * This structure is used for commands and ProbeResponses to be sent to the
- * System from the 21264.
- *
- * NOTE: Because we are emulating these communications and not sending a series
- * 		 of 15 bits in 4 cycles, we do not need to differentiate between "Bank
- * 		 Interleave" and "Page Hit" modes.
- *
- * This is for commands from the Alpha AXP 21264 CPU to the System.
- */
-typedef struct
-{
-	AXP_21264_SYSADD_OUT_CMD		command;
-	AXP_21264_SYSADD_OUT_PROBE_STAT	status;
-	AXP_21264_SYSADD_MASK			mask;
-	bool							miss1;				/* M1 */
-	bool							miss2;				/* M2 */
-	bool							cacheHit;			/* CH */
-	bool							readValidate;		/* RV */
-	bool							dataMovement;		/* DM */
-	bool							victimSent;			/* VS */
-	bool							mafAddressSent;		/* MS */
-	u8								maf;
-	u8								vdb;
-	u8								sysData[sizeof(u64)]; /* when DM=true */
-	u64								pa;
-} AXP_21264_SYSADD_OUT;
-
-/*
- * HRM 4.7.7.1 and 4.7.7.2
- * This is for probes and Data Transfer Commands from the system to the Alpha
- * AXP 21264 CPU.
- */
-typedef struct
-{
-	AXP_21264_SYSADD_IN_PROBE_CMD	command;
-	AXP_21264_SYSADD_IN_SYSDC		sysDc;
-	bool							probeData;	/* probe=true; data=false; */
-	bool							resetVictimBuffer;	/* RVB */
-	bool							resetProbeValidBit;	/* RPB */
-	bool							commandAck;			/* A */
-	bool							commit;				/* C */
-	u8								ID;
-	u64								pa;
-	u8								sysData[sizeof(u64)]; /* when ProbeData=false */
-} AXP_21264_SYSADD_IN;
-#endif
+#define AXP_21264_SIZE_LONG		32
+#define AXP_21264_SIZE_QUAD		64
 
 /*
  * HRM 2.1.4.1
@@ -536,19 +453,12 @@ typedef struct
 {
 	AXP_21264_VDB_TYPE			type;
 	u64							pa;
-#if 0
-	union
-	{
-		AXP_21264_SYSADD_IN			rsp;
-		AXP_21264_SYSADD_OUT		rq;
-	};
-#endif
 	bool						validVictim;
 	bool						validProbe;
 	bool						processed;
 	bool						valid;
 	bool						marked;
-	u8							data[sizeof(u64)];
+	u8							sysData[AXP_21264_SIZE_QUAD];
 	u8							dataLen;
 } AXP_21264_CBOX_VIC_BUF;
 
@@ -558,10 +468,9 @@ typedef struct
  */
 typedef struct
 {
-	int							probe;
+	u64							pa;
 	AXP_21264_SYSDC_RSP			sysDc;
-	u8							ID;
-	bool						notJustSysDc;
+	int							probe;
 	bool						rvb;
 	bool						rpb;
 	bool						a;
@@ -569,7 +478,8 @@ typedef struct
 	bool						processed;
 	bool						valid;
 	bool						marked;
-	u64							pa;
+	u8							ID;
+	u8							sysData[AXP_21264_SIZE_QUAD];
 } AXP_21264_CBOX_PQ;
 
 /*
@@ -609,8 +519,6 @@ typedef struct
  * 		physical address
  * 		control logic	(TBD)
  */
-#define AXP_21264_SIZE_LONG		32
-#define AXP_21264_SIZE_QUAD		64
 typedef struct
 {
 	bool				processed;
@@ -619,10 +527,13 @@ typedef struct
 	u64					pa;
 	i8					lqSqEntry[AXP_21264_MBOX_MAX];
 	u8					storeLen;
-	u8					data[AXP_21264_SIZE_QUAD];
+	u8					sysData[AXP_21264_SIZE_QUAD];
 	int					dataLen;
 } AXP_21264_CBOX_IOWB;
 
+#define AXP_IOWB_ID_MASK		0x08
+#define AXP_21264_IOWB_ID(id)	(((id) & AXP_IOWB_ID_MASK) == AXP_IOWB_ID_MASK)
+#define AXP_MASK_ID(id)			((id) & ~AXP_IOWB_ID_MASK)
 
 /*
  * This structure is the definition for one Cbox copy of Dcache Tag Array.  A
@@ -649,10 +560,11 @@ typedef struct
 typedef u8 AXP_21264_BCACHE_BLK[AXP_BCACHE_BLOCK_SIZE];
 typedef struct
 {
-	bool				valid;
-	bool				shared;
-	bool				dirty;
 	u64					tag;
+	u64					pa;
+	bool				valid;
+	bool				dirty;
+	bool				shared;
 } AXP_21264_BCACHE_TAG;
 
 #endif /* _AXP_21264_CBOX_DEFS_ */

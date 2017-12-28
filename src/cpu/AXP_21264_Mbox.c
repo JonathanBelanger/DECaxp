@@ -501,9 +501,9 @@ void AXP_21264_Mbox_CboxCompl(AXP_21264_CPU *cpu, i8 lqSqEntry, u8 *data)
 void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 {
 	AXP_MBOX_QUEUE	*lqEntry = &cpu->lq[entry];
-	int				ii;
-	u8				cacheStatus;
+	u32				cacheStatus;
 	u8				nextOlderStore;
+	int				ii;
 	bool			olderStore = false;
 
 	/*

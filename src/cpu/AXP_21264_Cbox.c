@@ -1,4 +1,5 @@
 
+
 /*
  * Copyright (C) Jonathan D. Belanger 2017.
  * All Rights Reserved.
@@ -38,6 +39,10 @@
  *
  *	V01.003		22-Dec-2017	Jonathan D. Belanger
  *	Worked through the IOWB processing.  This code is pretty much complete.
+ *
+ *	V01.004		26-Dec-2017	Jonathan D. Belanger
+ *	Started on the VDB and MAF processing.  Need to take another look at PQ
+ *	processing.
  */
 #include "AXP_21264_Cbox.h"
 #include "AXP_Configure.h"
@@ -135,24 +140,7 @@ AXP_21264_CBOX_CSR_NAMES csrNames[] =
 	};
 
 /*
- * AXP_DuplicateDcacheTagArray
- *	This function is responsible for managing the duplicate Dcache Tag (DTAG)
- *	array and is used by the Cbox when processing Dcache fills, Icache fills
- *	and system port probes.
- *
- * Input Parameters:
- *
- * Output Parameters:
- *
- * Return Value:
- */
-void AXP_DuplicateDcacheTagArray()
-{
-	return;
-}
-
-/*
- * AXP_IQArbiter
+ * AXP_21264_Cbox_IQArbiter
  *	This function is responsible for the arbitration of instructions pending in
  *	the Integer Issue Queue (IQ).  Architecturally, this is defined in the Cbox
  *	as the "Arbiter".  According to the architecture, there are two(2) arbiters
@@ -164,18 +152,22 @@ void AXP_DuplicateDcacheTagArray()
  *	select U1.
  *
  * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
  *
  * Output Parameters:
  *
  * Return Value:
  */
-void AXP_IQArbiter()
+void AXP_21264_Cbox_IQArbiter(AXP_21264_CPU *cpu)
 {
+	/* TODO: This code needs to be completed */
 	return;
 }
 
 /*
- * AXP_FQArbiter
+ * AXP_21264_Cbox_FQArbiter
  *	This function is responsible for the arbitration of instructions pending in
  *	the Floating-point Issue Queue (FQ).  Architecturally, this is defined in
  *	the Cbox as the "Arbiter".  According to the architecture, there are
@@ -185,13 +177,17 @@ void AXP_IQArbiter()
  *	given to older requests over newer ones.
  *
  * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
  *
  * Output Parameters:
  *
  * Return Value:
  */
-void AXP_FQArbiter()
+void AXP_21264_Cbox_FQArbiter(AXP_21264_CPU *cpu)
 {
+	/* TODO: This code needs to be completed */
 	return;
 }
 
@@ -646,6 +642,58 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 }
 
 /*
+ * AXP_21264_Bcache_Evict
+ *	This function is called to evict a Bcache block.  If the block is dirty,
+ *	then it is written out to memory.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure where the Bcache is stored.
+ *	pa:
+ *		A value containing the physical address to be checked for validity.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	None.
+ */
+void AXP_21264_Bcache_Evict(AXP_21264_CPU *cpu, u64 pa)
+{
+	int		index = AXP_BCACHE_INDEX(cpu, pa);
+	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+	u8		entry;
+
+	/*
+	 * If the block is valid, then if it is dirty, we need to send it to the
+	 * System to store back in memory.
+	 */
+	if (valid == true)
+	{
+		if (cpu->bTag[index].dirty == true)
+			entry = AXP_21264_Add_VDB(
+							cpu,
+							toMemory,
+							pa,
+							cpu->bCache[index],
+							AXP_BCACHE_BLOCK_SIZE,
+							false,
+							true);	/* TODO: mutex setting needs? */
+	}
+
+	/*
+	 * We always clear the valid bit, because we may be involved in a Bcache
+	 * Flush operation.
+	 */
+	cpu->bTag[index].valid = false;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
  * AXP_21264_Bcache_Flush
  *	This function is called to Flush everything from the Bcache.
  *
@@ -697,7 +745,7 @@ void AXP_21264_Bcache_Flush(AXP_21264_CPU *cpu)
 	 * was just written to the block array.
 	 */
 	for (ii = 0; ii < bCacheArraySize; ii++)
-		cpu->bTag[ii].valid = false;
+		 AXP_21264_Bcache_Evict(cpu, cpu->bTag[index].pa);
 
 	/*
 	 * Return back to the caller.
@@ -868,28 +916,36 @@ bool AXP_21264_Bcache_Read(
  * Return Values:
  *	None.
  */
-void AXP_21264_Bcache_Write(AXP_21264_CPU *cpu, u64 pa, u8 *data)
+void AXP_21264_Bcache_Write(
+				AXP_21264_CPU *cpu,
+				u64 pa,
+				u8 *data)
 {
 	int		index = AXP_BCACHE_INDEX(cpu, pa);
 	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
 
 	/*
-	 * First copy the buffer into the Bcache, then update the associated tag
+	 * Before we go to far, see if we need to evict the current buffer.
+	 */
+	if ((valid == false) && (cpu->bTag[index].valid == true))
+		AXP_21264_Bcache_Evict(cpu, pa);
+
+	/*
+	 * Now copy the buffer into the Bcache, then update the associated tag
 	 * with the tag value and setting the valid bit.
-	 *
-	 * TODO: What do we do with the shared bit.
 	 */
 	memcpy(cpu->bCache[index], data, AXP_BCACHE_BLOCK_SIZE);
 	cpu->bTag[index].tag = AXP_BCACHE_TAG(cpu, pa);
+	cpu->bTag[index].pa = pa;
 	cpu->bTag[index].valid = true;
 
 	/*
-	 * If the buffer was already valid, then we have to update memory as well.
+	 * If the buffer was already valid, then we need to indicate that this
+	 * Bcache block is dirty.  This way, when it is evicted, it will get
+	 * written out to memory.
 	 */
 	if (valid == true)
-	{
-		/* TODO: Write the updated buffer out to memory. */
-	}
+		cpu->bTag[index].dirty = true;
 
 	/*
 	 * Return back to the caller.
@@ -897,16 +953,186 @@ void AXP_21264_Bcache_Write(AXP_21264_CPU *cpu, u64 pa, u8 *data)
 	return;
 }
 
+/*
+ * AXP_21264_Bcache_SetShared
+ *	This function is called to set the shared bit for a Bcache block.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure where the Bcache is stored.
+ *	pa:
+ *		A value containing the physical address to be checked for validity.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Bcache_SetShared(
+				AXP_21264_CPU *cpu,
+				u64 pa)
+{
+	int		index = AXP_BCACHE_INDEX(cpu, pa);
+	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+
+	/*
+	 * If the Bcache block is valid, then indicate that it is shared with
+	 * another agent.
+	 */
+	if (valid == true)
+		cpu->bTag[index].shared = true;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_Bcache_ClearShared
+ *	This function is called to clear the shared bit for a Bcache block.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure where the Bcache is stored.
+ *	pa:
+ *		A value containing the physical address to be checked for validity.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Bcache_ClearShared(
+				AXP_21264_CPU *cpu,
+				u64 pa)
+{
+	int		index = AXP_BCACHE_INDEX(cpu, pa);
+	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+
+	/*
+	 * If the Bcache block is valid, then indicate that it is shared with
+	 * another agent.
+	 */
+	if (valid == true)
+		cpu->bTag[index].shared = false;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_Bcache_SetDirty
+ *	This function is called to set the dirty bit for a Bcache block.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure where the Bcache is stored.
+ *	pa:
+ *		A value containing the physical address to be checked for validity.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Bcache_SetDirty(
+				AXP_21264_CPU *cpu,
+				u64 pa)
+{
+	int		index = AXP_BCACHE_INDEX(cpu, pa);
+	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+
+	/*
+	 * If the Bcache block is valid, then indicate that it is shared with
+	 * another agent.
+	 */
+	if (valid == true)
+		cpu->bTag[index].dirty = true;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_Bcache_ClearDirty
+ *	This function is called to clear the dirty bit for a Bcache block.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure where the Bcache is stored.
+ *	pa:
+ *		A value containing the physical address to be checked for validity.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Bcache_ClearDirty(
+				AXP_21264_CPU *cpu,
+				u64 pa)
+{
+	int		index = AXP_BCACHE_INDEX(cpu, pa);
+	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+
+	/*
+	 * If the Bcache block is valid, then indicate that it is shared with
+	 * another agent.
+	 */
+	if (valid == true)
+		cpu->bTag[index].dirty = false;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_OldestPQFlags
+ *	This function is called to determine what the settings for the M1, M@, and
+ *	CH flags should be as part of a response to the oldest pending Probe from
+ *	the system.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure where the Bcache is stored.
+ *	m1:
+ *		A pointer to receive a boolean value indicating if this was a simple
+ *		cache miss.
+ *	m2:
+ *		A pointer to receive a boolean value indicating if this was a more
+ *		complex cache miss (used in association with the value returned in the
+ *		ch parameter).
+ *	ch:
+ *		A pointer to receive a boolean value indicating that a cache hit
+ *		occurred.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
 void AXP_21264_OldestPQFlags(
 				AXP_21264_CPU *cpu,
 				bool *m1,
 				bool *m2,
 				bool *ch)
 {
-	int						oldestPQ = -1;
-	int						ii;
-	int 					start1 = -1, end1 = -1, start2 = -1, end2 = -1;
 
+	/*
+	 * First things first, set the value of the flags to all false.
+	 */
 	*m1 = false;
 	*m2 = false;
 	*ch = false;
@@ -934,37 +1160,15 @@ void AXP_21264_OldestPQFlags(
 	 * 				indicates no data movement or a ReadIfDirty command that
 	 * 				hits on a valid but clean or shared block.
 	 */
-	if (cpu->pqTop > cpu->pqBottom)
-	{
-		start1 = cpu->pqTop;
-		end1 = AXP_21264_PQ_LEN;
-		start2 = 0;
-		end2 = cpu->pqBottom;
-	}
-	else
-	{
-		start1 = cpu->pqTop;
-		end1 = cpu->pqBottom;
-	}
 
 	/*
-	 * Search through the list to find the oldest entry that can be processed.
+	 * If we found a pending probe, the first one is by definition the oldest
+	 * one.
 	 */
-	for (ii = start1; ((ii < end1) && (oldestPQ == -1)); ii++)
-		if ((cpu->pq[ii].valid == true) && (cpu->pq[ii].processed == false))
-			oldestPQ = ii;
-	if ((oldestPQ == -1) && (start2 != -1))
-		for (ii = start2; ((ii < end2) && (oldestPQ == -1)); ii++)
-			if ((cpu->pq[ii].valid == true) && (cpu->pq[ii].processed == false))
-				oldestPQ = ii;
-
-	/*
-	 * If we found a pending probe, the first one found is by definition the
-	 * oldest one.
-	 */
-	if (oldestPQ >= 0)
+	if ((cpu->pq[cpu->pqTop].valid == true) &&
+		(cpu->pq[cpu->pqTop].processed == false))
 	{
-		AXP_21264_CBOX_PQ	*pq = &cpu->pq[oldestPQ];
+		AXP_21264_CBOX_PQ	*pq = &cpu->pq[cpu->pqTop];
 		AXP_VA				physAddr = {.va = pq->pa};
 		AXP_EXCEPTIONS 		except;
 		u32					status = AXP_21264_CACHE_MISS;
@@ -1034,7 +1238,7 @@ void AXP_21264_OldestPQFlags(
 		 * If we have a HIT, but the probe was not looking to move data, then
 		 * set set the CH bit, and conditionally the M2 bit.
 		 */
-		else if (pq->notJustSysDc == false)
+		else if (pq->probe != 0)
 		{
 			*ch = true;
 
@@ -1083,7 +1287,7 @@ int AXP_21264_MAF_Empty(AXP_21264_CPU *cpu)
 	if (cpu->mafTop > cpu->mafBottom)
 	{
 		start1 = cpu->mafTop;
-		end1 = AXP_21264_MAF_LEN;
+		end1 = AXP_21264_MAF_LEN - 1;
 		start2 = 0;
 		end2 = cpu->mafBottom;
 	}
@@ -1096,11 +1300,11 @@ int AXP_21264_MAF_Empty(AXP_21264_CPU *cpu)
 	/*
 	 * Search through the list to find the first entry that can be processed.
 	 */
-	for (ii = start1; ((ii < end1) && (retVal == -1)); ii++)
+	for (ii = start1; ((ii <= end1) && (retVal == -1)); ii++)
 		if ((cpu->maf[ii].type != MAFNotInUse) && (cpu->maf[ii].complete == false))
 			retVal = ii;
 	if ((retVal == -1) && (start2 != -1))
-		for (ii = start2; ((ii < end2) && (retVal == -1)); ii++)
+		for (ii = start2; ((ii <= end2) && (retVal == -1)); ii++)
 			if ((cpu->maf[ii].type != MAFNotInUse) && (cpu->maf[ii].complete == false))
 				retVal = ii;
 
@@ -1224,7 +1428,7 @@ void AXP_21264_Add_MAF(
 		bool shared)
 {
 	int		ii;
-	int		start1 = -1, start2 = -1, end1 = -1, end2 = -1;
+	int		start1, start2, end1 = -1, end2 = -1;
 	int		matchingMAF = -1;
 
 	/*
@@ -1261,7 +1465,7 @@ void AXP_21264_Add_MAF(
 	if (cpu->mafTop > cpu->mafBottom)
 	{
 		start1 = cpu->mafTop;
-		end1 = AXP_21264_MAF_LEN;
+		end1 = AXP_21264_MAF_LEN - 1;
 		start2 = 0;
 		end2 = cpu->mafBottom;
 	}
@@ -1281,11 +1485,11 @@ void AXP_21264_Add_MAF(
 	 *		3)	If the 64-byte block of the physical address includes the all
 	 *			the bytes for the data we are reading/writing.
 	 */
-	for (ii = start1; ((ii < end1) && (matchingMAF == -1)); ii++)
+	for (ii = start1; ((ii <= end1) && (matchingMAF == -1)); ii++)
 		if ((cpu->maf[ii].type != MAFNotInUse) &&
 			(cpu->maf[ii].complete == false))
 		{
-			if ((cpu->maf[ii].type = type) ||
+			if ((cpu->maf[ii].type == type) ||
 				((cpu->maf[ii].type == STx) && (type == LDx)))
 			{
 				if (cpu->maf[ii].pa ==
@@ -1294,11 +1498,11 @@ void AXP_21264_Add_MAF(
 			}
 		}
 	if ((matchingMAF == -1) && (start2 != -1))
-		for (ii = start2; ((ii < end2) && (matchingMAF == -1)); ii++)
+		for (ii = start2; ((ii <= end2) && (matchingMAF == -1)); ii++)
 			if ((cpu->maf[ii].type != MAFNotInUse) &&
 				(cpu->maf[ii].complete == false))
 			{
-				if ((cpu->maf[ii].type = type) ||
+				if ((cpu->maf[ii].type == type) ||
 					((cpu->maf[ii].type == STx) && (type == LDx)))
 				{
 					if (cpu->maf[ii].pa ==
@@ -1325,7 +1529,8 @@ void AXP_21264_Add_MAF(
 		/*
 		 * Add a record to the next available MAF.
 		 */
-		cpu->mafBottom = (cpu->mafBottom + 1) & 0x07;
+		if (cpu->maf[cpu->mafBottom].valid == true)
+			cpu->mafBottom = (cpu->mafBottom + 1) & 0x07;
 		cpu->maf[cpu->mafBottom].type = type;
 		cpu->maf[cpu->mafBottom].pa = pa & AXP_21264_ALIGN_MEM_BLK;
 		cpu->maf[cpu->mafBottom].complete = false;
@@ -1340,6 +1545,80 @@ void AXP_21264_Add_MAF(
 	 */
 	pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
 	pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
+	return;
+}
+
+/*
+ * AXP_21264_Free_MAF
+ * 	This function is called to return a previously allocated MAF entry.  It
+ * 	does this by setting the valid bit to false and adjusting the mafTop
+ * 	index, as necessary.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	entry:
+ *		An integer value that is the entry in the MAF to be invalidated.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Free_MAF(AXP_21264_CPU *cpu, u8 entry)
+{
+	AXP_21264_CBOX_MAF	*maf = &cpu->maf[entry];
+	int		ii;
+	int 	start1, end1, start2 = -1, end2 = -1;
+	bool	done = false;
+
+	/*
+	 * First, clear the valid bit.
+	 */
+	maf->valid = false;
+
+	/*
+	 * We now have to see if we can adjust the top of the queue.
+	 */
+	if (cpu->mafTop > cpu->mafBottom)
+	{
+		start1 = cpu->mafTop;
+		end1 = AXP_21264_MAF_LEN - 1;
+		start2 = 0;
+		end2 = cpu->mafBottom;
+	}
+	else
+	{
+		start1 = cpu->mafTop;
+		end1 = cpu->mafBottom;
+	}
+
+	/*
+	 * Search through the list to find the first entry that is in-use (valid).
+	 */
+	for (ii = start1; ((ii <= end1) && (done == false)); ii++)
+	{
+		if (cpu->maf[ii].valid == false)
+			cpu->mafTop = (cpu->mafTop + 1) & 0x07;
+		else
+			done == true;
+	}
+	if ((done == false) && (start2 != -1))
+	{
+		for (ii = start2; ((ii <= end2) && (done == false)); ii++)
+		{
+			if (cpu->maf[ii].valid == false)
+				cpu->mafTop = (cpu->mafTop + 1) & 0x07;
+			else
+				done = true;
+		}
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
 	return;
 }
 
@@ -1364,12 +1643,12 @@ int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
 {
 	int		retVal = -1;
 	int		ii;
-	int		start1 = -1, end1 = -1, start2 = -1, end2 = -1;
+	int		start1, end1, start2 = -1, end2 = -1;
 
 	if (cpu->vdbTop > cpu->vdbBottom)
 	{
 		start1 = cpu->vdbTop;
-		end1 = AXP_21264_VDB_LEN;
+		end1 = AXP_21264_VDB_LEN - 1;
 		start2 = 0;
 		end2 = cpu->vdbBottom;
 	}
@@ -1382,11 +1661,11 @@ int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
 	/*
 	 * Search through the list to find the first entry that can be processed.
 	 */
-	for (ii = start1; ((ii < end1) && (retVal == -1)); ii++)
+	for (ii = start1; ((ii <= end1) && (retVal == -1)); ii++)
 		if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].processed == false))
 			retVal = ii;
 	if ((retVal == -1) && (start2 != -1))
-	for (ii = start2; ((ii < end2) && (retVal == -1)); ii++)
+	for (ii = start2; ((ii <= end2) && (retVal == -1)); ii++)
 		if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].processed == false))
 			retVal = ii;
 
@@ -1518,12 +1797,13 @@ u8 AXP_21264_Add_VDB(
 	/*
 	 * Add a record to the next available VDB.
 	 */
-	cpu->vdbBottom = (cpu->vdbBottom + 1) & 0x07;
+	if (cpu->vdb[cpu->vdbBottom].valid == true)
+		cpu->vdbBottom = (cpu->vdbBottom + 1) & 0x07;
 	cpu->vdb[cpu->vdbBottom].type = type;
 	cpu->vdb[cpu->vdbBottom].pa = pa;
 	cpu->vdb[cpu->vdbBottom].validProbe = probe;
-	memset(cpu->vdb[cpu->vdbBottom].data, '\0', QUAD_LEN);
-	memcpy(cpu->vdb[cpu->vdbBottom].data, buf, bufLen);
+	memset(cpu->vdb[cpu->vdbBottom].sysData, '\0', QUAD_LEN);
+	memcpy(cpu->vdb[cpu->vdbBottom].sysData, buf, bufLen);
 	cpu->vdb[cpu->vdbBottom].dataLen = bufLen;
 	cpu->vdb[cpu->vdbBottom].valid = true;
 	cpu->vdb[cpu->vdbBottom].processed = false;
@@ -1538,6 +1818,80 @@ u8 AXP_21264_Add_VDB(
 		pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
 	}
 	return(cpu->vdbBottom);
+}
+
+/*
+ * AXP_21264_Free_VDB
+ * 	This function is called to return a previously allocated VDB buffer.  It
+ * 	does this by setting the valid bit to false and adjusting the vdbTop
+ * 	index, as necessary.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	entry:
+ *		An integer value that is the entry in the VDB to be invalidated.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Free_VDB(AXP_21264_CPU *cpu, u8 entry)
+{
+	AXP_21264_CBOX_VIC_BUF	*vdb = &cpu->vdb[entry];
+	int		ii;
+	int 	start1, end1, start2 = -1, end2 = -1;
+	bool	done = false;
+
+	/*
+	 * First, clear the valid bit.
+	 */
+	vdb->valid = false;
+
+	/*
+	 * We now have to see if we can adjust the top of the queue.
+	 */
+	if (cpu->vdbTop > cpu->vdbBottom)
+	{
+		start1 = cpu->vdbTop;
+		end1 = AXP_21264_VDB_LEN - 1;
+		start2 = 0;
+		end2 = cpu->vdbBottom;
+	}
+	else
+	{
+		start1 = cpu->vdbTop;
+		end1 = cpu->vdbBottom;
+	}
+
+	/*
+	 * Search through the list to find the first entry that is in-use (valid).
+	 */
+	for (ii = start1; ((ii <= end1) && (done == false)); ii++)
+	{
+		if (cpu->vdb[ii].valid == false)
+			cpu->vdbTop = (cpu->vdbTop + 1) & 0x07;
+		else
+			done == true;
+	}
+	if ((done == false) && (start2 != -1))
+	{
+		for (ii = start2; ((ii <= end2) && (done == false)); ii++)
+		{
+			if (cpu->vdb[ii].valid == false)
+				cpu->vdbTop = (cpu->vdbTop + 1) & 0x07;
+			else
+				done = true;
+		}
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
 }
 
 /*
@@ -1561,12 +1915,12 @@ int AXP_21264_IOWB_Empty(AXP_21264_CPU *cpu)
 {
 	int		retVal = -1;
 	int		ii;
-	int 	start1 = -1, end1 = -1, start2 = -1, end2 = -1;
+	int 	start1, end1, start2 = -1, end2 = -1;
 
 	if (cpu->iowbTop > cpu->iowbBottom)
 	{
 		start1 = cpu->iowbTop;
-		end1 = AXP_21264_IOWB_LEN;
+		end1 = AXP_21264_IOWB_LEN - 1;
 		start2 = 0;
 		end2 = cpu->iowbBottom;
 	}
@@ -1579,11 +1933,11 @@ int AXP_21264_IOWB_Empty(AXP_21264_CPU *cpu)
 	/*
 	 * Search through the list to find the first entry that can be processed.
 	 */
-	for (ii = start1; ((ii < end1) && (retVal == -1)); ii++)
+	for (ii = start1; ((ii <= end1) && (retVal == -1)); ii++)
 		if ((cpu->iowb[ii].valid == true) && (cpu->iowb[ii].processed == false))
 			retVal = ii;
 	if ((retVal == -1) && (start2 != -1))
-		for (ii = start2; ((ii < end2) && (retVal == -1)); ii++)
+		for (ii = start2; ((ii <= end2) && (retVal == -1)); ii++)
 			if ((cpu->iowb[ii].valid == true) && (cpu->iowb[ii].processed == false))
 				retVal = ii;
 
@@ -1663,7 +2017,7 @@ void AXP_21264_Process_IOWB(AXP_21264_CPU *cpu, int entry)
 					mask,
 					ch,
 					iowb->pa,
-					iowb->data,
+					iowb->sysData,
 					iowb->dataLen);
 
 	/*
@@ -1731,9 +2085,9 @@ bool AXP_21264_Merge_IOWB(
 		if (iowb->dataLen < maxLen)
 		{
 			if (dataLen == LONG_LEN)
-				*((u32 *) &iowb->data[iowb->dataLen]) = *((u32 *) data);
+				*((u32 *) &iowb->sysData[iowb->dataLen]) = *((u32 *) data);
 			else
-				*((u64 *) &iowb->data[iowb->dataLen]) = *((u64 *) data);
+				*((u64 *) &iowb->sysData[iowb->dataLen]) = *((u64 *) data);
 			iowb->lqSqEntry[iowb->dataLen/dataLen] = lqSqEntry;
 			iowb->dataLen += dataLen;
 			retVal = false;
@@ -1817,12 +2171,12 @@ void AXP_21264_Add_IOWB(
 	if ((dataLen != BYTE_LEN) || (dataLen != WORD_LEN))	/* Don't merge Bytes/Words */
 	{
 		int		maxLen;
-		int 	start1 = -1, end1 = -1, start2 = -1, end2 = -1;
+		int 	start1, end1, start2 = -1, end2 = -1;
 
 		if (cpu->iowbTop > cpu->iowbBottom)
 		{
 			start1 = cpu->iowbTop;
-			end1 = AXP_21264_IOWB_LEN;
+			end1 = AXP_21264_IOWB_LEN - 1;
 			start2 = 0;
 			end2 = cpu->iowbBottom;
 		}
@@ -1848,7 +2202,7 @@ void AXP_21264_Add_IOWB(
 		 * Search through each of the allocated IOWBs and see if they are
 		 * candidates for merging.
 		 */
-		for (ii = start1; ((ii < end1) && (allocateIOWB == true)); ii++)
+		for (ii = start1; ((ii <= end1) && (allocateIOWB == true)); ii++)
 			allocateIOWB = AXP_21264_Merge_IOWB(
 									&cpu->iowb[ii],
 									pa,
@@ -1857,7 +2211,7 @@ void AXP_21264_Add_IOWB(
 									dataLen,
 									maxLen);
 		if ((allocateIOWB == false) && (start2 != -1))
-			for (ii = start2; ((ii < end2) && (allocateIOWB == false)); ii++)
+			for (ii = start2; ((ii <= end2) && (allocateIOWB == false)); ii++)
 				allocateIOWB = AXP_21264_Merge_IOWB(
 										&cpu->iowb[ii],
 										pa,
@@ -1873,19 +2227,20 @@ void AXP_21264_Add_IOWB(
 	 */
 	if (allocateIOWB == true)
 	{
-		cpu->iowbBottom = (cpu->iowbBottom + 1) & 0x03;
+		if (cpu->iowb[cpu->iowbBottom].valid == true)
+			cpu->iowbBottom = (cpu->iowbBottom + 1) & 0x03;
 		cpu->iowb[cpu->iowbBottom].pa = pa;
 		cpu->iowb[cpu->iowbBottom].lqSqEntry[0] = lqSqEntry;
 		for (ii = 1; ii < AXP_21264_MBOX_MAX; ii++)
 			cpu->iowb[cpu->iowbBottom].lqSqEntry[ii] = 0;
 		cpu->iowb[cpu->iowbBottom].storeLen = dataLen;
 		if (data != NULL)	/* this is a store */
-			memcpy(cpu->iowb[cpu->iowbBottom].data, data, dataLen);
+			memcpy(cpu->iowb[cpu->iowbBottom].sysData, data, dataLen);
 		else
 			memset(
-				cpu->iowb[cpu->iowbBottom].data,
+				cpu->iowb[cpu->iowbBottom].sysData,
 				0,
-				sizeof(cpu->iowb[cpu->iowbBottom].data));
+				sizeof(cpu->iowb[cpu->iowbBottom].sysData));
 		cpu->iowb[cpu->iowbBottom].dataLen = dataLen;
 		cpu->iowb[cpu->iowbBottom].valid = true;
 		cpu->iowb[cpu->iowbBottom].processed = false;
@@ -1898,6 +2253,80 @@ void AXP_21264_Add_IOWB(
 	 */
 	pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
 	pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
+	return;
+}
+
+/*
+ * AXP_21264_Free_IOWB
+ * 	This function is called to return a previously allocated IOWB buffer.  It
+ * 	does this by setting the valid bit to false and adjusting the iowbTop
+ * 	index, as necessary.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	entry:
+ *		An integer value that is the entry in the IOWB to be invalidated.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Free_IOWB(AXP_21264_CPU *cpu, u8 entry)
+{
+	AXP_21264_CBOX_IOWB	*iowb = &cpu->iowb[entry];
+	int		ii;
+	int 	start1, end1, start2 = -1, end2 = -1;
+	bool	done = false;
+
+	/*
+	 * First, clear the valid bit.
+	 */
+	iowb->valid = false;
+
+	/*
+	 * We now have to see if we can adjust the top of the queue.
+	 */
+	if (cpu->iowbTop > cpu->iowbBottom)
+	{
+		start1 = cpu->iowbTop;
+		end1 = AXP_21264_IOWB_LEN - 1;
+		start2 = 0;
+		end2 = cpu->iowbBottom;
+	}
+	else
+	{
+		start1 = cpu->iowbTop;
+		end1 = cpu->iowbBottom;
+	}
+
+	/*
+	 * Search through the list to find the first entry that is in-use (valid).
+	 */
+	for (ii = start1; ((ii <= end1) && (done == false)); ii++)
+	{
+		if (cpu->iowb[ii].valid == false)
+			cpu->iowbTop = (cpu->iowbTop + 1) & 0x07;
+		else
+			done == true;
+	}
+	if ((done == false) && (start2 != -1))
+	{
+		for (ii = start2; ((ii <= end2) && (done == false)); ii++)
+		{
+			if (cpu->iowb[ii].valid == false)
+				cpu->iowbTop = (cpu->iowbTop + 1) & 0x07;
+			else
+				done = true;
+		}
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
 	return;
 }
 
@@ -1922,12 +2351,12 @@ int AXP_21264_PQ_Empty(AXP_21264_CPU *cpu)
 {
 	int		retVal = -1;
 	int		ii;
-	int 	start1 = -1, end1 = -1, start2 = -1, end2 = -1;
+	int 	start1, end1, start2 = -1, end2 = -1;
 
 	if (cpu->pqTop > cpu->pqBottom)
 	{
 		start1 = cpu->pqTop;
-		end1 = AXP_21264_PQ_LEN;
+		end1 = AXP_21264_PQ_LEN - 1;
 		start2 = 0;
 		end2 = cpu->pqBottom;
 	}
@@ -1940,11 +2369,11 @@ int AXP_21264_PQ_Empty(AXP_21264_CPU *cpu)
 	/*
 	 * Search through the list to find the first entry that can be processed.
 	 */
-	for (ii = start1; ((ii < end1) && (retVal == -1)); ii++)
+	for (ii = start1; ((ii <= end1) && (retVal == -1)); ii++)
 		if ((cpu->pq[ii].valid == true) && (cpu->pq[ii].processed == false))
 			retVal = ii;
 	if ((retVal == -1) && (start2 != -1))
-		for (ii = start2; ((ii < end2) && (retVal == -1)); ii++)
+		for (ii = start2; ((ii <= end2) && (retVal == -1)); ii++)
 			if ((cpu->pq[ii].valid == true) && (cpu->pq[ii].processed == false))
 				retVal = ii;
 
@@ -1974,279 +2403,410 @@ int AXP_21264_PQ_Empty(AXP_21264_CPU *cpu)
  */
 void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 {
-	AXP_21264_PROBE_STAT probeStatus;
-	AXP_VA			physAddr;
-	u32				ctagIndex;
-	u32				dCacheIndex;
-	u32				bCacheIndex;
-	u32				dCacheIndex0;
-	u32				dCacheIndex1;
-	u32				setToUse;
-	int				ii;
-	bool			locked;
-	bool			bCacheValid = false;
-	bool			dCacheValid = false;
-	bool			dm = false;
-	bool			vs = false;
-	bool			ms = false;
+	AXP_21264_CBOX_PQ		*pq = &cpu->pq[entry];
+	AXP_21264_PROBE_STAT	probeStatus;
+	AXP_VA					physAddr = {.va = pq->pa};
+	u32						ctagIndex = physAddr.vaIdxInfo.index;
+	u32						setToUse;
+	u32						dCacheStatus = AXP_21264_CACHE_MISS;
+	u32						bCacheStatus;
+	u8						sysData[AXP_21264_SIZE_QUAD];
+	bool					locked;
+	bool					dm = false;
+	bool					vs = false;
+	bool					ms = false;
 
 	/*
 	 * Between the time when a probe request was queued up and this queue
 	 * entry was considered for processing, it may have already been processed.
 	 * If so, there is no need to process it again.
 	 */
-	if ((cpu->pq[entry].valid == true) && (cpu->pq[entry].processed == false))
+	if ((pq->valid == true) && (pq->processed == false))
 	{
-		bCacheValid = AXP_21264_Bcache_Valid(cpu, cpu->pq[entry].pa);
-		physAddr.va = cpu->pq[entry].pa;
-		ctagIndex = physAddr.vaIdxInfo.index;
-
-		/*
-		 * We are going to be checking the dtag for a matching physical address
-		 * tag.  Once checked, we will no longer need this lock.  Also note, we
-		 * don't need to worry about whether one or two sets are enabled.  If
-		 * only one, then the second set's valid bit will not be set.
-		 */
-		pthread_mutex_lock(&cpu->dtagMutex);
-		dCacheIndex0 = cpu->ctag[ctagIndex][0].dtagIndex;
-		dCacheIndex1 = cpu->ctag[ctagIndex][1].dtagIndex;
 		if ((cpu->ctag[ctagIndex][0].valid = true) &&
-			(cpu->dtag[dCacheIndex][0].physTag == physAddr.vaIdxInfo.tag))
+			(cpu->ctag[ctagIndex][0].physTag == physAddr.vaIdxInfo.tag))
 		{
 			setToUse = 0;
-			dCacheIndex = dCacheIndex0;
-			dCacheValid = true;
+			dCacheStatus = AXP_21264_CACHE_HIT;
 		}
 		else if ((cpu->ctag[ctagIndex][1].valid = true) &&
-				 (cpu->dtag[dCacheIndex][1].physTag == physAddr.vaIdxInfo.tag))
+				 (cpu->dtag[ctagIndex][1].physTag == physAddr.vaIdxInfo.tag))
 		{
 			setToUse = 1;
-			dCacheIndex = dCacheIndex1;
-			dCacheValid = true;
+			dCacheStatus = AXP_21264_CACHE_HIT;
 		}
-		pthread_mutex_unlock(&cpu->dtagMutex);
 
 		/*
-		 * We are going to play with a couple of shared structures in the Cbox,
-		 * so we need to lock them down.
+		 * HRM 4.7.7.2 Data Transfer Commands, page 4-28
 		 *
-		 * NOTE:	If we need to lock down the Mbox shared structure, then we
-		 *			need to unlock this first, in order to avoid a deadlock.
+		 * Probe commands can combine a SysDc command along with MBDone.  In
+		 * that event, the probe is considered ahead of the SysDc command.  If
+		 * the SysDc command allows the 21264 to retire an instruction before
+		 * am MB, or allows the 21264 itself to retire an MB (sysDc is MBDone),
+		 * that MB will not complete until the probe is executed.
 		 */
-		pthread_mutex_lock(&cpu->cBoxIPRMutex);
-		locked = true;
-		/* TODO: I'm not sure I like the above code.  Locking should be better */
-
-		/*
-		 * If we have an A[cknowledge] from the system, decrement the
-		 * outstanding
-		 */
-		if ((cpu->csr.SysbusAckLimit > 0) &&
-			(cpu->pq[entry].a == true) &&
-			(cpu->cmdAck > 0))
-			cpu->cmdAck--;
-
-		/*
-		 * If the RVB bit is set, clear the VDB or IOWB specified in the ID
-		 * field.
-		 */
-		if (cpu->pq[entry].rvb == true)
+		if (pq->probe != 0)
 		{
-			if ((cpu->pq[entry].ID &0x08) == 0x08)
+			AXP_21264_CBOX_CTAG		*ctag = &cpu->ctag[ctagIndex][setToUse];
+			AXP_DTAG_BLK			*dtag;
+			u32						dCacheIdx = ctag->dtagIndex;
+
+			if (dCacheStatus == AXP_21264_CACHE_HIT)
 			{
-				cpu->iowb[cpu->pq[entry].ID & 0x07].valid = false;
-				AXP_21264_Complete_SQ(cpu, cpu->iowb[cpu->pq[entry].ID & 0x07].sqEntry);
+				if (ctag->dirty == true)
+					dCacheStatus |= AXP_21264_CACHE_DIRTY;
+				if (ctag->shared == true)
+					dCacheStatus |= AXP_21264_CACHE_SHARED;
 			}
-			else
-				cpu->vdb[cpu->pq[entry].ID].valid = false;
-		}
+			bCacheStatus = AXP_21264_Bcache_Status(cpu, pq->pa);
 
-		/*
-		 * If the RPB bit is set, clear the Probe specified in the ID
-		 * field.
-		 */
-		if (cpu->pq[entry].rpb == true)
-		{
-			u32	oldPqTop = cpu->pqTop;
-
-			cpu->pq[cpu->pq[entry].ID & 0x07].valid = false;
-
-			/*
-			 * Reset the top of the queue to the first valid PQ entry.
-			 */
-			for (ii = oldPqTop; ii < oldPqTop+8; ii++)
-			{
-				if (cpu->pq[ii&0x07].valid == true)
-				{
-					cpu->pqTop = (cpu->pqTop + 1) & 0x07;
-					break;
-				}
-			}
-				
-		}
-
-		/*
-		 * We either have both a Probe and SysDc or just a SysDc.  The SysDc
-		 * controls data movement in and out of the CPU.
-		 */
-		if (cpu->pq[entry].notJustSysDc == true)
-		{
-			switch(AXP_21264_GET_PROBE_DM(cpu->pq[entry].probe))
+			switch(AXP_21264_GET_PROBE_DM(pq->probe))
 			{
 				case AXP_21264_DM_NOP:
 					/* Nothing to do here. */
 					break;
 
 				case AXP_21264_DM_RDHIT:
-					if (cpu->dCache[dCacheIndex][setToUse].valid == true)
-					{
-						/* TODO: if the cache block is in any state send to system */
+					if (ctag->valid == true)
 						dm = true;
-					}
 					break;
 
 				case AXP_21264_DM_RDDIRTY:
-					if ((cpu->dCache[dCacheIndex][setToUse].valid == true) &&
-						(cpu->dCache[dCacheIndex][setToUse].dirty == true))
-					{
-						/* TODO: if the cache block is in any state send to system */
+					if ((ctag->valid == true) && (ctag->dirty == true))
 						dm = true;
-					}
 					break;
 
 				case AXP_21264_DM_RDANY:
-					/* TODO: if the cache block is in any state send to system */
 					dm = true;
 					break;
 			}
+
+			pthread_mutex_lock(&cpu->dCacheMutex);
+			dtag = &cpu->dtag[dCacheIdx][setToUse];
+
+			/*
+			 * If we have data movement, then let's go get the block to be sent
+			 * to the system towards after processing the probe.
+			 */
+			if (dm == true)
+			{
+				memcpy(
+					sysData,
+					cpu->dCache[dCacheIdx][setToUse],
+					AXP_21264_SIZE_QUAD);
+			}
+			switch(AXP_21264_GET_PROBE_NS(pq->probe))
+			{
+				case AXP_21264_NS_NOP:
+				case AXP_21264_NS_RES:
+					/* Nothing to do here. */
+					break;
+
+				case AXP_21264_NS_CLEAN:
+					if (ctag->valid == true)
+					{
+						dtag->dirty = ctag->dirty = false;
+						dtag->shared = ctag->shared = false;
+					}
+					AXP_21264_Bcache_ClearDirty(cpu, pq->pa);
+					AXP_21264_Bcache_ClearShared(cpu, pq->pa);
+					break;
+
+				case AXP_21264_NS_CLEAN_SHARED:
+					if (ctag->valid == true)
+					{
+						dtag->dirty = ctag->dirty = false;
+						dtag->shared = ctag->shared = true;
+					}
+					AXP_21264_Bcache_ClearDirty(cpu, pq->pa);
+					AXP_21264_Bcache_SetShared(cpu, pq->pa);
+					break;
+
+				case AXP_21264_NS_TRANS3:
+					if (ctag->valid == true)
+					{
+
+						/*
+						 * Clean
+						 */
+						if (((dCacheStatus & AXP_21264_CACHE_DIRTY) != AXP_21264_CACHE_DIRTY) &&
+							((dCacheStatus & AXP_21264_CACHE_SHARED) != AXP_21264_CACHE_SHARED))
+						{
+							dtag->shared = ctag->shared = true;
+							AXP_21264_Bcache_SetShared(cpu, pq->pa);
+						}
+
+						/*
+						 * Dirty/Shared
+						 */
+						else if ((ctag->dirty == true) && (ctag->shared == true))
+						{
+							dtag->dirty = ctag->dirty = false;
+							AXP_21264_Bcache_ClearDirty(cpu, pq->pa);
+						}
+
+						/*
+						 * Dirty
+						 */
+						else if ((ctag->dirty == true) && (ctag->shared == false))
+						{
+							dtag->valid = ctag->valid = false;
+							/* TODO: Evict */
+						}
+					}
+					break;
+
+				case AXP_21264_NS_DIRTY_SHARED:
+					if (ctag->valid == true)
+					{
+						dtag->dirty = ctag->dirty = true;
+						dtag->shared = ctag->shared = true;
+					}
+					AXP_21264_Bcache_SetDirty(cpu, pq->pa);
+					AXP_21264_Bcache_SetShared(cpu, pq->pa);
+					break;
+
+				case AXP_21264_NS_INVALID:
+					if (ctag->valid == true)
+					{
+						dtag->valid = ctag->valid = false;
+						/* TODO: Evict */
+					}
+					break;
+
+				case AXP_21264_NS_TRANS1:
+
+					/*
+					 * If the block is valid then we are turning either a Clean or
+					 * Dirty block into a Clean/Shared or Dirty/Shared block.  The
+					 * only thing that is really changing is the shared bit (and
+					 * setting an already set bit is  really a no-op).
+					 */
+					if (ctag->valid == true)
+					{
+						dtag->shared = ctag->shared = true;
+					}
+					AXP_21264_Bcache_SetDirty(cpu, pq->pa);
+					AXP_21264_Bcache_SetShared(cpu, pq->pa);
+					break;
+			}
+			pthread_mutex_unlock(&cpu->dCacheMutex);
 		}
 
 		/*
-		 * Process the SysDc information.
+		 * Process the SysDc section of the request.
 		 *
-		 * NOTE: A Block state is defined as follows:
-		 * 		State			Valid		Dirty		Shared
-		 * 		------------	-----		-----		------
-		 * 		Clean			true		false		false
-		 * 		Clean/Shared	true		false		true
-		 * 		Dirty			true		true		false
-		 * 		Dirty/Shared	true		true		true
-		 * 		Invalid			false		n/a			n/a
+		 * Table 4–5 System Responses to 21264 Commands and Reactions
+		 * 21264 CMD	SysDc					21264 Action
+		 * Rdx			ReadData				This is a normal fill. The
+		 * 				ReadDataShared			cache block is filled and
+		 * 										marked clean or shared based on
+		 * 										SysDc.
+		 * Rdx			ReadDataShared/			The cache block is filled and
+		 * 				ReadDataShared			marked dirty/shared. Succeeding
+		 * 										store commands cannot update
+		 * 										the block without external
+		 * 										reference.
+		 * Rdx			ReadDataDirty			The cache block is filled and
+		 * 										marked dirty.
+		 * Rdx			ReadDataError			The cache block access was to
+		 * 										NXM address space. The 21264
+		 * 										delivers an all-ones pattern to
+		 * 										any load command and evicts the
+		 * 										block from the cache (with
+		 * 										associated victim processing).
+		 *										The cache block is marked invalid.
+		 * Rdx			ChangeToDirtySuccess	Both SysDc responses are
+		 * 				ChangeToDirtyFail		illegal for read commands.
+		 * RdBlkModx	ReadData				The cache block is filled and
+		 * 				ReadDataShared			marked with a non-writable
+		 * 				ReadDataShared/Dirty	status. If the store
+		 * 										instruction that generated the
+		 * 										RdBlkModx command is still
+		 * 										active (not killed), the 21264
+		 * 										will retry the instruction,
+		 * 										generating the appropriate
+		 * 										ChangeToDirty command.
+		 * 										Succeeding store commands
+		 * 										cannot update the block without
+		 * 										external reference.
+		 * RdBlkModx	ReadDataDirty			The 21264 performs a normal
+		 * 										fill response, and the cache
+		 * 										block becomes writable.
+		 * RdBlkModx	ChangeToDirtySuccess	Both SysDc responses are
+		 * 				ChangeToDirtyFail		illegal for read/modify
+		 * 										commands.
+		 * RdBlkModx	ReadDataError			The cache block command was to
+		 *										NXM address space. The 21264
+		 *										delivers an all-ones pattern to
+		 *										any dependent load command,
+		 *										forces a fail action on any
+		 *										pending store commands to this
+		 *										block, and any store to this
+		 *										block is not retried. The Cbox
+		 *										evicts the cache block from the
+		 *										cache system (with associated
+		 *										victim processing). The cache
+		 *										block is marked invalid.
+		 * ChxToDirty	ReadData				The original data in the Dcache
+		 * 				ReadDataShared			is replaced with the filled
+		 * 				ReadDataShared/Dirty	data. The block is not writable,
+		 * 										so the 21264 will retry the
+		 * 										store instruction and generate
+		 * 										another ChxToDirty class
+		 * 										command. To avoid a potential
+		 * 										livelock situation, the
+		 * 										STC_ENABLE CSR bit must be set.
+		 * 										Any STx_C instruction to this
+		 * 										block is forced to fail. In
+		 * 										addition, a Shared/Dirty
+		 * 										response causes the 21264 to
+		 * 										generate a victim for this
+		 * 										block upon eviction.
+		 * ChxToDirty	ReadDataDirty			The data in the Dcache is
+		 * 										replaced with the filled data.
+		 * 										The block is writable, so the
+		 * 										store instruction that
+		 * 										generated the original command
+		 * 										can update this block. Any
+		 * 										STx_C instruction to this block
+		 * 										is forced to fail. In addition,
+		 * 										the 21264 generates a victim
+		 * 										for this block upon eviction.
+		 * ChxToDirty	ReadDataError			Impossible situation. The block
+		 * 										must be cached to generate a
+		 * 										ChxToDirty command. Caching the
+		 * 										block is not possible because
+		 * 										all NXM fills are filled
+		 * 										non-cached.
+		 * ChToDirty	ChangeToDirtySuccess	Normal response.
+		 * 										ChangeToDirtySuccess makes the
+		 * 										block writable.  The 21264
+		 * 										retries the store instruction
+		 * 										and updates the Dcache. Any
+		 * 										STx_C instruction associated
+		 * 										with this block is allowed to
+		 * 										succeed.
+		 * ChxToDirty	ChangeToDirtyFail		The MAF entry is retired. Any
+		 *										STx_C instruction associated
+		 *										with the block is forced to
+		 *										fail. If a STx instruction
+		 *										generated this block, the 21264
+		 *										retries and generates either a
+		 *										RdBlkModx (because the
+		 *										reference that failed the
+		 *										ChangeToDirty also invalidated
+		 *										the cache by way of an
+		 *										invalidating probe) or another
+		 *										ChxToDirty command.
+		 * InvalToDirty	ReadData				The block is not writable, so
+		 * 				ReadDataShared			the 21264 will retry the WH64
+		 * 				ReadDataShared/Dirty	instruction and generate a
+		 * 										ChxToDirty command.
+		 * InvalToDirty	ReadDataError			The 21264 doesn’t send
+		 * 										InvalToDirty commands off-chip
+		 * 										speculatively.  This NXM
+		 * 										condition is a hard error.
+		 * 										Systems should perform a
+		 * 										machine check.
+		 * InvalToDirty	ReadDataDirty			The block is writable. Done.
+		 * 				ChangeToDirtySuccess
+		 * InvalToDirty	ChangeToDirtyFail		Illegal.  InvalToDirty
+		 * 										instructions must provide a
+		 * 										cache block.
+		 * Fetchx		ReadData				The 21264 delivers the data
+		 * Rdiox		ReadDataShared			block, independent of its
+		 * 				ReadDataShared/Dirty	status, to waiting load
+		 * 				ReadDataDirty			instructions and does not cache
+		 * 										the block in the 21264 cache
+		 * 										system.
+		 * Fetchx		ReadDataError			The cache block address was to
+		 * 										an NXM address space. The 21264
+		 * 										delivers the all-ones patterns
+		 * 										to any dependent load
+		 * 										instructions and does not cache
+		 * 										the block in the 21264 cache
+		 * 										system.
+		 * Rdiox		ReadDataError			The cache block access was to
+		 * 										NXM address space. The 21264
+		 * 										delivers an all-ones pattern to
+		 * 										any load command and does not
+		 * 										cache the block in the 21264
+		 * 										cache system.
+		 * Evict		ChangeToDirtyFail		Retiring the MAF entry is the
+		 * 										only legal response.
+		 * STCChangeTo	ReadDataX				All fill and ChangeToDirtyFail
+		 * Dirty		ChangeToDirtyFail		responses will fail the STx_C
+		 * 										requirements.
+		 * STCChangeTo	ChangeToDirtySuccess	The STx_C instruction succeeds.
+		 * Dirty
+		 * MB			MBDone					Acknowledgment for MB.
 		 */
-		pthread_mutex_lock(&cpu->dCacheMutex);
-		switch(AXP_21264_GET_PROBE_NS(cpu->pq[entry].probe))
+		switch (pq->sysDc)
 		{
-			case AXP_21264_NS_NOP:
-			case AXP_21264_NS_RES:
-				/* Nothing to do here. */
+			case NOPsysdc:
 				break;
 
-			case AXP_21264_NS_CLEAN:
-				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
+			case ReadDataError:
+				break;
+
+			case ChangeToDirtySuccess:
+				break;
+
+			case ChangeToDirtyFail:
+				break;
+
+			case MBDone:
+				break;
+
+			case ReleaseBuffer:
+				if (pq->rpb == true)
+					AXP_21264_Free_PQ(cpu, pq->ID);
+				else
 				{
-					cpu->dCache[dCacheIndex][setToUse].dirty = false;
-					cpu->dCache[dCacheIndex][setToUse].shared = false;
+					if (AXP_21264_IOWB_ID(pq->ID) == true)
+						AXP_21264_Free_IOWB(cpu, AXP_MASK_ID(pq->ID));
+					else
+						AXP_21264_Free_VDB(cpu, pq->ID);
 				}
 				break;
 
-			case AXP_21264_NS_CLEAN_SHARED:
-				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
-				{
-					cpu->dCache[dCacheIndex][setToUse].dirty = false;
-					cpu->dCache[dCacheIndex][setToUse].shared = true;
-				}
+			case WriteData0:
+			case WriteData1:
+			case WriteData2:
+			case WriteData3:
 				break;
 
-			case AXP_21264_NS_TRANS3:
-				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
-				{
-
-					/*
-					 * Clean
-					 */
-					if ((cpu->dCache[dCacheIndex][setToUse].dirty == false) &&
-						(cpu->dCache[dCacheIndex][setToUse].shared == false))
-						cpu->dCache[dCacheIndex][setToUse].shared = true;
-
-					/*
-					 * Dirty/Shared
-					 */
-					else if ((cpu->dCache[dCacheIndex][setToUse].dirty == true) &&
-							 (cpu->dCache[dCacheIndex][setToUse].shared == true))
-						cpu->dCache[dCacheIndex][setToUse].dirty = false;
-
-					/*
-					 * Dirty
-					 */
-					else if ((cpu->dCache[dCacheIndex][setToUse].dirty == true) &&
-							 (cpu->dCache[dCacheIndex][setToUse].shared == false))
-						cpu->dCache[dCacheIndex][setToUse].valid = false;
-				}
+			case ReadData0:
+			case ReadData1:
+			case ReadData2:
+			case ReadData3:
 				break;
 
-			case AXP_21264_NS_DIRTY_SHARED:
-				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
-				{
-					cpu->dCache[dCacheIndex][setToUse].dirty = true;
-					cpu->dCache[dCacheIndex][setToUse].shared = true;
-				}
+			case ReadDataDirty0:
+			case ReadDataDirty1:
+			case ReadDataDirty2:
+			case ReadDataDirty3:
 				break;
 
-			case AXP_21264_NS_INVALID:
-				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
-					cpu->dCache[dCacheIndex][setToUse].valid = false;
+			case ReadDataShared0:
+			case ReadDataShared1:
+			case ReadDataShared2:
+			case ReadDataShared3:
 				break;
 
-			case AXP_21264_NS_TRANS1:
-
-				/*
-				 * If the block is valid then we are turning either a Clean or
-				 * Dirty block into a Clean/Shared or Dirty/Shared block.  The
-				 * only thing that is really changing is the shared bit (and
-				 * setting an already set bit is  really a no-op).
-				 */
-				if (cpu->dCache[dCacheIndex][setToUse].valid == true)
-					cpu->dCache[dCacheIndex][setToUse].shared = true;
+			case ReadDataSharedDirty0:
+			case ReadDataSharedDirty1:
+			case ReadDataSharedDirty2:
+			case ReadDataSharedDirty3:
 				break;
-		}
-		pthread_mutex_unlock(&cpu->dCacheMutex);
-
-		/*
-		 * If the we hit in the Bcache (which should be a superset of both the
-		 * Dcache and Icache), then we need to send a ProbeResponse.
-		 * TODO: Otherwise, we send what?
-		 */
-		if (bCacheValid == true)
-		{
-			u8	dataBuf[AXP_BCACHE_BLOCK_SIZE];
-			u8	vdbEntry;
-
-			AXP_21264_Bcache_Read(cpu, cpu->pq[entry].pa, dataBuf);
-			vdbEntry = AXP_21264_Add_VDB(
-								cpu,
-								probeResponse,
-								cpu->pq[entry].pa,
-								dataBuf,
-								AXP_BCACHE_BLOCK_SIZE,
-								true);
-#if 0
-			AXP_System_ProbeResponse(
-							dm,			/* DM */
-							false,		/* VS */
-							vdbEntry,
-							maf,
-							probeStatus);
-#endif
-		}
-		else
-		{
 		}
 
 		/*
 		 * Indicate that the entry is now processed, and unlock the Cbox IPR
 		 * lock, if it is still locked.
 		 */
-		cpu->pq[entry].processed = true;
+		pq->processed = true;
 		if (locked == true)
 			pthread_mutex_unlock(&cpu->cBoxIPRMutex);
 	}
@@ -2285,12 +2845,12 @@ void AXP_21264_Add_PQ(
 				AXP_21264_SYSDC_RSP sysDc,
 				u64 pa,
 				u8 id,
-				bool notJustSysDc,
 				bool rvb,
 				bool rpb,
 				bool a,
 				bool c)
 {
+	AXP_21264_CBOX_PQ	*pq;
 
 	/*
 	 * Before we do anything, lock the interface mutex to prevent multiple
@@ -2301,18 +2861,19 @@ void AXP_21264_Add_PQ(
 	/*
 	 * Queue up the next PQ entry.
 	 */
-	cpu->pqBottom = (cpu->pqBottom + 1) & 0x07;
-	cpu->pq[cpu->pqBottom].probe = probe;
-	cpu->pq[cpu->pqBottom].sysDc = sysDc;
-	cpu->pq[cpu->pqBottom].pa = pa;
-	cpu->pq[cpu->pqBottom].notJustSysDc = notJustSysDc;
-	cpu->pq[cpu->pqBottom].rvb = rvb;
-	cpu->pq[cpu->pqBottom].rpb = rpb;
-	cpu->pq[cpu->pqBottom].a = a;
-	cpu->pq[cpu->pqBottom].c = c;
-	cpu->pq[cpu->pqBottom].marked = false;
-	cpu->pq[cpu->pqBottom].valid = true;
-	cpu->pq[cpu->pqBottom].processed = false;
+	if (cpu->pq[cpu->pqBottom].valid == true)
+		cpu->pqBottom = (cpu->pqBottom + 1) & 0x07;
+	pq = &cpu->pq[cpu->pqBottom];
+	pq->probe = probe;
+	pq->sysDc = sysDc;
+	pq->pa = pa;
+	pq->rvb = rvb;
+	pq->rpb = rpb;
+	pq->a = a;
+	pq->c = c;
+	pq->marked = false;
+	pq->valid = true;
+	pq->processed = false;
 
 	/*
 	 * Let the Cbox know there is something for it to process, then unlock the
@@ -2320,6 +2881,80 @@ void AXP_21264_Add_PQ(
 	 */
 	pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
 	pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
+	return;
+}
+
+/*
+ * AXP_21264_Free_PQ
+ * 	This function is called to return a previously allocated PQ buffer.  It
+ * 	does this by setting the valid bit to false and adjusting the pqTop index,
+ * 	as necessary.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 		processor.
+ *	entry:
+ *		An integer value that is the entry in the PQ to be invalidated.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Free_PQ(AXP_21264_CPU *cpu, u8 entry)
+{
+	AXP_21264_CBOX_PQ	*pq = &cpu->pq[entry];
+	int		ii;
+	int 	start1, end1, start2 = -1, end2 = -1;
+	bool	done = false;
+
+	/*
+	 * First, clear the valid bit.
+	 */
+	pq->valid = false;
+
+	/*
+	 * We now have to see if we can adjust the top of the queue.
+	 */
+	if (cpu->pqTop > cpu->pqBottom)
+	{
+		start1 = cpu->pqTop;
+		end1 = AXP_21264_PQ_LEN - 1;
+		start2 = 0;
+		end2 = cpu->pqBottom;
+	}
+	else
+	{
+		start1 = cpu->pqTop;
+		end1 = cpu->pqBottom;
+	}
+
+	/*
+	 * Search through the list to find the first entry that is in-use (valid).
+	 */
+	for (ii = start1; ((ii <= end1) && (done == false)); ii++)
+	{
+		if (cpu->pq[ii].valid == false)
+			cpu->pqTop = (cpu->pqTop + 1) & 0x07;
+		else
+			done == true;
+	}
+	if ((done == false) && (start2 != -1))
+	{
+		for (ii = start2; ((ii <= end2) && (done == false)); ii++)
+		{
+			if (cpu->pq[ii].valid == false)
+				cpu->pqTop = (cpu->pqTop + 1) & 0x07;
+			else
+				done = true;
+		}
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
 	return;
 }
 
