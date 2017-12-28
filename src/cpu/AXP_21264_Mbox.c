@@ -784,12 +784,13 @@ void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
 		else
 		{
 			lqEntry->state = CboxPending;
-			AXP_21264_Add_IOWB(
+			AXP_21264_Add_MAF(
 					cpu,
+					LDx,
 					lqEntry->physAddress,
 					(entry + 1),	/* We need to take zero out of play */
-					NULL,
-					lqEntry->len);
+					lqEntry->len,
+					false);
 		}
 	}
 	else
@@ -1458,12 +1459,6 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 		cpu->dtb[ii].valid = false;
 	}
 	cpu->nextDTB = 0;
-	for (ii = 0; ii < AXP_21264_MAF_LEN; ii++)
-	{
-		cpu->maf[ii].type = MAFNotInUse;
-		cpu->maf[ii].pa = 0;
-		cpu->maf[ii].complete = false;
-	}
 	cpu->tbMissOutstanding = false;;
 	cpu->dtbTag0.res_1 = 0;
 	cpu->dtbTag0.va = 0;

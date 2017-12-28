@@ -459,7 +459,7 @@ typedef struct
 	bool						valid;
 	bool						marked;
 	u8							sysData[AXP_21264_SIZE_QUAD];
-	u8							dataLen;
+	u32							dataLen;
 } AXP_21264_CBOX_VIC_BUF;
 
 /*
@@ -480,6 +480,7 @@ typedef struct
 	bool						marked;
 	u8							ID;
 	u8							sysData[AXP_21264_SIZE_QUAD];
+	u32							dataLen;
 } AXP_21264_CBOX_PQ;
 
 /*
@@ -507,9 +508,11 @@ typedef struct
 {
 	AXP_CBOX_MAF_TYPE	type;
 	u64					pa;
-	bool				valid;
 	i8					lqSqEntry[AXP_21264_MBOX_MAX];
+	bool				valid;
 	bool				complete;	/* cleared by Mbox, set by Cbox */
+	bool				shared;
+	bool				ioReq;
 } AXP_21264_CBOX_MAF;
 
 /*
