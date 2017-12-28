@@ -258,6 +258,15 @@ typedef struct
 #define AXP_21264_CACHE_DIRTY	0x02
 #define AXP_21264_CACHE_SHARED	0x04
 
+#define AXP_CACHE_HIT(_status)	\
+	((_status) & AXP_21264_CACHE_HIT == AXP_21264_CACHE_HIT)
+#define AXP_CACHE_DIRTY(_status)	\
+	((_status) & AXP_21264_CACHE_DIRTY == AXP_21264_CACHE_DIRTY)
+#define AXP_CACHE_SHARED(_status)	\
+	((_status) & AXP_21264_CACHE_SHARED == AXP_21264_CACHE_SHARED)
+#define AXP_CACHE_CLEAN(_status)	\
+	((_status) & AXP_21264_CACHE_DIRTY != AXP_21264_CACHE_DIRTY)
+
 /*
  * This structure is the definition for one Duplicate Dcache Tag Entry.  A
  * block contains the following:

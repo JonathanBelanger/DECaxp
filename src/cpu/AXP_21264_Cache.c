@@ -1016,7 +1016,7 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 		{
 
 			/*
-			 * 
+			 * Search through each of the possible sets.
 			 */
 			for (jj = 0; ((jj < activeSets) & (*status == 0)); jj++)
 			{
