@@ -253,19 +253,22 @@ typedef struct
  *	4.	MB: Based on the Cbox CSR SYSBUS_MB_ENABLE, the MB command can be sent
  *		to the pins.
  */
-#define AXP_21264_CACHE_MISS	0x00
-#define AXP_21264_CACHE_HIT		0x01
-#define AXP_21264_CACHE_DIRTY	0x02
-#define AXP_21264_CACHE_SHARED	0x04
+#define AXP_21264_CACHE_MISS			0x00
+#define AXP_21264_CACHE_HIT				0x01
+#define AXP_21264_CACHE_DIRTY			0x02
+#define AXP_21264_CACHE_SHARED			0x04
+#define AXP_21264_CACHE_CLEAN			0x01
+#define AXP_21264_CACHE_CLEAN_SHARED	0x05
+#define AXP_21264_CACHE_DIRTY_			0x03
+#define AXP_21264_CACHE_DIRTY_SHARED	0x07
 
-#define AXP_CACHE_HIT(_status)	\
-	((_status) & AXP_21264_CACHE_HIT == AXP_21264_CACHE_HIT)
-#define AXP_CACHE_DIRTY(_status)	\
-	((_status) & AXP_21264_CACHE_DIRTY == AXP_21264_CACHE_DIRTY)
-#define AXP_CACHE_SHARED(_status)	\
-	((_status) & AXP_21264_CACHE_SHARED == AXP_21264_CACHE_SHARED)
-#define AXP_CACHE_CLEAN(_status)	\
-	((_status) & AXP_21264_CACHE_DIRTY != AXP_21264_CACHE_DIRTY)
+#define AXP_CACHE_MISS(_status)			((_status) == AXP_21264_CACHE_MISS)
+#define AXP_CACHE_HIT(_status)			\
+	(((_status) & AXP_21264_CACHE_HIT) == AXP_21264_CACHE_HIT)
+#define AXP_CACHE_CLEAN(_status)		((_status) == AXP_21264_CACHE_CLEAN)
+#define AXP_CACHE_CLEAN_SHARED(_status)	((_status) == AXP_21264_CACHE_CLEAN_SHARED)
+#define AXP_CACHE_DIRTY(_status)		((_status) == AXP_21264_CACHE_DIRTY_)
+#define AXP_CACHE_DIRTY_SHARED(_status)	((_status) == AXP_21264_CACHE_DIRTY_SHARED)
 
 /*
  * This structure is the definition for one Duplicate Dcache Tag Entry.  A
