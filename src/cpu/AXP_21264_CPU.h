@@ -588,6 +588,7 @@ typedef struct
 	AXP_21264_CBOX_VIC_BUF	vdb[AXP_21264_VDB_LEN];
 	AXP_21264_CBOX_IOWB		iowb[AXP_21264_IOWB_LEN];
 	AXP_21264_CBOX_PQ		pq[AXP_21264_PQ_LEN];
+	bool					noProbeResponses;
 	AXP_21264_CBOX_MAF		maf[AXP_21264_MAF_LEN];
 	u8						irqH : 6;	/* Six interrupt bits set by system	*/
 	u8						vdbTop, vdbBottom;

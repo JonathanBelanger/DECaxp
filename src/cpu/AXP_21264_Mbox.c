@@ -393,25 +393,18 @@ void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *cpu,
  *	entry:
  *		The value of the signed index+1 into the LQ/SQ.  A value < 0 is for the
  *		SQ, otherwise the LQ.
- *	data:
- *		A pointer to the data that needs to be written to the Dcache.  The
- *		length of this data is always 64 bytes.
  *
  * Output Parameters:
- *	lqEntry/sqEntry:
- *		A pointer to the entry which has been set up so that the instruction
- *		can be retired.
+ *	None.
  *
  * Return Value:
  *	None.
  *
  * NOTE:	When we are called, the Mbox mutex is NOT locked.  We need to lock
  *			it before we do anything, and unlock it when we are done.
- *			TODO:	Do we need to differentiate between a Dcache fill and a
- *					IOWB completion.
  *
  */
-void AXP_21264_Mbox_CboxCompl(AXP_21264_CPU *cpu, i8 lqSqEntry, u8 *data)
+void AXP_21264_Mbox_CboxCompl(AXP_21264_CPU *cpu, i8 lqSqEntry)
 {
 	bool			signalCond = false;
 	u8				entry = abs(lqSqEntry) - 1;
@@ -433,11 +426,6 @@ void AXP_21264_Mbox_CboxCompl(AXP_21264_CPU *cpu, i8 lqSqEntry, u8 *data)
 	if (lqSqEntry <= 0)
 	{
 		AXP_MBOX_QUEUE	*sqEntry = &cpu->sq[entry];
-
-		/*
-		 * Write the buffer into the Dcache.
-		 */
-		AXP_DcacheWrite(cpu, sqEntry->dcacheLoc, AXP_DCACHE_DATA_LEN, data);
 
 		/*
 		 * We need to signal the Mbox if the entry was in a pending Cbox state.
@@ -593,7 +581,6 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 					LDx,
 					lqEntry->physAddress,
 					(entry + 1),	/* We need to take zero out of play */
-					NULL,
 					lqEntry->len,
 					false);
 			}
@@ -965,7 +952,6 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 				type,
 				sqEntry->physAddress,
 				-(entry + 1),	/* We need to take zero out of play */
-				sqEntry->value,
 				sqEntry->len,
 				shared);
 		}
@@ -996,7 +982,6 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 					type,
 					sqEntry->physAddress,
 					-(entry + 1),	/* We need to take zero out of play */
-					sqEntry->value,
 					sqEntry->len,
 					shared);
 			}

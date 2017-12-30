@@ -416,18 +416,6 @@ typedef enum
 #define AXP_21264_GET_PROBE_NS(probe)	((probe) & 0x07)
 #define AXP_21264_SET_PROBE(dm, ns)		((((dm) & 0x03) << 3) || ((ns) & 0x07))
 
-/*
- * Mask field to indicate which bytes in the data returned from/supplied to the
- * system are relevant.
- */
-#define AXP_21264_IO_INV		0x0000
-#define AXP_21264_IO_BYTE		0x0001
-#define AXP_21264_IO_WORD		0x0003
-#define AXP_21264_IO_LONG		0x000f
-#define AXP_21264_IO_QUAD		0x00ff
-#define AXP_21264_ICACHE_FILL	0x0100
-#define AXP_21264_DCACHE_FILL	0x0200
-
 #define AXP_21264_SIZE_LONG		32
 #define AXP_21264_SIZE_QUAD		64
 
@@ -459,7 +447,6 @@ typedef struct
 	bool						valid;
 	bool						marked;
 	u8							sysData[AXP_21264_SIZE_QUAD];
-	u32							dataLen;
 } AXP_21264_CBOX_VIC_BUF;
 
 /*
@@ -470,6 +457,7 @@ typedef struct
 {
 	u64							pa;
 	AXP_21264_SYSDC_RSP			sysDc;
+	AXP_21264_PROBE_STAT		probeStatus;
 	int							probe;
 	bool						rvb;
 	bool						rpb;
@@ -477,10 +465,14 @@ typedef struct
 	bool						c;
 	bool						processed;
 	bool						valid;
-	bool						marked;
+	bool						pendingRsp;
+	bool						dm;
+	bool						vs;
+	bool						ms;
 	u8							ID;
 	u8							sysData[AXP_21264_SIZE_QUAD];
-	u32							dataLen;
+	u8							vdb;
+	u8							maf;
 } AXP_21264_CBOX_PQ;
 
 /*
@@ -508,7 +500,10 @@ typedef struct
 {
 	AXP_CBOX_MAF_TYPE	type;
 	u64					pa;
+	u64					mask;
 	i8					lqSqEntry[AXP_21264_MBOX_MAX];
+	int					dataLen;
+	int					bufLen;
 	bool				valid;
 	bool				complete;	/* cleared by Mbox, set by Cbox */
 	bool				shared;
@@ -526,12 +521,12 @@ typedef struct
 {
 	bool				processed;
 	bool				valid;
-	bool				aligned;
 	u64					pa;
+	u64					mask;
 	i8					lqSqEntry[AXP_21264_MBOX_MAX];
 	u8					storeLen;
 	u8					sysData[AXP_21264_SIZE_QUAD];
-	int					dataLen;
+	int					bufLen;
 } AXP_21264_CBOX_IOWB;
 
 #define AXP_IOWB_ID_MASK		0x08

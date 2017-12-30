@@ -43,6 +43,15 @@
  *
  *	V01.004		18-Nov-2017	Jonathan D. Belanger
  *	Uncommented the pthread.h include.  We are going threading.
+ *
+ *	V01.005		29-Dec-2017	Jonathan D. Belanger
+ *	When sending data from the CPU to the System, we do so in upto 64-byte
+ *	blocks.  Since these blocks are not necessarily consecutive, there may be
+ *	gaps between the end of what section of relevant data and the start of the
+ *	next.  In the real CPU, this would be broken down into a series of
+ *	WrBytes/WrLWs/WrQWs or ReadBytes/ReadLWs/ReadQWs.  We need to mimic this,
+ *	but do it in a single step.  We need some macros to set/decode the
+ *	appropriate set of mask bits (each bit represent a single byte).
  */
 #ifndef _AXP_UTIL_DEFS_
 #define _AXP_UTIL_DEFS_
@@ -215,6 +224,14 @@ typedef struct
 #define AXP_ROM_FWID_MILO	7	/* Linux Miniloader */
 #define AXP_ROM_FWID_VXWRKS	8	/* VxWorks Real-Time Operating System */
 #define AXP_ROM_FWID_SROM	10	/* Serial ROM */
+
+/*
+ * CPU <--> System Mask generation macro definitions.
+ */
+#define AXP_MASK_BYTE				0x0001
+#define AXP_MASK_WORD				0x0003
+#define AXP_MASK_LONG				0x000f
+#define AXP_MASK_QUAD				0x00ff
 
 /*
  * Define a basic queue.  This will be used to define a number of other queue
