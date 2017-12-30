@@ -129,12 +129,12 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 		 */
 		if ((pthreadRet == 0) || (qRet == true))
 		{
-#if 0
 			pthreadRet = pthread_create(
 							&cpu->iBoxThreadID,
 							NULL,
 							AXP_21264_iBoxMain,
 							cpu);
+#if 0
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->eBoxU0ThreadID,
@@ -171,6 +171,7 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 								NULL,
 								AXP_21264_fBoxOthMain,
 								cpu);
+#endif
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->mBoxThreadID,
@@ -183,7 +184,6 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 								NULL,
 								AXP_21264_cBoxMain,
 								cpu);
-#endif
 		}
 
 		/*

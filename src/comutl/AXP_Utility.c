@@ -39,8 +39,17 @@
  *	wait for an entry to be queued.
  *
  *	V01.004		21-Nov-2017	Jonathan D. Belanger
- *	Decided to redo the ROM load/unload routines to move the CPU specific
+ *	Decided to re-do the ROM load/unload routines to move the CPU specific
  *	structures out of this module.  They are going to be moved into the Cbox.
+ *
+ *	V01.005		29-Dec-2017	Jonathan D. Belanger
+ *	When sending data from the CPU to the System, we do so in upto 64-byte
+ *	blocks.  Since these blocks are not necessarily consecutive, there may be
+ *	gaps between the end of what section of relevant data and the start of the
+ *	next.  In the real CPU, this would be broken down into a series of
+ *	WrBytes/WrLWs/WrQWs or ReadBytes/ReadLWs/ReadQWs.  We need to mimic this,
+ *	but do it in a single step.  We need some functions to set/decode the
+ *	appropriate set of mask bits (each bit represent a single byte).
  */
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
@@ -1504,5 +1513,213 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
 		printf(errMsg, "FNO", "File not opened.");
 		retVal = true;
 	}
+	return(retVal);
+}
+
+/*
+ * AXP_MaskReset
+ *	This function is called to reset the indicated mask.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	mask:
+ *		A pointer to a 64-bit unsigned integer to have all its bits cleared.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_MaskReset(u64 *mask)
+{
+	*mask = 0;
+
+	/*
+	 * return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_MaskSet
+ *	This function is called to set some bits in a mask, representing occupied
+ *	locations within a 64 byte buffer.
+ *
+ * Input Parameters:
+ *	mask:
+ *		A pointer containing the current set of masked bits.
+ *	basePA:
+ *		A 64-bit unsigned value representing the base address of the buffer.
+ *	pa:
+ *		A 64-bit unsigned value representing the base address of the data
+ *		written to the buffer.
+ *	len:
+ *		A value indicating the length of the data written to the buffer.
+ *
+ * Output Parameters:
+ * 	mask:
+ * 		A pointer with the updated set of bit masks.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_MaskSet(u64 *mask, u64 basePa, u64 pa, int len)
+{
+	switch(len)
+	{
+		case BYTE_LEN:
+			*mask |= (AXP_MASK_BYTE << (pa - basePa));
+			break;
+
+		case WORD_LEN:
+			*mask |= (AXP_MASK_WORD << (pa - basePa));
+			break;
+
+		case LONG_LEN:
+			*mask |= (AXP_MASK_LONG << (pa - basePa));
+			break;
+
+		case QUAD_LEN:
+			*mask |= (AXP_MASK_QUAD << (pa - basePa));
+			break;
+	}
+
+	/*
+	 * return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_MaskStartGet
+ *	This function is called to set up the pointer into the mask to its initial
+ *	value.  This pointer is used to determine where we left off for successive
+ *	AXP_MaskGets.  The pointer needs to be supplied for each of the AXP_MaskGet
+ *	calls.  A call to this function must be performed prior to any set of
+ *	AX_MaskGets.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	curPtr:
+ *		A pointer to a location indicating where we left off in returning the
+ *		set of currently set masks.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_MaskStartGet(int *curPtr)
+{
+	*curPtr = 0;
+
+	/*
+	 * return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_MaskGet
+ *	This function is called to return the offset to the next location within
+ *	the buffer with the valid data.  The current point into the buffer is set
+ *	to the next location.
+ *
+ * Input Parameters:
+ *	curPtr:
+ *		A pointer to a location with the current location within the mask to be
+ *		parsed.
+ *	mask:
+ *		A 64-bit value representing the mask being parsed.
+ *	len:
+ *		A value indicating the length of the data written to the buffer.
+ *
+ * Output Parameters:
+ *	curPtr:
+ *		A pointer to a location to receive the next place to look for valid
+ *		data within the buffer.  A value of -1 indicate that there is no more
+ *		to parse.
+ *
+ * Return Value:
+ *	-1:		Nothing to parse.
+ *	>=0:	A value representing the byte offset within a buffer containing
+ *			valid data.
+ */
+int AXP_MaskGet(int *curPtr, u64 mask, int len)
+{
+	int		retVal = -1;
+	int		curPtrMax;
+	u16		maskBits;
+
+	switch(len)
+	{
+		case BYTE_LEN:
+			maskBits = AXP_MASK_BYTE;
+			curPtrMax = 64;
+			break;
+
+		case WORD_LEN:
+			maskBits = AXP_MASK_WORD;
+			curPtrMax = 63;
+			break;
+
+		case LONG_LEN:
+			maskBits = AXP_MASK_LONG;
+			curPtrMax = 61;
+			break;
+
+		case QUAD_LEN:
+			maskBits = AXP_MASK_QUAD;
+			curPtrMax = 57;
+			break;
+	}
+
+	/*
+	 * If this is the first time we are parsing this mask, then the current
+	 * pointer may not be pointing to the next valid data.  We need to do an
+	 * initial search for the first one.
+	 */
+	if (*curPtr == 0)
+	{
+
+		/*
+		 * Loop through each of the mask bits, trying to find a set for the
+		 * current data length, or until we run out of bits to check.
+		 */
+		while (((mask & (maskBits << *curPtr)) != (maskBits << *curPtr)) &&
+			   (*curPtr < curPtrMax))
+		{
+			*curPtr++;
+		}
+		if (*curPtr == curPtrMax)
+			*curPtr = -1;
+	}
+
+	/*
+	 * At this point the current point either needs to point to the next set of
+	 * mask bits or is negative, indicating that there is nothing more to
+	 * process.  If the former, then return the current pointer value to the
+	 * caller and determine the next, if any, offset to be returned.
+	 */
+	if (*curPtr > 0)
+	{
+		retVal = *curPtr;
+
+		/*
+		 * Loop through each of the mask bits, trying to find a set for the
+		 * current data length, or until we run out of bits to check.
+		 */
+		while (((mask & (maskBits << *curPtr)) != (maskBits << *curPtr)) &&
+			   (*curPtr < curPtrMax))
+		{
+			*curPtr++;
+		}
+		if (*curPtr == curPtrMax)
+			*curPtr = -1;
+	}
+
+	/*
+	 * Return what we found back to the caller.
+	 */
 	return(retVal);
 }
