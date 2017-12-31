@@ -54,18 +54,33 @@
 #	error.  I made a bunch of clean ups and made this code a bit more
 #	resilient.
 #
+#	V01.007		31-Dec-2017	Jonathan D. Belanger
+#	Made this Makefile much more dynamic.  You'll notice that there are not too
+#	many explicit filenames in here.  They are generated as part of the depend
+#	target.  At some point I may make this Makefile more self-aware, where it
+#	will rebuild itself if any of the source files changed, including the
+#	Makefile itself.
+#
 PROJDIR = /cygdrive/g/git/DECaxp/
 
 #
 # Create variables for the various top-level directories we care about.
 #
-COMUTLDIR = $(PROJDIR)src/comutl/
+COMDIR = $(PROJDIR)src/comutl/
 CPUDIR = $(PROJDIR)src/cpu/
-SRCDIR = $(COMUTLDIR) $(CPUDIR)
+SRCDIR = $(COMDIR) $(CPUDIR)
 TSTDIR = $(PROJDIR)src/tst/
 OBJDIR = $(PROJDIR)bin/
 EXEDIR = $(PROJDIR)exe/
 BLDDIR = $(PROJDIR)bld/
+
+#
+# Build file information, so that we can build from any directory and not have
+# to worry where files get written.
+#
+SELF = $(BLDDIR)Makefile
+DEP = $(addsuffix .dep, $(SELF))
+BAK = $(addsuffix .bak, $(SELF))
 
 #
 # Create variables for the .c source code files for the emulator and the object
@@ -133,11 +148,9 @@ progs: $(OBJS) $(PROGS)
 # to the obj folder and there may be multiple source folders.
 #
 $(OBJDIR)%.o: $(SRCS)
-	$(eval SRC = $(findstring $(COMUTLDIR)$(*F).c, $(SRCS)))
-ifeq ($(SRC),)
-	echo "Here"
-		$(eval SRC = $(findstring $(CPUDIR)$(*F).c, $(SRCS)))
-endif
+	$(eval SRC = $(findstring $(COMDIR)$(*F).c, $(SRCS)))
+	$(eval SRC1 = $(findstring $(CPUDIR)$(*F).c, $(SRCS)))
+	$(eval $(strip SRC += $(SRC1)))
 	$(CC) -c $(CFLAGS) -o $@ $(SRC)
 
 .PHONY: clean
@@ -148,8 +161,11 @@ endif
 #
 clean: straighten
 ifneq ($(wildcard $(BLDDIR)*.bak),)
-	rm -f $(BLDDIR)Makefile
-	mv -f $(BLDDIR)Makefile.bak $(BLDDIR)Makefile
+	rm -f $(SELF)
+	mv -f $(BAK) $(SELF)
+endif
+ifneq ($(wildcard $(BLDDIR)*.dep),)
+	rm -f $(DEP)
 endif
 
 #
@@ -161,7 +177,21 @@ straighten:
 #
 # Make all the dependencies.
 #
-depend:
-	makedepend -p$(OBJDIR) -I/usr/lib/gcc/x86_64-pc-cygwin/6.4.0/include -- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PROGS)
+depend: $(DEP)
+	makedepend -f$(SELF)								\
+		-p$(OBJDIR) 									\
+		-I/usr/lib/gcc/x86_64-pc-cygwin/6.4.0/include	\
+		-- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PROGS)
+
+$(DEP): $(SRCS)
+	$(file >$(DEP))
+	$(foreach _,									\
+		$(SRCS), 									\
+		$(file >>$(DEP),$(addprefix $(OBJDIR),		\
+				$(addsuffix .o,						\
+					$(basename 						\
+						$(notdir $(_))))): $(_)))
+
+include $(DEP)
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
