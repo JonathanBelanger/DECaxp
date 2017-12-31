@@ -151,8 +151,6 @@ int main()
 	instr.type_hint_index = 0;
 	instr.scbdMask = 0;
 	instr.len_stall = 0;
-	instr.lockFlagPending = false;
-	instr.clearLockPending = false;
 	instr.useLiteral = false;
 	instr.branchPredict = false;
 	instr.literal = 0;

@@ -49,12 +49,19 @@
 #	V01.005		19-Nov-2017	Jonathan D. Belanger
 #	Moved the test folder (tst) into the src folder.
 #
+#	V01.006		30-Dec-2017	Jonathan D. Belanger
+#	What was here before looked like it was working, but it was doing so in
+#	error.  I made a bunch of clean ups and made this code a bit more
+#	resilient.
+#
 PROJDIR = /cygdrive/g/git/DECaxp/
 
 #
 # Create variables for the various top-level directories we care about.
 #
-SRCDIR = $(PROJDIR)src/comutl $(PROJDIR)src/cpu
+COMUTLDIR = $(PROJDIR)src/comutl/
+CPUDIR = $(PROJDIR)src/cpu/
+SRCDIR = $(COMUTLDIR) $(CPUDIR)
 TSTDIR = $(PROJDIR)src/tst/
 OBJDIR = $(PROJDIR)bin/
 EXEDIR = $(PROJDIR)exe/
@@ -65,7 +72,7 @@ BLDDIR = $(PROJDIR)bld/
 # files that are created from compiling.  This definition will look in all
 # sub-directories under the top-level source directory.
 #
-CFILES = $(wildcard $(SRCDIR)*.c)
+CFILES = $(foreach DIR, $(SRCDIR), $(wildcard $(DIR)*.c))
 SRCS = $(CFILES)
 OBJS = $(addprefix $(OBJDIR), $(notdir $(CFILES:.c=.o)))
 
@@ -86,7 +93,7 @@ PROGS =
 #
 # Create variables for the include path for all the emulator header files.
 #
-INCDIRS = $(wildcard $(SRCDIR)/*)
+INCDIRS = $(wildcard $(SRCDIR))
 INCS = $(foreach d, $(INCDIRS), -I$d)
 
 #
@@ -94,7 +101,7 @@ INCS = $(foreach d, $(INCDIRS), -I$d)
 # object and executable files.
 #
 CC = gcc
-CFLAGS = $(INCS) -std=c99 -Wall -pthread
+CFLAGS = $(INCS) -m64 -std=c99 -Wall -pthread
 
 #
 # Debug adds to the compiler flags and then compiles everything that has not
@@ -106,18 +113,32 @@ debug: all
 #
 # Build everything.  Objects, test executables, and emulator executables.
 #
-all: $(OBJS) $(TSTS) $(PROGS)
+all: tests progs
 
-$(OBJS): | $(OBJDIR)
+#
+# The Test executables require the objects and the test source code.
+#
+tests:	$(OBJS) $(TSTS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(EXEDIR) $<
 
-$(OBJDIR):
-	mkdir -p $(OBJDIR)
+#
+# The Program executeable(s) require the objects and the program source
+# file(s).
+#
+progs: $(OBJS) $(PROGS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(EXEDIR) $<
 
-$(EXEDIR)%$(EXE) : $(TSTDIR)%.c $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $@ $<
-
-$(OBJDIR)%.o : $(SRCDIR)*/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+#
+# The Object files require the component source files.  The objects are written
+# to the obj folder and there may be multiple source folders.
+#
+$(OBJDIR)%.o: $(SRCS)
+	$(eval SRC = $(findstring $(COMUTLDIR)$(*F).c, $(SRCS)))
+ifeq ($(SRC),)
+	echo "Here"
+		$(eval SRC = $(findstring $(CPUDIR)$(*F).c, $(SRCS)))
+endif
+	$(CC) -c $(CFLAGS) -o $@ $(SRC)
 
 .PHONY: clean
 

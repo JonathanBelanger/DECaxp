@@ -641,9 +641,6 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 			case NOPsysdc:
 				break;
 
-			case MBDone:
-				break;
-
 			case ReleaseBuffer:
 			case WriteData0:
 			case WriteData1:
@@ -880,22 +877,56 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 			case ReadDataError:
 			case ChangeToDirtySuccess:
 			case ChangeToDirtyFail:
+			case MBDone:
+				AXP_21264_Complete_MAF(
+									cpu,
+									pq->ID,
+									pq->sysDc,
+									pq->sysData);
+				break;
+
 			case ReadData0:
 			case ReadData1:
 			case ReadData2:
 			case ReadData3:
+				AXP_21264_Complete_MAF(
+									cpu,
+									pq->ID,
+									ReadData,
+									pq->sysData);
+				break;
+
 			case ReadDataDirty0:
 			case ReadDataDirty1:
 			case ReadDataDirty2:
 			case ReadDataDirty3:
+				AXP_21264_Complete_MAF(
+									cpu,
+									pq->ID,
+									ReadDataDirty,
+									pq->sysData);
+				break;
+
 			case ReadDataShared0:
 			case ReadDataShared1:
 			case ReadDataShared2:
 			case ReadDataShared3:
+				AXP_21264_Complete_MAF(
+									cpu,
+									pq->ID,
+									ReadDataShared,
+									pq->sysData);
+				break;
+
 			case ReadDataSharedDirty0:
 			case ReadDataSharedDirty1:
 			case ReadDataSharedDirty2:
 			case ReadDataSharedDirty3:
+				AXP_21264_Complete_MAF(
+									cpu,
+									pq->ID,
+									ReadDataSharedDirty,
+									pq->sysData);
 				break;
 		}
 		pthread_mutex_lock(&cpu->bCacheMutex);

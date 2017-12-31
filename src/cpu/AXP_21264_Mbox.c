@@ -393,6 +393,16 @@ void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *cpu,
  *	entry:
  *		The value of the signed index+1 into the LQ/SQ.  A value < 0 is for the
  *		SQ, otherwise the LQ.
+ *	data:
+ *		A pointer to a buffer containing data returned from an Load to the I/O
+ *		Address Space.  Data that is supposed to go into the Dcache will have
+ *		already been copied there by the Cbox prior to calling this function.
+ *	dataLen:
+ *		A value indicating the length of the data returned in the 'data'
+ *		parameter.
+ *	error:
+ *		A value indicating that an error was returned.  The buffer returned on
+ *		a load is set to an all ones bit pattern.
  *
  * Output Parameters:
  *	None.
@@ -404,7 +414,12 @@ void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *cpu,
  *			it before we do anything, and unlock it when we are done.
  *
  */
-void AXP_21264_Mbox_CboxCompl(AXP_21264_CPU *cpu, i8 lqSqEntry)
+void AXP_21264_Mbox_CboxCompl(
+					AXP_21264_CPU *cpu,
+					i8 lqSqEntry,
+					u8 *data,
+					int dataLen,
+					bool error)
 {
 	bool			signalCond = false;
 	u8				entry = abs(lqSqEntry) - 1;
@@ -442,6 +457,8 @@ void AXP_21264_Mbox_CboxCompl(AXP_21264_CPU *cpu, i8 lqSqEntry)
 		/*
 		 * We need to signal the Mbox if the entry was in a pending Cbox state.
 		 * If so, we need to change the state to Read Pending.
+		 *
+		 * TODO: Need to process the data for I/O loads.
 		 */
 		signalCond = lqEntry->state == CboxPending;
 		if (signalCond == true)
@@ -558,7 +575,7 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 		 * If we did not get a DcHit (See HRM Table 4-1), then we need to check
 		 * the Bcache.
 		 */
-		if ((cacheStatus & AXP_21264_CACHE_HIT) != AXP_21264_CACHE_HIT)
+		if (AXP_CACHE_MISS(cacheStatus) == true)
 		{
 
 			/*
@@ -573,7 +590,7 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 			 * Missed Address File (MAF) for the Cbox to process.  There is
 			 * nothing else for us to do here.
 			 */
-			if ((cacheStatus & AXP_21264_CACHE_HIT) != AXP_21264_CACHE_HIT)
+			if (AXP_CACHE_MISS(cacheStatus) == true)
 			{
 				lqEntry->state = CboxPending;
 				AXP_21264_Add_MAF(
@@ -875,7 +892,7 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 		 * If we did not hit in the Dcache, go see if the information is in the
 		 * Bcache.
 		 */
-		if ((cacheStatus & AXP_21264_CACHE_HIT) != AXP_21264_CACHE_HIT)
+		if (AXP_CACHE_MISS(cacheStatus) == true)
 		{
 
 			/*
@@ -896,7 +913,7 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 			 * Hit in the Bcache, move the data to the Dcache, which may
 			 * require evicting the current entry.
 			 */
-			if ((cacheStatus & AXP_21264_CACHE_HIT) == AXP_21264_CACHE_HIT)
+			if (AXP_CACHE_HIT(cacheStatus) == true)
 			{
 
 				/*
@@ -914,8 +931,7 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 				 * If the cache status is Dirty and Not Shared, then it is
 				 * writable.
 				 */
-				if (((cacheStatus & AXP_21264_CACHE_DIRTY) == AXP_21264_CACHE_DIRTY) ||
-					((cacheStatus & AXP_21264_CACHE_SHARED) != AXP_21264_CACHE_SHARED))
+				if (AXP_CACHE_DIRTY(cacheStatus) == true)
 					DcW = true;
 			}
 
@@ -927,8 +943,7 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 		else
 		{
 			DcHit = true;
-			if (((cacheStatus & AXP_21264_CACHE_DIRTY) == AXP_21264_CACHE_DIRTY) ||
-				((cacheStatus & AXP_21264_CACHE_SHARED) != AXP_21264_CACHE_SHARED))
+			if (AXP_CACHE_DIRTY(cacheStatus) == true)
 				DcW = true;
 		}
 
@@ -937,7 +952,8 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 		 * if we did hit in either cache, then we need to go get the block from
 		 * memory.
 		 */
-		shared = ((cacheStatus & AXP_21264_CACHE_SHARED) == AXP_21264_CACHE_SHARED);
+		shared = (AXP_CACHE_CLEAN_SHARED(cacheStatus) ||
+				  AXP_CACHE_DIRTY_SHARED(cacheStatus));
 		if (DcHit == false)
 		{
 			sqEntry->state = CboxPending;

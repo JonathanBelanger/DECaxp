@@ -478,7 +478,7 @@ void AXP_21264_Free_IOWB(AXP_21264_CPU *cpu, u8 entry)
 	for (ii = 0; ii < AXP_21264_MBOX_MAX; ii++)
 	{
 		if (iowb->lqSqEntry != 0)
-			AXP_21264_Mbox_CboxCompl(cpu, iowb->lqSqEntry[ii]);
+			AXP_21264_Mbox_CboxCompl(cpu, iowb->lqSqEntry[ii], NULL, 0, false);
 	}
 
 	/*

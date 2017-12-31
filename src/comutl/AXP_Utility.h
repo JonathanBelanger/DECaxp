@@ -60,6 +60,7 @@
  * Includes used throughout the code.
  */
 #include <pthread.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -99,6 +100,7 @@ typedef __int128			i128;	/* 16 bytes (128 bits) in length */
 #define WORD_LEN			sizeof(u16)
 #define LONG_LEN			sizeof(u32)
 #define QUAD_LEN			sizeof(u64)
+#define CACHE_LEN			64
 
 /*
  * Various values that are used throughout the code.
@@ -106,7 +108,7 @@ typedef __int128			i128;	/* 16 bytes (128 bits) in length */
 #define AXP_LOW_BYTE		0x00000000000000ffll
 #define AXP_LOW_WORD		0x000000000000ffffll
 #define AXP_LOW_LONG		0x00000000ffffffffll
-#define AXP_LOW_QUAD		0xffffffffffffffffll
+#define AXP_LOW_QUAD		(i64) 0xffffffffffffffffll
 #define AXP_LOW_6BITS		0x000000000000003fll
 #define AXP_LOW_3BITS		0x0000000000000007ll
 
@@ -119,7 +121,7 @@ typedef __int128			i128;	/* 16 bytes (128 bits) in length */
  *		31, 1994).
  */
 typedef u32	AXP_TRCLOG;
-extern const AXP_TRCLOG		_axp_trc_log_;
+extern AXP_TRCLOG		_axp_trc_log_;
 
 /*
  * These bits are used in each of the nibbles within the AXPTRCLOG environment
@@ -349,6 +351,11 @@ typedef struct
 /*
  * Prototype Definitions
  *
+ * Trace Functionality
+ */
+bool AXP_TraceInit(void);
+
+/*
  * Least Recently Used (LRU) queue functions.
  */
 void AXP_LRUAdd(AXP_QUEUE_HDR *lruQ, AXP_QUEUE_HDR *entry);
@@ -368,13 +375,27 @@ bool AXP_CondQueue_Init(AXP_COND_Q_ROOT *);
 bool AXP_CondQueueCnt_Init(AXP_COND_Q_ROOT_CNT *, u32);
 int AXP_CondQueue_Insert(AXP_COND_Q_LEAF *, AXP_COND_Q_LEAF *);
 bool AXP_CondQueue_Remove(AXP_COND_Q_LEAF *, AXP_COND_Q_LEAF **);
-bool AXP_CondQueue_Wait(AXP_COND_Q_HDR *);
+void AXP_CondQueue_Wait(AXP_COND_Q_HDR *);
 bool AXP_CondQueue_Empty(AXP_COND_Q_HDR *);
 
+/*
+ * ROM and Executable file reading and writing.
+ */
+u32 AXP_Crc32(u8 *, int, bool, u32);
 int AXP_LoadExecutable(char *, u8 *, u32);
 bool AXP_OpenRead_SROM(char *, AXP_SROM_HANDLE *);
 bool AXP_OpenWrite_SROM(char *, AXP_SROM_HANDLE *, u64, u32);
 i32 AXP_Read_SROM(AXP_SROM_HANDLE *, u8 *, u32);
 bool AXP_Write_SROM(AXP_SROM_HANDLE *, u8 *, u32);
 bool AXP_Close_SROM(AXP_SROM_HANDLE *);
+
+/*
+ * Buffer masking functions.  Used for not necessarily continuous buffer
+ * utilization.
+ */
+void AXP_MaskReset(u64 *);
+void AXP_MaskSet(u64 *, u64, u64, int);
+void AXP_MaskStartGet(int *);
+int AXP_MaskGet(int *, u64, int);
+
 #endif /* _AXP_UTIL_DEFS_ */

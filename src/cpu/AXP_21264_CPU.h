@@ -529,7 +529,6 @@ typedef struct
 	u32						lqNext;
 	pthread_mutex_t			sqMutex;
 	AXP_MBOX_QUEUE			sq[AXP_MBOX_QUEUE_LEN];
-	pthread_mutex_t			sqMutex;
 	u32						sqNext;
 	pthread_mutex_t			dtbMutex;
 	AXP_21264_TLB			dtb[AXP_TB_LEN];
