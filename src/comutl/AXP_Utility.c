@@ -59,8 +59,8 @@
  */
 const char			*errMsg = "%%AXP-E-%s, %s\n";
 static char			*AXPTRCLOG = "AXP_TRCLOG";
-static const		axp_trc_log_init = false;
-const AXP_TRCLOG	_axp_trc_log_ = 0;
+static bool			axp_trc_log_init = false;
+AXP_TRCLOG			_axp_trc_log_ = 0;
 static const char	*_axp_fwid_str[] =
 {
 	"Alpha Motherboards Debug Monitor firmware",
@@ -101,7 +101,7 @@ bool AXP_TraceInit(void)
 	 */
 	if (axp_trc_log_init == false)
 	{
-		sprintf(envir(AXPTRCLOG), "0x%08x", _axp_trc_log_);
+		sprintf(getenv(AXPTRCLOG), "0x%08x", _axp_trc_log_);
 		axp_trc_log_init = true;
 	}
 	return(true);
@@ -656,7 +656,6 @@ bool AXP_CondQueue_Remove(AXP_COND_Q_LEAF *from, AXP_COND_Q_LEAF **to)
 {
 	bool	retVal = true;
 	AXP_COND_Q_ROOT	*parent = (AXP_COND_Q_ROOT *) from->parent;
-	AXP_COND_Q_ROOT_CNT *countedParent = (AXP_COND_Q_ROOT_CNT *) parent;
 
 	/*
 	 * First lock the mutex so that we can perform the rest of the processing
@@ -665,7 +664,7 @@ bool AXP_CondQueue_Remove(AXP_COND_Q_LEAF *from, AXP_COND_Q_LEAF **to)
 	 */
 	if (pthread_mutex_lock(&parent->qMutex) == 0)
 	{
-		if (AXP_CondQueue_Empty(parent) == false)
+		if (AXP_CondQueue_Empty((AXP_COND_Q_HDR *) parent) == false)
 		{
 			AXP_COND_Q_LEAF *before = (AXP_COND_Q_LEAF *) from->blink;
 			AXP_COND_Q_LEAF *after = (AXP_COND_Q_LEAF *) from->flink;
@@ -704,7 +703,7 @@ bool AXP_CondQueue_Remove(AXP_COND_Q_LEAF *from, AXP_COND_Q_LEAF **to)
  * Return Values:
  * 	None.
  */
-void AXP_CondQueue_Wait(void *root)
+void AXP_CondQueue_Wait(AXP_COND_Q_HDR *root)
 {
 	AXP_COND_Q_ROOT	*parent = (AXP_COND_Q_ROOT *) root;
 
@@ -718,7 +717,7 @@ void AXP_CondQueue_Wait(void *root)
 		/*
 		 * If the queue is empty, then let's wait for something to arrive.
 		 */
-		if (AXP_CondQueue_Empty(parent) == true)
+		if (AXP_CondQueue_Empty((AXP_COND_Q_HDR *) parent) == true)
 			pthread_cond_wait(&parent->qCond, &parent->qMutex);
 
 		/*
@@ -753,7 +752,7 @@ void AXP_CondQueue_Wait(void *root)
  * 	false:	The condition queue is NOT empty.
  * 	true:	The condition queue IS empty.
  */
-bool AXP_CondQueue_Empty(void *queue)
+bool AXP_CondQueue_Empty(AXP_COND_Q_HDR *queue)
 {
 	bool			retVal = false;
 	AXP_COND_Q_ROOT	*parent = (AXP_COND_Q_ROOT *) queue;
@@ -764,7 +763,7 @@ bool AXP_CondQueue_Empty(void *queue)
 	 * already locked by the caller.  This is OK.  If we did lock it, we will
 	 * unlock it before returning to the caller.
 	 */
-	locked = pthread_mutex_trylock(parent->qMutex);
+	locked = pthread_mutex_trylock(&parent->qMutex);
 
 	/*
 	 * If the forward link equals the header, then there are no entries in the
@@ -776,57 +775,7 @@ bool AXP_CondQueue_Empty(void *queue)
 	 * If we locked the mutex above, then unlock it now.
 	 */
 	if (locked == 0)
-		pthread_mutex_unlock(parent->qMutex);
-
-	/*
-	 * Return what we found back to the caller.
-	 */
-	return(retVal);
-}
-
-/*
- * AXP_CondQueue_Empty
- * 	This function is called to determine if the queue in question is empty.
- * 	This is done by the flink pointing to is own queue.
- *
- * Input Parameters:
- * 	queue:
- * 		A pointer to void, which is actually either a Condition Queue or a
- * 		Counted Condition Queue.  NOTE: Since the important layout between
- * 		these two Condition Queue types is the same, we only have to cast to
- * 		the simplest common format.
- *
- * Output Parameters:
- * 	None.
- *
- * Return Value:
- * 	false:	The condition queue is NOT empty.
- * 	true:	The condition queue IS empty.
- */
-bool AXP_CondQueue_Empty(void *queue)
-{
-	bool			retVal = false;
-	AXP_COND_Q_ROOT	*parent = (AXP_COND_Q_ROOT *) queue;
-	int				locked;
-
-	/*
-	 * Try locking the mutex.   If it fails, it is probably because it is
-	 * already locked by the caller.  This is OK.  If we did lock it, we will
-	 * unlock it before returning to the caller.
-	 */
-	locked = pthread_mutex_trylock(parent->qMutex);
-
-	/*
-	 * If the forward link equals the header, then there are no entries in the
-	 * queue (it is empty).
-	 */
-	retVal = parent->flink == parent;
-
-	/*
-	 * If we locked the mutex above, then unlock it now.
-	 */
-	if (locked == 0)
-		pthread_mutex_unlock(parent->qMutex);
+		pthread_mutex_unlock(&parent->qMutex);
 
 	/*
 	 * Return what we found back to the caller.
@@ -1035,7 +984,7 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 			{
 				case 0:
 					fread(
-						sromHandle->validPat,
+						&sromHandle->validPat,
 						sizeof(u32),
 						1,
 						sromHandle->fp);
@@ -1048,7 +997,7 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 
 				case 1:
 					fread(
-						sromHandle->inverseVP,
+						&sromHandle->inverseVP,
 						sizeof(u32),
 						1,
 						sromHandle->fp);
@@ -1063,7 +1012,7 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 					break;
 
 				case 2:
-					fread(sromHandle->hdrSize, sizeof(u32), 1, sromHandle->fp);
+					fread(&sromHandle->hdrSize, sizeof(u32), 1, sromHandle->fp);
 					if (sromHandle->hdrSize != AXP_ROM_HDR_LEN)
 					{
 						printf(errMsg, "HDRIVP", "Header size invalid.");
@@ -1073,19 +1022,19 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 
 				case 3:
 					fread(
-						sromHandle->imgChecksum,
+						&sromHandle->imgChecksum,
 						sizeof(u32),
 						1,
 						sromHandle->fp);
 					break;
 
 				case 4:
-					fread(sromHandle->imgSize, sizeof(u32), 1, sromHandle->fp);
+					fread(&sromHandle->imgSize, sizeof(u32), 1, sromHandle->fp);
 					break;
 
 				case 5:
 					fread(
-						sromHandle->decompFlag,
+						&sromHandle->decompFlag,
 						sizeof(u32),
 						1,
 						sromHandle->fp);
@@ -1093,47 +1042,47 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 
 				case 6:
 					fread(
-						sromHandle->destAddr,
+						&sromHandle->destAddr,
 						sizeof(u64),
 						1,
 						sromHandle->fp);
 					break;
 
 				case 7:
-					fread(sromHandle->hdrRev, sizeof(u8), 1, sromHandle->fp);
+					fread(&sromHandle->hdrRev, sizeof(u8), 1, sromHandle->fp);
 					break;
 
 				case 8:
-					fread(sromHandle->fwID, sizeof(u8), 1, sromHandle->fp);
+					fread(&sromHandle->fwID, sizeof(u8), 1, sromHandle->fp);
 					break;
 
 				case 9:
 					fread(
-						sromHandle->hdrRevExt,
+						&sromHandle->hdrRevExt,
 						sizeof(u8),
 						1,
 						sromHandle->fp);
 					break;
 
 				case 10:
-					fread(sromHandle->res, sizeof(u8), 1, sromHandle->fp);
+					fread(&sromHandle->res, sizeof(u8), 1, sromHandle->fp);
 					break;
 
 				case 11:
 					fread(
-						sromHandle->romImgSize,
+						&sromHandle->romImgSize,
 						sizeof(u32),
 						1,
 						sromHandle->fp);
 					break;
 
 				case 12:
-					fread(sromHandle->optFwID, sizeof(u64), 1, sromHandle->fp);
+					fread(&sromHandle->optFwID, sizeof(u64), 1, sromHandle->fp);
 					break;
 
 				case 13:
 					fread(
-						sromHandle->romOffset,
+						&sromHandle->romOffset,
 						sizeof(u32),
 						1,
 						sromHandle->fp);
@@ -1144,7 +1093,7 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 
 				case 14:
 					fread(
-						sromHandle->hdrChecksum,
+						&sromHandle->hdrChecksum,
 						sizeof(u32),
 						1,
 						sromHandle->fp);
@@ -1168,8 +1117,10 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 		 * specified in the header file matches a calculated value.
 		 */
 		if ((retVal == false) &&
-			(AXP_Crc(&sromHandle->validPat, AXP_ROM_HDR_LEN, false, 0) ==
-			 sromHandle->hdrChecksum))
+			(AXP_Crc32(
+					(u8 *) &sromHandle->validPat,
+					AXP_ROM_HDR_LEN, false,
+					0) == sromHandle->hdrChecksum))
 		{
 			printf(errMsg, "BADCSC", "Header CSC-32 is not valid.");
 			retVal = true;
@@ -1234,8 +1185,6 @@ bool AXP_OpenWrite_SROM(
 			u64 destAddr,
 			u32 fwID)
 {
-	const char	*errMsg = "%%AXP-E-%s, %s\n";
-	int			ii;
 	bool		retVal = false;
 
 	if (AXP_UTL_BUFF)
@@ -1272,8 +1221,10 @@ bool AXP_OpenWrite_SROM(
 		sromHandle->optFwID = 0200001711212316;
 		sromHandle->romOffset = 0;	/* no ROM offset */
 	}
-	else
-		retVal = false;
+
+	/*
+	 * Return the result of this call back to the caller.
+	 */
 	return(retVal);
 }
 
@@ -1324,7 +1275,7 @@ i32 AXP_Read_SROM(AXP_SROM_HANDLE *sromHandle, u8 *buf, u32 bufLen)
 			retVal = AXP_E_READERR;
 		else
 		{
-			sromHandle->verImgChecksum = AXP_Crc(
+			sromHandle->verImgChecksum = AXP_Crc32(
 											buf,
 											retVal,
 											true,
@@ -1442,8 +1393,8 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
 										sromHandle->imgSize,
 										true,
 										0);
-			sromHandle->hdrChecksum = AXP_Crc(
-										&sromHandle->validPat,
+			sromHandle->hdrChecksum = AXP_Crc32(
+										(u8 *) &sromHandle->validPat,
 										AXP_ROM_HDR_LEN,
 										false,
 										0);
@@ -1470,21 +1421,21 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
 			/*
 			 * Write out all the header data.
 			 */
-			fwrite(sromHandle->validPat, sizeof(u32), 1, sromHandle->fp);
-			fwrite(sromHandle->inverseVP, sizeof(u32), 1, sromHandle->fp);
-			fwrite(sromHandle->hdrSize, sizeof(u32), 1, sromHandle->fp);
-			fwrite(sromHandle->imgChecksum, sizeof(u32), 1, sromHandle->fp);
-			fwrite(sromHandle->imgSize, sizeof(u32), 1, sromHandle->fp);
-			fwrite(sromHandle->decompFlag, sizeof(u32), 1, sromHandle->fp);
-			fwrite(sromHandle->destAddr, sizeof(u64), 1, sromHandle->fp);
-			fwrite(sromHandle->hdrRev, sizeof(u8), 1, sromHandle->fp);
-			fwrite(sromHandle->fwID, sizeof(u8), 1, sromHandle->fp);
-			fwrite(sromHandle->hdrRevExt, sizeof(u8), 1, sromHandle->fp);
-			fwrite(sromHandle->res, sizeof(u8), 1, sromHandle->fp);
-			fwrite(sromHandle->romImgSize, sizeof(u32), 1, sromHandle->fp);
-			fwrite(sromHandle->optFwID, sizeof(u64), 1, sromHandle->fp);
-			fwrite(sromHandle->romOffset, sizeof(u32), 1, sromHandle->fp);
-			fwrite(sromHandle->hdrChecksum, sizeof(u32), 1, sromHandle->fp);
+			fwrite(&sromHandle->validPat, sizeof(u32), 1, sromHandle->fp);
+			fwrite(&sromHandle->inverseVP, sizeof(u32), 1, sromHandle->fp);
+			fwrite(&sromHandle->hdrSize, sizeof(u32), 1, sromHandle->fp);
+			fwrite(&sromHandle->imgChecksum, sizeof(u32), 1, sromHandle->fp);
+			fwrite(&sromHandle->imgSize, sizeof(u32), 1, sromHandle->fp);
+			fwrite(&sromHandle->decompFlag, sizeof(u32), 1, sromHandle->fp);
+			fwrite(&sromHandle->destAddr, sizeof(u64), 1, sromHandle->fp);
+			fwrite(&sromHandle->hdrRev, sizeof(u8), 1, sromHandle->fp);
+			fwrite(&sromHandle->fwID, sizeof(u8), 1, sromHandle->fp);
+			fwrite(&sromHandle->hdrRevExt, sizeof(u8), 1, sromHandle->fp);
+			fwrite(&sromHandle->res, sizeof(u8), 1, sromHandle->fp);
+			fwrite(&sromHandle->romImgSize, sizeof(u32), 1, sromHandle->fp);
+			fwrite(&sromHandle->optFwID, sizeof(u64), 1, sromHandle->fp);
+			fwrite(&sromHandle->romOffset, sizeof(u32), 1, sromHandle->fp);
+			fwrite(&sromHandle->hdrChecksum, sizeof(u32), 1, sromHandle->fp);
 
 			/*
 			 * Write out the image data.
@@ -1582,6 +1533,10 @@ void AXP_MaskSet(u64 *mask, u64 basePa, u64 pa, int len)
 		case QUAD_LEN:
 			*mask |= (AXP_MASK_QUAD << (pa - basePa));
 			break;
+
+		case CACHE_LEN:
+			*mask = AXP_LOW_QUAD;
+			break;
 	}
 
 	/*
@@ -1672,6 +1627,11 @@ int AXP_MaskGet(int *curPtr, u64 mask, int len)
 			maskBits = AXP_MASK_QUAD;
 			curPtrMax = 57;
 			break;
+
+		case CACHE_LEN:
+			maskBits = AXP_LOW_QUAD;
+			curPtrMax = 1;
+			break;
 	}
 
 	/*
@@ -1689,7 +1649,7 @@ int AXP_MaskGet(int *curPtr, u64 mask, int len)
 		while (((mask & (maskBits << *curPtr)) != (maskBits << *curPtr)) &&
 			   (*curPtr < curPtrMax))
 		{
-			*curPtr++;
+			*curPtr = *curPtr + 1;
 		}
 		if (*curPtr == curPtrMax)
 			*curPtr = -1;
@@ -1712,7 +1672,7 @@ int AXP_MaskGet(int *curPtr, u64 mask, int len)
 		while (((mask & (maskBits << *curPtr)) != (maskBits << *curPtr)) &&
 			   (*curPtr < curPtrMax))
 		{
-			*curPtr++;
+			*curPtr = *curPtr + 1;
 		}
 		if (*curPtr == curPtrMax)
 			*curPtr = -1;

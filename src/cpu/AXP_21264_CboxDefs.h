@@ -317,22 +317,27 @@ typedef enum
 	WriteData1,
 	WriteData2,
 	WriteData3,
+	WriteData = WriteData0,
 	ReadData0 = 0x10,
 	ReadData1,
 	ReadData2,
 	ReadData3,
+	ReadData = ReadData0,
 	ReadDataDirty0,
 	ReadDataDirty1,
 	ReadDataDirty2,
 	ReadDataDirty3,
+	ReadDataDirty = ReadDataDirty0,
 	ReadDataShared0,
 	ReadDataShared1,
 	ReadDataShared2,
 	ReadDataShared3,
+	ReadDataShared = ReadDataShared0,
 	ReadDataSharedDirty0,
 	ReadDataSharedDirty1,
 	ReadDataSharedDirty2,
-	ReadDataSharedDirty3
+	ReadDataSharedDirty3,
+	ReadDataSharedDirty = ReadDataSharedDirty0
 } AXP_21264_SYSDC_RSP;
 
 /*
@@ -492,7 +497,8 @@ typedef enum
 	STxCChangeToDirty,
 	WH64,
 	ECB,
-	Istream
+	Istream,
+	MemoryBarrier
 } AXP_CBOX_MAF_TYPE;
 
 #define AXP_21264_MBOX_MAX		8
