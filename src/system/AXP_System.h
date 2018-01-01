@@ -16,21 +16,23 @@
  *
  * Description:
  *
- *	This header file contains the definitions needed by the AXP_21264_CPU.C
- *	source file.
+ *	This header file contains the function prototypes for the System interface.
  *
  *	Revision History:
  *
- *	V01.000		17-Nov-2017	Jonathan D. Belanger
+ *	V01.000		31-Dec-2017	Jonathan D. Belanger
  *	Initially written.
  */
-#ifndef _AXP_21264_CPU_DEFS_DEFS_
-#define _AXP_21264_CPU_DEFS_DEFS_	1
+#ifndef _AXP_SYSTEM_DEFS_
+#define _AXP_SYSTEM_DEFS_	1
 
+#include "AXP_Utility.h"
 #include "AXP_Configure.h"
-#include "AXP_21264_CPU.h"
-#include "AXP_21264_Ibox.h"
-#include "AXP_21264_Mbox.h"
-#include "AXP_21264_Cbox.h"
+#include "AXP_System_InterfaceDefs.h"
 
-#endif 	/* _AXP_21264_CPU_DEFS_DEFS_ */
+void AXP_System_CommandSend(
+					AXP_21264_TO_SYS_CMD, bool, int, bool,
+					u64, bool, u64, u8 *, int);
+void AXP_System_ProbeResponse(bool, bool, u8, bool, u8, AXP_21264_PROBE_STAT);
+
+#endif	/* _AXP_SYSTEM_DEFS_ */

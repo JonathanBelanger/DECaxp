@@ -398,7 +398,7 @@ void AXP_21264_Add_IOWB(
 	 * Let the Cbox know there is something for it to process, then unlock the
 	 * mutex so it can.
 	 */
-	pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
+	pthread_cond_signal(&cpu->cBoxInterfaceCond);
 	pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
 	return;
 }
@@ -460,11 +460,11 @@ void AXP_21264_Free_IOWB(AXP_21264_CPU *cpu, u8 entry)
 		if (cpu->iowb[ii].valid == false)
 			cpu->iowbTop = (cpu->iowbTop + 1) & 0x07;
 		else
-			done == true;
+			done = true;
 		if ((done == false) && (start2 != -1) && (ii == end))
 		{
 			ii = start2;
-			end = end1;
+			end = end2;
 			start2 = -1;
 		}
 		else

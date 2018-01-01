@@ -35,6 +35,8 @@
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Mbox.h"
+#include "AXP_21264_Cache.h"
+#include "AXP_21264_Cbox.h"
 
 /*
  * AXP_21264_Mbox_GetLQSlot
@@ -198,7 +200,7 @@ void AXP_21264_Mbox_ReadMem(AXP_21264_CPU *cpu,
 	 * Notify the Mbox that there is something to process and unlock the Mbox
 	 * mutex so it can start performing the processing we just requested.
 	 */
-	pthread_cond_signal(&cpu->mBoxCondition, &cpu->mBoxMutex);
+	pthread_cond_signal(&cpu->mBoxCondition);
 	pthread_mutex_unlock(&cpu->mBoxMutex);
 
 	/*
@@ -371,7 +373,7 @@ void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *cpu,
 	 * Notify the Mbox that there is something to process and unlock the Mbox
 	 * mutex so it can start performing the processing we just requested.
 	 */
-	pthread_cond_signal(&cpu->mBoxCondition, &cpu->mBoxMutex);
+	pthread_cond_signal(&cpu->mBoxCondition);
 	pthread_mutex_unlock(&cpu->mBoxMutex);
 
 	/*
@@ -470,7 +472,7 @@ void AXP_21264_Mbox_CboxCompl(
 	 * may be something to process.
 	 */
 	if (signalCond == true)
-		pthread_cond_signal(&cpu->mBoxCondition, &cpu->mBoxMutex);
+		pthread_cond_signal(&cpu->mBoxCondition);
 
 	/*
 	 * Unlock the Mbox mutex and get out of here.
@@ -506,6 +508,7 @@ void AXP_21264_Mbox_CboxCompl(
 void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 {
 	AXP_MBOX_QUEUE	*lqEntry = &cpu->lq[entry];
+	AXP_DCACHE_LOC	dcacheLoc;
 	u32				cacheStatus;
 	u8				nextOlderStore;
 	int				ii;
@@ -566,10 +569,15 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 		/*
 		 * Get the status for the Dcache for the current Va/PA pair.
 		 */
-		cacheStatus = AXP_Dcache_Status(
-							cpu,
-							lqEntry->virtAddress,
-							lqEntry->physAddress);
+		lqEntry->exception = AXP_Dcache_Status(
+									cpu,
+									lqEntry->virtAddress,
+									lqEntry->physAddress,
+									lqEntry->len,
+									true,
+									&cacheStatus,
+									&dcacheLoc,
+									false);
 
 		/*
 		 * If we did not get a DcHit (See HRM Table 4-1), then we need to check
@@ -614,10 +622,10 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 				 * need to evict the current block (possibly the same index and
 				 * set, but not the same physical tag).
 				 */
-				AXP_21264_CopyBcacheToDcache(
-										cpu,
-										lqEntry->virtAddress,
-										lqEntry->physAddress);
+				AXP_CopyBcacheToDcache(
+								cpu,
+								&dcacheLoc,
+								lqEntry->physAddress);
 				DcHit = true;
 			}
 		}
@@ -629,15 +637,13 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 		 */
 		if (DcHit == true)
 		{
-			bool	retVal;
-
-			lqEntry->instr->destv = 0;
-			retVal = AXP_DcacheRead(
+			lqEntry->instr->destv.r.uq = 0;
+			(void) AXP_DcacheRead(
 						cpu,
 						lqEntry->virtAddress,
 						lqEntry->physAddress,
 						lqEntry->len,
-						&lqEntry->instr->destv,
+						&lqEntry->instr->destv.r,
 						NULL);
 			lqEntry->state = LQComplete;
 		}
@@ -649,28 +655,23 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 	 */
 	else
 	{
-		u8	*dest8 = (u8 *) &lqEntry->instr->destv;
-		u16	*dest16 = (u16 *) &lqEntry->instr->destv;
-		u32	*dest32 = (u32 *) &lqEntry->instr->destv;
-		u64	*dest64 = (u64 *) &lqEntry->instr->destv;
-
-		lqEntry->instr->destv = 0;
+		lqEntry->instr->destv.r.uq = 0;
 		switch (lqEntry->len)
 		{
 			case 1:
-				*dest8 = *((u8 *) &cpu->sq[nextOlderStore].value);
+				lqEntry->instr->destv.r.ub = *((u8 *) &cpu->sq[nextOlderStore].value);
 				break;
 
 			case 2:
-				*dest16 = *((u16 *) cpu->sq[nextOlderStore].value);
+				lqEntry->instr->destv.r.uw = *((u16 *) cpu->sq[nextOlderStore].value);
 				break;
 
 			case 4:
-				*dest32 = *((u32 *) cpu->sq[nextOlderStore].value);
+				lqEntry->instr->destv.r.ul = *((u32 *) cpu->sq[nextOlderStore].value);
 				break;
 
 			case 8:
-				*dest64 = *((u64 *) cpu->sq[nextOlderStore].value);
+				lqEntry->instr->destv.r.uq = *((u64 *) cpu->sq[nextOlderStore].value);
 				break;
 		}
 		lqEntry->state = LQComplete;
@@ -708,6 +709,10 @@ void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
 
 	/*
 	 * First, determine the length of the load.
+	 *
+	 * TODO:	This is wrong for Floating Point values.  In memory they need
+	 *			to be in their memory format.  In registers that can be
+	 *			formatted so the CPU can process them.
 	 */
 	switch (lqEntry->instr->opcode)
 	{
@@ -738,7 +743,7 @@ void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
 			break;
 
 		case HW_LD:
-			if (lqEntry->instr->len_stall = AXP_HW_LD_LONGWORD)
+			if (lqEntry->instr->len_stall == AXP_HW_LD_LONGWORD)
 				lqEntry->len = 4;
 			else
 				lqEntry->len = 8;
@@ -861,8 +866,7 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 {
 	AXP_MBOX_QUEUE		*sqEntry = &cpu->sq[entry];
 	AXP_CBOX_MAF_TYPE	type;
-	AXP_EXCEPTIONS		exception;
-	u8					cacheStatus;
+	u32					cacheStatus;
 	bool				DcHit = false;
 	bool				DcW = false;
 	bool				shared;
@@ -870,7 +874,7 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 	/*
 	 * First, get the status for the Dcache for the current VA/PA pair.
 	 */
-	exception = AXP_Dcache_Status(
+	sqEntry->exception = AXP_Dcache_Status(
 						cpu,
 						sqEntry->virtAddress,
 						sqEntry->physAddress,
@@ -885,7 +889,7 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 	 * If not exception was returned from the Dcache status call, then let's
 	 * try to determine what we need to do next.
 	 */
-	if (exception == NoException)
+	if (sqEntry->exception == NoException)
 	{
 
 		/*
@@ -1072,41 +1076,58 @@ void AXP_21264_Mbox_SQ_Init(AXP_21264_CPU *cpu, u8 entry)
 	{
 		case STB:
 			sqEntry->len = 1;
-			sqEntry->value = sqEntry->instr->src1v & AXP_LOW_BYTE;
+			sqEntry->value = sqEntry->instr->src1v.r.ub;
 			break;
 
 		case STW:
 			sqEntry->len = 2;
-			sqEntry->value = sqEntry->instr->src1v & AXP_LOW_WORD;
+			sqEntry->value = sqEntry->instr->src1v.r.uw;
 			break;
 
+		/*
+		 * TODO:	This is not correct.  We need to determine how 32-bit
+		 * 			floating point values need to be stored (I thin we need to
+		 * 			convert them).
+		 */
 		case STF:
 		case STS:
+			sqEntry->len = 8;
+			sqEntry->value = sqEntry->instr->src1v.fp.uq;
+			break;
+
 		case STL:
 		case STL_C:
 			sqEntry->len = 4;
-			sqEntry->value = sqEntry->instr->src1v & AXP_LOW_LONG;
+			sqEntry->value = sqEntry->instr->src1v.r.ul;
 			break;
 
 		case STQ_U:
+			sqEntry->len = 8;
+			sqEntry->value = sqEntry->instr->src1v.r.uq;
+			break;
+
 		case STG:
 		case STT:
+			sqEntry->len = 8;
+			sqEntry->value = sqEntry->instr->src1v.fp.uq;
+			break;
+
 		case STQ:
 		case STQ_C:
 			sqEntry->len = 8;
-			sqEntry->value = sqEntry->instr->src1v;
+			sqEntry->value = sqEntry->instr->src1v.r.sq;
 			break;
 
 		case HW_ST:
-			if (sqEntry->instr->len_stall = AXP_HW_LD_LONGWORD)
+			if (sqEntry->instr->len_stall == AXP_HW_LD_LONGWORD)
 			{
 				sqEntry->len = 4;
-				sqEntry->value = sqEntry->instr->src1v & AXP_LOW_LONG;
+				sqEntry->value = sqEntry->instr->src1v.r.ul;
 			}
 			else
 			{
 				sqEntry->len = 8;
-				sqEntry->value = sqEntry->instr->src1v;
+				sqEntry->value = sqEntry->instr->src1v.r.uq;
 			}
 			break;
 	}
@@ -1122,7 +1143,8 @@ void AXP_21264_Mbox_SQ_Init(AXP_21264_CPU *cpu, u8 entry)
 								true,	/* use the DTB */
 								Write,
 								&_asm,
-								&fault);
+								&fault,
+								&sqEntry->exception);
 
 	/*
 	 * If a physical address was returned, then we have some more to do.
@@ -1157,7 +1179,7 @@ void AXP_21264_Mbox_SQ_Init(AXP_21264_CPU *cpu, u8 entry)
 					cpu,
 					sqEntry->physAddress,
 					-(entry + 1),	/* We need to take zero out of play */
-					sqEntry->value,
+					(u8 *) &sqEntry->value,
 					sqEntry->len);
 			sqEntry->state = SQComplete;
 		}
@@ -1326,7 +1348,7 @@ void AXP_21264_Mbox_RetireWrite(AXP_21264_CPU *cpu, u8 slot)
 {
 	AXP_DcacheWrite(
 				cpu,
-				cpu->sq[slot].dcacheLoc,
+				&cpu->sq[slot].dcacheLoc,
 				cpu->sq[slot].len,
 				&cpu->sq[slot].value);
 	AXP_21264_Mbox_PutSQSlot(cpu, slot);
@@ -1562,8 +1584,9 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
  * Return Value:
  * 	None.
  */
-void AXP_21264_MboxMain(AXP_21264_CPU *cpu)
+void *AXP_21264_MboxMain(void *voidPtr)
 {
+	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 
 	/*
 	 * While the CPU is not shutting down, we either have to wait before we can
@@ -1591,7 +1614,7 @@ void AXP_21264_MboxMain(AXP_21264_CPU *cpu)
 				 */
 				pthread_mutex_lock(&cpu->cpuMutex);
 				while ((cpu->cpuState != Run) && (cpu->cpuState != ShuttingDown))
-					pthread_cont_wait(&cpu->cpuCond, &cpu->cpuMutex);
+					pthread_cond_wait(&cpu->cpuCond, &cpu->cpuMutex);
 				pthread_mutex_unlock(&cpu->cpuMutex);
 				break;
 
@@ -1615,6 +1638,13 @@ void AXP_21264_MboxMain(AXP_21264_CPU *cpu)
 				 * waiting just for the wake-up signal.
 				 */
 				break;
+
+			case ShuttingDown:
+
+				/*
+				 * Nothing to do here.
+				 */
+				break;
 		}
 	}
 
@@ -1629,5 +1659,5 @@ void AXP_21264_MboxMain(AXP_21264_CPU *cpu)
 	 * Return back to the caller.  Because of the call to pthread_exit(), we'll
 	 * never get here.  We do this to keep the compiler happy.
 	 */
-	return;
+	return(NULL);
 }

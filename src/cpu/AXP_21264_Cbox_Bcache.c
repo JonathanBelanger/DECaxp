@@ -53,7 +53,6 @@ void AXP_21264_Bcache_Evict(AXP_21264_CPU *cpu, u64 pa)
 {
 	int		index = AXP_BCACHE_INDEX(cpu, pa);
 	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
-	u8		entry;
 
 	/*
 	 * If the block is valid, then if it is dirty, we need to send it to the
@@ -62,7 +61,7 @@ void AXP_21264_Bcache_Evict(AXP_21264_CPU *cpu, u64 pa)
 	if (valid == true)
 	{
 		if (cpu->bTag[index].dirty == true)
-			entry = AXP_21264_Add_VDB(
+			(void) AXP_21264_Add_VDB(
 							cpu,
 							toMemory,
 							pa,
@@ -135,7 +134,7 @@ void AXP_21264_Bcache_Flush(AXP_21264_CPU *cpu)
 	 * was just written to the block array.
 	 */
 	for (ii = 0; ii < bCacheArraySize; ii++)
-		 AXP_21264_Bcache_Evict(cpu, cpu->bTag[index].pa);
+		 AXP_21264_Bcache_Evict(cpu, cpu->bTag[ii].pa);
 
 	/*
 	 * Return back to the caller.

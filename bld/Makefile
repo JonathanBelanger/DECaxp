@@ -68,7 +68,8 @@ PROJDIR = /cygdrive/g/git/DECaxp/
 #
 COMDIR = $(PROJDIR)src/comutl/
 CPUDIR = $(PROJDIR)src/cpu/
-SRCDIR = $(COMDIR) $(CPUDIR)
+SYSDIR = $(PROJDIR)src/system/
+SRCDIR = $(COMDIR) $(CPUDIR) $(SYSDIR)
 TSTDIR = $(PROJDIR)src/tst/
 OBJDIR = $(PROJDIR)bin/
 EXEDIR = $(PROJDIR)exe/
@@ -96,8 +97,9 @@ OBJS = $(addprefix $(OBJDIR), $(notdir $(CFILES:.c=.o)))
 # created from compiling.
 #
 TSTFILES = $(wildcard $(TSTDIR)*.c)
+TSTS = $(TSTFILES)
 EXE = .exe
-TSTS = $(addprefix $(EXEDIR), $(notdir $(TSTFILES:.c=$(EXE))))
+EXES = $(addprefix $(EXEDIR), $(notdir $(TSTFILES:.c=$(EXE))))
 
 #
 # Create the variable for the emulator source files (the emulator itself and
@@ -133,15 +135,13 @@ all: tests progs
 #
 # The Test executables require the objects and the test source code.
 #
-tests:	$(OBJS) $(TSTS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(EXEDIR) $<
+tests:	$(OBJS) $(EXES)
 
 #
 # The Program executeable(s) require the objects and the program source
 # file(s).
 #
 progs: $(OBJS) $(PROGS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(EXEDIR) $<
 
 #
 # The Object files require the component source files.  The objects are written
@@ -150,8 +150,17 @@ progs: $(OBJS) $(PROGS)
 $(OBJDIR)%.o: $(SRCS)
 	$(eval SRC = $(findstring $(COMDIR)$(*F).c, $(SRCS)))
 	$(eval SRC1 = $(findstring $(CPUDIR)$(*F).c, $(SRCS)))
+	$(eval SRC2 = $(findstring $(SYSDIR)$(*F).c, $(SRCS)))
 	$(eval $(strip SRC += $(SRC1)))
+	$(eval $(strip SRC += $(SRC2)))
 	$(CC) -c $(CFLAGS) -o $@ $(SRC)
+
+#
+# The Tests require the objects and test source files.  The executables are
+# written to the exe folder and there may be multiple source folders.
+#
+$(EXEDIR)%.exe: $(TSTS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $<
 
 .PHONY: clean
 
@@ -183,13 +192,19 @@ depend: $(DEP)
 		-I/usr/lib/gcc/x86_64-pc-cygwin/6.4.0/include	\
 		-- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PROGS)
 
-$(DEP): $(SRCS)
+$(DEP): $(SRCS) $(TSTS)
 	$(file >$(DEP))
-	$(foreach _,									\
-		$(SRCS), 									\
-		$(file >>$(DEP),$(addprefix $(OBJDIR),		\
-				$(addsuffix .o,						\
-					$(basename 						\
+	$(foreach _,										\
+		$(SRCS), 										\
+		$(file >>$(DEP),$(addprefix $(OBJDIR),			\
+				$(addsuffix .o,							\
+					$(basename 							\
+						$(notdir $(_))))): $(_)))
+	$(foreach _,										\
+		$(TSTS), 										\
+		$(file >>$(DEP),$(addprefix $(EXEDIR),			\
+				$(addsuffix .exe,						\
+					$(basename 							\
 						$(notdir $(_))))): $(_)))
 
 include $(DEP)

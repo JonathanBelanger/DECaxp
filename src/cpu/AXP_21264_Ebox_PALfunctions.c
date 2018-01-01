@@ -71,7 +71,10 @@ AXP_EXCEPTIONS AXP_HWLD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	va = instr->src1v.r.uq + instr->displacement;
 
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va, sizeof(u64));
+	/*
+	 * TODO: Make sure the Mbox_ReadMem function can handle this instruction.
+	 */
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
 	instr->loadCompletion = AXP_HW_LD_COMPL;
 
 	/*
@@ -143,13 +146,15 @@ AXP_EXCEPTIONS AXP_HWST(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	va = instr->src1v.r.uq + instr->displacement;
 
+	/*
+	 * TODO: Make sure the Mbox_WriteMem function can handle this instruction.
+	 */
 	AXP_21264_Mbox_WriteMem(
 		cpu,
 		instr,
 		instr->slot,
 		va,
-		instr->src1v.r.uq,
-		sizeof(instr->src1v.r.uq));
+		instr->src1v.r.uq);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

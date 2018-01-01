@@ -31,8 +31,21 @@
 #include "AXP_21264_CPU.h"
 
 u32 AXP_21264_Mbox_GetLQSlot(AXP_21264_CPU *);
+void AXP_21264_Mbox_PutLQSlot(AXP_21264_CPU *, u32);
 void AXP_21264_Mbox_ReadMem(AXP_21264_CPU *, AXP_INSTRUCTION *, u32, u64);
 u32 AXP_21264_Mbox_GetSQSlot(AXP_21264_CPU *);
+void AXP_21264_Mbox_PutSQSlot(AXP_21264_CPU *, u32);
 void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *, AXP_INSTRUCTION *, u32, u64, u64);
+void AXP_21264_Mbox_CboxCompl(AXP_21264_CPU *, i8 , u8 *, int, bool);
+void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *, u8);
+void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *, u8);
+void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *, u8);
+void AXP_21264_Mbox_SQ_Init(AXP_21264_CPU *, u8);
+void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *);
+void AXP_21264_Mbox_RetireWrite(AXP_21264_CPU *, u8);
+bool AXP_21264_Mbox_WorkQueued(AXP_21264_CPU *);
+void AXP_21264_Mbox_UpdateDcache(AXP_21264_CPU *, i8, u8 *, u8);
 bool AXP_21264_Mbox_Init(AXP_21264_CPU *);
+void *AXP_21264_MboxMain(void  *);
+
 #endif /* _AXP_21264_MBOX_DEFS_ */

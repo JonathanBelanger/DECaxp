@@ -105,22 +105,22 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 		 * queue entries.
 		 */
 		if (qRet == true)
-			qRet = AXP_CondQueueCnt_Init(cpu->iq, AXP_IQ_LEN);
+			qRet = AXP_CondQueueCnt_Init(&cpu->iq, AXP_IQ_LEN);
 		if (qRet == true)
 			for(ii = 0; ii < AXP_IQ_LEN; ii++)
 			{
 				cpu->iqEntries[ii].header.flink =
 						cpu->iqEntries[ii].header.blink = NULL;
-				cpu->iqEntries[ii].header.parent = cpu->iq;
+				cpu->iqEntries[ii].header.parent = &cpu->iq;
 			}
 		if (qRet == true)
-			qRet = AXP_CondQueueCnt_Init(cpu->fq, AXP_FQ_LEN);
+			qRet = AXP_CondQueueCnt_Init(&cpu->fq, AXP_FQ_LEN);
 		if (qRet == true)
 			for(ii = 0; ii < AXP_FQ_LEN; ii++)
 			{
 				cpu->fqEntries[ii].header.flink =
 						cpu->fqEntries[ii].header.blink = NULL;
-				cpu->fqEntries[ii].header.parent = cpu->fq;
+				cpu->fqEntries[ii].header.parent = &cpu->fq;
 			}
 
 		/*
@@ -132,57 +132,57 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 			pthreadRet = pthread_create(
 							&cpu->iBoxThreadID,
 							NULL,
-							AXP_21264_iBoxMain,
+							AXP_21264_IboxMain,
 							cpu);
 #if 0
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->eBoxU0ThreadID,
 								NULL,
-								AXP_21264_eBoxU0Main,
+								(void *(void *)) AXP_21264_EboxU0Main,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->eBoxU1ThreadID,
 								NULL,
-								AXP_21264_eBoxU1Main,
+								(void *(void *)) AXP_21264_eBoxU1Main,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->eBoxL0ThreadID,
 								NULL,
-								AXP_21264_eBoxL0Main,
+								(void *(void *)) AXP_21264_EboxL0Main,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->eBoxL1ThreadID,
 								NULL,
-								AXP_21264_eBoxL1Main,
+								(void *(void *)) AXP_21264_EboxL1Main,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->fBoxMulThreadID,
 								NULL,
-								AXP_21264_fBoxMulMain,
+								(void *(void *)) AXP_21264_FboxMulMain,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->fBoxOthThreadID,
 								NULL,
-								AXP_21264_fBoxOthMain,
+								(void *(void *)) AXP_21264_FboxOthMain,
 								cpu);
 #endif
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->mBoxThreadID,
 								NULL,
-								AXP_21264_mBoxMain,
+								AXP_21264_MboxMain,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->cBoxThreadID,
 								NULL,
-								AXP_21264_cBoxMain,
+								AXP_21264_CboxMain,
 								cpu);
 		}
 

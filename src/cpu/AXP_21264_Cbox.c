@@ -508,48 +508,50 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 					break;
 
 				case BcSize:
-					int bCacheArraySize;
-
-					cpu->csr.BcSize = value;
-
-					/*
-					 * Now that we know the Bcache size, go an allocate a
-					 * buffer large enough for it.  First, deallocate anything
-					 * that was previously allocated.
-					 */
-					if (cpu->bCache != NULL)
-						free(cpu->bCache);
-					if (cpu->bTag != NULL)
-						free(cpu->bTag);
-
-					/*
-					 * OK, now allocate a Bcache large enough for the size.
-					 * NOTE: Each Bcache block contains 64 bytes, so the array
-					 * size is the Bcache size divided by 64.
-					 */
-					bCacheArraySize = ((cpu->csr.BcSize + 1) * ONE_M) /
-							AXP_BCACHE_BLOCK_SIZE;
-
-					/*
-					 * Go and actually allocate the 2 arrays needed for the
-					 * Bcache (the cache array and the tag array).
-					 */
-					cpu->bCache = calloc(
-									bCacheArraySize,
-									sizeof(AXP_21264_BCACHE_BLK));
-					cpu->bTag = calloc(
-									bCacheArraySize,
-									sizeof(AXP_21264_BCACHE_TAG));
-
-					/*
-					 * If we failed to allocate either, then we are done
-					 * here.  Returning true will cause the caller to
-					 * exit.
-					 */
-					if ((cpu->bCache == NULL) || (cpu->bTag == NULL))
 					{
-						retVal = true;
-						readResult = false;
+						int bCacheArraySize;
+
+						cpu->csr.BcSize = value;
+
+						/*
+						 * Now that we know the Bcache size, go an allocate a
+						 * buffer large enough for it.  First, deallocate
+						 * anything that was previously allocated.
+						 */
+						if (cpu->bCache != NULL)
+							free(cpu->bCache);
+						if (cpu->bTag != NULL)
+							free(cpu->bTag);
+
+						/*
+						 * OK, now allocate a Bcache large enough for the size.
+						 * NOTE: Each Bcache block contains 64 bytes, so the
+						 * array size is the Bcache size divided by 64.
+						 */
+						bCacheArraySize = ((cpu->csr.BcSize + 1) * ONE_M) /
+								AXP_BCACHE_BLOCK_SIZE;
+
+						/*
+						 * Go and actually allocate the 2 arrays needed for the
+						 * Bcache (the cache array and the tag array).
+						 */
+						cpu->bCache = calloc(
+										bCacheArraySize,
+										sizeof(AXP_21264_BCACHE_BLK));
+						cpu->bTag = calloc(
+										bCacheArraySize,
+										sizeof(AXP_21264_BCACHE_TAG));
+
+						/*
+						 * If we failed to allocate either, then we are done
+						 * here.  Returning true will cause the caller to
+						 * exit.
+						 */
+						if ((cpu->bCache == NULL) || (cpu->bTag == NULL))
+						{
+							retVal = true;
+							readResult = false;
+						}
 					}
 					break;
 
@@ -664,6 +666,11 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
  */
 void AXP_21264_Process_IRQ(AXP_21264_CPU *cpu)
 {
+	AXP_PC	pc;
+
+	pc.pal = 0;
+	pc.res = 0;
+	pc.pc = 0;
 
 	/*
 	 * Queue this up to the Ibox.  We don't supply a PC or virtual address,
@@ -671,14 +678,14 @@ void AXP_21264_Process_IRQ(AXP_21264_CPU *cpu)
 	 * register (31), this is not a write operation and we are not the Ibox.
 	 */
 	AXP_21264_Ibox_Event(
-			cpu,
-			AXP_INTERRUPT,
-			0,
-			0,
-			0,
-			AXP_UNMAPPED_REG,
-			false,
-			false);
+				cpu,
+				AXP_INTERRUPT,
+				pc,
+				0,
+				0,
+				AXP_UNMAPPED_REG,
+				false,
+				false);
 
 	/*
 	 * Return back to the caller.
@@ -728,7 +735,7 @@ void AXP_21264_Set_IRQ(AXP_21264_CPU *cpu, u8 flags)
 	 * Let the Cbox know there is something for it to process, then unlock the
 	 * mutex so it can.
 	 */
-	pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
+	pthread_cond_signal(&cpu->cBoxInterfaceCond);
 	pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
 
 	/*
@@ -789,14 +796,19 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 			cpu->ctag[ii][jj].physTag = 0;
 			cpu->ctag[ii][jj].dtagIndex = AXP_CACHE_ENTRIES;
 			cpu->ctag[ii][jj].valid = false;
+			cpu->ctag[ii][jj].dirty = false;
+			cpu->ctag[ii][jj].shared = false;
 		}
 	}
 	for (ii = 0; ii < AXP_21264_MAF_LEN; ii++)
 	{
 		cpu->maf[ii].type = MAFNotInUse;
 		cpu->maf[ii].pa = 0;
-		cpu->maf[ii].complete = false;
+		cpu->maf[ii].mask = 0;
+		cpu->maf[ii].dataLen = 0;
+		cpu->maf[ii].bufLen = 0;
 		cpu->maf[ii].valid = false;
+		cpu->maf[ii].complete = false;
 		cpu->maf[ii].shared = false;
 		cpu->maf[ii].ioReq = false;
 		for (jj = 0; jj < AXP_21264_MBOX_MAX; jj++)
@@ -811,12 +823,12 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 		cpu->vdb[ii].processed = false;
 		cpu->vdb[ii].valid = false;
 		cpu->vdb[ii].marked = false;
-		cpu->vdb[ii].dataLen = 0;
 	}
 	for (ii = 0; ii < AXP_21264_PQ_LEN; ii++)
 	{
 		cpu->pq[ii].pa = 0;
 		cpu->pq[ii].sysDc = NOPsysdc;
+		cpu->pq[ii].probeStatus = HitClean;
 		cpu->pq[ii].probe = 0;
 		cpu->pq[ii].rvb = false;
 		cpu->pq[ii].rpb = false;
@@ -824,18 +836,22 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 		cpu->pq[ii].c = false;
 		cpu->pq[ii].processed = false;
 		cpu->pq[ii].valid = false;
-		cpu->pq[ii].marked = false;
+		cpu->pq[ii].pendingRsp = false;
+		cpu->pq[ii].dm = false;
+		cpu->pq[ii].vs = false;
+		cpu->pq[ii].ms = false;
 		cpu->pq[ii].ID = 0;
-		cpu->pq[ii].dataLen = 0;
+		cpu->pq[ii].vdb = 0;
+		cpu->pq[ii].maf = 0;
 	}
 	for (ii = 0; ii < AXP_21264_IOWB_LEN; ii++)
 	{
 		cpu->iowb[ii].processed = false;
 		cpu->iowb[ii].valid = false;
-		cpu->iowb[ii].aligned = false;
 		cpu->iowb[ii].pa = 0;
+		cpu->iowb[ii].mask = 0;
 		cpu->iowb[ii].storeLen = 0;
-		cpu->iowb[ii].dataLen = 0;
+		cpu->iowb[ii].bufLen = 0;
 		for (jj = 0; jj < AXP_21264_MBOX_MAX; jj++)
 			cpu->iowb[ii].lqSqEntry[jj] = 0;
 	}
@@ -860,8 +876,9 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
  * Return Value:
  * 	None.
  */
-void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
+void *AXP_21264_CboxMain(void *voidPtr)
 {
+	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 	AXP_SROM_HANDLE	sromHdl;
 	int				component = 0, ii, jj, entry;
 	bool			initFailure = false, processed;
@@ -970,7 +987,7 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 								/*
 								 * Get the PC for the RESET/WAKEUP PALcode.
 								 */
-						 		palFuncPC = AXP_21264_GetPALFuncvpc(
+						 		palFuncPC = AXP_21264_GetPALFuncVPC(
 						 									cpu,
 						 									AXP_RESET_WAKEUP);
 
@@ -995,7 +1012,7 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 									for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
 										retVal = AXP_Read_SROM(
 											&sromHdl,
-											cpu->iCache[ii][jj].instructions,
+											(u8 *) cpu->iCache[ii][jj].instructions,
 											(AXP_ICACHE_LINE_INS *
 											 sizeof(AXP_INS_FMT)));
 								}
@@ -1114,5 +1131,5 @@ void AXP_21264_Cbox_Main(AXP_21264_CPU *cpu)
 				break;
 		}
 	}
-	return;
+	return(NULL);
 }
