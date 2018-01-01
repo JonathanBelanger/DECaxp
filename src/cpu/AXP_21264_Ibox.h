@@ -36,6 +36,7 @@
 #include "AXP_21264_Ibox_InstructionInfo.h"
 #include "AXP_21264_Instructions.h"
 #include "AXP_21264_RegisterRenaming.h"
+#include "AXP_21264_Cbox.h"
 
 #define AXP_NONE	0
 #define AXP_IQ		1
@@ -65,7 +66,10 @@ AXP_PC AXP_21264_GetVPC(AXP_21264_CPU *, u64, u8);
 AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *);
 AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *);
 AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *, i64);
+void AXP_21264_Ibox_MboxCompl(AXP_21264_CPU *, AXP_INSTRUCTION *, AXP_EXCEPTIONS);
+void AXP_21264_Ibox_Event(AXP_21264_CPU *, u32, AXP_PC, u64, u8, u8, bool, bool);
+void AXP_21264_Ibox_UpdateIcache(AXP_21264_CPU *, u64, u8 *, u8);
 bool AXP_21264_Ibox_Init(AXP_21264_CPU *);
-void AXP_21264_IboxMain(AXP_21264_CPU *);
+void *AXP_21264_IboxMain(void *);
 
 #endif /* _AXP_21264_IBOX_DEFS_ */

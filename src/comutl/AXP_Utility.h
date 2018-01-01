@@ -120,7 +120,7 @@ typedef __int128			i128;	/* 16 bytes (128 bits) in length */
  *		homage to my Digital SNA Development days (June 16, 1986 to December
  *		31, 1994).
  */
-typedef u32	AXP_TRCLOG;
+typedef u32				AXP_TRCLOG;
 extern AXP_TRCLOG		_axp_trc_log_;
 
 /*
@@ -273,15 +273,15 @@ typedef struct
 } AXP_CQUE_ENTRY;
 
 #define AXP_INIT_CQUE(queue, maximum)	\
-	AXP_INIT_QUE(queue.header);			\
+	AXP_INIT_QUE(queue);				\
 	queue.max = maximum;				\
 	queue.count = 0
 #define AXP_INIT_CQUEP(queue, maximum)	\
-	AXP_INIT_QUE(queue->header);		\
+	AXP_INIT_QUEP(queue);				\
 	queue->max = maximum;				\
 	queue->count = 0
 #define AXP_INIT_CQENTRY(queue, prent)	\
-		AXP_INIT_QUE(queue.header);		\
+		AXP_INIT_QUE(queue);			\
 		queue.parent = &prent;
 #define AXP_CQUE_EMPTY(queue)	(queue.count == 0)
 #define AXP_CQUEP_EMPTY(queue)	(queue->count == 0)

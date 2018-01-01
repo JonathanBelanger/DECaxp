@@ -590,7 +590,7 @@ static AXP_OPER_TYPE AXP_DecodeOperType(u8 opCode, u32 funcCode)
  *
  * Input Parameters:
  * 	instr:
- * 		A valus of the instruction being parsed.
+ * 		A value of the instruction being parsed.
  *
  * Output Parameters:
  * 	None.
@@ -1431,7 +1431,7 @@ void AXP_21264_Ibox_Event(
 	 */
 	if ((opcode == HW_LD) || (opcode == HW_ST))
 		mmStatOpcode -= 0x18;
-	cpu->excAddr = pc;
+	cpu->excAddr.exc_pc = pc;
 
 	/*
 	 * Clear out the fault IPRs.
@@ -1512,7 +1512,7 @@ void AXP_21264_Ibox_Event(
 	 */
 	if (self == false)
 	{
-		pthread_cond_signal(&cpu->iBoxCondition, &cpu->iBoxMutex);
+		pthread_cond_signal(&cpu->iBoxCondition);
 		pthread_mutex_unlock(&cpu->iBoxMutex);
 	}
 
@@ -1576,7 +1576,7 @@ void AXP_21264_Ibox_MboxCompl(
 	 * Finally, signal the Ibox that there is something to process (in this
 	 * case, retire an instruction).
 	 */
-	pthread_cond_signal(&cpu->iBoxCondition, & cpu->iBoxMutex);
+	pthread_cond_signal(&cpu->iBoxCondition);
 	pthread_mutex_unlock(&cpu->iBoxMutex);
 
 	/*
@@ -1834,15 +1834,17 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
  * Return Value:
  * 	None.
  */
-void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
+void *AXP_21264_IboxMain(void *voidPtr)
 {
-	AXP_PC nextPC, branchPC;
-	AXP_INS_LINE nextCacheLine;
-	AXP_INSTRUCTION *decodedInstr;
-	AXP_QUEUE_ENTRY *xqEntry;
-	u32 ii;
-	bool local, global, choice;
-	u16 whichQueue;
+	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+	AXP_PC			nextPC, branchPC;
+	AXP_INS_LINE	nextCacheLine;
+	AXP_EXCEPTIONS	exception;
+	AXP_INSTRUCTION	*decodedInstr;
+	AXP_QUEUE_ENTRY	*xqEntry;
+	u32				ii;
+	bool			local, global, choice;
+	u16				whichQueue;
 
 	/*
 	 * Here we'll loop starting at the current PC and working our way through
@@ -1936,13 +1938,20 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 							 */
 							pa = AXP_va2pa(
 									cpu,
-									branchPC,
+									*((u64 *) &branchPC),
 									nextPC,
 									false,
 									Execute,
 									&_asm,
-									&fault);
-							AXP_21264_Add_MAF(cpu, Istream, IcacheFill, pa);
+									&fault,
+									&exception);
+							AXP_21264_Add_MAF(
+									cpu,
+									Istream,
+									pa,
+									0,
+									AXP_ICACHE_BUF_LEN,
+									false);
 						}
 
 						/*
@@ -2043,5 +2052,5 @@ void AXP_21264_IboxMain(AXP_21264_CPU *cpu)
 			}
 		}
 	}
-	return;
+	return(NULL);
 }

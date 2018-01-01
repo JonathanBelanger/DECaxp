@@ -106,7 +106,7 @@ AXP_EXCEPTIONS AXP_LDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Get the value out of memory (it'll be in memory format and is 32-bits)
 	 */
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u32));
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 	instr->loadCompletion = AXP_LDF_COMPL;
 
 	/*
@@ -210,7 +210,7 @@ AXP_EXCEPTIONS AXP_LDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Get the value out of memory (it'll be in memory format and is 32-bits)
 	 */
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va, sizeof(u64));
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
 	instr->loadCompletion = AXP_LDG_COMPL;
 
 	/*
@@ -324,7 +324,7 @@ AXP_EXCEPTIONS AXP_LDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Get the value out of memory (it'll be in memory format and is 32-bits)
 	 */
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime, sizeof(u32));
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 	instr->loadCompletion = AXP_LDS_COMPL;
 
 	/*
@@ -437,7 +437,7 @@ AXP_EXCEPTIONS AXP_LDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Get the value out of memory (it'll be in memory format and is 64-bits)
 	 */
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va, sizeof(u32));
+	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
 	instr->loadCompletion = AXP_LDT_COMPL;
 
 	/*
@@ -535,7 +535,7 @@ AXP_EXCEPTIONS AXP_STF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/* TODO: Check to see if we had an alignment fault (Alignment) */
 	/* TODO: Check to see if we had a read fault (Fault on Write) */
 	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
-	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp, sizeof(tmp));
+	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -595,7 +595,7 @@ AXP_EXCEPTIONS AXP_STG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/* TODO: Check to see if we had an alignment fault (Alignment) */
 	/* TODO: Check to see if we had a read fault (Fault on Write) */
 	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
-	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, va, tmp, sizeof(tmp));
+	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, va, tmp);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -669,7 +669,7 @@ AXP_EXCEPTIONS AXP_STS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/* TODO: Check to see if we had an alignment fault (Alignment) */
 	/* TODO: Check to see if we had a read fault (Fault on Write) */
 	/* TODO: Check to see if we had a translation fault (Translation Not Valid) */
-	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp, sizeof(tmp));
+	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -723,8 +723,7 @@ AXP_EXCEPTIONS AXP_STT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 							instr,
 							instr->slot,
 							va,
-							instr->src1v.fp.uq,
-							sizeof(instr->src1v.fp.uq));
+							instr->src1v.fp.uq);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.

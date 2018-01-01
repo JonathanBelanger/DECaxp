@@ -86,7 +86,7 @@ void AXP_21264_OldestPQFlags(
 	 */
 	ii = start1;
 	end = end1;
-	while ((ii <= end) && (pq == -1))
+	while ((ii <= end) && (pq == NULL))
 	{
 		if ((cpu->pq[ii].valid == true) &&
 			(cpu->pq[ii].pendingRsp == false) &&
@@ -98,7 +98,7 @@ void AXP_21264_OldestPQFlags(
 		if ((pq == NULL) && (start2 != -1) && (ii == end))
 		{
 			ii = start2;
-			end = end1;
+			end = end2;
 			start2 = -1;
 		}
 		else
@@ -138,7 +138,6 @@ void AXP_21264_OldestPQFlags(
 	if (pq != NULL)
 	{
 		AXP_VA				physAddr = {.va = pq->pa};
-		AXP_EXCEPTIONS 		except;
 		u32					status = AXP_21264_CACHE_MISS;
 		u32					ctagIndex = physAddr.vaIdxInfo.index;
 		u32					setToUse = 0;
@@ -214,12 +213,12 @@ void AXP_21264_OldestPQFlags(
 			 */
 			if ((AXP_21264_GET_PROBE_DM(pq->probe) == AXP_21264_DM_RDDIRTY) &&
 				((AXP_CACHE_CLEAN(status) == true) ||
-				 (AXP_CACHE_CLEAN_SHARED(status) == true)
+				 (AXP_CACHE_CLEAN_SHARED(status) == true) ||
 				 (AXP_CACHE_DIRTY_SHARED(status) == true)))
 				*m2 = true;
 		}
-		if ((m1 == true) || (m2 == true) || (ch == true))
-			AXP_21264_PQ_Free(cpu, entry);
+		if ((*m1 == true) || (*m2 == true) || (*ch == true))
+			AXP_21264_Free_PQ(cpu, entry);
 	}
 
 	/*
@@ -276,7 +275,7 @@ int AXP_21264_PQ_Empty(AXP_21264_CPU *cpu)
 		if ((retVal == -1) && (start2 != -1) && (ii == end))
 		{
 			ii = start2;
-			end = end1;
+			end = end2;
 			start2 = -1;
 		}
 		else
@@ -310,7 +309,6 @@ int AXP_21264_PQ_Empty(AXP_21264_CPU *cpu)
 void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 {
 	AXP_21264_CBOX_PQ		*pq = &cpu->pq[entry];
-	u8						*sysData = NULL;
 	AXP_21264_PROBE_STAT	probeStatus;
 	AXP_VA					physAddr = {.va = pq->pa};
 	u32						ctagIndex = physAddr.vaIdxInfo.index;
@@ -426,7 +424,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 									cpu,
 									probeResponse,
 									pq->pa,
-									cpu->dCache[dCacheIdx][setToUse],
+									cpu->dCache[dCacheIdx][setToUse].data,
 									false,
 									false);
 					pthread_mutex_unlock(&cpu->dCacheMutex);
@@ -1000,7 +998,7 @@ void AXP_21264_SendRsps_PQ(AXP_21264_CPU *cpu)
 		if ((start2 != -1) && (ii == end))
 		{
 			ii = start2;
-			end = end1;
+			end = end2;
 			start2 = -1;
 		}
 		else
@@ -1139,7 +1137,7 @@ void AXP_21264_Add_PQ(
 	 * Let the Cbox know there is something for it to process, then unlock the
 	 * mutex so it can.
 	 */
-	pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
+	pthread_cond_signal(&cpu->cBoxInterfaceCond);
 	pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
 	return;
 }
@@ -1201,7 +1199,7 @@ void AXP_21264_Free_PQ(AXP_21264_CPU *cpu, u8 entry)
 		if (cpu->pq[ii].valid == false)
 			cpu->pqTop = (cpu->pqTop + 1) & 0x07;
 		else
-			done == true;
+			done = true;
 		if ((done == false) && (start2 != -1) && (ii = end))
 		{
 			ii = start2;

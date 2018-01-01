@@ -317,6 +317,7 @@ typedef struct
 } AXP_DTAG_BLK;
 
 #define AXP_ICACHE_LINE_INS		16
+#define AXP_ICACHE_BUF_LEN		64
 
 /*
  * This structure is the definition of one instruction cache block.  A block

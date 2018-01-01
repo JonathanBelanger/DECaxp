@@ -114,7 +114,7 @@ int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
 void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 {
 	AXP_21264_CBOX_VIC_BUF *vdb = &cpu->vdb[entry];
-	u16						mask = AXP_21264_IO_INV;
+	u16						mask = AXP_LOW_QUAD;
 	bool					m1 = false;
 	bool					m2 = false;
 	bool					rv = true;
@@ -156,7 +156,8 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 							WrVictimBlk,
 							m2,
 							entry,
-							rv, mask,
+							rv,
+							mask,
 							ch,
 							vdb->pa,
 							vdb->sysData,
@@ -233,7 +234,7 @@ u8 AXP_21264_Add_VDB(
 	 */
 	if (locked == true)
 	{
-		pthread_cond_signal(&cpu->cBoxInterfaceCond, &cpu->cBoxInterfaceMutex);
+		pthread_cond_signal(&cpu->cBoxInterfaceCond);
 		pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
 	}
 	return(cpu->vdbBottom);
@@ -287,7 +288,7 @@ bool AXP_21264_IsSetP_VDB(AXP_21264_CPU *cpu, u64 pa)
 	{
 		if ((cpu->vdb[ii].valid == true) &&
 			(cpu->vdb[ii].pa == pa))
-			retVal == true;
+			retVal = true;
 		if ((retVal == false) && (start2 != -1) && (ii == end))
 		{
 			ii = start2;
@@ -399,7 +400,7 @@ void AXP_21264_Free_VDB(AXP_21264_CPU *cpu, u8 entry)
 		if (cpu->vdb[ii].valid == false)
 			cpu->vdbTop = (cpu->vdbTop + 1) & 0x07;
 		else
-			done == true;
+			done = true;
 		if ((done == false) && (start2 != -1) && (ii == end))
 		{
 			ii = start2;
