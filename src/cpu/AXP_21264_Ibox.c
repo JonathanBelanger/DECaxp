@@ -189,9 +189,7 @@ static void AXP_RenameRegisters(AXP_21264_CPU *, AXP_INSTRUCTION *, u16);
  * Functions that manage the instruction queue free entries.
  */
 static AXP_QUEUE_ENTRY *AXP_GetNextIQEntry(AXP_21264_CPU *);
-static void AXP_ReturnIQEntry(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
 static AXP_QUEUE_ENTRY *AXP_GetNextFQEntry(AXP_21264_CPU *);
-static void AXP_ReturnFQEntry(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
 
 /*
  * The following module specific structure and variable are used to be able to
@@ -983,7 +981,8 @@ static AXP_QUEUE_ENTRY *AXP_GetNextIQEntry(AXP_21264_CPU *cpu)
 
 /*
  * AXP_ReturnIQEntry
- * 	This function is called to get the next available entry for the IQ queue.
+ * 	This function is called to return an entry onto the free list for the IQ
+ * 	queue.
  *
  * Input Parameters:
  * 	cpu:
@@ -998,7 +997,7 @@ static AXP_QUEUE_ENTRY *AXP_GetNextIQEntry(AXP_21264_CPU *cpu)
  * Return Value:
  * 	None.
  */
-static void AXP_ReturnIQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
+void AXP_ReturnIQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 {
 
 	/*
@@ -1068,7 +1067,7 @@ static AXP_QUEUE_ENTRY *AXP_GetNextFQEntry(AXP_21264_CPU *cpu)
  * Return Value:
  * 	None.
  */
-static void AXP_ReturnFQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
+void AXP_ReturnFQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 {
 
 	/*
@@ -1421,166 +1420,120 @@ void AXP_21264_Ibox_Event(
 		pthread_mutex_lock(&cpu->iBoxMutex);
 
 	/*
-	 * We always need to lock down the IPR mutex.
+	 * If there is already an exception pending, swallow this current one.
 	 */
-	pthread_mutex_lock(&cpu->iBoxIPRMutex);
-
-	/*
-	 * HW_LD (0x1b = 27 -> 3) and HW_ST (0x1f = 31 -> 7), subtract 0x18 = 24
-	 * from both.
-	 */
-	if ((opcode == HW_LD) || (opcode == HW_ST))
-		mmStatOpcode -= 0x18;
-	cpu->excAddr.exc_pc = pc;
-
-	/*
-	 * Clear out the fault IPRs.
-	 */
-	cpu->va = 0;
-	*((u64 *) &cpu->excSum) = 0;
-	*((u64 *) &cpu->mmStat) = 0;
-
-	/*
-	 * Based on the fault, set the appropriate IPRs.
-	 */
-	switch (fault)
+	if (cpu->excPend == false)
 	{
-		case AXP_DTBM_DOUBLE_3:
-		case AXP_DTBM_DOUBLE_4:
-		case AXP_ITB_MISS:
-		case AXP_DTBM_SINGLE:
-			cpu->mmStat.opcodes = mmStatOpcode;
-			cpu->mmStat.wr = (write ? 1 : 0);
-			cpu->va = va;
-			cpu->excSum.reg = reg;
-			break;
 
-		case AXP_DFAULT:
-		case AXP_UNALIGNED:
-			cpu->excSum.reg = reg;
-			cpu->mmStat.opcodes = mmStatOpcode;
-			cpu->mmStat.wr = (write ? 1 : 0);
-			cpu->mmStat.fow = (write ? 1 : 0);
-			cpu->mmStat._for = (write ? 0 : 1);
-			cpu->mmStat.acv = 1;
-			cpu->va = va;
-			break;
+		/*
+		 * We always need to lock down the IPR mutex.
+		 */
+		pthread_mutex_lock(&cpu->iBoxIPRMutex);
 
-		case AXP_IACV:
-			cpu->excSum.bad_iva = 0;	/* VA contains the address */
-			cpu->va = va;
-			break;
+		/*
+		 * HW_LD (0x1b = 27 -> 3) and HW_ST (0x1f = 31 -> 7), subtract 0x18(24)
+		 * from both.
+		 */
+		if ((opcode == HW_LD) || (opcode == HW_ST))
+			mmStatOpcode -= 0x18;
+		cpu->excAddr.exc_pc = pc;
 
-		case AXP_ARITH:
-		case AXP_FEN:
-		case AXP_MT_FPCR_TRAP:
-			cpu->excSum.reg = reg;
-			break;
+		/*
+		 * Clear out the fault IPRs.
+		 */
+		cpu->va = 0;
+		*((u64 *) &cpu->excSum) = 0;
+		*((u64 *) &cpu->mmStat) = 0;
 
-		case AXP_OPCDEC:
-			cpu->mmStat.opcodes = mmStatOpcode;
-			break;
+		/*
+		 * Based on the fault, set the appropriate IPRs.
+		 */
+		switch (fault)
+		{
+			case AXP_DTBM_DOUBLE_3:
+			case AXP_DTBM_DOUBLE_4:
+			case AXP_ITB_MISS:
+			case AXP_DTBM_SINGLE:
+				cpu->mmStat.opcodes = mmStatOpcode;
+				cpu->mmStat.wr = (write ? 1 : 0);
+				cpu->va = va;
+				cpu->excSum.reg = reg;
+				break;
 
-		case AXP_INTERRUPT:
-			cpu->iSum.ei = cpu->irqH;
-			cpu->irqH = 0;
-			break;
+			case AXP_DFAULT:
+			case AXP_UNALIGNED:
+				cpu->excSum.reg = reg;
+				cpu->mmStat.opcodes = mmStatOpcode;
+				cpu->mmStat.wr = (write ? 1 : 0);
+				cpu->mmStat.fow = (write ? 1 : 0);
+				cpu->mmStat._for = (write ? 0 : 1);
+				cpu->mmStat.acv = 1;
+				cpu->va = va;
+				break;
 
-		case AXP_MCHK:
-		case AXP_RESET_WAKEUP:
-			break;
+			case AXP_IACV:
+				cpu->excSum.bad_iva = 0;	/* VA contains the address */
+				cpu->va = va;
+				break;
+
+			case AXP_ARITH:
+			case AXP_FEN:
+			case AXP_MT_FPCR_TRAP:
+				cpu->excSum.reg = reg;
+				break;
+
+			case AXP_OPCDEC:
+				cpu->mmStat.opcodes = mmStatOpcode;
+				break;
+
+			case AXP_INTERRUPT:
+				cpu->iSum.ei = cpu->irqH;
+				cpu->irqH = 0;
+				break;
+
+			case AXP_MCHK:
+			case AXP_RESET_WAKEUP:
+				break;
+		}
+
+		/*
+		 * Sign-extend the set_iov bit.
+		 */
+		if (cpu->excSum.set_iov == 1)
+			cpu->excSum.sext_set_iov = 0xffff;
+
+		/*
+		 * Set the exception PC, which the main line will pick up when
+		 * processing the exception.
+		 */
+		cpu->excPC = AXP_21264_GetPALFuncVPC(cpu, fault);
+
+		/*
+		 * Make sure to unlock the IPR mutex.
+		 */
+		pthread_mutex_unlock(&cpu->iBoxIPRMutex);
+
+		/*
+		 * Let the main loop know that there is an exception pending.
+		 */
+		cpu->excPend = true;
+
+		/*
+		 * We, the Ibox, did not call this function, then we need signal the
+		 * Ibox to process this fault.
+		 */
+		if (self == false)
+			pthread_cond_signal(&cpu->iBoxCondition);
 	}
 
 	/*
-	 * Sign-extend the set_iov bit.
-	 */
-	if (cpu->excSum.set_iov == 1)
-		cpu->excSum.sext_set_iov = 0xffff;
-
-	/*
-	 * TODO: Push the excAddr onto the prediction stack.
-	 */
-
-	/*
-	 * Make sure to unlock the IPR mutex.
-	 */
-	pthread_mutex_unlock(&cpu->iBoxIPRMutex);
-
-	/*
-	 * We, the Ibox, did not call this function, then we need signal the Ibox
-	 * to process this fault, and then to unlock the Ibox mutex.
+	 * Now unlock the Ibox mutex.
 	 */
 	if (self == false)
-	{
-		pthread_cond_signal(&cpu->iBoxCondition);
 		pthread_mutex_unlock(&cpu->iBoxMutex);
-	}
 
 	/*
 	 * Return back to the caller.
-	 */
-	return;
-}
-
-/*
- * AXP_21264_Ibox_MboxCompl
- *	This function is called when the Mbox has completed a load or store
- *	instruction.  This function will lock the Ibox mutex, set the instruction
- *	state to WaitingRetirement and then signal the Ibox thread to complete the
- *	instructions, in order.
- *
- * Input Parameters:
- *	cpu:
- *		A pointer to the CPU structure for the emulated Alpha AXP 21264
- *		processor.
- *	instr:
- *		A pointer to the instruction structure to be ready for completion.
- *	exception:
- *		A value indicating the exception that was generated by attempting to
- *		execute this instruction.
- *
- * Output Parameters:
- * 	instr:
- * 		A pointer to the instruction who's state has been changed to
- * 		WaitingRetirement.
- *
- * Return Values:
- * 	None.
- *
- * NOTE:	This is also where, if an error occurred, will be set so that the
- * 			instruction is properly completed.
- */
-void AXP_21264_Ibox_MboxCompl(
-					AXP_21264_CPU *cpu,
-					AXP_INSTRUCTION *instr,
-					AXP_EXCEPTIONS exception)
-{
-
-	/*
-	 * First, lock the Ibox mutex so that we will not be interrupted.
-	 */
-	pthread_mutex_lock(&cpu->iBoxMutex);
-
-	/*
-	 * Store the exception, into the instruction entry.
-	 */
-	instr->excRegMask = exception;
-
-	/*
-	 * Next, set the items in the instruction that need to be set so that the
-	 * Ibox can complete the instruction.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
-	 * Finally, signal the Ibox that there is something to process (in this
-	 * case, retire an instruction).
-	 */
-	pthread_cond_signal(&cpu->iBoxCondition);
-	pthread_mutex_unlock(&cpu->iBoxMutex);
-
-	/*
-	 * Return back to the caller (the Mbox).
 	 */
 	return;
 }
@@ -1606,6 +1559,11 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 {
 	bool	retVal = false;
 	int		ii, jj, kk;
+
+	/*
+	 * We start out with no exceptions pending.
+	 */
+	cpu->excPend = false;
 
 	/*
 	 * Initialize the branch prediction information.
@@ -1842,9 +1800,34 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	AXP_EXCEPTIONS	exception;
 	AXP_INSTRUCTION	*decodedInstr;
 	AXP_QUEUE_ENTRY	*xqEntry;
-	u32				ii;
-	bool			local, global, choice;
+	u32				ii, fault;
+	bool			local, global, choice, wasRunning = false;
+	bool _asm;
 	u16				whichQueue;
+	int				qFull;
+
+	/*
+	 * OK, we are just starting out and there is probably nothing available to
+	 * process, yet.  Lock the CPU mutex, which the state of the CPU and if not
+	 * in a Run or ShuttingDown state, then wait on the CPU condition variable.
+	 */
+	pthread_mutex_lock(&cpu->cpuMutex);
+	while ((cpu->cpuState != Run) && (cpu->cpuState != ShuttingDown))
+	{
+		pthread_cond_wait(&cpu->cpuCond, &cpu->cpuMutex);
+	}
+	pthread_mutex_unlock(&cpu->cpuMutex);
+
+	/*
+	 * OK, we've either been successfully initialized or we are shutting-down
+	 * before we even started.  If it is the former, then we need to lock the
+	 * iBox mutex.
+	 */
+	if (cpu->cpuState == Run)
+	{
+		pthread_mutex_lock(&cpu->iBoxMutex);
+		wasRunning = true;
+	}
 
 	/*
 	 * Here we'll loop starting at the current PC and working our way through
@@ -1876,10 +1859,27 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	{
 
 		/*
-		 * Get the PC for the next set of instructions to be fetched from the
-		 * Icache and Fetch those instructions.
+		 * Exceptions take precedence over normal CPU processing.  IF an
+		 * exception occurred, then make this the next PC and clear the
+		 * exception pending flag.
 		 */
-		nextPC = AXP_21264_GetNextVPC(cpu);
+		if (cpu->excPend == true)
+		{
+
+			/*
+			 * TODO: Push the excAddr onto the prediction stack.
+			 */
+			nextPC = cpu->excPC;
+			cpu->excPend = false;
+
+		}
+		else
+
+			/*
+			 * Get the PC for the next set of instructions to be fetched from
+			 * the Icache and Fetch those instructions.
+			 */
+			nextPC = AXP_21264_GetNextVPC(cpu);
 
 		/*
 		 * The cache fetch will return true or false.  If true, we received the
@@ -1991,22 +1991,34 @@ void *AXP_21264_IboxMain(void *voidPtr)
 				{
 					xqEntry = AXP_GetNextIQEntry(cpu);
 					xqEntry->ins = decodedInstr;
-					AXP_CondQueue_Insert(
-							(AXP_COND_Q_LEAF *) &cpu->iq,
-							(AXP_COND_Q_LEAF *) xqEntry);
+					qFull = AXP_InsertCountedQueue(
+							(AXP_QUEUE_HDR *) &cpu->iq,
+							(AXP_CQUE_ENTRY *) xqEntry);
 				}
 				else	/* FQ */
 				{
 					xqEntry = AXP_GetNextFQEntry(cpu);
 					xqEntry->ins = decodedInstr;
-					AXP_CondQueue_Insert(
-							(AXP_COND_Q_LEAF *) &cpu->fq,
-							(AXP_COND_Q_LEAF *) xqEntry);
+					qFull = AXP_InsertCountedQueue(
+							(AXP_QUEUE_HDR *) &cpu->fq,
+							(AXP_CQUE_ENTRY *) xqEntry);
 				}
+
+				/*
+				 * TODO:	We need to make sure that there is at least four
+				 *			entries available in the IQ/FQ, not just 1.
+				 */
+				if (qFull < 0)
+					printf("\n>>>>> We need to determine if there are any instructions to parse <<<<<\n");
 				decodedInstr->state = Queued;
 				nextPC = AXP_21264_IncrementVPC(cpu);
 			}
 		}
+
+		/*
+		 * We failed to get the next instruction.  We need to request an Icache
+		 * Fill, or we have an ITB_MISS
+		 */
 		else
 		{
 			AXP_21264_TLB *itb;
@@ -2022,15 +2034,15 @@ void *AXP_21264_IboxMain(void *voidPtr)
 			 */
 			if (itb == NULL)
 			{
-
-				/*
-				 * TODO:	Calling PALcode implies waiting for outstanding
-				 * 			instructions to complete, then performing a
-				 * 			branch/jump to the appropriate PC.  We need to get
-				 * 			this working, as well.
-				 */
-				cpu->excAddr.exc_pc = nextPC;
-				nextPC = AXP_21264_GetPALBaseVPC(cpu, AXP_ITB_MISS);
+				AXP_21264_Ibox_Event(
+							cpu,
+							AXP_ITB_MISS,
+							nextPC,
+							*((u64 *) &nextPC),
+							PAL00,
+							AXP_UNMAPPED_REG,
+							false,
+							true);
 			}
 
 			/*
@@ -2047,10 +2059,67 @@ void *AXP_21264_IboxMain(void *voidPtr)
 			 */
 			else
 			{
-				AXP_ReturnIQEntry(cpu, xqEntry);	/* TODO: Remove - keep gcc happy */
-				AXP_ReturnFQEntry(cpu, xqEntry);	/* TODO: Remove - keep gcc happy */
+				u64	pa;
+				AXP_EXCEPTIONS exception;
+
+				/*
+				 * First, try and convert the virtual address of the PC into
+				 * its physical address equivalent.
+				 */
+				pa = AXP_va2pa(
+						cpu,
+						*((u64 *) &nextPC),
+						nextPC,
+						false,
+						Execute,
+						&_asm,
+						&fault,
+						&exception);
+
+				/*
+				 * If converting the VA to a PA generated an exception, then we
+				 * need to handle this now.  Otherwise, put in a request to the
+				 * Cbox to perform a Icache Fill.
+				 */
+				if (exception != NoException)
+					AXP_21264_Ibox_Event(
+								cpu,
+								fault,
+								nextPC,
+								*((u64 *) &nextPC),
+								PAL00,
+								AXP_UNMAPPED_REG,
+								false,
+								true);
+				else
+					AXP_21264_Add_MAF(
+							cpu,
+							Istream,
+							pa,
+							0,
+							AXP_ICACHE_BUF_LEN,
+							false);
 			}
 		}
+
+		/*
+		 * Before we loop back to the top, we need to see if there is something
+		 * to process or places to put what needs to be processed (IQ and/or FQ
+		 * cannot handle another entry).
+		 */
+		if (((cpu->excPend == false) &&
+			 (AXP_IcacheValid(cpu, nextPC) == false)) ||
+			((AXP_CountedQueueFull(&cpu->iq) != 0) ||
+			 (AXP_CountedQueueFull(&cpu->fq) != 0)))
+			pthread_cond_wait(&cpu->iBoxCondition, &cpu->iBoxMutex);
+	}
+
+	/*
+	 *
+	 */
+	if (wasRunning == true)
+	{
+		pthread_mutex_unlock(&cpu->iBoxMutex);
 	}
 	return(NULL);
 }

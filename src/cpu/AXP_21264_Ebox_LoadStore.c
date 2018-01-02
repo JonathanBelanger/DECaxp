@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -32,6 +32,10 @@
  *	V01.002		28-Jun-2017	Jonathan D. Belanger
  *	Added code to call the Mbox function to load and store data values into
  *	memory (Dcache).
+ *
+ *	V01.003		01-Jan-2018	Jonathan D. Belanger
+ *	Changed the way instructions are completed when they need to utilize the
+ *	Mbox.
  */
 
 #include "AXP_Configure.h"
@@ -40,10 +44,10 @@
 /*
  * Prototypes for Local Functions.
  */
-void AXP_LDBU_COMPL(AXP_INSTRUCTION *);
-void AXP_LDWU_COMPL(AXP_INSTRUCTION *);
-void AXP_LDL_COMPL(AXP_INSTRUCTION *);
-void AXP_LDQ_COMPL(AXP_INSTRUCTION *);
+void AXP_LDBU_COMPL(AXP_21264_CPU *, AXP_INSTRUCTION *);
+void AXP_LDWU_COMPL(AXP_21264_CPU *, AXP_INSTRUCTION *);
+void AXP_LDL_COMPL(AXP_21264_CPU *, AXP_INSTRUCTION *);
+void AXP_LDQ_COMPL(AXP_21264_CPU *, AXP_INSTRUCTION *);
 
 /*
  * IMPLEMENTATION NOTES:
@@ -194,6 +198,9 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  *	instruction of the Alpha AXP processor.
  *
  * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
  * 	instr:
  * 		A pointer to a structure containing the information needed to complete
  * 		this instruction.
@@ -205,7 +212,7 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Value:
  * 	None.
  */
-void AXP_LDBU_COMPL(AXP_INSTRUCTION *instr)
+void AXP_LDBU_COMPL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
 	/*
@@ -280,6 +287,9 @@ AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  *	instruction of the Alpha AXP processor.
  *
  * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
  * 	instr:
  * 		A pointer to a structure containing the information needed to complete
  * 		this instruction.
@@ -291,7 +301,7 @@ AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Value:
  * 	None.
  */
-void AXP_LDWU_COMPL(AXP_INSTRUCTION *instr)
+void AXP_LDWU_COMPL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
 	/*
@@ -372,6 +382,9 @@ AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  *	instruction of the Alpha AXP processor.
  *
  * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
  * 	instr:
  * 		A pointer to a structure containing the information needed to complete
  * 		this instruction.
@@ -383,7 +396,7 @@ AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Value:
  * 	None.
  */
-void AXP_LDL_COMPL(AXP_INSTRUCTION *instr)
+void AXP_LDL_COMPL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
 	/*
@@ -503,7 +516,12 @@ AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  *	instruction of the Alpha AXP processor.
  *
  * Input Parameters:
- * 	None.
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to complete
+ * 		this instruction.
  *
  * Output Parameters:
  * 	instr:
@@ -512,7 +530,7 @@ AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Value:
  * 	None.
  */
-void AXP_LDQ_COMPL(AXP_INSTRUCTION *instr)
+void AXP_LDQ_COMPL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
 	/*

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -32,6 +32,10 @@
  *
  *	V01.003		20-Jul-2017	Jonathan D. Belanger
  *	Added the Miscellaneous instruction prototypes.
+ *
+ *	V01.004		01-Jan-2018	Jonathan D. Belanger
+ *	Changed the way instructions are completed when they need to utilize the
+ *	Mbox.
  */
 #ifndef _AXP_21264_EBOX_DEFS_
 #define _AXP_21264_EBOX_DEFS_
@@ -205,6 +209,7 @@ AXP_EXCEPTIONS AXP_UNPKWB(AXP_21264_CPU *, AXP_INSTRUCTION *);
 /*
  * Initialization code for Ebox.
  */
+void AXP_21264_Ebox_Compl(AXP_21264_CPU *, AXP_INSTRUCTION *);
 bool AXP_21264_Ebox_Init(AXP_21264_CPU *);
 
 #endif /* _AXP_21264_EBOX_DEFS_ */

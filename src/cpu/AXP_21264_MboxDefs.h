@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -23,6 +23,10 @@
  *
  *	V01.000		28-Jun-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		01-Jan-2018	Jonathan D. Belanger
+ *	Changed the way instructions are completed when they need to utilize the
+ *	Mbox.
  */
 #ifndef _AXP_21264_MBOX_DEFS_DEFS_
 #define _AXP_21264_MBOX_DEFS_DEFS_
@@ -47,7 +51,6 @@ typedef struct
 	u64						virtAddress;
 	u64						physAddress;
 	AXP_INSTRUCTION			*instr;
-	AXP_EXCEPTIONS			exception;
 	AXP_MBOX_QUEUE_STATE	state;
 	AXP_DCACHE_LOC			dcacheLoc;
 	u8						len;

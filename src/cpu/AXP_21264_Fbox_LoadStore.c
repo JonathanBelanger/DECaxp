@@ -35,7 +35,7 @@
  *	have to worry about with integer loads is based off of the length of the
  *	value read in, do we zero- or sign-extend it.  For floating-point, we have
  *	to convert from memory format to register format.  This means that the
- *	functions dealing with loads, are going to have to be broekn up into an
+ *	functions dealing with loads, are going to have to be broken up into an
  *	initiation function and a completion function.
  */
 #include "AXP_Configure.h"
@@ -44,10 +44,10 @@
 /*
  * Prototypes for local functions.
  */
-void AXP_LDF_COMPL(AXP_INSTRUCTION *);
-void AXP_LDG_COMPL(AXP_INSTRUCTION *);
-void AXP_LDS_COMPL(AXP_INSTRUCTION *);
-void AXP_LDT_COMPL(AXP_INSTRUCTION *);
+void AXP_LDF_COMPL(AXP_21264_CPU *, AXP_INSTRUCTION *);
+void AXP_LDG_COMPL(AXP_21264_CPU *, AXP_INSTRUCTION *);
+void AXP_LDS_COMPL(AXP_21264_CPU *, AXP_INSTRUCTION *);
+void AXP_LDT_COMPL(AXP_21264_CPU *, AXP_INSTRUCTION *);
 
 /*
  * IMPLEMENTATION NOTES:
@@ -121,8 +121,11 @@ AXP_EXCEPTIONS AXP_LDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  *	instruction of the Alpha AXP processor.
  *
  * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
  * 	instr:
- * 		A pointer to a structure containing the information needed to execute
+ * 		A pointer to a structure containing the information needed to complete
  * 		this instruction.
  *
  * Output Parameters:
@@ -132,7 +135,7 @@ AXP_EXCEPTIONS AXP_LDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Value:
  * 	None.
  */
-void AXP_LDF_COMPL(AXP_INSTRUCTION *instr)
+void AXP_LDF_COMPL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 tmp, exp;
 	AXP_F_MEMORY *tmpF = (AXP_F_MEMORY *) &tmp;
@@ -225,8 +228,11 @@ AXP_EXCEPTIONS AXP_LDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  *	instruction of the Alpha AXP processor.
  *
  * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
  * 	instr:
- * 		A pointer to a structure containing the information needed to execute
+ * 		A pointer to a structure containing the information needed to complete
  * 		this instruction.
  *
  * Output Parameters:
@@ -236,7 +242,7 @@ AXP_EXCEPTIONS AXP_LDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Value:
  * 	None.
  */
-void AXP_LDG_COMPL(AXP_INSTRUCTION *instr)
+void AXP_LDG_COMPL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 tmp;
 	AXP_G_MEMORY *tmpG = (AXP_G_MEMORY *) &tmp;
@@ -339,8 +345,11 @@ AXP_EXCEPTIONS AXP_LDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  *	instruction of the Alpha AXP processor.
  *
  * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
  * 	instr:
- * 		A pointer to a structure containing the information needed to execute
+ * 		A pointer to a structure containing the information needed to complete
  * 		this instruction.
  *
  * Output Parameters:
@@ -350,7 +359,7 @@ AXP_EXCEPTIONS AXP_LDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Value:
  * 	None.
  */
-void AXP_LDS_COMPL(AXP_INSTRUCTION *instr)
+void AXP_LDS_COMPL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u64 tmp, exp;
 	AXP_S_MEMORY *tmpS = (AXP_S_MEMORY *) &tmp;
@@ -452,7 +461,12 @@ AXP_EXCEPTIONS AXP_LDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  *	instruction of the Alpha AXP processor.
  *
  * Input Parameters:
- * 	None.
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to complete
+ * 		this instruction.
  *
  * Output Parameters:
  * 	instr:
@@ -461,7 +475,7 @@ AXP_EXCEPTIONS AXP_LDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Value:
  * 	None.
  */
-void AXP_LDT_COMPL(AXP_INSTRUCTION *instr)
+void AXP_LDT_COMPL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
 	/*

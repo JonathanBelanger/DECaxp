@@ -192,7 +192,7 @@ typedef struct
 
 typedef struct
 {
-	AXP_COND_Q_LEAF		header;
+	AXP_CQUE_ENTRY		header;
 	AXP_INSTRUCTION		*ins;
 	u32					index;
 } AXP_QUEUE_ENTRY;
@@ -287,6 +287,8 @@ typedef struct
 	pthread_t				iBoxThreadID;
 	pthread_mutex_t			iBoxMutex;
 	pthread_cond_t			iBoxCondition;
+	bool					excPend;
+	AXP_PC					excPC;
 
 	/*
 	 * The following definitions are used by the branch prediction code.
@@ -296,7 +298,6 @@ typedef struct
 	GPT						globalPredictor;
 	CPT						choicePredictor;
 	u16						globalPathHistory;
-
 	u8						instrCounter;	/* Unique ID for each instruction */
 
 	/*
@@ -316,8 +317,8 @@ typedef struct
 	/*
 	 * Instruction Queues (Integer and Floating-Point).
 	 */
-	AXP_COND_Q_ROOT_CNT		iq;
-	AXP_COND_Q_ROOT_CNT		fq;
+	AXP_COUNTED_QUEUE		iq;
+	AXP_COUNTED_QUEUE		fq;
 
 	/*
 	 * Instruction Queue Pre-allocated Cache.
@@ -392,6 +393,8 @@ typedef struct
 	pthread_t				eBoxU1ThreadID;
 	pthread_t				eBoxL0ThreadID;
 	pthread_t				eBoxL1ThreadID;
+	pthread_mutex_t			eBoxMutex;
+	pthread_cond_t			eBoxCondition;
 
 	/*
 	 * VAX Compatibility Interrupt Flag.  This flag is intended to be utilized
@@ -433,7 +436,6 @@ typedef struct
 	/*
 	 * Ebox IPRs
 	 */
-	pthread_mutex_t			eBoxIPRMutex;
 	AXP_EBOX_CC				cc;			/* Cycle counter					*/
 	AXP_EBOX_CC_CTL			ccCtl;		/* Cycle counter control			*/
 	AXP_EBOX_VA				va;			/* Virtual address					*/
@@ -458,6 +460,8 @@ typedef struct
 	 */
 	pthread_t				fBoxMulThreadID;
 	pthread_t				fBoxOthThreadID;
+	pthread_mutex_t			fBoxMutex;
+	pthread_cond_t			fBoxCondition;
 
 	/*
 	 * Physical registers.
@@ -479,7 +483,6 @@ typedef struct
 	/*
 	 * Fbox IPRs
 	 */
-	pthread_mutex_t			fBoxIPRMutex;
 	AXP_FBOX_FPCR			fpcr;
 
 	/**************************************************************************
@@ -578,9 +581,7 @@ typedef struct
 	pthread_t				cBoxThreadID;
 
 	/*
-	 * TODO: The code for the following structures is not yet complete.  These
-	 * 		 are the interfaces between the Ibox and Mbox to Cbox, and the
-	 *		 System and the Cbox.
+	 * The following structures are used to control the Cbox and its queues.
 	 */
 	pthread_mutex_t			cBoxInterfaceMutex;
 	pthread_cond_t			cBoxInterfaceCond;

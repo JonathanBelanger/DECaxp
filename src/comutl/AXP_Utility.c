@@ -347,6 +347,34 @@ i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
 }
 
 /*
+ * AXP_CountedQueueFull
+ * 	This function is called to determine if a counted queue is full.
+ *
+ * Input Parameters:
+ * 	parent:
+ * 		A pointer to the parent (head) of the queue.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ * -1, if the queue has the maximum number of entries.
+ * 	0, if the queue is not empty.
+ * 	1, if the queue is empty.
+ */
+i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *parent)
+{
+	int		retVal;
+
+	if (parent->count == 0)
+		retVal = 1;
+	else if (parent->count == parent->max)
+		retVal = -1;
+	else
+		retVal = 0;
+	return (retVal);
+}
+/*
  * AXP_RemoveCountedQueue
  * 	This function is called to remove an entry out of a specific location
  * 	within a counted queue.  The counter at the queue parent (head) is
