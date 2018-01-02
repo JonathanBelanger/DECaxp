@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -33,6 +33,10 @@
  *
  *	V01.003		25-May-2017	Jonathan D. Belanger
  *	Added the instruction format for the PALcode Reserved Instructions.
+ *
+ *	V01.004		01-Jan-2018	Jonathan D. Belanger
+ *	Changed the way instructions are completed when they need to utilize the
+ *	Mbox.
  */
 #ifndef _AXP_21264_INS_DEFS_
 #define _AXP_21264_INS_DEFS_

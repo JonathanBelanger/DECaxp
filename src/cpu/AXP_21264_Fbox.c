@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -26,9 +26,48 @@
  *
  *	v01.001		03-Nov-2017		Jonathan D. Belanger
  *	Added Fbox initialization code.
- */
+ *
+ *	V01.002		01-Jan-2018	Jonathan D. Belanger
+ *	Changed the way instructions are completed when they need to utilize the
+ *	Mbox.
+*/
 #include "AXP_Configure.h"
 #include "AXP_21264_Fbox.h"
+
+/*
+ * AXP_21264_Fbox_Compl
+ *	This function is called by the Mbox for Integer Store operations.  This is
+ *	very similar to the Integer Load Complete functions that are individually
+ *	written for each kind of unique load instruction.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to complete
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_21264_Fbox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+
+	/*
+	 * Indicate that the instruction is ready to be retired.
+	 */
+	instr->state = WaitingRetirement;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
 
 /*
  * AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)

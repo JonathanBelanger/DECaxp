@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -24,6 +24,10 @@
  *
  *	V01.000		17-Nov-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		01-Jan-2018	Jonathan D. Belanger
+ *	Added a call to pthread_once to make sure the mutex handling code has been
+ *	initialized.
  */
 #include "AXP_21264_CPUDefs.h"
 
@@ -69,9 +73,13 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->itbMutex, NULL);
 		if (pthreadRet == 0)
-			pthreadRet = pthread_mutex_init(&cpu->eBoxIPRMutex, NULL);
+			pthreadRet = pthread_mutex_init(&cpu->eBoxMutex, NULL);
 		if (pthreadRet == 0)
-			pthreadRet = pthread_mutex_init(&cpu->fBoxIPRMutex, NULL);
+			pthreadRet = pthread_mutex_init(&cpu->fBoxMutex, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&cpu->mBoxMutex, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&cpu->mBoxIPRMutex, NULL);
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->dCacheMutex, NULL);
 		if (pthreadRet == 0)
@@ -83,7 +91,7 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->dtbMutex, NULL);
 		if (pthreadRet == 0)
-			pthreadRet = pthread_mutex_init(&cpu->mBoxIPRMutex, NULL);
+			pthreadRet = pthread_mutex_init(&cpu->cBoxInterfaceMutex, NULL);
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->cBoxIPRMutex, NULL);
 		if (pthreadRet == 0)
@@ -96,6 +104,14 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 			pthreadRet = pthread_cond_init(&cpu->cpuCond, NULL);
 		if (pthreadRet == 0)
 			pthreadRet = pthread_cond_init(&cpu->iBoxCondition, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_cond_init(&cpu->eBoxCondition, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_cond_init(&cpu->fBoxCondition, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_cond_init(&cpu->mBoxCondition, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_cond_init(&cpu->cBoxInterfaceCond, NULL);
 		else
 			qRet = false;
 
@@ -105,23 +121,31 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 		 * queue entries.
 		 */
 		if (qRet == true)
-			qRet = AXP_CondQueueCnt_Init(&cpu->iq, AXP_IQ_LEN);
+		{
+			AXP_INIT_CQUE(cpu->iq, AXP_IQ_LEN);
+		}
 		if (qRet == true)
+		{
 			for(ii = 0; ii < AXP_IQ_LEN; ii++)
 			{
-				cpu->iqEntries[ii].header.flink =
-						cpu->iqEntries[ii].header.blink = NULL;
-				cpu->iqEntries[ii].header.parent = &cpu->iq;
+				AXP_INIT_CQENTRY(cpu->iqEntries[ii].header, cpu->iq);
+				cpu->iqEntries[ii].ins = NULL;
+				cpu->iqEntries[ii].index = ii;
 			}
+		}
 		if (qRet == true)
-			qRet = AXP_CondQueueCnt_Init(&cpu->fq, AXP_FQ_LEN);
+		{
+			AXP_INIT_CQUE(cpu->fq, AXP_IQ_LEN);
+		}
 		if (qRet == true)
+		{
 			for(ii = 0; ii < AXP_FQ_LEN; ii++)
 			{
-				cpu->fqEntries[ii].header.flink =
-						cpu->fqEntries[ii].header.blink = NULL;
-				cpu->fqEntries[ii].header.parent = &cpu->fq;
+				AXP_INIT_CQENTRY(cpu->fqEntries[ii].header, cpu->fq);
+				cpu->fqEntries[ii].ins = NULL;
+				cpu->fqEntries[ii].index = ii;
 			}
+		}
 
 		/*
 		 * At this point everything should be initialize.  Time to create all
@@ -190,7 +214,7 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 		 * If anything happened in error, then deallocate the CPU block just
 		 * allocated and return NULL to the caller.
 		 */
-		if ((pthreadRet != 0) || (qRet != true))
+		if ((cpu != NULL) && ((pthreadRet != 0) || (qRet != true)))
 		{
 			AXP_Deallocate_Block((AXP_BLOCK_DSC *) cpu);
 			cpu = NULL;

@@ -270,6 +270,7 @@ typedef struct
 	void				*flink;
 	void				*blink;
 	AXP_COUNTED_QUEUE	*parent;
+	int					index;
 } AXP_CQUE_ENTRY;
 
 #define AXP_INIT_CQUE(queue, maximum)	\
@@ -281,7 +282,8 @@ typedef struct
 	queue->max = maximum;				\
 	queue->count = 0
 #define AXP_INIT_CQENTRY(queue, prent)	\
-		AXP_INIT_QUE(queue);			\
+		queue.flink = NULL;				\
+		queue.blink = NULL;				\
 		queue.parent = &prent;
 #define AXP_CQUE_EMPTY(queue)	(queue.count == 0)
 #define AXP_CQUEP_EMPTY(queue)	(queue->count == 0)
@@ -366,6 +368,7 @@ AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ);
  * Counted queue functions.
  */
 i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *, AXP_CQUE_ENTRY *);
+i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *);
 i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *);
 
 /*

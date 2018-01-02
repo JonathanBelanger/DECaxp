@@ -53,14 +53,6 @@
 #include "AXP_21264_Cache.h"
 
 /*
- * TODO:	When updating the DTB, we also need to inform the Cbox, as it has
- *			a duplicate copy of the DTB (or we update it ourselves on behalf of
- *			the Cbox).  The difference between the two is that the DTB is
- *			virtually indexed and physically tagged and the Cbox version is
- *			physically indexed and virtually tagged.
- */
-
-/*
  * Union to hold 2 32-bit values as a 64-bit value for the purposes of saving
  * the index and set value for a Dcache item.
  */
@@ -779,15 +771,6 @@ u64 AXP_va2pa(
 	 */
 	if (tlb == NULL)
 	{
-
-		/*
-		 * TODO: The caller needs to set the following.
-		 *	cpu->excAddr = pc;
-		 *	if (cpu->tbMissOutstanding == false)
-		 *		cpu->mmStat.? = 1;
-		 *	cpu->va = va;
-		 *	cpu->excSum.? = 1;
-		 */
 		if (cpu->tbMissOutstanding == true)
 		{
 			if (cpu->iCtl.va_48 == 0)
@@ -817,25 +800,12 @@ u64 AXP_va2pa(
 		*memChk = AXP_21264_checkMemoryAccess(cpu, tlb, acc);
 		if (*memChk != NoException)
 		{
-			/* TODO: The caller needs to do this: cpu->excAddr = pc; */
 			if (dtb == true)
 			{
-
-				/*
-				 * TODO: The caller needs to set the following.
-				 *	cpu->excSum.? = 1;
-				 *	cpu->mmStat.? = 1;
-				 *	cpu->va = va;
-				 */
 				*fault = AXP_DFAULT;
 			}
 			else
 			{
-
-				/*
-				 * TODO: The caller needs to set the following.
-				 *	cpu->excSum = 0;
-				 */
 				*fault = AXP_IACV;
 			}
 		}
@@ -1319,7 +1289,6 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 
 	/*
 	 * First we need to lock access to the Dcache and Dtag.
-	 * TODO: Do we need a ctag mutex
 	 */
 	pthread_mutex_lock(&cpu->dCacheMutex);
 	pthread_mutex_lock(&cpu->dtagMutex);

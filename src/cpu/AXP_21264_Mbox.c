@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -32,6 +32,10 @@
  *	have all be written.  there is one 'TO-DO' item that will need to be
  *	resolved round whether the Cbox completing a IOWB versus a Dcache Fill
  *	needs to be handled differently.
+ *
+ *	V01.003		01-Jan-2018	Jonathan D. Belanger
+ *	Changed the way instructions are completed when they need to utilize the
+ *	Mbox.
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Mbox.h"
@@ -193,7 +197,7 @@ void AXP_21264_Mbox_ReadMem(AXP_21264_CPU *cpu,
 	 */
 	cpu->lq[slot].virtAddress = virtAddr;
 	cpu->lq[slot].instr = instr;
-	cpu->lq[slot].exception = NoException;
+	cpu->lq[slot].instr->excRegMask = NoException;
 	cpu->lq[slot].state = Initial;
 
 	/*
@@ -366,7 +370,7 @@ void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *cpu,
 	cpu->sq[slot].value = value;
 	cpu->sq[slot].virtAddress = virtAddr;
 	cpu->sq[slot].instr = instr;
-	cpu->sq[slot].exception = NoException;
+	cpu->sq[slot].instr->excRegMask = NoException;
 	cpu->sq[slot].state = Initial;
 
 	/*
@@ -569,7 +573,7 @@ void AXP_21264_Mbox_TryCaches(AXP_21264_CPU *cpu, u8 entry)
 		/*
 		 * Get the status for the Dcache for the current Va/PA pair.
 		 */
-		lqEntry->exception = AXP_Dcache_Status(
+		lqEntry->instr->excRegMask = AXP_Dcache_Status(
 									cpu,
 									lqEntry->virtAddress,
 									lqEntry->physAddress,
@@ -762,7 +766,7 @@ void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
 								Read,
 								&_asm,
 								&fault,
-								&lqEntry->exception);
+								&lqEntry->instr->excRegMask);
 
 	/*
 	 * If a physical address was returned, then we have some more to do.
@@ -874,7 +878,7 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 	/*
 	 * First, get the status for the Dcache for the current VA/PA pair.
 	 */
-	sqEntry->exception = AXP_Dcache_Status(
+	sqEntry->instr->excRegMask = AXP_Dcache_Status(
 						cpu,
 						sqEntry->virtAddress,
 						sqEntry->physAddress,
@@ -889,7 +893,7 @@ void AXP_21264_Mbox_SQ_Pending(AXP_21264_CPU *cpu, u8 entry)
 	 * If not exception was returned from the Dcache status call, then let's
 	 * try to determine what we need to do next.
 	 */
-	if (sqEntry->exception == NoException)
+	if (sqEntry->instr->excRegMask == NoException)
 	{
 
 		/*
@@ -1144,7 +1148,7 @@ void AXP_21264_Mbox_SQ_Init(AXP_21264_CPU *cpu, u8 entry)
 								Write,
 								&_asm,
 								&fault,
-								&sqEntry->exception);
+								&sqEntry->instr->excRegMask);
 
 	/*
 	 * If a physical address was returned, then we have some more to do.
@@ -1274,10 +1278,23 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 		 */
 		if (cpu->lq[ii].state == LQComplete)
 		{
-			AXP_21264_Ibox_MboxCompl(
-					cpu,
-					cpu->lq[ii].instr,
-					cpu->lq[ii].exception);
+			void *complRtn = cpu->lq[ii].instr->loadCompletion;
+
+			if (complRtn == NULL)
+			{
+				if ((cpu->lq[ii].instr->opcode == LDBU) ||
+					(cpu->lq[ii].instr->opcode == LDW_U) ||
+					(cpu->lq[ii].instr->opcode == LDL) ||
+					(cpu->lq[ii].instr->opcode == LDL_L) ||
+					(cpu->lq[ii].instr->opcode == LDQ) ||
+					(cpu->lq[ii].instr->opcode == LDQ_U) ||
+					(cpu->lq[ii].instr->opcode == LDQ_L) ||
+					(cpu->lq[ii].instr->opcode == HW_LD))
+					complRtn = AXP_21264_Ebox_Compl;
+				else
+					complRtn = AXP_21264_Fbox_Compl;
+			}
+			complRtn(cpu, cpu->lq[ii].instr);
 			AXP_21264_Mbox_PutLQSlot(cpu, ii);
 		}
 	}
@@ -1310,10 +1327,25 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 		 */
 		if (cpu->sq[ii].state == SQComplete)
 		{
-			AXP_21264_Ibox_MboxCompl(
-					cpu,
-					cpu->sq[ii].instr,
-					cpu->sq[ii].exception);
+			void *complRtn;
+
+			/*
+			 * NOTE:	Unique store instructions do not have a completion
+			 *			handler.  One handler will suffice for each of the
+			 *			integer and floating-point instructions.
+			 */
+			if ((cpu->sq[ii].instr->opcode == STB) ||
+				(cpu->sq[ii].instr->opcode == STW) ||
+				(cpu->sq[ii].instr->opcode == STL) ||
+				(cpu->sq[ii].instr->opcode == STL_C) ||
+				(cpu->sq[ii].instr->opcode == STQ) ||
+				(cpu->sq[ii].instr->opcode == STQ_U) ||
+				(cpu->sq[ii].instr->opcode == STQ_C) ||
+				(cpu->sq[ii].instr->opcode == HW_ST))
+				complRtn = AXP_21264_Ebox_Compl;
+			else
+				complRtn = AXP_21264_Fbox_Compl;
+			*complRtn(cpu, cpu->sq[ii].instr);
 		}
 	}
 	return;

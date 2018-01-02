@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -23,6 +23,10 @@
  *
  *	V01.000		19-Jun-2017	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.002		01-Jan-2018	Jonathan D. Belanger
+ *	Changed the way instructions are completed when they need to utilize the
+ *	Mbox.
  */
 #ifndef _AXP_21264_FBOX_DEFS_
 #define _AXP_21264_FBOX_DEFS_
@@ -412,5 +416,7 @@ typedef enum
 /*
  * Initialization Function for Fbox.
  */
+void AXP_21264_Fbox_Compl(AXP_21264_CPU *, AXP_INSTRUCTION *);
 bool AXP_21264_Fbox_Init(AXP_21264_CPU *);
+
 #endif /* _AXP_21264_FBOX_DEFS_ */
