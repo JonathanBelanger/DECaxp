@@ -483,7 +483,7 @@ typedef enum
 #define OSF_CLRFEN			0x00ae
 
 /*
- * Opcode function codes 
+ * Opcode function codes
  */
 #define AXP_FUNC_JMP			0x00
 #define AXP_FUNC_ADDL			0x00
@@ -976,9 +976,9 @@ typedef enum
  *	ibr			U0, U1				Integer conditional branch instructions
  *	jsr			L0					BR, BSR, JMP, CALL, RET, COR, HW_RET,
  *									CALL_PAL
- *	iadd		L0, U0, L1, U1		Instructions with opcode 1016, except CMPBGE
+ *	iadd		L0, U0, L1, U1		Instructions with opcode 0x10, except CMPBGE
  *	ilog		L0, U0, L1, U1		AND, BIC, BIS, ORNOT, XOR, EQV, CMPBGE
- *	ishf		U0, U1				Instructions with opcode 1216
+ *	ishf		U0, U1				Instructions with opcode 0x12
  *	cmov		L0, U0, L1, U1		Integer CMOV - either cluster
  *	imul		U1					Integer multiply instructions
  *	imisc		U0					PERR, MINxxx, MAXxxx, PKxx, UNPKxx
@@ -986,8 +986,8 @@ typedef enum
  *	fadd		FA					All floating-point operate instructions except multiply,
  *									divide, square root, and conditional move instructions
  *	fmul		FM					Floating-point multiply instruction
- *	fcmov1		FA					Floating-point CMOV?first half
- *	fcmov2		FA					Floating-point CMOV? second half
+ *	fcmov1		FA					Floating-point CMOV first half
+ *	fcmov2		FA					Floating-point CMOV second half
  *	fdiv		FA					Floating-point divide instruction
  *	fsqrt		FA					Floating-point square root instruction
  *	nop			None				TRAP, EXCB, UNOP - LDQ_U R31, 0(Rx)
@@ -996,6 +996,25 @@ typedef enum
  *	mx_fpcr		FM					Instructions that move data from the floating-point
  *									control register
  */
+typedef enum
+{
+	PipelineNone,	/* R/F31 as a dest	*/
+	EboxU0,			/* U0				*/
+	EboxU1,			/* U1				*/
+	EboxU0U1,		/* U0, U1			*/
+	EboxL0,			/* L0				*/
+	EboxL1,			/* L1				*/
+	EboxL0L1,		/* L0, L1			*/
+	EboxL0L1U0U1,	/* L0, L1, U0, U1	*/
+	FboxMul,		/* FM				*/
+	FboxOther		/* FA, FST0, FST1	*/
+} AXP_PIPELINE;
+
+#define AXP_U0_PIPELINE			0
+#define AXP_U1_PIPELINE			1
+#define AXP_L0_PIPELINE			2
+#define AXP_L1_PIPELINE			3
+#define AXP_EBOX_PIPELINE_MAX	4
 
 typedef enum
 {
@@ -1035,8 +1054,6 @@ typedef struct
 	AXP_REGISTER	src1v;		/* Value from src1 register */
 	AXP_REGISTER	src2v;		/* Value from src2 register */
 	AXP_REGISTER	destv;		/* Value to dest register */
-	u64				lockPhysAddrPending; /* used with lockFlagPending */
-	u64				lockVirtAddrPending; /* used with lockFlagPending */
 	AXP_INS_TYPE	format;		/* Instruction format */
 	AXP_OPER_TYPE	type;
 	AXP_PC			pc;
@@ -1045,7 +1062,7 @@ typedef struct
 	AXP_FBOX_FPCR	insFpcr;
 	AXP_IBOX_EXC_SUM excSum;
 	AXP_EXCEPTIONS	excRegMask;	/* Exception Register Mask */
-	void			(*loadCompletion)();
+	AXP_PIPELINE	pipeline;
 } AXP_INSTRUCTION;
 
 #endif /* _AXP_21264_INS_DEFS_ */

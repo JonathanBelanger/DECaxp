@@ -47,7 +47,7 @@
  * 	NULL:	An error occurred allocating and initializing the CPU structure.
  * 	!NULL:	Normal successful completion.
  */
-AXP_21264_CPU * AXP_21264_AllocateCPU(void)
+AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 {
 	AXP_21264_CPU	*cpu = NULL;
 	int				pthreadRet;
@@ -158,7 +158,6 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 							NULL,
 							AXP_21264_IboxMain,
 							cpu);
-#if 0
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->eBoxU0ThreadID,
@@ -169,7 +168,7 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 				pthreadRet = pthread_create(
 								&cpu->eBoxU1ThreadID,
 								NULL,
-								(void *(void *)) AXP_21264_eBoxU1Main,
+								(void *(void *)) AXP_21264_EboxU1Main,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
@@ -195,7 +194,6 @@ AXP_21264_CPU * AXP_21264_AllocateCPU(void)
 								NULL,
 								(void *(void *)) AXP_21264_FboxOthMain,
 								cpu);
-#endif
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->mBoxThreadID,

@@ -746,7 +746,7 @@ u64 AXP_va2pa(
 		else if ((spe & AXP_SPE1_BIT) && (vaSpe.spe1.spe1 == AXP_SPE1_VA_VAL))
 		{
 			pa = ((va & AXP_SPE1_VA_MASK) |
-				  (va & AXP_SPE1_VA_40 ? AXP_SPE1_PA_43_41 : 0));
+				  ((va & AXP_SPE1_VA_40) ? AXP_SPE1_PA_43_41 : 0));
 			*_asm = false;
 			return(pa);
 		}

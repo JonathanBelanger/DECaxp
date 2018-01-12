@@ -163,7 +163,7 @@ bool AXP_Read_NVP_File(FILE *filePointer, char *name, u32 *value)
 				 * "name=value", with nothing before it or after.  First, let's
 				 * pull out the name.  If we don't find one it is an error.
 				 */
-				name = strtok(readLine, delim);
+				name = strtok_r(readLine, delim);
 				if (name != NULL)
 				{
 					char *valueStr;
@@ -172,7 +172,7 @@ bool AXP_Read_NVP_File(FILE *filePointer, char *name, u32 *value)
 					 * Now pull out the value string.  If we don't find one,
 					 * then return an error.
 					 */
-					valueStr = strtok(readLine, delim);
+					valueStr = strtok_r(readLine, delim);
 					if (valueStr != NULL)
 					{
 

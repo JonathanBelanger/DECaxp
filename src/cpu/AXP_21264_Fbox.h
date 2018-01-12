@@ -414,9 +414,13 @@ typedef enum
 	((fp).exponent ? (fp).exponent - (AXP_S_BIAS - AXP_T_BIAS) : 0)
 
 /*
- * Initialization Function for Fbox.
+ * Initialization and Main Functions for Fbox.
  */
+bool AXP_21264_Fbox_RegistersReady(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
 void AXP_21264_Fbox_Compl(AXP_21264_CPU *, AXP_INSTRUCTION *);
 bool AXP_21264_Fbox_Init(AXP_21264_CPU *);
+void *AXP_21264_FboxMulMain(void *);
+void *AXP_21264_FboxOthMain(void *);
+void AXP_21264_FboxMain(AXP_21264_CPU *, int);
 
 #endif /* _AXP_21264_FBOX_DEFS_ */

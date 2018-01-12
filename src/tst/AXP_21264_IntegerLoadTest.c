@@ -155,8 +155,6 @@ int main()
 	instr.branchPredict = false;
 	instr.literal = 0;
 	instr.src2v.r.uq = 0;	/* Only 2 registers (Ra = destination, Rb = source) */
-	instr.lockPhysAddrPending = 0;
-	instr.lockVirtAddrPending = 0;
 	instr.format = Mem;		/* Memory formatted instruction. */
 	instr.type = Load;		/* Load operation. */
 	instr.pc.pc = 0x000000007ffe000ll;
@@ -194,8 +192,9 @@ int main()
 			/*
 			 * Sign extend the displacement.
 			 */
-			instr.displacement |= (instr.displacement & 0x0000000000008000ll ?
-						0xffffffffffff0000 : 0);
+			instr.displacement |=
+					((instr.displacement & 0x0000000000008000ll) ?
+					 0xffffffffffff0000 : 0);
 			instr.state = Executing;
 			testCnt++;
 			retVal = AXP_LDA(cpu, &instr);		/* Call the LDA instruction. */
@@ -304,7 +303,7 @@ int main()
 		 printf("Test passed.  %d test cases executed.\n", testCnt);
 	 else
 		 printf("\nTest failed (%d passed before failing).  See preceding message.\n", testCnt);
-	
+
 	/*
 	 * We are done.
 	 */
