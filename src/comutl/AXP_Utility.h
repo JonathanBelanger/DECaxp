@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -70,6 +70,8 @@
 #include <math.h>
 #include <limits.h>
 #include <fenv.h>
+
+#include "AXP_NoCompilerHack.h"
 
 /*
  * Define some regularly utilized definitions.

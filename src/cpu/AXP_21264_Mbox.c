@@ -49,7 +49,7 @@
  *
  * Input Parameters:
  *	cpu:
- *		A pointer to the structure containing the information needed to emulate 
+ *		A pointer to the structure containing the information needed to emulate
  *		a single CPU.
  *
  * Output Parameters:
@@ -159,7 +159,7 @@ void AXP_21264_Mbox_PutLQSlot(AXP_21264_CPU *cpu, u32 entry)
  *
  * Input Parameters:
  *	cpu:
- *		A pointer to the structure containing the information needed to emulate 
+ *		A pointer to the structure containing the information needed to emulate
  *		a single CPU.
  *	instr:
  *		A pointer to the decoded instruction.  When the read is complete, the
@@ -212,7 +212,7 @@ void AXP_21264_Mbox_ReadMem(AXP_21264_CPU *cpu,
 	 */
 	return;
  }
- 
+
 /*
  * AXP_21264_Mbox_GetSQSlot
  *	This function is called to get the next available Store slot.  They are
@@ -220,7 +220,7 @@ void AXP_21264_Mbox_ReadMem(AXP_21264_CPU *cpu,
  *
  * Input Parameters:
  *	cpu:
- *		A pointer to the structure containing the information needed to emulate 
+ *		A pointer to the structure containing the information needed to emulate
  *		a single CPU.
  *
  * Output Parameters:
@@ -331,7 +331,7 @@ void AXP_21264_Mbox_PutSQSlot(AXP_21264_CPU *cpu, u32 entry)
  *
  * Input Parameters:
  *	cpu:
- *		A pointer to the structure containing the information needed to emulate 
+ *		A pointer to the structure containing the information needed to emulate
  *		a single CPU.
  *	instr:
  *		A pointer to the decoded instruction.  When the write is completed, the
@@ -363,7 +363,7 @@ void AXP_21264_Mbox_WriteMem(AXP_21264_CPU *cpu,
 	 * we are accessing it.
 	 */
 	pthread_mutex_lock(&cpu->mBoxMutex);
-	
+
 	/*
 	 * Store the information in the
 	 */
@@ -1278,22 +1278,24 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 		 */
 		if (cpu->lq[ii].state == LQComplete)
 		{
-			void *complRtn = cpu->lq[ii].instr->loadCompletion;
+			void (*complRtn)();
 
-			if (complRtn == NULL)
-			{
-				if ((cpu->lq[ii].instr->opcode == LDBU) ||
-					(cpu->lq[ii].instr->opcode == LDW_U) ||
-					(cpu->lq[ii].instr->opcode == LDL) ||
-					(cpu->lq[ii].instr->opcode == LDL_L) ||
-					(cpu->lq[ii].instr->opcode == LDQ) ||
-					(cpu->lq[ii].instr->opcode == LDQ_U) ||
-					(cpu->lq[ii].instr->opcode == LDQ_L) ||
-					(cpu->lq[ii].instr->opcode == HW_LD))
-					complRtn = AXP_21264_Ebox_Compl;
-				else
-					complRtn = AXP_21264_Fbox_Compl;
-			}
+			/*
+			 * We are either completing an Integer Load or a Floating-Point
+			 * Load.  Select the completion routine, based on the instruction
+			 * type.
+			 */
+			if ((cpu->lq[ii].instr->opcode == LDBU) ||
+				(cpu->lq[ii].instr->opcode == LDW_U) ||
+				(cpu->lq[ii].instr->opcode == LDL) ||
+				(cpu->lq[ii].instr->opcode == LDL_L) ||
+				(cpu->lq[ii].instr->opcode == LDQ) ||
+				(cpu->lq[ii].instr->opcode == LDQ_U) ||
+				(cpu->lq[ii].instr->opcode == LDQ_L) ||
+				(cpu->lq[ii].instr->opcode == HW_LD))
+				complRtn = AXP_21264_Ebox_Compl;
+			else
+				complRtn = AXP_21264_Fbox_Compl;
 			complRtn(cpu, cpu->lq[ii].instr);
 			AXP_21264_Mbox_PutLQSlot(cpu, ii);
 		}
@@ -1327,12 +1329,12 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 		 */
 		if (cpu->sq[ii].state == SQComplete)
 		{
-			void *complRtn;
+			void (*complRtn)();
 
 			/*
-			 * NOTE:	Unique store instructions do not have a completion
-			 *			handler.  One handler will suffice for each of the
-			 *			integer and floating-point instructions.
+			 * We are either completing an Integer Store or a Floating-Point
+			 * store.  Use the instruction to determine which completion
+			 * function to call (Ebox - Integer or Fbox - Floating-point).
 			 */
 			if ((cpu->sq[ii].instr->opcode == STB) ||
 				(cpu->sq[ii].instr->opcode == STW) ||
@@ -1345,7 +1347,7 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 				complRtn = AXP_21264_Ebox_Compl;
 			else
 				complRtn = AXP_21264_Fbox_Compl;
-			*complRtn(cpu, cpu->sq[ii].instr);
+			complRtn(cpu, cpu->sq[ii].instr);
 		}
 	}
 	return;

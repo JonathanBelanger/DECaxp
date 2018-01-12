@@ -30,9 +30,45 @@
  *	V01.002		01-Jan-2018	Jonathan D. Belanger
  *	Changed the way instructions are completed when they need to utilize the
  *	Mbox.
+ *
+ *	V01.003		06-Jan-2018	Jonathan D. Belanger
+ *	Continuing to implement the main function for the integer pipelines.  At
+ *	some point I'll add a main for each pipeline, each of which calls a common
+ *	main with parameters to have the common main execute specific to the
+ *	pipeline main that called it.
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Ebox.h"
+
+/*
+ * AXP_21264_Ebox_RegisterReady
+ *	This function is called to determine if a queued instruction's registers
+ *	are ready for execution.  If one or more registers is waiting for a
+ *	previous instruction to finish its execution and store the value this
+ *	instruction needs.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ *	entry:
+ *		A pointer to the entry containing all the pre-parsed information of the
+ *		instruction so that we can determine which physical registers are being
+ *		used and which are needed for this instruction.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ * 	true:	The registers for instruction execution are ready.
+ * 	false:	The registers for instruction execution are NOT ready.
+ */
+bool AXP_21264_Ebox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
+{
+	return ((cpu->prState[entry->ins->src1] == Valid) &&
+			(cpu->prState[entry->ins->src2] == Valid) &&
+			(cpu->prState[entry->ins->dest] == Valid));
+}
 
 /*
  * AXP_21264_Ebox_Compl
@@ -57,6 +93,46 @@
  */
 void AXP_21264_Ebox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
+
+	/*
+	 * If no exception occurred, then we have the data we need and just need to
+	 * store the value that is going to be put into the destination register
+	 * when the instruciton is retired.  There is nothing specific that needs
+	 * to happen to store instrucitons.
+	 *
+	 * NOTE: Any aception will be handled in the retirment code.
+	 */
+	if (instr->excRegMask == NoException)
+	{
+		switch (instr->opcode)
+		{
+			case LDBU:
+				instr->destv.r.uq = AXP_ZEXT_BYTE(instr->destv.r.uq);
+				break;
+
+			case LDW_U:
+				instr->destv.r.uq = AXP_ZEXT_WORD(instr->destv.r.uq);
+				break;
+
+			case LDL:
+			case LDL_L:
+				instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
+				break;
+
+			case HW_LD:
+				if (instr->len_stall == AXP_HW_LD_LONGWORD)
+					instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
+				break;
+
+			case STL_C:
+			case STQ_C:
+				instr->destv.r.uq = 1;
+				break;
+
+			default:
+				break;
+		}
+	}
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -108,18 +184,18 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 		cpu->prState[ii] = Valid;
 	}
 
- 
-	/* 
+
+	/*
 	 * The above loop initialized the prMap array entries from 0 to 30 to be
 	 * mapped to the physical registers also from 0 to 30.  The next two lines
-	 * of code initialize the mapping for R31 to be mapped to an invalid 
+	 * of code initialize the mapping for R31 to be mapped to an invalid
 	 * physical register.  This is used to indicate to the code that implements
 	 * the Alpha AXP instructions that, as a source register is always a value
-	 * of 0, and as a destination register, never updated.  This will greatly 
-	 * simplify the register (architectural and physical) handling. 
-	 */ 
-	cpu->prMap[AXP_MAX_REGISTERS-1].pr = AXP_INT_PHYS_REG + 1; 
-	cpu->prMap[AXP_MAX_REGISTERS-1].prevPr = AXP_INT_PHYS_REG + 1; 
+	 * of 0, and as a destination register, never updated.  This will greatly
+	 * simplify the register (architectural and physical) handling.
+	 */
+	cpu->prMap[AXP_MAX_REGISTERS-1].pr = AXP_INT_PHYS_REG + 1;
+	cpu->prMap[AXP_MAX_REGISTERS-1].prevPr = AXP_INT_PHYS_REG + 1;
 
 	/*
 	 * The remaining physical registers need to be put on the free list.
@@ -153,4 +229,279 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 	cpu->vaForm.form00.vptb = 0;
 
 	return(retVal);
+}
+
+/*
+ * AXP_21264_EboxU0Main
+ *	This is the main function for the Upper 0 Cluster of the Ebox (Integer)
+ *	pipeline.  It is called by the pthread_create function.  It calls the Ebox
+ *	main function to perform the instruction execution for the Upper 0 Cluster
+ *	of teh Digital Alpha AXP 21264 Central Processing Unit emulation.
+ *
+ * Input Parameters:
+ *	voidPtr:
+ *		A void pointer which is actually the address of the Digital Alpha AXP
+ *		21264 cpu data structure.  It'll be recast within the code.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void *AXP_21264_EboxU0Main(void *voidPtr)
+{
+	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+
+	/*
+	 * Call the actual main function with the information it needs to be able
+	 * to execute instructions for a specific Integer Pipeline.
+	 */
+	AXP_21264_EboxMain(cpu, AXP_U0_PIPELINE);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(NULL);
+}
+
+/*
+ * AXP_21264_EboxU1Main
+ *	This is the main function for the Upper 1 Cluster of the Ebox (Integer)
+ *	pipeline.  It is called by the pthread_create function.  It calls the Ebox
+ *	main function to perform the instruction execution for the Upper 1 Cluster
+ *	of teh Digital Alpha AXP 21264 Central Processing Unit emulation.
+ *
+ * Input Parameters:
+ *	voidPtr:
+ *		A void pointer which is actually the address of the Digital Alpha AXP
+ *		21264 cpu data structure.  It'll be recast within the code.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void *AXP_21264_EboxU1Main(void *voidPtr)
+{
+	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+
+	/*
+	 * Call the actual main function with the information it needs to be able
+	 * to execute instructions for a specific Integer Pipeline.
+	 */
+	AXP_21264_EboxMain(cpu, AXP_U1_PIPELINE);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(NULL);
+}
+
+/*
+ * AXP_21264_EboxL0Main
+ *	This is the main function for the Lower 0 Cluster of the Ebox (Integer)
+ *	pipeline.  It is called by the pthread_create function.  It calls the Ebox
+ *	main function to perform the instruction execution for the Lower 0 Cluster
+ *	of teh Digital Alpha AXP 21264 Central Processing Unit emulation.
+ *
+ * Input Parameters:
+ *	voidPtr:
+ *		A void pointer which is actually the address of the Digital Alpha AXP
+ *		21264 cpu data structure.  It'll be recast within the code.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void *AXP_21264_EboxU0Main(void *voidPtr)
+{
+	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+
+	/*
+	 * Call the actual main function with the information it needs to be able
+	 * to execute instructions for a specific Integer Pipeline.
+	 */
+	AXP_21264_EboxMain(cpu, AXP_L0_PIPELINE);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(NULL);
+}
+
+/*
+ * AXP_21264_EboxL1Main
+ *	This is the main function for the Lower 1 Cluster of the Ebox (Integer)
+ *	pipeline.  It is called by the pthread_create function.  It calls the Ebox
+ *	main function to perform the instruction execution for the Lower 1 Cluster
+ *	of teh Digital Alpha AXP 21264 Central Processing Unit emulation.
+ *
+ * Input Parameters:
+ *	voidPtr:
+ *		A void pointer which is actually the address of the Digital Alpha AXP
+ *		21264 cpu data structure.  It'll be recast within the code.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void *AXP_21264_EboxL1Main(void *voidPtr)
+{
+	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+
+	/*
+	 * Call the actual main function with the information it needs to be able
+	 * to execute instructions for a specific Integer Pipeline.
+	 */
+	AXP_21264_EboxMain(cpu, AXP_L1_PIPELINE);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(NULL);
+}
+
+/*
+ * AXP_21264_EboxMain
+ *	This is the main function for all the Integer pipelines.  It is called with
+ *	the inforamtion needed to perform the processing for a specific pipeline
+ *	within the Ebox pipeline  It waits on something needing processing to be
+ *	put onto the IQ.  It scans from oldest to newest looking for the next
+ *	instruction to be able to be processed by the U0/U1/L0/L1 CPU pipeline.
+ *
+ *	The Ebox is broken up into 4 pipelines, U0, U1, L0, and L1.  Some
+ *	instructions can execute in one or the other, and a few can execute in
+ *	either.  Each of these pipelines is a separate thread, but they all share
+ *	the same IQ.  In order to be able to handle this, there is a single
+ *	mutex/condition variable.  To avoid one thread locking out another, the
+ *	mutex is only locked while either looking for the next instruction to
+ *	process or waiting for the condition variable to be broadcast.  Once a
+ *	queued instruction is found that can be processed by this pipeline, its
+ *	state will be set to executing and then the mutex unlocked.  If nothing is
+ *	found that can be executed, then this thread will wait on the condition
+ *	again, which will unlock the mutex.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the Digital Alpha AXP 21264 cpu data structure.
+ *	pipeline:
+ *		A value indicating which pipeline this function will be executing.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
+{
+	static AXP_PIPELINE	pipelineCond[AXP_EBOX_PIPELINE_MAX][] =
+	{
+		{EboxU0, EboxU0U1, EboxL0L1U0U1},	/* U0 */
+		{EboxU1, EboxU0U1, EboxL0L1U0U1},	/* U1 */
+		{EboxL0, EboxL0L1, EboxL0L1U0U1},	/* L0 */
+		{EboxL1, EboxL0L1, EboxL0L1U0U1}	/* L1 */
+	};
+	AXP_QUEUE_ENTRY		*entry;
+
+	/*
+	 * First things first, lock the Ebox mutex.
+	 */
+	pthread_mutex_lock(&cpu->eBoxMutex);
+
+	/*
+	 * While we are not shutting down, we'll continue to try and process
+	 * instructions.
+	 */
+	while (cpu->cpuState != ShuttingDown)
+	{
+
+		/*
+		 * Next we need to do is see if there is nothing to process,
+		 * then wait for something to get queued up.
+		 */
+		while ((AXP_CQUE_EMPTY(cpu->iq) == true) &&
+			   (cpu->cpuState != ShuttingDown))
+			pthread_cond_wait(&cpu->eBoxCondition, &cpu->eBoxMutex);
+
+		/*
+		 * If we are not shutting down, then we may have something to process.
+		 * Let's go looking for trouble.
+		 */
+		if (cpu->cpuState != ShuttingDown)
+		{
+			entry = (AXP_QUEUE_ENTRY *) cpu->iq.flink;
+
+			/*
+			 * Search through the queue of pending integer pipeline
+			 * instructions.  If we find one for this cluster, then break out
+			 * of this loop.  Otherwise, move on to the next entry in the
+			 * queue.  Since the queue eventually points back to the
+			 * parent/header, this will exit the loop as well.
+			 */
+			while ((void *) entry != (void *) &cpu->iq)
+			{
+
+				/*
+				 * We are only looking for entries that can be executed in the
+				 * correct Integer cluster and have only been queued for
+				 * processing and the registers needed for the instruction are
+				 * ready to be used (the source registers need to not be
+				 * waiting for pervious instruction to write to it).
+				 */
+				if (((entry->ins->pipeline == pipelineCond[pipeline][0]) ||
+					 (entry->ins->pipeline == pipelineCond[pipeline][1]) ||
+					 (entry->ins->pipeline == pipelineCond[pipeline][2])) &&
+					(entry->ins->state == Queued) &&
+					(AXP_21264_Ebox_RegistersReady(cpu, entry) == true))
+					break;
+				else
+					entry = (AXP_QUEUE_ENTRY *) entry->header.flink;
+			}
+
+			/*
+			 * If we did not find an instruction to execute, then go back to
+			 * the beginning of the loop.  Since we did not unlock the mutex,
+			 * we do not need to lock it now.
+			 */
+			if ((void *) entry == (void *) &cpu->iq)
+				continue;
+
+			/*
+			 * OK, we have something to execute.  Mark the entry as such and
+			 * dequeue it from the queue.  Then, dispatch it to the function
+			 * to execute the instruction.
+			 */
+			entry->ins->state = Executing;
+			AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+			pthread_mutex_unlock(&cpu->eBoxMutex);
+
+			/*
+			 * Call the dispatcher to dispatch this instruction to the correct
+			 * function to execute the instruction.
+			 */
+			AXP_Dispatcher(cpu, entry->ins);
+		}
+
+		/*
+		 * before going to the top of the loop, lock the Ebox mutex.
+		 */
+		pthread_mutex_lock(&cpu->eBoxMutex);
+	}
+
+	/*
+	 * Last things lasst, lock the Ebox mutex.
+	 */
+	pthread_mutex_unlock(&cpu->eBoxMutex);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
 }

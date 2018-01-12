@@ -1045,13 +1045,9 @@ int main()
 	instr.type_hint_index = 0;
 	instr.scbdMask = 0;
 	instr.len_stall = 0;
-	instr.lockFlagPending = false;
-	instr.clearLockPending = false;
 	instr.useLiteral = false;
 	instr.branchPredict = false;
 	instr.literal = 0;
-	instr.lockPhysAddrPending = 0;
-	instr.lockVirtAddrPending = 0;
 	instr.format = FP;		/* Memory formatted instruction. */
 	instr.type = Other;		/* Load operation. */
 	instr.pc.pc = 0x000000007ffe000ll;
@@ -1062,7 +1058,6 @@ int main()
 	*((u64 *) &instr.insFpcr) = 0;
 	*((u64 *) &instr.excSum) = 0;
 	instr.excRegMask = 0;	/* Exception Register Mask */
-	instr.loadCompletion = NULL;
 
 	fp = openNextFile(fileName);
 
@@ -1529,7 +1524,7 @@ int main()
 			failed,
 			skipped,
 			testCnt);
-	
+
 	/*
 	 * We are done.
 	 */

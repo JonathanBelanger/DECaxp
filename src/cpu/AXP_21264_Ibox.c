@@ -124,7 +124,7 @@ typedef union
 	 struct palBaseBits21164	bits21164;
 	 struct palBaseBits21264	bits21264;
 	 u64						palBaseAddr;
-	 
+
 }AXP_IBOX_PALBASE_BITS;
 
 struct palPCBits21264
@@ -326,6 +326,10 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 		decodeRegisters.raw =
 			decodeFuncs[decodeRegisters.bits.opcodeRegDecode]
 				(next->instructions[nextInstr]);
+
+	decodedInstr->pipeline = AXP_InstructionPipeline(
+										decodedInstr->opcode,
+										decodedInstr->function);
 
 	/*
 	 * Decode destination register
@@ -1149,7 +1153,7 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 
 	palBase.palBaseAddr = cpu->palBase.pal_base_pc;
 	palFunc.func = func;
-	
+
 	/*
 	 * We assume that the function supplied follows any of the following
 	 * criteria:
@@ -1579,6 +1583,10 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 	cpu->globalPathHistory = 0;
 
 	/*
+	 * TODO: Initialize the Integer and Floating Point register arrays.
+	 */
+
+	/*
 	 * Initialize the Ibox IPRs.
 	 */
 	cpu->itbTag.res_1 = 0;		/* ITB_TAG */
@@ -1892,6 +1900,12 @@ void *AXP_21264_IboxMain(void *voidPtr)
 		{
 			for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
 			{
+
+				/*
+				 * TODO:	We need an ROB mutex, because the Ibox, Ebox, and
+				 *			Fbox all access this queue on the fly.  Also,
+				 *			consider doing this as a counter queue.
+				 */
 				decodedInstr = &cpu->rob[cpu->robEnd];
 				cpu->robEnd = (cpu->robEnd + 1) % AXP_INFLIGHT_MAX;
 				if (cpu->robEnd == cpu->robStart)
@@ -1966,51 +1980,92 @@ void *AXP_21264_IboxMain(void *voidPtr)
 						 */
 					}
 				}
-				whichQueue = AXP_InstructionQueue(decodedInstr->opcode);
-				if(whichQueue == AXP_COND)
-				{
-					if (decodedInstr->opcode == ITFP)
-					{
-						if ((decodedInstr->function == AXP_FUNC_ITOFS) ||
-							(decodedInstr->function == AXP_FUNC_ITOFF) ||
-							(decodedInstr->function == AXP_FUNC_ITOFT))
-							whichQueue = AXP_IQ;
-						else
-							whichQueue = AXP_FQ;
-					}
-					else	/* FPTI */
-					{
-						if ((decodedInstr->function == AXP_FUNC_FTOIT) ||
-							(decodedInstr->function == AXP_FUNC_FTOIS))
-							whichQueue = AXP_FQ;
-						else
-							whichQueue = AXP_IQ;
-						}
-				}
-				if (whichQueue == AXP_IQ)
-				{
-					xqEntry = AXP_GetNextIQEntry(cpu);
-					xqEntry->ins = decodedInstr;
-					qFull = AXP_InsertCountedQueue(
-							(AXP_QUEUE_HDR *) &cpu->iq,
-							(AXP_CQUE_ENTRY *) xqEntry);
-				}
-				else	/* FQ */
-				{
-					xqEntry = AXP_GetNextFQEntry(cpu);
-					xqEntry->ins = decodedInstr;
-					qFull = AXP_InsertCountedQueue(
-							(AXP_QUEUE_HDR *) &cpu->fq,
-							(AXP_CQUE_ENTRY *) xqEntry);
-				}
 
 				/*
-				 * TODO:	We need to make sure that there is at least four
-				 *			entries available in the IQ/FQ, not just 1.
+				 * If this is one of the potential NOOP instructions, then the
+				 * instruction is already completed and does not need to be
+				 * queued up.
 				 */
-				if (qFull < 0)
-					printf("\n>>>>> We need to determine if there are any instructions to parse <<<<<\n");
-				decodedInstr->state = Queued;
+				noop = (decodedInstr->pipeline == PipelineNone ? true : false);
+				if (decodedInstr->aDest == AXP_UNMAPPED_REG)
+				{
+					switch (decodedInstr->opcode)
+					{
+						case INTA:
+						case INTL:
+						case INTM:
+						case INTS:
+						case LDQ_U:
+						case ITFP:
+							if (decodedInstr->aDest == AXP_UNMAPPED_REG)
+								noop = true;
+							break;
+
+						case FLTI:
+						case FLTL:
+						case FLTV:
+							if ((decodedInstr->aDest == AXP_UNMAPPED_REG) &&
+								(decodedInstr->function != AXP_FUNC_MT_FPCR))
+								noop = true;
+							break;
+					}
+				}
+				if (noop == false)
+				{
+					whichQueue = AXP_InstructionQueue(decodedInstr->opcode);
+					if(whichQueue == AXP_COND)
+					{
+						if (decodedInstr->opcode == ITFP)
+						{
+							if ((decodedInstr->function == AXP_FUNC_ITOFS) ||
+								(decodedInstr->function == AXP_FUNC_ITOFF) ||
+								(decodedInstr->function == AXP_FUNC_ITOFT))
+								whichQueue = AXP_IQ;
+							else
+								whichQueue = AXP_FQ;
+						}
+						else	/* FPTI */
+						{
+							if ((decodedInstr->function == AXP_FUNC_FTOIT) ||
+								(decodedInstr->function == AXP_FUNC_FTOIS))
+								whichQueue = AXP_FQ;
+							else
+								whichQueue = AXP_IQ;
+							}
+					}
+					if (whichQueue == AXP_IQ)
+					{
+						xqEntry = AXP_GetNextIQEntry(cpu);
+						xqEntry->ins = decodedInstr;
+						pthread_mutex_lock(&cpu->eBoxMutex);
+						qFull = AXP_InsertCountedQueue(
+								(AXP_QUEUE_HDR *) &cpu->iq,
+								(AXP_CQUE_ENTRY *) xqEntry);
+						pthread_cond_broadcast(&cpu->eBoxCondition);
+						pthread_mutex_unlock(&cpu->eBoxMutex);
+					}
+					else	/* FQ */
+					{
+						xqEntry = AXP_GetNextFQEntry(cpu);
+						xqEntry->ins = decodedInstr;
+						pthread_mutex_lock(&cpu->fBoxMutex);
+						qFull = AXP_InsertCountedQueue(
+								(AXP_QUEUE_HDR *) &cpu->fq,
+								(AXP_CQUE_ENTRY *) xqEntry);
+						pthread_cond_broadcast(&cpu->fBoxCondition);
+						pthread_mutex_unlock(&cpu->fBoxMutex);
+					}
+
+					/*
+					 * TODO:	We need to make sure that there is at least four
+					 *			entries available in the IQ/FQ, not just 1.
+					 */
+					if (qFull < 0)
+						printf("\n>>>>> We need to determine if there are any instructions to parse <<<<<\n");
+					decodedInstr->state = Queued;
+				}
+				else
+					decodedInstr->state = WaitingRetirement;
 				nextPC = AXP_21264_IncrementVPC(cpu);
 			}
 		}
