@@ -968,7 +968,7 @@ static void AXP_RenameRegisters(
  */
 static AXP_QUEUE_ENTRY *AXP_GetNextIQEntry(AXP_21264_CPU *cpu)
 {
-	AXP_QUEUE_ENTRY *retVal = NULL;
+	AXP_QUEUE_ENTRY *retVal;
 
 	retVal = &cpu->iqEntries[cpu->iqEFlStart];
 	cpu->iqEFlStart = (cpu->iqEFlStart + 1) % AXP_IQ_LEN;
@@ -1039,7 +1039,7 @@ void AXP_ReturnIQEntry(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
  */
 static AXP_QUEUE_ENTRY *AXP_GetNextFQEntry(AXP_21264_CPU *cpu)
 {
-	AXP_QUEUE_ENTRY *retVal = NULL;
+	AXP_QUEUE_ENTRY *retVal;
 
 	retVal = &cpu->fqEntries[cpu->fqEFlStart];
 	cpu->fqEFlStart = (cpu->fqEFlStart + 1) % AXP_FQ_LEN;
@@ -1802,7 +1802,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	AXP_QUEUE_ENTRY	*xqEntry;
 	u32				ii, fault;
 	bool			local, global, choice, wasRunning = false;
-	bool _asm;
+	bool			_asm;
 	u16				whichQueue;
 	int				qFull;
 
