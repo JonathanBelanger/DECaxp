@@ -157,7 +157,7 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
  */
 AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
 {
-	AXP_21264_TLB 	*retVal = NULL;
+	AXP_21264_TLB 	*retVal;
 	int				ii;
 	int				start1, start2;
 	int				end1, end2;

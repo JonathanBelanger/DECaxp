@@ -49,7 +49,7 @@
  */
 AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 {
-	AXP_21264_CPU	*cpu = NULL;
+	AXP_21264_CPU	*cpu;
 	int				pthreadRet;
 	int				ii;
 	bool			qRet = true;

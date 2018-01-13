@@ -31,7 +31,6 @@
 #include "AXP_21264_Instructions.h"
 
 void AXP_SetException(AXP_INSTRUCTION *, u32);
-void AXP_SetIEEEException(AXP_INSTRUCTION *, u64);
 
 #define AXP_EXC_SW_COMPL		0x01
 #define AXP_EXC_INV_OPER		0x02

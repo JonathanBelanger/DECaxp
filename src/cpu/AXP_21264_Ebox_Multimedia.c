@@ -403,7 +403,7 @@ AXP_EXCEPTIONS AXP_PERR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u8	*Rav = (u8 *) &instr->src1v.r.uq;
 	u8	*Rbv = (u8 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
-	u64	temp;
+	u64	temp = 0;
 	int	ii;
 
 	/*
@@ -513,8 +513,8 @@ AXP_EXCEPTIONS AXP_PKWB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 }
 
 /*
- * AXP_UNPKLB
- *	This function implements the Unpack Longwords to Bytes instruction of the
+ * AXP_UNPKBL
+ *	This function implements the Unpack Bytes to Longwords instruction of the
  *	Alpha AXP processor.
  *
  * Input Parameters:
@@ -532,7 +532,7 @@ AXP_EXCEPTIONS AXP_PKWB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Value:
  * 	No Exception:	Normal successful completion.
  */
-AXP_EXCEPTIONS AXP_UNPKLB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+AXP_EXCEPTIONS AXP_UNPKBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u8	*Rbv = (u8 *) &instr->src2v.r.uq;
 	u8	*Rcv = (u8 *) &instr->destv.r.uq;
@@ -556,8 +556,8 @@ AXP_EXCEPTIONS AXP_UNPKLB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 }
 
 /*
- * AXP_UNPKWB
- *	This function implements the Unpack Longwords to Bytes instruction of the
+ * AXP_UNPKBW
+ *	This function implements the Unpack Bytes to Words instruction of the
  *	Alpha AXP processor.
  *
  * Input Parameters:
@@ -575,7 +575,7 @@ AXP_EXCEPTIONS AXP_UNPKLB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Value:
  * 	No Exception:	Normal successful completion.
  */
-AXP_EXCEPTIONS AXP_UNPKWB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+AXP_EXCEPTIONS AXP_UNPKBW(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	u8	*Rbv = (u8 *) &instr->src2v.r.uq;
 	u8	*Rcv = (u8 *) &instr->destv.r.uq;

@@ -74,10 +74,9 @@ void AXP_Deallocate_Block(AXP_BLOCK_DSC *block)
 		default:
 			break;
 	}
-	
+
 	/*
-	 * Clear the address specified on the call.
+	 * Return back to the caller.
 	 */
-	block = NULL;
 	return;
 }

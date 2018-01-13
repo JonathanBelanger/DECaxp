@@ -44,7 +44,7 @@
  */
 FILE *AXP_Open_NVP_File(char *filename)
 {
-	FILE	*retVal = NULL;
+	FILE	*retVal;
 
 	retVal = fopen(filename, "r");
 
@@ -77,7 +77,6 @@ FILE *AXP_Open_NVP_File(char *filename)
 void AXP_Close_NVP_File(FILE *filePointer)
 {
 	fclose(filePointer);
-	filePointer = NULL;
 
 	/*
 	 * Return back to the caller.
