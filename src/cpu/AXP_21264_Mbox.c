@@ -1593,7 +1593,7 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	cpu->dcStat.seo = 0;
 	cpu->dcStat.ecc_err_ld = 0;
 	cpu->dcStat.ecc_err_st = 0;
-	cpu->dcStat.tperr_p1 = 0;
+	cpu->dcStat.tperr_p0 = 0;
 	cpu->dcStat.tperr_p1 = 0;
 
 	/*

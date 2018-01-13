@@ -752,6 +752,11 @@ void AXP_21264_Complete_MAF(
 	}
 
 	/*
+	 * Return this MAF entry back into the pool.
+	 */
+	AXP_21264_Free_MAF(cpu, entry);
+
+	/*
 	 * Return back to the caller.
 	 */
 	return;

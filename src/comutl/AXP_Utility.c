@@ -1168,14 +1168,14 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 			u8	*optFwID = (u8 *) &sromHandle->optFwID;
 
 			printf("SROM Header Information:\n\n");
-			printf("Header Size......... %d bytes\n", sromHandle->hdrSize);
+			printf("Header Size......... %u bytes\n", sromHandle->hdrSize);
 			printf("Image Checksum...... 0x%08x\n", sromHandle->imgChecksum);
-			printf("Image Size (Uncomp). %d (%d KB)\n", sromHandle->imgSize, sromHandle->imgSize/ONE_K);
-			printf("Compression Type.... %d\n", sromHandle->decompFlag);
+			printf("Image Size (Uncomp). %u (%u KB)\n", sromHandle->imgSize, sromHandle->imgSize/ONE_K);
+			printf("Compression Type.... %u\n", sromHandle->decompFlag);
 			printf("Image Destination... 0x%016llx\n", sromHandle->destAddr);
 			printf("Header Version...... %d\n", sromHandle->hdrRev);
 			printf("Firmware ID......... %d - %s\n", sromHandle->fwID, _axp_fwid_str[sromHandle->fwID]);
-			printf("ROM Image Size...... %d (%d KB)\n", sromHandle->romImgSize, sromHandle->romImgSize/ONE_K);
+			printf("ROM Image Size...... %u (%u KB)\n", sromHandle->romImgSize, sromHandle->romImgSize/ONE_K);
 			printf("Firmware ID (Opt.).. ");
 			for (ii = 0; ii < sizeof(sromHandle->optFwID); ii++)
 				printf("%02d", optFwID[ii]);
@@ -1234,7 +1234,7 @@ bool AXP_OpenWrite_SROM(
 	{
 		sromHandle->openForWrite = true;
 		sromHandle->validPat = AXP_ROM_VAL_PAT;
-		sromHandle->validPat = AXP_ROM_INV_VP_PAT;
+		sromHandle->inverseVP = AXP_ROM_INV_VP_PAT;
 		sromHandle->hdrSize = AXP_ROM_HDR_LEN;
 		sromHandle->decompFlag = 0;
 		sromHandle->destAddr = destAddr;
@@ -1432,14 +1432,14 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
 				int	ii;
 
 				printf("SROM Header Information:\n\n");
-				printf("Header Size......... %d bytes\n", sromHandle->hdrSize);
+				printf("Header Size......... %u bytes\n", sromHandle->hdrSize);
 				printf("Image Checksum...... 0x%08x\n", sromHandle->imgChecksum);
-				printf("Image Size (Uncomp). %d (%d KB)\n", sromHandle->imgSize, sromHandle->imgSize/ONE_K);
-				printf("Compression Type.... %d\n", sromHandle->decompFlag);
+				printf("Image Size (Uncomp). %u (%u KB)\n", sromHandle->imgSize, sromHandle->imgSize/ONE_K);
+				printf("Compression Type.... %u\n", sromHandle->decompFlag);
 				printf("Image Destination... 0x%016llx\n", sromHandle->destAddr);
 				printf("Header Version...... %d\n", sromHandle->hdrRev);
 				printf("Firmware ID......... %d - %s\n", sromHandle->fwID, _axp_fwid_str[sromHandle->fwID]);
-				printf("ROM Image Size...... %d (%d KB)\n", sromHandle->romImgSize, sromHandle->romImgSize/ONE_K);
+				printf("ROM Image Size...... %u (%u KB)\n", sromHandle->romImgSize, sromHandle->romImgSize/ONE_K);
 				printf("Firmware ID (Opt.).. ");
 				for (ii = 0; ii < sizeof(sromHandle->optFwID); ii++)
 					printf("%02d", optFwID[ii]);

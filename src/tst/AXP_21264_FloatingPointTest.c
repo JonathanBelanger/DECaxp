@@ -666,15 +666,17 @@ i32 parseNextLine(
 				}
 			if (found == false)
 			{
+				char localStr[80];
+
 				sprintf(
-					workingStr,
+					localStr,
 					"floating-point operation (%s) not found",
 					workingStr);
 				printf(
 					msgStr,
 					fatal,
 					"OPNOTFOUND",
-					workingStr);
+					localStr);
 				retVal = -1;
 			}
 			else if (getC == EOF)
@@ -700,15 +702,17 @@ i32 parseNextLine(
 				}
 			if (found == false)
 			{
+				char localStr[80];
+
 				sprintf(
-					workingStr,
+					localStr,
 					"floating-point rounding mode (%s) not found",
 					workingStr);
 				printf(
 					msgStr,
 					fatal,
 					"RNDNOTFOUND",
-					workingStr);
+					localStr);
 				retVal = -1;
 			}
 			else if (getC == EOF)
@@ -885,7 +889,7 @@ i32 parseNextLine(
  */
 FILE *openNextFile(char *fileName)
 {
-	FILE	*fp = NULL;
+	FILE	*fp;
 	char	line[80];
 	bool	ready = false;
 
@@ -1469,7 +1473,7 @@ int main()
 						case nextUpAction:
 						case nextDownAction:
 						case equivalentAction:
-							for (ii = 0; ii< AXP_NUM_OPER; ii++)
+							for (ii = 0; ii < AXP_NUM_OPER; ii++)
 								if (oper == cvtOperStr[ii].oper)
 									break;
 							offset += sprintf(&outStr[offset],

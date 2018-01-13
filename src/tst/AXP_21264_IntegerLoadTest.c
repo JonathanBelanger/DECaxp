@@ -126,13 +126,13 @@ int main()
 {
 	FILE			*fp;
 	char			*fileName = "../tst/LDA_LDAH_TestData.csv";
-	char			headerStr[80];
+	char			headerStr[81];
 	bool			pass = true;
 	u64				ldaAddress, ldahAddress;
 	AXP_21264_CPU	*cpu;
 	AXP_INSTRUCTION	instr;
 	AXP_EXCEPTIONS	retVal;
-	int				testCnt;
+	int				testCnt = 0;
 
 	/*
 	 * NOTE: 	The current simulation takes in one instruction at a time.  The

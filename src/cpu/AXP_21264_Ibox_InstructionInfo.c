@@ -400,7 +400,7 @@ OP_AND:
 			break;
 
 		case AXP_FUNC_XOR:
-			instr->excRegMask = AXP_XOPR(cpu, instr);
+			instr->excRegMask = AXP_XOR(cpu, instr);
 			goto COMPLETION_OP;
 			break;
 

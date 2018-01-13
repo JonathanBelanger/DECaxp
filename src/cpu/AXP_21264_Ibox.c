@@ -1813,6 +1813,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	bool			_asm;
 	u16				whichQueue;
 	int				qFull;
+	bool			noop;
 
 	/*
 	 * OK, we are just starting out and there is probably nothing available to
@@ -2012,6 +2013,46 @@ void *AXP_21264_IboxMain(void *voidPtr)
 				}
 				if (noop == false)
 				{
+
+					/*
+					 * Before we do much more, if we have a load/store, we need
+					 * to request an entry in either the LQ or SQ in the Mbox.
+					 */
+					switch (decodedInstr->opcode)
+					{
+						case LDBU:
+						case LDQ_U:
+						case LDW_U:
+						case HW_LD:
+						case LDF:
+						case LDG:
+						case LDS:
+						case LDT:
+						case LDL:
+						case LDQ:
+						case LDL_L:
+						case LDQ_L:
+							decodedInstr->slot = AXP_21264_Mbox_GetLQSlot(cpu);
+							break;
+
+						case STW:
+						case STB:
+						case STQ_U:
+						case HW_ST:
+						case STF:
+						case STG:
+						case STS:
+						case STT:
+						case STL:
+						case STQ:
+						case STL_C:
+						case STQ_C:
+							decodedInstr->slot = AXP_21264_Mbox_GetSQSlot(cpu);
+							break;
+
+						default:
+							break;
+					}
 					whichQueue = AXP_InstructionQueue(decodedInstr->opcode);
 					if(whichQueue == AXP_COND)
 					{
