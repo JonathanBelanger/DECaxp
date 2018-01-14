@@ -80,6 +80,7 @@ typedef struct
 #define AXP_DEST_FA		0x0900		/* Fa as a destination register 	*/
 #define AXP_DEST_FB		0x0a00		/* Fb as a destination register 	*/
 #define AXP_DEST_FC		0x0c00		/* Fc as a destination register 	*/
+#define AXP_DEST_FLOAT	0x0800		/* Destination register is FP		*/
 
 #define AXP_SRC1_RA		0x0010		/* Ra as a source 1 register 		*/
 #define AXP_SRC1_RB		0x0020		/* Rb as a source 1 register 		*/

@@ -69,11 +69,15 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->iBoxIPRMutex, NULL);
 		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&cpu->robMutex, NULL);
+		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->iCacheMutex, NULL);
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->itbMutex, NULL);
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->eBoxMutex, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&cpu->eBoxIPRMutex, NULL);
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&cpu->fBoxMutex, NULL);
 		if (pthreadRet == 0)

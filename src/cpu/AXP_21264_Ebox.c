@@ -140,6 +140,16 @@ void AXP_21264_Ebox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->state = WaitingRetirement;
 
 	/*
+	 * We want the Ebox threads to handle their own completion.  The Mbox has
+	 * done what is was supposed to and now we need to tell the Ebox that there
+	 * is something to retire.
+	 */
+	pthread_mutex_lock(&cpu->eBoxMutex);
+	cpu->eBoxWaitingRetirement = true;
+	pthread_cond_signal(&cpu->eBoxCondition);
+	pthread_mutex_unlock(&cpu->eBoxMutex);
+
+	/*
 	 * Return back to the caller.
 	 */
 	return;
@@ -304,7 +314,7 @@ void *AXP_21264_EboxU1Main(void *voidPtr)
  *	This is the main function for the Lower 0 Cluster of the Ebox (Integer)
  *	pipeline.  It is called by the pthread_create function.  It calls the Ebox
  *	main function to perform the instruction execution for the Lower 0 Cluster
- *	of teh Digital Alpha AXP 21264 Central Processing Unit emulation.
+ *	of the Digital Alpha AXP 21264 Central Processing Unit emulation.
  *
  * Input Parameters:
  *	voidPtr:
@@ -338,7 +348,7 @@ void *AXP_21264_EboxU0Main(void *voidPtr)
  *	This is the main function for the Lower 1 Cluster of the Ebox (Integer)
  *	pipeline.  It is called by the pthread_create function.  It calls the Ebox
  *	main function to perform the instruction execution for the Lower 1 Cluster
- *	of teh Digital Alpha AXP 21264 Central Processing Unit emulation.
+ *	of the Digital Alpha AXP 21264 Central Processing Unit emulation.
  *
  * Input Parameters:
  *	voidPtr:
@@ -370,7 +380,7 @@ void *AXP_21264_EboxL1Main(void *voidPtr)
 /*
  * AXP_21264_EboxMain
  *	This is the main function for all the Integer pipelines.  It is called with
- *	the inforamtion needed to perform the processing for a specific pipeline
+ *	the information needed to perform the processing for a specific pipeline
  *	within the Ebox pipeline  It waits on something needing processing to be
  *	put onto the IQ.  It scans from oldest to newest looking for the next
  *	instruction to be able to be processed by the U0/U1/L0/L1 CPU pipeline.
@@ -423,10 +433,20 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 	{
 
 		/*
+		 * This may seem odd to put this here, but before we wait for anything,
+		 * see if there is an instruction that needs to be retired.  Then make
+		 * sure we indicate that the Ebox is no longer waiting to retire an
+		 * instruction.
+		 */
+		AXP_21264_Ibox_Retire(cpu);
+		cpu->eBoxWaitingRetirement = false;
+
+		/*
 		 * Next we need to do is see if there is nothing to process,
 		 * then wait for something to get queued up.
 		 */
 		while ((AXP_CQUE_EMPTY(cpu->iq) == true) &&
+			   (cpu->eBoxWaitingRetirement == false) &&
 			   (cpu->cpuState != ShuttingDown))
 			pthread_cond_wait(&cpu->eBoxCondition, &cpu->eBoxMutex);
 
@@ -487,6 +507,11 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 			 * function to execute the instruction.
 			 */
 			AXP_Dispatcher(cpu, entry->ins);
+
+			/*
+			 * Return the entry back to the pool for future instructions.
+			 */
+			AXP_ReturnIQEntry(cpu, entry);
 		}
 
 		/*
