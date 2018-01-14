@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -64,6 +64,12 @@
  *	V01.008		19-Nov-2017	Jonathan D. Belanger
  *	Started adding pthread definitions.  Also moved some definitions from this
  *	header file to be Base CPU header file.
+ *
+ *	V01.009		13-Jan-2018	Jonathan D. Belanger
+ *	The ReOrder Buffer is accessed by the Ibox (when decoding and queuing the
+ *	instruction to the appropriate integer/floating-point queue, and by the
+ *	Ebox and Fbox when an instruction has been set to retire.  In order to be
+ *	able to prevent a conflict, we need a mutex to protect the ROB.
  */
 #ifndef _AXP_21264_CPU_DEFS_
 #define _AXP_21264_CPU_DEFS_
@@ -310,6 +316,7 @@ typedef struct
 	/*
 	 * Reorder Buffer
 	 */
+	pthread_mutex_t			robMutex;
 	AXP_INSTRUCTION 		rob[AXP_INFLIGHT_MAX];
 	u32						robStart;
 	u32						robEnd;
@@ -397,6 +404,12 @@ typedef struct
 	pthread_cond_t			eBoxCondition;
 
 	/*
+	 * When the Mbox completes an instruction, it sets this flag and then
+	 * signal the Ebox conditional variable.
+	 */
+	bool					eBoxWaitingRetirement;
+
+	/*
 	 * VAX Compatibility Interrupt Flag.  This flag is intended to be utilized
 	 * for VAX Compatibility.  It is intended to be utilized to determine if a
 	 * sequence of Alpha instructions between RS and RC, corresponding to a
@@ -436,6 +449,7 @@ typedef struct
 	/*
 	 * Ebox IPRs
 	 */
+	pthread_mutex_t			eBoxIPRMutex;
 	AXP_EBOX_CC				cc;			/* Cycle counter					*/
 	AXP_EBOX_CC_CTL			ccCtl;		/* Cycle counter control			*/
 	AXP_EBOX_VA				va;			/* Virtual address					*/
@@ -462,6 +476,12 @@ typedef struct
 	pthread_t				fBoxOthThreadID;
 	pthread_mutex_t			fBoxMutex;
 	pthread_cond_t			fBoxCondition;
+
+	/*
+	 * When the Mbox completes an instruction, it sets this flag and then
+	 * signal the Ebox conditional variable.
+	 */
+	bool					fBoxWaitingRetirement;
 
 	/*
 	 * Physical registers.

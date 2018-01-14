@@ -289,7 +289,7 @@ typedef struct
 } AXP_IBOX_SIRR;
 
 /*
- * Interrupt Summary Register - Used to report what interrups are currently
+ * Interrupt Summary Register - Used to report what interrupts are currently
  * pending.
  * 	The pc field can have the following values:
  * 		0 = PC0
@@ -686,6 +686,7 @@ typedef struct
 #define AXP_IPR_CLR_MAP							0x15
 #define AXP_IPR_I_STAT							0x16
 #define AXP_IPR_SLEEP							0x17
+
 #define AXP_IPR_DTB_TAG0						0x20
 #define AXP_IPR_DTB_PTE0						0x21
 #define AXP_IPR_DTB_IS0							0x24
@@ -695,8 +696,10 @@ typedef struct
 #define AXP_IPR_M_CTL							0x28
 #define AXP_IPR_DC_CTL							0x29
 #define AXP_IPR_DC_STAT							0x2A
+
 #define AXP_IPR_C_DATA							0x2B
 #define AXP_IPR_C_SHFT							0x2C
+
 #define AXP_IPR_PCXT0							0x40
 #define AXP_IPR_PCXT0_ASN						0x41
 #define AXP_IPR_PCXT0_ASTER						0x42
@@ -761,6 +764,7 @@ typedef struct
 #define AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASN		0x7D
 #define AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER		0x7E
 #define AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER_ASN	0x7F
+
 #define AXP_IPR_DTB_TAG1						0xA0
 #define AXP_IPR_DTB_PTE1						0xA1
 #define AXP_IPR_DTB_IAP							0xA2
@@ -768,6 +772,15 @@ typedef struct
 #define AXP_IPR_DTB_IS1							0xA4
 #define AXP_IPR_DTB_ASN1						0xA5
 
+#define AXP_IPR_CC								0xC0
+#define AXP_IPR_CC_CTL							0xC1
+#define AXP_IPR_VA								0xC2
+#define AXP_IPR_VA_FORM							0xC3
+#define AXP_IPR_VA_CTL							0xC4
+
+/*
+ * Process Context components.
+ */
 #define AXP_IPR_PCTX_ASN						0x01
 #define AXP_IPR_PCTX_ASTER						0x02
 #define AXP_IPR_PCTX_ASTRR						0x04

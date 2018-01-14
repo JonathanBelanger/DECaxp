@@ -1056,6 +1056,7 @@ typedef struct
 	AXP_REGISTER	destv;		/* Value to dest register */
 	AXP_INS_TYPE	format;		/* Instruction format */
 	AXP_OPER_TYPE	type;
+	AXP_REG_DECODE	decodedReg;	/* which registers are used for what */
 	AXP_PC			pc;
 	AXP_PC			branchPC;
 	AXP_INS_STATE	state;

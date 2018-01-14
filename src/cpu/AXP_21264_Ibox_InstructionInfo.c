@@ -2834,7 +2834,7 @@ AXP_INS_TYPE AXP_InstructionFormat(AXP_INS_FMT inst)
 		/*
 		 * If the returned value from the above look up is 'Cond', then we are
 		 * dealing with opcode = 0x1c.  This particular opcode has 2 potential
-		 * values, depending upon the funciton code.  If the function code is
+		 * values, depending upon the function code.  If the function code is
 		 * either 0x70 or 0x78, then type instruction type is 'FP' (Floating
 		 * Point).  Otherwise, it is 'Opr'.
 		 */

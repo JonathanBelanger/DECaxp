@@ -782,7 +782,7 @@ void AXP_CondQueue_Wait(AXP_COND_Q_HDR *root)
  */
 bool AXP_CondQueue_Empty(AXP_COND_Q_HDR *queue)
 {
-	bool			retVal = false;
+	bool			retVal;
 	AXP_COND_Q_ROOT	*parent = (AXP_COND_Q_ROOT *) queue;
 	int				locked;
 

@@ -59,7 +59,7 @@ u8	memory[EIGHT_M];
 int AXP_21264_LoadMemory(char *fileName)
 {
 	bool	done = false;
-	FILE	*fp = NULL;
+	FILE	*fp;
 	int		ii = 0;
 	u32		scratch;
 

@@ -185,121 +185,14 @@ void AXP_21264_Fbox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->state = WaitingRetirement;
 
 	/*
-	 * Return back to the caller.
+	 * We want the Fbox threads to handle their own completion.  The Mbox has
+	 * done what is was supposed to and now we need to tell the Fbox that there
+	 * is something to retire.
 	 */
-	return;
-}
-
-/*
- * AXP_21264_Fbox_Retire
- *	This function is called whenever a floating-point instruction is
- *	transitioned to WaitingRetirement state.  This function will search through
- *	the ReOrder Buffer (ROB) from the oldest to the newest and retire all the
- *	instructions it can, in order.  If there was an exception, this should
- *	cause the remaining instructions to be flushed and not retired.
- *
- * Input Parameters:
- *	cpu:
- *		A pointer to the CPU structure for the emulated Alpha AXP 21264
- *		processor.
- *
- * Output Parameters:
- *	None.
- *
- * Return Values:
- *	None.
- */
-void AXP_21264_Fbox_Retire(AXP_21264_CPU *cpu)
-{
-	AXP_INSTRUCTION	*rob;
-	u32				ii, start, end;
-	bool			split;
-	bool			done = false;
-
-	/*
-	 * TODO:	While doing this, we need to lock a mutex so that the ROB will
-	 *			not be update while we are processing through it.
-	 */
-
-	split = cpu->robEnd < cpu->robStart;
-
-	/*
-	 * Determine out initial start and end entries.  If the end has wrapped
-	 * around, then we search in 2 passes (start to list end; list beginning to
-	 * end).
-	 */
-	start = cpu->robStart;
-	end = (split ? end = cpu->robEnd : AXP_INFLIGHT_MAX);
-
-	/*
-	 * Set our starting value.  Loop until we reach the end or we find an entry
-	 * that is not ready for retirement (maybe its 401K is not where it should
-	 * be or his employer bankrupt the pension fund).
-	 */
-	ii = start;
-	while ((ii < end) && (done == false))
-	{
-		rob = &cpu->rob[ii];
-
-		/*
-		 * If the next entry is ready for retirement, then complete the work
-		 * necessary for this instruction.  If it is not, then because
-		 * instructions need to be completed in order, then we are done trying
-		 * to retire instructions.
-		 */
-		if (rob->state == WaitingRetirement)
-		{
-
-			/*
-			 * If an exception occurred, we need to process it.  Otherwise, the
-			 * destingation value should be written to the destination
-			 * (physical) register.  If it is a store operation, then we need
-			 * to update the Dcache.
-			 */
-			if (rob->excRegMask != NoException)
-			{
-				/* TODO: We need to report the exception for the instruction */
-			}
-			else
-			{
-				cpu->pf[rob->dest] = rob->destv;
-
-				/*
-				 * If a store, write it to the Dcache.
-				 */
-				if ((rob->opcode == STF) || (rob->opcode == STG) ||
-					(rob->opcode == STS) || (rob->opcode == STT))
-					AXP_21264_Mbox_RetireWrite(cpu, rob->slot);
-			}
-
-			/*
-			 * Mark the instruction retired and move the top of the stack to
-			 * the next instruction location.
-			 */
-			cpu->rob[ii].state = Retired;
-			cpu->robStart = (cpu->robStart + 1) % AXP_INFLIGHT_MAX;
-		}
-		else
-			done = true;
-
-		/*
-		 * We processed the current ROB.  Time to move onto the next.
-		 */
-		ii++;
-
-		/*
-		 * If we reached the end, but the search is split, then change the
-		 * index to the start of the list and the end to the end of the list.
-		 * Clear the split flag, so that we don't get ourselves into an
-		 * infinite loop.
-		 */
-		if ((ii == end) && (split == true))
-		{
-			ii = 0;
-			end = cpu->robEnd;
-			split = false;
-		}
-	}
+	pthread_mutex_lock(&cpu->fBoxMutex);
+	cpu->fBoxWaitingRetirement = true;
+	pthread_cond_signal(&cpu->fBoxCondition);
+	pthread_mutex_unlock(&cpu->fBoxMutex);
 
 	/*
 	 * Return back to the caller.
@@ -411,12 +304,12 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
  *	This is the main function for the Multiply Cluster of the Fbox (Floating
  *	Point) pipeline.  It is called by the pthread_create function.  It calls
  *	the Fbox main function to perform the instruction execution for the
- *	Mutliply Cluster of teh Digital Alpha AXP 21264 Central Processing Unit
+ *	Multiply Cluster of the Digital Alpha AXP 21264 Central Processing Unit
  *	emulation.
  *
- *	NOTE:	In the real Alpha AXP 21264 CPU, only multiplication is merformed
+ *	NOTE:	In the real Alpha AXP 21264 CPU, only multiplication is performed
  *			in this pipeline.  In the emulator, I have both multiply and
- *			divide executing in this pipleline.  If testing determines that
+ *			divide executing in this pipeline.  If testing determines that
  *			these should be separated, then it is a simple data change (and
  *			recompile to change this).
  *
@@ -452,12 +345,12 @@ void *AXP_21264_FboxMulMain(void *voidPtr)
  *	This is the main function for the Cluster of the Fbox (Floating
  *	Point) pipeline.  It is called by the pthread_create function.  It calls
  *	the Fbox main function to perform the instruction execution for the
- *	Mutliply Cluster of teh Digital Alpha AXP 21264 Central Processing Unit
+ *	Multiply Cluster of the Digital Alpha AXP 21264 Central Processing Unit
  *	emulation.
  *
- *	NOTE:	In the real Alpha AXP 21264 CPU, division is not merformed in this
+ *	NOTE:	In the real Alpha AXP 21264 CPU, division is not performed in this
  *			pipeline.  In the emulator, I have both multiply and divide
- *			executing in the Multiply pipleline.  If testing determines that
+ *			executing in the Multiply pipeline.  If testing determines that
  *			these should be separated, then it is a simple data change (and
  *			recompile to change this).
  *
@@ -491,13 +384,13 @@ void *AXP_21264_FboxOthMain(void *voidPtr)
 /*
  * AXP_21264_FboxMain
  *	This is the main function for all the Floating Point pipelines.  It is
- *	called with the inforamtion needed to perform the processing for a specific
+ *	called with the information needed to perform the processing for a specific
  *	pipeline within the Fbox pipeline  It waits on something needing processing
  *	to be put onto the FQ.  It scans from oldest to newest looking for the next
  *	instruction to be able to be processed by the Multiply/(Add/Divide/Square
  *	Root - Other) CPU pipeline.
  *
- *	The Fbox is broken up into 2 pipelines, Mutliply and Add/Divide/Square
+ *	The Fbox is broken up into 2 pipelines, Multiply and Add/Divide/Square
  *	Root.  Each of these pipelines is a separate thread, but they both share
  *	the same FQ.  In order to be able to handle this, there is a single
  *	mutex/condition variable.  To avoid one thread locking out another, the
@@ -537,10 +430,20 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 	{
 
 		/*
+		 * This may seem odd to put this here, but before we wait for anything,
+		 * see if there is an instruction that needs to be retired.  Then make
+		 * sure we indicate that the Fbox is no longer waiting to retire an
+		 * instruction.
+		 */
+		AXP_21264_Ibox_Retire(cpu);
+		cpu->fBoxWaitingRetirement = false;
+
+		/*
 		 * Next we need to do is see if there is nothing to process,
 		 * then wait for something to get queued up.
 		 */
 		while ((AXP_CQUE_EMPTY(cpu->fq) == true) &&
+			   (cpu->fBoxWaitingRetirement == false) &&
 			   (cpu->cpuState != ShuttingDown))
 			pthread_cond_wait(&cpu->fBoxCondition, &cpu->fBoxMutex);
 
@@ -567,7 +470,7 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 				 * correct Floating Point cluster and have only been queued for
 				 * processing and the registers needed for the instruction are
 				 * ready to be used (the source registers need to not be
-				 * waiting for pervious instruction to write to it).
+				 * waiting for previous instruction to write to it).
 				 */
 				if ((entry->ins->pipeline == pipeline) &&
 					(entry->ins->state == Queued) &&
@@ -599,6 +502,11 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			 * function to execute the instruction.
 			 */
 			AXP_Dispatcher(cpu, entry->ins);
+
+			/*
+			 * Return the entry back to the pool for future instructions.
+			 */
+			AXP_ReturnFQEntry(cpu, entry);
 		}
 
 		/*
@@ -608,7 +516,7 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 	}
 
 	/*
-	 * Last things lasst, lock the Fbox mutex.
+	 * Last things last, lock the Fbox mutex.
 	 */
 	pthread_mutex_unlock(&cpu->fBoxMutex);
 
