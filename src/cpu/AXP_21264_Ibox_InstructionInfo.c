@@ -111,6 +111,201 @@ static struct instructDecode insDecode[] =
 	{Bra,	Branch,	{ .raw = AXP_SRC1_RA}, AXP_IQ, EboxL0}						/* 3F	BGT			Branch if > zero			*/
 };
 
+static AXP_PIPELINE hw_mxpr_pipe[] =
+{
+		EboxL0,			/* ITB_TAG								- b'0000 0000' */
+		EboxL0, 		/* ITB_PTE								- b'0000 0001' */
+		EboxL0,			/* ITB_IAP								- b'0000 0010' */
+		EboxL0,			/* ITB_IA								- b'0000 0011' */
+		EboxL0,			/* ITB_IS								- b'0000 0100' */
+		PipelineNone,
+		EboxL0,			/* EXC_ADDR								- b'0000 0110' */
+		EboxL0,			/* IVA_FORM								- b'0000 0111' */
+		PipelineNone,
+		EboxL0,			/* CM									- b'0000 1001' */
+		EboxL0,			/* IER									- b'0000 1010' */
+		EboxL0,			/* IER_CM								- b'0000 1011' */
+		EboxL0,			/* SIRR									- b'0000 1100' */
+		EboxL0L1,		/* ISUM									- b'0000 1101' */
+		EboxL0,			/* HW_INT_CLR							- b'0000 1110' */
+		EboxL0,			/* EXC_SUM								- b'0000 1111' */
+		EboxL0,			/* PAL_BASE								- b'0001 0000' */
+		EboxL0,			/* I_CTL								- b'0001 0001' */
+		EboxL0,			/* IC_FLUSH_ASM							- b'0001 0010' */
+		EboxL0,			/* IC_FLUSH								- b'0001 0011' */
+		EboxL0,			/* PCTR_CTL								- b'0001 0100' */
+		EboxL0,			/* CLR_MAP								- b'0001 0101' */
+		EboxL0,			/* I_STAT								- b'0001 0110' */
+		EboxL0,			/* SLEEP								- b'0001 0111' */
+		PipelineNone,
+		PipelineNone,
+		EboxL0,			/* DTB_TAG0								- b'0010 0000' */
+		EboxL0,			/* DTB_PTE0								- b'0010 0001' */
+		PipelineNone,
+		PipelineNone,
+		EboxL0,			/* DTB_IS0								- b'0010 0100' */
+		EboxL0,			/* DTB_ASN0								- b'0010 0101' */
+		EboxL1,			/* DTB_ALTMODE							- b'0010 0110' */
+		EboxL0L1,		/* MM_STAT								- b'0010 0111' */
+		EboxL0,			/* M_CTL								- b'0010 1000' */
+		EboxL0,			/* DC_CTL								- b'0010 1001' */
+		EboxL0,			/* DC_STAT								- b'0010 1010' */
+		EboxL0,			/* C_DATA								- b'0010 1011' */
+		EboxL0,			/* C_SHFT								- b'0010 1100' */
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,	/*										- b'0011 0000' */
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		EboxL0,			/* PCXT									- b'0100 0000' */
+		EboxL0,			/* PCXT[ASN]							- b'0100 0001' */
+		EboxL0,			/* PCXT[ASTER]							- b'0100 0010' */
+		EboxL0,			/* PCXT[ASTER, ASN]						- b'0100 0011' */
+		EboxL0,			/* PCXT[ASTRR]							- b'0100 0100' */
+		EboxL0,			/* PCXT[ASTRR, ASN]						- b'0100 0101' */
+		EboxL0,			/* PCXT[ASTRR, ASTER]					- b'0100 0110' */
+		EboxL0,			/* PCXT[ASTRR, ASTER, ASN]				- b'0100 0111' */
+		EboxL0,			/* PCXT[PPCE]							- b'0100 1000' */
+		EboxL0,			/* PCXT[PPCE, ASN]						- b'0100 1001' */
+		EboxL0,			/* PCXT[PPCE, ASTER]					- b'0100 1010' */
+		EboxL0,			/* PCXT[PPCE, ASTER, ASN]				- b'0100 1011' */
+		EboxL0,			/* PCXT[PPCE, ASTRR]					- b'0100 1100' */
+		EboxL0,			/* PCXT[PPCE, ASTRR, ASN]				- b'0100 1101' */
+		EboxL0,			/* PCXT[PPCE, ASTRR, ASTER]				- b'0100 1110' */
+		EboxL0,			/* PCXT[PPCE, ASTRR, ASTER, ASN]		- b'0100 1111' */
+		EboxL0,			/* PCXT[FPE]							- b'0101 0000' */
+		EboxL0,			/* PCXT[FPE, ASN]						- b'0101 0001' */
+		EboxL0,			/* PCXT[FPE, ASTER]						- b'0101 0010' */
+		EboxL0,			/* PCXT[FPE, ASTER, ASN]				- b'0101 0011' */
+		EboxL0,			/* PCXT[FPE, ASTRR]						- b'0101 0100' */
+		EboxL0,			/* PCXT[FPE, ASTRR, ASN]				- b'0101 0101' */
+		EboxL0,			/* PCXT[FPE, ASTRR, ASTER]				- b'0101 0110' */
+		EboxL0,			/* PCXT[FPE, ASTRR, ASTER, ASN]			- b'0101 0111' */
+		EboxL0,			/* PCXT[FPE, PPCE]						- b'0101 1000' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASN]					- b'0101 1001' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTER]				- b'0101 1010' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTER, ASN]			- b'0101 1011' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTRR]				- b'0101 1100' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTRR, ASN]			- b'0101 1101' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTRR, ASTER]		- b'0101 1110' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTRR, ASTER, ASN]	- b'0101 1111' */
+		EboxL0,			/* PCXT]								- b'0110 0000' */
+		EboxL0,			/* PCXT[ASN]							- b'0110 0001' */
+		EboxL0,			/* PCXT[ASTER]							- b'0110 0010' */
+		EboxL0,			/* PCXT[ASTER, ASN]						- b'0110 0011' */
+		EboxL0,			/* PCXT[ASTRR]							- b'0110 0100' */
+		EboxL0,			/* PCXT[ASTRR, ASN]						- b'0110 0101' */
+		EboxL0,			/* PCXT[ASTRR, ASTER]					- b'0110 0110' */
+		EboxL0,			/* PCXT[ASTRR, ASTER, ASN]				- b'0110 0111' */
+		EboxL0,			/* PCXT[PPCE]							- b'0110 1000' */
+		EboxL0,			/* PCXT[PPCE, ASN]						- b'0110 1001' */
+		EboxL0,			/* PCXT[PPCE, ASTER]					- b'0110 1010' */
+		EboxL0,			/* PCXT[PPCE, ASTER, ASN]				- b'0110 1011' */
+		EboxL0,			/* PCXT[PPCE, ASTRR]					- b'0110 1100' */
+		EboxL0,			/* PCXT[PPCE, ASTRR, ASN]				- b'0110 1101' */
+		EboxL0,			/* PCXT[PPCE, ASTRR, ASTER]				- b'0110 1110' */
+		EboxL0,			/* PCXT[PPCE, ASTRR, ASTER, ASN]		- b'0110 1111' */
+		EboxL0,			/* PCXT[FPE]							- b'0111 0000' */
+		EboxL0,			/* PCXT[FPE, ASN]						- b'0111 0001' */
+		EboxL0,			/* PCXT[FPE, ASTER]						- b'0111 0010' */
+		EboxL0,			/* PCXT[FPE, ASTER, ASN]				- b'0111 0011' */
+		EboxL0,			/* PCXT[FPE, ASTRR]						- b'0111 0100' */
+		EboxL0,			/* PCXT[FPE, ASTRR, ASN]				- b'0111 0101' */
+		EboxL0,			/* PCXT[FPE, ASTRR, ASTER]				- b'0111 0110' */
+		EboxL0,			/* PCXT[FPE, ASTRR, ASTER, ASN]			- b'0111 0111' */
+		EboxL0,			/* PCXT[FPE, PPCE]						- b'0111 1000' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASN]					- b'0111 1001' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTER]				- b'0111 1010' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTER, ASN]			- b'0111 1011' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTRR]				- b'0111 1100' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTRR, ASN]			- b'0111 1101' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTRR, ASTER]		- b'0111 1110' */
+		EboxL0,			/* PCXT[FPE, PPCE, ASTRR, ASTER, ASN]]	- b'0111 1111' */
+		PipelineNone,	/*										- b'1000 0000' */
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,	/*										- b'1001 0000' */
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		EboxL1,			/* DTB_TAG1								- b'1010 0000' */
+		EboxL0,			/* DTB_PTE1								- b'1010 0001' */
+		EboxL1,			/* DTB_IAP								- b'1010 0010' */
+		EboxL1,			/* DTB_IA 								- b'1010 0011' */
+		EboxL1,			/* DTB_IS1								- b'1010 0100' */
+		EboxL1,			/* DTB_ASN1								- b'1010 0101' */
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,	/*										- b'1100 0000' */
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		EboxL1,			/* CC									- b'1100 0000' */
+		EboxL1,			/* CC_CTL								- b'1100 0001' */
+		EboxL1,			/* VA									- b'1100 0010' */
+		EboxL1,			/* VA_FORM								- b'1100 0011' */
+		EboxL1			/* VA_CTL								- b'1100 0100' */
+};
+
 /*
  * AXP_Dispatcher
  *	This function is called to dispatch the instruction to the correct function
@@ -204,6 +399,7 @@ void AXP_Dispatcher(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	goto *(&&OP_CALL_PAL + label[instr->opcode]);
 
 OP_CALL_PAL:
+	/* TODO: Need to recalculate new PC and implement like a jump */
 	goto COMPLETION_OP;
 
 OP_LDA:
@@ -2506,10 +2702,9 @@ OP_TRAPB:
 	}
 
 OP_HW_MFPR:
-	if (instr->pc.pal == AXP_PAL_MODE)
+	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
-	else
-		instr->excRegMask = AXP_HWMFPR(cpu, instr);
+	instr->excRegMask = AXP_HWMFPR(cpu, instr);
 	goto COMPLETION_OP;
 
 OP_JMP:
@@ -2517,10 +2712,9 @@ OP_JMP:
 	goto COMPLETION_OP;
 
 OP_HW_LD:
-	if (instr->pc.pal == AXP_PAL_MODE)
+	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
-	else
-		instr->excRegMask = AXP_HWLD(cpu, instr);
+	instr->excRegMask = AXP_HWLD(cpu, instr);
 	goto COMPLETION_OP;
 
 OP_SEXTB:
@@ -2632,24 +2826,21 @@ OP_SEXTB:
 	}
 
 OP_HW_MTPR:
-	if (instr->pc.pal == AXP_PAL_MODE)
+	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
-	else
-		instr->excRegMask = AXP_HWHPTR(cpu, instr);
+	instr->excRegMask = AXP_HWHPTR(cpu, instr);
 	goto COMPLETION_OP;
 
 OP_HW_RET:
-	if (instr->pc.pal == AXP_PAL_MODE)
+	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
-	else
-		instr->excRegMask = AXP_HWRET(cpu, instr);
+	instr->excRegMask = AXP_HWRET(cpu, instr);
 	goto COMPLETION_OP;
 
 OP_HW_ST:
-	if (instr->pc.pal == AXP_PAL_MODE)
+	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
-	else
-		instr->excRegMask = AXP_HWST(cpu, instr);
+	instr->excRegMask = AXP_HWST(cpu, instr);
 	goto COMPLETION_OP;
 
 OP_LDF:
@@ -2985,7 +3176,7 @@ AXP_PIPELINE AXP_InstructionPipeline(u32 opcode, u32 func)
 	AXP_PIPELINE	retVal = insDecode[opcode].pipeline;
 
 	/*
-	 * Some opcode.functions are executed in different pipelines.
+	 * Some opcode functions are executed in different pipelines.
 	 */
 	switch(opcode)
 	{
@@ -3227,6 +3418,11 @@ AXP_PIPELINE AXP_InstructionPipeline(u32 opcode, u32 func)
 				default:
 					break;
 			}
+			break;
+
+		case HW_MTPR:
+		case HW_MFPR:
+			retVal = hw_mxpr_pipe[func];
 			break;
 
 		default:
