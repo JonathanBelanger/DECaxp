@@ -64,7 +64,7 @@ typedef struct
 #define AXP_EBOX_READ_CC(dest, cpu)			\
 		*((u64 *) &dest) = *((u64 *) &cpu->cc)
 #define AXP_EBOX_WRITE_CC(src, cpu)	\
-		*((u64 *) &cpu->cc) = *((u64 *) &src)
+		cpu->cc.offset = *((uu32 *) &src)
 
 typedef struct
 {
@@ -379,7 +379,7 @@ typedef struct
 	u64	res_3 : 31;
 } AXP_IBOX_HW_INT_CLR;
 #define AXP_IBOX_WRITE_HW_INT_CLR(src, cpu)	\
-		*((u64 &) cpu->hwIntClr) = *((u64 *) &src) & 0x00000001f4000000ll
+		*((u64 *) &cpu->hwIntClr) = *((u64 *) &src) & 0x00000001f4000000ll
 
 typedef struct
 {
@@ -497,7 +497,7 @@ typedef struct
 	u64 res_4 : 17;
 } AXP_IBOX_PCTX;
 #define AXP_IBOX_READ_PCTX(dest, cpu)		\
-		*((u64 *) &dest) = *((u64 *) cpu->pctx) & 0x00007f8000001fe6ll
+		*((u64 *) &dest) = *((u64 *) cpu->pCtx) & 0x00007f8000001fe6ll
 /* NOTE: No write macro because writing to individual fields is easier */
 
 /*

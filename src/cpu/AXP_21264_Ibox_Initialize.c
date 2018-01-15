@@ -1,0 +1,278 @@
+/*
+ * Copyright (C) Jonathan D. Belanger 2018.
+ * All Rights Reserved.
+ *
+ * This software is furnished under a license and may be used and copied only
+ * in accordance with the terms of such license and with the inclusion of the
+ * above copyright notice.  This software or any other copies thereof may not
+ * be provided or otherwise made available to any other person.  No title to
+ * and ownership of the software is hereby transferred.
+ *
+ * The information in this software is subject to change without notice and
+ * should not be construed as a commitment by the author or co-authors.
+ *
+ * The author and any co-authors assume no responsibility for the use or
+ * reliability of this software.
+ *
+ * Description:
+ *
+ *	This source file contains the functions needed to implement the
+ *	initialization functionality of the Ibox.
+ *
+ * Revision History:
+ *
+ *	V01.000		10-May-2017	Jonathan D. Belanger
+ *	Initially written from AXP_21264_Ibox.c.
+ */
+#include "AXP_Configure.h"
+#include "AXP_21264_Ibox.h"
+
+/*
+ */
+void AXP_21264_Ibox_ResetRegMap(cpu)
+{
+	return;
+}
+
+/*
+ * AXP_21264_Ibox_Init
+ *	This function is called to initialize the Ibox.  It will set the IPRs
+ *	associated with the Ibox to their initial/reset values.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *		processor.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	true:	Failed to perform all initialization processing.
+ *	false:	Normal Successful Completion.
+ */
+bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
+{
+	bool	retVal = false;
+	int		ii, jj, kk;
+
+	/*
+	 * We start out with no exceptions pending.
+	 */
+	cpu->excPend = false;
+
+	/*
+	 * Initialize the branch prediction information.
+	 */
+	for (ii = 0; ii < ONE_K; ii++)
+	{
+		cpu->localHistoryTable.lcl_history[ii] = 0;
+		cpu->localPredictor.lcl_pred[ii] = 0;
+		cpu->choicePredictor.choice_pred[ii] = 0;
+	}
+	for (ii = 0; ii < FOUR_K; ii++)
+		cpu->globalPredictor.gbl_pred[ii] = 0;
+	cpu->globalPathHistory = 0;
+
+	/*
+	 */
+	AXP_21264_Ibox_ResetRegMap(cpu);
+
+	/*
+	 * Initialize the Ibox IPRs.
+	 */
+	cpu->itbTag.res_1 = 0;		/* ITB_TAG */
+	cpu->itbTag.tag = 0;
+	cpu->itbTag.res_2 = 0;
+	cpu->itbPte.res_1 = 0;		/* ITB_PTE */
+	cpu->itbPte._asm = 0;
+	cpu->itbPte.gh = 0;
+	cpu->itbPte.res_2 = 0;
+	cpu->itbPte.kre = 0;
+	cpu->itbPte.ere = 0;
+	cpu->itbPte.sre = 0;
+	cpu->itbPte.ure = 0;
+	cpu->itbPte.res_3 = 0;
+	cpu->itbPte.pfn = 0;
+	cpu->itbPte.res_4 = 0;
+	cpu->itbIs.res_1 = 0;			/* ITB_IS */
+	cpu->itbIs.inval_itb = 0;
+	cpu->itbIs.res_2 = 0;
+	cpu->excAddr.exc_addr = 0;		/* EXC_ADDR */
+	cpu->ivaForm.form10.res = 0;	/* IVA_FORM */
+	cpu->ivaForm.form10.va_sext_vptb = 0;
+	cpu->ierCm.res_1 = 0;			/* IER_CM */
+	cpu->ierCm.cm = 0;
+	cpu->ierCm.res_2 = 0;
+	cpu->ierCm.asten = 0;
+	cpu->ierCm.sien = 0;
+	cpu->ierCm.pcen = 0;
+	cpu->ierCm.cren = 0;
+	cpu->ierCm.slen = 0;
+	cpu->ierCm.eien = 0;
+	cpu->ierCm.res_3 = 0;
+	cpu->sirr.res_1 = 0;			/* SIRR */
+	cpu->sirr.sir = 0;
+	cpu->sirr.res_2 = 0;
+	cpu->iSum.res_1 = 0;			/* ISUM */
+	cpu->iSum.astk = 0;
+	cpu->iSum.aste = 0;
+	cpu->iSum.res_2 = 0;
+	cpu->iSum.asts = 0;
+	cpu->iSum.astu = 0;
+	cpu->iSum.res_3 = 0;
+	cpu->iSum.si = 0;
+	cpu->iSum.pc = 0;
+	cpu->iSum.cr = 0;
+	cpu->iSum.sl = 0;
+	cpu->iSum.ei = 0;
+	cpu->iSum.res_4 = 0;
+	cpu->hwIntClr.res_1 = 0;		/* HW_INT_CLR */
+	cpu->hwIntClr.fbtp = 0;
+	cpu->hwIntClr.mchk_d = 0;
+	cpu->hwIntClr.res_2 = 0;
+	cpu->hwIntClr.pc = 0;
+	cpu->hwIntClr.cr = 0;
+	cpu->hwIntClr.sl = 0;
+	cpu->hwIntClr.res_3 = 0;
+	cpu->excSum.swc = 0;			/* EXC_SUM */
+	cpu->excSum.inv = 0;
+	cpu->excSum.dze = 0;
+	cpu->excSum.ovf = 0;
+	cpu->excSum.unf = 0;
+	cpu->excSum.ine = 0;
+	cpu->excSum.iov = 0;
+	cpu->excSum._int = 0;
+	cpu->excSum.reg = 0;
+	cpu->excSum.bad_iva = 0;
+	cpu->excSum.res = 0;
+	cpu->excSum.pc_ovfl = 0;
+	cpu->excSum.set_inv = 0;
+	cpu->excSum.set_dze = 0;
+	cpu->excSum.set_ovf = 0;
+	cpu->excSum.set_unf = 0;
+	cpu->excSum.set_ine = 0;
+	cpu->excSum.set_iov = 0;
+	cpu->excSum.sext_set_iov = 0;
+	cpu->palBase.pal_base_pc = 0;	/* PAL_BASE */
+	cpu->iCtl.spce = 0;				/* I_CTL */
+	cpu->iCtl.ic_en = 3;
+	cpu->iCtl.spe = 0;
+	cpu->iCtl.sde = 0;
+	cpu->iCtl.sbe = 0;
+	cpu->iCtl.bp_mode = 0;
+	cpu->iCtl.hwe = 0;
+	cpu->iCtl.sl_xmit = 0;
+	cpu->iCtl.sl_rcv = 0;
+	cpu->iCtl.va_48 = 0;
+	cpu->iCtl.va_form_32 = 0;
+	cpu->iCtl.single_issue_h = 0;
+	cpu->iCtl.pct0_en = 0;
+	cpu->iCtl.pct1_en = 0;
+	cpu->iCtl.call_pal_r23 = 0;
+	cpu->iCtl.mchk_en = 0;
+	cpu->iCtl.tb_mb_en = 0;
+	cpu->iCtl.bist_fail = 0;
+	cpu->iCtl.chip_id = 0;
+	cpu->iCtl.vptb = 0;
+	cpu->iCtl.sext_vptb = 0;
+	cpu->iStat.res_1 = 0;			/* I_STAT */
+	cpu->iStat.tpe = 0;
+	cpu->iStat.dpe = 0;
+	cpu->iStat.res_2 = 0;
+	cpu->pCtx.res_1 = 0;			/* PCTX */
+	cpu->pCtx.ppce = 0;
+	cpu->pCtx.fpe = 1;
+	cpu->pCtx.res_2 = 0;
+	cpu->pCtx.aster = 0;
+	cpu->pCtx.astrr = 0;
+	cpu->pCtx.res_3 = 0;
+	cpu->pCtx.asn = 0;
+	cpu->pCtx.res_4 = 0;
+	cpu->pCtrCtl.sl1 = 0;			/* PCTR_CTL */
+	cpu->pCtrCtl.sl0 = 0;
+	cpu->pCtrCtl.res_1 = 0;
+	cpu->pCtrCtl.pctr1 = 0;
+	cpu->pCtrCtl.res_2 = 0;
+	cpu->pCtrCtl.pctr0 = 0;
+	cpu->pCtrCtl.sext_pctr0 = 0;
+
+	/*
+	 * Initialize the Unique instruction ID and the VPC array.
+	 */
+	cpu->instrCounter = 0;
+	cpu->vpcStart = 0;
+	cpu->vpcEnd = 0;
+	for (ii = 0; ii < AXP_INFLIGHT_MAX; ii++)
+	{
+		cpu->vpc[ii].pal = 0;
+		cpu->vpc[ii].res = 0;
+		cpu->vpc[ii].pc = 0;
+	}
+
+	/*
+	 * Initialize the instruction cache.
+	 */
+	for (ii = 0; ii < AXP_CACHE_ENTRIES; ii++)
+	{
+		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
+		{
+			cpu->iCache[ii][jj].kre = 0;
+			cpu->iCache[ii][jj].ere = 0;
+			cpu->iCache[ii][jj].sre = 0;
+			cpu->iCache[ii][jj].ure = 0;
+			cpu->iCache[ii][jj]._asm = 0;
+			cpu->iCache[ii][jj].asn = 0;
+			cpu->iCache[ii][jj].pal = 0;
+			cpu->iCache[ii][jj].vb = 0;
+			cpu->iCache[ii][jj].tag = 0;
+			cpu->iCache[ii][jj].set_0_1 = 0;
+			cpu->iCache[ii][jj].res_1 = 0;
+			for (kk = 0; kk < AXP_ICACHE_LINE_INS; kk++)
+				cpu->iCache[ii][jj].instructions[kk].instr = 0;
+		}
+	}
+
+	/*
+	 * Initialize the Instruction Translation Look-aside Buffer.
+	 */
+	cpu->nextITB = 0;
+	for (ii = 0; ii < AXP_TB_LEN; ii++)
+	{
+		cpu->itb[ii].virtAddr = 0;
+		cpu->itb[ii].physAddr = 0;
+		cpu->itb[ii].matchMask = 0;
+		cpu->itb[ii].keepMask = 0;
+		cpu->itb[ii].kre = 0;
+		cpu->itb[ii].ere = 0;
+		cpu->itb[ii].sre = 0;
+		cpu->itb[ii].ure = 0;
+		cpu->itb[ii].kwe = 0;
+		cpu->itb[ii].ewe = 0;
+		cpu->itb[ii].swe = 0;
+		cpu->itb[ii].uwe = 0;
+		cpu->itb[ii].faultOnRead = 0;
+		cpu->itb[ii].faultOnWrite = 0;
+		cpu->itb[ii].faultOnExecute = 0;
+		cpu->itb[ii].res_1 = 0;
+		cpu->itb[ii].asn = 0;
+		cpu->itb[ii]._asm = false;
+		cpu->itb[ii].valid = false;
+	}
+
+	/*
+	 * Initialize the ReOrder Buffer (ROB).
+	 */
+	cpu->robStart = 0;
+	cpu->robEnd = 0;
+	for (ii = 0; ii < AXP_INFLIGHT_MAX; ii++)
+	{
+		cpu->rob[ii].state = Retired;
+	}
+
+	/*
+	 * Return the result of this initialization back to the caller.
+	 */
+	return(retVal);
+}
+
