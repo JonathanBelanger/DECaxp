@@ -369,6 +369,7 @@ typedef struct
 	 */
 	pthread_mutex_t			iCacheMutex;
 	AXP_ICACHE_BLK			iCache[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
+	bool					iCacheFlushPending;
 
 	/*
 	 * This is the Instruction Address Translation (Look-aside) Table (ITB).
