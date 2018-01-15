@@ -105,6 +105,9 @@
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Ibox.h"
+#include "AXP_21264_Ibox_Initialize.h"
+#include "AXP_21264_Ibox_InstructionDecoding.h"
+#include "AXP_21264_Ibox_PCHandling.h"
 
 /*
  * A local structure used to calculate the PC for a CALL_PAL function.
@@ -520,198 +523,183 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 (instr->type_hint_index <= AXP_IPR_SLEEP)) ||
 		((instr->type_hint_index >= AXP_IPR_PCXT0) &&
 		 (instr->type_hint_index <= AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER_ASN)))
-		 pthread_mutex_lock(&cpu->iBoxIPRMutex);
-	else if (((instr->type_hint_index >= AXP_IPR_DTB_TAG0) &&
-			  (instr->type_hint_index <= AXP_IPR_DC_STAT)) ||
-			 ((instr->type_hint_index >= AXP_IPR_DTB_TAG1) &&
-			  (instr->type_hint_index <= AXP_IPR_DTB_ASN1)))
-		pthread_mutex_lock(&cpu->mBoxIPRMutex);
-	else if ((instr->type_hint_index >= AXP_IPR_CC) &&
-			 (instr->type_hint_index <= AXP_IPR_VA_CTL))
-		pthread_mutex_lock(&cpu->eBoxIPRMutex);
-	else
-		pthread_mutex_lock(&cpu->cBoxIPRMutex);
-
-	switch (instr->type_hint_index)
 	{
+		 pthread_mutex_lock(&cpu->iBoxIPRMutex);
+			switch (instr->type_hint_index)
+			{
+				case AXP_IPR_EXC_ADDR:
+					AXP_IBOX_READ_EXC_ADDR(instr->destv.r.uq, cpu);
+					break;
 
-		/*
-		 * Ibox IPRs (RO and RW)
-		 */
-		case AXP_IPR_EXC_ADDR:
-			AXP_IBOX_READ_EXC_ADDR(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_IVA_FORM:
+					AXP_IBOX_READ_IVA_FORM(instr->destv.r.uq, cpu);
+					break;
 
-		case AXP_IPR_IVA_FORM:
-			AXP_IBOX_READ_IVA_FORM(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_CM:
+					AXP_IBOX_READ_CM(instr->destv.r.uq, cpu);
+					break;
 
-		case AXP_IPR_CM:
-			AXP_IBOX_READ_CM(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_IER:
+					AXP_IBOX_READ_IER(instr->destv.r.uq, cpu);
+					break;
 
-		case AXP_IPR_IER:
-			AXP_IBOX_READ_IER(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_IER_CM:
+					AXP_IBOX_READ_IER_CM(instr->destv.r.uq, cpu);
+					break;
 
-		case AXP_IPR_IER_CM:
-			AXP_IBOX_READ_IER_CM(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_SIRR:
+					AXP_IBOX_READ_SIRR(instr->destv.r.uq, cpu);
+					break;
 
-		case AXP_IPR_SIRR:
-			AXP_IBOX_READ_SIRR(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_ISUM:
+					AXP_IBOX_READ_ISUM(instr->destv.r.uq, cpu);
+					break;
 
-		case AXP_IPR_ISUM:
-			AXP_IBOX_READ_ISUM(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_EXC_SUM:
+					AXP_IBOX_READ_EXC_SUM(instr->destv.r.uq, cpu);
+					break;
 
-		case AXP_IPR_EXC_SUM:
-			AXP_IBOX_READ_EXC_SUM(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_PAL_BASE:
+					AXP_IBOX_READ_PAL_BASE(instr->destv.r.uq, cpu);
+					break;
 
-		case AXP_IPR_PAL_BASE:
-			AXP_IBOX_READ_PAL_BASE(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_I_CTL:
+					AXP_IBOX_READ_I_CTL(instr->destv.r.uq, cpu);
+					break;
 
-		case AXP_IPR_I_CTL:
-			AXP_IBOX_READ_I_CTL(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_PCTR_CTL:
+					AXP_IBOX_READ_PCTR_CTL(instr->destv.r.uq, cpu);
+					break;
 
-		case AXP_IPR_PCTR_CTL:
-			AXP_IBOX_READ_PCTR_CTL(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_I_STAT:
+					AXP_IBOX_READ_I_STAT(instr->destv.r.uq, cpu);
+					break;
 
-		case AXP_IPR_I_STAT:
-			AXP_IBOX_READ_I_STAT(instr->destv.r.uq, cpu);
-			break;
+				case AXP_IPR_PCXT0:
+				case AXP_IPR_PCXT0_ASN:
+				case AXP_IPR_PCXT0_ASTER:
+				case AXP_IPR_PCXT0_ASTER_ASN:
+				case AXP_IPR_PCXT0_ASTRR:
+				case AXP_IPR_PCXT0_ASTRR_ASN:
+				case AXP_IPR_PCXT0_ASTRR_ASTER:
+				case AXP_IPR_PCXT0_ASTRR_ASTER_ASN:
+				case AXP_IPR_PCXT0_PPCE:
+				case AXP_IPR_PCXT0_PPCE_ASN:
+				case AXP_IPR_PCXT0_PPCE_ASTER:
+				case AXP_IPR_PCXT0_PPCE_ASTER_ASN:
+				case AXP_IPR_PCXT0_PPCE_ASTRR:
+				case AXP_IPR_PCXT0_PPCE_ASTRR_ASN:
+				case AXP_IPR_PCXT0_PPCE_ASTRR_ASTER:
+				case AXP_IPR_PCXT0_PPCE_ASTRR_ASTER_ASN:
+				case AXP_IPR_PCXT0_FPE:
+				case AXP_IPR_PCXT0_FPE_ASN:
+				case AXP_IPR_PCXT0_FPE_ASTER:
+				case AXP_IPR_PCXT0_FPE_ASTER_ASN:
+				case AXP_IPR_PCXT0_FPE_ASTRR:
+				case AXP_IPR_PCXT0_FPE_ASTRR_ASN:
+				case AXP_IPR_PCXT0_FPE_ASTRR_ASTER:
+				case AXP_IPR_PCXT0_FPE_ASTRR_ASTER_ASN:
+				case AXP_IPR_PCXT0_FPE_PPCE:
+				case AXP_IPR_PCXT0_FPE_PPCE_ASN:
+				case AXP_IPR_PCXT0_FPE_PPCE_ASTER:
+				case AXP_IPR_PCXT0_FPE_PPCE_ASTER_ASN:
+				case AXP_IPR_PCXT0_FPE_PPCE_ASTRR:
+				case AXP_IPR_PCXT0_FPE_PPCE_ASTRR_ASN:
+				case AXP_IPR_PCXT0_FPE_PPCE_ASTRR_ASTER:
+				case AXP_IPR_PCXT0_FPE_PPCE_ASTRR_ASTER_ASN:
+				case AXP_IPR_PCXT1:
+				case AXP_IPR_PCXT1_ASN:
+				case AXP_IPR_PCXT1_ASTER:
+				case AXP_IPR_PCXT1_ASTER_ASN:
+				case AXP_IPR_PCXT1_ASTRR:
+				case AXP_IPR_PCXT1_ASTRR_ASN:
+				case AXP_IPR_PCXT1_ASTRR_ASTER:
+				case AXP_IPR_PCXT1_ASTRR_ASTER_ASN:
+				case AXP_IPR_PCXT1_PPCE:
+				case AXP_IPR_PCXT1_PPCE_ASN:
+				case AXP_IPR_PCXT1_PPCE_ASTER:
+				case AXP_IPR_PCXT1_PPCE_ASTER_ASN:
+				case AXP_IPR_PCXT1_PPCE_ASTRR:
+				case AXP_IPR_PCXT1_PPCE_ASTRR_ASN:
+				case AXP_IPR_PCXT1_PPCE_ASTRR_ASTER:
+				case AXP_IPR_PCXT1_PPCE_ASTRR_ASTER_ASN:
+				case AXP_IPR_PCXT1_FPE:
+				case AXP_IPR_PCXT1_FPE_ASN:
+				case AXP_IPR_PCXT1_FPE_ASTER:
+				case AXP_IPR_PCXT1_FPE_ASTER_ASN:
+				case AXP_IPR_PCXT1_FPE_ASTRR:
+				case AXP_IPR_PCXT1_FPE_ASTRR_ASN:
+				case AXP_IPR_PCXT1_FPE_ASTRR_ASTER:
+				case AXP_IPR_PCXT1_FPE_ASTRR_ASTER_ASN:
+				case AXP_IPR_PCXT1_FPE_PPCE:
+				case AXP_IPR_PCXT1_FPE_PPCE_ASN:
+				case AXP_IPR_PCXT1_FPE_PPCE_ASTER:
+				case AXP_IPR_PCXT1_FPE_PPCE_ASTER_ASN:
+				case AXP_IPR_PCXT1_FPE_PPCE_ASTRR:
+				case AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASN:
+				case AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER:
+				case AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER_ASN:
+					AXP_IBOX_READ_PCTX(instr->destv.r.uq, cpu);
+					break;
 
-		/*
-		 * Mbox IPRs (RO and RW)
-		 */
-		case AXP_IPR_MM_STAT:
-			AXP_MBOX_READ_MM_STAT(instr->destv.r.uq, cpu);
-			break;
-
-		case AXP_IPR_DC_STAT:
-			AXP_MBOX_READ_DC_STAT(instr->destv.r.uq, cpu);
-			break;
-
-		/*
-		 * Cbox IPR (RW)
-		 */
-		case AXP_IPR_C_DATA:
-			AXP_CBOX_READ_C_DATA(instr->destv.r.uq, cpu);
-			break;
-
-		/*
-		 * Ibox Process Context IPR (R)
-		 * NOTE: When reading, all the bits are returned always.
-		 */
-		case AXP_IPR_PCXT0:
-		case AXP_IPR_PCXT0_ASN:
-		case AXP_IPR_PCXT0_ASTER:
-		case AXP_IPR_PCXT0_ASTER_ASN:
-		case AXP_IPR_PCXT0_ASTRR:
-		case AXP_IPR_PCXT0_ASTRR_ASN:
-		case AXP_IPR_PCXT0_ASTRR_ASTER:
-		case AXP_IPR_PCXT0_ASTRR_ASTER_ASN:
-		case AXP_IPR_PCXT0_PPCE:
-		case AXP_IPR_PCXT0_PPCE_ASN:
-		case AXP_IPR_PCXT0_PPCE_ASTER:
-		case AXP_IPR_PCXT0_PPCE_ASTER_ASN:
-		case AXP_IPR_PCXT0_PPCE_ASTRR:
-		case AXP_IPR_PCXT0_PPCE_ASTRR_ASN:
-		case AXP_IPR_PCXT0_PPCE_ASTRR_ASTER:
-		case AXP_IPR_PCXT0_PPCE_ASTRR_ASTER_ASN:
-		case AXP_IPR_PCXT0_FPE:
-		case AXP_IPR_PCXT0_FPE_ASN:
-		case AXP_IPR_PCXT0_FPE_ASTER:
-		case AXP_IPR_PCXT0_FPE_ASTER_ASN:
-		case AXP_IPR_PCXT0_FPE_ASTRR:
-		case AXP_IPR_PCXT0_FPE_ASTRR_ASN:
-		case AXP_IPR_PCXT0_FPE_ASTRR_ASTER:
-		case AXP_IPR_PCXT0_FPE_ASTRR_ASTER_ASN:
-		case AXP_IPR_PCXT0_FPE_PPCE:
-		case AXP_IPR_PCXT0_FPE_PPCE_ASN:
-		case AXP_IPR_PCXT0_FPE_PPCE_ASTER:
-		case AXP_IPR_PCXT0_FPE_PPCE_ASTER_ASN:
-		case AXP_IPR_PCXT0_FPE_PPCE_ASTRR:
-		case AXP_IPR_PCXT0_FPE_PPCE_ASTRR_ASN:
-		case AXP_IPR_PCXT0_FPE_PPCE_ASTRR_ASTER:
-		case AXP_IPR_PCXT0_FPE_PPCE_ASTRR_ASTER_ASN:
-		case AXP_IPR_PCXT1:
-		case AXP_IPR_PCXT1_ASN:
-		case AXP_IPR_PCXT1_ASTER:
-		case AXP_IPR_PCXT1_ASTER_ASN:
-		case AXP_IPR_PCXT1_ASTRR:
-		case AXP_IPR_PCXT1_ASTRR_ASN:
-		case AXP_IPR_PCXT1_ASTRR_ASTER:
-		case AXP_IPR_PCXT1_ASTRR_ASTER_ASN:
-		case AXP_IPR_PCXT1_PPCE:
-		case AXP_IPR_PCXT1_PPCE_ASN:
-		case AXP_IPR_PCXT1_PPCE_ASTER:
-		case AXP_IPR_PCXT1_PPCE_ASTER_ASN:
-		case AXP_IPR_PCXT1_PPCE_ASTRR:
-		case AXP_IPR_PCXT1_PPCE_ASTRR_ASN:
-		case AXP_IPR_PCXT1_PPCE_ASTRR_ASTER:
-		case AXP_IPR_PCXT1_PPCE_ASTRR_ASTER_ASN:
-		case AXP_IPR_PCXT1_FPE:
-		case AXP_IPR_PCXT1_FPE_ASN:
-		case AXP_IPR_PCXT1_FPE_ASTER:
-		case AXP_IPR_PCXT1_FPE_ASTER_ASN:
-		case AXP_IPR_PCXT1_FPE_ASTRR:
-		case AXP_IPR_PCXT1_FPE_ASTRR_ASN:
-		case AXP_IPR_PCXT1_FPE_ASTRR_ASTER:
-		case AXP_IPR_PCXT1_FPE_ASTRR_ASTER_ASN:
-		case AXP_IPR_PCXT1_FPE_PPCE:
-		case AXP_IPR_PCXT1_FPE_PPCE_ASN:
-		case AXP_IPR_PCXT1_FPE_PPCE_ASTER:
-		case AXP_IPR_PCXT1_FPE_PPCE_ASTER_ASN:
-		case AXP_IPR_PCXT1_FPE_PPCE_ASTRR:
-		case AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASN:
-		case AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER:
-		case AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER_ASN:
-			AXP_IBOX_READ_PCTX(instr->destv.r.uq, cpu);
-			break;
-
-		/*
-		 * Ebox IPRS (RO and RW)
-		 */
-		case AXP_IPR_CC:
-			AXP_EBOX_READ_CC(instr->destv.r.uq, cpu);
-			break;
-
-		case AXP_IPR_VA:
-			AXP_EBOX_READ_VA(instr->destv.r.uq, cpu);
-			break;
-
-		case AXP_IPR_VA_FORM:
-			AXP_EBOX_READ_VA_FORM(instr->destv.r.uq, cpu);
-			break;
-
-		default:
-			break;
-	}
-
-	/*
-	 * Make sure to unlock the appropriate IPR mutex.
-	 */
-	if (((instr->type_hint_index >= AXP_IPR_ITB_TAG) &&
-		 (instr->type_hint_index <= AXP_IPR_SLEEP)) ||
-		((instr->type_hint_index >= AXP_IPR_PCXT0) &&
-		 (instr->type_hint_index <= AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER_ASN)))
+				default:
+					break;
+			}
 		 pthread_mutex_unlock(&cpu->iBoxIPRMutex);
+	}
 	else if (((instr->type_hint_index >= AXP_IPR_DTB_TAG0) &&
 			  (instr->type_hint_index <= AXP_IPR_DC_STAT)) ||
 			 ((instr->type_hint_index >= AXP_IPR_DTB_TAG1) &&
 			  (instr->type_hint_index <= AXP_IPR_DTB_ASN1)))
+	{
+		pthread_mutex_lock(&cpu->mBoxIPRMutex);
+		switch (instr->type_hint_index)
+		{
+			case AXP_IPR_MM_STAT:
+				AXP_MBOX_READ_MM_STAT(instr->destv.r.uq, cpu);
+				break;
+
+			case AXP_IPR_DC_STAT:
+				AXP_MBOX_READ_DC_STAT(instr->destv.r.uq, cpu);
+				break;
+
+			default:
+				break;
+		}
 		pthread_mutex_unlock(&cpu->mBoxIPRMutex);
+	}
 	else if ((instr->type_hint_index >= AXP_IPR_CC) &&
 			 (instr->type_hint_index <= AXP_IPR_VA_CTL))
+	{
+		pthread_mutex_lock(&cpu->eBoxIPRMutex);
+		switch (instr->type_hint_index)
+		{
+			case AXP_IPR_CC:
+				AXP_EBOX_READ_CC(instr->destv.r.uq, cpu);
+				break;
+
+			case AXP_IPR_VA:
+				AXP_EBOX_READ_VA(instr->destv.r.uq, cpu);
+				break;
+
+			case AXP_IPR_VA_FORM:
+				AXP_EBOX_READ_VA_FORM(instr->destv.r.uq, cpu);
+				break;
+
+			default:
+				break;
+		}
 		pthread_mutex_unlock(&cpu->eBoxIPRMutex);
+	}
 	else
+	{
+		pthread_mutex_lock(&cpu->cBoxIPRMutex);
+		if (instr->type_hint_index == AXP_IPR_C_DATA)
+		{
+			AXP_CBOX_READ_C_DATA(instr->destv.r.uq, cpu);
+		}
 		pthread_mutex_unlock(&cpu->cBoxIPRMutex);
+	}
 
 	/*
 	 * Return back to the caller.
@@ -853,7 +841,7 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				break;
 
 			case AXP_IPR_CLR_MAP:
-				/* TODO: Pseudo register */
+				AXP_21264_Ibox_ResetRegMap(cpu);
 				break;
 
 			case AXP_IPR_I_STAT:
@@ -1099,9 +1087,6 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				/*
 				 * Retiring this instruction causes the TAG0 and PTE0 to be
 				 * written into the DTB entry.
-				 *
-				 * TODO:	Do we really want to do this for both TAG0/PTE0 and
-				 *			TAG1/PTE1?
 				 */
 				AXP_addTLBEntry(
 						cpu,
@@ -1116,8 +1101,6 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				/*
 				 * Writing to it clears the DTB PTE entries that matches the
 				 * DTB_IS0 IPR.
-				 *
-				 * TODO:	Do we really want to do this for both IS0 and IS1?
 				 */
 				AXP_tbis(cpu, *((u64 *) &cpu->dtbIs0), true);
 				break;
@@ -1152,9 +1135,6 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				/*
 				 * Retiring this instruction causes the TAG and PTE to be
 				 * written into the DTB entry.
-				 *
-				 * TODO:	Do we really want to do this for both TAG0/PTE0 and
-				 *			TAG1/PTE1?
 				 */
 				AXP_addTLBEntry(
 						cpu,
@@ -1187,8 +1167,6 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				/*
 				 * Writing to it clears the DTB PTE entries that matches the
 				 * DTB_IS0 IPR.
-				 *
-				 * TODO:	Do we really want to do this for both IS0 and IS1?
 				 */
 				AXP_tbis(cpu, *((u64 *) &cpu->dtbIs1), true);
 				break;
@@ -1333,6 +1311,14 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 			 */
 			if (rob->excRegMask != NoException)
 			{
+
+				/*
+				 * TODO:	There is quite a bit to re-do/do here.  Right now,
+				 *			events can be generated from the Mbox and Cbox for
+				 *			things that happen while executing an instruction.
+				 *			We need to do some of these in-line with retiring
+				 *			the instruction (namely, right here).
+				 */
 			}
 			else
 			{
@@ -1445,13 +1431,6 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	/*
 	 * Return back to the caller.
 	 */
-	return;
-}
-
-/*
- */
-void AXP_21264_Ibox_ResetRegMap(cpu)
-{
 	return;
 }
 
@@ -1631,6 +1610,15 @@ void *AXP_21264_IboxMain(void *voidPtr)
 									&_asm,
 									&fault,
 									&exception);
+
+							/*
+							 * TODO:	We need to check that we don't have a
+							 * 			hit in the Bcache, before requesting
+							 * 			it.  Also, not if we fill in the Icache
+							 * 			from the Bcache, then we need to check
+							 * 			the value of cpu->->hwIntClr.fbtp to
+							 * 			generate a 'Bad Icache fill parity'.
+							 */
 							AXP_21264_Add_MAF(
 									cpu,
 									Istream,
