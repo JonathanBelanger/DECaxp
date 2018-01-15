@@ -195,7 +195,7 @@ static AXP_QUEUE_ENTRY *AXP_GetNextFQEntry(AXP_21264_CPU *);
 /*
  * The following module specific structure and variable are used to be able to
  * decode opcodes that have differing ways register are utilized.  The index
- * into this array is the opcodeRegDecode fiels in the bits field of the
+ * into this array is the opcodeRegDecode fields in the bits field of the
  * register mapping in the above table.  There is no entry [0], so that is
  * just NULL and should never get referenced.
  */
@@ -243,14 +243,18 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 	bool			src1Float = false;
 	bool			src2Float = false;
 	bool			destFloat = false;
+	u32				function;
 
 	/*
 	 * Decode the next instruction.
 	 *
 	 * First, Assign a unique ID to this instruction (the counter should
-	 * auto-wrap).
+	 * auto-wrap) and initialize some of the other fields within the decoded
+	 * instruction.
 	 */
 	decodedInstr->uniqueID = cpu->instrCounter++;
+	decodedInstr->fault = AXP_NO_FAULTS;
+	decodedInstr->excRegMask = NoException;
 
 	/*
 	 * Let's, decode the instruction.
@@ -326,10 +330,13 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 		decodedInstr->decodedReg.raw =
 			decodeFuncs[decodedInstr->decodedReg.bits.opcodeRegDecode]
 				(next->instructions[nextInstr]);
-
+	if ((decodedInstr->opcode == HW_MFPR) || (decodedInstr->opcode == HW_MFPR))
+		function = decodedInstr->type_hint_index;
+	else
+		function = decodedInstr->function;
 	decodedInstr->pipeline = AXP_InstructionPipeline(
 										decodedInstr->opcode,
-										decodedInstr->function);
+										function);
 
 	/*
 	 * Decode destination register
@@ -1586,69 +1593,69 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 * Ibox IPRs (RO and RW)
 		 */
 		case AXP_IPR_EXC_ADDR:
-			instr->destv.r.uq = *((u64 *) &cpu->excAddr);
+			AXP_IBOX_READ_EXC_ADDR(instr->destv.r.uq, cpu);
 			break;
 
 		case AXP_IPR_IVA_FORM:
-			instr->destv.r.uq = *((u64 *) &cpu->ivaForm);
+			AXP_IBOX_READ_IVA_FORM(instr->destv.r.uq, cpu);
 			break;
 
-		case AXP_IPR_CM:		/* Only the CM part of the IER_CM IPR */
-			instr->destv.r.uq = *((u64 *) &cpu->ierCm) & 0x0000000000000018ll;
+		case AXP_IPR_CM:
+			AXP_IBOX_READ_CM(instr->destv.r.uq, cpu);
 			break;
 
-		case AXP_IPR_IER:		/* Only the IER part of the IER_CM IPR */
-			instr->destv.r.uq = *((u64 *) &cpu->ierCm) & 0x00000000ffffe000ll;
+		case AXP_IPR_IER:
+			AXP_IBOX_READ_IER(instr->destv.r.uq, cpu);
 			break;
 
-		case AXP_IPR_IER_CM:	/* The entire IER_CM register */
-			instr->destv.r.uq = *((u64 *) &cpu->ierCm);
+		case AXP_IPR_IER_CM:
+			AXP_IBOX_READ_IER_CM(instr->destv.r.uq, cpu);
 			break;
 
 		case AXP_IPR_SIRR:
-			instr->destv.r.uq = *((u64 *) &cpu->sirr);
+			AXP_IBOX_READ_SIRR(instr->destv.r.uq, cpu);
 			break;
 
 		case AXP_IPR_ISUM:
-			instr->destv.r.uq = *((u64 *) &cpu->iSum);
+			AXP_IBOX_READ_ISUM(instr->destv.r.uq, cpu);
 			break;
 
 		case AXP_IPR_EXC_SUM:
-			instr->destv.r.uq = *((u64 *) &cpu->excSum);
+			AXP_IBOX_READ_EXC_SUM(instr->destv.r.uq, cpu);
 			break;
 
 		case AXP_IPR_PAL_BASE:
-			instr->destv.r.uq = cpu->palBase.pal_base_pc;
+			AXP_IBOX_READ_PAL_BASE(instr->destv.r.uq, cpu);
 			break;
 
 		case AXP_IPR_I_CTL:
-			instr->destv.r.uq = *((u64 *) &cpu->iCtl);
+			AXP_IBOX_READ_I_CTL(instr->destv.r.uq, cpu);
 			break;
 
 		case AXP_IPR_PCTR_CTL:
-			instr->destv.r.uq = *((u64 *) &cpu->pCtrCtl);
+			AXP_IBOX_READ_PCTR_CTL(instr->destv.r.uq, cpu);
 			break;
 
 		case AXP_IPR_I_STAT:
-			instr->destv.r.uq = *((u64 *) &cpu->iStat);
+			AXP_IBOX_READ_I_STAT(instr->destv.r.uq, cpu);
 			break;
 
 		/*
 		 * Mbox IPRs (RO and RW)
 		 */
 		case AXP_IPR_MM_STAT:
-			instr->destv.r.uq = *((u64 *) &cpu->mmStat);
+			AXP_MBOX_READ_MM_STAT(instr->destv.r.uq, cpu);
 			break;
 
 		case AXP_IPR_DC_STAT:
-			instr->destv.r.uq = *((u64 *) &cpu->dcStat);
+			AXP_MBOX_READ_DC_STAT(instr->destv.r.uq, cpu);
 			break;
 
 		/*
 		 * Cbox IPR (RW)
 		 */
 		case AXP_IPR_C_DATA:
-			instr->destv.r.uq = *((u64 *) &cpu->cData);
+			AXP_CBOX_READ_C_DATA(instr->destv.r.uq, cpu);
 			break;
 
 		/*
@@ -1719,26 +1726,25 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		case AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASN:
 		case AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER:
 		case AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER_ASN:
-			instr->destv.r.uq = *((u64 *) &cpu->pCtx);
+			AXP_IBOX_READ_PCTX(instr->destv.r.uq, cpu);
 			break;
 
 		/*
 		 * Ebox IPRS (RO and RW)
 		 */
 		case AXP_IPR_CC:
-			instr->destv.r.uq = *((u64 *) &cpu->cc);
+			AXP_EBOX_READ_CC(instr->destv.r.uq, cpu);
 			break;
 
 		case AXP_IPR_VA:
-			instr->destv.r.uq = cpu->va;
+			AXP_EBOX_READ_VA(instr->destv.r.uq, cpu);
 			break;
 
 		case AXP_IPR_VA_FORM:
-			instr->destv.r.uq = *((u64 *) &cpu->vaForm);
+			AXP_EBOX_READ_VA_FORM(instr->destv.r.uq, cpu);
 			break;
 
 		default:
-			/* TODO: Should we generate an exception? */
 			break;
 	}
 
@@ -1788,7 +1794,6 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64		tempIPR;
 
 	/*
 	 * Before we do anything, we need to lock the appropriate IPR mutex.
@@ -1816,11 +1821,11 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 * Ibox IPRs (RW, WO, and W)
 		 */
 		case AXP_IPR_ITB_TAG:
-			*((u64 *) &cpu->itbTag) = instr->src1v.r.uq;
+			AXP_IBOX_WRITE_ITB_TAG(instr->src1v.r.uq, cpu);
 			break;
 
 		case AXP_IPR_ITB_PTE:
-			*((u64 *) &cpu->itbPte) = instr->src1v.r.uq;
+			AXP_IBOX_WRITE_ITB_PTE(instr->src1v.r.uq, cpu);
 
 			/*
 			 * Retiring this instruction causes the TAG and PTE to be written
@@ -1852,7 +1857,7 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			break;
 
 		case AXP_IPR_ITB_IS:
-			*((u64 *) &cpu->itbIs) = instr->src1v.r.uq;
+			AXP_IBOX_WRITE_ITB_IS(instr->src1v.r.uq, cpu);
 
 			/*
 			 * Writing to it clears the ITB PTE entries that matches the ITB_IS
@@ -1862,52 +1867,97 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			break;
 
 
-		case AXP_IPR_CM:		/* Only the CM part of the IER_CM IPR */
-			tempIPR = *((u64 *) &cpu->ierCm) & ~0x0000000000000018ll;
-			*((u64 *) &cpu->ierCm) =
-					tempIPR | (instr->src1v.r.uq & 0x0000000000000018ll)
+		case AXP_IPR_CM:
+			AXP_IBOX_WRITE_CM(instr->src1v.r.uq, cpu);
 			break;
 
-		case AXP_IPR_IER:		/* Only the IER part of the IER_CM IPR */
-			tempIPR = *((u64 *) &cpu->ierCm) & ~0x00000000ffffe000ll;
-			*((u64 *) &cpu->ierCm) =
-					tempIPR | (instr->src1v.r.uq & 0x00000000ffffe000ll);
+		case AXP_IPR_IER:
+			AXP_IBOX_WRITE_IER(instr->src1v.r.uq, cpu);
 			break;
 
-		case AXP_IPR_IER_CM:	/* The entire IER_CM IPR */
-			*((u64 *) &cpu->ierCm) = instr->src1v.r.uq;
+		case AXP_IPR_IER_CM:
+			AXP_IBOX_WRITE_IER_CM(instr->src1v.r.uq, cpu);
 			break;
 
 		case AXP_IPR_SIRR:
-			*((u64 *) &cpu->sirr) = instr->src1v.r.uq;
+			AXP_IBOX_WRITE_SIRR(instr->src1v.r.uq, cpu);
 			break;
 
 		case AXP_IPR_HW_INT_CLR:
-			*((u64 *) &cpu->hwIntClr) = instr->src1v.r.uq;
+			AXP_IBOX_WRITE_HW_INT_CLR(instr->src1v.r.uq, cpu);
 			/* TODO: Must we do more to actually clear the hardware interrupts */
 			break;
 
 		case AXP_IPR_PAL_BASE:
-			cpu->palBase.pal_base_pc = instr->src1v.r.uq;
+			AXP_IBOX_WRITE_PAL_BASE(instr->src1v.r.uq, cpu);
 			break;
 
 		case AXP_IPR_I_CTL:
+			AXP_IBOX_WRITE_I_CTL(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_IC_FLUSH_ASM:
+			/* TODO: Pseudo register */
+			break;
+
 		case AXP_IPR_IC_FLUSH:
+			/* TODO: Pseudo register */
+			break;
+
 		case AXP_IPR_PCTR_CTL:
+			AXP_IBOX_WRITE_PCTR_CTL(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_CLR_MAP:
+			/* TODO: Pseudo register */
+			break;
+
 		case AXP_IPR_I_STAT:
+			AXP_IBOX_WRITE_I_STAT(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_SLEEP:
+			/* TODO: Pseudo register */
+			break;
+
 		case AXP_IPR_DTB_TAG0:
+			AXP_MBOX_WRITE_DTB_TAG0(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_DTB_PTE0:
+			AXP_MBOX_WRITE_DTB_PTE0(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_DTB_IS0:
+			AXP_MBOX_WRITE_DTB_IS0(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_DTB_ASN0:
+			AXP_MBOX_WRITE_DTB_ASN0(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_DTB_ALTMODE:
+			AXP_MBOX_WRITE_DTB_ALTMODE(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_M_CTL:
+			AXP_MBOX_WRITE_M_CTL(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_DC_CTL:
+			AXP_MBOX_WRITE_DC_CTL(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_DC_STAT:
+			AXP_MBOX_WRITE_DC_STAT(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_C_DATA:
+			AXP_CBOX_WRITE_C_DATA(instr->src1v.r.uq,cpu);
+			break;
+
 		case AXP_IPR_C_SHFT:
+			AXP_CBOX_WRITE_C_SHFT(instr->src1v.r.uq,cpu);
 			break;
 
 		/*
@@ -1999,7 +2049,6 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			break;
 
 		default:
-			/* TODO: Should we generate an exception? */
 			break;
 	}
 
@@ -2101,7 +2150,6 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 			 */
 			if (rob->excRegMask != NoException)
 			{
-				/* TODO: We need to report the exception for the instruction */
 			}
 			else
 			{

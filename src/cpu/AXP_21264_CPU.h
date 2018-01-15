@@ -166,6 +166,7 @@
  * NOTE: These are CPU generation specific.  The ones below are for the 21264
  * 		 generation of the Digital Alpha AXP CPU.
  */
+#define AXP_NO_FAULTS		0x0000
 #define AXP_DTBM_DOUBLE_3	0x0100
 #define AXP_DTBM_DOUBLE_4	0x0180
 #define AXP_FEN				0x0200
