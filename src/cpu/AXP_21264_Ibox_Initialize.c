@@ -28,9 +28,77 @@
 #include "AXP_21264_Ibox.h"
 
 /*
+ * AXP_21264_Ibox_ResetRegMap
+ *	This function is called to [re]set the virtual to physical register
+ *	mapping.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *		processor.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	None.
  */
-void AXP_21264_Ibox_ResetRegMap(cpu)
+void AXP_21264_Ibox_ResetRegMap(AXP_21264_CPU *cpu)
 {
+	int ii;
+
+	/*
+	 * First set up the mapping:
+	 *	R0 --> PR0, R1 --> PR1, ..., R38 --> PR38, R39 --> PR39
+	 *	F0 --> PF0, F1 --> PF1, ..., F30 --> PF30, F31 --> PF31
+	 *
+	 * NOTE:	R32 to R39 are PALshadow registers.
+	 */
+	for (ii = 0; ii < AXP_MAX_INT_REGISTERS; ii++)
+	{
+
+		/*
+		 * Integer registers
+		 */
+		cpu->pr[ii] = 0;
+		cpu->prMap[ii].pr = ii;
+		cpu->prMap[ii].prevPr = AXP_UNMAPPED_REG;
+		cpu->prState[ii] = Valid;
+
+		if (ii < AXP_MAX_FP_REGISTERS)
+		{
+
+			/*
+			 * Floating-point registers
+			 */
+			cpu->pf[ii] = 0;
+			cpu->pfMap[ii].pr = ii;
+			cpu->pfMap[ii].prevPr = AXP_UNMAPPED_REG;
+			cpu->pfState[ii] = Valid;
+		}
+	}
+
+	/*
+	 * The remaining registers are added to the free list.
+	 */
+	cpu->prFlStart = 0;
+	cpu->prFlEnd = AXP_I_FREELIST_SIZE - 1;
+	for (ii = 0; ii < AXP_I_FREELIST_SIZE; ii++)
+	{
+		cpu->prFreeList[ii] = AXP_MAX_INT_REGISTERS + ii;
+		cpu->prState[ii] = Free;
+	}
+	cpu->pfFlStart = 0;
+	cpu->pfFlEnd = AXP_F_FREELIST_SIZE - 1;
+	for (ii = 0; ii < AXP_F_FREELIST_SIZE; ii++)
+	{
+		cpu->pfFreeList[ii] = AXP_MAX_FP_REGISTERS + ii;
+		cpu->pfState[ii] = Free;
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
 	return;
 }
 
@@ -75,6 +143,8 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 	cpu->globalPathHistory = 0;
 
 	/*
+	 * The Register Map is reset either when the CPU is initialized or when
+	 * something is written to the CLR_MAP Pseudo-register.
 	 */
 	AXP_21264_Ibox_ResetRegMap(cpu);
 

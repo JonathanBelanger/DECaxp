@@ -109,11 +109,13 @@
 #define AXP_ICB_INS_CNT			16
 #define AXP_21264_PAGE_SIZE		8192	/* 8KB page size */
 #define AXP_21264_MEM_BITS		44
-#define AXP_INT_PHYS_REG		AXP_MAX_REGISTERS + AXP_SHADOW_REG + AXP_RESULTS_REG - 1
-#define AXP_FP_PHYS_REG			AXP_MAX_REGISTERS + AXP_RESULTS_REG - 1
+#define AXP_MAX_INT_REGISTERS	(AXP_MAX_REGISTERS + AXP_SHADOW_REG)
+#define AXP_MAX_FP_REGISTERS	AXP_MAX_REGISTERS
+#define AXP_INT_PHYS_REG		80
+#define AXP_FP_PHYS_REG			72
 #define AXP_UNMAPPED_REG		31	/* R31 and F31 are never renamed/mapped */
-#define AXP_I_FREELIST_SIZE		AXP_INT_PHYS_REG - AXP_MAX_REGISTERS - 1
-#define AXP_F_FREELIST_SIZE		AXP_FP_PHYS_REG - AXP_MAX_REGISTERS - 1
+#define AXP_I_FREELIST_SIZE		(AXP_INT_PHYS_REG - AXP_MAX_INT_REGISTERS)
+#define AXP_F_FREELIST_SIZE		(AXP_FP_PHYS_REG - AXP_MAX_FP_REGISTERS)
 #define AXP_INFLIGHT_FETCHES	20
 #define AXP_INFLIGHT_MAX		80
 #define AXP_MBOX_QUEUE_LEN		32
@@ -133,15 +135,17 @@
  * 	in decreasing order of priority.
  *
  *		Entry Name		Type		Offset	Description
- *		DTBM_DOUBLE_3	Fault		0x100	Dstream TB miss on virtual page table
- *											entry fetch.  Use three-level flow.
- *		DTBM_DOUBLE_4	Fault		0x180	Dstream TB miss on virtual page table
- *											entry fetch.  Use four-level flow.
+ *		DTBM_DOUBLE_3	Fault		0x100	Dstream TB miss on virtual page
+ *											table entry fetch.  Use three-level
+ *											flow.
+ *		DTBM_DOUBLE_4	Fault		0x180	Dstream TB miss on virtual page
+ *											table entry fetch.  Use four-level
+ *											flow.
  *		FEN				Fault		0x200	Floating point disabled.
  *		UNALIGNED		Fault		0x280	Unaligned Dstream reference.
  *		DTBM_SINGLE		Fault		0x300	Dstream TB miss.
- *		DFAULT			Fault		0x380	Dstream fault or virtual address sign
- *											check error.
+ *		DFAULT			Fault		0x380	Dstream fault or virtual address
+ *											sign check error.
  *		OPCDEC			Fault		0x400	Illegal opcode or function field:
  *											- Opcode 1, 2, 3, 4, 5, 6 or 7
  *											- Opcode 0x19, 0x1b, 0x1d, 0x1e or
@@ -445,7 +449,7 @@ typedef struct
 	u32						prFreeList[AXP_I_FREELIST_SIZE];
 	u32						prFlStart;
 	u32						prFlEnd;
-	AXP_21264_REG_MAP		prMap[AXP_MAX_REGISTERS];
+	AXP_21264_REG_MAP		prMap[AXP_MAX_INT_REGISTERS];
 	AXP_21264_REG_STATE		prState[AXP_INT_PHYS_REG];
 
 	/*
@@ -499,7 +503,7 @@ typedef struct
 	u32						pfFreeList[AXP_F_FREELIST_SIZE];
 	u32						pfFlStart;
 	u32						pfFlEnd;
-	AXP_21264_REG_MAP		pfMap[AXP_MAX_REGISTERS];
+	AXP_21264_REG_MAP		pfMap[AXP_MAX_FP_REGISTERS];
 	AXP_21264_REG_STATE		pfState[AXP_FP_PHYS_REG];
 
 	/*

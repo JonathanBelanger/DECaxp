@@ -2828,7 +2828,7 @@ OP_SEXTB:
 OP_HW_MTPR:
 	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
-	instr->excRegMask = AXP_HWHPTR(cpu, instr);
+	instr->excRegMask = AXP_HWMTPR(cpu, instr);
 	goto COMPLETION_OP;
 
 OP_HW_RET:

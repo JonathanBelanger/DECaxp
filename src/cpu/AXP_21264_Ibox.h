@@ -58,19 +58,10 @@ void AXP_Branch_Direction(
 				bool taken,
 				bool localTaken,
 				bool globalTaken);
-AXP_INS_TYPE AXP_InstructionFormat(AXP_INS_FMT inst);
 void AXP_ReturnIQEntry(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
 void AXP_ReturnFQEntry(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
-void AXP_21264_AddVPC(AXP_21264_CPU *, AXP_PC);
-AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *, u32);
-AXP_PC AXP_21264_GetPALBaseVPC(AXP_21264_CPU *, u64);
-AXP_PC AXP_21264_GetVPC(AXP_21264_CPU *, u64, u8);
-AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *);
-AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *);
-AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *, i64);
 void AXP_21264_Ibox_Event(AXP_21264_CPU *, u32, AXP_PC, u64, u8, u8, bool, bool);
 void AXP_21264_Ibox_UpdateIcache(AXP_21264_CPU *, u64, u8 *, u8);
-bool AXP_21264_Ibox_Init(AXP_21264_CPU *);
 void *AXP_21264_IboxMain(void *);
 
 #endif /* _AXP_21264_IBOX_DEFS_ */

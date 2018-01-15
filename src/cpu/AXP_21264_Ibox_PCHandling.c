@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017-2018.
+ * Copyright (C) Jonathan D. Belanger 2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -17,91 +17,12 @@
  * Description:
  *
  *	This source file contains the functions needed to implement the
- *	functionality of the Ibox.
+ *	PC handling functionality of the Ibox.
  *
  * Revision History:
  *
- *	V01.000		10-May-2017	Jonathan D. Belanger
+ *	V01.000		15-Jan-2018	Jonathan D. Belanger
  *	Initially written.
- *
- *	V01.001		14-May-2017	Jonathan D. Belanger
- *	Cleaned up some compiler errors.  Ran some tests, and corrected some coding
- *	mistakes.  The prediction code correctly predicts a branch instruction
- *	between 95.0% and 99.1% of the time.
- *
- *	V01.002		20-May-2017	Jonathan D. Belanger
- *	Did a bit of reorganization.  This module will contain all the
- *	functionality that is described as being part of the Ibox.  I move the
- *	prediction code here.
- *
- *	V01.003		22-May-2017	Jonathan D. Belanger
- *	Moved the main() function out of this module and into its own.
- *
- *	V01.004		24-May-2017	Jonathan D. Belanger
- *	Added some instruction cache (icache) code and definitions into this code.
- *	The iCache structure should be part of the CPU structure and the iCache
- *	code should not be adding a cache entry on a miss.  There should be a
- *	separate fill cache function.  Also, the iCache look-up code should return
- *	the requested instructions on a hit.
- *
- *	V01.005		01-Jun-2017	Jonathan D. Belanger
- *	Added a function to add an Icache line/block.  There are a couple to do
- *	items for ASM and ASN in this function.
- *
- *	V01.006		11-Jun-2017	Jonathan D. Belanger
- *	Started working on the instruction decode and register renaming code.
- *
- *	V01.007		12-Jun-2017	Jonathan D. Belanger
- *	Forgot to include the generation of a unique ID (8-bits long) to associate
- *	with each decoded instruction.
- *	BTW: We need a better way to decode an instruction.  The decoded
- *	instruction does not require the architectural register number, so we
- *	should not save them.  Also, renaming can be done while we are decoding the
- *	instruction.  We are also going to have to special case some instructions,
- *	such as PAL instructions, CMOVE, and there are exceptions for instruction
- *	types (Ra is a destination register for a Load, but a source register for a
- *	store.
- *
- *	V01.008		15-Jun-2017	Jonathan D. Belanger
- *	Finished defining structure array to be able to normalize how a register is
- *	used in an instruction.  Generally speaking, register 'c' (Rc or Fc) is a
- *	destination register.  In load operations, register 'a' (Ra or Fa) is the
- *	destination register.  Register 'b' (Rb or Fb) is never used as a
- *	designation (through I have implemented provisions for this).
- *	Unfortunately, sometimes a register is not used, or 'b' may be source 1 and
- *	other times it is source 2.  Sometimes not register is utilized (e.g. MB).
- *	The array structures assist in these differences so that in the end we end
- *	up with a destination (not not), a source 1 (or not), and/or a source 2
- *	(or not) set of registers.  If we have a destination register, then
- *	register renaming needs to allocate a new register.  IF we have source
- *	register, then renaming needs to associate the current register mapping to
- *	this register.
- *
- *	V01.009		16-Jun-2017	Jonathan D. Belanger
- *	Finished the implementation of normalizing registers, as indicated above,
- *	and then mapping them from architectural to physical registers, generating
- *	a new mapping for the destination register.
- *
- *	V01.010		23-Jun-2017	Jonathan D. Belanger
- *	The way I'm handling the Program Counter (PC/VPC) is not correct.  When
- *	instructions are decoded, queued, and executed, their results are not
- *	realized until the instruction is retired.  The Integer Control
- *	instructions currently determine the next PC and set it immediately. not
- *	are retirement.  This is because I tried to do to much in the code that
- *	handles the PC/VPC.  The next PC should only be updated as a part of normal
- *	instruction queuing or instruction retirement.  We should only have one
- *	way to "set" the PC, but other functions to calculate one, based on various
- *	criteria.
- *
- *	V01.011		18-Jul-2017	Jonathan D. Belanger
- *	Updated the instruction decoding code to replace instruction indicated
- *	registers for PALshadow registers when we are in, or going to be in,
- *	PALmode.  Also, do not include floating point registers, as there are no
- *	PALshadow registers for these.
- *
- *	V01.012		15-Jan-2018	Jonathan D. Belanger
- *	Move the instruction decoding functions to their own module.  This was
- *	getting too large for eclipse to handle without crashing.
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Ibox.h"
