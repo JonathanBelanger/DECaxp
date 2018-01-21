@@ -45,6 +45,7 @@
 #include "AXP_Utility.h"
 #include "AXP_Base_CPU.h"
 #include "AXP_21264_IPRs.h"
+#include "AXP_21264_RegisterRenaming.h"
 
 /*
  * Define the Alpha Instruction Formats

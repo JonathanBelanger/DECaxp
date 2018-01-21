@@ -430,6 +430,10 @@ typedef union
 	AXP_IDX_FIELDS	vaIdxInfo;
 } AXP_VA;
 
+#define AXP_VA2PA(paTag, paIdx)					\
+	((((paTag) << 15) & 0xffffffffffff8000) ||	\
+	 (((paIdx) <<  6) & 0x0000000000007fc0))
+
 /*
  * The following macros are used to clear out the 2-bits in a virtual and
  * physical address that are beyond that address by a virtual page, and be able

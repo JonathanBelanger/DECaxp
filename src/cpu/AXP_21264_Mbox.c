@@ -429,9 +429,52 @@ void AXP_21264_Mbox_CboxCompl(
 {
 	bool			signalCond = false;
 	u8				entry = abs(lqSqEntry) - 1;
+	u64				retData;
 
 	/*
-	 * First, lock the Mbox mutex.
+	 * TODO: What are we supposed to do with the 'error' parameter.
+	 */
+
+	/*
+	 * Before we do anything, if data was returned, this is done for I/O reads,
+	 * then convert the data supplied on the call to a 64-bit register format.
+	 * This will make the code below a bit simpler.  NOTE: The dataLen
+	 * parameter can only be, 0, 1, 2, 4, 8.
+	 */
+	switch (dataLen)
+	{
+		case 0:
+			retData = 0;
+			break;
+
+		case 1:
+			retData = *((u64 *) data) & AXP_LOW_BYTE;
+			break;
+
+		case 2:
+			retData = *((u64 *) data) & AXP_LOW_WORD;
+			break;
+
+		case 4:
+			retData = *((u64 *) data) & AXP_LOW_LONG;
+			break;
+
+		case 8:
+			retData = *((u64 *) data);
+			break;
+
+		default:
+			printf(
+				"\n%%DECAXP-F-UNEXLEN, Unexpected data length returned from "
+				"Cbox, %d at %s, line %d\n",
+				dataLen,
+				__FILE__,
+				__LINE__);
+			break;
+	}
+
+	/*
+	 * Now, lock the Mbox mutex.
 	 */
 	pthread_mutex_lock(&cpu->mBoxMutex);
 
@@ -463,12 +506,13 @@ void AXP_21264_Mbox_CboxCompl(
 		/*
 		 * We need to signal the Mbox if the entry was in a pending Cbox state.
 		 * If so, we need to change the state to Read Pending.
-		 *
-		 * TODO: Need to process the data for I/O loads.
 		 */
 		signalCond = lqEntry->state == CboxPending;
 		if (signalCond == true)
 			lqEntry->state = LQReadPending;
+
+		if (lqEntry->IOflag == true)
+			lqEntry->IOdata = retData;
 	}
 
 	/*
@@ -713,10 +757,6 @@ void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
 
 	/*
 	 * First, determine the length of the load.
-	 *
-	 * TODO:	This is wrong for Floating Point values.  In memory they need
-	 *			to be in their memory format.  In registers that can be
-	 *			formatted so the CPU can process them.
 	 */
 	switch (lqEntry->instr->opcode)
 	{
@@ -1088,11 +1128,6 @@ void AXP_21264_Mbox_SQ_Init(AXP_21264_CPU *cpu, u8 entry)
 			sqEntry->value = sqEntry->instr->src1v.r.uw;
 			break;
 
-		/*
-		 * TODO:	This is not correct.  We need to determine how 32-bit
-		 * 			floating point values need to be stored (I thin we need to
-		 * 			convert them).
-		 */
 		case STF:
 		case STS:
 			sqEntry->len = 8;
@@ -1262,7 +1297,13 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 				break;
 
 			case LQReadPending:
-				AXP_21264_Mbox_TryCaches(cpu, ii);
+				if (cpu->lq[ii].IOflag == false)
+					AXP_21264_Mbox_TryCaches(cpu, ii);
+				else
+				{
+					cpu->lq[ii]->instr->destv.r.uq = cpu->lq[ii].IOdata;
+					cpu->lq[ii].state = LQComplete;
+				}
 				break;
 
 			default:

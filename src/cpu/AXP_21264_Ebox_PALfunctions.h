@@ -31,6 +31,7 @@
 #include "AXP_Base_CPU.h"
 #include "AXP_21264_Instructions.h"
 #include "AXP_21264_CPU.h"
+#include "AXP_21264_Ibox_PCHandling.h"
 #include "AXP_21264_Mbox.h"
 
 #endif /* _AXP_21264_EBOX_PAL_FUNCTION_DEFS_ */

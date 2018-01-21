@@ -16,7 +16,7 @@
  *
  * Description:
  *
- *	This header file contains definiions normally procided by various system
+ *	This header file contains definitions normally provided by various system
  *	header files.  When editing on my laptop, there is no compiler installed.
  *	This header file defines a series of items to keep the editor's code
  *	analysis happy.
@@ -26,8 +26,11 @@
  *	V01.000		10-May-2017	Jonathan D. Belanger
  *	Initially written.
  */
-#ifndef _AXP_NO_COMP_DEFS_
-#define _AXP_NO_COMP_DEFS_
+#ifndef _AXP_NO_COMPILER_HACK_
+#define _AXP_NO_COMPILER_HACK_	1
+
+#if 0
+
 /*
  * The following definitions are here to keep eclipse happy on my laptop, that
  * does not have gcc on it.
@@ -65,46 +68,17 @@ typedef int pthread_t;
 
 #ifndef FP_SUBNORMAL
 #define FP_SUBNORMAL	-1
-#endif
-
-#ifndef FE_OVERFLOW
 #define FE_OVERFLOW		-2
-#endif
-
-#ifndef FE_UNDERFLOW
 #define FE_UNDERFLOW	-3
-#endif
-
-#ifndef FE_INVALID
 #define FE_INVALID		-4
-#endif
-
-#ifndef FE_TOWARDZERO
 #define FE_TOWARDZERO	1
-#endif
-
-#ifndef FE_DOWNWARD
 #define FE_DOWNWARD		2
-#endif
-
-#ifndef FE_TONEAREST
 #define FE_TONEAREST	3
-#endif
-
-#ifndef FE_UPWARD
 #define FE_UPWARD		4
-#endif
-
-#ifndef FE_DIVBYZERO
 #define FE_DIVBYZERO	5
-#endif
-
-#ifndef FE_INEXACT
 #define FE_INEXACT		6
-#endif
-
-#ifndef FE_ALL_EXCEPT
 #define FE_ALL_EXCEPT	0
+#endif
 
 #ifndef size_t
 typedef int size_t;
@@ -113,5 +87,5 @@ typedef int size_t;
 #ifndef stderr
 #define stderr	1
 #endif
-
-#endif _AXP_NO_COMP_DEFS_
+#endif
+#endif	/* _AXP_NO_COMPILER_HACK_ */

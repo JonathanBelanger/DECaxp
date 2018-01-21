@@ -30,6 +30,7 @@
 #include "AXP_Utility.h"
 #include "AXP_Base_CPU.h"
 #include "AXP_21264_CPU.h"
-#include "AXP_21264_Ibox.h"
+#include "AXP_21264_Cache.h"
+#include "AXP_21264_Ibox_PCHandling.h"
 
 #endif /* _AXP_21264_EBOX_MISC_DEFS_ */

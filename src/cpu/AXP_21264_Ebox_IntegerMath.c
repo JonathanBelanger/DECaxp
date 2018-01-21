@@ -27,8 +27,6 @@
  *	V01.001		25-Jun-2017	Jonathan D. Belanger
  *	Registers are no longer just 64-bit values, but have been described as a
  *	structure to aid in coding (no more masks and shifts).
- *
- * TODO:	We need to look at handling Arithmetic Traps.
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Ebox_IntegerMath.h"
@@ -488,6 +486,41 @@ AXP_EXCEPTIONS AXP_CMPULE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 }
 
 /*
+ * AXP_CMPULT
+ *	This function implements the Integer Arithmetic Compare Unsigned Quadword
+ *	Less Than instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_CMPULT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	u64 Rbv = instr->useLiteral ? instr->literal : instr->src2v.r.uq;
+
+	/*
+	 * Implement the instruction
+	 */
+	instr->destv.r.uq = instr->src1v.r.uq < Rbv ? 1 : 0;
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
  * AXP_CTLZ
  *	This function implements the Integer Arithmetic Count Leading Zero
  *	instruction of the Alpha AXP processor.
@@ -521,6 +554,48 @@ AXP_EXCEPTIONS AXP_CTLZ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		if ((Rbv & mostSigBit) != 0)
 			break;
 		instr->destv.r.uq++;
+		mostSigBit >>= 1;
+	}
+
+	/*
+	 * Return back to the caller with any exception that may have occurred.
+	 */
+	return(NoException);
+}
+
+/*
+ * AXP_CTPOP
+ *	This function implements the Integer Arithmetic Count Population
+ *	instruction of the Alpha AXP processor.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ * 	instr:
+ * 		A pointer to a structure containing the information needed to execute
+ * 		this instruction.
+ *
+ * Output Parameters:
+ * 	instr:
+ * 		The contents of this structure are updated, as needed.
+ *
+ * Return Value:
+ * 	NoException:		Normal successful completion.
+ */
+AXP_EXCEPTIONS AXP_CTPOP(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+{
+	u64 Rbv = instr->useLiteral ? instr->literal : instr->src2v.r.uq;
+	u64 mostSigBit = 0x8000000000000000ll;
+
+	/*
+	 * Implement the instruction
+	 */
+	instr->destv.r.uq = 0;
+	while (mostSigBit != 0)
+	{
+		if ((Rbv & mostSigBit) != 0)
+			instr->destv.r.uq++;
 		mostSigBit >>= 1;
 	}
 

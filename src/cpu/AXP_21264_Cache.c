@@ -489,8 +489,11 @@ void AXP_tbis(AXP_21264_CPU *cpu, u64 va, bool dtb)
  *	None.
  *
  * Return Value:
- *	false:	If the process does not have the requested access.
- *	true:	If the process does have the access requested.
+ *	NoException:	Requested VA access in current mode is valid.
+ *	FaultOnRead:	A request to read to VA in the current mode is not valid.
+ *	FaultOnWrite:	A request to write from VA in the current mode is not valid.
+ *	FaultOnExecute:	A request to execute instructions at VA in the current mode
+ *					is not valid.
  */
 AXP_EXCEPTIONS AXP_21264_checkMemoryAccess(
 					AXP_21264_CPU *cpu,
@@ -500,141 +503,131 @@ AXP_EXCEPTIONS AXP_21264_checkMemoryAccess(
 	AXP_EXCEPTIONS	retVal = NoException;
 
 	/*
-	 * If the valid bit is not set, then by default, the process does not have
-	 * access.
+	 * Determine access based on the current mode.  Then within each mode,
+	 * check that the requested access is allowed.
 	 */
-	if (tlb->valid == true)
+	switch(cpu->ierCm.cm)
 	{
+		case AXP_CM_KERNEL:
+			switch(acc)
+			{
+				case None:
+					break;
 
-		/*
-		 * Determine access based on the current mode.  Then within each mode,
-		 * check that the requested access is allowed.
-		 */
-		switch(cpu->ierCm.cm)
-		{
-			case AXP_CM_KERNEL:
-				switch(acc)
-				{
-					case None:
-						break;
+				case Read:
+					if ((tlb->kre == 0) || (tlb->faultOnRead == 1))
+						retVal = FaultOnRead;
+					break;
 
-					case Read:
-						if ((tlb->kre == 0) || (tlb->faultOnRead == 1))
-							retVal = FaultOnRead;
-						break;
+				case Write:
+					if ((tlb->kwe == 0) || (tlb->faultOnWrite == 1))
+						retVal = FaultOnWrite;
+					break;
 
-					case Write:
-						if ((tlb->kwe == 0) || (tlb->faultOnWrite == 1))
-							retVal = FaultOnWrite;
-						break;
+				case Execute:
+					if ((tlb->kre == 0) || (tlb->faultOnExecute == 1))
+						retVal = FaultOnExecute;
+					break;
 
-					case Execute:
-						if ((tlb->kre == 0) || (tlb->faultOnExecute == 1))
-							retVal = FaultOnExecute;
-						break;
+				case Modify:
+					if ((tlb->kwe == 0) || (tlb->faultOnWrite == 1))
+						retVal = FaultOnWrite;
+					else if ((tlb->kre == 0) || (tlb->faultOnRead == 1))
+						retVal = FaultOnRead;
+					break;
+			}
+			break;
 
-					case Modify:	/* TODO: Is this correct? */
-						if (((tlb->kwe == 0) || (tlb->kre == 0)) ||
-							((tlb->faultOnWrite == 1) ||
-							 (tlb->faultOnRead == 1)))
-						   retVal = AccessControlViolation;
-						break;
-				}
-				break;
+		case AXP_CM_EXEC:
+			switch(acc)
+			{
+				case None:
+					break;
 
-			case AXP_CM_EXEC:
-				switch(acc)
-				{
-					case None:
-						break;
+				case Read:
+					if ((tlb->ere == 0) || (tlb->faultOnRead == 1))
+						retVal = FaultOnRead;
+					break;
 
-					case Read:
-						if ((tlb->ere == 0) || (tlb->faultOnRead == 1))
-							retVal = FaultOnRead;
-						break;
+				case Write:
+					if ((tlb->ewe == 0) || (tlb->faultOnWrite == 1))
+						retVal = FaultOnWrite;
+					break;
 
-					case Write:
-						if ((tlb->ewe == 0) || (tlb->faultOnWrite == 1))
-							retVal = FaultOnWrite;
-						break;
+				case Execute:
+					if ((tlb->ere == 0) || (tlb->faultOnExecute == 1))
+						retVal = FaultOnExecute;
+					break;
 
-					case Execute:
-						if ((tlb->ere == 0) || (tlb->faultOnExecute == 1))
-							retVal = FaultOnExecute;
-						break;
+				case Modify:
+					if ((tlb->ewe == 0) || (tlb->faultOnWrite == 1))
+						retVal = FaultOnWrite;
+					else if ((tlb->ere == 0) || (tlb->faultOnRead == 1))
+						retVal = FaultOnRead;
+					break;
+			}
+			break;
 
-					case Modify:
-						if (((tlb->ewe == 0) || (tlb->ere == 0)) ||
-							((tlb->faultOnWrite == 1) ||
-							 (tlb->faultOnRead == 1)))
-							retVal = AccessControlViolation;
-						break;
-				}
-				break;
+		case AXP_CM_SUPER:
+			switch(acc)
+			{
+				case None:
+					break;
 
-			case AXP_CM_SUPER:
-				switch(acc)
-				{
-					case None:
-						break;
+				case Read:
+					if ((tlb->sre == 0) || (tlb->faultOnRead == 1))
+						retVal = FaultOnRead;
+					break;
 
-					case Read:
-						if ((tlb->sre == 0) || (tlb->faultOnRead == 1))
-							retVal = FaultOnRead;
-						break;
+				case Write:
+					if ((tlb->swe == 0) || (tlb->faultOnWrite == 1))
+						retVal = FaultOnWrite;
+					break;
 
-					case Write:
-						if ((tlb->swe == 0) || (tlb->faultOnWrite == 1))
-							retVal = FaultOnWrite;
-						break;
+				case Execute:
+					if ((tlb->sre == 0) || (tlb->faultOnExecute == 1))
+						retVal = FaultOnExecute;
+					break;
 
-					case Execute:
-						if ((tlb->sre == 0) || (tlb->faultOnExecute == 1))
-							retVal = FaultOnExecute;
-						break;
+				case Modify:
+					if ((tlb->swe == 0) || (tlb->faultOnWrite == 1))
+						retVal = FaultOnWrite;
+					else if ((tlb->sre == 0) || (tlb->faultOnRead == 1))
+						retVal = FaultOnRead;
+					break;
+			}
+			break;
 
-					case Modify:
-						if (((tlb->swe == 0) || (tlb->sre == 0)) ||
-							((tlb->faultOnWrite == 1) ||
-							 (tlb->faultOnRead == 1)))
-							retVal = AccessControlViolation;
-						break;
-				}
-				break;
+		case AXP_CM_USER:
+			switch(acc)
+			{
+				case None:
+					break;
 
-			case AXP_CM_USER:
-				switch(acc)
-				{
-					case None:
-						break;
+				case Read:
+					if ((tlb->ure == 0) || (tlb->faultOnRead == 1))
+						retVal = FaultOnRead;
+					break;
 
-					case Read:
-						if ((tlb->ure == 0) || (tlb->faultOnRead == 1))
-							retVal = FaultOnRead;
-						break;
+				case Write:
+					if ((tlb->uwe == 0) || (tlb->faultOnWrite == 1))
+						retVal = FaultOnWrite;
+					break;
 
-					case Write:
-						if ((tlb->uwe == 0) || (tlb->faultOnWrite == 1))
-							retVal = FaultOnWrite;
-						break;
+				case Execute:
+					if ((tlb->ure == 0) || (tlb->faultOnExecute == 1))
+						retVal = FaultOnExecute;
+					break;
 
-					case Execute:
-						if ((tlb->ure == 0) || (tlb->faultOnExecute == 1))
-							retVal = FaultOnExecute;
-						break;
-
-					case Modify:
-						if (((tlb->uwe == 0) || (tlb->ure == 0)) ||
-							((tlb->faultOnWrite == 1) ||
-							 (tlb->faultOnRead == 1)))
-							retVal = AccessControlViolation;
-						break;
-				}
-				break;
-		}	/* switch(cpu->ierCm.cm) */
-	}		/* if (tlb->valid == true) */
-	else
-		retVal = AccessControlViolation;
+				case Modify:
+					if ((tlb->uwe == 0) || (tlb->faultOnWrite == 1))
+						retVal = FaultOnWrite;
+					else if ((tlb->ure == 0) || (tlb->faultOnRead == 1))
+						retVal = FaultOnRead;
+					break;
+			}
+			break;
+	}	/* switch(cpu->ierCm.cm) */
 
 	/*
 	 * Return what we found back to the caller.
@@ -720,8 +713,10 @@ u64 AXP_va2pa(
 	/*
 	 * Initialize the output parameters.
 	 */
-	*_asm = false;
-	*fault = 0;
+	if (_asm != NULL)
+		*_asm = false;
+	if (fault != NULL)
+		*fault = 0;
 	*memChk = NoException;
 
 	/*
@@ -740,20 +735,23 @@ u64 AXP_va2pa(
 		if ((spe & AXP_SPE2_BIT) && (vaSpe.spe2.spe2 == AXP_SPE2_VA_VAL))
 		{
 			pa = va & AXP_SPE2_VA_MASK;
-			*_asm = false;
+			if (_asm != NULL)
+				*_asm = false;
 			return(pa);
 		}
 		else if ((spe & AXP_SPE1_BIT) && (vaSpe.spe1.spe1 == AXP_SPE1_VA_VAL))
 		{
 			pa = ((va & AXP_SPE1_VA_MASK) |
 				  ((va & AXP_SPE1_VA_40) ? AXP_SPE1_PA_43_41 : 0));
-			*_asm = false;
+			if (_asm != NULL)
+				*_asm = false;
 			return(pa);
 		}
 		else if ((spe & AXP_SPE0_BIT) && (vaSpe.spe0.spe0 == AXP_SPE0_VA_VAL))
 		{
 			pa = va & AXP_SPE0_VA_MASK;
-			*_asm = false;
+			if (_asm != NULL)
+				*_asm = false;
 			return(pa);
 		}
 	}
@@ -769,7 +767,7 @@ u64 AXP_va2pa(
 	 * We were unable to find a TLB entry for this virtual address.  We need to
 	 * call the PALcode to fill in for the TLB Miss.
 	 */
-	if (tlb == NULL)
+	if ((tlb == NULL) && (fault != NULL))
 	{
 		if (cpu->tbMissOutstanding == true)
 		{
@@ -800,19 +798,23 @@ u64 AXP_va2pa(
 		*memChk = AXP_21264_checkMemoryAccess(cpu, tlb, acc);
 		if (*memChk != NoException)
 		{
-			if (dtb == true)
+			if (fault != NULL)
 			{
-				*fault = AXP_DFAULT;
-			}
-			else
-			{
-				*fault = AXP_IACV;
+				if (dtb == true)
+				{
+					*fault = AXP_DFAULT;
+				}
+				else
+				{
+					*fault = AXP_IACV;
+				}
 			}
 		}
 		else
 		{
 			pa = tlb->physAddr | (va & tlb->keepMask);
-			*_asm = tlb->_asm;
+			if (_asm != NULL)
+				*_asm = tlb->_asm;
 		}
 	}
 
@@ -827,8 +829,8 @@ u64 AXP_va2pa(
 /****************************************************************************/
 /*																			*/
 /*	The following code is utilized to manage the Dcache within the Digital	*/
-/*	Alpha AXP processor.  It is consistent with the 21264 generation of		*/
-/*	this CPU.  It may also be applicable for other generations.				*/
+/*	Alpha AXP 21264 processor.  It is consistent with the 21264 generation	*/
+/*	of this CPU.  It may also be applicable for other generations.			*/
 /*																			*/
 /****************************************************************************/
 
@@ -1201,7 +1203,7 @@ bool AXP_DcacheWrite(
 
 		case 64:
 			memcpy(cpu->dCache[index][set].data, data, len);
-			cpu->dtag[index][set].dirty = true;		/* TODO: Do we need more here? */
+			cpu->dtag[index][set].dirty = true;
 			cpu->dtag[index][set].modified = true;
 			cpu->dtag[index][set].state = Ready;
 			break;
@@ -1306,10 +1308,14 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 			{
 
 				/*
-				 * TODO:	We need to do this differently, as we don't have
-				 *			the real physical address.
+				 * Using the information we have convert the virtual address to
+				 * its physical equivalent.
+				 *
+				 * NOTE:	We don't have to worry about the offset within the
+				 *			block, as we are copying the entire block from its
+				 *			zero offset.
 				 */
-				pa = cpu->ctag[ctagIdx][jj].physTag;
+				pa = AXP_VA2PA(cpu->ctag[ctagIdx][jj].physTag, ctagIdx);
 				/* Update the Bcache with this modified block. */
 				AXP_21264_Bcache_Write(
 					cpu,
@@ -1338,6 +1344,104 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 	pthread_mutex_unlock(&cpu->bCacheMutex);
 	pthread_mutex_unlock(&cpu->dtagMutex);
 	pthread_mutex_unlock(&cpu->dCacheMutex);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_DcacheEvict
+ * 	This function is called to evict a block from the Data Cache.
+ *
+ * Input Parameters:
+ * 	cpu:
+ * 		A pointer to the Digital Alpha AXP 21264 CPU structure containing the
+ * 		Data Cache (dCache) array.
+ * 	va:
+ * 		A value indicating the virtual address of the Dcache block to be
+ * 		evicted.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+void AXP_DcacheEvict(AXP_21264_CPU *cpu, u64 va, AXP_PC pc)
+{
+	AXP_DTAG_BLK		*dtag = NULL;
+	AXP_21264_CBOX_CTAG	*ctag;
+	AXP_DCACHE_BLK		*dcache;
+	AXP_VA				virtAddr = {.va = va};
+	AXP_VA				physAddr;
+	AXP_EXCEPTIONS		exception;
+	u64					pa;
+	int					index = virtAddr.vaIdx.index;
+
+	/*
+	 * Get the physical address associated with the virtual address, if any.
+	 */
+	pa = AXP_va2pa(cpu, va, pc, true, None, NULL, NULL, &exception);
+
+	/*
+	 * If the VA --> PA did not generate an exception,then we have a valid PA
+	 * with which to play.
+	 */
+	if (exception == NoException)
+	{
+		physAddr.va = pa;
+
+		/*
+		 * First we need to lock access to the Dcache and Dtag.
+		 */
+		pthread_mutex_lock(&cpu->dCacheMutex);
+		pthread_mutex_lock(&cpu->dtagMutex);
+		pthread_mutex_lock(&cpu->bCacheMutex);
+
+		if ((cpu->dtag[index][0].valid == true) &&
+			(cpu->dtag[index][0].physTag == physAddr.vaIdxInfo.tag))
+		{
+			dtag = &cpu->dtag[index][0];
+			dcache = &cpu->dCache[index][0];
+			ctag = &cpu->ctag[dtag->ctagIndex][0];
+		}
+		else if ((cpu->dcCtl.set_en == 1) &&
+				 (cpu->dtag[index][1].valid == true) &&
+				 (cpu->dtag[index][1].physTag == physAddr.vaIdxInfo.tag))
+		{
+			dtag = &cpu->dtag[index][1];
+			dcache = &cpu->dCache[index][1];
+			ctag = &cpu->ctag[dtag->ctagIndex][0];
+		}
+
+		if (dtag != NULL)
+		{
+			if (dtag->modified == true)
+				AXP_21264_Bcache_Write(cpu, pa, dcache->data);
+			dtag->set_0_1 = false;
+			dtag->physTag = 0;
+			dtag->dirty = false;
+			dtag->modified = false;
+			dtag->shared = false;
+			dtag->valid = false;
+			ctag->physTag = 0;
+			ctag->dirty = false;
+			ctag->shared = false;
+			ctag->valid = false;
+		}
+
+		/*
+		 * Finally we need to unlock access to the Dcache and Dtag.  Always unlock
+		 * in the reverse order of how they were locked.  Also,  always make sure
+		 * that these locks are locked in the same order where ever both are
+		 * locked.
+		 */
+		pthread_mutex_unlock(&cpu->bCacheMutex);
+		pthread_mutex_unlock(&cpu->dtagMutex);
+		pthread_mutex_unlock(&cpu->dCacheMutex);
+	}
 
 	/*
 	 * Return back to the caller.

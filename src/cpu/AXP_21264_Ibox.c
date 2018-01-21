@@ -108,6 +108,7 @@
 #include "AXP_21264_Ibox_Initialize.h"
 #include "AXP_21264_Ibox_InstructionDecoding.h"
 #include "AXP_21264_Ibox_PCHandling.h"
+#include "AXP_21264_Mbox.h"
 
 /*
  * A local structure used to calculate the PC for a CALL_PAL function.
@@ -726,7 +727,7 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Values:
  *	None.
  */
-void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+void AXP_21264_Ibox_Retire_HW_MTPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_IBOX_PCTX	*pctx = (AXP_IBOX_PCTX *) &cpu->pCtx;
 	u32				ccCtlCounter;
@@ -1282,7 +1283,7 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	 * end).
 	 */
 	start = cpu->robStart;
-	end = (split ? end = cpu->robEnd : AXP_INFLIGHT_MAX);
+	end = (split ? cpu->robEnd : AXP_INFLIGHT_MAX);
 
 	/*
 	 * Set our starting value.  Loop until we reach the end or we find an entry
@@ -1337,7 +1338,7 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 				 * floating-point register.
 				 */
 				if ((rob->decodedReg.bits.dest & AXP_DEST_FLOAT) == AXP_DEST_FLOAT)
-					cpu->pf[rob->dest] = rob->destv;
+					cpu->pf[rob->dest] = rob->destv.fp.uq;
 
 				/*
 				 * If the destination register is not a floating-point
@@ -1347,7 +1348,7 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 				 * do.
 				 */
 				else if (rob->decodedReg.bits.dest != 0)
-					cpu->pr[rob->dest] = rob->destv;
+					cpu->pr[rob->dest] = rob->destv.r.uq;
 
 				/*
 				 * If a store, write it to the Dcache.

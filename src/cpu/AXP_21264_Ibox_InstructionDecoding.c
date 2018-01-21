@@ -42,7 +42,7 @@ static u16 AXP_RegisterDecodingOpcode15_16(AXP_INS_FMT);
 static u16 AXP_RegisterDecodingOpcode17(AXP_INS_FMT);
 static u16 AXP_RegisterDecodingOpcode18(AXP_INS_FMT);
 static u16 AXP_RegisterDecodingOpcode1c(AXP_INS_FMT);
-static void AXP_RenameRegisters(AXP_21264_CPU *, AXP_INSTRUCTION *, u16);
+static void AXP_RenameRegisters(AXP_21264_CPU *, AXP_INSTRUCTION *);
 
 /*
  * The following module specific structure and variable are used to be able to

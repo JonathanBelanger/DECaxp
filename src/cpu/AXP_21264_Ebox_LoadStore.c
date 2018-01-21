@@ -361,27 +361,6 @@ AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 }
 
 /*
- * TODO:	The 21264 does not contain a dedicated lock register, nor are any
- * TODO:	system components required to do so.
- * TODO:
- * TODO:	When a load-lock instruction executed, data is accessed from the
- * TODO:	Dcache (or Bcache).  If there is a cache miss, data is access from
- * TODO:	memory with a RdBlk command.  Its associated cache line is filled
- * TODO:	into the Dcache in the clean state, if it's not already there.
- * TODO:
- * TODO:	When a store-conditional instruction executes, it is allowed to
- * TODO:	succeed if it's associated cache line is still present in the
- * TODO:	Dcache and can be made writable; otherwise it fails.
- * TODO:
- * TODO:	This algorithm is successful because another agent in the system
- * TODO:	writing to the cache line between the load-lock and
- * TODO:	store-conditional cache line would make the cache line invalid.
- * TODO:
- * TODO:	The following code does not take any of this into account and will
- * TODO:	need to be corrected.
- */
-
-/*
  * AXP_LDL_L
  *	This function implements the Load Longword Memory Data into Integer
  *	Register Locked instruction of the Alpha AXP processor.
@@ -507,11 +486,6 @@ AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			instr->slot,
 			vaPrime,
 			instr->src1v.r.ul);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.

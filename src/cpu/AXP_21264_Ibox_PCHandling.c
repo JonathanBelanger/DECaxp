@@ -23,6 +23,11 @@
  *
  *	V01.000		15-Jan-2018	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		20-Jan-2018	Jonathan D. Belanger
+ *	The AXP_21264_GetPALBaseVPC function was not being called.  The
+ *	functionality in this function was somewhat redundant with the
+ *	AXP_21264_GetPALFuncVPC function.  So, the former was removed.
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Ibox.h"
@@ -189,38 +194,6 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 	 * Return the composed VPC it back to the caller.
 	 */
 	return(pc.vpc);
-}
-
-/*
- * AXP_21264_GetPALBaseVPC
- * 	This function is called to get the Virtual Program Counter (VPC) to a
- * 	specific offset from the address specified in the PAL_BASE register.
- *
- * Input Parameters:
- * 	cpu:
- *		A pointer to the structure containing all the fields needed to emulate
- *		an Alpha AXP 21264 CPU.
- *	offset:
- *		An offset value, from PAL_BASE, of the next VPC to be entered into the
- *		VPC list.
- *
- * Output Parameters:
- *	None.
- *
- * Return Value:
- * 	The value that the PC should be set to to call the requested offset.
- */
-AXP_PC AXP_21264_GetPALBaseVPC(AXP_21264_CPU *cpu, u64 offset)
-{
-	u64 pc;
-
-	pc = cpu->palBase.pal_base_pc + offset;
-
-	/*
-	 * Get the VPC set with the correct PALmode bit and return it back to the
-	 * caller.
-	 */
-	return(AXP_21264_GetVPC(cpu, pc, AXP_PAL_MODE));
 }
 
 /*
