@@ -27,6 +27,15 @@
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.345660048" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1968993112" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.32284215" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;G:\git\DECaxp\src\comutl&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;G:\git\DECaxp\src\cpu&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;G:\git\DECaxp\src\system&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;G:\git\DECaxp\src\tst&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\cygwin64\usr&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\cygwin64\lib&quot;"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.2130542345" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols"/>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.40078149" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1580189690" name="UPC" superClass="org.eclipse.cdt.build.core.settings.holder">
@@ -61,4 +70,5 @@
 			<resource resourceType="PROJECT" workspacePath="/DECaxp"/>
 		</configuration>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>

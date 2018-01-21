@@ -210,10 +210,11 @@ AXP_EXCEPTIONS AXP_HWMFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_EXCEPTIONS retVal = NoException;
 
 	/*
-	 * Implement the instruction.
-	 */
-
-	/*
+	 * There is nothing to do here.  Because instructions may be executed out
+	 * of order, the only true view of an IPRs value is at the moment of
+	 * instruction retirement.  This instruction is actually implemented in the
+	 * retirement code in the Ibox.
+	 *
 	 * Indicate that the instruction is ready to be retired.
 	 */
 	instr->state = WaitingRetirement;
@@ -252,10 +253,11 @@ AXP_EXCEPTIONS AXP_HWMTPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_EXCEPTIONS retVal = NoException;
 
 	/*
-	 * Implement the instruction.
-	 */
-
-	/*
+	 * There is nothing to do here.  Because instructions may be executed out
+	 * of order, a value of an IPR should only be stored at the moment of
+	 * instruction retirement.  This instruction is actually implemented in the
+	 * retirement code in the Ibox.
+	 *
 	 * Indicate that the instruction is ready to be retired.
 	 */
 	instr->state = WaitingRetirement;

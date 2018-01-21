@@ -1371,7 +1371,7 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 						break;
 
 					case HW_MTPR:
-						AXP_21264_Ibox_Retire_HW_MFPR(cpu, rob);
+						AXP_21264_Ibox_Retire_HW_MTPR(cpu, rob);
 						break;
 
 					case HW_RET:

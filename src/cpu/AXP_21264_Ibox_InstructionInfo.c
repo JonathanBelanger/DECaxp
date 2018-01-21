@@ -1064,7 +1064,7 @@ FUNC_VAX_CVTF:
 FUNC_VAX_CVTD:
 		if (fpFunc.src == AXP_FP_G)
 		{
-			instr->excRegMask = AXP_CVTDG(cpu, instr);
+			instr->excRegMask = AXP_CVTGD(cpu, instr);
 			goto COMPLETION_OP;
 		}
 		goto RESERVED_OP;

@@ -26,10 +26,9 @@
  *	V01.000		10-May-2017	Jonathan D. Belanger
  *	Initially written.
  */
-#ifndef _AXP_NO_COMPILER_HACK_
-#define _AXP_NO_COMPILER_HACK_	1
+#ifdef USING_ECLIPSE
 
-#if 0
+#warning "Including No Compiler Hacks file."
 
 /*
  * The following definitions are here to keep eclipse happy on my laptop, that
@@ -87,5 +86,5 @@ typedef int size_t;
 #ifndef stderr
 #define stderr	1
 #endif
-#endif
-#endif	/* _AXP_NO_COMPILER_HACK_ */
+
+#endif	/* USING_ECLIPSE */

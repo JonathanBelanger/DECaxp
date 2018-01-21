@@ -1540,7 +1540,7 @@ bool AXP_DcacheRead(
 			va + AXP_DCACHE_DATA_LEN,
 			pa + AXP_DCACHE_DATA_LEN,
 			(u32) lenOver,
-			(void *) (data + len - lenOver),
+			(void *) ((u8 *) data + len - lenOver),
 			NULL);
 		len -= lenOver;
 	}
