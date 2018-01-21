@@ -26,6 +26,8 @@
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Ibox_InstructionInfo.h"
+#include "AXP_21264_Ebox.h"
+#include "AXP_21264_Fbox.h"
 
 /*
  * The following module specific structure and variable contains a list of the
@@ -330,111 +332,169 @@ void AXP_Dispatcher(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	static const int	label[] =
 	{
-		&&OP_CALL_PAL - &&OP_CALL_PAL,
-		&&RESERVED_OP - &&OP_CALL_PAL,
-		&&RESERVED_OP - &&OP_CALL_PAL,
-		&&RESERVED_OP - &&OP_CALL_PAL,
-		&&RESERVED_OP - &&OP_CALL_PAL,
-		&&RESERVED_OP - &&OP_CALL_PAL,
-		&&RESERVED_OP - &&OP_CALL_PAL,
-		&&RESERVED_OP - &&OP_CALL_PAL,
-		&&OP_LDA - &&OP_CALL_PAL,
-		&&OP_LDAH - &&OP_CALL_PAL,
-		&&OP_LDBU - &&OP_CALL_PAL,
-		&&OP_LDQ_U - &&OP_CALL_PAL,
-		&&OP_LDWU - &&OP_CALL_PAL,
-		&&OP_STW - &&OP_CALL_PAL,
-		&&OP_STB - &&OP_CALL_PAL,
-		&&OP_STQ_U - &&OP_CALL_PAL,
-		&&OP_ADDL - &&OP_CALL_PAL,
-		&&OP_AND - &&OP_CALL_PAL,
-		&&OP_MSKBL - &&OP_CALL_PAL,
-		&&OP_MULL - &&OP_CALL_PAL,
-		&&OP_ITOFS - &&OP_CALL_PAL,
-		&&OP_ADDF - &&OP_CALL_PAL,
-		&&OP_ADDS - &&OP_CALL_PAL,
-		&&OP_CVTLQ - &&OP_CALL_PAL,
-		&&OP_TRAPB - &&OP_CALL_PAL,
-		&&OP_HW_MFPR - &&OP_CALL_PAL,
-		&&OP_JMP - &&OP_CALL_PAL,
-		&&OP_HW_LD - &&OP_CALL_PAL,
-		&&OP_SEXTB - &&OP_CALL_PAL,
-		&&OP_HW_MTPR - &&OP_CALL_PAL,
-		&&OP_HW_RET - &&OP_CALL_PAL,
-		&&OP_HW_ST - &&OP_CALL_PAL,
-		&&OP_LDF - &&OP_CALL_PAL,
-		&&OP_LDG - &&OP_CALL_PAL,
-		&&OP_LDS - &&OP_CALL_PAL,
-		&&OP_LDT - &&OP_CALL_PAL,
-		&&OP_STF - &&OP_CALL_PAL,
-		&&OP_STG - &&OP_CALL_PAL,
-		&&OP_STS - &&OP_CALL_PAL,
-		&&OP_STT - &&OP_CALL_PAL,
-		&&OP_LDL - &&OP_CALL_PAL,
-		&&OP_LDQ - &&OP_CALL_PAL,
-		&&OP_LDL_L - &&OP_CALL_PAL,
-		&&OP_LDQ_L - &&OP_CALL_PAL,
-		&&OP_STL - &&OP_CALL_PAL,
-		&&OP_STQ - &&OP_CALL_PAL,
-		&&OP_STL_C - &&OP_CALL_PAL,
-		&&OP_STQ_C - &&OP_CALL_PAL,
-		&&OP_BR - &&OP_CALL_PAL,
-		&&OP_FBEQ - &&OP_CALL_PAL,
-		&&OP_FBLT - &&OP_CALL_PAL,
-		&&OP_FBLE - &&OP_CALL_PAL,
-		&&OP_BSR - &&OP_CALL_PAL,
-		&&OP_FBNE - &&OP_CALL_PAL,
-		&&OP_FBGE - &&OP_CALL_PAL,
-		&&OP_FBGT - &&OP_CALL_PAL,
-		&&OP_BLBC - &&OP_CALL_PAL,
-		&&OP_BEQ - &&OP_CALL_PAL,
-		&&OP_BLT - &&OP_CALL_PAL,
-		&&OP_BLE - &&OP_CALL_PAL,
-		&&OP_BLBS - &&OP_CALL_PAL,
-		&&OP_BNE - &&OP_CALL_PAL,
-		&&OP_BGE - &&OP_CALL_PAL,
-		&&OP_BGT - &&OP_CALL_PAL
+		&&OP_CALL_PAL - &&OP_CALL_PAL,		/* OPCODE: 0x00 */
+		&&RESERVED_OP - &&OP_CALL_PAL,		/* OPCODE: 0x01 */
+		&&RESERVED_OP - &&OP_CALL_PAL,		/* OPCODE: 0x02 */
+		&&RESERVED_OP - &&OP_CALL_PAL,		/* OPCODE: 0x03 */
+		&&RESERVED_OP - &&OP_CALL_PAL,		/* OPCODE: 0x04 */
+		&&RESERVED_OP - &&OP_CALL_PAL,		/* OPCODE: 0x05 */
+		&&RESERVED_OP - &&OP_CALL_PAL,		/* OPCODE: 0x06 */
+		&&RESERVED_OP - &&OP_CALL_PAL,		/* OPCODE: 0x07 */
+		&&OP_LDA - &&OP_CALL_PAL,			/* OPCODE: 0x08 */
+		&&OP_LDAH - &&OP_CALL_PAL,			/* OPCODE: 0x09 */
+		&&OP_LDBU - &&OP_CALL_PAL,			/* OPCODE: 0x0a */
+		&&OP_LDQ_U - &&OP_CALL_PAL,			/* OPCODE: 0x0b */
+		&&OP_LDWU - &&OP_CALL_PAL,			/* OPCODE: 0x0c */
+		&&OP_STW - &&OP_CALL_PAL,			/* OPCODE: 0x0d */
+		&&OP_STB - &&OP_CALL_PAL,			/* OPCODE: 0x0e */
+		&&OP_STQ_U - &&OP_CALL_PAL,			/* OPCODE: 0x0f */
+		&&OP_ADDL - &&OP_CALL_PAL,			/* OPCODE: 0x10 */
+		&&OP_AND - &&OP_CALL_PAL,			/* OPCODE: 0x11 */
+		&&OP_MSKBL - &&OP_CALL_PAL,			/* OPCODE: 0x12 */
+		&&OP_MULL - &&OP_CALL_PAL,			/* OPCODE: 0x13 */
+		&&OP_ITOFS - &&OP_CALL_PAL,			/* OPCODE: 0x14 */
+		&&OP_ADDF - &&OP_CALL_PAL,			/* OPCODE: 0x15 */
+		&&OP_ADDS - &&OP_CALL_PAL,			/* OPCODE: 0x16 */
+		&&OP_CVTLQ - &&OP_CALL_PAL,			/* OPCODE: 0x17 */
+		&&OP_TRAPB - &&OP_CALL_PAL,			/* OPCODE: 0x18 */
+		&&OP_HW_MFPR - &&OP_CALL_PAL,		/* OPCODE: 0x19 */
+		&&OP_JMP - &&OP_CALL_PAL,			/* OPCODE: 0x1a */
+		&&OP_HW_LD - &&OP_CALL_PAL,			/* OPCODE: 0x1b */
+		&&OP_SEXTB - &&OP_CALL_PAL,			/* OPCODE: 0x1c */
+		&&OP_HW_MTPR - &&OP_CALL_PAL,		/* OPCODE: 0x1d */
+		&&OP_HW_RET - &&OP_CALL_PAL,		/* OPCODE: 0x1e */
+		&&OP_HW_ST - &&OP_CALL_PAL,			/* OPCODE: 0x1f */
+		&&OP_LDF - &&OP_CALL_PAL,			/* OPCODE: 0x20 */
+		&&OP_LDG - &&OP_CALL_PAL,			/* OPCODE: 0x21 */
+		&&OP_LDS - &&OP_CALL_PAL,			/* OPCODE: 0x22 */
+		&&OP_LDT - &&OP_CALL_PAL,			/* OPCODE: 0x23 */
+		&&OP_STF - &&OP_CALL_PAL,			/* OPCODE: 0x24 */
+		&&OP_STG - &&OP_CALL_PAL,			/* OPCODE: 0x25 */
+		&&OP_STS - &&OP_CALL_PAL,			/* OPCODE: 0x26 */
+		&&OP_STT - &&OP_CALL_PAL,			/* OPCODE: 0x27 */
+		&&OP_LDL - &&OP_CALL_PAL,			/* OPCODE: 0x28 */
+		&&OP_LDQ - &&OP_CALL_PAL,			/* OPCODE: 0x29 */
+		&&OP_LDL_L - &&OP_CALL_PAL,			/* OPCODE: 0x2a */
+		&&OP_LDQ_L - &&OP_CALL_PAL,			/* OPCODE: 0x2b */
+		&&OP_STL - &&OP_CALL_PAL,			/* OPCODE: 0x2c */
+		&&OP_STQ - &&OP_CALL_PAL,			/* OPCODE: 0x2d */
+		&&OP_STL_C - &&OP_CALL_PAL,			/* OPCODE: 0x2e */
+		&&OP_STQ_C - &&OP_CALL_PAL,			/* OPCODE: 0x2f */
+		&&OP_BR - &&OP_CALL_PAL,			/* OPCODE: 0x30 */
+		&&OP_FBEQ - &&OP_CALL_PAL,			/* OPCODE: 0x31 */
+		&&OP_FBLT - &&OP_CALL_PAL,			/* OPCODE: 0x32 */
+		&&OP_FBLE - &&OP_CALL_PAL,			/* OPCODE: 0x33 */
+		&&OP_BSR - &&OP_CALL_PAL,			/* OPCODE: 0x34 */
+		&&OP_FBNE - &&OP_CALL_PAL,			/* OPCODE: 0x35 */
+		&&OP_FBGE - &&OP_CALL_PAL,			/* OPCODE: 0x36 */
+		&&OP_FBGT - &&OP_CALL_PAL,			/* OPCODE: 0x37 */
+		&&OP_BLBC - &&OP_CALL_PAL,			/* OPCODE: 0x38 */
+		&&OP_BEQ - &&OP_CALL_PAL,			/* OPCODE: 0x39 */
+		&&OP_BLT - &&OP_CALL_PAL,			/* OPCODE: 0x3a */
+		&&OP_BLE - &&OP_CALL_PAL,			/* OPCODE: 0x3b */
+		&&OP_BLBS - &&OP_CALL_PAL,			/* OPCODE: 0x3c */
+		&&OP_BNE - &&OP_CALL_PAL,			/* OPCODE: 0x3d */
+		&&OP_BGE - &&OP_CALL_PAL,			/* OPCODE: 0x3e */
+		&&OP_BGT - &&OP_CALL_PAL			/* OPCODE: 0x3f */
 	};
+	static const int	opcode14Label[] =
+	{
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0x0 */
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0x1 */
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0x2 */
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0x3 */
+		&&FUNC_ITOF - &&FUNC_ITOF,			/* FNC: 0x4 */
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0x5 */
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0x6 */
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0x7 */
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0x8 */
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0x9 */
+		&&FUNC_SQRTFG - &&FUNC_ITOF,		/* FNC: 0xa */
+		&&FUNC_SQRTST - &&FUNC_ITOF,		/* FNC: 0xb */
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0xc */
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0xd */
+		&&RESERVED_OP - &&FUNC_ITOF,		/* FNC: 0xe */
+		&&RESERVED_OP - &&FUNC_ITOF			/* FNC: 0xf */
+	};
+	static const int	opcode15Label[] =
+	{
+		&&FUNC_VAX_ADD - &&FUNC_VAX_ADD,	/* FNC: 0x0 */
+		&&FUNC_VAX_SUB - &&FUNC_VAX_ADD,	/* FNC: 0x1 */
+		&&FUNC_VAX_MUL - &&FUNC_VAX_ADD,	/* FNC: 0x2 */
+		&&FUNC_VAX_DIV - &&FUNC_VAX_ADD,	/* FNC: 0x3 */
+		&&RESERVED_OP - &&FUNC_VAX_ADD,		/* FNC: 0x4 */
+		&&FUNC_VAX_CMPEQ - &&FUNC_VAX_ADD,	/* FNC: 0x5 */
+		&&FUNC_VAX_CMPLT - &&FUNC_VAX_ADD,	/* FNC: 0x6 */
+		&&FUNC_VAX_CMPLE - &&FUNC_VAX_ADD,	/* FNC: 0x7 */
+		&&RESERVED_OP - &&FUNC_VAX_ADD,		/* FNC: 0x8 */
+		&&RESERVED_OP - &&FUNC_VAX_ADD,		/* FNC: 0x9 */
+		&&RESERVED_OP - &&FUNC_VAX_ADD,		/* FNC: 0xa */
+		&&RESERVED_OP - &&FUNC_VAX_ADD,		/* FNC: 0xb */
+		&&FUNC_VAX_CVTF - &&FUNC_VAX_ADD,	/* FNC: 0xc */
+		&&FUNC_VAX_CVTD - &&FUNC_VAX_ADD,	/* FNC: 0xd */
+		&&FUNC_VAX_CVTG - &&FUNC_VAX_ADD,	/* FNC: 0xe */
+		&&FUNC_VAX_CVTQ - &&FUNC_VAX_ADD	/* FNC: 0xf */
+	};
+	static const int	opcode16Label[] =
+	{
+		&&FUNC_IEEE_ADD - &&FUNC_IEEE_ADD,	/* FNC: 0x0 */
+		&&FUNC_IEEE_SUB - &&FUNC_IEEE_ADD,	/* FNC: 0x1 */
+		&&FUNC_IEEE_MUL - &&FUNC_IEEE_ADD,	/* FNC: 0x2 */
+		&&FUNC_IEEE_DIV - &&FUNC_IEEE_ADD,	/* FNC: 0x3 */
+		&&FUNC_IEEE_CMPUN - &&FUNC_IEEE_ADD,/* FNC: 0x4 */
+		&&FUNC_IEEE_CMPEQ - &&FUNC_IEEE_ADD,/* FNC: 0x5 */
+		&&FUNC_IEEE_CMPLT - &&FUNC_IEEE_ADD,/* FNC: 0x6 */
+		&&FUNC_IEEE_CMPLE - &&FUNC_IEEE_ADD,/* FNC: 0x7 */
+		&&RESERVED_OP - &&FUNC_IEEE_ADD,	/* FNC: 0x8 */
+		&&RESERVED_OP - &&FUNC_IEEE_ADD,	/* FNC: 0x9 */
+		&&RESERVED_OP - &&FUNC_IEEE_ADD,	/* FNC: 0xa */
+		&&RESERVED_OP - &&FUNC_IEEE_ADD,	/* FNC: 0xb */
+		&&FUNC_IEEE_CVTS - &&FUNC_IEEE_ADD,	/* FNC: 0xc */
+		&&RESERVED_OP - &&FUNC_IEEE_ADD,	/* FNC: 0xd */
+		&&FUNC_IEEE_CVTT - &&FUNC_IEEE_ADD,	/* FNC: 0xe */
+		&&FUNC_IEEE_CVTQ - &&FUNC_IEEE_ADD	/* FNC: 0xf */
+	};
+	AXP_FP_FUNC	fpFunc;
 
 	goto *(&&OP_CALL_PAL + label[instr->opcode]);
 
-OP_CALL_PAL:
-	/* TODO: Need to recalculate new PC and implement like a jump */
+OP_CALL_PAL:	/* OPCODE: 0x00 */
+	instr->excRegMask = AXP_CALL_PAL(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDA:
+OP_LDA:			/* OPCODE: 0x08 */
 	instr->excRegMask = AXP_LDA(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDAH:
+OP_LDAH:		/* OPCODE: 0x09 */
 	instr->excRegMask = AXP_LDAH(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDBU:
+OP_LDBU:		/* OPCODE: 0x0a */
 	instr->excRegMask = AXP_LDBU(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDQ_U:
+OP_LDQ_U:		/* OPCODE: 0x0b */
 	instr->excRegMask = AXP_LDQ_U(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDWU:
+OP_LDWU:		/* OPCODE: 0x0c */
 	instr->excRegMask = AXP_LDWU(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_STW:
+OP_STW:			/* OPCODE: 0x0d */
 	instr->excRegMask = AXP_STW(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_STB:
+OP_STB:			/* OPCODE: 0x0e */
 	instr->excRegMask = AXP_STB(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_STQ_U:
+OP_STQ_U:		/* OPCODE: 0x0f */
 	instr->excRegMask = AXP_STQ_U(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_ADDL:
+OP_ADDL:		/* OPCODE: 0x10 */
 	switch (instr->function)
 	{
 		case AXP_FUNC_ADDL:
@@ -552,7 +612,7 @@ OP_ADDL:
 			break;
 	}
 
-OP_AND:
+OP_AND:			/* OPCODE: 0x11 */
 	switch (instr->function)
 	{
 		case AXP_FUNC_AND:
@@ -640,7 +700,7 @@ OP_AND:
 			break;
 	}
 
-OP_MSKBL:
+OP_MSKBL:		/* OPCODE: 0x11 */
 	switch (instr->function)
 	{
 		case AXP_FUNC_MSKBL:
@@ -778,7 +838,7 @@ OP_MSKBL:
 			break;
 	}
 
-OP_MULL:
+OP_MULL:		/* OPCODE: 0x13 */
 	switch (instr->function)
 	{
 		case AXP_FUNC_MULL:
@@ -811,1746 +871,399 @@ OP_MULL:
 			break;
 	}
 
-OP_ITOFS:
-	switch (instr->function)
-	{
-		case AXP_FUNC_ITOFS:
-			instr->excRegMask = AXP_ITOFS(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTF_C:
-			instr->excRegMask = AXP_SQRTF_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_C:
-			instr->excRegMask = AXP_SQRTS_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ITOFF:
-			instr->excRegMask = AXP_ITOFF(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ITOFT:
-			instr->excRegMask = AXP_ITOFT(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTG_C:
-			instr->excRegMask = AXP_SQRTG_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_C:
-			instr->excRegMask = AXP_SQRTT_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_M:
-			instr->excRegMask = AXP_SQRTS_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_M:
-			instr->excRegMask = AXP_SQRTT_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTF:
-			instr->excRegMask = AXP_SQRTF(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS:
-			instr->excRegMask = AXP_SQRTS(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTG:
-			instr->excRegMask = AXP_SQRTG(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT:
-			instr->excRegMask = AXP_SQRTT(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_D:
-			instr->excRegMask = AXP_SQRTS_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_D:
-			instr->excRegMask = AXP_SQRTT_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTF_UC:
-			instr->excRegMask = AXP_SQRTF_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_UC:
-			instr->excRegMask = AXP_SQRTS_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTG_UC:
-			instr->excRegMask = AXP_SQRTG_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_UC:
-			instr->excRegMask = AXP_SQRTT_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_UM:
-			instr->excRegMask = AXP_SQRTS_UM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_UM:
-			instr->excRegMask = AXP_SQRTT_UM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTF_U:
-			instr->excRegMask = AXP_SQRTF_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_U:
-			instr->excRegMask = AXP_SQRTS_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTG_U:
-			instr->excRegMask = AXP_SQRTG_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_U:
-			instr->excRegMask = AXP_SQRTT_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_UD:
-			instr->excRegMask = AXP_SQRTS_UD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_UD:
-			instr->excRegMask = AXP_SQRTT_UD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTF_SC:
-			instr->excRegMask = AXP_SQRTF_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTG_SC:
-			instr->excRegMask = AXP_SQRTG_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTF_S:
-			instr->excRegMask = AXP_SQRTF_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTG_S:
-			instr->excRegMask = AXP_SQRTG_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTF_SUC:
-			instr->excRegMask = AXP_SQRTF_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_SUC:
-			instr->excRegMask = AXP_SQRTS_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTG_SUC:
-			instr->excRegMask = AXP_SQRTG_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_SUC:
-			instr->excRegMask = AXP_SQRTT_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_SUM:
-			instr->excRegMask = AXP_SQRTS_SUM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_SUM:
-			instr->excRegMask = AXP_SQRTT_SUM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTF_SU:
-			instr->excRegMask = AXP_SQRTF_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_SU:
-			instr->excRegMask = AXP_SQRTS_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTG_SU:
-			instr->excRegMask = AXP_SQRTG_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_SU:
-			instr->excRegMask = AXP_SQRTT_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_SUD:
-			instr->excRegMask = AXP_SQRTS_SUD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_SUD:
-			instr->excRegMask = AXP_SQRTT_SUD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_SUIC:
-			instr->excRegMask = AXP_SQRTS_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_SUIC:
-			instr->excRegMask = AXP_SQRTT_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_SUIM:
-			instr->excRegMask = AXP_SQRTS_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_SUIM:
-			instr->excRegMask = AXP_SQRTT_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_SUI:
-			instr->excRegMask = AXP_SQRTS_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_SUI:
-			instr->excRegMask = AXP_SQRTT_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTS_SUID:
-			instr->excRegMask = AXP_SQRTS_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SQRTT_SUID:
-			instr->excRegMask = AXP_SQRTT_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		default:
-			goto RESERVED_OP;
-			break;
-	}
-
-OP_ADDF:
-	switch (instr->function)
-	{
-		case AXP_FUNC_ADDF_C:
-			instr->excRegMask = AXP_ADDF_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBF_C:
-			instr->excRegMask = AXP_SUBF_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULF_C:
-			instr->excRegMask = AXP_MULF_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVF_C:
-			instr->excRegMask = AXP_DIVF_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTDG_C:
-			instr->excRegMask = AXP_CVTDG_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDG_C:
-			instr->excRegMask = AXP_ADDG_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBG_C:
-			instr->excRegMask = AXP_SUBG_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULG_C:
-			instr->excRegMask = AXP_MULG_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVG_C:
-			instr->excRegMask = AXP_DIVG_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGF_C:
-			instr->excRegMask = AXP_CVTGF_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGD_C:
-			instr->excRegMask = AXP_CVTGD_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGQ_C:
-			instr->excRegMask = AXP_CVTGQ_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQF_C:
-			instr->excRegMask = AXP_CVTQF_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQG_C:
-			instr->excRegMask = AXP_CVTQG_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDF:
-			instr->excRegMask = AXP_ADDF(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBF:
-			instr->excRegMask = AXP_SUBF(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULF:
-			instr->excRegMask = AXP_MULF(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVF:
-			instr->excRegMask = AXP_DIVF(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTDG:
-			instr->excRegMask = AXP_CVTDG(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDG:
-			instr->excRegMask = AXP_ADDG(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBG:
-			instr->excRegMask = AXP_SUBG(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULG:
-			instr->excRegMask = AXP_MULG(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVG:
-			instr->excRegMask = AXP_DIVG(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CMPGEQ:
+OP_ITOFS:		/* OPCODE: 0x14 */
+	fpFunc = *(AXP_FP_FUNC *) &instr->function;
+	goto *(&&FUNC_ITOF + opcode14Label[fpFunc.fnc]);
+
+FUNC_ITOF:		/* FNC: 0x4 */
+		switch (fpFunc.src)
+		{
+			case AXP_FP_S:
+				instr->excRegMask = AXP_ITOFS(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP14_F:
+				instr->excRegMask = AXP_ITOFF(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_T:
+				instr->excRegMask = AXP_ITOFT(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_SQRTFG:	/* FNC: 0xa */
+		switch (fpFunc.src)
+		{
+			case AXP_FP14_F:
+				instr->excRegMask = AXP_SQRTF(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_G:
+				instr->excRegMask = AXP_SQRTG(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_SQRTST:	/* FNC: 0xb */
+		switch (fpFunc.src)
+		{
+			case AXP_FP_S:
+				instr->excRegMask = AXP_SQRTS(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_T:
+				instr->excRegMask = AXP_SQRTT(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+OP_ADDF:		/* OPCODE: 0x15 */
+	fpFunc = *(AXP_FP_FUNC *) &instr->function;
+	goto *(&&FUNC_VAX_ADD + opcode15Label[fpFunc.fnc]);
+
+FUNC_VAX_ADD:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_F:
+				instr->excRegMask = AXP_ADDF(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_G:
+				instr->excRegMask = AXP_ADDG(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_VAX_SUB:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_F:
+				instr->excRegMask = AXP_SUBF(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_G:
+				instr->excRegMask = AXP_SUBG(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_VAX_MUL:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_F:
+				instr->excRegMask = AXP_MULF(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_G:
+				instr->excRegMask = AXP_MULG(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_VAX_DIV:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_F:
+				instr->excRegMask = AXP_DIVF(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_G:
+				instr->excRegMask = AXP_DIVG(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_VAX_CMPEQ:
+		if (fpFunc.src == AXP_FP_G)
+		{
 			instr->excRegMask = AXP_CMPGEQ(cpu, instr);
 			goto COMPLETION_OP;
-			break;
+		}
+		goto RESERVED_OP;
 
-		case AXP_FUNC_CMPGLT:
-			instr->excRegMask = AXP_CMPGLT(cpu, instr);
-			goto COMPLETION_OP;
-			break;
+FUNC_VAX_CMPLT:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_F:
+				goto COMPLETION_OP;
+				break;
 
-		case AXP_FUNC_CMPGLE:
+			case AXP_FP_G:
+				instr->excRegMask = AXP_CMPGLT(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_VAX_CMPLE:
+		if (fpFunc.src== AXP_FP_G)
+		{
 			instr->excRegMask = AXP_CMPGLE(cpu, instr);
 			goto COMPLETION_OP;
-			break;
+		}
+		goto RESERVED_OP;
 
-		case AXP_FUNC_CVTGF:
-			instr->excRegMask = AXP_CVTGF(cpu, instr);
+FUNC_VAX_CVTF:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_G:
+				instr->excRegMask = AXP_CVTGF(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_Q:
+				instr->excRegMask = AXP_CVTQF(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_VAX_CVTD:
+		if (fpFunc.src == AXP_FP_G)
+		{
+			instr->excRegMask = AXP_CVTDG(cpu, instr);
 			goto COMPLETION_OP;
-			break;
+		}
+		goto RESERVED_OP;
 
-		case AXP_FUNC_CVTGD:
-			instr->excRegMask = AXP_CVTGD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
+FUNC_VAX_CVTG:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_D:
+				instr->excRegMask = AXP_CVTDG(cpu, instr);
+				goto COMPLETION_OP;
+				break;
 
-		case AXP_FUNC_CVTGQ:
+			case AXP_FP_Q:
+				instr->excRegMask = AXP_CVTQG(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_VAX_CVTQ:
+		if (fpFunc.src == AXP_FP_G)
+		{
 			instr->excRegMask = AXP_CVTGQ(cpu, instr);
 			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQF:
-			instr->excRegMask = AXP_CVTQF(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQG:
-			instr->excRegMask = AXP_CVTQG(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDF_UC:
-			instr->excRegMask = AXP_ADDF_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBF_UC:
-			instr->excRegMask = AXP_SUBF_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULF_UC:
-			instr->excRegMask = AXP_MULF_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVF_UC:
-			instr->excRegMask = AXP_DIVF_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTDG_UC:
-			instr->excRegMask = AXP_CVTDG_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDG_UC:
-			instr->excRegMask = AXP_ADDG_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBG_UC:
-			instr->excRegMask = AXP_SUBG_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULG_UC:
-			instr->excRegMask = AXP_MULG_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVG_UC:
-			instr->excRegMask = AXP_DIVG_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGF_UC:
-			instr->excRegMask = AXP_CVTGF_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGD_UC:
-			instr->excRegMask = AXP_CVTGD_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGQ_VC:
-			instr->excRegMask = AXP_CVTGQ_VC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDF_U:
-			instr->excRegMask = AXP_ADDF_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBF_U:
-			instr->excRegMask = AXP_SUBF_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULF_U:
-			instr->excRegMask = AXP_MULF_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVF_U:
-			instr->excRegMask = AXP_DIVF_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTDG_U:
-			instr->excRegMask = AXP_CVTDG_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDG_U:
-			instr->excRegMask = AXP_ADDG_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBG_U:
-			instr->excRegMask = AXP_SUBG_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULG_U:
-			instr->excRegMask = AXP_MULG_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVG_U:
-			instr->excRegMask = AXP_DIVG_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGF_U:
-			instr->excRegMask = AXP_CVTGF_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGD_U:
-			instr->excRegMask = AXP_CVTGD_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGQ_V:
-			instr->excRegMask = AXP_CVTGQ_V(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDF_SC:
-			instr->excRegMask = AXP_ADDF_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBF_SC:
-			instr->excRegMask = AXP_SUBF_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULF_SC:
-			instr->excRegMask = AXP_MULF_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVF_SC:
-			instr->excRegMask = AXP_DIVF_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTDG_SC:
-			instr->excRegMask = AXP_CVTDG_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDG_SC:
-			instr->excRegMask = AXP_ADDG_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBG_SC:
-			instr->excRegMask = AXP_SUBG_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULG_SC:
-			instr->excRegMask = AXP_MULG_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVG_SC:
-			instr->excRegMask = AXP_DIVG_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGF_SC:
-			instr->excRegMask = AXP_CVTGF_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGD_SC:
-			instr->excRegMask = AXP_CVTGD_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGQ_SC:
-			instr->excRegMask = AXP_CVTGQ_SC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDF_S:
-			instr->excRegMask = AXP_ADDF_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBF_S:
-			instr->excRegMask = AXP_SUBF_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULF_S:
-			instr->excRegMask = AXP_MULF_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVF_S:
-			instr->excRegMask = AXP_DIVF_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTDG_S:
-			instr->excRegMask = AXP_CVTDG_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDG_S:
-			instr->excRegMask = AXP_ADDG_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBG_S:
-			instr->excRegMask = AXP_SUBG_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULG_S:
-			instr->excRegMask = AXP_MULG_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVG_S:
-			instr->excRegMask = AXP_DIVG_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CMPGEQ_S:
-			instr->excRegMask = AXP_CMPGEQ_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CMPGLT_S:
-			instr->excRegMask = AXP_CMPGLT_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CMPGLE_S:
-			instr->excRegMask = AXP_CMPGLE_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGF_S:
-			instr->excRegMask = AXP_CVTGF_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGD_S:
-			instr->excRegMask = AXP_CVTGD_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGQ_S:
-			instr->excRegMask = AXP_CVTGQ_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDF_SUC:
-			instr->excRegMask = AXP_ADDF_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBF_SUC:
-			instr->excRegMask = AXP_SUBF_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULF_SUC:
-			instr->excRegMask = AXP_MULF_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVF_SUC:
-			instr->excRegMask = AXP_DIVF_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTDG_SUC:
-			instr->excRegMask = AXP_CVTDG_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDG_SUC:
-			instr->excRegMask = AXP_ADDG_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBG_SUC:
-			instr->excRegMask = AXP_SUBG_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULG_SUC:
-			instr->excRegMask = AXP_MULG_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVG_SUC:
-			instr->excRegMask = AXP_DIVG_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGF_SUC:
-			instr->excRegMask = AXP_CVTGF_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGD_SUC:
-			instr->excRegMask = AXP_CVTGD_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGQ_SVC:
-			instr->excRegMask = AXP_CVTGQ_SVC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDF_SU:
-			instr->excRegMask = AXP_ADDF_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBF_SU:
-			instr->excRegMask = AXP_SUBF_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULF_SU:
-			instr->excRegMask = AXP_MULF_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVF_SU:
-			instr->excRegMask = AXP_DIVF_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTDG_SU:
-			instr->excRegMask = AXP_CVTDG_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDG_SU:
-			instr->excRegMask = AXP_ADDG_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBG_SU:
-			instr->excRegMask = AXP_SUBG_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULG_SU:
-			instr->excRegMask = AXP_MULG_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVG_SU:
-			instr->excRegMask = AXP_DIVG_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGF_SU:
-			instr->excRegMask = AXP_CVTGF_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGD_SU:
-			instr->excRegMask = AXP_CVTGD_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTGQ_SV:
-			instr->excRegMask = AXP_CVTGQ_SV(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		default:
-			goto RESERVED_OP;
-			break;
-	}
-
-OP_ADDS:
-	switch (instr->function)
-	{
-		case AXP_FUNC_ADDS_C:
-			instr->excRegMask = AXP_ADDS_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_C:
-			instr->excRegMask = AXP_SUBS_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_C:
-			instr->excRegMask = AXP_MULS_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_C:
-			instr->excRegMask = AXP_DIVS_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_C:
-			instr->excRegMask = AXP_ADDT_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_C:
-			instr->excRegMask = AXP_SUBT_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_C:
-			instr->excRegMask = AXP_MULT_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_C:
-			instr->excRegMask = AXP_DIVT_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_C:
-			instr->excRegMask = AXP_CVTTS_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_C:
-			instr->excRegMask = AXP_CVTTQ_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQS_C:
-			instr->excRegMask = AXP_CVTQS_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQT_C:
-			instr->excRegMask = AXP_CVTQT_C(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_M:
-			instr->excRegMask = AXP_ADDS_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_M:
-			instr->excRegMask = AXP_SUBS_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_M:
-			instr->excRegMask = AXP_MULS_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_M:
-			instr->excRegMask = AXP_DIVS_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_M:
-			instr->excRegMask = AXP_ADDT_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_M:
-			instr->excRegMask = AXP_SUBT_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_M:
-			instr->excRegMask = AXP_MULT_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_M:
-			instr->excRegMask = AXP_DIVT_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_M:
-			instr->excRegMask = AXP_CVTTS_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_M:
-			instr->excRegMask = AXP_CVTTQ_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQS_M:
-			instr->excRegMask = AXP_CVTQS_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQT_M:
-			instr->excRegMask = AXP_CVTQT_M(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS:
-			instr->excRegMask = AXP_ADDS(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS:
-			instr->excRegMask = AXP_SUBS(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS:
-			instr->excRegMask = AXP_MULS(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS:
-			instr->excRegMask = AXP_DIVS(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT:
-			instr->excRegMask = AXP_ADDT(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT:
-			instr->excRegMask = AXP_SUBT(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT:
-			instr->excRegMask = AXP_MULT(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT:
-			instr->excRegMask = AXP_DIVT(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CMPTUN:
+		}
+		goto RESERVED_OP;
+
+OP_ADDS:		/* OPCODE: 0x16 */
+	fpFunc = *(AXP_FP_FUNC *) &instr->function;
+	goto *(&&FUNC_IEEE_ADD + opcode16Label[fpFunc.fnc]);
+
+FUNC_IEEE_ADD:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_S:
+				instr->excRegMask = AXP_ADDS(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_T:
+				instr->excRegMask = AXP_ADDT(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_Q:
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_IEEE_SUB:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_S:
+				instr->excRegMask = AXP_SUBS(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_T:
+				instr->excRegMask = AXP_SUBT(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_Q:
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_IEEE_MUL:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_S:
+				instr->excRegMask = AXP_MULS(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_T:
+				instr->excRegMask = AXP_MULT(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_Q:
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_IEEE_DIV:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_S:
+				instr->excRegMask = AXP_DIVS(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_T:
+				instr->excRegMask = AXP_DIVT(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_Q:
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_IEEE_CMPUN:
+		if (fpFunc.src == AXP_FP_T)
+		{
 			instr->excRegMask = AXP_CMPTUN(cpu, instr);
 			goto COMPLETION_OP;
-			break;
+		}
+		goto RESERVED_OP;
 
-		case AXP_FUNC_CMPTEQ:
+FUNC_IEEE_CMPEQ:
+		if (fpFunc.src == AXP_FP_T)
+		{
 			instr->excRegMask = AXP_CMPTEQ(cpu, instr);
 			goto COMPLETION_OP;
-			break;
+		}
+		goto RESERVED_OP;
 
-		case AXP_FUNC_CMPTLT:
+FUNC_IEEE_CMPLT:
+		if (fpFunc.src == AXP_FP_T)
+		{
 			instr->excRegMask = AXP_CMPTLT(cpu, instr);
 			goto COMPLETION_OP;
-			break;
+		}
+		goto RESERVED_OP;
 
-		case AXP_FUNC_CMPTLE:
+FUNC_IEEE_CMPLE:
+		if (fpFunc.src == AXP_FP_T)
+		{
 			instr->excRegMask = AXP_CMPTLE(cpu, instr);
 			goto COMPLETION_OP;
-			break;
+		}
+		goto RESERVED_OP;
 
-		case AXP_FUNC_CVTTS:
-			instr->excRegMask = AXP_CVTTS(cpu, instr);
-			goto COMPLETION_OP;
-			break;
+FUNC_IEEE_CVTS:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_T:
+				instr->excRegMask = AXP_CVTTS(cpu, instr);
+				goto COMPLETION_OP;
+				break;
 
-		case AXP_FUNC_CVTTQ:
+			case AXP_FP_Q:
+				instr->excRegMask = AXP_CVTQS(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_IEEE_CVTT:
+		switch (fpFunc.src)
+		{
+			case AXP_FP_S:
+				instr->excRegMask = AXP_CVTST(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			case AXP_FP_Q:
+				instr->excRegMask = AXP_CVTQT(cpu, instr);
+				goto COMPLETION_OP;
+				break;
+
+			default:
+				goto RESERVED_OP;
+				break;
+		}
+
+FUNC_IEEE_CVTQ:
+		if (fpFunc.src == AXP_FP_T)
+		{
 			instr->excRegMask = AXP_CVTTQ(cpu, instr);
 			goto COMPLETION_OP;
-			break;
+		}
+		goto RESERVED_OP;
 
-		case AXP_FUNC_CVTQS:
-			instr->excRegMask = AXP_CVTQS(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQT:
-			instr->excRegMask = AXP_CVTQT(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_D:
-			instr->excRegMask = AXP_ADDS_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_D:
-			instr->excRegMask = AXP_SUBS_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_D:
-			instr->excRegMask = AXP_MULS_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_D:
-			instr->excRegMask = AXP_DIVS_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_D:
-			instr->excRegMask = AXP_ADDT_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_D:
-			instr->excRegMask = AXP_SUBT_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_D:
-			instr->excRegMask = AXP_MULT_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_D:
-			instr->excRegMask = AXP_DIVT_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_D:
-			instr->excRegMask = AXP_CVTTS_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_D:
-			instr->excRegMask = AXP_CVTTQ_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQS_D:
-			instr->excRegMask = AXP_CVTQS_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQT_D:
-			instr->excRegMask = AXP_CVTQT_D(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_UC:
-			instr->excRegMask = AXP_ADDS_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_UC:
-			instr->excRegMask = AXP_SUBS_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_UC:
-			instr->excRegMask = AXP_MULS_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_UC:
-			instr->excRegMask = AXP_DIVS_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_UC:
-			instr->excRegMask = AXP_ADDT_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_UC:
-			instr->excRegMask = AXP_SUBT_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_UC:
-			instr->excRegMask = AXP_MULT_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_UC:
-			instr->excRegMask = AXP_DIVT_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_UC:
-			instr->excRegMask = AXP_CVTTS_UC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_VC:
-			instr->excRegMask = AXP_CVTTQ_VC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_UM:
-			instr->excRegMask = AXP_ADDS_UM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_UM:
-			instr->excRegMask = AXP_SUBS_UM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_UM:
-			instr->excRegMask = AXP_MULS_UM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_UM:
-			instr->excRegMask = AXP_DIVS_UM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_UM:
-			instr->excRegMask = AXP_ADDT_UM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_UM:
-			instr->excRegMask = AXP_SUBT_UM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_UM:
-			instr->excRegMask = AXP_MULT_UM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_UM:
-			instr->excRegMask = AXP_DIVT_UM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_UM:
-			instr->excRegMask = AXP_CVTTS_UM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_VM:
-			instr->excRegMask = AXP_CVTTQ_VM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_U:
-			instr->excRegMask = AXP_ADDS_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_U:
-			instr->excRegMask = AXP_SUBS_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_U:
-			instr->excRegMask = AXP_MULS_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_U:
-			instr->excRegMask = AXP_DIVS_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_U:
-			instr->excRegMask = AXP_ADDT_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_U:
-			instr->excRegMask = AXP_SUBT_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_U:
-			instr->excRegMask = AXP_MULT_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_U:
-			instr->excRegMask = AXP_DIVT_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_U:
-			instr->excRegMask = AXP_CVTTS_U(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_V:
-			instr->excRegMask = AXP_CVTTQ_V(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_UD:
-			instr->excRegMask = AXP_ADDS_UD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_UD:
-			instr->excRegMask = AXP_SUBS_UD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_UD:
-			instr->excRegMask = AXP_MULS_UD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_UD:
-			instr->excRegMask = AXP_DIVS_UD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_UD:
-			instr->excRegMask = AXP_ADDT_UD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_UD:
-			instr->excRegMask = AXP_SUBT_UD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_UD:
-			instr->excRegMask = AXP_MULT_UD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_UD:
-			instr->excRegMask = AXP_DIVT_UD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_UD:
-			instr->excRegMask = AXP_CVTTS_UD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_VD:
-			instr->excRegMask = AXP_CVTTQ_VD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTST:
-			instr->excRegMask = AXP_CVTST(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_SUC:
-			instr->excRegMask = AXP_ADDS_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_SUC:
-			instr->excRegMask = AXP_SUBS_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_SUC:
-			instr->excRegMask = AXP_MULS_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_SUC:
-			instr->excRegMask = AXP_DIVS_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_SUC:
-			instr->excRegMask = AXP_ADDT_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_SUC:
-			instr->excRegMask = AXP_SUBT_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_SUC:
-			instr->excRegMask = AXP_MULT_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_SUC:
-			instr->excRegMask = AXP_DIVT_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_SUC:
-			instr->excRegMask = AXP_CVTTS_SUC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_SVC:
-			instr->excRegMask = AXP_CVTTQ_SVC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_SUM:
-			instr->excRegMask = AXP_ADDS_SUM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_SUM:
-			instr->excRegMask = AXP_SUBS_SUM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_SUM:
-			instr->excRegMask = AXP_MULS_SUM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_SUM:
-			instr->excRegMask = AXP_DIVS_SUM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_SUM:
-			instr->excRegMask = AXP_ADDT_SUM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_SUM:
-			instr->excRegMask = AXP_SUBT_SUM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_SUM:
-			instr->excRegMask = AXP_MULT_SUM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_SUM:
-			instr->excRegMask = AXP_DIVT_SUM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_SUM:
-			instr->excRegMask = AXP_CVTTS_SUM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_SVM:
-			instr->excRegMask = AXP_CVTTQ_SVM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_SU:
-			instr->excRegMask = AXP_ADDS_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_SU:
-			instr->excRegMask = AXP_SUBS_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_SU:
-			instr->excRegMask = AXP_MULS_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_SU:
-			instr->excRegMask = AXP_DIVS_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_SU:
-			instr->excRegMask = AXP_ADDT_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_SU:
-			instr->excRegMask = AXP_SUBT_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_SU:
-			instr->excRegMask = AXP_MULT_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_SU:
-			instr->excRegMask = AXP_DIVT_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CMPTUN_SU:
-			instr->excRegMask = AXP_CMPTUN_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CMPTEQ_SU:
-			instr->excRegMask = AXP_CMPTEQ_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CMPTLT_SU:
-			instr->excRegMask = AXP_CMPTLT_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CMPTLE_SU:
-			instr->excRegMask = AXP_CMPTLE_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_SU:
-			instr->excRegMask = AXP_CVTTS_SU(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_SV:
-			instr->excRegMask = AXP_CVTTQ_SV(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_SUD:
-			instr->excRegMask = AXP_ADDS_SUD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_SUD:
-			instr->excRegMask = AXP_SUBS_SUD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_SUD:
-			instr->excRegMask = AXP_MULS_SUD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_SUD:
-			instr->excRegMask = AXP_DIVS_SUD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_SUD:
-			instr->excRegMask = AXP_ADDT_SUD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_SUD:
-			instr->excRegMask = AXP_SUBT_SUD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_SUD:
-			instr->excRegMask = AXP_MULT_SUD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_SUD:
-			instr->excRegMask = AXP_DIVT_SUD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_SUD:
-			instr->excRegMask = AXP_CVTTS_SUD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_SVD:
-			instr->excRegMask = AXP_CVTTQ_SVD(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTST_S:
-			instr->excRegMask = AXP_CVTST_S(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_SUIC:
-			instr->excRegMask = AXP_ADDS_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_SUIC:
-			instr->excRegMask = AXP_SUBS_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_SUIC:
-			instr->excRegMask = AXP_MULS_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_SUIC:
-			instr->excRegMask = AXP_DIVS_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_SUIC:
-			instr->excRegMask = AXP_ADDT_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_SUIC:
-			instr->excRegMask = AXP_SUBT_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_SUIC:
-			instr->excRegMask = AXP_MULT_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_SUIC:
-			instr->excRegMask = AXP_DIVT_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_SUIC:
-			instr->excRegMask = AXP_CVTTS_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_SVIC:
-			instr->excRegMask = AXP_CVTTQ_SVIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQS_SUIC:
-			instr->excRegMask = AXP_CVTQS_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQT_SUIC:
-			instr->excRegMask = AXP_CVTQT_SUIC(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_SUIM:
-			instr->excRegMask = AXP_ADDS_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_SUIM:
-			instr->excRegMask = AXP_SUBS_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_SUIM:
-			instr->excRegMask = AXP_MULS_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_SUIM:
-			instr->excRegMask = AXP_DIVS_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_SUIM:
-			instr->excRegMask = AXP_ADDT_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_SUIM:
-			instr->excRegMask = AXP_SUBT_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_SUIM:
-			instr->excRegMask = AXP_MULT_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_SUIM:
-			instr->excRegMask = AXP_DIVT_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_SUIM:
-			instr->excRegMask = AXP_CVTTS_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_SVIM:
-			instr->excRegMask = AXP_CVTTQ_SVIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQS_SUIM:
-			instr->excRegMask = AXP_CVTQS_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQT_SUIM:
-			instr->excRegMask = AXP_CVTQT_SUIM(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_SUI:
-			instr->excRegMask = AXP_ADDS_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_SUI:
-			instr->excRegMask = AXP_SUBS_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_SUI:
-			instr->excRegMask = AXP_MULS_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_SUI:
-			instr->excRegMask = AXP_DIVS_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_SUI:
-			instr->excRegMask = AXP_ADDT_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_SUI:
-			instr->excRegMask = AXP_SUBT_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_SUI:
-			instr->excRegMask = AXP_MULT_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_SUI:
-			instr->excRegMask = AXP_DIVT_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_SUI:
-			instr->excRegMask = AXP_CVTTS_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_SVI:
-			instr->excRegMask = AXP_CVTTQ_SVI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQS_SUI:
-			instr->excRegMask = AXP_CVTQS_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQT_SUI:
-			instr->excRegMask = AXP_CVTQT_SUI(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDS_SUID:
-			instr->excRegMask = AXP_ADDS_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBS_SUID:
-			instr->excRegMask = AXP_SUBS_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULS_SUID:
-			instr->excRegMask = AXP_MULS_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVS_SUID:
-			instr->excRegMask = AXP_DIVS_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_ADDT_SUID:
-			instr->excRegMask = AXP_ADDT_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_SUBT_SUID:
-			instr->excRegMask = AXP_SUBT_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_MULT_SUID:
-			instr->excRegMask = AXP_MULT_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_DIVT_SUID:
-			instr->excRegMask = AXP_DIVT_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTS_SUID:
-			instr->excRegMask = AXP_CVTTS_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTTQ_SVID:
-			instr->excRegMask = AXP_CVTTQ_SVID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQS_SUID:
-			instr->excRegMask = AXP_CVTQS_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		case AXP_FUNC_CVTQT_SUID:
-			instr->excRegMask = AXP_CVTQT_SUID(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
-		default:
-			goto RESERVED_OP;
-			break;
-	}
-
-OP_CVTLQ:
+OP_CVTLQ:		/* OPCODE: 0x17 */
 	switch (instr->function)
 	{
 		case AXP_FUNC_CVTLQ:
@@ -2614,17 +1327,9 @@ OP_CVTLQ:
 			break;
 
 		case AXP_FUNC_CVTQL:
-			instr->excRegMask = AXP_CVTQL(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
 		case AXP_FUNC_CVTQL_V:
-			instr->excRegMask = AXP_CVTQL_V(cpu, instr);
-			goto COMPLETION_OP;
-			break;
-
 		case AXP_FUNC_CVTQL_SV:
-			instr->excRegMask = AXP_CVTQL_SV(cpu, instr);
+			instr->excRegMask = AXP_CVTQL(cpu, instr);
 			goto COMPLETION_OP;
 			break;
 
@@ -2633,7 +1338,7 @@ OP_CVTLQ:
 			break;
 	}
 
-OP_TRAPB:
+OP_TRAPB:		/* OPCODE: 0x18 */
 	switch (instr->function)
 	{
 		case AXP_FUNC_TRAPB:
@@ -2701,23 +1406,23 @@ OP_TRAPB:
 			break;
 	}
 
-OP_HW_MFPR:
+OP_HW_MFPR:		/* OPCODE: 0x19 */
 	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWMFPR(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_JMP:
+OP_JMP:			/* OPCODE: 0x1a */
 	instr->excRegMask = AXP_JMP(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_HW_LD:
+OP_HW_LD:		/* OPCODE: 0x1b */
 	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWLD(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_SEXTB:
+OP_SEXTB:		/* OPCODE: 0x1c */
 	switch (instr->function)
 	{
 		case AXP_FUNC_SEXTB:
@@ -2825,149 +1530,149 @@ OP_SEXTB:
 			break;
 	}
 
-OP_HW_MTPR:
+OP_HW_MTPR:		/* OPCODE: 0x1d */
 	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWMTPR(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_HW_RET:
+OP_HW_RET:		/* OPCODE: 0x1e */
 	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWRET(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_HW_ST:
+OP_HW_ST:		/* OPCODE: 0x1f */
 	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWST(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDF:
+OP_LDF:			/* OPCODE: 0x20 */
 	instr->excRegMask = AXP_LDF(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDG:
+OP_LDG:			/* OPCODE: 0x21 */
 	instr->excRegMask = AXP_LDG(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDS:
+OP_LDS:			/* OPCODE: 0x22 */
 	instr->excRegMask = AXP_LDS(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDT:
+OP_LDT:			/* OPCODE: 0x23 */
 	instr->excRegMask = AXP_LDT(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_STF:
+OP_STF:			/* OPCODE: 0x24 */
 	instr->excRegMask = AXP_STF(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_STG:
+OP_STG:			/* OPCODE: 0x25 */
 	instr->excRegMask = AXP_STG(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_STS:
+OP_STS:			/* OPCODE: 0x26 */
 	instr->excRegMask = AXP_STS(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_STT:
+OP_STT:			/* OPCODE: 0x27 */
 	instr->excRegMask = AXP_STT(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDL:
+OP_LDL:			/* OPCODE: 0x28 */
 	instr->excRegMask = AXP_LDL(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDQ:
+OP_LDQ:			/* OPCODE: 0x29 */
 	instr->excRegMask = AXP_LDQ(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDL_L:
+OP_LDL_L:		/* OPCODE: 0x2a */
 	instr->excRegMask = AXP_LDL_L(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_LDQ_L:
+OP_LDQ_L:		/* OPCODE: 0x2b */
 	instr->excRegMask = AXP_LDQ_L(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_STL:
+OP_STL:			/* OPCODE: 0x2c */
 	instr->excRegMask = AXP_STL(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_STQ:
+OP_STQ:			/* OPCODE: 0x2d */
 	instr->excRegMask = AXP_STQ(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_STL_C:
+OP_STL_C:		/* OPCODE: 0x2e */
 	instr->excRegMask = AXP_STL_C(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_STQ_C:
+OP_STQ_C:		/* OPCODE: 0x2f */
 	instr->excRegMask = AXP_STQ_C(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_BR:
+OP_BR:			/* OPCODE: 0x30 */
 	instr->excRegMask = AXP_BR(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_FBEQ:
+OP_FBEQ:		/* OPCODE: 0x31 */
 	instr->excRegMask = AXP_FBEQ(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_FBLT:
+OP_FBLT:		/* OPCODE: 0x32 */
 	instr->excRegMask = AXP_FBLT(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_FBLE:
+OP_FBLE:		/* OPCODE: 0x33 */
 	instr->excRegMask = AXP_FBLE(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_BSR:
+OP_BSR:			/* OPCODE: 0x34 */
 	instr->excRegMask = AXP_BSR(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_FBNE:
+OP_FBNE:		/* OPCODE: 0x35 */
 	instr->excRegMask = AXP_FBNE(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_FBGE:
+OP_FBGE:		/* OPCODE: 0x36 */
 	instr->excRegMask = AXP_FBGE(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_FBGT:
+OP_FBGT:		/* OPCODE: 0x37 */
 	instr->excRegMask = AXP_FBGT(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_BLBC:
+OP_BLBC:		/* OPCODE: 0x38 */
 	instr->excRegMask = AXP_BLBC(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_BEQ:
+OP_BEQ:			/* OPCODE: 0x39 */
 	instr->excRegMask = AXP_BEQ(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_BLT:
+OP_BLT:			/* OPCODE: 0x3a */
 	instr->excRegMask = AXP_BLT(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_BLE:
+OP_BLE:			/* OPCODE: 0x3b */
 	instr->excRegMask = AXP_BLE(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_BLBS:
+OP_BLBS:		/* OPCODE: 0x3c */
 	instr->excRegMask = AXP_BLBS(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_BNE:
+OP_BNE:			/* OPCODE: 0x3d */
 	instr->excRegMask = AXP_BNE(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_BGE:
+OP_BGE:			/* OPCODE: 0x3e */
 	instr->excRegMask = AXP_BGE(cpu, instr);
 	goto COMPLETION_OP;
 
-OP_BGT:
+OP_BGT:			/* OPCODE: 0x3f */
 	instr->excRegMask = AXP_BGT(cpu, instr);
 	goto COMPLETION_OP;
 
@@ -2977,7 +1682,7 @@ RESERVED_OP:
 					cpu,
 					AXP_OPCDEC,
 					instr->pc,
-					instr->pc,
+					*(u64 *) &instr->pc,
 					instr->opcode,
 					AXP_UNMAPPED_REG,
 					false,

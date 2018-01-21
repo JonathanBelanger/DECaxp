@@ -209,11 +209,7 @@ AXP_EXCEPTIONS AXP_IMPLVER(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_ECB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-
-	/*
-	 * TODO:	We need to implement the evict data cache block instruction
-	 *			once the data cache code has been implemented.
-	 */
+	AXP_DcacheEvict(cpu, instr->src1v.r.uq, instr->pc);
 
 	/*
 	 * Indicate that the instruction is ready to be retired.
@@ -251,8 +247,6 @@ AXP_EXCEPTIONS AXP_EXCB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
 	/*
 	 * There is nothing we have to do except get retired.
-	 *
-	 * Indicate that the instruction is ready to be retired.
 	 */
 	instr->state = WaitingRetirement;
 
@@ -290,6 +284,10 @@ AXP_EXCEPTIONS AXP_FETCH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 *			once the data cache code has been implemented.
 	 *			Not sure if this needs to be handled by the Mbox or
 	 *			Cbox.
+	 * NOTE:	This function fetches an aligned 512-byte block.  Much larger
+	 *			than the usual 64 byte block fetched as the result of the Load
+	 *			and Store instructions.  We need to think this through.  For
+	 *			now, this is implemented as a NO-OP.
 	 */
 
 	/*
@@ -331,6 +329,10 @@ AXP_EXCEPTIONS AXP_FETCH_M(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 *			once the data cache code has been implemented.
 	 *			Not sure if this needs to be handled by the Mbox or
 	 *			Cbox.
+	 * NOTE:	This function fetches an aligned 512-byte block.  Much larger
+	 *			than the usual 64 byte block fetched as the result of the Load
+	 *			and Store instructions.  We need to think this through.  For
+	 *			now, this is implemented as a NO-OP.
 	 */
 
 	/*
@@ -512,7 +514,7 @@ AXP_EXCEPTIONS AXP_WH64(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 *			allocated, but the contents of the memory location where this
 	 *			cached address resides, may not be read.  Any error that occurs
 	 *			(access violation, translation not valid, and so forth) will
-	 *			cause this instruction to behave like a NOOP.
+	 *			cause this instruction to behave like a NO-OP.
 	 */
 
 	/*

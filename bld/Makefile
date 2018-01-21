@@ -118,7 +118,7 @@ INCS = $(foreach d, $(INCDIRS), -I$d)
 # object and executable files.
 #
 CC = gcc
-CFLAGS = $(INCS) -m64 -std=c99 -Wall -pthread
+CFLAGS = $(INCS) -m64 -std=gnu99 -Wall -pthread
 
 #
 # Debug adds to the compiler flags and then compiles everything that has not

@@ -67,7 +67,7 @@ void AXP_21264_Bcache_Evict(AXP_21264_CPU *cpu, u64 pa)
 							pa,
 							cpu->bCache[index],
 							false,
-							true);	/* TODO: mutex setting needs? */
+							true);
 	}
 
 	/*

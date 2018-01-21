@@ -329,6 +329,7 @@ void AXP_21264_Complete_MAF(
 						 * marked invalid.
 						 */
 						case ReadDataError:
+
 							/*
 							 * TODO:	Need to evict the block associated with
 							 *			the pa from the Bcache, Dcache and/or
@@ -488,6 +489,7 @@ void AXP_21264_Complete_MAF(
 					 * cache block is marked invalid.
 					 */
 					case ReadDataError:
+
 						/*
 						 * TODO:	Need to evict the block associated with
 						 *			the pa from the Bcache, Dcache and/or
@@ -517,8 +519,6 @@ void AXP_21264_Complete_MAF(
 		 * NOTE:	STx_C instructions always use the STxCCHangeToDirty
 		 * 			command. So, we don't need to handle the STx_C processing
 		 * 			described in this particular case.
-		 * TODO:	We are not expecting data at this point.  I'm not sure if
-		 *			this is even possible.  We need to look into this.
 		 */
 		case STxChangeToDirty:
 			dataLen = AXP_DCACHE_DATA_LEN;

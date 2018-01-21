@@ -39,6 +39,7 @@
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Ebox.h"
+#include "AXP_21264_Ibox_InstructionInfo.h"
 
 /*
  * AXP_21264_Ebox_RegisterReady
@@ -97,10 +98,10 @@ void AXP_21264_Ebox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * If no exception occurred, then we have the data we need and just need to
 	 * store the value that is going to be put into the destination register
-	 * when the instruciton is retired.  There is nothing specific that needs
-	 * to happen to store instrucitons.
+	 * when the instruction is retired.  There is nothing specific that needs
+	 * to happen to store instructions.
 	 *
-	 * NOTE: Any aception will be handled in the retirment code.
+	 * NOTE: Any exception will be handled in the retirement code.
 	 */
 	if (instr->excRegMask == NoException)
 	{
@@ -327,7 +328,7 @@ void *AXP_21264_EboxU1Main(void *voidPtr)
  * Return Values:
  *	None.
  */
-void *AXP_21264_EboxU0Main(void *voidPtr)
+void *AXP_21264_EboxL0Main(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 
@@ -411,7 +412,7 @@ void *AXP_21264_EboxL1Main(void *voidPtr)
  */
 void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 {
-	static AXP_PIPELINE	pipelineCond[AXP_EBOX_PIPELINE_MAX][] =
+	static AXP_PIPELINE	pipelineCond[AXP_EBOX_PIPELINE_MAX][3] =
 	{
 		{EboxU0, EboxU0U1, EboxL0L1U0U1},	/* U0 */
 		{EboxU1, EboxU0U1, EboxL0L1U0U1},	/* U1 */
@@ -473,7 +474,7 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 				 * correct Integer cluster and have only been queued for
 				 * processing and the registers needed for the instruction are
 				 * ready to be used (the source registers need to not be
-				 * waiting for pervious instruction to write to it).
+				 * waiting for previous instruction to write to it).
 				 */
 				if (((entry->ins->pipeline == pipelineCond[pipeline][0]) ||
 					 (entry->ins->pipeline == pipelineCond[pipeline][1]) ||

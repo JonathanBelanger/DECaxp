@@ -50,6 +50,7 @@ typedef struct
 	u64						value;
 	u64						virtAddress;
 	u64						physAddress;
+	u64						IOdata;
 	AXP_INSTRUCTION			*instr;
 	AXP_MBOX_QUEUE_STATE	state;
 	AXP_DCACHE_LOC			dcacheLoc;

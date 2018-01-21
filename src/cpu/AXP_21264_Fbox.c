@@ -30,6 +30,11 @@
  *	V01.002		01-Jan-2018	Jonathan D. Belanger
  *	Changed the way instructions are completed when they need to utilize the
  *	Mbox.
+ *
+ *	V01.003		20-Jan-2018	Jonathan D. Belanger
+ *	Added a check to make sure the floating-point instructions are enabled.  If
+ *	so, call the dispatcher.  If not, set an exception and indicate that the
+ *	instruction is ready for retirement.
 */
 #include "AXP_Configure.h"
 #include "AXP_21264_Fbox.h"
@@ -223,7 +228,7 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 	int			ii;
 
 	/*
-	 * Initlaize the one Fbox IPR.
+	 * Initialize the one Fbox IPR.
 	 */
 	cpu->fpcr.res = 0;
 	cpu->fpcr.dnz = 0;
@@ -498,10 +503,19 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			pthread_mutex_unlock(&cpu->fBoxMutex);
 
 			/*
-			 * Call the dispatcher to dispatch this instruction to the correct
-			 * function to execute the instruction.
+			 * If Floating-Point instructions are enabled, then call the
+			 * dispatcher to dispatch this instruction to the correct function
+			 * to execute the instruction.  Otherwise, set the appropriate
+			 * exception value.
 			 */
-			AXP_Dispatcher(cpu, entry->ins);
+			pthread_mutex_lock(&cpu->iBoxIPRMutex);
+			if (cpu->pCtx.fpe == 1)
+				AXP_Dispatcher(cpu, entry->ins);
+			{
+				entry->ins->excRegMask = FloatingDisabledFault;
+				entry->ins->state = WaitingRetirement;
+			}
+			pthread_mutex_unlock(&cpu->iBoxIPRMutex);
 
 			/*
 			 * Return the entry back to the pool for future instructions.

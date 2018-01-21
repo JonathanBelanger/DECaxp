@@ -180,9 +180,6 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
  *	NOTE:	The Mbox and Cbox call this function.  The Mbox to have a Dcache
  *			block to be written to the Bcache.  The Cbox to have Istream blocks
  *			recently written to the Icache to the Bcache as well
- *			(TODO: Determine if the Cbox can do both at the same time), Bcache
- *			blocks that need to be written to memory, or cache blocks sent to
- *			the system in response to probe commands.
  *
  * Input Parameters:
  * 	cpu:

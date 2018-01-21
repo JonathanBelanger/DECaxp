@@ -59,6 +59,7 @@
 /*
  * Includes used throughout the code.
  */
+#include <unistd.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
