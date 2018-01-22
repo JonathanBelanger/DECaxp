@@ -1,5 +1,5 @@
 #
-# Copyright (C) Jonathan D. Belanger 2017.
+# Copyright (C) Jonathan D. Belanger 2017-2018.
 # All Rights Reserved.
 #
 # This software is furnished under a license and may be used and copied only
@@ -61,6 +61,9 @@
 #	will rebuild itself if any of the source files changed, including the
 #	Makefile itself.
 #
+#	V01.008		21-Jan-2018	Jonathan D. Belanger
+#	Updated the include list for the maedepend statement.
+#
 PROJDIR = /cygdrive/g/git/DECaxp/
 
 #
@@ -69,7 +72,7 @@ PROJDIR = /cygdrive/g/git/DECaxp/
 COMDIR = $(PROJDIR)src/comutl/
 CPUDIR = $(PROJDIR)src/cpu/
 SYSDIR = $(PROJDIR)src/system/
-SRCDIR = $(COMDIR) $(CPUDIR) $(SYSDIR)
+SRCDIR = $(COMDIR) $(CPUDIR)
 TSTDIR = $(PROJDIR)src/tst/
 OBJDIR = $(PROJDIR)bin/
 EXEDIR = $(PROJDIR)exe/
@@ -105,12 +108,15 @@ EXES = $(addprefix $(EXEDIR), $(notdir $(TSTFILES:.c=$(EXE))))
 # Create the variable for the emulator source files (the emulator itself and
 # any companion programs - ie: configuration programs, if any).
 #
-PROGS =
+PRGSRC = $(foreach DIR, $(SYSDIR), $(wildcard $(DIR)*.c))
+PRGOBJ = $(addprefix $(OBJDIR), $(notdir $(PRGSRC:.c=.o)))
+PROGS = $(EXEDIR)DECaxp$(EXE)
 
 #
 # Create variables for the include path for all the emulator header files.
 #
-INCDIRS = $(wildcard $(SRCDIR))
+CDIRS = $(SRCDIR) $(SYSDIR)
+INCDIRS = $(wildcard $(CDIRS))
 INCS = $(foreach d, $(INCDIRS), -I$d)
 
 #
@@ -118,7 +124,7 @@ INCS = $(foreach d, $(INCDIRS), -I$d)
 # object and executable files.
 #
 CC = gcc
-CFLAGS = $(INCS) -m64 -std=gnu99 -Wall -pthread
+CFLAGS = $(INCS) -m64 -std=gnu99 -Wall -pthread -D_AXP_COMPILER_PRESENT_
 
 #
 # Debug adds to the compiler flags and then compiles everything that has not
@@ -135,19 +141,19 @@ all: tests progs
 #
 # The Test executables require the objects and the test source code.
 #
-tests:	$(OBJS) $(EXES)
+tests:	$(OBJS) $(EXES) $(PROGS)
 
 #
 # The Program executeable(s) require the objects and the program source
 # file(s).
 #
-progs: $(OBJS) $(PROGS)
+progs: $(OBJS) $(PRGOBJ)
 
 #
 # The Object files require the component source files.  The objects are written
 # to the obj folder and there may be multiple source folders.
 #
-$(OBJDIR)%.o: $(SRCS)
+$(OBJDIR)%.o: $(SRCS) $(PRGSRC)
 	$(eval SRC = $(findstring $(COMDIR)$(*F).c, $(SRCS)))
 	$(eval SRC1 = $(findstring $(CPUDIR)$(*F).c, $(SRCS)))
 	$(eval SRC2 = $(findstring $(SYSDIR)$(*F).c, $(SRCS)))
@@ -159,7 +165,7 @@ $(OBJDIR)%.o: $(SRCS)
 # The Tests require the objects and test source files.  The executables are
 # written to the exe folder and there may be multiple source folders.
 #
-$(EXEDIR)%.exe: $(TSTS)
+$(EXEDIR)%.exe: $(TSTS) $(PROGS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $<
 
 .PHONY: clean
@@ -187,24 +193,30 @@ straighten:
 # Make all the dependencies.
 #
 depend: $(DEP)
-	makedepend -f$(SELF)								\
-		-p$(OBJDIR) 									\
-		-I/usr/lib/gcc/x86_64-pc-cygwin/6.4.0/include	\
-		-- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PROGS)
+	makedepend -f$(SELF)											\
+		-p$(OBJDIR) 												\
+		-I /lib/gcc/x86_64-pc-cygwin/6.4.0/include/					\
+		-- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PRGSRC)
 
 $(DEP): $(SRCS) $(TSTS)
 	$(file >$(DEP))
-	$(foreach _,										\
-		$(SRCS), 										\
-		$(file >>$(DEP),$(addprefix $(OBJDIR),			\
-				$(addsuffix .o,							\
-					$(basename 							\
+	$(foreach _,													\
+		$(SRCS), 													\
+		$(file >>$(DEP),$(addprefix $(OBJDIR),						\
+				$(addsuffix .o,										\
+					$(basename 										\
 						$(notdir $(_))))): $(_)))
-	$(foreach _,										\
-		$(TSTS), 										\
-		$(file >>$(DEP),$(addprefix $(EXEDIR),			\
-				$(addsuffix .exe,						\
-					$(basename 							\
+	$(foreach _,													\
+		$(TSTS), 													\
+		$(file >>$(DEP),$(addprefix $(EXEDIR),						\
+				$(addsuffix .exe,									\
+					$(basename 										\
+						$(notdir $(_))))): $(_)))
+	$(foreach _,													\
+		$(PRGSRC), 													\
+		$(file >>$(DEP),$(addprefix $(EXEDIR),						\
+				$(addsuffix .exe,									\
+					$(basename 										\
 						$(notdir $(_))))): $(_)))
 
 include $(DEP)

@@ -32,8 +32,8 @@
 									<listOptionValue builtIn="false" value="&quot;G:\git\DECaxp\src\cpu&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;G:\git\DECaxp\src\system&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;G:\git\DECaxp\src\tst&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\cygwin64\usr&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\cygwin64\lib&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\cygwin64\usr\include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\cygwin64\lib\gcc\x86_64-pc-cygwin\6.4.0\include&quot;"/>
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.2130542345" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols"/>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.40078149" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>

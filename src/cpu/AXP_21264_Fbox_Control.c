@@ -30,6 +30,7 @@
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Fbox_Control.h"
+#include "AXP_21264_Ibox_PCHandling.h"
 
 /*
  * AXP_FBEQ

@@ -54,6 +54,8 @@
 #include "AXP_21264_Ebox.h"
 #include "AXP_21264_Fbox.h"
 #include "AXP_21264_Ibox.h"
+#include "AXP_21264_Ibox_Initialize.h"
+#include "AXP_21264_Ibox_PCHandling.h"
 
 /*
  * Local Variables

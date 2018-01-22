@@ -496,6 +496,65 @@ void AXP_21264_Ibox_Event(
 }
 
 /*
+ * AXP_21264_Ibox_UpdateIcache
+ *	This function is called by the Cbox to update a particular block within the
+ *	Icache.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ *	pa:
+ *		A value representing the physical address associated with the block of
+ *		instructions.
+ *	data:
+ *		A pointer to a buffer containing data returned from a Load/Store from
+ *		physical memory.
+ *	status:
+ *		A value indicating the bits to be set in the ITAG (dirty and shared).
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Ibox_UpdateIcache(
+						AXP_21264_CPU *cpu,
+						u64 pa,
+						u8 *data,
+						u8 status)
+{
+
+	/*
+	 * First things first, we have to lock the Mbox mutex.
+	 */
+	pthread_mutex_lock(&cpu->iBoxMutex);
+
+#pragma message "This function, AXP_21264_Ibox_UpdateIcache, is not even close to being finished."
+
+	/*
+	 * Write the data to the Dcache block.
+	 */
+	AXP_IcacheAdd(cpu, *(AXP_PC *) &pa, (u32 *) data, NULL);
+
+	/*
+	 * Let the Ibox know that there are more instructions to process.
+	 */
+	pthread_cond_signal(&cpu->iBoxCondition);
+
+	/*
+	 * Last things last, we have to unlock the Mbox mutex.
+	 */
+	pthread_mutex_unlock(&cpu->mBoxMutex);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
  * AXP_21264_Ibox_Retire_HW_MFPR
  *	This function is called to move a value from a processor register to an
  *	architectural register.
@@ -520,8 +579,7 @@ void AXP_21264_Ibox_Retire_HW_MFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Before we do anything, we need to lock the appropriate IPR mutex.
 	 */
-	if (((instr->type_hint_index >= AXP_IPR_ITB_TAG) &&
-		 (instr->type_hint_index <= AXP_IPR_SLEEP)) ||
+	if ((instr->type_hint_index <= AXP_IPR_SLEEP) ||
 		((instr->type_hint_index >= AXP_IPR_PCXT0) &&
 		 (instr->type_hint_index <= AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER_ASN)))
 	{
@@ -738,8 +796,7 @@ void AXP_21264_Ibox_Retire_HW_MTPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 *
 	 * Ibox IPR
 	 */
-	if (((instr->type_hint_index >= AXP_IPR_ITB_TAG) &&
-		 (instr->type_hint_index <= AXP_IPR_SLEEP)) ||
+	if ((instr->type_hint_index <= AXP_IPR_SLEEP) ||
 		((instr->type_hint_index >= AXP_IPR_PCXT0) &&
 		 (instr->type_hint_index <= AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER_ASN)))
 	{

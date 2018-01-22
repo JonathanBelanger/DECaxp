@@ -269,7 +269,7 @@ int AXP_FP_CvtX2G(
 	AXP_X_MEMORY	*xSrc1Ptr = (AXP_X_MEMORY *) src1;
 	AXP_X_MEMORY	*xSrc2Ptr = (AXP_X_MEMORY *) src2;
 	bool			sign = (xSrc1Ptr->sign == 1);
-	u32				exponent= xSrc1Ptr->exponent;
+	i32				exponent = xSrc1Ptr->exponent;
 	u128			fraction = xSrc1Ptr->fraction;
 
 	/*

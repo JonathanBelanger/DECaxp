@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 	if (cpu != NULL)
 	{
 		printf("\n%%DECAXP-I-RUNNING, The Digital Alpha AXP 21264 CPU Emulator has successfully started.\n");
-		pthread_join(cpu->cBoxThreadID);
+		pthread_join(cpu->cBoxThreadID, NULL);
 
 		/*
 		 * The following calls are just to keep the linker happy.

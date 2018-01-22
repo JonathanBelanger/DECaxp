@@ -34,6 +34,7 @@
  *	update all the register references.
  */
 #include "AXP_21264_Ebox_Control.h"
+#include "AXP_21264_Ibox_PCHandling.h"
 
 /*
  * AXP_BEQ

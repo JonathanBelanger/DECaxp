@@ -62,7 +62,7 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 						u32 *,
 						AXP_DCACHE_LOC *,
 						bool);
-bool AXP_DcacheWrite(AXP_21264_CPU *, AXP_DCACHE_LOC *, u32, void *);
+bool AXP_DcacheWrite(AXP_21264_CPU *, AXP_DCACHE_LOC *, u32, void *, u8);
 void AXP_CopyBcacheToDcache(AXP_21264_CPU *, AXP_DCACHE_LOC *, u64);
 void AXP_DcacheFlush(AXP_21264_CPU *);
 void AXP_DcacheEvict(AXP_21264_CPU *, u64, AXP_PC);

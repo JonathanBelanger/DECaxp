@@ -1169,7 +1169,8 @@ bool AXP_DcacheWrite(
 			AXP_21264_CPU *cpu,
 			AXP_DCACHE_LOC *indexSetOffset,
 			u32 len,
-			void *data)
+			void *data,
+			u8 status)
 {
 	bool	retVal = true;
 	u32		set = indexSetOffset->set;
@@ -1203,7 +1204,19 @@ bool AXP_DcacheWrite(
 
 		case 64:
 			memcpy(cpu->dCache[index][set].data, data, len);
-			cpu->dtag[index][set].dirty = true;
+			if (status == 0)
+				cpu->dtag[index][set].dirty = true;
+			else
+			{
+				if (AXP_CACHE_DIRTY(status) || AXP_CACHE_DIRTY_SHARED(status))
+					cpu->dtag[index][set].dirty = true;
+				else
+					cpu->dtag[index][set].dirty = false;
+				if (AXP_CACHE_CLEAN_SHARED(status) || AXP_CACHE_DIRTY_SHARED(status))
+					cpu->dtag[index][set].shared = true;
+				else
+					cpu->dtag[index][set].shared = false;
+			}
 			cpu->dtag[index][set].modified = true;
 			cpu->dtag[index][set].state = Ready;
 			break;
@@ -1904,8 +1917,8 @@ void AXP_IcacheFlush(AXP_21264_CPU *cpu, bool purgeAsm)
  *		executed.
  *
  * Return Value:
- *	True:	Instructions were returned.
- *	False:	Instructions were not found.
+ *	true:	Instructions were returned.
+ *	false:	Instructions were not found.
  */
 bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 {

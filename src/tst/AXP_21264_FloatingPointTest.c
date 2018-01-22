@@ -147,7 +147,7 @@ typedef struct
 
 #define AXP_NUM_OPER	40
 
-AXP_cvtOperationStr cvtOperStr[AXP_NUM_OPER] =
+AXP_cvtOperationStr cvtOperStr[AXP_NUM_OPER + 1] =
 {
 	{"+", addAction, "add"},
 	{"-", subtractAction, "subtract"},
@@ -1059,7 +1059,7 @@ int main()
 	instr.branchPC.pc = 0;
 	instr.branchPC.pal = 0;
 	instr.state = Retired;	/* All instructions are initially Retired. */
-	*((u64 *) &instr.insFpcr) = 0;
+	memset(&instr.insFpcr, 0, sizeof(instr.insFpcr));
 	*((u64 *) &instr.excSum) = 0;
 	instr.excRegMask = 0;	/* Exception Register Mask */
 

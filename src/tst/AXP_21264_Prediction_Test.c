@@ -65,7 +65,7 @@ int main()
 	int				takenInt;
 	int				ii, jj, kk;
 	AXP_21264_CPU	*cpu;
-	AXP_PC			vpc;
+	AXP_PC			vpc = {.pal = 0, .res = 0};
 	int				vpcInt;
 	bool			localTaken;
 	bool			globalTaken;
