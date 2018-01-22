@@ -1060,7 +1060,7 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 			}
 
 			/*
-			 * No reset the DTAG to indicate that the block is valid but in a
+			 * Now reset the DTAG to indicate that the block is valid but in a
 			 * pending state, until filled.  Then, unhook the associated CTAG
 			 * block, resetting it as well, then link the new CTAG with this
 			 * DTAG.
@@ -1085,7 +1085,7 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 
 			/*
 			 * The CTAG is physically indexed and tagged, unlike the Dcache,
-			 * which is virtually indexed, but physically cached.
+			 * which is virtually indexed, but physically tagged.
 			 */
 			ctagIndex = physAddr.vaIdxInfo.index;
 			ctagSet = set;
@@ -1172,18 +1172,22 @@ bool AXP_DcacheWrite(
 			void *data,
 			u8 status)
 {
-	bool	retVal = true;
-	u32		set = indexSetOffset->set;
-	u32		offset = indexSetOffset->offset;
-	u32		index = indexSetOffset->index;
-	void	*dest = (void *) &cpu->dCache[index][set].data[offset];
+	bool				retVal = true;
+	u32					set = indexSetOffset->set;
+	u32					offset = indexSetOffset->offset;
+	u32					index = indexSetOffset->index;
+	AXP_DTAG_BLK		*dtag = &cpu->dtag[index][set];
+	AXP_21264_CBOX_CTAG	*ctag = &cpu->ctag[dtag->ctagIndex][set];
+	AXP_DCACHE_BLK		*dcache = &cpu->dCache[index][set];
+	void				*dest = (void *) &dcache->data[offset];
 
 	/*
-	 * First, lock both the DTAG mutex and the Dcache mutex.
+	 * First, lock both the DTAG and Dcache mutexes.  The DTAG mutex used
+	 * throughout this function.  The Dcache one is used sporadically in this
+	 * function.
 	 */
 	pthread_mutex_lock(&cpu->dtagMutex);
 	pthread_mutex_lock(&cpu->dCacheMutex);
-
 	switch (len)
 	{
 		case 1:
@@ -1203,29 +1207,95 @@ bool AXP_DcacheWrite(
 			break;
 
 		case 64:
-			memcpy(cpu->dCache[index][set].data, data, len);
+			memcpy(dcache->data, data, len);
 			if (status == 0)
-				cpu->dtag[index][set].dirty = true;
+				dtag->dirty = true;
 			else
 			{
 				if (AXP_CACHE_DIRTY(status) || AXP_CACHE_DIRTY_SHARED(status))
-					cpu->dtag[index][set].dirty = true;
+					dtag->dirty = true;
 				else
-					cpu->dtag[index][set].dirty = false;
+					dtag->dirty = false;
 				if (AXP_CACHE_CLEAN_SHARED(status) || AXP_CACHE_DIRTY_SHARED(status))
-					cpu->dtag[index][set].shared = true;
+					dtag->shared = true;
 				else
-					cpu->dtag[index][set].shared = false;
+					dtag->shared = false;
 			}
-			cpu->dtag[index][set].modified = true;
-			cpu->dtag[index][set].state = Ready;
+			dtag->state = Ready;
 			break;
+	}
+
+	/*
+	 * We are done with the Dcache, for now.  We may re-lock later.
+	 */
+	pthread_mutex_unlock(&cpu->dCacheMutex);
+
+	/*
+	 * The Dcache block has been updated, set the modified bit so that it will
+	 * be written to the Bcache upon eviction.
+	 */
+	dtag->modified = true;
+
+	/*
+	 * Make sure the CTAG agrees with the DTAG.  Make sure to lock/unlock the
+	 * Cbox IPR mutex around the setting of the CTAG bits.
+	 */
+	pthread_mutex_lock(&cpu->cBoxIPRMutex);
+	ctag->dirty = dtag->dirty;
+	ctag->shared = dtag->shared;
+	pthread_mutex_unlock(&cpu->cBoxIPRMutex);
+
+	/*
+	 * If the Dcache block was locked, waiting for one or more writes, then we
+	 * have just one.  Decrement the number of lockers.
+	 */
+	if (dtag->lockers > 0)
+		dtag->lockers--;
+
+	/*
+	 * If there are no more lockers and there was an attempt to evict this
+	 * block, then evict the block now.
+	 */
+	if ((dtag->lockers == 0) && (dtag->evict == true))
+	{
+		u64 pa = AXP_VA2PA(dtag->physTag, dtag->ctagIndex);
+
+		/*
+		 * We are no longer needing to wait to evict this block.
+		 */
+		dtag->evict = false;
+
+		/*
+		 * If the Dcache block was modified, then write it to the Bcache, but
+		 * make sure that the Dcache mutex is locked around this code.
+		 */
+		if (dtag->modified == true)
+		{
+			pthread_mutex_lock(&cpu->dCacheMutex);
+			AXP_21264_Bcache_Write(cpu, pa, dcache->data);
+			pthread_mutex_unlock(&cpu->dCacheMutex);
+		}
+		dtag->set_0_1 = false;
+		dtag->physTag = 0;
+		dtag->dirty = false;
+		dtag->modified = false;
+		dtag->shared = false;
+		dtag->valid = false;
+
+		/*
+		 * Don't forget to reset the CTAG bits as well.
+		 */
+		pthread_mutex_lock(&cpu->cBoxIPRMutex);
+		ctag->physTag = 0;
+		ctag->dirty = false;
+		ctag->shared = false;
+		ctag->valid = false;
+		pthread_mutex_unlock(&cpu->cBoxIPRMutex);
 	}
 
 	/*
 	 * Return the result back to the caller.
 	 */
-	pthread_mutex_unlock(&cpu->dCacheMutex);
 	pthread_mutex_unlock(&cpu->dtagMutex);
 	return(retVal);
 }
@@ -1307,7 +1377,7 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 	 */
 	pthread_mutex_lock(&cpu->dCacheMutex);
 	pthread_mutex_lock(&cpu->dtagMutex);
-	pthread_mutex_lock(&cpu->bCacheMutex);
+	pthread_mutex_lock(&cpu->cBoxIPRMutex);
 
 	/*
 	 * Go through each cache item and invalidate and reset it.
@@ -1315,37 +1385,42 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 	for (ii = 0; ii < AXP_CACHE_ENTRIES; ii++)
 		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
 		{
-			ctagIdx = cpu->dtag[ii][jj].ctagIndex;
-			if ((cpu->dtag[ii][jj].valid == true) &&
-				(cpu->dtag[ii][jj].modified == true))
+			if (cpu->dtag[ii][jj].lockers > 0)
 			{
+				ctagIdx = cpu->dtag[ii][jj].ctagIndex;
+				if ((cpu->dtag[ii][jj].valid == true) &&
+					(cpu->dtag[ii][jj].modified == true))
+				{
 
-				/*
-				 * Using the information we have convert the virtual address to
-				 * its physical equivalent.
-				 *
-				 * NOTE:	We don't have to worry about the offset within the
-				 *			block, as we are copying the entire block from its
-				 *			zero offset.
-				 */
-				pa = AXP_VA2PA(cpu->ctag[ctagIdx][jj].physTag, ctagIdx);
-				/* Update the Bcache with this modified block. */
-				AXP_21264_Bcache_Write(
-					cpu,
-					pa,
-					cpu->dCache[ii][jj].data);
+					/*
+					 * Using the information we have convert the virtual address to
+					 * its physical equivalent.
+					 *
+					 * NOTE:	We don't have to worry about the offset within the
+					 *			block, as we are copying the entire block from its
+					 *			zero offset.
+					 */
+					pa = AXP_VA2PA(cpu->ctag[ctagIdx][jj].physTag, ctagIdx);
+					/* Update the Bcache with this modified block. */
+					AXP_21264_Bcache_Write(
+						cpu,
+						pa,
+						cpu->dCache[ii][jj].data);
+					cpu->dtag[ii][jj].modified = false;
+				}
+				cpu->dtag[ii][jj].set_0_1 = false;
+				cpu->dtag[ii][jj].physTag = 0;
+				cpu->dtag[ii][jj].dirty = false;
 				cpu->dtag[ii][jj].modified = false;
+				cpu->dtag[ii][jj].shared = false;
+				cpu->dtag[ii][jj].valid = false;
+				cpu->ctag[ctagIdx][jj].physTag = 0;
+				cpu->ctag[ctagIdx][jj].dirty = false;
+				cpu->ctag[ctagIdx][jj].shared = false;
+				cpu->ctag[ctagIdx][jj].valid = false;
 			}
-			cpu->dtag[ii][jj].set_0_1 = false;
-			cpu->dtag[ii][jj].physTag = 0;
-			cpu->dtag[ii][jj].dirty = false;
-			cpu->dtag[ii][jj].modified = false;
-			cpu->dtag[ii][jj].shared = false;
-			cpu->dtag[ii][jj].valid = false;
-			cpu->ctag[ctagIdx][jj].physTag = 0;
-			cpu->ctag[ctagIdx][jj].dirty = false;
-			cpu->ctag[ctagIdx][jj].shared = false;
-			cpu->ctag[ctagIdx][jj].valid = false;
+			else
+				cpu->dtag[ii][jj].evict = true;
 		}
 
 	/*
@@ -1354,7 +1429,7 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
 	 * that these locks are locked in the same order where ever both are
 	 * locked.
 	 */
-	pthread_mutex_unlock(&cpu->bCacheMutex);
+	pthread_mutex_unlock(&cpu->cBoxIPRMutex);
 	pthread_mutex_unlock(&cpu->dtagMutex);
 	pthread_mutex_unlock(&cpu->dCacheMutex);
 
@@ -1411,7 +1486,7 @@ void AXP_DcacheEvict(AXP_21264_CPU *cpu, u64 va, AXP_PC pc)
 		 */
 		pthread_mutex_lock(&cpu->dCacheMutex);
 		pthread_mutex_lock(&cpu->dtagMutex);
-		pthread_mutex_lock(&cpu->bCacheMutex);
+		pthread_mutex_lock(&cpu->cBoxIPRMutex);
 
 		if ((cpu->dtag[index][0].valid == true) &&
 			(cpu->dtag[index][0].physTag == physAddr.vaIdxInfo.tag))
@@ -1431,18 +1506,23 @@ void AXP_DcacheEvict(AXP_21264_CPU *cpu, u64 va, AXP_PC pc)
 
 		if (dtag != NULL)
 		{
-			if (dtag->modified == true)
-				AXP_21264_Bcache_Write(cpu, pa, dcache->data);
-			dtag->set_0_1 = false;
-			dtag->physTag = 0;
-			dtag->dirty = false;
-			dtag->modified = false;
-			dtag->shared = false;
-			dtag->valid = false;
-			ctag->physTag = 0;
-			ctag->dirty = false;
-			ctag->shared = false;
-			ctag->valid = false;
+			if (dtag->lockers > 0)
+			{
+				if (dtag->modified == true)
+					AXP_21264_Bcache_Write(cpu, pa, dcache->data);
+				dtag->set_0_1 = false;
+				dtag->physTag = 0;
+				dtag->dirty = false;
+				dtag->modified = false;
+				dtag->shared = false;
+				dtag->valid = false;
+				ctag->physTag = 0;
+				ctag->dirty = false;
+				ctag->shared = false;
+				ctag->valid = false;
+			}
+			else
+				dtag->evict = true;
 		}
 
 		/*
@@ -1451,7 +1531,7 @@ void AXP_DcacheEvict(AXP_21264_CPU *cpu, u64 va, AXP_PC pc)
 		 * that these locks are locked in the same order where ever both are
 		 * locked.
 		 */
-		pthread_mutex_unlock(&cpu->bCacheMutex);
+		pthread_mutex_unlock(&cpu->cBoxIPRMutex);
 		pthread_mutex_unlock(&cpu->dtagMutex);
 		pthread_mutex_unlock(&cpu->dCacheMutex);
 	}
@@ -1459,6 +1539,74 @@ void AXP_DcacheEvict(AXP_21264_CPU *cpu, u64 va, AXP_PC pc)
 	/*
 	 * Return back to the caller.
 	 */
+	return;
+}
+
+/*
+ * AXP_Dcache_Lock
+ *	This function is called to lock the Dcache block associated with a
+ *	particular Virtual Address (VA) and Physical Address (PA) pair.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the AXP 21264 CPU structure containing the current
+ *		execution mode and the DTB (for Data) and ITB (for Instructions)
+ *		arrays.
+ * 	va:
+ * 		The virtual address of the data in virtual memory.
+ * 	pa:
+ * 		The physical address, as stored in the DTB (Data TLB).
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Value:
+ *	None.
+ */
+void AXP_Dcache_Lock(
+				AXP_21264_CPU *cpu,
+				u64 va,
+				u64 pa)
+{
+	AXP_VA			virtAddr = {.va = va};
+	AXP_VA			physAddr = {.va = pa};
+	u64				tag = physAddr.vaIdxInfo.tag;
+	u32				index = virtAddr.vaIdx.index & 0x07f;
+	u32				sets;
+
+	/*
+	 * We are only going to be looking in the dtag array, no need to lock
+	 * either the Dcache or CboxIPR mutexes.
+	 */
+	pthread_mutex_lock(&cpu->dtagMutex);
+
+	/*
+	 * Get the number of Dcache sets currently in play.  It is either 1 or
+	 * 2.  Don't forget to lock/unlock the Mbox IPR mutex around this, so
+	 * that it is not changed while we are looking at it.
+	 */
+	pthread_mutex_lock(&cpu->mBoxIPRMutex);
+	sets = (cpu->dcCtl.set_en == 1) ? 1 : 2;
+	pthread_mutex_unlock(&cpu->mBoxIPRMutex);
+
+	/*
+	 * Check the active sets to determine which one to lock, if any.  We use a
+	 * lock counter so that multiple writers to the same block have all been
+	 * accounted for.  This is important when the block is also targeted for
+	 * eviction, but not all the writers have been retired.
+	 */
+	if ((cpu->dtag[index][0].valid == true) &&
+		(cpu->dtag[index][0].physTag == tag))
+		cpu->dtag[index][0].lockers++;
+	else if ((sets == 2) &&
+			 (cpu->dtag[index][1].valid == true) &&
+			 (cpu->dtag[index][1].physTag == tag))
+		cpu->dtag[index][1].lockers++;
+
+	/*
+	 * Return back to that caller.
+	 */
+	pthread_mutex_unlock(&cpu->dtagMutex);
 	return;
 }
 
@@ -1564,6 +1712,7 @@ bool AXP_DcacheRead(
 	 * prevent multiple accessors to these structures.
 	 */
 	pthread_mutex_lock(&cpu->dCacheMutex);
+	pthread_mutex_lock(&cpu->dtagMutex);
 
 	/*
 	 * 5.3.10 Determine how many sets are enabled.
@@ -1612,6 +1761,7 @@ bool AXP_DcacheRead(
 			break;
 		}
 	}
+	pthread_mutex_unlock(&cpu->dtagMutex);
 
 	/*
 	 * If we found what we were looking for, so save the value requested

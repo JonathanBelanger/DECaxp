@@ -72,8 +72,9 @@ PROJDIR = /cygdrive/g/git/DECaxp/
 COMDIR = $(PROJDIR)src/comutl/
 CPUDIR = $(PROJDIR)src/cpu/
 SYSDIR = $(PROJDIR)src/system/
-SRCDIR = $(COMDIR) $(CPUDIR)
+SRCDIR = $(COMDIR) $(CPUDIR) $(SYSDIR)
 TSTDIR = $(PROJDIR)src/tst/
+APPDIR = $(PROJDIR)app/
 OBJDIR = $(PROJDIR)bin/
 EXEDIR = $(PROJDIR)exe/
 BLDDIR = $(PROJDIR)bld/
@@ -108,7 +109,7 @@ EXES = $(addprefix $(EXEDIR), $(notdir $(TSTFILES:.c=$(EXE))))
 # Create the variable for the emulator source files (the emulator itself and
 # any companion programs - ie: configuration programs, if any).
 #
-PRGSRC = $(foreach DIR, $(SYSDIR), $(wildcard $(DIR)*.c))
+PRGSRC = $(foreach DIR, $(APPDIR), $(wildcard $(DIR)*.c))
 PRGOBJ = $(addprefix $(OBJDIR), $(notdir $(PRGSRC:.c=.o)))
 PROGS = $(EXEDIR)DECaxp$(EXE)
 
@@ -154,11 +155,13 @@ progs: $(OBJS) $(PRGOBJ)
 # to the obj folder and there may be multiple source folders.
 #
 $(OBJDIR)%.o: $(SRCS) $(PRGSRC)
-	$(eval SRC = $(findstring $(COMDIR)$(*F).c, $(SRCS)))
+	$(eval SRC  = $(findstring $(COMDIR)$(*F).c, $(SRCS)))
 	$(eval SRC1 = $(findstring $(CPUDIR)$(*F).c, $(SRCS)))
 	$(eval SRC2 = $(findstring $(SYSDIR)$(*F).c, $(SRCS)))
+	$(eval APP  = $(findstring $(APPDIR)$(*F).c, $(PRGSRC)))
 	$(eval $(strip SRC += $(SRC1)))
 	$(eval $(strip SRC += $(SRC2)))
+	$(eval $(strip SRC += $(APP)))
 	$(CC) -c $(CFLAGS) -o $@ $(SRC)
 
 #
