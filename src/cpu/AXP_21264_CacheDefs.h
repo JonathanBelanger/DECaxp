@@ -307,13 +307,14 @@ typedef struct
 	u64					physTag;
 	u32					ctagIndex;
 	u32					ctagSet;
+	u32					lockers;
 	AXP_21264_CACHE_ST	state;
 	bool				valid;
 	bool				dirty;
 	bool				shared;
 	bool				modified;
 	bool				set_0_1;
-	bool				locked;
+	bool				evict;
 } AXP_DTAG_BLK;
 
 #define AXP_ICACHE_LINE_INS		16

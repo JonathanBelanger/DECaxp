@@ -1585,12 +1585,13 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 			cpu->dtag[ii][jj].ctagIndex = AXP_CACHE_ENTRIES;
 			cpu->dtag[ii][jj].ctagSet = AXP_2_WAY_CACHE;
 			cpu->dtag[ii][jj].physTag = 0;
+			cpu->dtag[ii][jj].lockers = 0;
 			cpu->dtag[ii][jj].valid = false;
 			cpu->dtag[ii][jj].dirty = false;
 			cpu->dtag[ii][jj].shared = false;
 			cpu->dtag[ii][jj].modified = false;
-			cpu->dtag[ii][jj].set_0_1 = false;;
-			cpu->dtag[ii][jj].locked = false;;
+			cpu->dtag[ii][jj].set_0_1 = false;
+			cpu->dtag[ii][jj].evict = false;
 			cpu->dtag[ii][jj].state = Invalid;
 		}
 	}
