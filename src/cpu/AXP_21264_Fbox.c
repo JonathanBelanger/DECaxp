@@ -38,6 +38,8 @@
 */
 #include "AXP_Configure.h"
 #include "AXP_21264_Fbox.h"
+#include "AXP_21264_Ibox.h"
+#include "AXP_21264_Ibox_InstructionInfo.h"
 
 /*
  * AXP_21264_Fbox_RegisterReady
@@ -96,7 +98,6 @@ void AXP_21264_Fbox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_F_MEMORY *tmpF = (AXP_F_MEMORY *) &tmp;
 	AXP_G_MEMORY *tmpG = (AXP_G_MEMORY *) &tmp;
 	AXP_S_MEMORY *tmpS = (AXP_S_MEMORY *) &tmp;
-	AXP_T_MEMORY *tmpT = (AXP_T_MEMORY *) &tmp;
 
 	if (instr->excRegMask == NoException)
 	{
@@ -378,7 +379,7 @@ void *AXP_21264_FboxOthMain(void *voidPtr)
 	 * Call the actual main function with the information it needs to be able
 	 * to execute instructions for a specific Integer Pipeline.
 	 */
-	AXP_21264_EboxMain(cpu, FboxOther);
+	AXP_21264_FboxMain(cpu, FboxOther);
 
 	/*
 	 * Return back to the caller.

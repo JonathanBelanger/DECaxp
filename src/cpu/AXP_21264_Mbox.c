@@ -40,6 +40,8 @@
 #include "AXP_Configure.h"
 #include "AXP_21264_Mbox.h"
 #include "AXP_21264_Cache.h"
+#include "AXP_21264_Ebox.h"
+#include "AXP_21264_Fbox.h"
 #include "AXP_21264_Cbox.h"
 
 /*
@@ -1301,7 +1303,7 @@ void AXP_21264_Mbox_Process_Q(AXP_21264_CPU *cpu)
 					AXP_21264_Mbox_TryCaches(cpu, ii);
 				else
 				{
-					cpu->lq[ii]->instr->destv.r.uq = cpu->lq[ii].IOdata;
+					cpu->lq[ii].instr->destv.r.uq = cpu->lq[ii].IOdata;
 					cpu->lq[ii].state = LQComplete;
 				}
 				break;
@@ -1425,7 +1427,8 @@ void AXP_21264_Mbox_RetireWrite(AXP_21264_CPU *cpu, u8 slot)
 				cpu,
 				&cpu->sq[slot].dcacheLoc,
 				cpu->sq[slot].len,
-				&cpu->sq[slot].value);
+				&cpu->sq[slot].value,
+				0);
 	AXP_21264_Mbox_PutSQSlot(cpu, slot);
 	return;
 }
@@ -1467,6 +1470,84 @@ bool AXP_21264_Mbox_WorkQueued(AXP_21264_CPU *cpu)
 	 * Return the results back to the caller.
 	 */
 	return(retVal);
+}
+
+/*
+ * AXP_21264_Mbox_UpdateDcache
+ *	This function is called by the Cbox to update a particular block within the
+ *	Dcache.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the structure containing the information needed to emulate
+ *		a single CPU.
+ *	lsSqEntry:
+ *		The value of the signed index+1 into the LQ/SQ.  A value < 0 is for the
+ *		SQ, otherwise the LQ.
+ *	data:
+ *		A pointer to a buffer containing data returned from a Load/Store from
+ *		physical memory.
+ *	status:
+ *		A value indicating the bits to be set in the DTAG (dirty and shared).
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Mbox_UpdateDcache(
+						AXP_21264_CPU *cpu,
+						i8 lqSqEntry,
+						u8 *data,
+						u8 status)
+{
+	bool			signalCond = false;
+	bool			loadFlag = lqSqEntry <= 0;
+	u8				entry = abs(lqSqEntry) - 1;
+	AXP_MBOX_QUEUE	*qEntry = (loadFlag == true) ?
+							&cpu->lq[entry] :
+							&cpu->sq[entry];
+
+	/*
+	 * First things first, we have to lock the Mbox mutex.
+	 */
+	pthread_mutex_lock(&cpu->mBoxMutex);
+
+	/*
+	 * Write the data to the Dcache block.
+	 */
+	AXP_DcacheWrite(
+				cpu,
+				&qEntry->dcacheLoc,
+				AXP_DCACHE_DATA_LEN,
+				data,
+				status);
+
+	/*
+	 * We need to signal the Mbox if the entry was in a pending Cbox state.
+	 * If so, we need to change the state to Write Pending.
+	 */
+	signalCond = qEntry->state == CboxPending;
+	if (signalCond == true)
+		qEntry->state = (loadFlag == true) ? LQReadPending : SQWritePending;
+
+	/*
+	 * If we changed one of the SQ/LQ states, then signal the Mbox that there
+	 * may be something to process.
+	 */
+	if (signalCond == true)
+		pthread_cond_signal(&cpu->mBoxCondition);
+
+	/*
+	 * Last things last, we have to unlock the Mbox mutex.
+	 */
+	pthread_mutex_unlock(&cpu->mBoxMutex);
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
 }
 
 /*

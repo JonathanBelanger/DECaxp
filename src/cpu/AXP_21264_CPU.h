@@ -691,4 +691,9 @@ typedef struct
  */
 #define AXP_21264_ALIGN_MEM_BLK		0xffffffffffffffc0ll
 
+/*
+ * CPU Allocation Function Prototype.
+ */
+AXP_21264_CPU *AXP_21264_AllocateCPU(void);
+
 #endif /* _AXP_21264_CPU_DEFS_ */

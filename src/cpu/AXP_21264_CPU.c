@@ -30,6 +30,11 @@
  *	initialized.
  */
 #include "AXP_21264_CPUDefs.h"
+#include "AXP_21264_Ibox.h"
+#include "AXP_21264_Ebox.h"
+#include "AXP_21264_Fbox.h"
+#include "AXP_21264_Mbox.h"
+#include "AXP_21264_Cbox.h"
 
 /*
  * AXP_21264_AlloateCPU
@@ -166,37 +171,37 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 				pthreadRet = pthread_create(
 								&cpu->eBoxU0ThreadID,
 								NULL,
-								(void *(void *)) AXP_21264_EboxU0Main,
+								AXP_21264_EboxU0Main,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->eBoxU1ThreadID,
 								NULL,
-								(void *(void *)) AXP_21264_EboxU1Main,
+								AXP_21264_EboxU1Main,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->eBoxL0ThreadID,
 								NULL,
-								(void *(void *)) AXP_21264_EboxL0Main,
+								AXP_21264_EboxL0Main,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->eBoxL1ThreadID,
 								NULL,
-								(void *(void *)) AXP_21264_EboxL1Main,
+								AXP_21264_EboxL1Main,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->fBoxMulThreadID,
 								NULL,
-								(void *(void *)) AXP_21264_FboxMulMain,
+								AXP_21264_FboxMulMain,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
 								&cpu->fBoxOthThreadID,
 								NULL,
-								(void *(void *)) AXP_21264_FboxOthMain,
+								AXP_21264_FboxOthMain,
 								cpu);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(

@@ -1718,7 +1718,7 @@ AXP_INS_TYPE AXP_InstructionFormat(AXP_INS_FMT inst)
 	/*
 	 * Opcodes can only be between 0x00 and 0x3f.  Any other value is reserved.
 	 */
-	if ((inst.pal.opcode >= 0x00) && (inst.pal.opcode <= 0x3f))
+	if (inst.pal.opcode <= 0x3f)
 	{
 
 		/*
@@ -1766,7 +1766,7 @@ AXP_OPER_TYPE AXP_OperationType(u32 opcode)
 	/*
 	 * Opcodes can only be between 0x00 and 0x3f.  Any other value is reserved.
 	 */
-	if ((opcode >= 0x00) && (opcode <= 0x3f))
+	if (opcode <= 0x3f)
 	{
 
 		/*
@@ -1805,7 +1805,7 @@ AXP_REG_DECODE AXP_RegisterDecoding(u32 opcode)
 	/*
 	 * Opcodes can only be between 0x00 and 0x3f.  Any other value is reserved.
 	 */
-	if ((opcode >= 0x00) && (opcode <= 0x3f))
+	if (opcode <= 0x3f)
 	{
 
 		/*
@@ -1843,7 +1843,7 @@ u16 AXP_InstructionQueue(u32 opcode)
 	/*
 	 * Opcodes can only be between 0x00 and 0x3f.  Any other value is reserved.
 	 */
-	if ((opcode >= 0x00) && (opcode <= 0x3f))
+	if (opcode <= 0x3f)
 	{
 
 		/*

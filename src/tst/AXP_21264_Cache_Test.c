@@ -149,8 +149,8 @@ int main()
 				if ((items != 2) && (items != 3))
 				{
 					printf("%s\n", line);
-					printf("%d %08x %08x\n", oper, addr, data);
-					printf("parseLine did not return the number of expected items %d\n", items);
+					printf("%u %08x %08x\n", oper, addr, data);
+					printf("parseLine did not return the number of expected items %u\n", items);
 					abort();
 				}
 				switch (oper)
@@ -405,19 +405,19 @@ int main()
 		fp = NULL;
 		ii++;
 	}
-	printf("Total operations executed: %d\n\n", totalOper);
-	printf("Total reads from Dcache: %d\n", readData);
-	printf("Total reads that Hit in the Dcache: %d\n", readHit);
-	printf("Total reads that Missed in the Dcache: %d\n\n", readMiss);
+	printf("Total operations executed: %u\n\n", totalOper);
+	printf("Total reads from Dcache: %u\n", readData);
+	printf("Total reads that Hit in the Dcache: %u\n", readHit);
+	printf("Total reads that Missed in the Dcache: %u\n\n", readMiss);
 
-	printf("Total writes to Dcache: %d\n", writeData);
-	printf("Total writes that Hit the Dcache (updates): %d\n", writeHit);
-	printf("Total writes that Missed the Dcache (adds): %d\n", writeMiss);
-	printf("Total writes that Missed the Dcache and DTB: %d\n\n", writeWayMiss);
+	printf("Total writes to Dcache: %u\n", writeData);
+	printf("Total writes that Hit the Dcache (updates): %u\n", writeHit);
+	printf("Total writes that Missed the Dcache (adds): %u\n", writeMiss);
+	printf("Total writes that Missed the Dcache and DTB: %u\n\n", writeWayMiss);
 
-	printf("Total reads from Icache: %d\n", readInst);
-	printf("Total reads that Hit in the Icache: %d\n", instrHit);
-	printf("Total reads that Missed in the Icache: %d\n", instrMiss);
-	printf("Total reads that Missed the Icache and the ITB: %d\n\n", instrWayMiss);
+	printf("Total reads from Icache: %u\n", readInst);
+	printf("Total reads that Hit in the Icache: %u\n", instrHit);
+	printf("Total reads that Missed in the Icache: %u\n", instrMiss);
+	printf("Total reads that Missed the Icache and the ITB: %u\n\n", instrWayMiss);
 	return(0);
 }

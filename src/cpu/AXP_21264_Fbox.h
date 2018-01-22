@@ -422,6 +422,5 @@ void AXP_21264_Fbox_Compl(AXP_21264_CPU *, AXP_INSTRUCTION *);
 bool AXP_21264_Fbox_Init(AXP_21264_CPU *);
 void *AXP_21264_FboxMulMain(void *);
 void *AXP_21264_FboxOthMain(void *);
-void AXP_21264_FboxMain(AXP_21264_CPU *, int);
-
+void AXP_21264_FboxMain(AXP_21264_CPU *, AXP_PIPELINE);
 #endif /* _AXP_21264_FBOX_DEFS_ */
