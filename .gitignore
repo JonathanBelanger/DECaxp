@@ -1,4 +1,5 @@
-Debug
 bin
 bld/Makefile.bak
+bld/Makefile.dep
 exe
+lib
