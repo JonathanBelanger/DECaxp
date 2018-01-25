@@ -64,23 +64,69 @@
 #	V01.008		21-Jan-2018	Jonathan D. Belanger
 #	Updated the include list for the maedepend statement.
 #
+#	V01.009		25-Jan-2018	Jonathan D. Belanger
+#	This makefile requires a bit more restructuring.  It worked in the simpler
+#	case, where we only had one set of executeables.  It now needs to be
+#	broken down into steps.  The steps will be as follows:
+#		1) .c --> .o	(in comutl, cpu, and system folders)
+#		2) .o --> .a	(libcomutl.a, libcpu.a, libsystem.a)
+#		3) .c --> .exe	(in tst and app folders)
+#
+
+#
+# File extensions for various input and output files
+#
+CFILE = .c
+OFILE = .o
+AFILE = .a
+EFILE = .exe
+
+#
+# THe below variable is used as the base folder for all other project folders.
+#
 PROJDIR = /cygdrive/g/git/DECaxp/
 
 #
-# Create variables for the various top-level directories we care about.
+# Component names.
 #
-COMDIR = $(PROJDIR)src/comutl/
-CPUDIR = $(PROJDIR)src/cpu/
-SYSDIR = $(PROJDIR)src/system/
-SRCDIR = $(COMDIR) $(CPUDIR) $(SYSDIR)
-TSTDIR = $(PROJDIR)src/tst/
-APPDIR = $(PROJDIR)app/
-OBJDIR = $(PROJDIR)bin/
-EXEDIR = $(PROJDIR)exe/
-BLDDIR = $(PROJDIR)bld/
+COMUTL = comutl
+CPU = cpu
+SYS = system
+COMPS = $(COMUTL) $(CPU) $(SYS)
 
 #
-# Build file information, so that we can build from any directory and not have
+# Executeable source folders
+#
+EXEC1 = tst
+EXEC2 = app
+
+#
+# Create variables for the build and target folders.  The build folder is
+# where this file is located.  The target folders are one for object files,
+# one for library files, and one for executeable files.
+#
+BLDDIR = $(PROJDIR)bld/
+OBJDIR = $(PROJDIR)bin/
+EXEDIR = $(PROJDIR)exe/
+LIBDIR = $(PROJDIR)lib/
+
+#
+# Create variables for the folders where component source files are located.
+#
+SRCDIR = $(PROJDIR)src/
+COMDIR = $(SRCDIR)$(COMUTL)/
+CPUDIR = $(SRCDIR)$(CPU)/
+SYSDIR = $(SRCDIR)$(SYS)/
+
+#
+# Create variables for the folders where the source files that will be
+# compiled to executeable files.
+#
+TSTDIR = $(SRCDIR)$(EXEC1)/
+APPDIR = $(SRCDIR)$(EXEC2)/
+
+#
+# Build file information, so that we can build from any folder and not have
 # to worry where files get written.
 #
 SELF = $(BLDDIR)Makefile
@@ -92,31 +138,41 @@ BAK = $(addsuffix .bak, $(SELF))
 # files that are created from compiling.  This definition will look in all
 # sub-directories under the top-level source directory.
 #
-CFILES = $(foreach DIR, $(SRCDIR), $(wildcard $(DIR)*.c))
-SRCS = $(CFILES)
-OBJS = $(addprefix $(OBJDIR), $(notdir $(CFILES:.c=.o)))
+COMSRCS = $(wildcard $(COMDIR)*$(CFILE))
+COMOBJS = $(addprefix $(OBJDIR), $(notdir $(COMSRCS:$(CFILE)=$(OFILE))))
+CPUSRCS = $(wildcard $(CPUDIR)*$(CFILE))
+CPUOBJS = $(addprefix $(OBJDIR), $(notdir $(CPUSRCS:$(CFILE)=$(OFILE))))
+SYSSRCS = $(wildcard $(SYSDIR)*$(CFILE))
+SYSOBJS = $(addprefix $(SYSDIR), $(notdir $(SYSSRCS:$(CFILE)=$(OFILE))))
+SRCS = $(COMSRCS) $(CPUSRCS) $(SYSSRCS)
+OBJS = $(COMOBJS) $(CPUOBJS) $(SYSOBJS)
+
+#
+# Create variables fo the .a archive files that need to be created.
+#
+COMARC = $(addprefix $(LIBDIR)lib, $(addsuffix $(AFILE), $(COMUTL)))
+CPUARC = $(addprefix $(LIBDIR)lib, $(addsuffix $(AFILE), $(CPU)))
+SYSARC = $(addprefix $(LIBDIR)lib, $(addsuffix $(AFILE), $(SYS)))
+ARCS = $(COMARC) $(CPUARC) $(SYSARC)
 
 #
 # Create variables for the .c source code files and the object files that are
 # created from compiling.
 #
-TSTFILES = $(wildcard $(TSTDIR)*.c)
-TSTS = $(TSTFILES)
-EXE = .exe
-EXES = $(addprefix $(EXEDIR), $(notdir $(TSTFILES:.c=$(EXE))))
+TSTSRCS = $(wildcard $(TSTDIR)*$(CFILE))
+TSTEXES = $(addprefix $(EXEDIR), $(notdir $(TSTFILES:$(CFILE)=$(EFILE))))
 
 #
-# Create the variable for the emulator source files (the emulator itself and
+# Create the variables for the emulator source files (the emulator itself and
 # any companion programs - ie: configuration programs, if any).
 #
-PRGSRC = $(foreach DIR, $(APPDIR), $(wildcard $(DIR)*.c))
-PRGOBJ = $(addprefix $(OBJDIR), $(notdir $(PRGSRC:.c=.o)))
-PROGS = $(EXEDIR)DECaxp$(EXE)
+PRGSRCS = $(foreach DIR, $(APPDIR), $(wildcard $(DIR)*$(CFILE)))
+PRGEXES = $(foreach PROG, $(PRGSRCS), $(addprefix $(EXEDIR), $(addsuffix $(EFILE), $(PROG))))
 
 #
 # Create variables for the include path for all the emulator header files.
 #
-CDIRS = $(SRCDIR) $(SYSDIR)
+CDIRS = $(COMDIR) $(CPUDIR) $(SYSDIR)
 INCDIRS = $(wildcard $(CDIRS))
 INCS = $(foreach d, $(INCDIRS), -I$d)
 
@@ -140,44 +196,59 @@ debug: all
 all: tests progs
 
 #
-# The Test executables require the objects and the test source code.
+# The Test executables require the test executables to be built.
 #
-tests:	$(OBJS) $(EXES) $(PROGS)
+tests:	$(TSTEXES)
 
 #
 # The Program executeable(s) require the objects and the program source
 # file(s).
 #
-progs: $(OBJS) $(PRGOBJ)
+progs: $(PRGEXES)
 
 #
-# The Object files require the component source files.  The objects are written
-# to the obj folder and there may be multiple source folders.
+# Define the suffix rule to go from .c file to .o file
 #
-$(OBJDIR)%.o: $(SRCS) $(PRGSRC)
-	$(eval SRC  = $(findstring $(COMDIR)$(*F).c, $(SRCS)))
-	$(eval SRC1 = $(findstring $(CPUDIR)$(*F).c, $(SRCS)))
-	$(eval SRC2 = $(findstring $(SYSDIR)$(*F).c, $(SRCS)))
-	$(eval APP  = $(findstring $(APPDIR)$(*F).c, $(PRGSRC)))
-	$(eval $(strip SRC += $(SRC1)))
-	$(eval $(strip SRC += $(SRC2)))
-	$(eval $(strip SRC += $(APP)))
-	$(CC) -c $(CFLAGS) -o $@ $(SRC)
+%$(OFILE): %$(CFILE)
+	$(CC) -c $(CFLAGS) -o $@ $<
 
 #
-# The Tests require the objects and test source files.  The executables are
-# written to the exe folder and there may be multiple source folders.
+# Define the suffix rule to go from .o file to .a file
 #
-$(EXEDIR)%.exe: $(TSTS) $(PROGS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $<
+(%$(AFILE)): %$(OFILE) $(OBJS)
+	$(AR) r $@ $<
 
-.PHONY: clean
+#
+# Define the suffix rule to go from .c to .exe file
+#
+%$(EFILE): %(CFILE) $(ARCS)
+	$(CC) $(CFLAGS) -o $@ $(ARCS) $<
+
+#
+# Define some entries to be called by the dependincy generation code.
+#
+define GET_FILENAME =
+	$(basename $(not_dir $(1)))
+endef
+define SRC_TEMPLATE =
+	$(addprefix $(OBJDIR), $(addsuffix $OFILE, $(eval $(call GET_FILENAME, $(1))))): $(1)
+endef
+define ARC_TEMPLATE =
+	$(addprefix $(LIBDIR), $(addsuffix $(AFILE), $(eval $(call GET_FILENAME, $(1)))))(	\
+		$(addsuffix $(OFILE), $(eval $(call GET_FILENAME, $(2))))):	\
+		$(addprefix $(OBJDIR), $(addsuffix $(OFILE), $(eval $(call GET_FILENAME, $(1)))))
+endef
+define EXE_TEMPLATE =
+	$(addprefix $(EXEDIR), $(addsuffix $(EFILE), $(eval $(call GET_FILENAME, $(1))))): $(1) $(ARCS)
+endef
+
+.PHONY: clean purge
 
 #
 # Clean up everything (equvalent to what the 'all' target created, plus
 # restoring the Makefile that had been updated by a "make depend" command).
 #
-clean: straighten
+clean: purge
 ifneq ($(wildcard $(BLDDIR)*.bak),)
 	rm -f $(SELF)
 	mv -f $(BAK) $(SELF)
@@ -189,38 +260,37 @@ endif
 #
 # Clean up everything (equvalent to what the 'all' target created, only).
 #
-straighten:
-	rm -f $(OBJDIR)* $(EXEDIR)*
+purge:
+	rm -f $(OBJDIR)* $(LIBDIR)* $(EXEDIR)*
 
 #
-# Make all the dependencies.
+# Make all the dependencies.  The dependencies include all the following:
+#	1) #include files within each of the source files (makde with makedepend)
+#	2) Each of the target component object files from component source files
+#	3) Each of the target component archives from component object files
+#	4) Each of the target executable file from the component archive files
+#	5) Each of the target executable files from the equivalent source files
 #
 depend: $(DEP)
-	makedepend -f$(SELF)											\
-		-p$(OBJDIR) 												\
-		-I /lib/gcc/x86_64-pc-cygwin/6.4.0/include/					\
-		-- $(CFLAGS) -- $(SRCS) $(TSTFILES) $(PRGSRC)
+	makedepend -f$(SELF)	\
+		-p$(OBJDIR) \
+		-I /lib/gcc/x86_64-pc-cygwin/6.4.0/include/	\
+		-- $(CFLAGS) -- $(SRCS) $(TSTSRCS) $(PRGSRCS)
 
-$(DEP): $(SRCS) $(TSTS)
+#
+# The following code makes all the dependencies for the following:
+#	1) obj\*.o: src\*\*.c		- for each component
+#	2) lib\lib*.a: obj\*.o		- for each component and component object file
+#	3) exe\*.exe: *\*.c lib\*.a	- for each executable source and all archives
+#
+$(DEP):
 	$(file >$(DEP))
-	$(foreach _,													\
-		$(SRCS), 													\
-		$(file >>$(DEP),$(addprefix $(OBJDIR),						\
-				$(addsuffix .o,										\
-					$(basename 										\
-						$(notdir $(_))))): $(_)))
-	$(foreach _,													\
-		$(TSTS), 													\
-		$(file >>$(DEP),$(addprefix $(EXEDIR),						\
-				$(addsuffix .exe,									\
-					$(basename 										\
-						$(notdir $(_))))): $(_)))
-	$(foreach _,													\
-		$(PRGSRC), 													\
-		$(file >>$(DEP),$(addprefix $(EXEDIR),						\
-				$(addsuffix .exe,									\
-					$(basename 										\
-						$(notdir $(_))))): $(_)))
+	$(foreach _, $(SRCS), $(file >>$(DEP), $(eval $(call SRC_TEMPLATE, $(_)))))					# Step 1	(#2 above)
+	$(foreach _, $(COMSRCS), $(file >>$(DEP), $(eval $(call ARC_TEMPLATE, $(COMUTL), $(_)))))	# Step 2a	(#3 above)
+	$(foreach _, $(CPUSRCS), $(file >>$(DEP), $(eval $(call ARC_TEMPLATE, $(CPU), $(_)))))		# Step 2b	(#3 above)
+	$(foreach _, $(SYSSRCS), $(file >>$(DEP), $(eval $(call ARC_TEMPLATE, $(SYS), $(_)))))		# Step 2c	(#3 above)
+	$(foreach _, $(TSTSRCS), $(file >>$(DEP), $(eval $(call EXE_TEMPLATE, $(_)))))				# Step 3a	(#4 above)
+	$(foreach _, $(PRGSRCS), $(file >>$(DEP), $(eval $(call EXE_TEMPLATE, $(_)))))				# Step 3b	(#5 above)
 
 include $(DEP)
 
