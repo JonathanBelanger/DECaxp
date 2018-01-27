@@ -16,7 +16,7 @@
 #
 # Description:
 #
-#		This make file is used to build the executables for the DECemu project.
+#		This make file is used to build the executables for the DECaxp project.
 #
 #	Revision History:
 #
@@ -74,17 +74,33 @@
 #
 
 #
+# THe below variable is used as the base folder for all other project folders.
+#
+PROJDIR = /cygdrive/g/git/DECaxp/
+
+#
+# Build file information, so that we can build from any folder and not have
+# to worry where files get written.
+#
+BLDDIR = $(PROJDIR)bld/
+SELF = $(BLDDIR)Makefile
+FNC = $(addsuffix .fnc, $(SELF))
+DEP = $(addsuffix .dep, $(SELF))
+BAK = $(addsuffix .bak, $(SELF))
+
+#
+# Include the function definitions so they can be referenced from this point
+# forward.
+#
+include $(FNC)
+
+#
 # File extensions for various input and output files
 #
 CFILE = .c
 OFILE = .o
 AFILE = .a
 EFILE = .exe
-
-#
-# THe below variable is used as the base folder for all other project folders.
-#
-PROJDIR = /cygdrive/g/git/DECaxp/
 
 #
 # Component names.
@@ -105,7 +121,6 @@ EXEC2 = app
 # where this file is located.  The target folders are one for object files,
 # one for library files, and one for executeable files.
 #
-BLDDIR = $(PROJDIR)bld/
 OBJDIR = $(PROJDIR)bin/
 EXEDIR = $(PROJDIR)exe/
 LIBDIR = $(PROJDIR)lib/
@@ -124,14 +139,6 @@ SYSDIR = $(SRCDIR)$(SYS)/
 #
 TSTDIR = $(SRCDIR)$(EXEC1)/
 APPDIR = $(SRCDIR)$(EXEC2)/
-
-#
-# Build file information, so that we can build from any folder and not have
-# to worry where files get written.
-#
-SELF = $(BLDDIR)Makefile
-DEP = $(addsuffix .dep, $(SELF))
-BAK = $(addsuffix .bak, $(SELF))
 
 #
 # Create variables for the .c source code files for the emulator and the object
@@ -223,24 +230,6 @@ progs: $(PRGEXES)
 #
 %$(EFILE): %(CFILE) $(ARCS)
 	$(CC) $(CFLAGS) -o $@ $(ARCS) $<
-
-#
-# Define some entries to be called by the dependincy generation code.
-#
-define GET_FILENAME =
-	$(basename $(not_dir $(1)))
-endef
-define SRC_TEMPLATE =
-	$(addprefix $(OBJDIR), $(addsuffix $OFILE, $(eval $(call GET_FILENAME, $(1))))): $(1)
-endef
-define ARC_TEMPLATE =
-	$(addprefix $(LIBDIR), $(addsuffix $(AFILE), $(eval $(call GET_FILENAME, $(1)))))(	\
-		$(addsuffix $(OFILE), $(eval $(call GET_FILENAME, $(2))))):	\
-		$(addprefix $(OBJDIR), $(addsuffix $(OFILE), $(eval $(call GET_FILENAME, $(1)))))
-endef
-define EXE_TEMPLATE =
-	$(addprefix $(EXEDIR), $(addsuffix $(EFILE), $(eval $(call GET_FILENAME, $(1))))): $(1) $(ARCS)
-endef
 
 .PHONY: clean purge
 
