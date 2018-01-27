@@ -59,7 +59,9 @@
 /*
  * Includes used throughout the code.
  */
+#ifndef WIN32
 #include <unistd.h>
+#endif
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>

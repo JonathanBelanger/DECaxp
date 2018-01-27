@@ -1,0 +1,98 @@
+{
+  "configurations": [
+    {
+        "inheritEnvironments": [
+            "msvc_x86"
+        ],
+        "name": "x86-Debug",
+        "includePath": [
+            "${env.INCLUDE}",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\computl",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\cpu",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\system",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\app",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\tst",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC"
+        ],
+        "defines": [
+            "WIN32",
+            "_DEBUG",
+            "UNICODE",
+            "_UNICODE"
+        ],
+        "intelliSenseMode": "linux-gcc-x64"
+    },
+    {
+        "inheritEnvironments": [
+            "msvc_x86"
+        ],
+        "name": "x86-Release",
+        "includePath": [
+            "${env.INCLUDE}",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\computl",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\cpu",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\system",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\app",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\tst",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC"
+        ],
+        "defines": [
+            "WIN32",
+            "NDEBUG",
+            "UNICODE",
+            "_UNICODE"
+        ],
+        "intelliSenseMode": "linux-gcc-x64"
+    },
+    {
+        "inheritEnvironments": [
+            "msvc_x64"
+        ],
+        "name": "x64-Debug",
+        "includePath": [
+            "${env.INCLUDE}",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\computl",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\cpu",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\system",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\app",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\tst",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC"
+        ],
+        "defines": [
+            "WIN32",
+            "_WIN64",
+            "_DEBUG",
+            "UNICODE",
+            "_UNICODE",
+            "_STDC_",
+            "_M_X64 "
+        ],
+        "intelliSenseMode": "linux-gcc-x64"
+    },
+    {
+        "inheritEnvironments": [
+            "msvc_x64"
+        ],
+        "name": "x64-Release",
+        "includePath": [
+            "${env.INCLUDE}",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\computl",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\cpu",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\system",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\app",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC\\DECaxp\\src\\tst",
+            "C:\\Users\\TDEVJ1b\\Desktop\\GCC"
+        ],
+        "defines": [
+            "WIN32",
+            "_WIN64",
+            "NDEBUG",
+            "UNICODE",
+            "_UNICODE",
+            "_STDC_",
+            "_M_X64 "
+        ],
+        "intelliSenseMode": "linux-gcc-x64"
+    }
+  ]
+}
