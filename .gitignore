@@ -4,4 +4,4 @@ bld/Makefile.dep
 exe
 lib
 Browse.VC.opendb
-/CppProperties.json
+CppProperties.json
