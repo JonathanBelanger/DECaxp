@@ -40,6 +40,7 @@
 #include "AXP_21264_Fbox.h"
 #include "AXP_21264_Ibox.h"
 #include "AXP_21264_Ibox_InstructionInfo.h"
+#include "AXP_Trace.h"
 
 /*
  * AXP_21264_Fbox_RegisterReady
@@ -228,6 +229,10 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 	bool		retVal = false;
 	int			ii;
 
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Fbox is initializing");
+	AXP_TRACE_END();
+
 	/*
 	 * Initialize the one Fbox IPR.
 	 */
@@ -298,6 +303,10 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 		AXP_INIT_CQENTRY(cpu->fqEntries[ii].header, cpu->fq);
 		cpu->fqEntries[ii].index = ii;
 	}
+
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Fbox has initialized");
+	AXP_TRACE_END();
 
 	/*
 	 * Return a success back to the caller.

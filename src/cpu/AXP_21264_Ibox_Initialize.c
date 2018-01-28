@@ -26,6 +26,7 @@
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Ibox.h"
+#include "AXP_Trace.h"
 
 /*
  * AXP_21264_Ibox_ResetRegMap
@@ -123,6 +124,10 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 {
 	bool	retVal = false;
 	int		ii, jj, kk;
+
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Ibox is initializing");
+	AXP_TRACE_END();
 
 	/*
 	 * We start out with no exceptions pending.
@@ -339,6 +344,10 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 	{
 		cpu->rob[ii].state = Retired;
 	}
+
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Ibox Has initialized");
+	AXP_TRACE_END();
 
 	/*
 	 * Return the result of this initialization back to the caller.

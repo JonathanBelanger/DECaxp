@@ -26,6 +26,7 @@
  */
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
+#include "AXP_Trace.h"
 #include "AXP_21264_CPU.h"
 #include "AXP_21264_CboxDefs.h"
 #include "AXP_21264_Cbox.h"
@@ -48,10 +49,11 @@
  */
 int main(int argc, char **argv)
 {
-	int				retVal = 0;
 	AXP_21264_CPU	*cpu;
+	int				retVal = 0;
 
-	cpu = AXP_21264_AllocateCPU();
+	if (AXP_TraceInit() == true)
+		cpu = AXP_21264_AllocateCPU();
 	if (cpu != NULL)
 	{
 		printf("\n%%DECAXP-I-RUNNING, The Digital Alpha AXP 21264 CPU Emulator has successfully started.\n");

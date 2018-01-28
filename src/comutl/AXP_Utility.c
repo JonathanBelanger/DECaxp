@@ -53,14 +53,12 @@
  */
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
+#include "AXP_Trace.h"
 
 /*
- * This format is used throughout this module for writting a message to sysout.
+ * This format is used throughout this module for writing a message to sysout.
  */
 const char			*errMsg = "%%AXP-E-%s, %s\n";
-static char			*AXPTRCLOG = "AXP_TRCLOG";
-static bool			axp_trc_log_init = false;
-AXP_TRCLOG			_axp_trc_log_ = 0;
 static const char	*_axp_fwid_str[] =
 {
 	"Alpha Motherboards Debug Monitor firmware",
@@ -75,37 +73,6 @@ static const char	*_axp_fwid_str[] =
 	"Unknown 9",
 	"Serial ROM"
 };
-
-/*
- * AXP_TraceInit
- *	This function is called once when the first attempt to check the
- *	_axp_trc_log_ global variable.  This variable and associated environment
- *	variable are used for enabling tracing throughout the emulator.
- *
- *	TODO: A complete trace module should be written for this.
- *
- * Input Parameters:
- *	None.
- *
- * Output Parameters:
- *	None.
- *
- * Return Value:
- *	true:	Always return true (this simplified the macros).
- */
-bool AXP_TraceInit(void)
-{
-
-	/*
-	 * If we have not initialized the environment variable, then do so now.
-	 */
-	if (axp_trc_log_init == false)
-	{
-		sprintf(getenv(AXPTRCLOG), "0x%08x", _axp_trc_log_);
-		axp_trc_log_init = true;
-	}
-	return(true);
-}
 
 /*
  * AXP_Crc32
