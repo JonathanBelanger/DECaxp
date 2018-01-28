@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -56,92 +56,104 @@
 #include "AXP_21264_Ibox.h"
 #include "AXP_21264_Ibox_Initialize.h"
 #include "AXP_21264_Ibox_PCHandling.h"
+#include "AXP_Trace.h"
 
 /*
  * Local Variables
  */
 AXP_21264_CBOX_CSR_NAMES csrNames[] =
-	{
-		{"BcBankEnable", BcBankEnable},
-		{"BcBurstModeEnable", BcBurstModeEnable},
-		{"BcCleanVictim", BcCleanVictim},
-		{"BcClkfwdEnable", BcClkfwdEnable},
-		{"BcClockOut", BcClockOut},
-		{"BcDdmFallEn", BcDdmFallEn},
-		{"BcDdmfEnable", BcDdmfEnable},
-		{"BcDdmrEnable", BcDdmrEnable},
-		{"BcDdmRiseEn", BcDdmRiseEn},
-		{"BcEnable", BcEnable},
-		{"BcFrmClk", BcFrmClk},
-		{"BcLateWriteUpper", BcLateWriteUpper},
-		{"BcPentiumMode", BcPentiumMode},
-		{"BcRdRdBubble", BcRdRdBubble},
-		{"BcRdvictim", BcRdvictim},
-		{"BcSjBankEnable", BcSjBankEnable},
-		{"BcTagDdmFallEn", BcTagDdmFallEn},
-		{"BcTagDdmRiseEn", BcTagDdmRiseEn},
-		{"BcWrWrBubble", BcWrWrBubble},
-		{"ThirtyTwoByteIo", ThirtyTwoByteIo},
-		{"DupTagEnable", DupTagEnable},
-		{"EnableEvict", EnableEvict},
-		{"EnableProbeCheck", EnableProbeCheck},
-		{"EnableStcCommand", EnableStcCommand},
-		{"FastModeDisable", FastModeDisable},
-		{"InitMode", InitMode},
-		{"JitterCmd", JitterCmd},
-		{"MboxBcPrbStall", MboxBcPrbStall},
-		{"PrbTagOnly", PrbTagOnly},
-		{"RdvicAckInhibit", RdvicAckInhibit},
-		{"SkewedFillMode", SkewedFillMode},
-		{"SpecReadEnable", SpecReadEnable},
-		{"StcEnable", StcEnable},
-		{"SysbusFormat", SysbusFormat},
-		{"SysbusMbEnable", SysbusMbEnable},
-		{"SysClkfwdEnable", SysClkfwdEnable},
-		{"SysDdmFallEn", SysDdmFallEn},
-		{"SysDdmfEnable", SysDdmfEnable},
-		{"SysDdmrEnable", SysDdmrEnable},
-		{"SysDdmRdFallEn", SysDdmRdFallEn},
-		{"SysDdmRdRiseEn", SysDdmRdRiseEn},
-		{"SysDdmRiseEn", SysDdmRiseEn},
-		{"BcClkDelay", BcClkDelay},
-		{"BcCpuClkDelay", BcCpuClkDelay},
-		{"BcCpuLateWriteNum", BcCpuLateWriteNum},
-		{"BcRcvMuxCntPreset", BcRcvMuxCntPreset},
-		{"CfrFrmclkDelay", CfrFrmclkDelay},
-		{"DataValidDly", DataValidDly},
-		{"InvalToDirty", InvalToDirty1},
-		{"InvalToDirtyEnable", InvalToDirtyEnable},
-		{"SysBusSize", SysBusSize},
-		{"SysClkDelay", SysClkDelay},
-		{"SysCpuClkDelay", SysCpuClkDelay},
-		{"SysRcvMuxCntPreset", SysRcvMuxCntPreset},
-		{"SysRcvMuxPreset", SysRcvMuxPreset},
-		{"BcLateWriteNum", BcLateWriteNum},
-		{"CfrEv6clkDelay", CfrEv6clkDelay},
-		{"SetDirtyEnable", SetDirtyEnable},
-		{"SysbusVicLimit", SysbusVicLimit},
-		{"BcBphaseLdVector", BcBphaseLdVector},
-		{"BcSize", BcSize},
-		{"BcWrRdBubbles", BcWrRdBubbles},
-		{"BcWrtSts", BcWrtSts},
-		{"CfrGclkDelay", CfrGclkDelay},
-		{"MbCnt", MbCnt},
-		{"SysBphaseLdVector", SysBphaseLdVector},
-		{"SysdcDelay", SysdcDelay},
-		{"SysbusAckLimit", SysbusAckLimit},
-		{"SysClkRatio", SysClkRatio},
-		{"SysFrameLdVector", SysFrameLdVector},
-		{"BcRdWrBubbles", BcRdWrBubbles},
-		{"BcLatTagPattern", BcLatTagPattern},
-		{"BcFdbkEn", BcFdbkEn},
-		{"DcvicThreshold", DcvicThreshold},
-		{"SysFdbkEn", SysFdbkEn},
-		{"BcClkLdVector", BcClkLdVector},
-		{"SysClkLdVector", SysClkLdVector},
-		{"BcLatDataPattern", BcLatDataPattern},
-		{NULL, LastCSR}
-	};
+{
+	{"BcBankEnable", BcBankEnable},
+	{"BcBurstModeEnable", BcBurstModeEnable},
+	{"BcCleanVictim", BcCleanVictim},
+	{"BcClkfwdEnable", BcClkfwdEnable},
+	{"BcClockOut", BcClockOut},
+	{"BcDdmFallEn", BcDdmFallEn},
+	{"BcDdmfEnable", BcDdmfEnable},
+	{"BcDdmrEnable", BcDdmrEnable},
+	{"BcDdmRiseEn", BcDdmRiseEn},
+	{"BcEnable", BcEnable},
+	{"BcFrmClk", BcFrmClk},
+	{"BcLateWriteUpper", BcLateWriteUpper},
+	{"BcPentiumMode", BcPentiumMode},
+	{"BcRdRdBubble", BcRdRdBubble},
+	{"BcRdvictim", BcRdvictim},
+	{"BcSjBankEnable", BcSjBankEnable},
+	{"BcTagDdmFallEn", BcTagDdmFallEn},
+	{"BcTagDdmRiseEn", BcTagDdmRiseEn},
+	{"BcWrWrBubble", BcWrWrBubble},
+	{"ThirtyTwoByteIo", ThirtyTwoByteIo},
+	{"DupTagEnable", DupTagEnable},
+	{"EnableEvict", EnableEvict},
+	{"EnableProbeCheck", EnableProbeCheck},
+	{"EnableStcCommand", EnableStcCommand},
+	{"FastModeDisable", FastModeDisable},
+	{"InitMode", InitMode},
+	{"JitterCmd", JitterCmd},
+	{"MboxBcPrbStall", MboxBcPrbStall},
+	{"PrbTagOnly", PrbTagOnly},
+	{"RdvicAckInhibit", RdvicAckInhibit},
+	{"SkewedFillMode", SkewedFillMode},
+	{"SpecReadEnable", SpecReadEnable},
+	{"StcEnable", StcEnable},
+	{"SysbusFormat", SysbusFormat},
+	{"SysbusMbEnable", SysbusMbEnable},
+	{"SysClkfwdEnable", SysClkfwdEnable},
+	{"SysDdmFallEn", SysDdmFallEn},
+	{"SysDdmfEnable", SysDdmfEnable},
+	{"SysDdmrEnable", SysDdmrEnable},
+	{"SysDdmRdFallEn", SysDdmRdFallEn},
+	{"SysDdmRdRiseEn", SysDdmRdRiseEn},
+	{"SysDdmRiseEn", SysDdmRiseEn},
+	{"BcClkDelay", BcClkDelay},
+	{"BcCpuClkDelay", BcCpuClkDelay},
+	{"BcCpuLateWriteNum", BcCpuLateWriteNum},
+	{"BcRcvMuxCntPreset", BcRcvMuxCntPreset},
+	{"CfrFrmclkDelay", CfrFrmclkDelay},
+	{"DataValidDly", DataValidDly},
+	{"InvalToDirty", InvalToDirty1},
+	{"InvalToDirtyEnable", InvalToDirtyEnable},
+	{"SysBusSize", SysBusSize},
+	{"SysClkDelay", SysClkDelay},
+	{"SysCpuClkDelay", SysCpuClkDelay},
+	{"SysRcvMuxCntPreset", SysRcvMuxCntPreset},
+	{"SysRcvMuxPreset", SysRcvMuxPreset},
+	{"BcLateWriteNum", BcLateWriteNum},
+	{"CfrEv6clkDelay", CfrEv6clkDelay},
+	{"SetDirtyEnable", SetDirtyEnable},
+	{"SysbusVicLimit", SysbusVicLimit},
+	{"BcBphaseLdVector", BcBphaseLdVector},
+	{"BcSize", BcSize},
+	{"BcWrRdBubbles", BcWrRdBubbles},
+	{"BcWrtSts", BcWrtSts},
+	{"CfrGclkDelay", CfrGclkDelay},
+	{"MbCnt", MbCnt},
+	{"SysBphaseLdVector", SysBphaseLdVector},
+	{"SysdcDelay", SysdcDelay},
+	{"SysbusAckLimit", SysbusAckLimit},
+	{"SysClkRatio", SysClkRatio},
+	{"SysFrameLdVector", SysFrameLdVector},
+	{"BcRdWrBubbles", BcRdWrBubbles},
+	{"BcLatTagPattern", BcLatTagPattern},
+	{"BcFdbkEn", BcFdbkEn},
+	{"DcvicThreshold", DcvicThreshold},
+	{"SysFdbkEn", SysFdbkEn},
+	{"BcClkLdVector", BcClkLdVector},
+	{"SysClkLdVector", SysClkLdVector},
+	{"BcLatDataPattern", BcLatDataPattern},
+	{NULL, LastCSR}
+};
+
+const char *componentStr[] =
+{
+	"Mbox Initialization",
+	"Ebox Initialization",
+	"Fbox Initialization",
+	"Ibox Initialization",
+	"Cbox Initialization",
+	"Cbox Configuration",
+	"Load from SROM"
+};
 
 /*
  * AXP_21264_Cbox_IQArbiter
@@ -220,8 +232,12 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 	char					*configFile = "../dat/AXP_21264_Cbox_CSR.nvp";
 	char					name[32];
 	u32						value;
-	int						ii;
+	int						ii, csrCnt = 0;
 	AXP_21264_CBOX_CSR_VAL	csr;
+
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Cbox is loading CSR values from %s", configFile);
+	AXP_TRACE_END();
 
 	/*
 	 * Open the file to configure the CSRs for the Cbox.
@@ -244,7 +260,13 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 			 */
 			if (readResult == false)
 			{
-				retVal = true;
+				if (csrCnt < AXP_21264_CBOX_CSR_CNT)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite("Not all CSRs loaded");
+					AXP_TRACE_END();
+					retVal = true;
+				}
 				continue;
 			}
 
@@ -255,10 +277,13 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 			 * which of the CSRs is being initialized with the value.
 			 */
 			csr = LastCSR;
-			for (ii = 0; ((csrNames[ii].name != NULL) && (csr != LastCSR)); ii++)
+			for (ii = 0; ((csrNames[ii].name != NULL) && (csr == LastCSR)); ii++)
 			{
 				if (strcmp(csrNames[ii].name, name) == 0)
+				{
 					csr = csrNames[ii].values;
+					csrCnt++;
+				}
 			}
 
 			/*
@@ -641,6 +666,12 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 		AXP_Close_NVP_File(fp);
 	}
 
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite((retVal == false ?
+						"Cbox CSRs have been loaded" :
+						"Cbox CSRs failed to load"));
+	AXP_TRACE_END();
+
 	/*
 	 * Return back to the caller.
 	 */
@@ -771,6 +802,10 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 	u32		ii, jj;
 	bool	retVal = false;
 
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Cbox is initializing");
+	AXP_TRACE_END();
+
 	/*
 	 * Initialize the Cbox IPRs.  Also, this is as good a place as any to
 	 * initialize the AMASK and IMPLVER IPRs (which don't really have one of
@@ -857,6 +892,10 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 		for (jj = 0; jj < AXP_21264_MBOX_MAX; jj++)
 			cpu->iowb[ii].lqSqEntry[jj] = 0;
 	}
+
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Cbox has initialized");
+	AXP_TRACE_END();
 
 	return(retVal);
 }
@@ -949,6 +988,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 
 						case 4:		/* Cbox */
 							initFailure = AXP_21264_Cbox_Init(cpu);
+							break;
 
 						case 5:		/* Cbox Config */
 
@@ -1026,6 +1066,11 @@ void *AXP_21264_CboxMain(void *voidPtr)
 							}
 							break;
 					}
+
+					/*
+					 * If the current component successfully initialized, then
+					 * move on to the next.
+					 */
 					if (initFailure == false)
 						component++;
 				}
@@ -1037,6 +1082,11 @@ void *AXP_21264_CboxMain(void *voidPtr)
 				 */
 				if (initFailure == true)
 				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+							"CPU Startup has failed at component %s",
+							componentStr[component]);
+					AXP_TRACE_END();
 					cpu->BiSTState = BiSTFailed;
 					cpu->cpuState = ShuttingDown;
 				}
@@ -1048,6 +1098,11 @@ void *AXP_21264_CboxMain(void *voidPtr)
 					 * all the other threads to start to do their processing.
 					 */
 					cpu->cpuState = Run;
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+							"The Digital Alpha AXP 21264 CPU Emulator is "
+							"now in a Running state");
+					AXP_TRACE_END();
 				}
 				pthread_cond_broadcast(&cpu->cpuCond);
 				pthread_mutex_unlock(&cpu->cpuMutex);

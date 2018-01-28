@@ -40,6 +40,7 @@
 #include "AXP_Configure.h"
 #include "AXP_21264_Ebox.h"
 #include "AXP_21264_Ibox_InstructionInfo.h"
+#include "AXP_Trace.h"
 
 /*
  * AXP_21264_Ebox_RegisterReady
@@ -178,6 +179,10 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 	bool	retVal = false;
 	int		ii;
 
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Ebox is initializing");
+	AXP_TRACE_END();
+
 	/*
 	 * This bit us used when emulating the RC and BC VAX Compatibility
 	 * instructions used by VAX-to-Alpha translator software.  ARM 4.12
@@ -238,6 +243,10 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 	cpu->vaForm.form00.res = 0;
 	cpu->vaForm.form00.va = 0;
 	cpu->vaForm.form00.vptb = 0;
+
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Ebox has initialized");
+	AXP_TRACE_END();
 
 	return(retVal);
 }

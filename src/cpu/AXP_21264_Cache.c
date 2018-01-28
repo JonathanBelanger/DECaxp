@@ -1654,15 +1654,14 @@ bool AXP_DcacheRead(
 			u64 pa,
 			u32 len,
 			void *data,
-			u64 *idxSet)
+			AXP_DCACHE_LOC *idxSet)
 {
 	bool				retVal = false;
-	AXP_DCACHE_IDXSET	indexAndSet;
+	AXP_DCACHE_LOC		indexAndSet;
 	AXP_VA				virtAddr = {.va = va};
 	AXP_VA				physAddr = {.va = pa};
 	i32					lenOver = ((va % AXP_DCACHE_DATA_LEN) + len - 1) -
 						  	  	   (AXP_DCACHE_DATA_LEN - 1);
-	u32					offset = virtAddr.vaIdx.offset;
 	u32					ii;
 	u32					sets;
 
@@ -1749,10 +1748,11 @@ bool AXP_DcacheRead(
 			 * Combine the index and set associated with this data and return
 			 * that into the caller supplied parameter.
 			 */
-			indexAndSet.idxOrSet.index = virtAddr.vaIdx.index;
-			indexAndSet.idxOrSet.set = ii;
+			indexAndSet.index = virtAddr.vaIdx.index;
+			indexAndSet.offset = virtAddr.vaIdx.offset;
+			indexAndSet.set = ii;
 			if (idxSet != NULL)
-				*idxSet = indexAndSet.idxSet;
+				*idxSet = indexAndSet;
 
 			/*
 			 * Indicate that we are returning the data requested.
@@ -1769,8 +1769,9 @@ bool AXP_DcacheRead(
 	 */
 	if (retVal == true)
 	{
-		u32		index = indexAndSet.idxOrSet.index;
-		u32		set = indexAndSet.idxOrSet.set;
+		u32		index = indexAndSet.index;
+		u32		offset = indexAndSet.offset;
+		u32		set = indexAndSet.set;
 
 		switch (len)
 		{

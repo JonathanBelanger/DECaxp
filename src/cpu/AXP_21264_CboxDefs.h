@@ -150,6 +150,8 @@ typedef struct
 	u32						res_6;					/* Quadword align */
 } AXP_21264_CBOX_CSRS;
 
+#define AXP_21264_CBOX_CSR_CNT 78
+
 /*
  * MB definitions.
  */

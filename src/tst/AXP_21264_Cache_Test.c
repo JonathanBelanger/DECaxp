@@ -83,6 +83,7 @@ int main()
 	AXP_21264_TLB	*itb;
 	AXP_INS_LINE	nextIns;
 	AXP_PC			pc;
+	AXP_EXCEPTIONS	except;
 	u64				zeroPCval = 0;
 	AXP_PC			zeroPC = *((AXP_PC *) &zeroPCval);
 	u32				noOp = 0x47ff041f;
@@ -99,7 +100,8 @@ int main()
 	size_t			lineLen = 32;
 	int				ii = 0;
 	u32				oper, addr, data, items;
-	u64				va, pa, dataLoc;
+	u64				va, pa;
+	AXP_DCACHE_LOC	dataLoc;
 	u32				fault = 0;
 	u32				fetchedData;
 	bool			_asm;
@@ -171,7 +173,8 @@ int main()
 									true,
 									Read,
 									&_asm,
-									&fault);
+									&fault,
+									&except);
 
 						/*
 						 * For all the reads, the call to convert from VA
@@ -199,7 +202,8 @@ int main()
 										true,
 										Read,
 										&_asm,
-										&fault);
+										&fault,
+										&except);
 							if (fault != 0)
 							{
 								printf("Got a va2pa(Read 2) fault 0x%04x\n", fault);
@@ -243,7 +247,8 @@ int main()
 								true,
 								Write,
 								&_asm,
-								&fault);
+								&fault,
+								&except);
 					if ((fault == AXP_DTBM_DOUBLE_3) ||
 						(fault == AXP_DTBM_DOUBLE_4) ||
 						(fault == AXP_DTBM_SINGLE))
@@ -266,7 +271,8 @@ int main()
 									true,
 									Write,
 									&_asm,
-									&fault);
+									&fault,
+									&except);
 					}
 					else if (fault != 0)
 					{
@@ -299,22 +305,20 @@ int main()
 							writeHit++;
 							AXP_DcacheWrite(
 									cpu,
-									va,
-									pa,
+									&dataLoc,
 									sizeof(data),
 									&data,
-									&dataLoc);
+									0);
 						}
 						else
 						{
 							writeMiss++;
 							AXP_DcacheWrite(
 									cpu,
-									va,
-									pa,
+									NULL,
 									sizeof(data),
 									&data,
-									NULL);
+									0);
 						}
 					}
 					else

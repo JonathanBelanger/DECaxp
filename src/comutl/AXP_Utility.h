@@ -65,14 +65,15 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdarg.h>
 #include <math.h>
 #include <limits.h>
 #include <fenv.h>
+#include <sys/time.h>
 
 #include "AXP_NoCompilerHack.h"
 
@@ -116,79 +117,6 @@ typedef __int128			i128;	/* 16 bytes (128 bits) in length */
 #define AXP_LOW_QUAD		(i64) 0xffffffffffffffffll
 #define AXP_LOW_6BITS		0x000000000000003fll
 #define AXP_LOW_3BITS		0x0000000000000007ll
-
-/*
- * Let's defined a DEBUG environment variable that will turn on certain
- * tracing options.
- *
- * BTW: The environment variable name and the typedef defined below is a
- *		homage to my Digital SNA Development days (June 16, 1986 to December
- *		31, 1994).
- */
-typedef u32				AXP_TRCLOG;
-extern AXP_TRCLOG		_axp_trc_log_;
-
-/*
- * These bits are used in each of the nibbles within the AXPTRCLOG environment
- * variable to trace differnet items.
- */
-#define AXP_TRC_CALL	0x1		/* b0001 */
-#define AXP_TRC_BUFF	0x2		/* b0010 */
-#define AXP_TRC_OPT1	0x4		/* b0100 */
-#define AXP_TRC_OPT2	0x8		/* b1000 */
-
-/*
- * These nibbles within the AXPTRCLOG environment variable are used in the
- * emulation code to trace different parts.
- */
-#define AXP_COMP_UTL	0x0000000f	/* COMUTL */
-#define AXP_SHIFT_UTL	0			/* bits to right shift */
-#define AXP_COMP_CPU	0x000000f0	/* CPU */
-#define AXP_SHIFT_CPU	4			/* bits to right shift */
-#define AXP_COMP_SYS	0x00000f00	/* System */
-#define AXP_SHIFT_SYS	8			/* bits to right shift */
-
-#define AXP_TRCLOG_INIT	((axp_trc_log_init == false) ? AXP_TraceInit() : true)
-
-/*
- * These macros return true when a type of tracing is to be performed.
- */
-#define AXP_UTL_CALL	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
-						    AXP_TRC_CALL) == AXP_TRC_CALL))
-#define AXP_UTL_BUFF	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
-						   AXP_TRC_BUFF) == AXP_TRC_BUFF))
-#define AXP_UTL_OPT1	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
-						   AXP_TRC_OPT1) == AXP_TRC_OPT1))
-#define AXP_UTL_OPT2	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
-						   AXP_TRC_OPT2) == AXP_TRC_OPT2))
-#define AXP_CPU_CALL	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-						   AXP_TRC_CALL) == AXP_TRC_CALL))
-#define AXP_CPU_BUFF	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-						   AXP_TRC_BUFF) == AXP_TRC_BUFF))
-#define AXP_CPU_OPT1	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) & 	\
-						   AXP_TRC_OPT1) == AXP_TRC_OPT1))
-#define AXP_CPU_OPT2	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) & 	\
-						   AXP_TRC_OPT2) == AXP_TRC_OPT2))
-#define AXP_SYS_CALL	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
-						   AXP_TRC_CALL) == AXP_TRC_CALL))
-#define AXP_SYS_BUFF	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
-						   AXP_TRC_BUFF) == AXP_TRC_BUFF))
-#define AXP_SYS_OPT1	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
-						   AXP_TRC_OPT1) == AXP_TRC_OPT1))
-#define AXP_SYS_OPT2	(AXP_TRCLOG_INIT &										\
-						 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
-						   AXP_TRC_OPT2) == AXP_TRC_OPT2))
 
 /*
  * Define the SROM handle for reading in an SROM file.

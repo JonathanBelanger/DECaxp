@@ -33,7 +33,6 @@
 /*
  * Define some values for 1 and 8 Meg
  */
-#define	ONE_M	(ONE_K * ONE_K)
 #define EIGHT_M	(ONE_M * 8)
 
 /*

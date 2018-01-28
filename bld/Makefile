@@ -74,6 +74,16 @@
 #
 
 #
+# Useful variables
+#
+OP := (
+CP := )
+CM := \#
+define NL
+
+endef
+
+#
 # THe below variable is used as the base folder for all other project folders.
 #
 PROJDIR = /cygdrive/g/git/DECaxp/
@@ -87,12 +97,6 @@ SELF = $(BLDDIR)Makefile
 FNC = $(addsuffix .fnc, $(SELF))
 DEP = $(addsuffix .dep, $(SELF))
 BAK = $(addsuffix .bak, $(SELF))
-
-#
-# Include the function definitions so they can be referenced from this point
-# forward.
-#
-include $(FNC)
 
 #
 # File extensions for various input and output files
@@ -167,14 +171,14 @@ ARCS = $(COMARC) $(CPUARC) $(SYSARC)
 # created from compiling.
 #
 TSTSRCS = $(wildcard $(TSTDIR)*$(CFILE))
-TSTEXES = $(addprefix $(EXEDIR), $(notdir $(TSTFILES:$(CFILE)=$(EFILE))))
+TSTEXES = $(addprefix $(EXEDIR), $(notdir $(TSTSRCS:$(CFILE)=$(EFILE))))
 
 #
 # Create the variables for the emulator source files (the emulator itself and
 # any companion programs - ie: configuration programs, if any).
 #
-PRGSRCS = $(foreach DIR, $(APPDIR), $(wildcard $(DIR)*$(CFILE)))
-PRGEXES = $(foreach PROG, $(PRGSRCS), $(addprefix $(EXEDIR), $(addsuffix $(EFILE), $(PROG))))
+APPSRCS = $(foreach DIR, $(APPDIR), $(wildcard $(DIR)*$(CFILE)))
+APPEXES = $(addprefix $(EXEDIR), $(notdir $(APPSRCS:$(CFILE)=$(EFILE))))
 
 #
 # Create variables for the include path for all the emulator header files.
@@ -211,25 +215,31 @@ tests:	$(TSTEXES)
 # The Program executeable(s) require the objects and the program source
 # file(s).
 #
-progs: $(PRGEXES)
+progs: $(APPEXES)
 
 #
 # Define the suffix rule to go from .c file to .o file
 #
-%$(OFILE): %$(CFILE)
+$(OBJDIR)%$(OFILE): $(COMDIR)%$(CFILE)
+	$(CC) -c $(CFLAGS) -o $@ $<
+$(OBJDIR)%$(OFILE): $(CPUDIR)%$(CFILE)
+	$(CC) -c $(CFLAGS) -o $@ $<
+$(OBJDIR)%$(OFILE): $(SYSDIR)%$(CFILE)
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 #
 # Define the suffix rule to go from .o file to .a file
 #
-(%$(AFILE)): %$(OFILE) $(OBJS)
+$(LIBDIR)%$(AFILE): $(OBJDIR)%$(OFILE)
 	$(AR) r $@ $<
 
 #
-# Define the suffix rule to go from .c to .exe file
+# Define the suffix rule to go from .c and .a to .exe file
 #
-%$(EFILE): %(CFILE) $(ARCS)
-	$(CC) $(CFLAGS) -o $@ $(ARCS) $<
+$(EXEDIR)%.exe: $(TSTDIR)%$(CFILE) $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $<
+$(EXEDIR)%.exe: $(APPDIR)%$(CFILE) $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $<
 
 .PHONY: clean purge
 
@@ -264,7 +274,7 @@ depend: $(DEP)
 	makedepend -f$(SELF)	\
 		-p$(OBJDIR) \
 		-I /lib/gcc/x86_64-pc-cygwin/6.4.0/include/	\
-		-- $(CFLAGS) -- $(SRCS) $(TSTSRCS) $(PRGSRCS)
+		-- $(CFLAGS) -- $(SRCS) $(TSTSRCS) $(APPSRCS)
 
 #
 # The following code makes all the dependencies for the following:
@@ -273,13 +283,22 @@ depend: $(DEP)
 #	3) exe\*.exe: *\*.c lib\*.a	- for each executable source and all archives
 #
 $(DEP):
-	$(file >$(DEP))
-	$(foreach _, $(SRCS), $(file >>$(DEP), $(eval $(call SRC_TEMPLATE, $(_)))))					# Step 1	(#2 above)
-	$(foreach _, $(COMSRCS), $(file >>$(DEP), $(eval $(call ARC_TEMPLATE, $(COMUTL), $(_)))))	# Step 2a	(#3 above)
-	$(foreach _, $(CPUSRCS), $(file >>$(DEP), $(eval $(call ARC_TEMPLATE, $(CPU), $(_)))))		# Step 2b	(#3 above)
-	$(foreach _, $(SYSSRCS), $(file >>$(DEP), $(eval $(call ARC_TEMPLATE, $(SYS), $(_)))))		# Step 2c	(#3 above)
-	$(foreach _, $(TSTSRCS), $(file >>$(DEP), $(eval $(call EXE_TEMPLATE, $(_)))))				# Step 3a	(#4 above)
-	$(foreach _, $(PRGSRCS), $(file >>$(DEP), $(eval $(call EXE_TEMPLATE, $(_)))))				# Step 3b	(#5 above)
+	$(file >$(DEP),$(CM))
+	$(file >>$(DEP),$(CM) All Source Files to Object Files.)
+	$(file >>$(DEP),$(CM))
+	$(foreach _, $(SRCS),$(file >>$(DEP),$(OBJDIR)$(basename $(notdir $(_)))$(OFILE): $(_)))
+	$(file >>$(DEP),$(NL))
+	$(file >>$(DEP),$(CM))
+	$(file >>$(DEP),$(CM) Test Source Files to executabled.)
+	$(file >>$(DEP),$(CM))
+	$(foreach _, $(TSTSRCS), 	\
+		$(file >>$(DEP),$(EXEDIR)$(basename $(notdir $(_)))$(EFILE): $(_) $(OBJS)))
+	$(file >>$(DEP),$(NL))
+	$(file >>$(DEP),$(CM))
+	$(file >>$(DEP),$(CM) Program Source Files to executabled.)
+	$(file >>$(DEP),$(CM))
+	$(foreach _, $(APPSRCS), 	\
+		$(file >>$(DEP),$(EXEDIR)$(basename $(notdir $(_)))$(EFILE): $(_) $(OBJS)))
 
 include $(DEP)
 

@@ -66,7 +66,7 @@ bool AXP_DcacheWrite(AXP_21264_CPU *, AXP_DCACHE_LOC *, u32, void *, u8);
 void AXP_CopyBcacheToDcache(AXP_21264_CPU *, AXP_DCACHE_LOC *, u64);
 void AXP_DcacheFlush(AXP_21264_CPU *);
 void AXP_DcacheEvict(AXP_21264_CPU *, u64, AXP_PC);
-bool AXP_DcacheRead(AXP_21264_CPU *, u64, u64, u32, void *, u64 *);
+bool AXP_DcacheRead(AXP_21264_CPU *, u64, u64, u32, void *, AXP_DCACHE_LOC *);
 void AXP_Dcache_Lock(AXP_21264_CPU *, u64, u64);
 void AXP_IcacheAdd(AXP_21264_CPU *, AXP_PC , u32 *, AXP_21264_TLB *);
 void AXP_IcacheFlush(AXP_21264_CPU *, bool);

@@ -115,6 +115,7 @@ bool AXP_Read_NVP_File(FILE *filePointer, char *name, u32 *value)
 	bool	retVal = true;
 	int		done = 0;	/* -1 = EOF, 0 = not done, 1 = name/value present */
 	char	*savePtr;
+	char	*token;
 
 	/*
 	 * Until we get either a name/value pair to return, and end-of-file, or an
@@ -128,7 +129,19 @@ bool AXP_Read_NVP_File(FILE *filePointer, char *name, u32 *value)
 			int		ii, jj;
 
 			/*
-			 * First collapse the line (remove all space and tab characters.
+			 * First, starting at the ; converting it and all remaining
+			 * characters to the null-character.
+			 */
+			jj = -1;
+			for (ii = 0; ii < sizeof(readLine); ii++)
+				if ((readLine[ii] == ';') || (jj > 0))
+				{
+					readLine[ii] = '\0';
+					jj = 1;
+				}
+
+			/*
+			 * Next collapse the line (remove all space and tab characters.
 			 */
 			for (ii = 1; ii < strlen(readLine); ii++)
 			{
@@ -136,6 +149,8 @@ bool AXP_Read_NVP_File(FILE *filePointer, char *name, u32 *value)
 				{
 					for (jj = ii - 1; jj < strlen(readLine) - 1; jj++)
 						readLine[jj] = readLine[jj + 1];
+					jj = strlen(readLine);
+					readLine[jj - 1] = '\0';
 				}
 			}
 
@@ -164,16 +179,18 @@ bool AXP_Read_NVP_File(FILE *filePointer, char *name, u32 *value)
 				 * pull out the name.  If we don't find one it is an error.
 				 */
 				savePtr = NULL;
-				name = strtok_r(readLine, delim, &savePtr);
-				if (name != NULL)
+				token = strtok_r(readLine, delim, &savePtr);
+				if (token != NULL)
 				{
 					char *valueStr;
+
+					strcpy(name, token);
 
 					/*
 					 * Now pull out the value string.  If we don't find one,
 					 * then return an error.
 					 */
-					valueStr = strtok_r(readLine, delim, &savePtr);
+					valueStr = strtok_r(NULL, delim, &savePtr);
 					if (valueStr != NULL)
 					{
 

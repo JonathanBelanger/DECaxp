@@ -43,6 +43,7 @@
 #include "AXP_21264_Ebox.h"
 #include "AXP_21264_Fbox.h"
 #include "AXP_21264_Cbox.h"
+#include "AXP_Trace.h"
 
 /*
  * AXP_21264_Mbox_GetLQSlot
@@ -1576,6 +1577,10 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	bool retVal = false;
 	int ii, jj;
 
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Mbox is initializing");
+	AXP_TRACE_END();
+
 	for (ii = 1; ii < AXP_CACHE_ENTRIES; ii++)
 	{
 		for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
@@ -1718,6 +1723,10 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	cpu->dcStat.ecc_err_st = 0;
 	cpu->dcStat.tperr_p0 = 0;
 	cpu->dcStat.tperr_p1 = 0;
+
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Mbox has initialized");
+	AXP_TRACE_END();
 
 	/*
 	 * All done, return to the caller.
