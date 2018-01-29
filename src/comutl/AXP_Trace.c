@@ -21,7 +21,7 @@
  *
  * Revision History:
  *
- *	V01.000		27-JAN-2018	Jonathan D. Belanger
+ *	V01.000		27-Jan-2018	Jonathan D. Belanger
  *	Initially written.
  */
 #include "AXP_Configure.h"

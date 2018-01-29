@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -28,13 +28,102 @@
  *	V01.001		22-May-2017	Jonathan D. Belanger
  *	Restructured the code a bit, so the definition that was in here is no
  *	longer needed.
+ *
+ *	V01.002		29-Jan-2018	Jonathan D. Belanger
+ *	Started coding for reading, parsing and making the configuration
+ *	information for the Digital Alpha AXP 21264 CPU Emulator code.
  */
 #ifndef _AXP_CONFIGURE_DEFS_
 #define _AXP_CONFIGURE_DEFS_
+/*
+ * The name space for the emulator is as follows:
+ *
+ *	DECaxp
+ *		Owner
+ *			Name
+ *				First				string
+ *				MI					string
+ *				Last				string
+ *				Suffix				string
+ *			Creation Date			DD-MMM-YYYY
+ *			Modify Date				DD-MMM-YYYY
+ *		System
+ *			Model
+ *				Name				string
+ *				Model				string
+ *			SROM
+ *				InitFile			file-specification
+ *				PALImage			file-specification
+ *				ROMImage			file-specification
+ *				NVRamFile			file-specification
+ *			CPUS
+ *				*CPU (number)
+ *					Generation		number
+ *					Pass			number
+ *					Name			string
+ *			DIMMS
+ *				*DIMM (number)
+ *					Size			decimal(MB, GB)
+ *			Disks
+ *				*Disk (number)
+ *					Type			Disk, CDROM, RWCDROM
+ *					Name			string
+ *					Size			decimal(MB, GB)
+ *					File			file-specification
+ *			Console
+ *				Port				number
+ *			Network
+ *				Name				string
+ *				MAC					##-##-##-##-##-##
+ *			Printers
+ *				*Printer (number)
+ *				<TBD>				ignored
+ *			Tapes
+ *				*Table (number)
+ *				<TBD>				ignored
+ */
+typedef enum
+{
+	Owner,
+	System
+} AXP_21264_CONFIG_NODES;
+
+typedef enum
+{
+	Name,
+	CreationDate,
+	ModifyDate
+} AXP_21264_CONFIG_OWNER;
+
+typedef enum
+{
+	Model,
+	SROM,
+	CPUS,
+	DIMMS,
+	Disks,
+	Console,
+	Network,
+	Printers,
+	Tapes
+} AXP_21264_CONFIG_SYSTEM;
+
+typedef struct
+{
+	char *first;
+	char *mi;
+	char *last;
+	char *suffix;
+	struct tm create;
+	struct tm modify;
+} AXP_21264_OWNER_INFO;
+
+/* TODO:	Continue to work on these */
 
 /*
- * Nothing defined here, yet.
+ * Function Prototypes
  */
+int AXP_LoadConfig_File(char *);
 
 #endif /* _AXP_CONFIGURE_DEFS_ */
 

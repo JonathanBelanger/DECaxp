@@ -185,7 +185,7 @@ APPEXES = $(addprefix $(EXEDIR), $(notdir $(APPSRCS:$(CFILE)=$(EFILE))))
 #
 CDIRS = $(COMDIR) $(CPUDIR) $(SYSDIR)
 INCDIRS = $(wildcard $(CDIRS))
-INCS = $(foreach d, $(INCDIRS), -I$d)
+INCS = $(foreach d, $(INCDIRS), -I$d) -I/usr/include/libxml2/
 
 #
 # Set the compiler and initial compiler flags to be used to build build all the
@@ -193,6 +193,11 @@ INCS = $(foreach d, $(INCDIRS), -I$d)
 #
 CC = gcc
 CFLAGS = $(INCS) -m64 -std=gnu99 -Wall -pthread -D_AXP_COMPILER_PRESENT_
+
+#
+# Set the libraries the linker need to resolve references.
+#
+LFLAGS = -lxml2 -lm
 
 #
 # Debug adds to the compiler flags and then compiles everything that has not
@@ -237,9 +242,9 @@ $(LIBDIR)%$(AFILE): $(OBJDIR)%$(OFILE)
 # Define the suffix rule to go from .c and .a to .exe file
 #
 $(EXEDIR)%.exe: $(TSTDIR)%$(CFILE) $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $<
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $< $(LFLAGS) 
 $(EXEDIR)%.exe: $(APPDIR)%$(CFILE) $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $<
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $< $(LFLAGS) 
 
 .PHONY: clean purge
 
@@ -272,8 +277,9 @@ purge:
 #
 depend: $(DEP)
 	makedepend -f$(SELF)	\
-		-p$(OBJDIR) \
-		-I /lib/gcc/x86_64-pc-cygwin/6.4.0/include/	\
+		-p$(OBJDIR)	\
+		-I /usr/include/libxml2/	\
+		-I /usr/lib/gcc/x86_64-pc-cygwin/6.4.0/include/	\
 		-- $(CFLAGS) -- $(SRCS) $(TSTSRCS) $(APPSRCS)
 
 #

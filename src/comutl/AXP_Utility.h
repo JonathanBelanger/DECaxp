@@ -275,13 +275,15 @@ typedef struct
 } AXP_COND_Q_ROOT_CNT;
 
 /*
- * Error returns for AXP_LoadExecutable
+ * Error returns for various AXP Utility file load functions.
  */
+#define AXP_S_NORMAL		0
 #define AXP_E_FNF 			-1
 #define AXP_E_BUFTOOSMALL	-2
 #define AXP_E_EOF			-3
 #define AXP_E_READERR		-4
 #define AXP_E_BADSROMFILE	-5
+#define AXP_E_BADCFGFILE	-6
 
 /*
  * Prototype Definitions
