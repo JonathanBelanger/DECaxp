@@ -52,11 +52,12 @@ int main(int argc, char **argv)
 	AXP_21264_CPU	*cpu;
 	int				retVal = 0;
 
-	if (AXP_TraceInit() == true)
+	printf("\n%%DECAXP-I-START, The Digital Alpha AXP 21264 CPU Emulator is starting.\n");
+	if ((AXP_LoadConfig_File("../dat/DECaxp Initial Configuration.xml") == AXP_S_NORMAL) &&
+		(AXP_TraceInit() == true))
 		cpu = AXP_21264_AllocateCPU();
 	if (cpu != NULL)
 	{
-		printf("\n%%DECAXP-I-RUNNING, The Digital Alpha AXP 21264 CPU Emulator has successfully started.\n");
 		pthread_join(cpu->cBoxThreadID, NULL);
 
 		/*

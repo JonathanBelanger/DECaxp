@@ -21,7 +21,7 @@
  *
  * Revision History:
  *
- *	V01.000		27-JAN-2018	Jonathan D. Belanger
+ *	V01.000		27-Jam-2018	Jonathan D. Belanger
  *	Initially written.
  */
 #ifndef AXP_TRACE_H_
