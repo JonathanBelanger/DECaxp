@@ -247,8 +247,8 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 	cpu->iCtl.call_pal_r23 = 0;
 	cpu->iCtl.mchk_en = 0;
 	cpu->iCtl.tb_mb_en = 0;
-	cpu->iCtl.bist_fail = 0;
-	cpu->iCtl.chip_id = 0;
+	cpu->iCtl.bist_fail = 1;
+	cpu->iCtl.chip_id = AXP_21264_Config.system.cpus.pass;
 	cpu->iCtl.vptb = 0;
 	cpu->iCtl.sext_vptb = 0;
 	cpu->iStat.res_1 = 0;			/* I_STAT */

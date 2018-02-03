@@ -32,9 +32,16 @@
  *	V01.002		29-Jan-2018	Jonathan D. Belanger
  *	Started coding for reading, parsing and making the configuration
  *	information for the Digital Alpha AXP 21264 CPU Emulator code.
+ *
+ *	V01.003		03-Feb-2018	Jonathan D. Belanger
+ *	Continued to work on reading in the configuration file and loading it into
+ *	a usable format.
  */
 #ifndef _AXP_CONFIGURE_DEFS_
 #define _AXP_CONFIGURE_DEFS_
+
+#include "AXP_Utility.h"
+
 /*
  * The name space for the emulator is as follows:
  *
@@ -57,13 +64,13 @@
  *				ROMImage			file-specification
  *				NVRamFile			file-specification
  *			CPUS
- *				*CPU (number)
- *					Generation		number
- *					Pass			number
- *					Name			string
+ *				Count				number
+ *				Generation			number
+ *				Pass				number
+ *				Name				string
  *			DIMMS
- *				*DIMM (number)
- *					Size			decimal(MB, GB)
+ *				Size				decimal
+ *				Count				decimal
  *			Disks
  *				*Disk (number)
  *					Type			Disk, CDROM, RWCDROM
@@ -72,24 +79,28 @@
  *					File			file-specification
  *			Console
  *				Port				number
- *			Network
- *				Name				string
- *				MAC					##-##-##-##-##-##
+ *			Networks
+ *				*Network (number)
+ *					Name			string
+ *					MAC				##-##-##-##-##-##
  *			Printers
  *				*Printer (number)
  *				<TBD>				ignored
  *			Tapes
- *				*Table (number)
+ *				*Tape (number)
  *				<TBD>				ignored
  */
 typedef enum
 {
+	NoNodes,
+	DECaxp,
 	Owner,
-	System
+	SystemConf
 } AXP_21264_CONFIG_NODES;
 
 typedef enum
 {
+	NoOwner,
 	Name,
 	CreationDate,
 	ModifyDate
@@ -97,28 +108,383 @@ typedef enum
 
 typedef enum
 {
+	NoName,
+	FirstName,
+	MI,
+	LastName,
+	NameSuffix
+} AXP_21264_CONFIG_NAME;
+
+typedef enum
+{
+	NoSystem,
 	Model,
 	SROM,
 	CPUS,
 	DIMMS,
 	Disks,
 	Console,
-	Network,
+	Networks,
 	Printers,
 	Tapes
 } AXP_21264_CONFIG_SYSTEM;
 
+typedef enum
+{
+	NoModel,
+	ModelName,
+	ModelModel
+} AXP_21264_CONFIG_MODEL;
+
+typedef enum
+{
+	NoSROM,
+	InitFile,
+	PALImage,
+	ROMImage,
+	NVRamFile
+} AXP_21264_CONFIG_SROM;
+
+typedef enum
+{
+	NoCPUs,
+	CPUCount,
+	Generation,
+	MfgPass,
+	CPUName
+} AXP_21264_CONFIG_CPUS;
+
+typedef enum
+{
+	NoDIMMs,
+	DIMMSize,
+	DIMMCount
+} AXP_21264_CONFIG_DIMMS;
+
+typedef enum
+{
+	NoDisks,
+	DECDisk
+} AXP_21264_CONFIG_DISKS;
+
+typedef enum
+{
+	NoDisk,
+	DiskType,
+	DiskName,
+	DiskSize,
+	DiskFile
+} AXP_21264_CONFIG_DISK;
+
+typedef enum
+{
+	NoConsole,
+	Port
+} AXP_21264_CONFIG_CONSOLE;
+
+typedef enum
+{
+	NoNetworks,
+	TopNetworks
+} AXP_21264_CONFIG_NETWORKS;
+
+typedef enum
+{
+	NoNetwork,
+	NetworkName,
+	NetworkMAC
+} AXP_21264_CONFIG_NETWORK;
+
+typedef enum
+{
+	NoPrinters,
+	TopPrinters
+} AXP_21264_CONFIG_PRINTERS;
+
+typedef enum
+{
+	NoTapes,
+	TopTapes
+} AXP_21264_CONFIG_TAPES;
+
+/*
+ * There can only be one Owner record.  It contains the owner's name and the
+ * creation and modify date information for the file itself.
+ *
+ *		Owner
+ *			Name
+ *				First				string
+ *				MI					string
+ *				Last				string
+ *				Suffix				string
+ *			Creation Date			DD-MMM-YYYY
+ *			Modify Date				DD-MMM-YYYY
+ */
 typedef struct
 {
-	char *first;
-	char *mi;
-	char *last;
-	char *suffix;
-	struct tm create;
-	struct tm modify;
+	char					*first;
+	char					*mi;
+	char					*last;
+	char					*suffix;
+	struct tm				create;
+	struct tm				modify;
 } AXP_21264_OWNER_INFO;
 
-/* TODO:	Continue to work on these */
+/*
+ * There can be only one model in a system.  The model information describes
+ * the system in human readable format.
+ *
+ *		System
+ *			Model
+ *				Name				string
+ *				Model				string
+ */
+typedef struct
+{
+	char					*name;
+	char					*model;
+} AXP_21264_MODEL_INFO;
+
+/*
+ * There can only be one SROM in a system.  This contains the locations of the
+ * files where things like the initialize file containing the code that
+ * generates the PAL image, the PAL image read in after the ROM image has
+ * initialized the CPU, and the Non-volatile RAM, where things like timers and
+ * the like are store between reboots.
+ *
+ *		System
+ *			SROM
+ *				InitFile			file-specification
+ *				PALImage			file-specification
+ *				ROMImage			file-specification
+ *				NVRamFile			file-specification
+ */
+typedef struct
+{
+	char					*initFile;
+	char					*PALImage;
+	char					*ROMImage;
+	char					*NVRamFile;
+} AXP_21264_SROM_INFO;
+
+/*
+ *		System
+ *			CPUS
+ *				Count				number
+ *				Generation			enum
+ *				Pass				number
+ *				Name				string
+ */
+typedef enum
+{
+	NoGen = 0,
+	EV3,
+	EV4,					/* 21064 */
+	Simulation,
+	LCAFamily,				/* 21066, 21068, 20166A, 20168A */
+	EV5,					/* 21164 */
+	EV45,					/* 21064A */
+	EV56,					/* 21164A */
+	EV6,					/* 21264 */
+	PCA56,					/* 21164PC */
+	PCA57,
+	EV67,					/* 21264 */
+	EV68CB_DC,				/* 21264 */
+	EV68A,					/* 21264 */
+	EV68CX,					/* 21264 */
+	EV7,					/* 21364 */
+	EV79,					/* 21364 */
+	EV69A					/* 21264 */
+} AXP_PROC_MAJ_TYPE;
+
+#define	AXP_PASS_2_21_EV4		0	/* EV4 */
+#define AXP_PASS_3_EV4			1
+#define AXP_RESERVED			0	/* LCA Family */
+#define AXP_PASS_1_11_66		1
+#define AXP_PASS_2_66			2
+#define AXP_PASS_1_11_68		3
+#define AXP_PASS_2_68			4
+#define AXP_PASS_1_66A			5
+#define AXP_PASS_1_68A			6
+#define AXP_PASS_2_22			1	/* EV5 */
+#define AXP_PASS_23_EV5			2
+#define AXP_PASS_3_EV5			3
+#define AXP_PASS_32				4
+#define AXP_PASS_4_EV5			5
+#define AXP_PASS_1				1	/* EV45 */
+#define AXP_PASS_11				2
+#define AXP_PASS_1_11			6
+#define AXP_PASS_2_EV45			3
+#define AXP_PASS_2_EV56			2
+#define	AXP_PASS_2_21			2	/* EV6 */
+#define AXP_PASS_22_EV6			3
+#define AXP_PASS_23_EV6			4
+#define AXP_PASS_3_EV6			5
+#define AXP_PASS_24_EV6			6
+#define AXP_PASS_25_EV6			7
+#define AXP_PASS_21				2	/* EV67 */
+#define AXP_PASS_211			4
+#define AXP_PASS_221			5
+#define AXP_PASS_23_24			6
+#define AXP_PASS_212			7
+#define AXP_PASS_222			8
+#define AXP_PASS_223_225		9
+#define AXP_PASS_224			10
+#define AXP_PASS_25_EV67		11
+#define AXP_PASS_241			12
+#define AXP_PASS_251			13
+#define AXP_PASS_26				14
+#define AXP_PASS_22_23			3	/* EV68CB */
+#define AXP_PASS_3_31			4
+#define AXP_PASS_24				5
+#define AXP_PASS_4				6
+#define AXP_PASS_2_EV68DC		2	/* EV68DC */
+#define AXP_PASS_231			3
+#define AXP_PASS_214_EV68DC		4
+#define AXP_PASS_2_EV68A		2	/* EV68A */
+#define AXP_PASS_21_21A_3		3
+#define AXP_PASS_22_EV68A		4
+
+typedef struct
+{
+	char				*name;
+	u32					count;
+	u32					pass;
+	AXP_PROC_MAJ_TYPE	generation;
+} AXP_21264_CPU_INFO;
+
+/*
+ * There can be one to four Dual In-line Memory Modules (DIMMs).  Each DIMM can
+ * be either 4x64MB (256MB), 4x128MB (512MB), 4x256MB (1.0GB), 4x512MB (2.0GB),
+ * for up to 8GB of memory.
+ *
+ *		System
+ *			DIMMS
+ *				Size			decimal(MB)
+ *				Count			decimal	[1,2,3,4]
+ */
+typedef struct
+{
+	u32						size;
+	u32						count;
+} AXP_21264_DIMM_INFO;
+
+/*
+ * There can be one or more disk drives.  There has to be at least one for the
+ * operating system.  There are up to 3 kinds of disk drive types supported.
+ * They are Disk (Read/Write Disk Drive), CDROM (Compact Disk Read-Only
+ * Memory), and RWCDROM (Read/Write CDROM).  There may be others added in the
+ * future.  For each disk the following information is required.  Type, Name,
+ * Size (in megabytes (MB) or gigabytes (GB)), and file-specification where the
+ * emulated disk is stored on the host operating system.
+ *
+ *		System
+ *			Disks
+ *				*Disk (number)
+ *					Type			Disk, CDROM, RWCDROM
+ *					Name			string
+ *					Size			decimal(MB, GB)
+ *					File			file-specification
+ */
+typedef enum
+{
+	Disk,
+	CD_ROM,
+	RW_CDROM
+} AXP_21264_DISK_TYPES;
+typedef struct
+{
+	char					*name;
+	char					*fileSpec;
+	u32						unit;
+	u32						size;
+	AXP_21264_DISK_TYPES	type;
+} AXP_21264_DISK_INFO;
+
+/*
+ * The ES40 has the potential for 2 consoles.  Not exactly sure why.  For now,
+ * we are going to only have a single console.  This console will be
+ * implemented using a telnet session.  For now, we'll just have the port
+ * number.  We may also need to know which network.
+ *
+ * TODO: Make sure this comment is accurate once fully implemented.
+ *
+ *		System
+ *			Console
+ *				Port				number
+ */
+typedef struct
+{
+	u32						port;
+} AXP_21264_CONSOLE_INFO;
+
+/*
+ * There can one or more network controllers defined.  These devices are
+ * configured under the System.
+ *
+ *		System
+ *			Networks
+ *				Network (number)
+ *					Name			string
+ *					MAC				##-##-##-##-##-##
+ *
+ * TODO: Do we also need a device type?
+ */
+typedef struct
+{
+	char					*name;
+	char					*mac;	/* TODO: This should probably be defined differently */
+	u32						unit;
+} AXP_21264_NETWORK_INFO;
+
+/*
+ * Currently, there is not support for printers or tapes.  When implemented,
+ * there can be zero or more of these devices.  These devices are configured
+ * under the System.  For now, these are just stubbed out.
+ *
+ *		System
+ *			Printers
+ *				*Printer (number)
+ *				<TBD>				ignored
+ *			Tapes
+ *				*Tape (number)
+ *				<TBD>				ignored
+ */
+typedef struct
+{
+	u32						unit;
+} AXP_21264_PRINTER_INFO;
+
+typedef struct
+{
+	u32						unit;
+} AXP_21264_TAPE_INFO;
+
+/*
+ * This is the structure to hold the configuration information that has been
+ * parsed from the configuration file.
+ */
+typedef struct
+{
+	AXP_21264_OWNER_INFO	owner;
+	struct
+	{
+		AXP_21264_DISK_INFO	*disks;
+		AXP_21264_NETWORK_INFO *networks;
+		AXP_21264_MODEL_INFO model;
+		AXP_21264_SROM_INFO	srom;
+		AXP_21264_CPU_INFO	cpus;
+		AXP_21264_DIMM_INFO	dimms;
+		AXP_21264_CONSOLE_INFO console;
+		u32					diskCount;
+		u32					networkCount;
+	} system;
+} AXP_21264_CONFIG;
+
+/*
+ * Exported Global Variables
+ */
+extern AXP_21264_CONFIG	AXP_21264_Config;
 
 /*
  * Function Prototypes

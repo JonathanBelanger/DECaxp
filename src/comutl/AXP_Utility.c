@@ -943,13 +943,16 @@ i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 {
 	const char	*errMsg = "%%AXP-E-%s, %s\n";
+	char		*localFileName = "";
 	int			ii = 0;
 	bool		retVal = false;
 
+	if (fileName != NULL)
+		localFileName = fileName;
 	if (AXP_UTL_BUFF)
 		printf(
 			"\n\nDECaxp: opened SROM file %s for reading\n\n",
-			fileName);
+			localFileName);
 
 	/*
 	 * Initialize the handle structure with all zeros.
@@ -959,7 +962,7 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 	/*
 	 * Copy the filename into the handle, then try opening the file.
 	 */
-	strcpy(sromHandle->fileName, fileName);
+	strcpy(sromHandle->fileName, localFileName);
 	sromHandle->fp = fopen(fileName, "r");
 
 	/*
@@ -1216,6 +1219,8 @@ bool AXP_OpenWrite_SROM(
 		sromHandle->optFwID = 0200001711212316;
 		sromHandle->romOffset = 0;	/* no ROM offset */
 	}
+	else
+		retVal = true;
 
 	/*
 	 * Return the result of this call back to the caller.
@@ -1377,7 +1382,7 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
 		 * calculate the image checksum, then the header checksum before
 		 * writing the header information, followed by the image data.
 		 */
-		if (sromHandle->openForWrite)
+		if (sromHandle->openForWrite == true)
 		{
 
 			/*
