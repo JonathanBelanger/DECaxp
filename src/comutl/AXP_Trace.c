@@ -83,9 +83,10 @@ void AXP_TraceInit_Once(void)
 		_axp_trc_active_ = true;
 		AXP_TraceWrite("Digital Alpha AXP 21264 CPU Emulator Trace Utility.");
 		AXP_TraceWrite(
-				"AXP_TRCLOG = 0x%08x : AXP_TRCFIL = %s\n",
+				"AXP_TRCLOG = 0x%08x : AXP_TRCFIL = %s",
 				_axp_trc_log_,
 				_axp_trc_out_);
+		AXP_TraceWrite("Copyright 2018, Jonathan D. Belanger.\n");
 	}
 
 	/*

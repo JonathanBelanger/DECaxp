@@ -46,6 +46,13 @@
  *	argv:
  *		An array, limit argc, of strings representing the image filename being
  *		executed, please each of the arguments provided on the command line.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	0:	Normal Successful Completion.
+ *	!0:	An Error occurred that is causing the image to exit.
  */
 int main(int argc, char **argv)
 {

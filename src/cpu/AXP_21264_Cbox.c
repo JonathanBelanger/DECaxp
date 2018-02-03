@@ -1010,11 +1010,10 @@ void *AXP_21264_CboxMain(void *voidPtr)
 							 * Finally, load the Instruction Cache for the
 							 * initialization code.  This is where the console
 							 * is loaded.
-							 *
-							 * TODO: Get the ROM filename from the
-							 *		 configuration.
 							 */
-							initFailure = AXP_OpenRead_SROM("", &sromHdl);
+							initFailure = AXP_OpenRead_SROM(
+										AXP_21264_Config.system.srom.ROMImage,
+										&sromHdl);
 							if (initFailure == false)
 							{
 								AXP_CACHE_IDX	destAddr;
