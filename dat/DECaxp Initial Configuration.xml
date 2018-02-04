@@ -55,12 +55,10 @@
 					Alpha AXP 21064, the name would be Flamingo
 		-->
 		<CPUs>
-			<CPU number="1">
-				<Generation>21264</Generation>
-				<Pass>1</Pass>
-				<Name />
-			</CPU>
-		</CPUs>
+			<Count>1</Count>
+			<Generation>21264</Generation>
+			<Pass>5</Pass>
+			<Name>EV68CD</Name></CPUs>
 
 		<!--
 			This defines the individual memory modules and their size.  In
@@ -68,18 +66,8 @@
 			DIMMs are simulated.
 		-->
 		<DIMMs>
-			<DIMM number="1">
-				<Size>4.0GB</Size>
-			</DIMM>
-			<DIMM number="2">
-				<Size>4.0GB</Size>
-			</DIMM>
-			<DIMM number="3">
-				<Size>4.0GB</Size>
-			</DIMM>
-			<DIMM number="4">
-				<Size>4.0GB</Size>
-			</DIMM>
+			<Size>4.0GB</Size>
+			<Count>4</Count>
 		</DIMMs>
 
 		<!--
@@ -113,10 +101,12 @@
 			The network definition contains the adapter name and the MAC
 			address to be assigned to it.
 		-->
-		<Network>
-			<Name>es04</Name>
-			<MAC>08-01-00-FF-FF-FF</MAC>
-		</Network>
+		<Networks>
+			<Network number="1">
+				<Name>es04</Name>
+				<MAC>08-00-20-01-23-45</MAC>
+			</Network>
+		</Networks>
 
 		<!--
 			This is a place holder for Printer definitions.
@@ -129,7 +119,7 @@
 			This is a place holder for Tape definitions.
 		-->
 		<Tapes>
-			<Name number="1" />
+			<Tape number="1" />
 		</Tapes>
 	</System>
 </DECaxp>

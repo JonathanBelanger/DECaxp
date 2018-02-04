@@ -50,16 +50,17 @@
  */
 int main(int argc, char **argv)
 {
-	char	*inFile;
-	char	*outFile;
-	FILE	*inFP;
-	u32		*SROMbuffer = NULL;
-	char	readLine[133];
-	u64		baseAddr = 0;
-	int		retVal = 0;
-	int		ii = 0;
-	int		SROMsize;
-	bool	baseAddrSet = false;
+	char			*inFile;
+	char			*outFile;
+	FILE			*inFP;
+	AXP_SROM_HANDLE	sromHandle;
+	char			readLine[133];
+	u32				instruction;
+	u32				noop = 0x47ff041f;	/* BIS R31,R31,R31 */
+	u32				blkOffset = 0;
+	int				retVal = 0;
+	bool			done = false;
+	bool			opened = false;
 
 	printf("\n%%DECAXP-I-START, The Digital Alpha AXP 21264 CPU Emulator is starting.\n");
 	if (argc == 3)
@@ -73,67 +74,61 @@ int main(int argc, char **argv)
 			char	*addr = &readLine[0];
 			char	*instr = &readLine[9];
 
-			SROMsize = 4;
-			SROMbuffer = calloc(SROMsize, sizeof(u32));
-			while (feof(inFP) && (SROMbuffer != NULL))
+			if (fgets(readLine, 132, inFP) != NULL)
 			{
-				char *ptr;
+				u32	binAddr;
+				u64	baseAddr = 0;
 
-				if (fgets(readLine, 132, inFP) != NULL)
-				{
-					addr[8] = '\0';
-					instr[17] = '\0';
-					if (baseAddrSet == false)
-					{
-						u32	binAddr = strtoul(addr, &ptr, 16);
-
-						baseAddr = binAddr;
-						baseAddrSet = true;
-					}
-					if (ii >= SROMsize)
-					{
-						SROMsize += 4;
-						SROMbuffer = realloc(SROMbuffer, SROMsize);
-					}
-					if (SROMbuffer != NULL)
-					{
-						SROMbuffer[ii] = stroul(instr, &ptr, 16);
-						ii++;
-					}
-				}
-			}
-			if (SROMbuffer != NULL)
-			{
-				AXP_SROM_HANDLE sromHandle;
-				u32				fwID;
-				int 			jj;
-				bool			SROMstatus;
-
-				if (ii < SROMsize)
-					for (jj = ii; jj < SROMsize; jj++)
-						SROMbuffer[jj] = 0x47ff041f;	/* BIS R31,R31,R31 */
-				fwID = time(NULL);
-				SROMstatus = AXP_OpenWrite_SROM(
+				addr[8] = '\0';
+				instr[8] = '\0';
+				binAddr = strtoul(addr, &addr, 16);
+				baseAddr = binAddr;		/* convert from 32-bit to 64-bit */
+				done = AXP_OpenWrite_SROM(
 							outFile,
 							&sromHandle,
 							baseAddr,
-							fwID);
-				if (SROMstatus == false)
-					SROMstatus = AXP_Write_SROM(
-										&sromHandle,
-										SROMbuffer,
-										(SROMsize * 4));
+							AXP_ROM_FWID_SROM);
+				if (done == false)
+					opened = true;
 				else
 					retVal = -4;
-				if ((retVal == 0) && (SROMstatus == false))
+			}
+			while ((feof(inFP) == 0) && (done == false))
+			{
+				instruction = strtoul(instr, &instr, 16);
+				done = AXP_Write_SROM(
+									&sromHandle,
+									(u8 *) &instruction,
+									sizeof(u32));
+				if (done == false)
 				{
-					SROMstatus = AXP_Close_SROM(&sromHandle);
-					if (SROMstatus == true)
+					blkOffset = (blkOffset + 1) & 0x03;
+					done = (fgets(readLine, 132, inFP) == NULL);
+					addr[8] = '\0';
+					instr[8] = '\0';
+				}
+			}
+			if (opened == true)
+			{
+				int ii;
+
+				done = false;
+				if (blkOffset != 0)
+				{
+					for (ii = blkOffset; ii < 4; ii++)
+						done = AXP_Write_SROM(
+											&sromHandle,
+											(u8 *) &noop,
+											sizeof(u32));
+				}
+				if (done == false)
+				{
+					done = AXP_Close_SROM(&sromHandle);
+					if (done == true)
 						retVal = -6;
 				}
 				else
 					retVal = -5;
-
 			}
 		}
 		else if (inFP == NULL)
