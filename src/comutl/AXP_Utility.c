@@ -1187,7 +1187,7 @@ bool AXP_OpenWrite_SROM(
 
 	if (AXP_UTL_BUFF)
 		printf(
-			"\n\nDECaxp: opened SROM file %s for writing\n\n",
+			"\n\nDECaxp: opening SROM file %s for writing\n\n",
 			fileName);
 
 	/*
@@ -1372,7 +1372,7 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
 	 */
 	if ((sromHandle->fp != NULL) &&
 		(sromHandle->validPat == AXP_ROM_VAL_PAT) &&
-		(sromHandle->validPat == AXP_ROM_INV_VP_PAT) &&
+		(sromHandle->inverseVP == AXP_ROM_INV_VP_PAT) &&
 		(sromHandle->hdrSize == AXP_ROM_HDR_LEN))
 	{
 
