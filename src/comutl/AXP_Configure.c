@@ -1415,11 +1415,12 @@ static void parse_name_names(
 	bool	found;
 
 	/*
-	 * If a value is to be returned, then make sure the current string is a
-	 * zero length string.
+	 * If we are called with an address to value of NULL, then we are called
+	 * for the first time by the parent parser.  When this happend, make sure
+	 * that the local string is zero length.
 	 */
-	if (value != NULL)
-		value[0] = '\0';
+	if (value == NULL)
+		nodeValue[0] = '\0';
 
 	/*
 	 * We recursively look through the node from the current one and look for
@@ -1478,6 +1479,9 @@ static void parse_name_names(
 				AXP_21264_Config.owner.first = realloc(
 												AXP_21264_Config.owner.first,
 												strlen(nodeValue)+1);
+				if (AXP_21264_Config.owner.first != NULL)
+					strcpy(AXP_21264_Config.owner.first, nodeValue);
+				nodeValue[0] = '\0';
 				break;
 
 			case MI:
@@ -1486,6 +1490,9 @@ static void parse_name_names(
 				AXP_21264_Config.owner.mi = realloc(
 												AXP_21264_Config.owner.mi,
 												strlen(nodeValue)+1);
+				if (AXP_21264_Config.owner.mi != NULL)
+					strcpy(AXP_21264_Config.owner.mi, nodeValue);
+				nodeValue[0] = '\0';
 				break;
 
 			case LastName:
@@ -1494,6 +1501,9 @@ static void parse_name_names(
 				AXP_21264_Config.owner.last = realloc(
 												AXP_21264_Config.owner.last,
 												strlen(nodeValue)+1);
+				if (AXP_21264_Config.owner.last != NULL)
+					strcpy(AXP_21264_Config.owner.last, nodeValue);
+				nodeValue[0] = '\0';
 				break;
 
 			case NameSuffix:
@@ -1502,6 +1512,9 @@ static void parse_name_names(
 				AXP_21264_Config.owner.suffix = realloc(
 												AXP_21264_Config.owner.suffix,
 												strlen(nodeValue)+1);
+				if (AXP_21264_Config.owner.suffix != NULL)
+					strcpy(AXP_21264_Config.owner.suffix, nodeValue);
+				nodeValue[0] = '\0';
 				break;
 
 			case NoName:
@@ -1625,11 +1638,12 @@ static void parse_owner_names(
 	bool	found;
 
 	/*
-	 * If a value is to be returned, then make sure the current string is a
-	 * zero length string.
+	 * If we are called with an address to value of NULL, then we are called
+	 * for the first time by the parent parser.  When this happend, make sure
+	 * that the local string is zero length.
 	 */
-	if (value != NULL)
-		value[0] = '\0';
+	if (value == NULL)
+		nodeValue[0] = '\0';
 
 	/*
 	 * We recursively look through the node from the current one and look for
@@ -1688,12 +1702,14 @@ static void parse_owner_names(
 				parse_owner_names(doc, cur_node->children, parent, nodeValue);
 				cvt_date_to_rm(nodeValue, &AXP_21264_Config.owner.create);
 				parent = NoOwner;
+				nodeValue[0] = '\0';
 				break;
 
 			case ModifyDate:
 				parse_owner_names(doc, cur_node->children, parent, nodeValue);
 				cvt_date_to_rm(nodeValue, &AXP_21264_Config.owner.modify);
 				parent = NoOwner;
+				nodeValue[0] = '\0';
 				break;
 
 			case NoName:
@@ -1868,3 +1884,4 @@ int AXP_LoadConfig_File(char *fileName)
 	 */
 	return(retVal);
 }
+
