@@ -400,10 +400,16 @@ static void AXP_stripXmlString(xmlChar *value)
 }
 
 /*
- * print_tapes_names
- *	This function is a precursor to the actual parsing code.  It scans through
- *	the XML document and pulls out the configuration information and displays
- *	it to stdout.
+ * parse_tapes_names
+ *	This function parses the elements within the Tapes Node in the XML
+ *	formatted configuration file.  It extracts the value for each of the
+ *	components and stores them in the configuration.  The format for the
+ *	subnodes in the Tapes node are as follows:
+ *		<Tapes>
+ *			<Tape number="1" \>
+ *		</Tapes>
+ *	NOTE:	This node is not fully defined and will be determined, if and when
+ *			a tape device is supported.
  *
  * Input Parameters:
  *	doc:
@@ -414,26 +420,58 @@ static void AXP_stripXmlString(xmlChar *value)
  *		A value indicating the parent node being parsed.
  *
  * Output Parameters:
- *	None.
+ *	value:
+ *		A pointer to a location to receive the value when the node parsed is a
+ *		text node.  This parameter may be NULL, when we want to ignore the
+ *		results.
+ *	unit:
+ *		A pointer to an unsigned 32-bit integer to receive the unit number for
+ *		the device.
  *
  * Return Values:
  *	None.
  */
-static void print_tapes_names(
+static void parse_tapes_names(
 					xmlDocPtr doc,
 					xmlNode *a_node,
-					AXP_21264_CONFIG_TAPES parent)
+					AXP_21264_CONFIG_TAPES parent,
+					char *value,
+					u32 *unit)
 {
 	xmlNode	*cur_node = NULL;
+	char	*ptr;
+	char	nodeValue[80];
+	u32		nodeUnit;
 	int		ii;
 	bool	found;
 
+	/*
+	 * If we are called with an address to value or unit of NULL, then we are
+	 * called for the first time by the parent parser.  When this happened,
+	 * make sure that the local string is zero length and the local unit is 0.
+	 */
+	if (value == NULL)
+		nodeValue[0] = '\0';
+	if (unit == NULL)
+		nodeUnit = 0;
+
+	/*
+	 * We recursively look through the node from the current one and look for
+	 * either an Element Node or a Text Node.  If an Element node, there is
+	 * something more to parse (handled below).  If it is a text node, then we
+	 * are returning a value associated with an Element node.
+	 */
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
 	{
+		xmlAttr *attr = cur_node->properties;
+
+		/*
+		 * We have an element node.  See that is one that we care about and
+		 * we'll parse it further.  Extra nodes will be ignored and duplicates
+		 * will overwrite the previous value.
+		 */
 		if (cur_node->type == XML_ELEMENT_NODE)
 		{
-			printf("Tapes: node type: Element, name: %s\n", cur_node->name);
-
 			found = false;
 			for (ii = 0;
 				 ((_tapes_level_nodes[ii].token != NULL) && (found == false));
@@ -445,23 +483,54 @@ static void print_tapes_names(
 					found = true;
 				}
 			}
+
+			/*
+			 * This element has a unit number as part of its definition.  Get
+			 * it and convert it.
+			 */
+			while (attr != NULL)
+			{
+				if (strcmp((char *) attr->name, "number") == 0)
+				{
+					xmlChar *attrVal = xmlNodeListGetString(doc, attr->children, 1);
+
+					AXP_stripXmlString(attrVal);
+					if (xmlStrlen(attrVal) > 0)
+					{
+						nodeUnit = strtoul((char *) attrVal, &ptr, 10);
+						if (unit != NULL)
+							*unit = nodeUnit;
+					}
+					xmlFree(attrVal);
+				}
+				attr = attr->next;
+			}
 		}
+
+		/*
+		 * We have a text node.  This is a value that is to be associated with
+		 * an Element node.
+		 */
 		else if (XML_TEXT_NODE == cur_node->type)
 		{
 			xmlChar	*key;
 
 			key = xmlNodeListGetString(doc, cur_node, 1);
 			AXP_stripXmlString(key);
-			if (xmlStrlen(key) > 0)
-				printf("Tapes: text node: \'%s\'\n", key);
+			if (value != NULL)
+				strcpy(value, (char *) key);
+			parent = NoTapes;
 			xmlFree(key);
 		}
 		if (parent != NoTapes)
 		{
-			printf("Tapes: Calling Tapes.\n");
-			print_tapes_names(doc, cur_node->children, parent);
+			parse_tapes_names(
+						doc,
+						cur_node->children,
+						parent,
+						nodeValue,
+						&nodeUnit);
 			parent = NoTapes;
-			printf("Tapes: Returning Tapes.\n");
 		}
     }
 
@@ -472,10 +541,16 @@ static void print_tapes_names(
 }
 
 /*
- * print_printers_names
- *	This function is a precursor to the actual parsing code.  It scans through
- *	the XML document and pulls out the configuration information and displays
- *	it to stdout.
+ * parse_printers_names
+ *	This function parses the elements within the Printers Node in the XML
+ *	formatted configuration file.  It extracts the value for each of the
+ *	components and stores them in the configuration.  The format for the
+ *	subnodes in the Tapes node are as follows:
+ *		<Printers>
+ *			<Printer number="1" \>
+ *		</Printers>
+ *	NOTE:	This node is not fully defined and will be determined, if and when
+ *			a tape device is supported.
  *
  * Input Parameters:
  *	doc:
@@ -486,26 +561,58 @@ static void print_tapes_names(
  *		A value indicating the parent node being parsed.
  *
  * Output Parameters:
- *	None.
+ *	value:
+ *		A pointer to a location to receive the value when the node parsed is a
+ *		text node.  This parameter may be NULL, when we want to ignore the
+ *		results.
+ *	unit:
+ *		A pointer to an unsigned 32-bit integer to receive the unit number for
+ *		the device.
  *
  * Return Values:
  *	None.
  */
-static void print_printers_names(
+static void parse_printers_names(
 					xmlDocPtr doc,
 					xmlNode *a_node,
-					AXP_21264_CONFIG_PRINTERS parent)
+					AXP_21264_CONFIG_PRINTERS parent,
+					char *value,
+					u32 *unit)
 {
 	xmlNode	*cur_node = NULL;
+	char	*ptr;
+	char	nodeValue[80];
+	u32		nodeUnit;
 	int		ii;
 	bool	found;
 
+	/*
+	 * If we are called with an address to value or unit of NULL, then we are
+	 * called for the first time by the parent parser.  When this happened,
+	 * make sure that the local string is zero length and the local unit is 0.
+	 */
+	if (value == NULL)
+		nodeValue[0] = '\0';
+	if (unit == NULL)
+		nodeUnit = 0;
+
+	/*
+	 * We recursively look through the node from the current one and look for
+	 * either an Element Node or a Text Node.  If an Element node, there is
+	 * something more to parse (handled below).  If it is a text node, then we
+	 * are returning a value associated with an Element node.
+	 */
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
 	{
+		xmlAttr *attr = cur_node->properties;
+
+		/*
+		 * We have an element node.  See that is one that we care about and
+		 * we'll parse it further.  Extra nodes will be ignored and duplicates
+		 * will overwrite the previous value.
+		 */
 		if (cur_node->type == XML_ELEMENT_NODE)
 		{
-			printf("Printers: node type: Element, name: %s\n", cur_node->name);
-
 			found = false;
 			for (ii = 0;
 				 ((_printers_level_nodes[ii].token != NULL) && (found == false));
@@ -517,23 +624,54 @@ static void print_printers_names(
 					found = true;
 				}
 			}
+
+			/*
+			 * This element has a unit number as part of its definition.  Get
+			 * it and convert it.
+			 */
+			while (attr != NULL)
+			{
+				if (strcmp((char *) attr->name, "number") == 0)
+				{
+					xmlChar *attrVal = xmlNodeListGetString(doc, attr->children, 1);
+
+					AXP_stripXmlString(attrVal);
+					if (xmlStrlen(attrVal) > 0)
+					{
+						nodeUnit = strtoul((char *) attrVal, &ptr, 10);
+						if (unit != NULL)
+							*unit = nodeUnit;
+					}
+					xmlFree(attrVal);
+				}
+				attr = attr->next;
+			}
 		}
+
+		/*
+		 * We have a text node.  This is a value that is to be associated with
+		 * an Element node.
+		 */
 		else if (XML_TEXT_NODE == cur_node->type)
 		{
 			xmlChar	*key;
 
 			key = xmlNodeListGetString(doc, cur_node, 1);
 			AXP_stripXmlString(key);
-			if (xmlStrlen(key) > 0)
-				printf("Printers: text node: \'%s\'\n", key);
+			if (value != NULL)
+				strcpy(value, (char *) key);
+			parent = NoTapes;
 			xmlFree(key);
 		}
 		if (parent != NoPrinters)
 		{
-			printf("Printers: Calling Printers.\n");
-			print_printers_names(doc, cur_node->children, parent);
+			parse_printers_names(
+						doc,
+						cur_node->children,
+						parent,
+						nodeValue,
+						&nodeUnit);
 			parent = NoPrinters;
-			printf("Printers: Returning Printers.\n");
 		}
     }
 
@@ -544,10 +682,15 @@ static void print_printers_names(
 }
 
 /*
- * print_network_names
- *	This function is a precursor to the actual parsing code.  It scans through
- *	the XML document and pulls out the configuration information and displays
- *	it to stdout.
+ * parse_network_names
+ *	This function parses the elements within the Network Node in the XML
+ *	formatted configuration file.  It extracts the value for each of the
+ *	components and stores them in the configuration.  The format for the
+ *	subnodes in the Network node are as follows:
+ *		<Network number="1">
+ *			<Name>es40</Name>
+ *			<MAC>08-00-20-01-12-45</MAC>
+ *		</Network>
  *
  * Input Parameters:
  *	doc:
@@ -556,30 +699,56 @@ static void print_printers_names(
  *		A pointer to the current node (element) being parsed.
  *	parent:
  *		A value indicating the parent node being parsed.
+ *	unit:
+ *		A value indicating the unit number associated with the network config
+ *		being parsed.
  *
  * Output Parameters:
- *	None.
+ *	value:
+ *		A pointer to a location to receive the value when the node parsed is a
+ *		text node.  This parameter may be NULL, when we want to ignore the
+ *		results.
  *
  * Return Values:
  *	None.
  */
-static void print_network_names(
+static void parse_network_names(
 					xmlDocPtr doc,
 					xmlNode *a_node,
-					AXP_21264_CONFIG_NETWORK parent)
+					AXP_21264_CONFIG_NETWORK parent,
+					u32 unit,
+					char *value)
 {
 	xmlNode	*cur_node = NULL;
+	xmlChar	*key = NULL;
+	char	nodeValue[80];
 	int		ii;
 	bool	found;
 
+	/*
+	 * If we are called with an address to value of NULL, then we are
+	 * called for the first time by the parent parser.  When this happened,
+	 * make sure that the local string is zero length.
+	 */
+	if (value == NULL)
+		nodeValue[0] = '\0';
+
+	/*
+	 * We recursively look through the node from the current one and look for
+	 * either an Element Node or a Text Node.  If an Element node, there is
+	 * something more to parse (handled below).  If it is a text node, then we
+	 * are returning a value associated with an Element node.
+	 */
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
 	{
+
+		/*
+		 * We have an element node.  See that is one that we care about and
+		 * we'll parse it further.  Extra nodes will be ignored and duplicates
+		 * will overwrite the previous value.
+		 */
 		if (cur_node->type == XML_ELEMENT_NODE)
 		{
-			xmlAttr *attr = cur_node->properties;
-
-			printf("Network: node type: Element, name: %s\n", cur_node->name);
-
 			found = false;
 			for (ii = 0;
 				 ((_network_level_nodes[ii].token != NULL) && (found == false));
@@ -591,37 +760,74 @@ static void print_network_names(
 					found = true;
 				}
 			}
-
-			while (attr != NULL)
-			{
-				xmlChar *attrVal = xmlNodeListGetString(doc, attr->children, 1);
-
-				AXP_stripXmlString(attrVal);
-				if (xmlStrlen(attrVal) > 0)
-					printf(
-						"Network:    attribute name: \'%s\'; value: \'%s\'\n",
-						attr->name,
-						attrVal);
-				xmlFree(attrVal);
-				attr = attr->next;
-			}
 		}
+
+		/*
+		 * We have a text node.  This is a value that is to be associated with
+		 * an Element node.
+		 */
 		else if (XML_TEXT_NODE == cur_node->type)
 		{
-			xmlChar	*key;
-
 			key = xmlNodeListGetString(doc, cur_node, 1);
 			AXP_stripXmlString(key);
-			if (xmlStrlen(key) > 0)
-				printf("Network: text node: \'%s\'\n", key);
+			if ((xmlStrlen(key) > 0) && (value != NULL))
+				strcpy(value, (char *) key);
 			xmlFree(key);
 		}
+
+		/*
+		 * If the parent is NoNetwork, then we have yet to find anything to
+		 * parse out, or we just parsed an element and need to move onto the
+		 * next element.
+		 */
 		if (parent != NoNetwork)
 		{
-			printf("Network: Calling Network.\n");
-			print_network_names(doc, cur_node->children, parent);
+
+			/*
+			 * Utilizing the unit value supplied on the call, find out where we
+			 * are to store the information for this network device.
+			 */
+			ii = 0;
+			while ((ii < AXP_21264_Config.system.networkCount) &&
+				   (AXP_21264_Config.system.networks[ii].unit != unit))
+				ii++;
+
+			/*
+			 * All ourselves to parse out the text node for the value of the
+			 * configuration item we are parsing.
+			 */
+			parse_network_names(
+					doc,
+					cur_node->children,
+					parent,
+					unit,
+					nodeValue);
+
+			/*
+			 * Depending upon the element being parsed, initialize the
+			 * configuration with the information just parsed out.
+			 */
+			switch (parent)
+			{
+				case NetworkName:
+					AXP_21264_Config.system.networks[ii].name = realloc(
+									AXP_21264_Config.system.networks[ii].name,
+									(strlen(nodeValue) + 1));
+					strcpy(AXP_21264_Config.system.networks[ii].name, nodeValue);
+					break;
+
+				case NetworkMAC:
+					AXP_21264_Config.system.networks[ii].mac = realloc(
+									AXP_21264_Config.system.networks[ii].mac,
+									(strlen(nodeValue) + 1));
+					strcpy(AXP_21264_Config.system.networks[ii].mac, nodeValue);
+					break;
+
+				case NoNetwork:
+				default:
+					break;
+			}
 			parent = NoNetwork;
-			printf("Network: Returning Network.\n");
 		}
     }
 
@@ -632,10 +838,14 @@ static void print_network_names(
 }
 
 /*
- * print_networks_names
- *	This function is a precursor to the actual parsing code.  It scans through
- *	the XML document and pulls out the configuration information and displays
- *	it to stdout.
+ * parse_networks_names
+ *	This function parses the elements within the Networks Node in the XML
+ *	formatted configuration file.  It extracts the value for each of the
+ *	components and stores them in the configuration.  The format for the
+ *	subnodes in the Networks node are as follows:
+ *		<Networks>
+ *			<Network number="1">...</Network>
+ *		</Networks>
  *
  * Input Parameters:
  *	doc:
@@ -651,20 +861,34 @@ static void print_network_names(
  * Return Values:
  *	None.
  */
-static void print_networks_names(
+static void parse_networks_names(
 					xmlDocPtr doc,
 					xmlNode *a_node,
 					AXP_21264_CONFIG_NETWORKS parent)
 {
 	xmlNode	*cur_node = NULL;
+	char	*ptr;
+	u32		nodeUnit = 0;
 	int		ii;
 	bool	found;
 
+	/*
+	 * We recursively look through the node from the current one and look for
+	 * either an Element Node or a Text Node.  If an Element node, there is
+	 * something more to parse (handled below).  If it is a text node, then we
+	 * are returning a value associated with an Element node.
+	 */
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
 	{
+
+		/*
+		 * We have an element node.  See that is one that we care about and
+		 * we'll parse it further.  Extra nodes will be ignored and duplicates
+		 * will overwrite the previous value.
+		 */
 		if (cur_node->type == XML_ELEMENT_NODE)
 		{
-			printf("Networks: node type: Element, name: %s\n", cur_node->name);
+			xmlAttr *attr = cur_node->properties;
 
 			found = false;
 			for (ii = 0;
@@ -677,23 +901,66 @@ static void print_networks_names(
 					found = true;
 				}
 			}
-		}
-		else if (XML_TEXT_NODE == cur_node->type)
-		{
-			xmlChar	*key;
 
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if (xmlStrlen(key) > 0)
-				printf("Networks: text node: \'%s\'\n", key);
-			xmlFree(key);
+			/*
+			 * The Network element has a single attribute called number.  Parse
+			 * this out and convert it to a 32-bit integer.  We'll store it in
+			 * the allocated configuration item and supply it on the code that
+			 * parses out the child configuration data,
+			 */
+			while (attr != NULL)
+			{
+				if (strcmp((char *) attr->name, "number") == 0)
+				{
+					xmlChar *attrVal = xmlNodeListGetString(doc, attr->children, 1);
+
+					AXP_stripXmlString(attrVal);
+					if (xmlStrlen(attrVal) > 0)
+						nodeUnit = strtoul((char *) attrVal, &ptr, 10);
+					xmlFree(attrVal);
+				}
+				attr = attr->next;
+			}
 		}
+
+		/*
+		 * If we are parsing a Network element, increment the number of
+		 * networks being configured, allocate a new entry in the array of
+		 * networks, set the unit number for this new entry and call the
+		 * parsing code to initialize the remaining fields.
+		 */
 		if (parent == TopNetworks)
 		{
-			printf("Networks: Calling Network.\n");
-			print_network_names(doc, cur_node->children, NoNetwork);
+
+			/*
+			 * We have a new network device to be configured.  Increment the
+			 * counter of these items.
+			 */
+			AXP_21264_Config.system.networkCount++;
+
+			/*
+			 * Allocate an array large enough to handle an additional entry.
+			 */
+			AXP_21264_Config.system.networks = realloc(
+						AXP_21264_Config.system.networks,
+						(AXP_21264_Config.system.networkCount *
+							sizeof(AXP_21264_NETWORK_INFO)));
+
+			/*
+			 * Set the unit number for this new entry (which should always be
+			 * the last one.  Also initialize the other fields so we don't get
+			 * a segmentation fault in the function are are about to call;
+			 */
+			ii = AXP_21264_Config.system.networkCount - 1;
+			AXP_21264_Config.system.networks[ii].unit = nodeUnit;
+			AXP_21264_Config.system.networks[ii].mac = NULL;
+			AXP_21264_Config.system.networks[ii].name = NULL;
+
+			/*
+			 * Parse out the other elements for the new network entry.
+			 */
+			parse_network_names(doc, cur_node->children, NoNetwork, nodeUnit, NULL);
 			parent = NoNetworks;
-			printf("Networks: Returning Network.\n");
 		}
     }
 
@@ -704,10 +971,14 @@ static void print_networks_names(
 }
 
 /*
- * print_console_names
- *	This function is a precursor to the actual parsing code.  It scans through
- *	the XML document and pulls out the configuration information and displays
- *	it to stdout.
+ * parse_console_names
+ *	This function parses the elements within the Console Node in the XML
+ *	formatted configuration file.  It extracts the value for each of the
+ *	components and stores them in the configuration.  The format for the
+ *	subnodes in the Console node are as follows:
+ *		<Console>
+ *			<Port>10</Port>
+ *		</Console>
  *
  * Input Parameters:
  *	doc:
@@ -723,21 +994,42 @@ static void print_networks_names(
  * Return Values:
  *	None.
  */
-static void print_console_names(
+static void parse_console_names(
 					xmlDocPtr doc,
 					xmlNode *a_node,
-					AXP_21264_CONFIG_CONSOLE parent)
+					AXP_21264_CONFIG_CONSOLE parent,
+					char *value)
 {
 	xmlNode	*cur_node = NULL;
+	char	*ptr;
+	char	nodeValue[80];
 	int		ii;
 	bool	found;
 
+	/*
+	 * If we are called with an address to value of NULL, then we are
+	 * called for the first time by the parent parser.  When this happened,
+	 * make sure that the local string is zero length.
+	 */
+	if (value == NULL)
+		nodeValue[0] = '\0';
+
+	/*
+	 * We recursively look through the node from the current one and look for
+	 * either an Element Node or a Text Node.  If an Element node, there is
+	 * something more to parse (handled below).  If it is a text node, then we
+	 * are returning a value associated with an Element node.
+	 */
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
 	{
+
+		/*
+		 * We have an element node.  See that is one that we care about and
+		 * we'll parse it further.  Extra nodes will be ignored and duplicates
+		 * will overwrite the previous value.
+		 */
 		if (cur_node->type == XML_ELEMENT_NODE)
 		{
-			printf("Console: node type: Element, name: %s\n", cur_node->name);
-
 			found = false;
 			for (ii = 0;
 				 ((_console_level_nodes[ii].token != NULL) && (found == false));
@@ -750,6 +1042,11 @@ static void print_console_names(
 				}
 			}
 		}
+
+		/*
+		 * We have a text node.  This is a value that is to be associated with
+		 * an Element node.
+		 */
 		else if (XML_TEXT_NODE == cur_node->type)
 		{
 			xmlChar	*key;
@@ -757,15 +1054,20 @@ static void print_console_names(
 			key = xmlNodeListGetString(doc, cur_node, 1);
 			AXP_stripXmlString(key);
 			if (xmlStrlen(key) > 0)
-				printf("Console: text node: \'%s\'\n", key);
+				strcpu(value, key);
 			xmlFree(key);
 		}
-		if (parent != NoConsole)
+
+		/*
+		 * If we are parsing a Port element, then call ourselves back to get
+		 * the text associated with this port and convert it to a 32-bit
+		 * unsigned integer.
+		 */
+		if (parent == Port)
 		{
-			printf("Console: Calling Console.\n");
-			print_console_names(doc, cur_node->children, parent);
+			parse_console_names(doc, cur_node->children, parent, nodeValue);
+			AXP_21264_Config.system.console.port = strtoul(nodeValue, &ptr, 10);
 			parent = NoConsole;
-			printf("Console: Returning Console.\n");
 		}
     }
 
@@ -1334,31 +1636,28 @@ static void print_system_names(
 				break;
 
 			case Console:
-				printf("System: Calling Console.\n");
-				print_console_names(doc, cur_node->children, NoConsole);
+				parse_console_names(doc, cur_node->children, NoConsole, NULL);
 				parent = NoSystem;
-				printf("System: Returning Console.\n");
 				break;
 
 			case Networks:
-				printf("System: Calling Networks.\n");
-				print_networks_names(doc, cur_node->children, NoNetworks);
+				parse_networks_names(doc, cur_node->children, NoNetworks);
 				parent = NoSystem;
-				printf("System: Returning Networks.\n");
 				break;
 
 			case Printers:
-				printf("System: Calling Printers.\n");
-				print_printers_names(doc, cur_node->children, NoPrinters);
+				parse_printers_names(
+							doc,
+							cur_node->children,
+							NoPrinters,
+							NULL,
+							NULL);
 				parent = NoSystem;
-				printf("System: Returning Printers.\n");
 				break;
 
 			case Tapes:
-				printf("System: Calling Tapes.\n");
-				print_tapes_names(doc, cur_node->children, NoTapes);
+				parse_tapes_names(doc, cur_node->children, NoTapes, NULL, NULL);
 				parent = NoSystem;
-				printf("System: Returning Tapes.\n");
 				break;
 
 			case NoSystem:
@@ -1416,7 +1715,7 @@ static void parse_name_names(
 
 	/*
 	 * If we are called with an address to value of NULL, then we are called
-	 * for the first time by the parent parser.  When this happend, make sure
+	 * for the first time by the parent parser.  When this happened, make sure
 	 * that the local string is zero length.
 	 */
 	if (value == NULL)
@@ -1684,6 +1983,9 @@ static void parse_owner_names(
 
 			key = xmlNodeListGetString(doc, cur_node, 1);
 			AXP_stripXmlString(key);
+			if (value != NULL)
+				strcpy(value, (char *) key);
+			parent = NoName;
 			xmlFree(key);
 		}
 
@@ -1757,8 +2059,6 @@ static void print_parent_names(
 	{
 		if (cur_node->type == XML_ELEMENT_NODE)
 		{
-			printf("DECaxp: node type: Element, name: %s\n", cur_node->name);
-
 			found = false;
 			for (ii = 0;
 				 ((_top_level_nodes[ii].token != NULL) && (found == false));
