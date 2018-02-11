@@ -125,7 +125,7 @@ typedef __int128			i128;	/* 16 bytes (128 bits) in length */
 typedef struct
 {
 	char					fileName[AXP_FILENAME_MAX+1];
-	u8						*writeBuf;
+	u32						*writeBuf;
 	FILE					*fp;
 	u32						validPat;			/* must be 0x5a5ac3c3 */
 	u32						inverseVP;			/* must be 0xa5a53c3c */
@@ -323,8 +323,8 @@ u32 AXP_Crc32(u8 *, int, bool, u32);
 int AXP_LoadExecutable(char *, u8 *, u32);
 bool AXP_OpenRead_SROM(char *, AXP_SROM_HANDLE *);
 bool AXP_OpenWrite_SROM(char *, AXP_SROM_HANDLE *, u64, u32);
-i32 AXP_Read_SROM(AXP_SROM_HANDLE *, u8 *, u32);
-bool AXP_Write_SROM(AXP_SROM_HANDLE *, u8 *, u32);
+i32 AXP_Read_SROM(AXP_SROM_HANDLE *, u32 *, u32);
+bool AXP_Write_SROM(AXP_SROM_HANDLE *, u32 *, u32);
 bool AXP_Close_SROM(AXP_SROM_HANDLE *);
 
 /*
