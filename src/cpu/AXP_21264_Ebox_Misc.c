@@ -559,7 +559,6 @@ AXP_EXCEPTIONS AXP_WH64EN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if ((cpu->majorType == EV6) || 					/* 21264 */
 		(cpu->majorType == EV67) ||					/* 21264 */
-		(cpu->majorType == EV68CB_DC) ||			/* 21264 */
 		(cpu->majorType == EV68A) ||				/* 21264 */
 		(cpu->majorType == EV68CX) ||				/* 21264 */
 		(cpu->majorType == EV69A))					/* 21264 */

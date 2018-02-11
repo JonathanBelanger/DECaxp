@@ -260,6 +260,9 @@ endif
 ifneq ($(wildcard $(BLDDIR)*.dep),)
 	rm -f $(DEP)
 endif
+ifneq ($(wildcard $(BLDDIR)*.stackdump),)
+	rm -f $(BLDDIR)*.stackdump
+endif
 
 #
 # Clean up everything (equvalent to what the 'all' target created, only).

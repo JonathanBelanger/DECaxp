@@ -71,6 +71,7 @@ int main(int argc, char **argv)
 		inFP = fopen(inFile, "r");
 		if (inFP != NULL)
 		{
+			char	*ptr;
 			char	*addr = &readLine[0];
 			char	*instr = &readLine[9];
 
@@ -81,7 +82,7 @@ int main(int argc, char **argv)
 
 				addr[8] = '\0';
 				instr[8] = '\0';
-				binAddr = strtoul(addr, &addr, 16);
+				binAddr = strtoul(addr, &ptr, 16);
 				baseAddr = binAddr;		/* convert from 32-bit to 64-bit */
 				done = AXP_OpenWrite_SROM(
 							outFile,
@@ -95,11 +96,9 @@ int main(int argc, char **argv)
 			}
 			while ((feof(inFP) == 0) && (done == false))
 			{
-				instruction = strtoul(instr, &instr, 16);
-				done = AXP_Write_SROM(
-									&sromHandle,
-									(u8 *) &instruction,
-									sizeof(u32));
+				instruction = strtoul(instr, &ptr, 16);
+				printf("0x%08x\n", instruction);
+				done = AXP_Write_SROM(&sromHandle, &instruction, 1);
 				if (done == false)
 				{
 					blkOffset = (blkOffset + 1) & 0x03;
@@ -116,10 +115,7 @@ int main(int argc, char **argv)
 				if (blkOffset != 0)
 				{
 					for (ii = blkOffset; ii < 4; ii++)
-						done = AXP_Write_SROM(
-											&sromHandle,
-											(u8 *) &noop,
-											sizeof(u32));
+						done = AXP_Write_SROM(&sromHandle, &noop, 1);
 				}
 				if (done == false)
 				{

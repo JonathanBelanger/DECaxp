@@ -28,8 +28,8 @@
 #include "AXP_Utility.h"
 #include "AXP_Trace.h"
 
-static char				*AXPTRCLOG = "AXP_TRCLOG";
-static char				*AXPTRCFIL = "AXP_TRCFIL";
+static char				*AXPTRCLOG = "AXP_LOGMASK";
+static char				*AXPTRCFIL = "AXP_LOGFILE";
 AXP_TRCLOG				_axp_trc_log_ = 0;
 static char				_axp_trc_out_[81];
 static pthread_mutex_t	_axp_trc_mutex_;
@@ -87,6 +87,7 @@ void AXP_TraceInit_Once(void)
 				_axp_trc_log_,
 				_axp_trc_out_);
 		AXP_TraceWrite("Copyright 2018, Jonathan D. Belanger.\n");
+		AXP_TraceConfig();
 	}
 
 	/*

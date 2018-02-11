@@ -35,30 +35,32 @@
 		-->
 		<SROM>
 			<InitFile>
-				/cygwin/g/git/DECaxp/dat/CPU Initialization Load File.dat
+				/cygdrive/g/git/DECaxp/dat/CPU Initialization Load File.dat
 			</InitFile>
-			<PALImage>/cygwin/g/git/DECaxp/dat/filename.exe</PALImage>
-			<ROMImage>/cygwin/g/git/DECaxp/dat/DECaxp 21264.rom</ROMImage>
-			<NVRamFile>/cygwin/g/git/DECaxp/dat/DECaxp 21264.nvr</NVRamFile>
+			<PALImage>/cygdrive/g/git/DECaxp/dat/cl67srmrom.exe</PALImage>
+			<ROMImage>
+				/cygdrive/g/git/DECaxp/dat/DEC_Alpha_AXP_Code_Compiler.rom
+			</ROMImage>
+			<NVRamFile>/cygdrive/g/git/DECaxp/dat/DECaxp 21264.nvr</NVRamFile>
+			<CboxCSRFile>
+				/cygdrive/g/git/DECaxp/dat/AXP_21264_Cbox_CSR.nvp
+			</CboxCSRFile>
 		</SROM>
 
 		<!-- 
-				This defines the actual CPUs.  They should be all the same with
-					a unit number attribute value
+				This defines the actual CPUs.
 				The number of CPUs that can be defined is determined by the
 					System/Model information
 				The Generation contains what version of the Digitial Alpha AXP
 					CPU we are emulating
 				The Pass contains the manufacturing pass for the generation of
 					the CPU
-				The Name is for informational purposes (e.g., for the Digital
-					Alpha AXP 21064, the name would be Flamingo
 		-->
 		<CPUs>
 			<Count>1</Count>
-			<Generation>21264</Generation>
+			<Generation>EV68CB</Generation>
 			<Pass>5</Pass>
-			<Name>EV68CD</Name></CPUs>
+		</CPUs>
 
 		<!--
 			This defines the individual memory modules and their size.  In
@@ -66,8 +68,8 @@
 			DIMMs are simulated.
 		-->
 		<DIMMs>
-			<Size>4.0GB</Size>
 			<Count>4</Count>
+			<Size>4.0GB</Size>
 		</DIMMs>
 
 		<!--

@@ -229,20 +229,21 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 	bool					retVal = false;
 	bool					readResult = true;
 	FILE					*fp;
-	char					*configFile = "../dat/AXP_21264_Cbox_CSR.nvp";
 	char					name[32];
 	u32						value;
 	int						ii, csrCnt = 0;
 	AXP_21264_CBOX_CSR_VAL	csr;
 
 	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Cbox is loading CSR values from %s", configFile);
+	AXP_TraceWrite(
+			"Cbox is loading CSR values from %s",
+			AXP_21264_Config.system.srom.CboxCSRFile);
 	AXP_TRACE_END();
 
 	/*
 	 * Open the file to configure the CSRs for the Cbox.
 	 */
-	fp = AXP_Open_NVP_File(configFile);
+	fp = AXP_Open_NVP_File(AXP_21264_Config.system.srom.CboxCSRFile);
 	if (fp != NULL)
 	{
 
@@ -921,7 +922,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 	AXP_SROM_HANDLE	sromHdl;
-	int				component = 0, ii, jj, entry;
+	int				component = 0, ii, jj, entry, sets;
 	bool			initFailure = false, processed;
 
 	/*
@@ -1048,14 +1049,14 @@ void *AXP_21264_CboxMain(void *voidPtr)
 								destAddr.offset = 0;
 								destAddr.index = sromHdl.destAddr / 64;
 								destAddr.res = 0;
+								sets = (cpu->iCtl.ic_en = 3) ? : 1;
 								for (ii = destAddr.index; retVal > 0; ii++)
 								{
-									for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
+									for (jj = 0; jj < sets; jj++)
 										retVal = AXP_Read_SROM(
 											&sromHdl,
-											(u8 *) cpu->iCache[ii][jj].instructions,
-											(AXP_ICACHE_LINE_INS *
-											 sizeof(AXP_INS_FMT)));
+											(u32 *) cpu->iCache[ii][jj].instructions,
+											AXP_ICACHE_LINE_INS);
 								}
 								initFailure = AXP_Close_SROM(&sromHdl);
 								if (((retVal == AXP_E_READERR) ||

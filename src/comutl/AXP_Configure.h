@@ -63,6 +63,7 @@
  *				PALImage			file-specification
  *				ROMImage			file-specification
  *				NVRamFile			file-specification
+ *				CboxCSRFile			file-specification
  *			CPUS
  *				Count				number
  *				Generation			number
@@ -142,7 +143,8 @@ typedef enum
 	InitFile,
 	PALImage,
 	ROMImage,
-	NVRamFile
+	NVRamFile,
+	CboxCSRs
 } AXP_21264_CONFIG_SROM;
 
 typedef enum
@@ -150,8 +152,7 @@ typedef enum
 	NoCPUs,
 	CPUCount,
 	Generation,
-	MfgPass,
-	CPUName
+	MfgPass
 } AXP_21264_CONFIG_CPUS;
 
 typedef enum
@@ -258,6 +259,7 @@ typedef struct
  *				PALImage			file-specification
  *				ROMImage			file-specification
  *				NVRamFile			file-specification
+ *				CboxCSRFile			file-specification
  */
 typedef struct
 {
@@ -265,6 +267,7 @@ typedef struct
 	char					*PALImage;
 	char					*ROMImage;
 	char					*NVRamFile;
+	char					*CboxCSRFile;
 } AXP_21264_SROM_INFO;
 
 /*
@@ -273,29 +276,17 @@ typedef struct
  *				Count				number
  *				Generation			enum
  *				Pass				number
- *				Name				string
  */
-typedef enum
-{
-	NoGen = 0,
-	EV3,
-	EV4,					/* 21064 */
-	Simulation,
-	LCAFamily,				/* 21066, 21068, 20166A, 20168A */
-	EV5,					/* 21164 */
-	EV45,					/* 21064A */
-	EV56,					/* 21164A */
-	EV6,					/* 21264 */
-	PCA56,					/* 21164PC */
-	PCA57,
-	EV67,					/* 21264 */
-	EV68CB_DC,				/* 21264 */
-	EV68A,					/* 21264 */
-	EV68CX,					/* 21264 */
-	EV7,					/* 21364 */
-	EV79,					/* 21364 */
-	EV69A					/* 21264 */
-} AXP_PROC_MAJ_TYPE;
+#define EV56					7
+#define EV6						8
+#define EV67					11
+#define EV68A					12
+#define EV68CB					12
+#define EV68DC					12
+#define EV68CX					14
+#define EV7						15
+#define EV79					16
+#define EV69A					17
 
 #define	AXP_PASS_2_21_EV4		0	/* EV4 */
 #define AXP_PASS_3_EV4			1
@@ -348,9 +339,31 @@ typedef enum
 typedef struct
 {
 	char				*name;
+	char				*genStr;
+	u32					majorType;
+	u32					year;
+	u32					dCacheSize;
+	u32					iCacheSize;
+	u32					sCacheSize;
+	u32					bCacheSizeLow;
+	u32					bCacheSizeHigh;
+	struct
+	{
+		u32				ieeeRndInf : 1;	/* h/w support for rounding to +/-Inf */
+		u32				bwx : 1;		/* Byte/Word Extensions */
+		u32				mvi : 1;		/* Multimedia Extensions */
+		u32				fix : 1;		/* Integer to/from FP move and SQRT */
+		u32				cix : 1;		/* Counting and Finding Bits extension */
+		u32				pfmi : 1;		/* Prefetch with modify intent support */
+		u32				res : 26;
+	} isa;
+} AXP_CPU_CONFIG;
+
+typedef struct
+{
+	AXP_CPU_CONFIG		*config;
+	u32					minorType;
 	u32					count;
-	u32					pass;
-	AXP_PROC_MAJ_TYPE	generation;
 } AXP_21264_CPU_INFO;
 
 /*
@@ -388,6 +401,7 @@ typedef struct
  */
 typedef enum
 {
+	Diskless,
 	Disk,
 	CD_ROM,
 	RW_CDROM
@@ -485,11 +499,13 @@ typedef struct
  * Exported Global Variables
  */
 extern AXP_21264_CONFIG	AXP_21264_Config;
+extern AXP_CPU_CONFIG AXP_CPU_Configurations[];
 
 /*
  * Function Prototypes
  */
 int AXP_LoadConfig_File(char *);
+void AXP_TraceConfig(void);
 
 #endif /* _AXP_CONFIGURE_DEFS_ */
 

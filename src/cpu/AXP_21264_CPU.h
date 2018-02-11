@@ -671,7 +671,7 @@ typedef struct
 	/*
 	 * Miscellaneous stuff the should probably go someplace else.
 	 */
-	AXP_PROC_MAJ_TYPE		majorType;	/* Processor Major Type				*/
+	u32						majorType;	/* Processor Major Type				*/
 	u32						minorType;	/* Processor Minor Type				*/
 	AXP_BASE_AMASK			amask;		/* Architectural Extension Support Mask	*/
 	u64						implVer;	/* Implementation Version			*/
