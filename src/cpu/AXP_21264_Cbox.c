@@ -57,6 +57,7 @@
 #include "AXP_21264_Ibox_Initialize.h"
 #include "AXP_21264_Ibox_PCHandling.h"
 #include "AXP_Trace.h"
+#include "AXP_Dumps.h"
 
 /*
  * Local Variables
@@ -234,11 +235,14 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 	int						ii, csrCnt = 0;
 	AXP_21264_CBOX_CSR_VAL	csr;
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-			"Cbox is loading CSR values from %s",
-			AXP_21264_Config.system.srom.CboxCSRFile);
-	AXP_TRACE_END();
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"Cbox is loading CSR values from %s",
+				AXP_21264_Config.system.srom.CboxCSRFile);
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Open the file to configure the CSRs for the Cbox.
@@ -263,9 +267,12 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 			{
 				if (csrCnt < AXP_21264_CBOX_CSR_CNT)
 				{
-					AXP_TRACE_BEGIN();
-					AXP_TraceWrite("Not all CSRs loaded");
-					AXP_TRACE_END();
+					if (AXP_CPU_CALL)
+					{
+						AXP_TRACE_BEGIN();
+						AXP_TraceWrite("Not all CSRs loaded");
+						AXP_TRACE_END();
+					}
 					retVal = true;
 				}
 				continue;
@@ -653,8 +660,17 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 					break;
 
 				default:
-					printf("Unexpected name/value pair: 'name' returned as \'%s\' at %s, line %d.\n",
- 						name, __FILE__, __LINE__); 
+					if (AXP_CPU_CALL)
+					{
+						AXP_TRACE_BEGIN();
+						AXP_TraceWrite(
+								"Unexpected name/value pair: 'name' returned "
+								"as \'%s\' at %s, line %d.\n",
+								name,
+								__FILE__,
+								__LINE__);
+						AXP_TRACE_END();
+					}
 					retVal = true;
 					readResult = false;
 					break;
@@ -667,11 +683,14 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 		AXP_Close_NVP_File(fp);
 	}
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite((retVal == false ?
-						"Cbox CSRs have been loaded" :
-						"Cbox CSRs failed to load"));
-	AXP_TRACE_END();
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite((retVal == false ?
+							"Cbox CSRs have been loaded" :
+							"Cbox CSRs failed to load"));
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Return back to the caller.
@@ -803,9 +822,12 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 	u32		ii, jj;
 	bool	retVal = false;
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Cbox is initializing");
-	AXP_TRACE_END();
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Cbox is initializing");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Initialize the Cbox IPRs.  Also, this is as good a place as any to
@@ -894,9 +916,12 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 			cpu->iowb[ii].lqSqEntry[jj] = 0;
 	}
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Cbox has initialized");
-	AXP_TRACE_END();
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Cbox has initialized");
+		AXP_TRACE_END();
+	}
 
 	return(retVal);
 }
@@ -1027,19 +1052,6 @@ void *AXP_21264_CboxMain(void *voidPtr)
 								cpu->palBase.pal_base_pc = sromHdl.destAddr;
 
 								/*
-								 * Get the PC for the RESET/WAKEUP PALcode.
-								 */
-						 		palFuncPC = AXP_21264_GetPALFuncVPC(
-						 									cpu,
-						 									AXP_RESET_WAKEUP);
-
-						 		/*
-						 		 * Set the PC to the PALcode to be called once
-						 		 * the SROM has been initialized.
-						 		 */
-								AXP_21264_AddVPC(cpu, palFuncPC);
-
-								/*
 								 * Finally, load the ROM code into the SROM.
 								 * Once we set the CPU state to Run, this will
 								 * cause the Ibox to start processing
@@ -1050,19 +1062,56 @@ void *AXP_21264_CboxMain(void *voidPtr)
 								destAddr.index = sromHdl.destAddr / 64;
 								destAddr.res = 0;
 								sets = (cpu->iCtl.ic_en = 3) ? : 1;
+								*(u64 *) &palFuncPC = sromHdl.destAddr;
+								palFuncPC.pal = 1;	/* PALmode for tracing */
 								for (ii = destAddr.index; retVal > 0; ii++)
 								{
 									for (jj = 0; jj < sets; jj++)
+									{
 										retVal = AXP_Read_SROM(
 											&sromHdl,
 											(u32 *) cpu->iCache[ii][jj].instructions,
 											AXP_ICACHE_LINE_INS);
+										if (AXP_CPU_BUFF)
+										{
+											char	traceBuf[256];
+											int		kk;
+
+											AXP_TRACE_BEGIN();
+											for (kk = 0;
+												 kk < AXP_ICACHE_LINE_INS;
+												 kk++)
+											{
+												AXP_Decode_Instruction(
+															&palFuncPC,
+															cpu->iCache[ii][jj].instructions[kk],
+															false,
+															traceBuf);
+												palFuncPC.pc++;
+												AXP_TraceWrite(traceBuf);
+											}
+											AXP_TRACE_END();
+										}
+									}
 								}
 								initFailure = AXP_Close_SROM(&sromHdl);
 								if (((retVal == AXP_E_READERR) ||
 									 (retVal == AXP_E_BADSROMFILE)) &&
 									(initFailure == false))
 									initFailure = true;
+
+								/*
+								 * Get the PC for the RESET/WAKEUP PALcode.
+								 */
+						 		palFuncPC = AXP_21264_GetPALFuncVPC(
+						 									cpu,
+						 									AXP_RESET_WAKEUP);
+
+						 		/*
+						 		 * Set the PC to the PALcode to be called now
+						 		 * that the SROM has been initialized.
+						 		 */
+								AXP_21264_AddVPC(cpu, palFuncPC);
 							}
 							break;
 					}
@@ -1082,11 +1131,14 @@ void *AXP_21264_CboxMain(void *voidPtr)
 				 */
 				if (initFailure == true)
 				{
-					AXP_TRACE_BEGIN();
-					AXP_TraceWrite(
-							"CPU Startup has failed at component %s",
-							componentStr[component]);
-					AXP_TRACE_END();
+					if (AXP_CPU_CALL)
+					{
+						AXP_TRACE_BEGIN();
+						AXP_TraceWrite(
+								"CPU Startup has failed at component %s",
+								componentStr[component]);
+						AXP_TRACE_END();
+					}
 					cpu->BiSTState = BiSTFailed;
 					cpu->cpuState = ShuttingDown;
 				}
@@ -1098,11 +1150,14 @@ void *AXP_21264_CboxMain(void *voidPtr)
 					 * all the other threads to start to do their processing.
 					 */
 					cpu->cpuState = Run;
-					AXP_TRACE_BEGIN();
-					AXP_TraceWrite(
-							"The Digital Alpha AXP 21264 CPU Emulator is "
-							"now in a Running state");
-					AXP_TRACE_END();
+					if (AXP_CPU_CALL)
+					{
+						AXP_TRACE_BEGIN();
+						AXP_TraceWrite(
+								"The Digital Alpha AXP 21264 CPU Emulator is "
+								"now in a Running state");
+						AXP_TRACE_END();
+					}
 				}
 				pthread_cond_broadcast(&cpu->cpuCond);
 				pthread_mutex_unlock(&cpu->cpuMutex);

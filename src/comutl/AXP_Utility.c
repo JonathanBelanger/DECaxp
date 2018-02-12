@@ -1307,7 +1307,9 @@ bool AXP_OpenWrite_SROM(
 i32 AXP_Read_SROM(AXP_SROM_HANDLE *sromHandle, u32 *buf, u32 bufLen)
 {
 	i32		retVal = 0;
+	u32		noop = 0x47ff041f;
 	int		ii;
+	bool	done = false;
 
 	/*
 	 * Make sure we are not at the end of file before trying to read from the
@@ -1319,41 +1321,49 @@ i32 AXP_Read_SROM(AXP_SROM_HANDLE *sromHandle, u32 *buf, u32 bufLen)
 		/*
 		 * Read up to bufLen worth of unsigned bytes.
 		 */
-		retVal = 0;
-		for (ii = 0; ii < bufLen; ii++)
-			retVal += fread(buf, sizeof(u32), 1, sromHandle->fp);
-		for (ii= 0; ii < bufLen; ii += 4)
-			printf("0x%08x\n", buf[ii]);
+		for (ii = 0; ((ii < bufLen) && (done == false)); ii++)
+		{
+			if (fread(&buf[ii], sizeof(u32), 1, sromHandle->fp) > 0)
+				retVal++;
+			else
+				done = true;
+		}
 
 		/*
-		 * If an error was returned, the return one to the caller.  Otherwise,
-		 * update the running image CRC.
+		 * If the done flag got set, then we found the end-of-file before
+		 * filling in the buffer.  Fill the remaining part of the buffer with
+		 * no-ops.
 		 */
-		if (retVal < 0)
-			retVal = AXP_E_READERR;
-		else
+		if (done == true)
 		{
-			sromHandle->verImgChecksum = AXP_Crc32(
-											(u8 *) buf,
-											retVal,
-											true,
-											sromHandle->verImgChecksum);
+			for (ii = retVal; ii < bufLen; ii++)
+				buf[ii] = noop;
+		}
+		retVal = bufLen;
+
+		/*
+		 * Update the running image CRC.
+		 */
+		sromHandle->verImgChecksum = AXP_Crc32(
+										(u8 *) buf,
+										retVal,
+										true,
+										sromHandle->verImgChecksum);
+
+		/*
+		 * If we hit the end-of-file, then inverse the CRC and check it
+		 * against the one from the file header.
+		 */
+		if (feof(sromHandle->fp) != 0)
+		{
+			sromHandle->verImgChecksum = ~sromHandle->verImgChecksum;
 
 			/*
-			 * If we hit the end-of-file, then inverse the CRC and check it
-			 * against the one from the file header.
+			 * If the newly calculated image checksum does not match the
+			 * one read in the header file.
 			 */
-			if (feof(sromHandle->fp) != 0)
-			{
-				sromHandle->verImgChecksum = ~sromHandle->verImgChecksum;
-
-				/*
-				 * If the newly calculated image checksum does not match the
-				 * one read in the header file.
-				 */
-				if (sromHandle->verImgChecksum != sromHandle->imgChecksum)
-					retVal = AXP_E_BADSROMFILE;
-			}
+			if (sromHandle->verImgChecksum != sromHandle->imgChecksum)
+				retVal = AXP_E_BADSROMFILE;
 		}
 	}
 	else
@@ -1502,10 +1512,7 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
 			 * Write out the image data.
 			 */
 			for (ii = 0; ii < sromHandle->imgSize; ii++)
-			{
 				fwrite(&sromHandle->writeBuf[ii], sizeof(u32), 1, sromHandle->fp);
-				printf("0x%08x\n", sromHandle->writeBuf[ii]);
-			}
 
 			/*
 			 * Free the buffer we allocated for the image data.  We no longer

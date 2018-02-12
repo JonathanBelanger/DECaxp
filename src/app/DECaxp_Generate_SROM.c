@@ -97,7 +97,6 @@ int main(int argc, char **argv)
 			while ((feof(inFP) == 0) && (done == false))
 			{
 				instruction = strtoul(instr, &ptr, 16);
-				printf("0x%08x\n", instruction);
 				done = AXP_Write_SROM(&sromHandle, &instruction, 1);
 				if (done == false)
 				{

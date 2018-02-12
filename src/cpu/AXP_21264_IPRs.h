@@ -778,43 +778,45 @@ typedef struct
 /*
  * IPR Index values.
  */
-#define AXP_IPR_ITB_TAG							0x00
-#define AXP_IPR_ITB_PTE							0x01
-#define AXP_IPR_ITB_IAP							0x02
-#define AXP_IPR_ITB_IA							0x03
-#define AXP_IPR_ITB_IS							0x04
-#define AXP_IPR_EXC_ADDR						0x06
-#define AXP_IPR_IVA_FORM						0x07
-#define AXP_IPR_CM								0x09
-#define AXP_IPR_IER								0x0A
-#define AXP_IPR_IER_CM							0x0B
-#define AXP_IPR_SIRR							0x0C
-#define AXP_IPR_ISUM							0x0D
-#define AXP_IPR_HW_INT_CLR						0x0E
-#define AXP_IPR_EXC_SUM							0x0F
-#define AXP_IPR_PAL_BASE						0x10
-#define AXP_IPR_I_CTL							0x11
-#define AXP_IPR_IC_FLUSH_ASM					0x12
-#define AXP_IPR_IC_FLUSH						0x13
-#define AXP_IPR_PCTR_CTL						0x14
-#define AXP_IPR_CLR_MAP							0x15
-#define AXP_IPR_I_STAT							0x16
-#define AXP_IPR_SLEEP							0x17
+#define AXP_IPR_ITB_TAG							0x00	/* 0000 0000 */
+#define AXP_IPR_ITB_PTE							0x01	/* 0000 0001 */
+#define AXP_IPR_ITB_IAP							0x02	/* 0000 0010 */
+#define AXP_IPR_ITB_IA							0x03	/* 0000 0011 */
+#define AXP_IPR_ITB_IS							0x04	/* 0000 0100 */
 
-#define AXP_IPR_DTB_TAG0						0x20
-#define AXP_IPR_DTB_PTE0						0x21
-#define AXP_IPR_DTB_IS0							0x24
-#define AXP_IPR_DTB_ASN0						0x25
-#define AXP_IPR_DTB_ALTMODE						0x26
-#define AXP_IPR_MM_STAT							0x27
-#define AXP_IPR_M_CTL							0x28
-#define AXP_IPR_DC_CTL							0x29
-#define AXP_IPR_DC_STAT							0x2A
+#define AXP_IPR_EXC_ADDR						0x06	/* 0000 0110 */
+#define AXP_IPR_IVA_FORM						0x07	/* 0000 0111 */
 
-#define AXP_IPR_C_DATA							0x2B
-#define AXP_IPR_C_SHFT							0x2C
+#define AXP_IPR_CM								0x09	/* 0000 1001 */
+#define AXP_IPR_IER								0x0A	/* 0000 1010 */
+#define AXP_IPR_IER_CM							0x0B	/* 0000 1011 */
+#define AXP_IPR_SIRR							0x0C	/* 0000 1100 */
+#define AXP_IPR_ISUM							0x0D	/* 0000 1101 */
+#define AXP_IPR_HW_INT_CLR						0x0E	/* 0000 1110 */
+#define AXP_IPR_EXC_SUM							0x0F	/* 0000 1111 */
+#define AXP_IPR_PAL_BASE						0x10	/* 0001 0000 */
+#define AXP_IPR_I_CTL							0x11	/* 0001 0001 */
+#define AXP_IPR_IC_FLUSH_ASM					0x12	/* 0001 0010 */
+#define AXP_IPR_IC_FLUSH						0x13	/* 0001 0011 */
+#define AXP_IPR_PCTR_CTL						0x14	/* 0001 0100 */
+#define AXP_IPR_CLR_MAP							0x15	/* 0001 0101 */
+#define AXP_IPR_I_STAT							0x16	/* 0001 0110 */
+#define AXP_IPR_SLEEP							0x17	/* 0001 0111 */
 
-#define AXP_IPR_PCXT0							0x40
+#define AXP_IPR_DTB_TAG0						0x20	/* 0010 0000 */
+#define AXP_IPR_DTB_PTE0						0x21	/* 0010 0001 */
+
+#define AXP_IPR_DTB_IS0							0x24	/* 0010 0100 */
+#define AXP_IPR_DTB_ASN0						0x25	/* 0010 0101 */
+#define AXP_IPR_DTB_ALTMODE						0x26	/* 0010 0110 */
+#define AXP_IPR_MM_STAT							0x27	/* 0010 0111 */
+#define AXP_IPR_M_CTL							0x28	/* 0010 1000 */
+#define AXP_IPR_DC_CTL							0x29	/* 0010 1001 */
+#define AXP_IPR_DC_STAT							0x2A	/* 0010 1010 */
+#define AXP_IPR_C_DATA							0x2B	/* 0010 1011 */
+#define AXP_IPR_C_SHFT							0x2C	/* 0010 1100 */
+
+#define AXP_IPR_PCXT0							0x40	/* 0100 0000 */
 #define AXP_IPR_PCXT0_ASN						0x41
 #define AXP_IPR_PCXT0_ASTER						0x42
 #define AXP_IPR_PCXT0_ASTER_ASN					0x43
@@ -830,7 +832,7 @@ typedef struct
 #define AXP_IPR_PCXT0_PPCE_ASTRR_ASN			0x4D
 #define AXP_IPR_PCXT0_PPCE_ASTRR_ASTER			0x4E
 #define AXP_IPR_PCXT0_PPCE_ASTRR_ASTER_ASN		0x4F
-#define AXP_IPR_PCXT0_FPE						0x50
+#define AXP_IPR_PCXT0_FPE						0x50	/* 0101 0000 */
 #define AXP_IPR_PCXT0_FPE_ASN					0x51
 #define AXP_IPR_PCXT0_FPE_ASTER					0x52
 #define AXP_IPR_PCXT0_FPE_ASTER_ASN				0x53
@@ -846,7 +848,7 @@ typedef struct
 #define AXP_IPR_PCXT0_FPE_PPCE_ASTRR_ASN		0x5D
 #define AXP_IPR_PCXT0_FPE_PPCE_ASTRR_ASTER		0x5E
 #define AXP_IPR_PCXT0_FPE_PPCE_ASTRR_ASTER_ASN	0x5F
-#define AXP_IPR_PCXT1							0x60
+#define AXP_IPR_PCXT1							0x60	/* 0110 0000 */
 #define AXP_IPR_PCXT1_ASN						0x61
 #define AXP_IPR_PCXT1_ASTER						0x62
 #define AXP_IPR_PCXT1_ASTER_ASN					0x63
@@ -862,7 +864,7 @@ typedef struct
 #define AXP_IPR_PCXT1_PPCE_ASTRR_ASN			0x6D
 #define AXP_IPR_PCXT1_PPCE_ASTRR_ASTER			0x6E
 #define AXP_IPR_PCXT1_PPCE_ASTRR_ASTER_ASN		0x6F
-#define AXP_IPR_PCXT1_FPE						0x70
+#define AXP_IPR_PCXT1_FPE						0x70	/* 0111 0000 */
 #define AXP_IPR_PCXT1_FPE_ASN					0x71
 #define AXP_IPR_PCXT1_FPE_ASTER					0x72
 #define AXP_IPR_PCXT1_FPE_ASTER_ASN				0x73
@@ -879,18 +881,18 @@ typedef struct
 #define AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER		0x7E
 #define AXP_IPR_PCXT1_FPE_PPCE_ASTRR_ASTER_ASN	0x7F
 
-#define AXP_IPR_DTB_TAG1						0xA0
-#define AXP_IPR_DTB_PTE1						0xA1
-#define AXP_IPR_DTB_IAP							0xA2
-#define AXP_IPR_DTB_IA							0xA3
-#define AXP_IPR_DTB_IS1							0xA4
-#define AXP_IPR_DTB_ASN1						0xA5
+#define AXP_IPR_DTB_TAG1						0xA0	/* 1010 0000 */
+#define AXP_IPR_DTB_PTE1						0xA1	/* 1010 0001 */
+#define AXP_IPR_DTB_IAP							0xA2	/* 1010 0010 */
+#define AXP_IPR_DTB_IA							0xA3	/* 1010 0011 */
+#define AXP_IPR_DTB_IS1							0xA4	/* 1010 0100 */
+#define AXP_IPR_DTB_ASN1						0xA5	/* 1010 0101 */
 
-#define AXP_IPR_CC								0xC0
-#define AXP_IPR_CC_CTL							0xC1
-#define AXP_IPR_VA								0xC2
-#define AXP_IPR_VA_FORM							0xC3
-#define AXP_IPR_VA_CTL							0xC4
+#define AXP_IPR_CC								0xC0	/* 1100 0000 */
+#define AXP_IPR_CC_CTL							0xC1	/* 1100 0001 */
+#define AXP_IPR_VA								0xC2	/* 1100 0010 */
+#define AXP_IPR_VA_FORM							0xC3	/* 1100 0011 */
+#define AXP_IPR_VA_CTL							0xC4	/* 1100 0100 */
 
 /*
  * Process Context components.
