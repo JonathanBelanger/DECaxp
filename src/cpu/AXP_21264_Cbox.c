@@ -950,6 +950,13 @@ void *AXP_21264_CboxMain(void *voidPtr)
 	int				component = 0, ii, jj, entry, sets;
 	bool			initFailure = false, processed;
 
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Cbox is starting");
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * The Cbox is very involved in the initialization of the CPU at power-up,
 	 * fault-resetting, and waking up from sleep.  The Cbox CSRs are
@@ -964,6 +971,12 @@ void *AXP_21264_CboxMain(void *voidPtr)
 		switch (cpu->cpuState)
 		{
 			case Cold:
+				if (AXP_CPU_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite("Cbox is performing a Cold Start");
+					AXP_TRACE_END();
+				}
 				pthread_mutex_lock(&cpu->cpuMutex);
 				cpu->cpuState = WaitBiST;
 				cpu->BiSTState = SystemReset;
@@ -972,6 +985,12 @@ void *AXP_21264_CboxMain(void *voidPtr)
 
 			case WaitBiST:
 			case WaitBiSI:
+				if (AXP_CPU_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite("Cbox is performing a BiST/BiSI testing");
+					AXP_TRACE_END();
+				}
 				pthread_mutex_lock(&cpu->cpuMutex);
 
 				/*
@@ -1024,11 +1043,23 @@ void *AXP_21264_CboxMain(void *voidPtr)
 							 * All right, BiST passed, now we have to load the
 							 * SROM Cbox configuration.
 							 */
+							if (AXP_CPU_OPT2)
+							{
+								AXP_TRACE_BEGIN();
+								AXP_TraceWrite("Cbox BiST/BiSI passed.  Configuring Cbox.");
+								AXP_TRACE_END();
+							}
 							cpu->BiSTState = BiSTSucceeded;
 							initFailure = AXP_21264_Cbox_Config(cpu);
 							break;
 
 						case 6:
+							if (AXP_CPU_OPT2)
+							{
+								AXP_TRACE_BEGIN();
+								AXP_TraceWrite("Cbox is configured.  Loading SROM.");
+								AXP_TRACE_END();
+							}
 
 							/*
 							 * HRM: 11.5.2.1
@@ -1131,7 +1162,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 				 */
 				if (initFailure == true)
 				{
-					if (AXP_CPU_CALL)
+					if (AXP_CPU_OPT2)
 					{
 						AXP_TRACE_BEGIN();
 						AXP_TraceWrite(
@@ -1150,7 +1181,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 					 * all the other threads to start to do their processing.
 					 */
 					cpu->cpuState = Run;
-					if (AXP_CPU_CALL)
+					if (AXP_CPU_OPT2)
 					{
 						AXP_TRACE_BEGIN();
 						AXP_TraceWrite(
@@ -1217,6 +1248,12 @@ void *AXP_21264_CboxMain(void *voidPtr)
 				break;
 
 			case FaultReset:
+				if (AXP_CPU_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite("Cbox got a Reset Fault");
+					AXP_TRACE_END();
+				}
 				pthread_mutex_lock(&cpu->cpuMutex);
 				cpu->cpuState = WaitBiSI;
 				cpu->BiSTState = SystemReset;
@@ -1224,6 +1261,12 @@ void *AXP_21264_CboxMain(void *voidPtr)
 				break;
 
 			case Sleep:
+				if (AXP_CPU_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite("Cbox is in Sleep State");
+					AXP_TRACE_END();
+				}
 
 				/* 
 				 * Need to quiesce everything and put the world to sleep waiting
@@ -1232,6 +1275,12 @@ void *AXP_21264_CboxMain(void *voidPtr)
 				break;
 
 			case ShuttingDown:
+				if (AXP_CPU_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite("Cbox is Shutting Down.");
+					AXP_TRACE_END();
+				}
 
 				/*
 				 * We are shutting down.  Since we started everything, we need

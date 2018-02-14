@@ -1531,6 +1531,14 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	pthread_mutex_lock(&cpu->cpuMutex);
 	while ((cpu->cpuState != Run) && (cpu->cpuState != ShuttingDown))
 	{
+		if (AXP_CPU_OPT1)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite(
+				"Ibox is waiting for CPU to be in Run State (%d)",
+				cpu->cpuState);
+			AXP_TRACE_END();
+		}
 		pthread_cond_wait(&cpu->cpuCond, &cpu->cpuMutex);
 	}
 	pthread_mutex_unlock(&cpu->cpuMutex);
@@ -1542,6 +1550,12 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	 */
 	if (cpu->cpuState == Run)
 	{
+		if (AXP_CPU_OPT1)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite("Ibox is in Running State");
+			AXP_TRACE_END();
+		}
 		pthread_mutex_lock(&cpu->iBoxMutex);
 		wasRunning = true;
 	}
@@ -1926,9 +1940,18 @@ void *AXP_21264_IboxMain(void *voidPtr)
 			 (AXP_CountedQueueFull(&cpu->fq) != 0)))
 			pthread_cond_wait(&cpu->iBoxCondition, &cpu->iBoxMutex);
 	}
+	if (AXP_CPU_OPT1)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+			"Ibox is not/no longer in the Run State (%d)",
+			cpu->cpuState);
+		AXP_TRACE_END();
+	}
 
 	/*
-	 *
+	 * If we set the wasRunning flag, then we locked the iBox mutex.  Make
+	 * make sure we unlock it.
 	 */
 	if (wasRunning == true)
 	{
