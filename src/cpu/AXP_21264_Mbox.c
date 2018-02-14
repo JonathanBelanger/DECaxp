@@ -1577,9 +1577,12 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	bool retVal = false;
 	int ii, jj;
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Mbox is initializing");
-	AXP_TRACE_END();
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Mbox is initializing");
+		AXP_TRACE_END();
+	}
 
 	for (ii = 1; ii < AXP_CACHE_ENTRIES; ii++)
 	{
@@ -1753,6 +1756,14 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 void *AXP_21264_MboxMain(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+	bool			saidImRunning = false;
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Mbox is starting");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * While the CPU is not shutting down, we either have to wait before we can
@@ -1774,6 +1785,14 @@ void *AXP_21264_MboxMain(void *voidPtr)
 			case WaitBiST:
 			case WaitBiSI:
 			case FaultReset:
+				if (AXP_CPU_OPT1)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+						"Mbox is waiting for CPU to be in Run State (%d)",
+						cpu->cpuState);
+					AXP_TRACE_END();
+				}
 
 				/*
 				 * The Mbox needs to wait until the cpu is in the 'run' state.
@@ -1785,6 +1804,13 @@ void *AXP_21264_MboxMain(void *voidPtr)
 				break;
 
 			case Run:
+				if ((AXP_CPU_OPT1) && (saidImRunning == false))
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite("Mbox is in Running State");
+					AXP_TRACE_END();
+				}
+				saidImRunning = true;
 
 				/*
 				 * If there is something to process, then process it.
@@ -1798,6 +1824,12 @@ void *AXP_21264_MboxMain(void *voidPtr)
 				break;
 
 			case Sleep:
+				if (AXP_CPU_OPT1)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite("Mbox is in Sleep State");
+					AXP_TRACE_END();
+				}
 
 				/*
 				 * Need to quiesce everything and put the world to sleep
@@ -1806,6 +1838,12 @@ void *AXP_21264_MboxMain(void *voidPtr)
 				break;
 
 			case ShuttingDown:
+				if (AXP_CPU_OPT1)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite("Mbox is Shutting Down");
+					AXP_TRACE_END();
+				}
 
 				/*
 				 * Nothing to do here.

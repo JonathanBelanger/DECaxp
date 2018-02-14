@@ -432,6 +432,13 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 {
 	AXP_QUEUE_ENTRY		*entry;
 
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Fbox (%d) is starting", pipeline);
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * First things first, lock the Ebox mutex.
 	 */
