@@ -1838,9 +1838,9 @@ bool AXP_DcacheRead(
  *		A pointer to the Instruction Translation Look-aside Buffer (ITB)
  *		associated with these instructions.
  *		NOTE:	We have this supplied by the caller, rather than looking it
- *				up in this function, because handing not finding the ITB
- *				should not be done here, but it better done in the caller even
- *				before calling this function.
+ *				up in this function, because handling not finding the ITB
+ *				should not be done here, but it's better done in the caller
+ *				even before calling this function.
  *
  * Output Parameters:
  *	None.

@@ -30,6 +30,7 @@
  *	AXP_21264_GetPALFuncVPC function.  So, the former was removed.
  */
 #include "AXP_Configure.h"
+#include "AXP_Trace.h"
 #include "AXP_21264_Ibox.h"
 
 /*
@@ -119,6 +120,12 @@ typedef union
  */
 void AXP_21264_AddVPC(AXP_21264_CPU *cpu, AXP_PC vpc)
 {
+	if (AXP_CPU_OPT2)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Adding vPC[%d] 0x%016llx", cpu->vpcEnd, *((u64 *) &vpc));
+		AXP_TRACE_END();
+	}
 	cpu->vpc[cpu->vpcEnd] = vpc;
 	cpu->vpcEnd = (cpu->vpcEnd + 1) % AXP_INFLIGHT_MAX;
 	if (cpu->vpcEnd == cpu->vpcStart)
@@ -190,6 +197,13 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 		pc.bits21164.palMode = AXP_PAL_MODE;
 	}
 
+	if (AXP_CPU_OPT2)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Generated PAL vPC 0x%016llx", *((u64 *) &pc));
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * Return the composed VPC it back to the caller.
 	 */
@@ -228,6 +242,13 @@ AXP_PC AXP_21264_GetVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 	vpc.vpc.res = 0;
 	vpc.vpc.pal = pal & AXP_PAL_MODE;
 
+	if (AXP_CPU_OPT2)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Getting vPC 0x%016llx", *((u64 *) &vpc));
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * Return back to the caller.
 	 */
@@ -261,6 +282,13 @@ AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
 	 */
 	prevVPC = ((cpu->vpcEnd != 0) ? cpu->vpcEnd : AXP_INFLIGHT_MAX) - 1;
 	retVal = cpu->vpc[prevVPC];
+
+	if (AXP_CPU_OPT2)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Getting Next vPC[%d] 0x%016llx", prevVPC, *((u64 *) &vpc));
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Return what we found back to the caller.
@@ -296,6 +324,13 @@ AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *cpu)
 	 * Increment it.
 	 */
 	vpc.pc++;
+
+	if (AXP_CPU_OPT2)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Incremented vPC 0x%016llx", *((u64 *) &vpc));
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Store it on the VPC List and return to the caller.
@@ -333,6 +368,16 @@ AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, i64 displacement)
 	 * Increment and then add the displacement.
 	 */
 	vpc.pc = vpc.pc + 1 + displacement;
+
+	if (AXP_CPU_OPT2)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"Displacement vPC 0x%016llx (0x%016llx)",
+				*((u64 *) &vpc),
+				displacement);
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Return back to the caller.

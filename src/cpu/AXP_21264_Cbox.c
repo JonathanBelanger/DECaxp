@@ -947,7 +947,8 @@ void *AXP_21264_CboxMain(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 	AXP_SROM_HANDLE	sromHdl;
-	int				component = 0, ii, jj, entry, sets;
+	u64				ii;
+	int				component = 0, jj, entry;
 	bool			initFailure = false, processed;
 
 	if (AXP_CPU_CALL)
@@ -1011,7 +1012,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 				 * we'll change the CPU state to ShuttingDown (which will cause
 				 * all the other components to shutdown as well).
 				 */
-				while (initFailure == false)
+				while ((initFailure == false) && (component < 7))
 				{
 					switch (component)
 					{
@@ -1073,14 +1074,37 @@ void *AXP_21264_CboxMain(void *voidPtr)
 										&sromHdl);
 							if (initFailure == false)
 							{
-								AXP_CACHE_IDX	destAddr;
-								AXP_PC			palFuncPC;
-								int				retVal = 1;
+								AXP_IBOX_ITB_PTE	pte;
+								AXP_21264_TLB		*itb;
+								AXP_PC				palFuncPC;
+								u32					instructions[AXP_ICACHE_LINE_INS];
+								int					retVal = 1;
 
 								/*
-								 * First set the PAL_BASE IPR.
+								 * First set the ITB_PTE IPR so that we can
+								 * load and execute the initialization
+								 * instructions.
 								 */
-								cpu->palBase.pal_base_pc = sromHdl.destAddr;
+								pte = cpu->itbPte;
+								cpu->itbPte._asm = 1;
+								cpu->itbPte.kre = 1;
+								cpu->itbPte.sre = 1;
+								cpu->itbPte.ere = 1;
+								cpu->itbPte.ure = 1;
+
+								/*
+								 * Add the ITB, into which we will be loading
+								 * the instructions.
+								 */
+								AXP_addTLBEntry(
+										cpu,
+										sromHdl.destAddr,
+										sromHdl.destAddr,
+										false);
+								itb = AXP_findTLBEntry(
+										cpu,
+										sromHdl.destAddr,
+										false);
 
 								/*
 								 * Finally, load the ROM code into the SROM.
@@ -1089,42 +1113,39 @@ void *AXP_21264_CboxMain(void *voidPtr)
 								 * instructions at the just set PC (where we
 								 * loaded the ROM code).
 								 */
-								destAddr.offset = 0;
-								destAddr.index = sromHdl.destAddr / 64;
-								destAddr.res = 0;
-								sets = (cpu->iCtl.ic_en = 3) ? : 1;
-								*(u64 *) &palFuncPC = sromHdl.destAddr;
-								palFuncPC.pal = 1;	/* PALmode for tracing */
-								for (ii = destAddr.index; retVal > 0; ii++)
+								for (ii = sromHdl.destAddr;
+									 retVal > 0;
+									 ii += (AXP_ICACHE_LINE_INS * sizeof(u32)))
 								{
-									for (jj = 0; jj < sets; jj++)
-									{
-										retVal = AXP_Read_SROM(
+									retVal = AXP_Read_SROM(
 											&sromHdl,
-											(u32 *) cpu->iCache[ii][jj].instructions,
+											instructions,
 											AXP_ICACHE_LINE_INS);
-										if (AXP_CPU_BUFF)
-										{
-											char	traceBuf[256];
-											int		kk;
+									AXP_IcacheAdd(
+											cpu,
+											*((AXP_PC*) &ii),
+											instructions,
+											itb);
+									if ((AXP_CPU_BUFF) && (retVal > 0))
+									{
+										char	traceBuf[256];
 
-											AXP_TRACE_BEGIN();
-											for (kk = 0;
-												 kk < AXP_ICACHE_LINE_INS;
-												 kk++)
-											{
-												AXP_Decode_Instruction(
-															&palFuncPC,
-															cpu->iCache[ii][jj].instructions[kk],
-															false,
-															traceBuf);
-												palFuncPC.pc++;
-												AXP_TraceWrite(traceBuf);
-											}
-											AXP_TRACE_END();
+										AXP_TRACE_BEGIN();
+										for (jj = 0;
+											 jj < AXP_ICACHE_LINE_INS;
+											 jj++)
+										{
+											AXP_Decode_Instruction(
+												(AXP_PC *) &ii,
+												(AXP_INS_FMT) instructions[jj],
+												false,
+												traceBuf);
+											AXP_TraceWrite(traceBuf);
 										}
+										AXP_TRACE_END();
 									}
 								}
+								cpu->itbPte = pte;
 								initFailure = AXP_Close_SROM(&sromHdl);
 								if (((retVal == AXP_E_READERR) ||
 									 (retVal == AXP_E_BADSROMFILE)) &&
@@ -1214,12 +1235,12 @@ void *AXP_21264_CboxMain(void *voidPtr)
 					AXP_21264_Process_VDB(cpu, entry);
 					processed = true;
 				}
-				if ((entry = AXP_21264_IOWB_Empty(cpu)) == -1)
+				if ((entry = AXP_21264_IOWB_Empty(cpu)) != -1)
 				{
 					AXP_21264_Process_IOWB(cpu, entry);
 					processed = true;
 				}
-				if ((entry = AXP_21264_PQ_Empty(cpu)) == -1)
+				if ((entry = AXP_21264_PQ_Empty(cpu)) != -1)
 				{
 					AXP_21264_Process_PQ(cpu, entry);
 					processed = true;

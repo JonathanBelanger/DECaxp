@@ -104,6 +104,7 @@
  *	getting too large for eclipse to handle without crashing.
  */
 #include "AXP_Configure.h"
+#include "AXP_Trace.h"
 #include "AXP_21264_Ibox.h"
 #include "AXP_21264_Ibox_Initialize.h"
 #include "AXP_21264_Ibox_InstructionDecoding.h"

@@ -157,6 +157,13 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 		}
 
 		/*
+		 * Pull some configuration items out of the configuration and
+		 * initialize the appropriate CPU fields.
+		 */
+		cpu->majorType = AXP_21264_Config.system.cpus.config->majorType;
+		cpu->minorType = AXP_21264_Config.system.cpus.minorType;
+
+		/*
 		 * At this point everything should be initialize.  Time to create all
 		 * the threads.
 		 */
