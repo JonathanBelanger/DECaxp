@@ -64,7 +64,11 @@ void reconstituteFilename(int argc, char **argv, char *configFilename)
 	{
 		configFilename[0] = '\0';
 		for (ii = 1; ii < argc; ii++)
+		{
+			if (argv[ii][strlen(argv[ii])-1] == '\\')
+				argv[ii][strlen(argv[ii])-1] = '\0';
 			sprintf(&configFilename[strlen(configFilename)], "%s ", argv[ii]);
+		}
 
 		/*
 		 * The filename string has an extra space on the end.  Remove it.

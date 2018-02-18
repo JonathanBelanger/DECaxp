@@ -51,6 +51,7 @@
  *	The Dcache code needs to be changed and simplified.
  */
 #include "AXP_21264_Cache.h"
+#include "AXP_Trace.h"
 
 /*
  * Union to hold 2 32-bit values as a 64-bit value for the purposes of saving
@@ -65,6 +66,15 @@ typedef union
 		u32	set;
 	}		idxOrSet;
 } AXP_DCACHE_IDXSET;
+
+static char *accStr[] =
+{
+	"No access",
+	"Read",
+	"Write",
+	"Execute (Read)",
+	"Read & Write"
+};
 
 /****************************************************************************/
 /*																			*/
@@ -104,6 +114,16 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
 	u8				asn = (dtb ? cpu->dtbAsn0.asn : cpu->pCtx.asn);
 	int				ii;
 
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"AXP_findTLBEntry for address 0x%016llx in %s called.",
+				virtAddr,
+				(dtb ? "DTB" : "ITB"));
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * Search through all valid TLB entries until we find the one we are being
 	 * asked to return.
@@ -120,6 +140,16 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
 				break;
 			}
 		}
+	}
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"AXP_findTLBEntry returning %s at 0x%016llx.",
+				(dtb ? "DTB" : "ITB"),
+				(u64 *) retVal);
+		AXP_TRACE_END();
 	}
 
 	/*
@@ -161,6 +191,13 @@ AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
 	int				ii;
 	int				start1, start2;
 	int				end1, end2;
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("AXP_getNextFreeTLB called.");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * The nextTLB index always points to the TLB entry to be selected (even if
@@ -222,6 +259,15 @@ AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
 				}
 	}
 
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"AXP_getNextFreeTLB returning 0x%016llx",
+				(u64 *) retVal);
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * Return what we found, or did not find, back to the caller.
 	 */
@@ -252,6 +298,17 @@ AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
 void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
 {
 	AXP_21264_TLB	*tlbEntry;
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"AXP_addTLBEntry for address (va: 0x%016llx, pa: 0x%016llx) to %s called.",
+				virtAddr,
+				physAddr,
+				(dtb ? "DTB" : "ITB"));
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * See if there already is an entry in the TLB.
@@ -354,6 +411,15 @@ void AXP_tbia(AXP_21264_CPU *cpu, bool dtb)
 	AXP_21264_TLB	*tlbArray = (dtb ? cpu->dtb : cpu->itb);
 	int				ii;
 
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"AXP_tbia to invalidate all %s entries called.",
+				(dtb ? "DTB" : "ITB"));
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * Go through the entire TLB array and invalidate everything (even those
 	 * entries that are already invalidated).
@@ -398,6 +464,15 @@ void AXP_tbiap(AXP_21264_CPU *cpu, bool dtb)
 	AXP_21264_TLB	*tlbArray = (dtb ? cpu->dtb : cpu->itb);
 	int				ii;
 
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+			"AXP_tbiap to invalidate all process specific %s entries called.",
+			(dtb ? "DTB" : "ITB"));
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * Loop through all the TLB entries and if the ASM bit is not set, then
 	 * invalidate the entry.  Leaving the entries with the ASM bit set alone,
@@ -436,6 +511,16 @@ void AXP_tbiap(AXP_21264_CPU *cpu, bool dtb)
 void AXP_tbis(AXP_21264_CPU *cpu, u64 va, bool dtb)
 {
 	AXP_21264_TLB	*tlb = AXP_findTLBEntry(cpu, va, dtb);
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+			"AXP_tbis to invalidate a single %s entry for 0x%016llx called.",
+			(dtb ? "DTB" : "ITB"),
+			va);
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * If we did not find the entry, then there is nothing to invalidate.
@@ -501,6 +586,16 @@ AXP_EXCEPTIONS AXP_21264_checkMemoryAccess(
 					AXP_21264_ACCESS acc)
 {
 	AXP_EXCEPTIONS	retVal = NoException;
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+			"AXP_21264_checkMemoryAccess tlb: 0x%016llx, access: %s called.",
+			(u64 *) tlb,
+			accStr[acc]);
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Determine access based on the current mode.  Then within each mode,
@@ -628,6 +723,13 @@ AXP_EXCEPTIONS AXP_21264_checkMemoryAccess(
 			}
 			break;
 	}	/* switch(cpu->ierCm.cm) */
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("AXP_21264_checkMemoryAccess returning %d.", retVal);
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Return what we found back to the caller.
@@ -801,13 +903,9 @@ u64 AXP_va2pa(
 			if (fault != NULL)
 			{
 				if (dtb == true)
-				{
 					*fault = AXP_DFAULT;
-				}
 				else
-				{
 					*fault = AXP_IACV;
-				}
 			}
 		}
 		else
@@ -916,34 +1014,8 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
 	 * data size is not properly aligned.  We don't do this for to of the store
 	 * instructions where they are intended to work on unaligned data.
 	 */
-	if (disableUnaligned == false)
-	{
-		switch (len)
-		{
-			case 1:
-				break;
-
-			case 2:
-				if ((va & 0xfffffffffffffffe) != va)
-					retVal = DataAlignmentTrap;
-				break;
-
-			case 4:
-				if ((va & 0xfffffffffffffffc) != va)
-					retVal = DataAlignmentTrap;
-				break;
-
-			case 8:
-				if ((va & 0xfffffffffffffff8) != va)
-					retVal = DataAlignmentTrap;
-				break;
-
-			case 64:
-				if ((va & 0xffffffffffffffc0) != va)
-					retVal = DataAlignmentTrap;
-				break;
-		}
-	}
+	if ((disableUnaligned == false) && ((va & ~(len-1)) != va))
+		retVal = DataAlignmentTrap;
 
 	/*
 	 * If not exception was detected, then let's go see if we can find the
@@ -1860,6 +1932,17 @@ void AXP_IcacheAdd(
 	u32			ii;
 	u32			sets, whichSet;
 
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+			"AXP_IcacheAdd at pc = 0x%016llx (0x%08x) for tlb: 0x%016llx called.",
+			*((u64 *) &pc),
+			*nextInst,
+			(u64 *) itb);
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * First things first, we need to lock the Icache from being updated by
 	 * anyone but us.
@@ -1942,6 +2025,16 @@ void AXP_IcacheAdd(
 	 * Return back to the caller.
 	 */
 	pthread_mutex_unlock(&cpu->iCacheMutex);
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+			"AXP_IcacheAdd added at iCache[%u][%u].",
+			index,
+			whichSet);
+		AXP_TRACE_END();
+	}
 	return;
 }
 
@@ -1969,6 +2062,13 @@ void AXP_IcacheAdd(
 void AXP_IcacheFlush(AXP_21264_CPU *cpu, bool purgeAsm)
 {
 	u32			ii, jj;
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("AXP_IcacheFlush (asm: %d) called.", purgeAsm);
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * First things first, we need to lock the Icache from being updated by
@@ -2082,6 +2182,15 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 	u32			ii;
 	u32			sets, whichSet;
 
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"AXP_IcacheFetch for pc = 0x%016llx called.",
+				*((u64 *) &pc));
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * First things first, we need to lock the Icache from being updated by
 	 * anyone but us.
@@ -2187,6 +2296,18 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 	 * Return back to the caller.
 	 */
 	pthread_mutex_unlock(&cpu->iCacheMutex);
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"AXP_IcacheFetch returning iCache[%u][%u] with status %d.",
+				index,
+				whichSet,
+				retVal);
+		AXP_TRACE_END();
+	}
+
 	return(retVal);
 }
 
@@ -2218,6 +2339,15 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
 	u64			tag = vpc.vpcFields.tag;
 	u32			ii;
 	u32			sets;
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+			"AXP_IcacheValid at pc = 0x%016llx called.",
+			*((u64 *) &pc));
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * First things first, we need to lock the Icache from being updated by
@@ -2257,5 +2387,12 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
 	 * Return back to the caller.
 	 */
 	pthread_mutex_unlock(&cpu->iCacheMutex);
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("AXP_IcacheValid return status %d.", retVal);
+		AXP_TRACE_END();
+	}
 	return(retVal);
 }
