@@ -86,7 +86,8 @@ void AXP_TraceInit_Once(void)
 				"AXP_TRCLOG = 0x%08x : AXP_TRCFIL = %s",
 				_axp_trc_log_,
 				_axp_trc_out_);
-		AXP_TraceWrite("Copyright 2018, Jonathan D. Belanger.\n");
+		AXP_TraceWrite("Copyright 2018, Jonathan D. Belanger.");
+		AXP_TraceWrite("");
 		AXP_TraceConfig();
 	}
 

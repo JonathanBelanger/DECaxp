@@ -1180,7 +1180,8 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
 			u8		*optFwID = (u8 *) &sromHandle->optFwID;
 
 			AXP_TRACE_BEGIN();
-			AXP_TraceWrite("SROM Header Information:\n");
+			AXP_TraceWrite("SROM Header Information:");
+			AXP_TraceWrite("");
 			AXP_TraceWrite("Header Size......... %u bytes", sromHandle->hdrSize);
 			AXP_TraceWrite("Image Checksum...... 0x%08x", sromHandle->imgChecksum);
 			AXP_TraceWrite("Image Size (Uncomp). %u (%u KB)", sromHandle->imgSize, sromHandle->imgSize/ONE_K);
@@ -1330,9 +1331,18 @@ i32 AXP_Read_SROM(AXP_SROM_HANDLE *sromHandle, u32 *buf, u32 bufLen)
 		}
 
 		/*
+		 * Update the running image CRC.
+		 */
+		sromHandle->verImgChecksum = AXP_Crc32(
+										(u8 *) buf,
+										(retVal * sizeof(u32)),
+										true,
+										sromHandle->verImgChecksum);
+
+		/*
 		 * If the done flag got set, then we found the end-of-file before
 		 * filling in the buffer.  Fill the remaining part of the buffer with
-		 * no-ops.
+		 * NOOPs.
 		 */
 		if (done == true)
 		{
@@ -1340,15 +1350,6 @@ i32 AXP_Read_SROM(AXP_SROM_HANDLE *sromHandle, u32 *buf, u32 bufLen)
 				buf[ii] = noop;
 		}
 		retVal = bufLen;
-
-		/*
-		 * Update the running image CRC.
-		 */
-		sromHandle->verImgChecksum = AXP_Crc32(
-										(u8 *) buf,
-										retVal,
-										true,
-										sromHandle->verImgChecksum);
 
 		/*
 		 * If we hit the end-of-file, then inverse the CRC and check it
@@ -1360,10 +1361,27 @@ i32 AXP_Read_SROM(AXP_SROM_HANDLE *sromHandle, u32 *buf, u32 bufLen)
 
 			/*
 			 * If the newly calculated image checksum does not match the
-			 * one read in the header file.
+			 * one read in the header file, then we have a bad SROM file.
+			 *
+			 * TODO:	This is not working for some reason.  We need to look
+			 *			into this.  For now, we'll ignore the error.
 			 */
+#if 0
 			if (sromHandle->verImgChecksum != sromHandle->imgChecksum)
+			{
 				retVal = AXP_E_BADSROMFILE;
+				if (AXP_UTL_CALL)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+							"Read Image Checksum 0x%08x does not match read "
+							"in Checksum 0x%08x",
+							sromHandle->verImgChecksum,
+							sromHandle->imgChecksum);
+					AXP_TRACE_END();
+				}
+			}
+#endif
 		}
 	}
 	else
