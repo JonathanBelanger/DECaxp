@@ -286,7 +286,7 @@ AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
 	if (AXP_CPU_OPT2)
 	{
 		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Getting Next vPC[%d] 0x%016llx", prevVPC, *((u64 *) &vpc));
+		AXP_TraceWrite("Getting Next vPC[%d] 0x%016llx", prevVPC, *((u64 *) &retVal));
 		AXP_TRACE_END();
 	}
 

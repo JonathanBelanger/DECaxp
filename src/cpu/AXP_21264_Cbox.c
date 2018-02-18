@@ -1076,7 +1076,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 							{
 								AXP_IBOX_ITB_PTE	pte;
 								AXP_21264_TLB		*itb;
-								AXP_PC				palFuncPC;
+								AXP_PC				startingPC;
 								u32					instructions[AXP_ICACHE_LINE_INS];
 								int					retVal = 1;
 
@@ -1130,40 +1130,44 @@ void *AXP_21264_CboxMain(void *voidPtr)
 									{
 										char	traceBuf[256];
 
+										startingPC = *((AXP_PC *) &ii);
 										AXP_TRACE_BEGIN();
 										for (jj = 0;
 											 jj < AXP_ICACHE_LINE_INS;
 											 jj++)
 										{
 											AXP_Decode_Instruction(
-												(AXP_PC *) &ii,
+												&startingPC,
 												(AXP_INS_FMT) instructions[jj],
 												false,
 												traceBuf);
 											AXP_TraceWrite(traceBuf);
+											startingPC.pc++;
 										}
 										AXP_TRACE_END();
 									}
 								}
 								cpu->itbPte = pte;
+
+								/*
+								 * Get the PC for the base address of the code
+								 * just loaded.  We're putting this in PALmode.
+								 */
+						 		startingPC = AXP_21264_GetVPC(
+						 									cpu,
+						 									sromHdl.destAddr,
+						 									AXP_PAL_MODE);
 								initFailure = AXP_Close_SROM(&sromHdl);
 								if (((retVal == AXP_E_READERR) ||
 									 (retVal == AXP_E_BADSROMFILE)) &&
 									(initFailure == false))
 									initFailure = true;
 
-								/*
-								 * Get the PC for the RESET/WAKEUP PALcode.
-								 */
-						 		palFuncPC = AXP_21264_GetPALFuncVPC(
-						 									cpu,
-						 									AXP_RESET_WAKEUP);
-
 						 		/*
-						 		 * Set the PC to the PALcode to be called now
-						 		 * that the SROM has been initialized.
+						 		 * Set the PC to the code to be called now that
+						 		 * the SROM has been initialized.
 						 		 */
-								AXP_21264_AddVPC(cpu, palFuncPC);
+								AXP_21264_AddVPC(cpu, startingPC);
 							}
 							break;
 					}
