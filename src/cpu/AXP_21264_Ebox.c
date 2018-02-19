@@ -63,6 +63,12 @@ static char *insStateStr[] =
 	"Executing",
 	"WaitingRetirement"
 };
+static char *regStateStr[] =
+{
+	"Free",
+	"Pending Update",
+	"Valid"
+};
 
 /*
  * AXP_21264_Ebox_RegisterReady
@@ -89,9 +95,32 @@ static char *insStateStr[] =
  */
 bool AXP_21264_Ebox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 {
-	return ((cpu->prState[entry->ins->src1] == Valid) &&
-			(cpu->prState[entry->ins->src2] == Valid) &&
-			(cpu->prState[entry->ins->dest] == Valid));
+	if (AXP_CPU_OPT2)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"Checking registers at "
+				"pc = 0x%016llx, "
+				"opcode = 0x%02x, "
+				"Src1(%02u) = %s, "
+				"Src2(%02u) = %s, "
+				"Dest(%02u) = %s.",
+				*((u64 *) &entry->ins->pc),
+				(u32) entry->ins->opcode,
+				entry->ins->aSrc1,
+				regStateStr[cpu->prState[entry->ins->aSrc1]],
+				entry->ins->aSrc2,
+				regStateStr[cpu->prState[entry->ins->aSrc2]],
+				entry->ins->aDest,
+				regStateStr[cpu->prState[entry->ins->aDest]]
+				);
+		AXP_TRACE_END();
+	}
+
+	return ((cpu->prState[entry->ins->aSrc1] == Valid) &&
+			(cpu->prState[entry->ins->aSrc2] == Valid) &&
+			((cpu->prState[entry->ins->aDest] == Valid) ||
+			 (cpu->prState[entry->ins->aDest] == PendingUpdate)));
 }
 
 /*
