@@ -845,6 +845,9 @@ const char *hwRetStall[] =
 	(byte & 0x02 ? '1' : '0'),	\
 	(byte & 0x01 ? '1' : '0')
 
+const char regLetter[]	= {'R', 'F'};
+#define AXP_REG_LETTER(reg)	(reg & AXP_REG_FP) == FP ? regLetter[1] : regLetter[0]
+
 const char *lineFmt		= "0x%016llx: %-31s %-31s ; 0x%08x '%c%c%c%c'";
 const char *Reg			= "R%02d";
 const char *DispReg 	= "#%-d(R%02d)";
@@ -858,8 +861,10 @@ const char *iprIdx		= "%c%c%c%c %c%c%c%c";
 const char *Scbd		= "%c%c%c%c%c%c%c%c";
 const char *Len			= "%-s";
 const char *Stall		= "%-s";
-const char *Comma		= ", ";
 const char *Pad			= "%#s";
+const char *Regv		= "%c%02d=0x%016llx";
+const char *Comma		= ", ";
+const char *Colon		= ": ";
 const char *Space		= " ";
 
 /*
@@ -1741,6 +1746,200 @@ void AXP_Decode_Instruction(
 		(isprint(binFuncStr[1]) ? binFuncStr[1] : '.'),
 		(isprint(binFuncStr[2]) ? binFuncStr[2] : '.'),
 		(isprint(binFuncStr[3]) ? binFuncStr[3] : '.'));
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_Dump_Registers
+ *	This function is called to dump the contents of the registers associated
+ *	with an instruction.  It is anticipated that this is called after the
+ *	instruction has been retired, so that the updated register values can be
+ *	displayed.
+ *
+ * Input Parameters:
+ *	instr:
+ *		A pointer to the decoded, executed, and retired instruction.
+ *	reg:
+ *		An array containing the physical register values.
+ *
+ * Output Parameters:
+ *	regStr:
+ *		A pointer to a string buffer to receive the dumped register values.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_Dump_Registers(
+				AXP_INSTRUCTION	*instr,
+				u64				*pr,
+				u64				*pf,
+				char			*regStr)
+{
+	int		offset;
+
+	/*
+	 * Initialize the output string to a zero-length string.
+	 */
+	regStr[0] = '\0';
+
+	/*
+	 * All three registers Ra, Rb, Rc or Fa, Fb, Fc
+	 */
+	if ((instr->decodedReg.bits.src1 != 0) &&
+		(instr->decodedReg.bits.src2 != 0) &&
+		(instr->decodedReg.bits.dest != 0))
+	{
+		offset = sprintf(
+					regStr,
+					Regv,
+					AXP_REG_LETTER(instr->decodedReg.bits.src1),
+					instr->aSrc1,
+					(instr->decodedReg.bits.src1 & AXP_REG_FP ?
+					 pf[instr->src1] :
+					 pr[instr->src1]));
+		offset += sprintf(&regStr[offset], Comma);
+		offset += sprintf(
+					&regStr[offset],
+					Regv,
+					AXP_REG_LETTER(instr->decodedReg.bits.src2),
+					instr->aSrc2,
+					(instr->decodedReg.bits.src2 & AXP_REG_FP ?
+					 pf[instr->src2] :
+					 pr[instr->src2]));
+		offset += sprintf(&regStr[offset], Comma);
+		sprintf(
+			&regStr[offset],
+			Regv,
+			AXP_REG_LETTER(instr->decodedReg.bits.dest),
+			instr->aDest,
+			(instr->decodedReg.bits.dest & AXP_REG_FP ?
+			 pf[instr->dest] :
+			 pr[instr->dest]));
+	}
+
+	/*
+	 * Just two registers Ra, Rc
+	 */
+	else if ((instr->decodedReg.bits.src1 != 0) &&
+			 (instr->decodedReg.bits.dest != 0))
+	{
+		offset = sprintf(
+					regStr,
+					Regv,
+					AXP_REG_LETTER(instr->decodedReg.bits.src1),
+					instr->aSrc1,
+					(instr->decodedReg.bits.src1 & AXP_REG_FP ?
+					 pf[instr->src1] :
+					 pr[instr->src1]));
+		offset += sprintf(&regStr[offset], Comma);
+		sprintf(
+			&regStr[offset],
+			Regv,
+			AXP_REG_LETTER(instr->decodedReg.bits.dest),
+			instr->aDest,
+			(instr->decodedReg.bits.dest & AXP_REG_FP ?
+			 pf[instr->dest] :
+			 pr[instr->dest]));
+	}
+
+	/*
+	 * Just two registers Rb, Rc
+	 */
+	else if ((instr->decodedReg.bits.src2 != 0) &&
+			 (instr->decodedReg.bits.dest != 0))
+	{
+		offset = sprintf(
+					regStr,
+					Regv,
+					AXP_REG_LETTER(instr->decodedReg.bits.src2),
+					instr->aSrc2,
+					(instr->decodedReg.bits.src2 & AXP_REG_FP ?
+					 pf[instr->src2] :
+					 pr[instr->src2]));
+		offset += sprintf(&regStr[offset], Comma);
+		sprintf(
+			&regStr[offset],
+			Regv,
+			AXP_REG_LETTER(instr->decodedReg.bits.dest),
+			instr->aDest,
+			(instr->decodedReg.bits.dest & AXP_REG_FP ?
+			 pf[instr->dest] :
+			 pr[instr->dest]));
+	}
+
+	/*
+	 * Just two registers Ra, Rb
+	 */
+	else if ((instr->decodedReg.bits.src1 != 0) &&
+			 (instr->decodedReg.bits.src2 != 0))
+	{
+		offset = sprintf(
+					regStr,
+					Regv,
+					AXP_REG_LETTER(instr->decodedReg.bits.src1),
+					instr->aSrc1,
+					(instr->decodedReg.bits.src1 & AXP_REG_FP ?
+					 pf[instr->src1] :
+					 pr[instr->src1]));
+		offset += sprintf(&regStr[offset], Comma);
+		offset += sprintf(
+					&regStr[offset],
+					Regv,
+					AXP_REG_LETTER(instr->decodedReg.bits.src2),
+					instr->aSrc2,
+					(instr->decodedReg.bits.src2 & AXP_REG_FP ?
+					 pf[instr->src2] :
+					 pr[instr->src2]));
+	}
+
+	/*
+	 * Just one registers Ra
+	 */
+	else if (instr->decodedReg.bits.src1 != 0)
+	{
+		sprintf(
+			regStr,
+			Regv,
+			AXP_REG_LETTER(instr->decodedReg.bits.src1),
+			instr->aSrc1,
+			(instr->decodedReg.bits.src1 & AXP_REG_FP ?
+			 pf[instr->src1] :
+			 pr[instr->src1]));
+	}
+
+	/*
+	 * Just one register Rb
+	 */
+	else if (instr->decodedReg.bits.src2 != 0)
+	{
+		sprintf(
+			regStr,
+			Regv,
+			AXP_REG_LETTER(instr->decodedReg.bits.src2),
+			instr->aSrc2,
+			(instr->decodedReg.bits.src2 & AXP_REG_FP ?
+			 pf[instr->src2] :
+			 pr[instr->src2]));
+	}
+
+	/*
+	 * Just one register Rc
+	 */
+	else if (instr->decodedReg.bits.dest != 0)
+	{
+		sprintf(
+			regStr,
+			Regv,
+			AXP_REG_LETTER(instr->decodedReg.bits.dest),
+			instr->aDest,
+			(instr->decodedReg.bits.dest & AXP_REG_FP ?
+			 pf[instr->dest] :
+			 pr[instr->dest]));
+	}
 
 	/*
 	 * Return back to the caller.

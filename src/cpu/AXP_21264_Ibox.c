@@ -104,6 +104,7 @@
  *	getting too large for eclipse to handle without crashing.
  */
 #include "AXP_Configure.h"
+#include "AXP_Dumps.h"
 #include "AXP_Trace.h"
 #include "AXP_21264_Ibox.h"
 #include "AXP_21264_Ibox_Initialize.h"
@@ -1321,6 +1322,8 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	u32				ii, start, end;
 	bool			split;
 	bool			done = false;
+	bool			signalEbox = false;
+	bool			signalFbox = false;
 
 	/*
 	 * First lock the ROB mutex so that it is not updated by anyone but this
@@ -1361,6 +1364,15 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 		 */
 		if (rob->state == WaitingRetirement)
 		{
+			if (AXP_CPU_OPT1)
+			{
+				AXP_TRACE_BEGIN();
+				AXP_TraceWrite(
+					"Retiring instruction at pc: 0x%016llx, opcode: 0x%02x",
+					rob->pc,
+					rob->opcode);
+				AXP_TRACE_END();
+			}
 
 			/*
 			 * If an exception occurred, we need to process it.  Otherwise, the
@@ -1391,12 +1403,17 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 					AXP_21264_Ibox_Retire_HW_MFPR(cpu, rob);
 
 				/*
-				 * If the destination register is a floating-point register,
-				 * then move the instruction result into the correct physical
-				 * floating-point register.
+				 * If the destination register is a floating-point register and
+				 * it is not the F31 register, then move the instruction result
+				 * into the correct physical floating-point register.
 				 */
-				if ((rob->decodedReg.bits.dest & AXP_DEST_FLOAT) == AXP_DEST_FLOAT)
+				if (((rob->decodedReg.bits.dest & AXP_DEST_FLOAT) == AXP_DEST_FLOAT) &&
+					(rob->aDest != AXP_UNMAPPED_REG))
+				{
 					cpu->pf[rob->dest] = rob->destv.fp.uq;
+					cpu->pfState[rob->dest] = Valid;
+					signalFbox = true;
+				}
 
 				/*
 				 * If the destination register is not a floating-point
@@ -1405,8 +1422,13 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 				 * a result at all.  For the latter, there is nothing more to
 				 * do.
 				 */
-				else if (rob->decodedReg.bits.dest != 0)
+				else if ((rob->decodedReg.bits.dest != 0) &&
+						 (rob->aDest != AXP_UNMAPPED_REG))
+				{
 					cpu->pr[rob->dest] = rob->destv.r.uq;
+					cpu->prState[rob->dest] = Valid;
+					signalEbox = true;
+				}
 
 				/*
 				 * If a store, write it to the Dcache.
@@ -1458,6 +1480,17 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 			 */
 			cpu->rob[ii].state = Retired;
 			cpu->robStart = (cpu->robStart + 1) % AXP_INFLIGHT_MAX;
+			if (AXP_CPU_BUFF)
+			{
+				char	insBuf[256];
+				char	regBuf[128];
+
+				AXP_Decode_Instruction(&rob->pc, rob->instr, false, insBuf);
+				AXP_Dump_Registers(rob, cpu->pr, cpu->pf, regBuf);
+				AXP_TRACE_BEGIN();
+				AXP_TraceWrite("%s : %s", insBuf, regBuf);
+				AXP_TRACE_END();
+			}
 		}
 		else
 			done = true;
@@ -1486,6 +1519,25 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	 * thread.
 	 */
 	pthread_mutex_unlock(&cpu->robMutex);
+
+	/*
+	 * There may have been an instruction that was waiting for one of the
+	 * destination registers to be written to before it could execute.  If one
+	 * of them was for the Fbox, signal it to wake up and check to see if there
+	 * is one or more Queued Floating Point instructions that can now be
+	 * executed.
+	 */
+	if (signalFbox == true)
+		pthread_cond_broadcast(&cpu->fBoxCondition);
+
+	/*
+	 * There may have been an instruction that was waiting for one of the
+	 * destination registers to be written to before it could execute.  If one
+	 * of them was for the Ebox, signal it to wake up and check to see if there
+	 * is one or more Queued Integer instructions that can now be executed.
+	 */
+	if (signalEbox == true)
+		pthread_cond_broadcast(&cpu->eBoxCondition);
 
 	/*
 	 * Return back to the caller.
@@ -1624,16 +1676,25 @@ void *AXP_21264_IboxMain(void *voidPtr)
 		{
 			for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
 			{
-
 				/*
-				 * TODO:	We need an ROB mutex, because the Ibox, Ebox, and
-				 *			Fbox all access this queue on the fly.  Also,
-				 *			consider doing this as a counter queue.
+				 * Lock the ROB mutex so that it is not updated by anyone but
+				 * this function.
 				 */
+				pthread_mutex_lock(&cpu->robMutex);
 				decodedInstr = &cpu->rob[cpu->robEnd];
 				cpu->robEnd = (cpu->robEnd + 1) % AXP_INFLIGHT_MAX;
 				if (cpu->robEnd == cpu->robStart)
 					cpu->robStart = (cpu->robStart + 1) % AXP_INFLIGHT_MAX;
+
+				/*
+				 * We are done with the ROB mutex.
+				 */
+				pthread_mutex_unlock(&cpu->robMutex);
+
+				/*
+				 * Go and decode the instruction, as well as rename the
+				 * architectural registers to their physical equivalent.
+				 */
 				AXP_Decode_Rename(cpu, &nextCacheLine, ii, decodedInstr);
 				if (decodedInstr->type == Branch)
 				{
@@ -1839,7 +1900,12 @@ void *AXP_21264_IboxMain(void *voidPtr)
 				}
 				else
 					decodedInstr->state = WaitingRetirement;
+
+				/*
+				 * Increment the PC, then add it to the PC list.
+				 */
 				nextPC = AXP_21264_IncrementVPC(cpu);
+				AXP_21264_AddVPC(cpu, nextPC);
 			}
 		}
 

@@ -34,8 +34,8 @@ extern bool	_axp_trc_active_;
 /*
  * A macros to wrap around trace statements.
  */
-#define AXP_TRACE_BEGIN()	if (_axp_trc_active_) {
-#define AXP_TRACE_END()		}
+#define AXP_TRACE_BEGIN()	if (_axp_trc_active_) { AXP_TraceLock();
+#define AXP_TRACE_END()		AXP_TraceUnlock(); }
 
 /*
  * Let's defined a DEBUG environment variable that will turn on certain
@@ -116,5 +116,7 @@ extern AXP_TRCLOG		_axp_trc_log_;
 bool AXP_TraceInit(void);
 void AXP_TraceEnd(void);
 void AXP_TraceWrite(char *, ...);
+void AXP_TraceLock(void);
+void AXP_TraceUnlock(void);
 
 #endif /* AXP_TRACE_H_ */

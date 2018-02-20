@@ -19,7 +19,7 @@
  *	This source file contains the functions needed to implement the
  *	functionality of the Ebox.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		19-Jun-2017	Jonathan D. Belanger
  *	Initially written.
@@ -53,8 +53,8 @@ static char *insPipelineStr[] =
 	"L1",
 	"L0, L1",
 	"L0, L1, U0, U1",
-	"Mul",
-	"Other"
+	"Multiply",
+	"FP Other"
 };
 static char *insStateStr[] =
 {
@@ -99,21 +99,21 @@ bool AXP_21264_Ebox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
-				"Checking registers at "
-				"pc = 0x%016llx, "
-				"opcode = 0x%02x, "
-				"Src1(%02u) = %s, "
-				"Src2(%02u) = %s, "
-				"Dest(%02u) = %s.",
+				"Ebox Checking registers at pc = 0x%016llx, opcode = 0x%02x:",
 				*((u64 *) &entry->ins->pc),
-				(u32) entry->ins->opcode,
+				(u32) entry->ins->opcode);
+		AXP_TraceWrite(
+				"\tSrc1(R%02u) = %s",
 				entry->ins->aSrc1,
-				regStateStr[cpu->prState[entry->ins->aSrc1]],
+				regStateStr[cpu->prState[entry->ins->aSrc1]]);
+		AXP_TraceWrite(
+				"\tSrc2(R%02u) = %s",
 				entry->ins->aSrc2,
-				regStateStr[cpu->prState[entry->ins->aSrc2]],
+				regStateStr[cpu->prState[entry->ins->aSrc2]]);
+		AXP_TraceWrite(
+				"\tDest(R%02u) = %s",
 				entry->ins->aDest,
-				regStateStr[cpu->prState[entry->ins->aDest]]
-				);
+				regStateStr[cpu->prState[entry->ins->aDest]]);
 		AXP_TRACE_END();
 	}
 
@@ -228,52 +228,19 @@ void AXP_21264_Ebox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 {
 	bool	retVal = false;
-	int		ii;
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Ebox is initializing");
-	AXP_TRACE_END();
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Ebox is initializing");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * This bit us used when emulating the RC and BC VAX Compatibility
 	 * instructions used by VAX-to-Alpha translator software.  ARM 4.12
 	 */
 	cpu->VAXintrFlag = false;
-
-	/*
-	 * Set up the initial register map.  We do not map R31.
-	 */
-	for (ii = 0; ii < (AXP_MAX_REGISTERS-1); ii++)
-	{
-		cpu->pr[ii] = 0;
-		cpu->prMap[ii].pr = 11;
-		cpu->prMap[ii].prevPr = AXP_UNMAPPED_REG;
-		cpu->prState[ii] = Valid;
-	}
-
-
-	/*
-	 * The above loop initialized the prMap array entries from 0 to 30 to be
-	 * mapped to the physical registers also from 0 to 30.  The next two lines
-	 * of code initialize the mapping for R31 to be mapped to an invalid
-	 * physical register.  This is used to indicate to the code that implements
-	 * the Alpha AXP instructions that, as a source register is always a value
-	 * of 0, and as a destination register, never updated.  This will greatly
-	 * simplify the register (architectural and physical) handling.
-	 */
-	cpu->prMap[AXP_MAX_REGISTERS-1].pr = AXP_INT_PHYS_REG + 1;
-	cpu->prMap[AXP_MAX_REGISTERS-1].prevPr = AXP_INT_PHYS_REG + 1;
-
-	/*
-	 * The remaining physical registers need to be put on the free list.
-	 */
-	cpu->prFlStart = 0;
-	cpu->prFlEnd = 0;
-	for (ii = AXP_MAX_REGISTERS; ii < AXP_INT_PHYS_REG; ii++)
-	{
-		cpu->prState[ii] = Free;
-		cpu->prFreeList[cpu->prFlEnd++] = ii;
-	}
 
 	/*
 	 * Initialize the Ebox IPRs.
@@ -295,9 +262,12 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 	cpu->vaForm.form00.va = 0;
 	cpu->vaForm.form00.vptb = 0;
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Ebox has initialized");
-	AXP_TRACE_END();
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Ebox has initialized");
+		AXP_TRACE_END();
+	}
 
 	return(retVal);
 }
@@ -307,7 +277,7 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
  *	This is the main function for the Upper 0 Cluster of the Ebox (Integer)
  *	pipeline.  It is called by the pthread_create function.  It calls the Ebox
  *	main function to perform the instruction execution for the Upper 0 Cluster
- *	of teh Digital Alpha AXP 21264 Central Processing Unit emulation.
+ *	of the Digital Alpha AXP 21264 Central Processing Unit emulation.
  *
  * Input Parameters:
  *	voidPtr:
@@ -509,11 +479,7 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 	};
 	AXP_QUEUE_ENTRY		*entry;
 	bool				notMe = true;
-
-	/*
-	 * First things first, lock the Ebox mutex.
-	 */
-	pthread_mutex_lock(&cpu->eBoxMutex);
+	bool				notFirstTime = false;
 
 	/*
 	 * While we are not shutting down, we'll continue to try and process
@@ -528,7 +494,7 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 		 * sure we indicate that the Ebox is no longer waiting to retire an
 		 * instruction.
 		 */
-		if (notMe == false)
+		if (notFirstTime)
 		{
 			if (AXP_CPU_OPT2)
 			{
@@ -539,8 +505,15 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 				AXP_TRACE_END();
 			}
 			AXP_21264_Ibox_Retire(cpu);
-			cpu->eBoxWaitingRetirement = false;
 		}
+		else
+			notFirstTime = true;
+		cpu->eBoxWaitingRetirement = false;
+
+		/*
+		 * Before we go checking the queue, lock the Ebox mutex.
+		 */
+		pthread_mutex_lock(&cpu->eBoxMutex);
 
 		/*
 		 * Next we need to do is see if there is nothing to process,
@@ -637,6 +610,12 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 			if ((void *) entry == (void *) &cpu->iq)
 			{
 				notMe = true;
+
+				/*
+				 * Before going back to the top of the loop, unlock the Ebox
+				 * mutex.
+				 */
+				pthread_mutex_unlock(&cpu->eBoxMutex);
 				continue;
 			}
 
@@ -658,6 +637,12 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 			}
 			entry->ins->state = Executing;
 			AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+
+			/*
+			 * Now that we have the instruction to be executed, we can unlock
+			 * the Ebox mutex and allow the other Ebox threads a chance to
+			 * execute.
+			 */
 			pthread_mutex_unlock(&cpu->eBoxMutex);
 
 			/*
@@ -689,15 +674,10 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 			 */
 			AXP_ReturnIQEntry(cpu, entry);
 		}
-
-		/*
-		 * before going to the top of the loop, lock the Ebox mutex.
-		 */
-		pthread_mutex_lock(&cpu->eBoxMutex);
 	}
 
 	/*
-	 * Last things lasst, lock the Ebox mutex.
+	 * Last things last, lock the Ebox mutex.
 	 */
 	pthread_mutex_unlock(&cpu->eBoxMutex);
 

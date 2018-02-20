@@ -947,7 +947,7 @@ static void AXP_stripXmlString(xmlChar *value)
  *	This function is called to convert a string containing the size for various
  *	components of an emulated system.  The string is encoded as the following:
  *
- *		<#>[.<#>][B|KB|MG|GB]
+ *		<#>[.<#>][B|KB|MB|GB]
  *
  *	where:
  *		<#>		is an integer greater than or equal to 0.
@@ -972,12 +972,12 @@ static void AXP_stripXmlString(xmlChar *value)
  * Return Value:
  *	An unsigned 32-bit value for the string to be converted.
  */
-u32	AXP_cvtSizeStr(char *value)
+u64	AXP_cvtSizeStr(char *value)
 {
 	double	cvtValue;
 	double	multiplier = 1.0;
 	int		len;
-	u32		retVal = 0;
+	u64		retVal = 0;
 
 	/*
 	 * If a pointer to the string was supplied on the call and there is
@@ -1824,8 +1824,8 @@ static void parse_disk_names(
 			 * are to store the information for this network device.
 			 */
 			ii = 0;
-			while ((ii < AXP_21264_Config.system.networkCount) &&
-				   (AXP_21264_Config.system.networks[ii].unit != unit))
+			while ((ii < AXP_21264_Config.system.diskCount) &&
+				   (AXP_21264_Config.system.disks[ii].unit != unit))
 				ii++;
 
 			parse_disk_names(doc, cur_node->children, parent, unit, nodeValue);
@@ -2253,7 +2253,7 @@ static void parse_cpus_names(
 								AXP_CPU_Configurations[ii].genStr) == 0)
 						{
 							AXP_21264_Config.system.cpus.config =
-									&AXP_CPU_Configurations[ii];
+								&AXP_CPU_Configurations[ii];
 						}
 						ii++;
 					}
@@ -3196,6 +3196,16 @@ int AXP_LoadConfig_File(char *fileName)
 }
 
 /*
+ * TODO:  We need the following configuration extraction functions:
+ *			AXP_ConfigGet_InitFile
+ *			AXP_ConfigGet_PALFile
+ *			AXP_ConfigGet_ROMFile
+ *			AXP_ConfigGet_CboxCSRFile
+ *			AXP_ConfigGet_CPUMajorType
+ *			AXP_ConfigGet_CPUMinorType
+ */
+
+/*
  * AXP_TraceConfig
  *	This function is called to write out the configuration information to the
  *	trace file.
@@ -3213,7 +3223,7 @@ void AXP_TraceConfig(void)
 {
 	char	buffer[133];
 	char	*bytes[] = {"B", "KB", "MB", "GB"};
-	u32		cacheSize;
+	u64		cacheSize;
 	int		idx = 0;
 	int		ii;
 	bool	configComplete = false;
@@ -3290,7 +3300,7 @@ void AXP_TraceConfig(void)
 				cacheSize /= ONE_K;
 				idx++;
 			}
-			AXP_TraceWrite("\t\t\tI-Cache Size:\t\t%u%s", cacheSize, bytes[idx]);
+			AXP_TraceWrite("\t\t\tI-Cache Size:\t\t%llu%s", cacheSize, bytes[idx]);
 			cacheSize = AXP_21264_Config.system.cpus.config->dCacheSize;
 			idx = 0;
 			while (cacheSize > ONE_K)
@@ -3298,7 +3308,7 @@ void AXP_TraceConfig(void)
 				cacheSize /= ONE_K;
 				idx++;
 			}
-			AXP_TraceWrite("\t\t\tD-Cache Size:\t\t%u%s", cacheSize, bytes[idx]);
+			AXP_TraceWrite("\t\t\tD-Cache Size:\t\t%llu%s", cacheSize, bytes[idx]);
 			cacheSize = AXP_21264_Config.system.cpus.config->sCacheSize;
 			idx = 0;
 			while (cacheSize > ONE_K)
@@ -3306,7 +3316,7 @@ void AXP_TraceConfig(void)
 				cacheSize /= ONE_K;
 				idx++;
 			}
-			AXP_TraceWrite("\t\t\tS-Cache Size:\t\t%u%s", cacheSize, bytes[idx]);
+			AXP_TraceWrite("\t\t\tS-Cache Size:\t\t%llu%s", cacheSize, bytes[idx]);
 			cacheSize = AXP_21264_Config.system.cpus.config->bCacheSizeLow;
 			idx = 0;
 			while (cacheSize > ONE_K)
@@ -3314,7 +3324,7 @@ void AXP_TraceConfig(void)
 				cacheSize /= ONE_K;
 				idx++;
 			}
-			sprintf(buffer, "\t\t\tB-Cache Size:\t\tbetween %u%s", cacheSize, bytes[idx]);
+			sprintf(buffer, "\t\t\tB-Cache Size:\t\tbetween %llu%s", cacheSize, bytes[idx]);
 			cacheSize = AXP_21264_Config.system.cpus.config->bCacheSizeHigh;
 			idx = 0;
 			while (cacheSize > ONE_K)
@@ -3322,7 +3332,7 @@ void AXP_TraceConfig(void)
 				cacheSize /= ONE_K;
 				idx++;
 			}
-			AXP_TraceWrite("%s and %u%s", buffer, cacheSize, bytes[idx]);
+			AXP_TraceWrite("%s and %llu%s", buffer, cacheSize, bytes[idx]);
 			AXP_TraceWrite("\t\tDIMMs:");
 			AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
 					AXP_21264_Config.system.dimms.count);
@@ -3333,7 +3343,7 @@ void AXP_TraceConfig(void)
 				cacheSize /= ONE_K;
 				idx++;
 			}
-			AXP_TraceWrite("\t\t\tSize:\t\t\t%u%s", cacheSize, bytes[idx]);
+			AXP_TraceWrite("\t\t\tSize:\t\t\t%llu%s", cacheSize, bytes[idx]);
 			AXP_TraceWrite("\t\tNetworks:");
 			AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
 					AXP_21264_Config.system.networkCount);
@@ -3384,7 +3394,7 @@ void AXP_TraceConfig(void)
 					cacheSize /= ONE_K;
 					idx++;
 				}
-				AXP_TraceWrite("\t\t\t\t   Size:\t%u%s", cacheSize, bytes[idx]);
+				AXP_TraceWrite("\t\t\t\t   Size:\t%llu%s", cacheSize, bytes[idx]);
 			}
 		}
 		else

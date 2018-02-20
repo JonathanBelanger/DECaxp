@@ -42,6 +42,35 @@
 #include "AXP_21264_Ibox_InstructionInfo.h"
 #include "AXP_Trace.h"
 
+static char *pipelineStr[] = {"Multiply", "FP Other"};
+#define AXP_PIPE_STR(pipe)	(pipe == FboxMul ? pipelineStr[0] : pipelineStr[1])
+static char *insPipelineStr[] =
+{
+	"None",
+	"U0",
+	"U1",
+	"U0, U1",
+	"L0",
+	"L1",
+	"L0, L1",
+	"L0, L1, U0, U1",
+	"Multiply",
+	"FP Other"
+};
+static char *insStateStr[] =
+{
+	"Retired",
+	"Queued",
+	"Executing",
+	"WaitingRetirement"
+};
+static char *regStateStr[] =
+{
+	"Free",
+	"Pending Update",
+	"Valid"
+};
+
 /*
  * AXP_21264_Fbox_RegisterReady
  *	This function is called to determine if a queued instruction's registers
@@ -67,9 +96,31 @@
  */
 bool AXP_21264_Fbox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 {
+	if (AXP_CPU_OPT2)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"Fbox Checking registers at pc = 0x%016llx, opcode = 0x%02x:",
+				*((u64 *) &entry->ins->pc),
+				(u32) entry->ins->opcode);
+		AXP_TraceWrite(
+				"\tSrc1(F%02u) = %s",
+				entry->ins->aSrc1,
+				regStateStr[cpu->pfState[entry->ins->aSrc1]]);
+		AXP_TraceWrite(
+				"\tSrc2(F%02u) = %s",
+				entry->ins->aSrc2,
+				regStateStr[cpu->pfState[entry->ins->aSrc2]]);
+		AXP_TraceWrite(
+				"\tDest(F%02u) = %s",
+				entry->ins->aDest,
+				regStateStr[cpu->pfState[entry->ins->aDest]]);
+		AXP_TRACE_END();
+	}
 	return ((cpu->pfState[entry->ins->src1] == Valid) &&
 			(cpu->pfState[entry->ins->src2] == Valid) &&
-			(cpu->pfState[entry->ins->dest] == Valid));
+			((cpu->pfState[entry->ins->dest] == Valid) ||
+			 (cpu->pfState[entry->ins->dest] == PendingUpdate)));
 }
 
 /*
@@ -229,9 +280,12 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 	bool		retVal = false;
 	int			ii;
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Fbox is initializing");
-	AXP_TRACE_END();
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Fbox is initializing");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Initialize the one Fbox IPR.
@@ -254,44 +308,9 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 	cpu->fpcr.sum = 0;
 
 	/*
-	 * Set up the initial register map.  We do not map F31.
-	 */
-	for (ii = 0; ii < (AXP_MAX_REGISTERS-1); ii++)
-	{
-		cpu->pf[ii] = 0;
-		cpu->pfMap[ii].pr = ii;
-		cpu->pfMap[ii].prevPr = AXP_UNMAPPED_REG;
-		cpu->pfState[ii] = Valid;
-	}
-
-
-	/*
-	 * The above loop initialized the pfMap array entries from 0 to 30 to be
-	 * mapped to the physical registers also from 0 to 30.  The next lines of
-	 * code initialize the mapping for F31 to be mapped to an invalid physical
-	 * register.  This is used to indicate to the code that implements the
-	 * Alpha AXP instructions that, as a source register is always a value
-	 * of 0, and as a destination register, never updated.  This will greatly
-	 * simplify the register (architectural and physical) handling.
-	 */
-	cpu->pfMap[AXP_MAX_REGISTERS-1].pr = AXP_FP_PHYS_REG + 1;
-	cpu->pfMap[AXP_MAX_REGISTERS-1].prevPr = AXP_FP_PHYS_REG + 1;
-
-	/*
-	 * The remaining physical registers need to be put on the free list.
-	 */
-	cpu->pfFlStart = 0;
-	cpu->pfFlEnd = 0;
-	for (ii = AXP_MAX_REGISTERS; ii < AXP_FP_PHYS_REG; ii++)
-	{
-		cpu->pfState[ii] = Free;
-		cpu->pfFreeList[cpu->pfFlEnd++] = ii;
-	}
-
-	/*
 	 * Initialize the instruction queue for the Fbox.
 	 */
-	AXP_INIT_CQUE(cpu->fq, AXP_IQ_LEN);
+	AXP_INIT_CQUE(cpu->fq, AXP_FQ_LEN);
 
 	/*
 	 * Initialize the instruction queue cache.  These are pre-allocated queue
@@ -304,9 +323,12 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 		cpu->fqEntries[ii].index = ii;
 	}
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Fbox has initialized");
-	AXP_TRACE_END();
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Fbox has initialized");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Return a success back to the caller.
@@ -342,6 +364,13 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 void *AXP_21264_FboxMulMain(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Fbox Multiply is starting");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Call the actual main function with the information it needs to be able
@@ -383,6 +412,13 @@ void *AXP_21264_FboxMulMain(void *voidPtr)
 void *AXP_21264_FboxOthMain(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+
+	if (AXP_CPU_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Fbox Other is starting");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Call the actual main function with the information it needs to be able
@@ -431,18 +467,9 @@ void *AXP_21264_FboxOthMain(void *voidPtr)
 void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 {
 	AXP_QUEUE_ENTRY		*entry;
-
-	if (AXP_CPU_CALL)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Fbox (%d) is starting", pipeline);
-		AXP_TRACE_END();
-	}
-
-	/*
-	 * First things first, lock the Ebox mutex.
-	 */
-	pthread_mutex_lock(&cpu->fBoxMutex);
+	bool				notMe = true;
+	bool				notFirstTime = false;
+	bool				fpEnabled;
 
 	/*
 	 * While we are not shutting down, we'll continue to try and process
@@ -457,17 +484,48 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 		 * sure we indicate that the Fbox is no longer waiting to retire an
 		 * instruction.
 		 */
-		AXP_21264_Ibox_Retire(cpu);
+		if (notFirstTime)
+		{
+			if (AXP_CPU_OPT2)
+			{
+				AXP_TRACE_BEGIN();
+				AXP_TraceWrite(
+						"Fbox %s is retiring any completed instructions.",
+						AXP_PIPE_STR(pipeline));
+				AXP_TRACE_END();
+			}
+			AXP_21264_Ibox_Retire(cpu);
+		}
+		else
+			notFirstTime = true;
 		cpu->fBoxWaitingRetirement = false;
+
+		/*
+		 * Before we go checking the queue, lock the Fbox mutex.
+		 */
+		pthread_mutex_lock(&cpu->fBoxMutex);
 
 		/*
 		 * Next we need to do is see if there is nothing to process,
 		 * then wait for something to get queued up.
 		 */
-		while ((AXP_CQUE_EMPTY(cpu->fq) == true) &&
-			   (cpu->fBoxWaitingRetirement == false) &&
-			   (cpu->cpuState != ShuttingDown))
+		while (((AXP_CQUE_EMPTY(cpu->fq) == true) &&
+			    (cpu->fBoxWaitingRetirement == false) &&
+			    (cpu->cpuState != ShuttingDown)) ||
+			   (notMe == true))
+		{
+			notMe = false;
 			pthread_cond_wait(&cpu->fBoxCondition, &cpu->fBoxMutex);
+		}
+
+		if (AXP_CPU_OPT2)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite(
+					"Fbox %s may have something to process.",
+					AXP_PIPE_STR(pipeline));
+			AXP_TRACE_END();
+		}
 
 		/*
 		 * If we are not shutting down, then we may have something to process.
@@ -486,6 +544,22 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			 */
 			while ((void *) entry != (void *) &cpu->fq)
 			{
+				if (AXP_CPU_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+							"Fbox %s checking at "
+							"pc = 0x%016llx, "
+							"opcode = 0x%02x, "
+							"pipeline = %s, "
+							"state = %s.",
+							AXP_PIPE_STR(pipeline),
+							*((u64 *) &entry->ins->pc),
+							(u32) entry->ins->opcode,
+							insPipelineStr[entry->ins->pipeline],
+							insStateStr[entry->ins->state]);
+					AXP_TRACE_END();
+				}
 
 				/*
 				 * We are only looking for entries that can be executed in the
@@ -497,7 +571,21 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 				if ((entry->ins->pipeline == pipeline) &&
 					(entry->ins->state == Queued) &&
 					(AXP_21264_Fbox_RegistersReady(cpu, entry) == true))
+				{
+					if (AXP_CPU_OPT2)
+					{
+						AXP_TRACE_BEGIN();
+						AXP_TraceWrite(
+								"Fbox %s can execute "
+								"pc = 0x%016llx, "
+								"opcode = 0x%02x",
+								AXP_PIPE_STR(pipeline),
+								*((u64 *) &entry->ins->pc),
+								(u32) entry->ins->opcode);
+						AXP_TRACE_END();
+					}
 					break;
+				}
 				else
 					entry = (AXP_QUEUE_ENTRY *) entry->header.flink;
 			}
@@ -508,7 +596,33 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			 * we do not need to lock it now.
 			 */
 			if ((void *) entry == (void *) &cpu->fq)
+			{
+				notMe = true;
+
+				/*
+				 * Before going back to the top of the loop, unlock the Ebox
+				 * mutex.
+				 */
+				pthread_mutex_unlock(&cpu->fBoxMutex);
 				continue;
+			}
+
+			/*
+			 * OK, we have something to execute.  Mark the entry as such and
+			 * dequeue it from the queue.  Then, dispatch it to the function
+			 * to execute the instruction.
+			 */
+			if (AXP_CPU_OPT2)
+			{
+				AXP_TRACE_BEGIN();
+				AXP_TraceWrite(
+						"Fbox %s has something to process at "
+						"pc = 0x%016llx, opcode = 0x%02x.",
+						AXP_PIPE_STR(pipeline),
+						*((u64 *) &entry->ins->pc),
+						(u32) entry->ins->opcode);
+				AXP_TRACE_END();
+			}
 
 			/*
 			 * OK, we have something to execute.  Mark the entry as such and
@@ -517,6 +631,12 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			 */
 			entry->ins->state = Executing;
 			AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+
+			/*
+			 * Now that we have the instruction to be executed, we can unlock
+			 * the Fbox mutex and allow the other Fbox thread a chance to
+			 * execute.
+			 */
 			pthread_mutex_unlock(&cpu->fBoxMutex);
 
 			/*
@@ -526,24 +646,50 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			 * exception value.
 			 */
 			pthread_mutex_lock(&cpu->iBoxIPRMutex);
-			if (cpu->pCtx.fpe == 1)
-				AXP_Dispatcher(cpu, entry->ins);
+			fpEnabled = cpu->pCtx.fpe == 1;
+			pthread_mutex_unlock(&cpu->iBoxIPRMutex);
+			if (fpEnabled)
 			{
+				if (AXP_CPU_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+							"Fbox %s dispatching instruction, opcode = 0x%02x",
+							AXP_PIPE_STR(pipeline),
+							entry->ins->opcode);
+					AXP_TRACE_END();
+				}
+				AXP_Dispatcher(cpu, entry->ins);
+				if (AXP_CPU_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+							"Fbox %s dispatched instruction, opcode = 0x%02x",
+							AXP_PIPE_STR(pipeline),
+							entry->ins->opcode);
+					AXP_TRACE_END();
+				}
+			}
+			else
+			{
+				if (AXP_CPU_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+							"Fbox %s : Floating point instructions are "
+							"currently disabled.",
+							AXP_PIPE_STR(pipeline));
+					AXP_TRACE_END();
+				}
 				entry->ins->excRegMask = FloatingDisabledFault;
 				entry->ins->state = WaitingRetirement;
 			}
-			pthread_mutex_unlock(&cpu->iBoxIPRMutex);
 
 			/*
 			 * Return the entry back to the pool for future instructions.
 			 */
 			AXP_ReturnFQEntry(cpu, entry);
 		}
-
-		/*
-		 * before going to the top of the loop, lock the Fbox mutex.
-		 */
-		pthread_mutex_lock(&cpu->fBoxMutex);
 	}
 
 	/*

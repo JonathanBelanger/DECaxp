@@ -32,7 +32,6 @@ static char				*AXPTRCLOG = "AXP_LOGMASK";
 static char				*AXPTRCFIL = "AXP_LOGFILE";
 AXP_TRCLOG				_axp_trc_log_ = 0;
 static char				_axp_trc_out_[81];
-static pthread_mutex_t	_axp_trc_mutex_;
 static pthread_once_t	_axp_trc_log_once_ = PTHREAD_ONCE_INIT;
 static FILE				*_axp_trc_fp_;
 bool					_axp_trc_active_ = false;
@@ -54,11 +53,6 @@ bool					_axp_trc_active_ = false;
 void AXP_TraceInit_Once(void)
 {
 	char *getEnvStr;
-
-	/*
-	 * We use a mutex to single thread the tracing calls.
-	 */
-	pthread_mutex_init(&_axp_trc_mutex_, NULL);
 
 	/*
 	 * Translate the environment variable to indicate that tracing should
@@ -141,19 +135,9 @@ void AXP_TraceEnd(void)
 {
 
 	/*
-	 * First lock the tracing mutex.
-	 */
-	pthread_mutex_lock(&_axp_trc_mutex_);
-
-	/*
 	 * Turn off the tracing.
 	 */
 	_axp_trc_active_ = false;
-
-	/*
-	 * Last unlock the tracing mutex.
-	 */
-	pthread_mutex_unlock(&_axp_trc_mutex_);
 
 	/*
 	 * Return back to the caller.
@@ -185,11 +169,6 @@ void AXP_TraceWrite(char *fmt, ...)
 	struct timeval	now;
 
 	/*
-	 * First lock the tracing mutex.
-	 */
-	pthread_mutex_lock(&_axp_trc_mutex_);
-
-	/*
 	 * Write out a time-stamp followed by a colon and a space character
 	 */
 	gettimeofday(&now, NULL);
@@ -209,12 +188,65 @@ void AXP_TraceWrite(char *fmt, ...)
 	fprintf(_axp_trc_fp_, "\n");
 
 	/*
-	 * Last unlock the tracing mutex.
+	 * Return back to the caller.
 	 */
-	pthread_mutex_unlock(&_axp_trc_mutex_);
+	return;
+}
+
+/*
+ * AXP_TraceLock
+ *	This function is called by the AXP_TRACE_BEGIN() macro to lock the trace
+ *	mutex.  We do this so that multiple calls to AXP_TraceWrite associated with
+ *	a single trace opportunity are logged together.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_TraceLock(void)
+{
 
 	/*
-	 * Return back to the caller.
+	 * Lock the file stream.
+	 */
+	flockfile(_axp_trc_fp_);
+
+	/*
+	 * Return back to the caller,
+	 */
+	return;
+}
+
+/*
+ * AXP_TraceUnlock
+ *	This function is called by the AXP_TRACE_END() macro to unlock the trace
+ *	mutex.  We do this so that multiple calls to AXP_TraceWrite associated with
+ *	a single trace opportunity are logged together.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_TraceUnlock(void)
+{
+
+	/*
+	 * Unlock the file stream.
+	 */
+	funlockfile(_axp_trc_fp_);
+
+	/*
+	 * Return back to the caller,
 	 */
 	return;
 }

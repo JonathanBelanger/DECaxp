@@ -55,46 +55,36 @@ void AXP_21264_Ibox_ResetRegMap(AXP_21264_CPU *cpu)
 	 *
 	 * NOTE:	R32 to R39 are PALshadow registers.
 	 */
-	for (ii = 0; ii < AXP_MAX_INT_REGISTERS; ii++)
+	cpu->prFlStart = cpu->prFlEnd = 0;
+	cpu->pfFlStart = cpu->pfFlEnd = 0;
+	for (ii = 0; ii < AXP_INT_PHYS_REG; ii++)
 	{
-
-		/*
-		 * Integer registers
-		 */
-		cpu->pr[ii] = 0;
-		cpu->prMap[ii].pr = ii;
-		cpu->prMap[ii].prevPr = AXP_UNMAPPED_REG;
-		cpu->prState[ii] = Valid;
-
+		if (ii < AXP_MAX_INT_REGISTERS)
+		{
+			cpu->pr[ii] = 0;
+			cpu->prMap[ii].pr = ii;
+			cpu->prMap[ii].prevPr = AXP_UNMAPPED_REG;
+			cpu->prState[ii] = Valid;
+		}
+		else
+		{
+			cpu->prFreeList[cpu->prFlEnd] = ii;
+			cpu->prState[ii] = Free;
+			cpu->prFlEnd = (cpu->prFlEnd + 1) % AXP_I_FREELIST_SIZE;
+		}
 		if (ii < AXP_MAX_FP_REGISTERS)
 		{
-
-			/*
-			 * Floating-point registers
-			 */
 			cpu->pf[ii] = 0;
 			cpu->pfMap[ii].pr = ii;
 			cpu->pfMap[ii].prevPr = AXP_UNMAPPED_REG;
 			cpu->pfState[ii] = Valid;
 		}
-	}
-
-	/*
-	 * The remaining registers are added to the free list.
-	 */
-	cpu->prFlStart = 0;
-	cpu->prFlEnd = AXP_I_FREELIST_SIZE - 1;
-	for (ii = 0; ii < AXP_I_FREELIST_SIZE; ii++)
-	{
-		cpu->prFreeList[ii] = AXP_MAX_INT_REGISTERS + ii;
-		cpu->prState[ii] = Free;
-	}
-	cpu->pfFlStart = 0;
-	cpu->pfFlEnd = AXP_F_FREELIST_SIZE - 1;
-	for (ii = 0; ii < AXP_F_FREELIST_SIZE; ii++)
-	{
-		cpu->pfFreeList[ii] = AXP_MAX_FP_REGISTERS + ii;
-		cpu->pfState[ii] = Free;
+		else if (ii < AXP_FP_PHYS_REG)
+		{
+			cpu->pfFreeList[cpu->pfFlEnd] = ii;
+			cpu->pfState[ii] = Free;
+			cpu->pfFlEnd = (cpu->pfFlEnd + 1) % AXP_F_FREELIST_SIZE;
+		}
 	}
 
 	/*
@@ -146,12 +136,6 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 	for (ii = 0; ii < FOUR_K; ii++)
 		cpu->globalPredictor.gbl_pred[ii] = 0;
 	cpu->globalPathHistory = 0;
-
-	/*
-	 * The Register Map is reset either when the CPU is initialized or when
-	 * something is written to the CLR_MAP Pseudo-register.
-	 */
-	AXP_21264_Ibox_ResetRegMap(cpu);
 
 	/*
 	 * Initialize the Ibox IPRs.
@@ -248,7 +232,7 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 	cpu->iCtl.mchk_en = 0;
 	cpu->iCtl.tb_mb_en = 0;
 	cpu->iCtl.bist_fail = 1;
-	cpu->iCtl.chip_id = AXP_21264_Config.system.cpus.minorType;
+	cpu->iCtl.chip_id = cpu->minorType;
 	cpu->iCtl.vptb = 0;
 	cpu->iCtl.sext_vptb = 0;
 	cpu->iStat.res_1 = 0;			/* I_STAT */
