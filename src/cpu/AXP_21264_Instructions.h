@@ -1065,6 +1065,7 @@ typedef struct
 	AXP_IBOX_EXC_SUM excSum;
 	AXP_EXCEPTIONS	excRegMask;	/* Exception Register Mask */
 	AXP_PIPELINE	pipeline;
+	AXP_INS_FMT		instr;
 } AXP_INSTRUCTION;
 
 #endif /* _AXP_21264_INS_DEFS_ */

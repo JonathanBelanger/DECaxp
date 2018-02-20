@@ -31,6 +31,7 @@
  */
 #include "AXP_21264_CPUDefs.h"
 #include "AXP_21264_Ibox.h"
+#include "AXP_21264_Ibox_Initialize.h"
 #include "AXP_21264_Ebox.h"
 #include "AXP_21264_Fbox.h"
 #include "AXP_21264_Mbox.h"
@@ -157,55 +158,15 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 		}
 
 		/*
-		 * Initialize the register mapping.  The initial mapping is as follows:
-		 *
-		 *	AR00 --> R00		AF00 --> F00
-		 *	AR01 --> R01		AF01 --> F01
-		 *		.					.
-		 *		.					.
-		 *		.					.
-		 *	AR31 --> R31		AF31 --> F31	(this mapping never changes)
-		 *
-		 * There are a total of 80 Integer and 72 Floating-Point Physical
-		 * Registers.  There are 32, plus 8 PALshadow, Integer and 32
-		 * Floating-Point Architectural Registers.  The first 40/32
-		 * architectural registers are mapped to the first 40/32 physical
-		 * registers.  The remaining in each are mapped to the appropriate
-		 * free-list.
+		 * Go initialize the register map.
 		 */
-		cpu->prFlStart = cpu->prFlEnd = 0;
-		cpu->pfFlStart = cpu->pfFlEnd = 0;
-		for (ii = 0; ii < AXP_INT_PHYS_REG; ii++)
-		{
-			if (ii < AXP_MAX_INT_REGISTERS)
-			{
-				cpu->prMap[ii].pr = ii;
-				cpu->prMap[ii].prevPr = ii;
-				cpu->prState[ii] = Valid;
-			}
-			else
-			{
-				cpu->prFreeList[cpu->prFlEnd++] = ii;
-				cpu->prState[ii] = Free;
-			}
-			if (ii < AXP_MAX_FP_REGISTERS)
-			{
-				cpu->pfMap[ii].pr = ii;
-				cpu->pfMap[ii].prevPr = ii;
-				cpu->pfState[ii] = Valid;
-			}
-			else if (ii < AXP_FP_PHYS_REG)
-			{
-				cpu->pfFreeList[cpu->pfFlEnd++] = ii;
-				cpu->pfState[ii] = Free;
-			}
-		}
+		AXP_21264_Ibox_ResetRegMap(cpu);
 
 		/*
 		 * Pull some configuration items out of the configuration and
 		 * initialize the appropriate CPU fields.
-		 */
 		cpu->majorType = AXP_21264_Config.system.cpus.config->majorType;
+		 */
 		cpu->minorType = AXP_21264_Config.system.cpus.minorType;
 
 		/*

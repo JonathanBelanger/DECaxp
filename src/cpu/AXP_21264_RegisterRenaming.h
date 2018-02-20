@@ -88,6 +88,7 @@ typedef struct
 #define AXP_SRC1_FA		0x0090		/* Fa as a source 1 register 		*/
 #define AXP_SRC1_FB		0x00a0		/* Fb as a source 1 register 		*/
 #define AXP_SRC1_FC		0x00c0		/* Fc as a source 1 register 		*/
+#define AXP_SRC1_FLOAT	0x0080		/* Source 1 register is FP			*/
 
 #define AXP_SRC2_RA		0x0001		/* Ra as a source 2 register 		*/
 #define AXP_SRC2_RB		0x0002		/* Rb as a source 2 register 		*/
@@ -95,6 +96,7 @@ typedef struct
 #define AXP_SRC2_FA		0x0009		/* Fa as a source 2 register 		*/
 #define AXP_SRC2_FB		0x000a		/* Fb as a source 2 register 		*/
 #define AXP_SRC2_FC		0x000c		/* Fc as a source 2 register 		*/
+#define AXP_SRC2_FLOAT	0x0008		/* Source 2 register is FP			*/
 
 #define AXP_OPCODE_11	0x1000		/* Opcode 11 needs special handling	*/
 #define AXP_OPCODE_14	0x2000		/* Opcode 14 needs special handling	*/
@@ -110,6 +112,7 @@ typedef struct
 #define AXP_REG_FA		0x9
 #define AXP_REG_FB		0xa
 #define AXP_REG_FC		0xc
+#define AXP_REG_FP		0x8
 
 struct regDecode
 {

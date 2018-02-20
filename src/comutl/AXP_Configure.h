@@ -342,11 +342,11 @@ typedef struct
 	char				*genStr;
 	u32					majorType;
 	u32					year;
-	u32					dCacheSize;
-	u32					iCacheSize;
-	u32					sCacheSize;
-	u32					bCacheSizeLow;
-	u32					bCacheSizeHigh;
+	u64					dCacheSize;
+	u64					iCacheSize;
+	u64					sCacheSize;
+	u64					bCacheSizeLow;
+	u64					bCacheSizeHigh;
 	struct
 	{
 		u32				ieeeRndInf : 1;	/* h/w support for rounding to +/-Inf */
@@ -378,7 +378,7 @@ typedef struct
  */
 typedef struct
 {
-	u32						size;
+	u64						size;
 	u32						count;
 } AXP_21264_DIMM_INFO;
 
@@ -411,7 +411,7 @@ typedef struct
 	char					*name;
 	char					*fileSpec;
 	u32						unit;
-	u32						size;
+	u64						size;
 	AXP_21264_DISK_TYPES	type;
 } AXP_21264_DISK_INFO;
 
