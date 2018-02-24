@@ -50,20 +50,6 @@ typedef enum
 } AXP_21264_REG_STATE;
 
 /*
- * This structure is used during the Map stage (Stage 2) to locate the current
- * AR to PR mapping.  The source registers, there can be 0, 1, or 2 of these,
- * utilize the existing mapping of that register.  The destination register, of
- * which there can only be 0 or 1, gets a new mapping from the free list.
- * There are an equal number of these entries as there are architectural
- * registers.
- */
-typedef struct
-{
-	u16				pr;				/* Current Physical Register */
-	u16				prevPr;			/* Previous Physical Register */
-} AXP_21264_REG_MAP;
-
-/*
  * Alpha AXP Instructions have between 0 and 3 register references.  These
  * registers can represent 0 to 2 source registers and 0 or 1 destination
  * registers.  The destination register is most often Ra.  The first source

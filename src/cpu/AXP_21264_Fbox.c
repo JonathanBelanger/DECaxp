@@ -96,7 +96,7 @@ static char *regStateStr[] =
  */
 bool AXP_21264_Fbox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 {
-	if (AXP_CPU_OPT2)
+	if (AXP_FBOX_OPT2)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -106,21 +106,21 @@ bool AXP_21264_Fbox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 		AXP_TraceWrite(
 				"\tSrc1(F%02u) = %s",
 				entry->ins->aSrc1,
-				regStateStr[cpu->pfState[entry->ins->aSrc1]]);
+				regStateStr[cpu->pfState[entry->ins->src1]]);
 		AXP_TraceWrite(
 				"\tSrc2(F%02u) = %s",
 				entry->ins->aSrc2,
-				regStateStr[cpu->pfState[entry->ins->aSrc2]]);
+				regStateStr[cpu->pfState[entry->ins->src2]]);
 		AXP_TraceWrite(
 				"\tDest(F%02u) = %s",
 				entry->ins->aDest,
-				regStateStr[cpu->pfState[entry->ins->aDest]]);
+				regStateStr[cpu->pfState[entry->ins->dest]]);
 		AXP_TRACE_END();
 	}
 	return ((cpu->pfState[entry->ins->src1] == Valid) &&
 			(cpu->pfState[entry->ins->src2] == Valid) &&
-			((cpu->pfState[entry->ins->dest] == Valid) ||
-			 (cpu->pfState[entry->ins->dest] == PendingUpdate)));
+			(cpu->pfState[entry->ins->dest] ==
+				(entry->ins->dest == AXP_UNMAPPED_REG ? Valid : PendingUpdate)));
 }
 
 /*
@@ -280,7 +280,7 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 	bool		retVal = false;
 	int			ii;
 
-	if (AXP_CPU_CALL)
+	if (AXP_FBOX_OPT1)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Fbox is initializing");
@@ -323,7 +323,7 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 		cpu->fqEntries[ii].index = ii;
 	}
 
-	if (AXP_CPU_CALL)
+	if (AXP_FBOX_OPT1)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Fbox has initialized");
@@ -365,7 +365,7 @@ void *AXP_21264_FboxMulMain(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_CPU_CALL)
+	if (AXP_FBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Fbox Multiply is starting");
@@ -413,7 +413,7 @@ void *AXP_21264_FboxOthMain(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_CPU_CALL)
+	if (AXP_FBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Fbox Other is starting");
@@ -486,7 +486,7 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 		 */
 		if (notFirstTime)
 		{
-			if (AXP_CPU_OPT2)
+			if (AXP_FBOX_OPT2)
 			{
 				AXP_TRACE_BEGIN();
 				AXP_TraceWrite(
@@ -518,11 +518,11 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			pthread_cond_wait(&cpu->fBoxCondition, &cpu->fBoxMutex);
 		}
 
-		if (AXP_CPU_OPT2)
+		if (AXP_FBOX_OPT2)
 		{
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite(
-					"Fbox %s may have something to process.",
+					"Fbox %s signaled an instruction has been put on the FQ.",
 					AXP_PIPE_STR(pipeline));
 			AXP_TRACE_END();
 		}
@@ -544,7 +544,7 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			 */
 			while ((void *) entry != (void *) &cpu->fq)
 			{
-				if (AXP_CPU_OPT2)
+				if (AXP_FBOX_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite(
@@ -572,7 +572,7 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 					(entry->ins->state == Queued) &&
 					(AXP_21264_Fbox_RegistersReady(cpu, entry) == true))
 				{
-					if (AXP_CPU_OPT2)
+					if (AXP_FBOX_OPT2)
 					{
 						AXP_TRACE_BEGIN();
 						AXP_TraceWrite(
@@ -599,6 +599,15 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			{
 				notMe = true;
 
+				if (AXP_EBOX_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+							"Fbox %s has nothing to process.",
+							AXP_PIPE_STR(pipeline));
+					AXP_TRACE_END();
+				}
+
 				/*
 				 * Before going back to the top of the loop, unlock the Ebox
 				 * mutex.
@@ -612,7 +621,7 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			 * dequeue it from the queue.  Then, dispatch it to the function
 			 * to execute the instruction.
 			 */
-			if (AXP_CPU_OPT2)
+			if (AXP_FBOX_OPT2)
 			{
 				AXP_TRACE_BEGIN();
 				AXP_TraceWrite(
@@ -650,7 +659,7 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			pthread_mutex_unlock(&cpu->iBoxIPRMutex);
 			if (fpEnabled)
 			{
-				if (AXP_CPU_OPT2)
+				if (AXP_FBOX_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite(
@@ -660,7 +669,7 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 					AXP_TRACE_END();
 				}
 				AXP_Dispatcher(cpu, entry->ins);
-				if (AXP_CPU_OPT2)
+				if (AXP_FBOX_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite(
@@ -672,7 +681,7 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			}
 			else
 			{
-				if (AXP_CPU_OPT2)
+				if (AXP_FBOX_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite(

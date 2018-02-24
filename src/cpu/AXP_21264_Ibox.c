@@ -176,6 +176,17 @@ typedef union
 } AXP_IBOX_PAL_FUNC_BITS;
 
 /*
+ * Converts instruction state to a string.
+ */
+static char *_ins_state_[] =
+{
+	"Retired",
+	"Queued",
+	"Executing",
+	"Waiting to be Retired"
+};
+
+/*
  * Functions that manage the instruction queue free entries.
  */
 static AXP_QUEUE_ENTRY *AXP_GetNextIQEntry(AXP_21264_CPU *);
@@ -1331,10 +1342,19 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	 */
 	pthread_mutex_lock(&cpu->robMutex);
 
+	if (AXP_IBOX_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"AXP_Ibox_Retire called (start: %u, end: %u)",
+				cpu->robStart, cpu->robEnd);
+		AXP_TRACE_END();
+	}
+
 	/*
-	 * The split flag is used to determine when the end index has wrap to the
+	 * The split flag is used to determine when the end index has wrapped to
 	 * the start of the list, making it less than the beginning index (at least
-	 * until the beginning index wraps to the start as well).
+	 * until the beginning index wraps as well).
 	 */
 	split = cpu->robEnd < cpu->robStart;
 
@@ -1344,7 +1364,14 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	 * end).
 	 */
 	start = cpu->robStart;
-	end = (split ? cpu->robEnd : AXP_INFLIGHT_MAX);
+	end = (split ? AXP_INFLIGHT_MAX : cpu->robEnd);
+
+	if (AXP_IBOX_OPT1)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("AXP_Ibox_Retire loop1 from: %u, to: %u", start, end);
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Set our starting value.  Loop until we reach the end or we find an entry
@@ -1355,6 +1382,18 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	while ((ii < end) && (done == false))
 	{
 		rob = &cpu->rob[ii];
+		if (AXP_IBOX_BUFF)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite(
+				"ROB[%u] instruction at pc: 0x%016llx, opcode: 0x%02x, "
+				"state = %s",
+				ii,
+				rob->pc,
+				rob->opcode,
+				_ins_state_[rob->state]);
+			AXP_TRACE_END();
+		}
 
 		/*
 		 * If the next entry is ready for retirement, then complete the work
@@ -1364,15 +1403,6 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 		 */
 		if (rob->state == WaitingRetirement)
 		{
-			if (AXP_CPU_OPT1)
-			{
-				AXP_TRACE_BEGIN();
-				AXP_TraceWrite(
-					"Retiring instruction at pc: 0x%016llx, opcode: 0x%02x",
-					rob->pc,
-					rob->opcode);
-				AXP_TRACE_END();
-			}
 
 			/*
 			 * If an exception occurred, we need to process it.  Otherwise, the
@@ -1480,7 +1510,7 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 			 */
 			cpu->rob[ii].state = Retired;
 			cpu->robStart = (cpu->robStart + 1) % AXP_INFLIGHT_MAX;
-			if (AXP_CPU_BUFF)
+			if (AXP_IBOX_INST)
 			{
 				char	insBuf[256];
 				char	regBuf[128];
@@ -1511,6 +1541,13 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 			ii = 0;
 			end = cpu->robEnd;
 			split = false;
+
+			if (AXP_IBOX_OPT1)
+			{
+				AXP_TRACE_BEGIN();
+				AXP_TraceWrite("AXP_Ibox_Retire loop2 from: 0, to: %u", end);
+				AXP_TRACE_END();
+			}
 		}
 	}
 
@@ -1577,6 +1614,13 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	bool			noop;
 
 	/*
+	 * Make sure to initialize the line and set prediction information.
+	 */
+	nextCacheLine.branch2bTaken = false;
+	nextCacheLine.linePrediction = 0;
+	nextCacheLine.setPrediction = 0;
+
+	/*
 	 * OK, we are just starting out and there is probably nothing available to
 	 * process, yet.  Lock the CPU mutex, which the state of the CPU and if not
 	 * in a Run or ShuttingDown state, then wait on the CPU condition variable.
@@ -1584,7 +1628,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	pthread_mutex_lock(&cpu->cpuMutex);
 	while ((cpu->cpuState != Run) && (cpu->cpuState != ShuttingDown))
 	{
-		if (AXP_CPU_OPT1)
+		if (AXP_IBOX_CALL)
 		{
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite(
@@ -1603,7 +1647,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	 */
 	if (cpu->cpuState == Run)
 	{
-		if (AXP_CPU_OPT1)
+		if (AXP_IBOX_OPT1)
 		{
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite("Ibox is in Running State");
@@ -1676,15 +1720,24 @@ void *AXP_21264_IboxMain(void *voidPtr)
 		{
 			for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
 			{
+
 				/*
 				 * Lock the ROB mutex so that it is not updated by anyone but
 				 * this function.
 				 */
 				pthread_mutex_lock(&cpu->robMutex);
 				decodedInstr = &cpu->rob[cpu->robEnd];
+				if (AXP_IBOX_BUFF)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+						"ROB[%u] getting instruction at pc: 0x%016llx",
+						cpu->robEnd,
+						*((u64 *) &nextPC));
+					AXP_TRACE_END();
+				}
+
 				cpu->robEnd = (cpu->robEnd + 1) % AXP_INFLIGHT_MAX;
-				if (cpu->robEnd == cpu->robStart)
-					cpu->robStart = (cpu->robStart + 1) % AXP_INFLIGHT_MAX;
 
 				/*
 				 * We are done with the ROB mutex.
@@ -2003,11 +2056,11 @@ void *AXP_21264_IboxMain(void *voidPtr)
 		 */
 		if (((cpu->excPend == false) &&
 			 (AXP_IcacheValid(cpu, nextPC) == false)) ||
-			((AXP_CountedQueueFull(&cpu->iq) != 0) ||
-			 (AXP_CountedQueueFull(&cpu->fq) != 0)))
+			((AXP_CountedQueueFull(&cpu->iq) < 0) ||
+			 (AXP_CountedQueueFull(&cpu->fq) < 0)))
 			pthread_cond_wait(&cpu->iBoxCondition, &cpu->iBoxMutex);
 	}
-	if (AXP_CPU_OPT1)
+	if (AXP_IBOX_OPT1)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(

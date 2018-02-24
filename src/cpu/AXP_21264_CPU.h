@@ -70,6 +70,10 @@
  *	instruction to the appropriate integer/floating-point queue, and by the
  *	Ebox and Fbox when an instruction has been set to retire.  In order to be
  *	able to prevent a conflict, we need a mutex to protect the ROB.
+ *
+ *	V01.010		24-Feb-2018	Jonathan D. Belanger
+ *	Added some comments about what variables do what for the architectural to
+ *	physical register mapping.  This is not overly clear within the code.
  */
 #ifndef _AXP_21264_CPU_DEFS_
 #define _AXP_21264_CPU_DEFS_
@@ -444,13 +448,65 @@ typedef struct
 	 * virtual.  The virtual ARs are assigned at the time an instruction is
 	 * decoded.  The register mapping is used too determine which physical
 	 * register (PR) is defined to which AR.
+	 *
+	 * Design Information:
+	 *	pr: 		These are the actual physical registers.  For the integer
+	 *				pipeline, there are a total of 80 physical registers.
+	 *	prFreeList:	This is where physical registers that are available for use
+	 *				as a destination register are maintained.  When renaming
+	 *				the architectural to physical for a destination register,
+	 *				a free register is removed from this list and indicated as
+	 *				Pending-Update (when the instruction is retired and the
+	 *				value of the instruction is actually stored in the physical
+	 *				register.  Physical registers are put back on this list
+	 *				when they are no longer being mapped.  This list is
+	 *				maintained in a round-robin fashion.  Entries are removed
+	 *				from the prFlStart entry and returned at the prFlEnd entry.
+	 *				There are a total of 80 (physical) - 32 (architectural) -
+	 *				8 (PALshadow) = 40 register entries on the free-list.
+	 *	prFlStart:	This is a value from 0 to 39, representing the location
+	 *				within the prFreeList where the first available physical
+	 *				register number is stored.  When this variable has a value
+	 *				of 39 and 1 is added, it returns back to a value of 0.
+	 *	prFlEnd:	This is a value from 0 to 39, representing the location
+	 *				within the prFreeList where the last+1 available physical
+	 *				register number is returned.  When this variable has a
+	 *				value of 39 and 1 is added, it returns back to a value of
+	 *				0.  When the free-list is completely full or empty, the
+	 *				prFlStart and prFlEnd are equal.
+	 *	prMap:		These are the mappings for each of the architectural
+	 *				registers to physical registers currently being mapped.
+	 *				This array is indexed by the architectural register number.
+	 *				R31 is always mapped to entry 31.  Each entry has the
+	 *				current and previous mapping to a physical register.  The
+	 *				previous mapping is used when aborting a set of
+	 *				instructions.  There are 32 (architectural) + 8 (PALshadow)
+	 *				= 40 register entries.
+	 *	prState:	These are the states for each of the physical registers.
+	 *				The states for each physical register are:
+	 *					- Free:				The register is on the free list
+	 *										and available for mapping.
+	 *					- Valid:			The register is currently mapped
+	 *										and its value is ready to be used
+	 *										to execute an instruction.
+	 *					- Pending Update:	The register is currently mapped
+	 *										but its value is not ready to be
+	 *										used.  It is mapped as a
+	 *										destination register for an
+	 *										instruction that has not been
+	 *										retired.  One the instruction is
+	 *										retired, the state will be changed
+	 *										to Valid.
+	 *				There are a total of 80 physical register states (one for
+	 *				each physical register) entries.  This array is index by
+	 *				the physical register number.
 	 */
 	u64						pr[AXP_INT_PHYS_REG];
-	u32						prFreeList[AXP_I_FREELIST_SIZE];
-	u32						prFlStart;
-	u32						prFlEnd;
-	AXP_21264_REG_MAP		prMap[AXP_MAX_INT_REGISTERS];
 	AXP_21264_REG_STATE		prState[AXP_INT_PHYS_REG];
+	u16						prMap[AXP_MAX_INT_REGISTERS];
+	u16						prFreeList[AXP_I_FREELIST_SIZE];
+	u16						prFlStart;
+	u16						prFlEnd;
 
 	/*
 	 * Ebox IPRs
@@ -498,13 +554,65 @@ typedef struct
 	 *
 	 * Since the floating-point execution unit only has 1 cluster, there is 
 	 * just 1 set of 72 registers.
+	 *
+	 * Design Information:
+	 *	pf: 		These are the actual physical registers.  For the floating
+	 *				point pipeline, there are a total of 72 physical registers.
+	 *	pfFreeList:	This is where physical registers that are available for use
+	 *				as a destination register are maintained.  When renaming
+	 *				the architectural to physical for a destination register,
+	 *				a free register is removed from this list and indicated as
+	 *				Pending-Update (when the instruction is retired and the
+	 *				value of the instruction is actually stored in the physical
+	 *				register.  Physical registers are put back on this list
+	 *				when they are no longer being mapped.  This list is
+	 *				maintained in a round-robin fashion.  Entries are removed
+	 *				from the pfFlStart entry and returned at the pfFlEnd entry.
+	 *				There are a total of 72 (physical) - 32 (architectural) =
+	 *				40 register entries on the free-list.
+	 *	pfFlStart:	This is a value from 0 to 39, representing the location
+	 *				within the pfFreeList where the first available physical
+	 *				register number is stored.  When this variable has a value
+	 *				of 39 and 1 is added, it returns back to a value of 0.
+	 *	pfFlEnd:	This is a value from 0 to 39, representing the location
+	 *				within the pfFreeList where the last+1 available physical
+	 *				register number is returned.  When this variable has a
+	 *				value of 39 and 1 is added, it returns back to a value of
+	 *				0.  When the free-list is completely full or empty, the
+	 *				pfFlStart and pfFlEnd are equal.
+	 *	pfMap:		These are the mappings for each of the architectural
+	 *				registers to physical registers currently being mapped.
+	 *				This array is indexed by the architectural register number.
+	 *				R31 is always mapped to entry 31.  Each entry has the
+	 *				current and previous mapping to a physical register.  The
+	 *				previous mapping is used when aborting a set of
+	 *				instructions.  There are 32 (architectural) register
+	 *				entries.
+	 *	pfState:	These are the states for each of the physical registers.
+	 *				The states for each physical register are:
+	 *					- Free:				The register is on the free list
+	 *										and available for mapping.
+	 *					- Valid:			The register is currently mapped
+	 *										and its value is ready to be used
+	 *										to execute an instruction.
+	 *					- Pending Update:	The register is currently mapped
+	 *										but its value is not ready to be
+	 *										used.  It is mapped as a
+	 *										destination register for an
+	 *										instruction that has not been
+	 *										retired.  One the instruction is
+	 *										retired, the state will be changed
+	 *										to Valid.
+	 *				There are a total of 72 physical register states (one for
+	 *				each physical register) entries.  This array is index by
+	 *				the physical register number.
 	 */
 	u64						pf[AXP_FP_PHYS_REG];
-	u32						pfFreeList[AXP_F_FREELIST_SIZE];
-	u32						pfFlStart;
-	u32						pfFlEnd;
-	AXP_21264_REG_MAP		pfMap[AXP_MAX_FP_REGISTERS];
 	AXP_21264_REG_STATE		pfState[AXP_FP_PHYS_REG];
+	u16						pfMap[AXP_MAX_FP_REGISTERS];
+	u16						pfFreeList[AXP_F_FREELIST_SIZE];
+	u16						pfFlStart;
+	u16						pfFlEnd;
 
 	/*
 	 * Fbox IPRs

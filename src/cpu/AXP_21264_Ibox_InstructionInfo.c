@@ -1453,7 +1453,7 @@ OP_TRAPB:		/* OPCODE: 0x18 */
 	}
 
 OP_HW_MFPR:		/* OPCODE: 0x19 */
-	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
+	if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWMFPR(cpu, instr);
 
@@ -1473,7 +1473,7 @@ OP_JMP:			/* OPCODE: 0x1a */
 	goto COMPLETION_OP;
 
 OP_HW_LD:		/* OPCODE: 0x1b */
-	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
+	if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWLD(cpu, instr);
 	goto COMPLETION_OP;
@@ -1573,7 +1573,7 @@ OP_SEXTB:		/* OPCODE: 0x1c */
 	goto COMPLETION_OP;
 
 OP_HW_MTPR:		/* OPCODE: 0x1d */
-	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
+	if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWMTPR(cpu, instr);
 
@@ -1584,7 +1584,7 @@ OP_HW_MTPR:		/* OPCODE: 0x1d */
 	goto COMPLETION_OP;
 
 OP_HW_RET:		/* OPCODE: 0x1e */
-	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
+	if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWRET(cpu, instr);
 
@@ -1595,7 +1595,7 @@ OP_HW_RET:		/* OPCODE: 0x1e */
 	goto COMPLETION_OP;
 
 OP_HW_ST:		/* OPCODE: 0x1f */
-	if ((instr->pc.pal == AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
+	if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWST(cpu, instr);
 	goto COMPLETION_OP;

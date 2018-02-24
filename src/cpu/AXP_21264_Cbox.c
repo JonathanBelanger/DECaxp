@@ -235,7 +235,7 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 	int						ii, csrCnt = 0;
 	AXP_21264_CBOX_CSR_VAL	csr;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -267,7 +267,7 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 			{
 				if (csrCnt < AXP_21264_CBOX_CSR_CNT)
 				{
-					if (AXP_CPU_CALL)
+					if (AXP_CBOX_CALL)
 					{
 						AXP_TRACE_BEGIN();
 						AXP_TraceWrite("Not all CSRs loaded");
@@ -660,7 +660,7 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 					break;
 
 				default:
-					if (AXP_CPU_CALL)
+					if (AXP_CBOX_OPT1)
 					{
 						AXP_TRACE_BEGIN();
 						AXP_TraceWrite(
@@ -683,7 +683,7 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 		AXP_Close_NVP_File(fp);
 	}
 
-	if (AXP_CPU_CALL)
+	if (AXP_CBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite((retVal == false ?
@@ -822,7 +822,7 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 	u32		ii, jj;
 	bool	retVal = false;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CBOX_OPT1)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Cbox is initializing");
@@ -916,7 +916,7 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
 			cpu->iowb[ii].lqSqEntry[jj] = 0;
 	}
 
-	if (AXP_CPU_CALL)
+	if (AXP_CBOX_OPT1)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Cbox has initialized");
@@ -951,7 +951,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 	int				component = 0, jj, entry;
 	bool			initFailure = false, processed;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Cbox is starting");
@@ -972,7 +972,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 		switch (cpu->cpuState)
 		{
 			case Cold:
-				if (AXP_CPU_OPT2)
+				if (AXP_CBOX_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite("Cbox is performing a Cold Start");
@@ -986,7 +986,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 
 			case WaitBiST:
 			case WaitBiSI:
-				if (AXP_CPU_OPT2)
+				if (AXP_CBOX_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite("Cbox is performing a BiST/BiSI testing");
@@ -1044,7 +1044,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 							 * All right, BiST passed, now we have to load the
 							 * SROM Cbox configuration.
 							 */
-							if (AXP_CPU_OPT2)
+							if (AXP_CBOX_OPT2)
 							{
 								AXP_TRACE_BEGIN();
 								AXP_TraceWrite("Cbox BiST/BiSI passed.  Configuring Cbox.");
@@ -1055,7 +1055,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 							break;
 
 						case 6:
-							if (AXP_CPU_OPT2)
+							if (AXP_CBOX_OPT2)
 							{
 								AXP_TRACE_BEGIN();
 								AXP_TraceWrite("Cbox is configured.  Loading SROM.");
@@ -1126,7 +1126,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 											*((AXP_PC*) &ii),
 											instructions,
 											itb);
-									if ((AXP_CPU_BUFF) && (retVal > 0))
+									if ((AXP_CBOX_INST) && (retVal > 0))
 									{
 										char	traceBuf[256];
 
@@ -1139,7 +1139,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 											AXP_Decode_Instruction(
 												&startingPC,
 												(AXP_INS_FMT) instructions[jj],
-												false,
+												true,
 												traceBuf);
 											AXP_TraceWrite(traceBuf);
 											startingPC.pc++;
@@ -1187,7 +1187,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 				 */
 				if (initFailure == true)
 				{
-					if (AXP_CPU_OPT2)
+					if (AXP_CBOX_OPT2)
 					{
 						AXP_TRACE_BEGIN();
 						AXP_TraceWrite(
@@ -1206,7 +1206,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 					 * all the other threads to start to do their processing.
 					 */
 					cpu->cpuState = Run;
-					if (AXP_CPU_OPT2)
+					if (AXP_CBOX_OPT2)
 					{
 						AXP_TRACE_BEGIN();
 						AXP_TraceWrite(
@@ -1273,7 +1273,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 				break;
 
 			case FaultReset:
-				if (AXP_CPU_OPT2)
+				if (AXP_CBOX_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite("Cbox got a Reset Fault");
@@ -1286,7 +1286,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 				break;
 
 			case Sleep:
-				if (AXP_CPU_OPT2)
+				if (AXP_CBOX_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite("Cbox is in Sleep State");
@@ -1300,7 +1300,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 				break;
 
 			case ShuttingDown:
-				if (AXP_CPU_OPT2)
+				if (AXP_CBOX_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite("Cbox is Shutting Down.");

@@ -114,7 +114,7 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
 	u8				asn = (dtb ? cpu->dtbAsn0.asn : cpu->pCtx.asn);
 	int				ii;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -142,7 +142,7 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
 		}
 	}
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -192,7 +192,7 @@ AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
 	int				start1, start2;
 	int				end1, end2;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("AXP_getNextFreeTLB called.");
@@ -259,7 +259,7 @@ AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
 				}
 	}
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -299,7 +299,7 @@ void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
 {
 	AXP_21264_TLB	*tlbEntry;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -411,7 +411,7 @@ void AXP_tbia(AXP_21264_CPU *cpu, bool dtb)
 	AXP_21264_TLB	*tlbArray = (dtb ? cpu->dtb : cpu->itb);
 	int				ii;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -464,7 +464,7 @@ void AXP_tbiap(AXP_21264_CPU *cpu, bool dtb)
 	AXP_21264_TLB	*tlbArray = (dtb ? cpu->dtb : cpu->itb);
 	int				ii;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -512,7 +512,7 @@ void AXP_tbis(AXP_21264_CPU *cpu, u64 va, bool dtb)
 {
 	AXP_21264_TLB	*tlb = AXP_findTLBEntry(cpu, va, dtb);
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -587,7 +587,7 @@ AXP_EXCEPTIONS AXP_21264_checkMemoryAccess(
 {
 	AXP_EXCEPTIONS	retVal = NoException;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -724,7 +724,7 @@ AXP_EXCEPTIONS AXP_21264_checkMemoryAccess(
 			break;
 	}	/* switch(cpu->ierCm.cm) */
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("AXP_21264_checkMemoryAccess returning %d.", retVal);
@@ -1932,7 +1932,7 @@ void AXP_IcacheAdd(
 	u32			ii;
 	u32			sets, whichSet;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -2026,7 +2026,7 @@ void AXP_IcacheAdd(
 	 */
 	pthread_mutex_unlock(&cpu->iCacheMutex);
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -2063,7 +2063,7 @@ void AXP_IcacheFlush(AXP_21264_CPU *cpu, bool purgeAsm)
 {
 	u32			ii, jj;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("AXP_IcacheFlush (asm: %d) called.", purgeAsm);
@@ -2182,7 +2182,7 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 	u32			ii;
 	u32			sets, whichSet;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -2297,7 +2297,7 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 	 */
 	pthread_mutex_unlock(&cpu->iCacheMutex);
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -2340,7 +2340,7 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
 	u32			ii;
 	u32			sets;
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -2376,7 +2376,7 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
 	 */
 	sets = (cpu->iCtl.ic_en == 1) ? 1 : 2;
 
-	for (ii = 1; ((ii < sets) & (retVal == false)); ii++)
+	for (ii = 0; ((ii < sets) & (retVal == false)); ii++)
 	{
 		if ((cpu->iCache[index][ii].vb == 1) &&
 			(cpu->iCache[index][ii].tag == tag))
@@ -2388,7 +2388,7 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
 	 */
 	pthread_mutex_unlock(&cpu->iCacheMutex);
 
-	if (AXP_CPU_CALL)
+	if (AXP_CACHE_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("AXP_IcacheValid return status %d.", retVal);

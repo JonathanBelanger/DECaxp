@@ -62,8 +62,7 @@ void AXP_21264_Ibox_ResetRegMap(AXP_21264_CPU *cpu)
 		if (ii < AXP_MAX_INT_REGISTERS)
 		{
 			cpu->pr[ii] = 0;
-			cpu->prMap[ii].pr = ii;
-			cpu->prMap[ii].prevPr = AXP_UNMAPPED_REG;
+			cpu->prMap[ii] = ii;
 			cpu->prState[ii] = Valid;
 		}
 		else
@@ -75,8 +74,7 @@ void AXP_21264_Ibox_ResetRegMap(AXP_21264_CPU *cpu)
 		if (ii < AXP_MAX_FP_REGISTERS)
 		{
 			cpu->pf[ii] = 0;
-			cpu->pfMap[ii].pr = ii;
-			cpu->pfMap[ii].prevPr = AXP_UNMAPPED_REG;
+			cpu->pfMap[ii] = ii;
 			cpu->pfState[ii] = Valid;
 		}
 		else if (ii < AXP_FP_PHYS_REG)
@@ -115,9 +113,12 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 	bool	retVal = false;
 	int		ii, jj, kk;
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Ibox is initializing");
-	AXP_TRACE_END();
+	if (AXP_IBOX_OPT1)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Ibox is initializing");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * We start out with no exceptions pending.
@@ -329,9 +330,12 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 		cpu->rob[ii].state = Retired;
 	}
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Ibox Has initialized");
-	AXP_TRACE_END();
+	if (AXP_IBOX_OPT1)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Ibox Has initialized");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Return the result of this initialization back to the caller.

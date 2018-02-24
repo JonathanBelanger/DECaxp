@@ -25,6 +25,7 @@
  *	Initially written, migrated from the AXP_21264_Ibox.c module.
  */
 #include "AXP_Configure.h"
+#include "AXP_Trace.h"
 #include "AXP_21264_Ibox_Prediction.h"
 
 /*
@@ -84,6 +85,15 @@ bool AXP_Branch_Prediction(
 	int			lcl_predictor_idx;
 	bool		retVal;
 
+	if (AXP_IBOX_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"Called into AXP_Branch_Prediction for pc: 0x%016llx",
+				*((u64 *) &vpc));
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * Determine how branch prediction should be performed based on the value
 	 * of the BP_MODE field of the I_CTL register.
@@ -92,7 +102,7 @@ bool AXP_Branch_Prediction(
 	 * 	01 = Local history prediction is used
 	 * 	00 = Chooser selects Local or Global history based on its state
 	 */
-	if ((cpu->iCtl.bp_mode & AXP_I_CTL_BP_MODE_FALL) == AXP_I_CTL_BP_MODE_DYN)
+	if ((cpu->iCtl.bp_mode & AXP_I_CTL_BP_MODE_FALL) != AXP_I_CTL_BP_MODE_FALL)
 	{
 
 		/*
@@ -132,14 +142,27 @@ bool AXP_Branch_Prediction(
 		retVal = false;
 	}
 
+	if (AXP_IBOX_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"Returning from AXP_Branch_Prediction for pc: 0x%016llx ,"
+				"local taken = %d, global taken = %d, choice = %d",
+				*((u64 *) &vpc),
+				*localTaken,
+				*globalTaken,
+				*choice);
+		AXP_TRACE_END();
+	}
+
 	return(retVal);
 }
 
 /*
  * AXP_Branch_Direction
- *	This function is called when the branch instruction is retired to update the
- *	local, global, and choice prediction tables, and the local history table and
- *	global path history information.
+ *	This function is called when the branch instruction is retired to update
+ *	the local, global, and choice prediction tables, and the local history
+ *	table and global path history information.
  *
  * Input Parameters:
  *	cpu:
@@ -169,6 +192,15 @@ void AXP_Branch_Direction(
 	int			lcl_history_idx;
 	int			lcl_predictor_idx;
 
+	if (AXP_IBOX_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"Called into AXP_Branch_Direction for pc: 0x016llx",
+				*((u64 *) &vpc));
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * Need to extract the index into the Local History Table from the VPC, and
 	 * use this to determine the index into the Local Predictor Table.
@@ -184,6 +216,15 @@ void AXP_Branch_Direction(
 	 */
 	if ((taken == localTaken) && (taken != globalTaken))
 	{
+		if (AXP_IBOX_OPT1)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite(
+					"AXP_Branch_Direction for pc: 0x016llx, "
+					"Local Prediction Correct",
+					*((u64 *) &vpc));
+			AXP_TRACE_END();
+		}
 		AXP_2BIT_DECR(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
 	}
 
@@ -198,6 +239,15 @@ void AXP_Branch_Direction(
 	 */
 	else if ((taken != localTaken) && (taken == globalTaken))
 	{
+		if (AXP_IBOX_OPT1)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite(
+					"AXP_Branch_Direction for pc: 0x016llx, "
+					"Global Prediction Correct",
+					*((u64 *) &vpc));
+			AXP_TRACE_END();
+		}
 		AXP_2BIT_INCR(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
 	}
 
@@ -214,6 +264,14 @@ void AXP_Branch_Direction(
 	 */
 	if (taken == true)
 	{
+		if (AXP_IBOX_OPT1)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite(
+					"AXP_Branch_Direction for pc: 0x016llx, Branch Taken",
+					*((u64 *) &vpc));
+			AXP_TRACE_END();
+		}
 		AXP_3BIT_INCR(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
 		AXP_2BIT_INCR(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
 		AXP_LOCAL_PATH_TAKEN(cpu->localHistoryTable.lcl_history[lcl_history_idx]);
@@ -221,6 +279,14 @@ void AXP_Branch_Direction(
 	}
 	else
 	{
+		if (AXP_IBOX_OPT1)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite(
+					"AXP_Branch_Direction for pc: 0x016llx, Branch Not Taken",
+					*((u64 *) &vpc));
+			AXP_TRACE_END();
+		}
 		AXP_3BIT_DECR(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
 		AXP_2BIT_DECR(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
 		AXP_LOCAL_PATH_NOT_TAKEN(cpu->localHistoryTable.lcl_history[lcl_history_idx]);
