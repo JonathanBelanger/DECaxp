@@ -38,7 +38,7 @@
 #include "AXP_21264_Cbox.h"
 
 /*
- * AXP_21264_AlloateCPU
+ * AXP_21264_AllocateCPU
  * 	This function is called to allocate and initialize the CPU structure.  Some
  * 	of the initialization will be performed by the Cbox, but after all the
  * 	threads have been created in here.

@@ -120,7 +120,7 @@ typedef union
  */
 void AXP_21264_AddVPC(AXP_21264_CPU *cpu, AXP_PC vpc)
 {
-	if (AXP_CPU_OPT2)
+	if (AXP_IBOX_OPT2)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Adding vPC[%d] 0x%016llx", cpu->vpcEnd, *((u64 *) &vpc));
@@ -197,7 +197,7 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 		pc.bits21164.palMode = AXP_PAL_MODE;
 	}
 
-	if (AXP_CPU_OPT2)
+	if (AXP_IBOX_OPT2)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Generated PAL vPC 0x%016llx", *((u64 *) &pc));
@@ -242,7 +242,7 @@ AXP_PC AXP_21264_GetVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 	vpc.vpc.res = 0;
 	vpc.vpc.pal = pal & AXP_PAL_MODE;
 
-	if (AXP_CPU_OPT2)
+	if (AXP_IBOX_OPT2)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Getting vPC 0x%016llx", *((u64 *) &vpc));
@@ -283,7 +283,7 @@ AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
 	prevVPC = ((cpu->vpcEnd != 0) ? cpu->vpcEnd : AXP_INFLIGHT_MAX) - 1;
 	retVal = cpu->vpc[prevVPC];
 
-	if (AXP_CPU_OPT2)
+	if (AXP_IBOX_OPT2)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Getting Next vPC[%d] 0x%016llx", prevVPC, *((u64 *) &retVal));
@@ -325,7 +325,7 @@ AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *cpu)
 	 */
 	vpc.pc++;
 
-	if (AXP_CPU_OPT2)
+	if (AXP_IBOX_OPT2)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Incremented vPC 0x%016llx", *((u64 *) &vpc));
@@ -369,7 +369,7 @@ AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, i64 displacement)
 	 */
 	vpc.pc = vpc.pc + 1 + displacement;
 
-	if (AXP_CPU_OPT2)
+	if (AXP_IBOX_OPT2)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(

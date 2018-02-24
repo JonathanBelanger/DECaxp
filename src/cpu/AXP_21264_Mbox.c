@@ -1577,7 +1577,7 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	bool retVal = false;
 	int ii, jj;
 
-	if (AXP_CPU_CALL)
+	if (AXP_MBOX_OPT1)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Mbox is initializing");
@@ -1727,9 +1727,12 @@ bool AXP_21264_Mbox_Init(AXP_21264_CPU *cpu)
 	cpu->dcStat.tperr_p0 = 0;
 	cpu->dcStat.tperr_p1 = 0;
 
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Mbox has initialized");
-	AXP_TRACE_END();
+	if (AXP_MBOX_OPT1)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Mbox has initialized");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * All done, return to the caller.
@@ -1758,7 +1761,7 @@ void *AXP_21264_MboxMain(void *voidPtr)
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 	bool			saidImRunning = false;
 
-	if (AXP_CPU_CALL)
+	if (AXP_MBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Mbox is starting");
@@ -1785,7 +1788,7 @@ void *AXP_21264_MboxMain(void *voidPtr)
 			case WaitBiST:
 			case WaitBiSI:
 			case FaultReset:
-				if (AXP_CPU_OPT1)
+				if (AXP_MBOX_OPT1)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite(
@@ -1804,7 +1807,7 @@ void *AXP_21264_MboxMain(void *voidPtr)
 				break;
 
 			case Run:
-				if ((AXP_CPU_OPT1) && (saidImRunning == false))
+				if ((AXP_MBOX_OPT1) && (saidImRunning == false))
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite("Mbox is in Running State");
@@ -1824,7 +1827,7 @@ void *AXP_21264_MboxMain(void *voidPtr)
 				break;
 
 			case Sleep:
-				if (AXP_CPU_OPT1)
+				if (AXP_MBOX_OPT1)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite("Mbox is in Sleep State");
@@ -1838,7 +1841,7 @@ void *AXP_21264_MboxMain(void *voidPtr)
 				break;
 
 			case ShuttingDown:
-				if (AXP_CPU_OPT1)
+				if (AXP_MBOX_OPT1)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite("Mbox is Shutting Down");

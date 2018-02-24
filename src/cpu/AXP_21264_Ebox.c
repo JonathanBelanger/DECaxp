@@ -95,7 +95,7 @@ static char *regStateStr[] =
  */
 bool AXP_21264_Ebox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 {
-	if (AXP_CPU_OPT2)
+	if (AXP_EBOX_OPT2)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
@@ -105,22 +105,22 @@ bool AXP_21264_Ebox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 		AXP_TraceWrite(
 				"\tSrc1(R%02u) = %s",
 				entry->ins->aSrc1,
-				regStateStr[cpu->prState[entry->ins->aSrc1]]);
+				regStateStr[cpu->prState[entry->ins->src1]]);
 		AXP_TraceWrite(
 				"\tSrc2(R%02u) = %s",
 				entry->ins->aSrc2,
-				regStateStr[cpu->prState[entry->ins->aSrc2]]);
+				regStateStr[cpu->prState[entry->ins->src2]]);
 		AXP_TraceWrite(
 				"\tDest(R%02u) = %s",
 				entry->ins->aDest,
-				regStateStr[cpu->prState[entry->ins->aDest]]);
+				regStateStr[cpu->prState[entry->ins->dest]]);
 		AXP_TRACE_END();
 	}
 
-	return ((cpu->prState[entry->ins->aSrc1] == Valid) &&
-			(cpu->prState[entry->ins->aSrc2] == Valid) &&
-			((cpu->prState[entry->ins->aDest] == Valid) ||
-			 (cpu->prState[entry->ins->aDest] == PendingUpdate)));
+	return ((cpu->prState[entry->ins->src1] == Valid) &&
+			(cpu->prState[entry->ins->src2] == Valid) &&
+			(cpu->prState[entry->ins->dest] ==
+				(entry->ins->dest == AXP_UNMAPPED_REG ? Valid : PendingUpdate)));
 }
 
 /*
@@ -229,7 +229,7 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 {
 	bool	retVal = false;
 
-	if (AXP_CPU_CALL)
+	if (AXP_EBOX_OPT1)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Ebox is initializing");
@@ -262,7 +262,7 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 	cpu->vaForm.form00.va = 0;
 	cpu->vaForm.form00.vptb = 0;
 
-	if (AXP_CPU_CALL)
+	if (AXP_EBOX_OPT1)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Ebox has initialized");
@@ -294,7 +294,7 @@ void *AXP_21264_EboxU0Main(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_CPU_CALL)
+	if (AXP_EBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Ebox U0 is starting");
@@ -335,7 +335,7 @@ void *AXP_21264_EboxU1Main(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_CPU_CALL)
+	if (AXP_EBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Ebox U1 is starting");
@@ -376,7 +376,7 @@ void *AXP_21264_EboxL0Main(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_CPU_CALL)
+	if (AXP_EBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Ebox L0 is starting");
@@ -417,7 +417,7 @@ void *AXP_21264_EboxL1Main(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_CPU_CALL)
+	if (AXP_EBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("Ebox L1 is starting");
@@ -496,7 +496,7 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 		 */
 		if (notFirstTime)
 		{
-			if (AXP_CPU_OPT2)
+			if (AXP_EBOX_OPT2)
 			{
 				AXP_TRACE_BEGIN();
 				AXP_TraceWrite(
@@ -528,11 +528,11 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 			pthread_cond_wait(&cpu->eBoxCondition, &cpu->eBoxMutex);
 		}
 
-		if (AXP_CPU_OPT2)
+		if (AXP_EBOX_OPT2)
 		{
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite(
-					"Ebox %s may have something to process.",
+					"Ebox %s signaled an instruction has been put on the IQ.",
 					pipelineStr[pipeline]);
 			AXP_TRACE_END();
 		}
@@ -554,7 +554,7 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 			 */
 			while ((void *) entry != (void *) &cpu->iq)
 			{
-				if (AXP_CPU_OPT2)
+				if (AXP_EBOX_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite(
@@ -584,7 +584,7 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 					(entry->ins->state == Queued) &&
 					(AXP_21264_Ebox_RegistersReady(cpu, entry) == true))
 				{
-					if (AXP_CPU_OPT2)
+					if (AXP_EBOX_OPT2)
 					{
 						AXP_TRACE_BEGIN();
 						AXP_TraceWrite(
@@ -611,6 +611,15 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 			{
 				notMe = true;
 
+				if (AXP_EBOX_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+							"Ebox %s has nothing to process.",
+							pipelineStr[pipeline]);
+					AXP_TRACE_END();
+				}
+
 				/*
 				 * Before going back to the top of the loop, unlock the Ebox
 				 * mutex.
@@ -624,7 +633,7 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 			 * dequeue it from the queue.  Then, dispatch it to the function
 			 * to execute the instruction.
 			 */
-			if (AXP_CPU_OPT2)
+			if (AXP_EBOX_OPT2)
 			{
 				AXP_TRACE_BEGIN();
 				AXP_TraceWrite(
@@ -649,7 +658,7 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 			 * Call the dispatcher to dispatch this instruction to the correct
 			 * function to execute the instruction.
 			 */
-			if (AXP_CPU_OPT2)
+			if (AXP_EBOX_OPT2)
 			{
 				AXP_TRACE_BEGIN();
 				AXP_TraceWrite(
@@ -659,7 +668,7 @@ void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
 				AXP_TRACE_END();
 			}
 			AXP_Dispatcher(cpu, entry->ins);
-			if (AXP_CPU_OPT2)
+			if (AXP_EBOX_OPT2)
 			{
 				AXP_TRACE_BEGIN();
 				AXP_TraceWrite(
