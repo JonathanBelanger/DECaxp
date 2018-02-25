@@ -1047,7 +1047,9 @@ typedef struct
 	u8				scbdMask;	/* HW_MxPR scbd_mask */
 	u8				len_stall : 1; /* HW_LD/ST len, HW_RET stall */
 	bool			useLiteral;	/* Indicator that the literal value is valid */
-	bool			branchPredict; /* If this is a branch, predict to take it */
+	bool			branchPredict; /* Prediction logic result */
+	bool			localPredict; /* Local branch predict */
+	bool			globalPredict; /* Global branch predict */
 	u32				function;	/* Function code for operation */
 	u32				slot;		/* Assigned Load/Store slot */
 	i64				displacement;/* Displacement from PC + 4 */

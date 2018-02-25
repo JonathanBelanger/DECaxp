@@ -1308,6 +1308,240 @@ void AXP_21264_Ibox_Retire_HW_MTPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	return;
 }
+
+/*
+ * AXP_21264_Ibox_AbortIns
+ *	This function is called to abort any instructions starting at the indicated
+ *	location in the array to the end location.  Then reset the end to be the
+ *	same as the indicated starting location.
+ *
+ * Input Parameters:
+ *	cpu:
+ *		A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *		processor.
+ *	start:
+ *		A value indicating where we should begin within the ROB array.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Ibox_AbortIns(AXP_21264_CPU *cpu, u32 start)
+{
+	AXP_INSTRUCTION		*rob;
+	AXP_21264_REG_STATE *destState;
+	AXP_QUEUE_ENTRY		*entry, *next;
+	u16					*destMap;
+	u16					*destFreeList, *flEnd;
+	bool				split, destFloat, found = false;
+	u32					ii, end;
+
+	/*
+	 * OK, we need to start at the next instruction in the Re-Order Buffer.
+	 */
+	start = (start + 1) == AXP_INFLIGHT_MAX ? 0 : start + 1;
+
+	/*
+	 * Are we going to wrap from the bottom of the array to the top?
+	 */
+	split = cpu->robEnd < start;
+	end = (split ? AXP_INFLIGHT_MAX : cpu->robEnd);
+	ii = start;
+	while (ii < end)
+	{
+
+		/*
+		 * Set up a pointer to the next instruction that needs to be aborted.
+		 */
+		rob = &cpu->rob[ii];
+
+		/*
+		 * First things first, we need to remove the IQ or FQ entry from the
+		 * queue so it does not get processed any further.  Note, if the
+		 * instruction has already be remove from the queue, then we either
+		 * are executing the instruction, or the instruction is pending
+		 * retirement.
+		 *
+		 * IQ first.
+		 */
+		pthread_mutex_lock(&cpu->eBoxMutex);
+		entry = (AXP_QUEUE_ENTRY *) cpu->iq.flink;
+		found = false;
+		while (((void *) entry != &cpu->iq) && (found == false))
+		{
+
+			/*
+			 * Log what we are about to do.
+			 */
+			if (AXP_IBOX_OPT1)
+			{
+				AXP_TRACE_BEGIN();
+				AXP_TraceWrite(
+						"ABORTING instruction at pc: 0x%016llx, opcode: 0x%02x, "
+						"state = %s",
+						entry->ins->pc,
+						entry->ins->opcode,
+						_ins_state_[entry->ins->state]);
+				AXP_TRACE_END();
+			}
+
+			/*
+			 * Get the address of the next entry now, because dequeuing the
+			 * entry means that the flink and blink are unpredictable.
+			 */
+			next = (AXP_QUEUE_ENTRY *) entry->header.flink;
+
+			/*
+			 * If this next instruction in the IQ as an address that matches
+			 * ROB entry being aborted, then remove it from the queue and
+			 * return it back for future processing.
+			 */
+			if (entry->ins == rob)
+			{
+				AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+				AXP_ReturnIQEntry(cpu, entry);
+				found = true;
+			}
+
+			/*
+			 * OK, let's take a look at the next entry.
+			 */
+			entry = next;
+		}
+		pthread_mutex_unlock(&cpu->eBoxMutex);
+
+		/*
+		 * FQ next.  NOTE: Don't reset the found flag, as a particular ROB
+		 * entry and only be in the IQ or FQ, but never both.  So, if we found
+		 * it in the IQ, there is no need to search the FQ.
+		 */
+		pthread_mutex_lock(&cpu->fBoxMutex);
+		entry = (AXP_QUEUE_ENTRY *) cpu->fq.flink;
+		while (((void *) entry != &cpu->fq) && (found == false))
+		{
+
+			/*
+			 * Get the address of the next entry now, because dequeuing the
+			 * entry means that the flink and blink are unpredictable.
+			 */
+			next = (AXP_QUEUE_ENTRY *) entry->header.flink;
+
+			/*
+			 * If this next instruction in the IQ as an address that matches
+			 * ROB entry being aborted, then remove it from the queue and
+			 * return it back for future processing.
+			 */
+			if (entry->ins == rob)
+			{
+				AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+				AXP_ReturnIQEntry(cpu, entry);
+				found = true;
+			}
+
+			/*
+			 * OK, let's take a look at the next entry.
+			 */
+			entry = next;
+		}
+		pthread_mutex_unlock(&cpu->fBoxMutex);
+
+		/*
+		 * Clear out any exceptions that may have occurred.
+		 */
+		rob->excRegMask = NoException;
+
+		/*
+		 * If the destination register was not R31/F31, then we need to return
+		 * it to the free list.
+		 */
+		if (rob->aDest != AXP_UNMAPPED_REG)
+		{
+
+			/*
+			 * Determine if the destination register is a
+			 * floating-point or integer register.
+			 */
+			destFloat =
+				((rob->decodedReg.bits.dest & AXP_DEST_FLOAT) ==
+						AXP_DEST_FLOAT);
+
+			/*
+			 * Set up some pointers so that the code below is a bit simpler.
+			 */
+			if (destFloat == true)
+			{
+				destState = cpu->pfState;
+				destMap = cpu->pfMap;
+				destFreeList = cpu->pfFreeList;
+				flEnd = &cpu->pfFlEnd;
+			}
+			else
+			{
+				destState = cpu->prState;
+				destMap = cpu->prMap;
+				destFreeList = cpu->prFreeList;
+				flEnd = &cpu->prFlEnd;
+			}
+
+			/*
+			 * Log what we are about to do.
+			 */
+			if (AXP_IBOX_OPT1)
+			{
+				AXP_TRACE_BEGIN();
+				AXP_TraceWrite(
+					"AXP_21264_Ibox_AbortIns freeing register: P%c%02u",
+					(destFloat ? 'F' :'R'),
+					destMap[rob->aDest]);
+				AXP_TRACE_END();
+			}
+
+			/*
+			 * Put the destination register back on to the free-list and mark
+			 * this physical register as being free.
+			 */
+			destFreeList[*flEnd] = destMap[rob->aDest];
+			*flEnd = (*flEnd + 1) % AXP_F_FREELIST_SIZE;
+			destState[destMap[rob->aDest]] = Free;
+		}
+
+		/*
+		 * TODO: We need to go and clear out all events from the event queue.
+		 * TODO: We need to roll back the VPC stack.
+		 */
+
+		/*
+		 * Mark this instruction as being retired (its reset state).
+		 */
+		rob->state = Retired;
+
+		/*
+		 * Increment the loop counter.  If we reached the end of the array and
+		 * it wrapped around, then reset the counter and the end value.  Also,
+		 * note that the split is no longer relevant (avoids an infinite loop).
+		 */
+		ii++;
+		if ((ii == end) && (split == true))
+		{
+			ii = 0;
+			end = cpu->robEnd;
+			split = false;
+		}
+	}
+
+	/*
+	 * The new end is the first aborted instruction.
+	 */
+	cpu->robEnd = start;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
 /*
  * AXP_21264_Ibox_Retire
  *	This function is called whenever an instruction is transitioned to
@@ -1330,11 +1564,12 @@ void AXP_21264_Ibox_Retire_HW_MTPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 {
 	AXP_INSTRUCTION	*rob;
-	u32				ii, start, end;
+	u32				ii, end;
 	bool			split;
 	bool			done = false;
 	bool			signalEbox = false;
 	bool			signalFbox = false;
+	bool			updateDest = false;
 
 	/*
 	 * First lock the ROB mutex so that it is not updated by anyone but this
@@ -1363,22 +1598,21 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	 * around, then we search in 2 passes (start to list end; list beginning to
 	 * end).
 	 */
-	start = cpu->robStart;
+	ii = cpu->robStart;
 	end = (split ? AXP_INFLIGHT_MAX : cpu->robEnd);
 
 	if (AXP_IBOX_OPT1)
 	{
 		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("AXP_Ibox_Retire loop1 from: %u, to: %u", start, end);
+		AXP_TraceWrite("AXP_Ibox_Retire loop1 from: %u, to: %u", ii, end);
 		AXP_TRACE_END();
 	}
 
 	/*
-	 * Set our starting value.  Loop until we reach the end or we find an entry
-	 * that is not ready for retirement (maybe its 401K is not where it should
-	 * be or his employer bankrupt the pension fund).
+	 * Loop until we reach the end or we find an entry that is not ready for
+	 * retirement (maybe its 401K is not where it should be or his employer
+	 * bankrupt the pension fund).
 	 */
-	ii = start;
 	while ((ii < end) && (done == false))
 	{
 		rob = &cpu->rob[ii];
@@ -1433,31 +1667,135 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 					AXP_21264_Ibox_Retire_HW_MFPR(cpu, rob);
 
 				/*
-				 * If the destination register is a floating-point register and
-				 * it is not the F31 register, then move the instruction result
-				 * into the correct physical floating-point register.
+				 * If this is a branch, we need to do the following:
+				 *
+				 *	1)	Update the branch prediction with whether we are taking
+				 *		branch or not.
+				 *	2)	If the branch is taken, update the destination
+				 *		register.
+				 *	3)	If the branch prediction did not match the actual
+				 *		branch taken or not, the we may have to abort the
+				 *		instructions loaded immediately after the branch.
+				 *	4)	Set the add the branchPC to the VPC stack.
 				 */
-				if (((rob->decodedReg.bits.dest & AXP_DEST_FLOAT) == AXP_DEST_FLOAT) &&
-					(rob->aDest != AXP_UNMAPPED_REG))
+				if (rob->type == Branch)
 				{
-					cpu->pf[rob->dest] = rob->destv.fp.uq;
-					cpu->pfState[rob->dest] = Valid;
+					bool	taken = (*(u64 *) &rob->branchPC) != 0;
+
+					/*
+					 * Step 1:
+					 *
+					 * Update the branch prediction logic.
+					 */
+					AXP_Branch_Direction(
+									cpu,
+									rob->pc,
+									taken,
+									rob->localPredict,
+									rob->globalPredict);
+
+
+					/*
+					 * Step 2:
+					 *
+					 * If we took the branch, then we need to update the
+					 * destination register, as well as the PC.
+					 */
+					if (taken)
+					{
+						if (((rob->decodedReg.bits.dest & AXP_DEST_FLOAT) ==
+							 AXP_DEST_FLOAT) &&
+							(rob->aDest != AXP_UNMAPPED_REG))
+						{
+							updateDest = true;
+							signalFbox = true;
+						}
+						else if ((rob->decodedReg.bits.dest != 0) &&
+								 (rob->aDest != AXP_UNMAPPED_REG))
+						{
+							updateDest = true;
+							signalEbox = true;
+						}
+
+						/*
+						 * Step 4:
+						 */
+						AXP_21264_AddVPC(cpu, rob->branchPC);
+					}
+
+					/*
+					 * Step 3:
+					 *
+					 * If the branch prediction logic did not match the actual
+					 * branch results, then we will need to abort all
+					 * instructions subsequent to this one (just like they
+					 * never happened - even if they are pending retirement).
+					 */
+					if (taken != rob->branchPredict)
+					{
+
+						/*
+						 * Call the function to abort all instructions
+						 * immediately after the current one.  This may change
+						 * the value of cpu->robEnd.
+						 */
+						AXP_21264_Ibox_AbortIns(cpu, ii);
+
+						/*
+						 * Since we just change the end of the ROB, we need to
+						 * recalculate the while loop values.
+						 */
+						split = cpu->robEnd < cpu->robStart;
+						end = (split ? AXP_INFLIGHT_MAX : cpu->robEnd);
+					}
+				}
+				else if (((rob->decodedReg.bits.dest & AXP_DEST_FLOAT) ==
+						  AXP_DEST_FLOAT) &&
+						 (rob->aDest != AXP_UNMAPPED_REG))
+				{
+					updateDest = true;
 					signalFbox = true;
 				}
-
-				/*
-				 * If the destination register is not a floating-point
-				 * register, we either have an instruction that stores the
-				 * result into a physical integer register, or does not store
-				 * a result at all.  For the latter, there is nothing more to
-				 * do.
-				 */
 				else if ((rob->decodedReg.bits.dest != 0) &&
 						 (rob->aDest != AXP_UNMAPPED_REG))
 				{
-					cpu->pr[rob->dest] = rob->destv.r.uq;
-					cpu->prState[rob->dest] = Valid;
+					updateDest = true;
 					signalEbox = true;
+				}
+
+				/*
+				 * If the destination register needs to be updated, then do so
+				 * now.
+				 */
+				if (updateDest == true)
+				{
+
+					/*
+					 * If we will be signaling the Fbox (floating-point
+					 * processing), then we need to update the destination
+					 * physical register.
+					 *
+					 * NOTE:	We already determined that we are not writing
+					 *			to F31.
+					 */
+					if (signalFbox == true)
+					{
+						cpu->pf[rob->dest] = rob->destv.fp.uq;
+						cpu->pfState[rob->dest] = Valid;
+					}
+
+					/*
+					 * We will be signaling the Ebox (integer processing), then
+					 * we need to update the destination physical register.
+					 *
+					 * NOTE:	We already determined that we are not writing
+					 *			to R31.
+					 */
+					else
+					{
+						cpu->pr[rob->dest] = rob->destv.r.uq;
+						cpu->prState[rob->dest] = Valid;
+					}
 				}
 
 				/*
@@ -1607,7 +1945,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	AXP_INSTRUCTION	*decodedInstr;
 	AXP_QUEUE_ENTRY	*xqEntry;
 	u32				ii, fault;
-	bool			local, global, choice, wasRunning = false;
+	bool			choice, wasRunning = false;
 	bool			_asm;
 	u16				whichQueue;
 	int				qFull;
@@ -1754,8 +2092,8 @@ void *AXP_21264_IboxMain(void *voidPtr)
 					decodedInstr->branchPredict = AXP_Branch_Prediction(
 								cpu,
 								nextPC,
-								&local,
-								&global,
+								&decodedInstr->localPredict,
+								&decodedInstr->globalPredict,
 								&choice);
 
 					/*

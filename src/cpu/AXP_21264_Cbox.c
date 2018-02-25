@@ -1153,7 +1153,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 								 * Get the PC for the base address of the code
 								 * just loaded.  We're putting this in PALmode.
 								 */
-						 		startingPC = AXP_21264_GetVPC(
+						 		startingPC = AXP_21264_MakeVPC(
 						 									cpu,
 						 									sromHdl.destAddr,
 						 									AXP_PAL_MODE);
