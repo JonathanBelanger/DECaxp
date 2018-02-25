@@ -58,11 +58,6 @@ AXP_EXCEPTIONS AXP_RC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	cpu->VAXintrFlag = false;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -97,11 +92,6 @@ AXP_EXCEPTIONS AXP_RS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	instr->destv.r.uq = cpu->VAXintrFlag;
 	cpu->VAXintrFlag = true;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.

@@ -455,6 +455,7 @@ void AXP_Dispatcher(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		&&FUNC_IEEE_CVTQ - &&FUNC_IEEE_ADD	/* FNC: 0xf */
 	};
 	AXP_FP_FUNC	fpFunc;
+	bool		locked = false;
 
 	goto *(&&OP_CALL_PAL + label[instr->opcode]);
 
@@ -464,13 +465,11 @@ OP_CALL_PAL:	/* OPCODE: 0x00 */
 
 OP_LDA:			/* OPCODE: 0x08 */
 	instr->excRegMask = AXP_LDA(cpu, instr);
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_LDAH:		/* OPCODE: 0x09 */
 	instr->excRegMask = AXP_LDAH(cpu, instr);
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_LDBU:		/* OPCODE: 0x0a */
 	instr->excRegMask = AXP_LDBU(cpu, instr);
@@ -591,12 +590,7 @@ OP_ADDL:		/* OPCODE: 0x10 */
 			goto RESERVED_OP;
 			break;
 	}
-
-	/*
-	 * These instructions complete immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_AND:			/* OPCODE: 0x11 */
 	switch (instr->function)
@@ -669,12 +663,7 @@ OP_AND:			/* OPCODE: 0x11 */
 			goto RESERVED_OP;
 			break;
 	}
-
-	/*
-	 * These instructions complete immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_MSKBL:		/* OPCODE: 0x11 */
 	switch (instr->function)
@@ -787,12 +776,7 @@ OP_MSKBL:		/* OPCODE: 0x11 */
 			goto RESERVED_OP;
 			break;
 	}
-
-	/*
-	 * These instructions complete immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_MULL:		/* OPCODE: 0x13 */
 	switch (instr->function)
@@ -821,12 +805,7 @@ OP_MULL:		/* OPCODE: 0x13 */
 			goto RESERVED_OP;
 			break;
 	}
-
-	/*
-	 * These instructions complete immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_ITOFS:		/* OPCODE: 0x14 */
 	fpFunc = *(AXP_FP_FUNC *) &instr->function;
@@ -851,12 +830,7 @@ FUNC_ITOF:		/* FNC: 0x4 */
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_SQRTFG:	/* FNC: 0xa */
 		switch (fpFunc.src)
@@ -873,12 +847,7 @@ FUNC_SQRTFG:	/* FNC: 0xa */
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_SQRTST:	/* FNC: 0xb */
 		switch (fpFunc.src)
@@ -895,12 +864,7 @@ FUNC_SQRTST:	/* FNC: 0xb */
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 OP_ADDF:		/* OPCODE: 0x15 */
 	fpFunc = *(AXP_FP_FUNC *) &instr->function;
@@ -921,12 +885,7 @@ FUNC_VAX_ADD:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_VAX_SUB:
 		switch (fpFunc.src)
@@ -943,12 +902,7 @@ FUNC_VAX_SUB:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_VAX_MUL:
 		switch (fpFunc.src)
@@ -965,12 +919,7 @@ FUNC_VAX_MUL:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_VAX_DIV:
 		switch (fpFunc.src)
@@ -987,23 +936,13 @@ FUNC_VAX_DIV:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_VAX_CMPEQ:
 		if (fpFunc.src == AXP_FP_G)
 		{
 			instr->excRegMask = AXP_CMPGEQ(cpu, instr);
-
-			/*
-			 * This instruction completes immediately.
-			 */
-			instr->state = WaitingRetirement;
-			goto COMPLETION_OP;
+			goto COMPL_RETIRE;
 		}
 		goto RESERVED_OP;
 
@@ -1021,23 +960,13 @@ FUNC_VAX_CMPLT:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_VAX_CMPLE:
 		if (fpFunc.src== AXP_FP_G)
 		{
 			instr->excRegMask = AXP_CMPGLE(cpu, instr);
-
-			/*
-			 * This instruction completes immediately.
-			 */
-			instr->state = WaitingRetirement;
-			goto COMPLETION_OP;
+			goto COMPL_RETIRE;
 		}
 		goto RESERVED_OP;
 
@@ -1056,23 +985,13 @@ FUNC_VAX_CVTF:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_VAX_CVTD:
 		if (fpFunc.src == AXP_FP_G)
 		{
 			instr->excRegMask = AXP_CVTGD(cpu, instr);
-
-			/*
-			 * This instruction completes immediately.
-			 */
-			instr->state = WaitingRetirement;
-			goto COMPLETION_OP;
+			goto COMPL_RETIRE;
 		}
 		goto RESERVED_OP;
 
@@ -1091,23 +1010,13 @@ FUNC_VAX_CVTG:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_VAX_CVTQ:
 		if (fpFunc.src == AXP_FP_G)
 		{
 			instr->excRegMask = AXP_CVTGQ(cpu, instr);
-
-			/*
-			 * This instruction completes immediately.
-			 */
-			instr->state = WaitingRetirement;
-			goto COMPLETION_OP;
+			goto COMPL_RETIRE;
 		}
 		goto RESERVED_OP;
 
@@ -1131,12 +1040,7 @@ FUNC_IEEE_ADD:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_IEEE_SUB:
 		switch (fpFunc.src)
@@ -1154,12 +1058,7 @@ FUNC_IEEE_SUB:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_IEEE_MUL:
 		switch (fpFunc.src)
@@ -1177,12 +1076,7 @@ FUNC_IEEE_MUL:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_IEEE_DIV:
 		switch (fpFunc.src)
@@ -1200,23 +1094,13 @@ FUNC_IEEE_DIV:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_IEEE_CMPUN:
 		if (fpFunc.src == AXP_FP_T)
 		{
 			instr->excRegMask = AXP_CMPTUN(cpu, instr);
-
-			/*
-			 * This instruction completes immediately.
-			 */
-			instr->state = WaitingRetirement;
-			goto COMPLETION_OP;
+			goto COMPL_RETIRE;
 		}
 		goto RESERVED_OP;
 
@@ -1224,12 +1108,7 @@ FUNC_IEEE_CMPEQ:
 		if (fpFunc.src == AXP_FP_T)
 		{
 			instr->excRegMask = AXP_CMPTEQ(cpu, instr);
-
-			/*
-			 * This instruction completes immediately.
-			 */
-			instr->state = WaitingRetirement;
-			goto COMPLETION_OP;
+			goto COMPL_RETIRE;
 		}
 		goto RESERVED_OP;
 
@@ -1237,12 +1116,7 @@ FUNC_IEEE_CMPLT:
 		if (fpFunc.src == AXP_FP_T)
 		{
 			instr->excRegMask = AXP_CMPTLT(cpu, instr);
-
-			/*
-			 * This instruction completes immediately.
-			 */
-			instr->state = WaitingRetirement;
-			goto COMPLETION_OP;
+			goto COMPL_RETIRE;
 		}
 		goto RESERVED_OP;
 
@@ -1250,12 +1124,7 @@ FUNC_IEEE_CMPLE:
 		if (fpFunc.src == AXP_FP_T)
 		{
 			instr->excRegMask = AXP_CMPTLE(cpu, instr);
-
-			/*
-			 * This instruction completes immediately.
-			 */
-			instr->state = WaitingRetirement;
-			goto COMPLETION_OP;
+			goto COMPL_RETIRE;
 		}
 		goto RESERVED_OP;
 
@@ -1274,12 +1143,7 @@ FUNC_IEEE_CVTS:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_IEEE_CVTT:
 		switch (fpFunc.src)
@@ -1296,23 +1160,13 @@ FUNC_IEEE_CVTT:
 				goto RESERVED_OP;
 				break;
 		}
-
-		/*
-		 * These instructions complete immediately.
-		 */
-		instr->state = WaitingRetirement;
-		goto COMPLETION_OP;
+		goto COMPL_RETIRE;
 
 FUNC_IEEE_CVTQ:
 		if (fpFunc.src == AXP_FP_T)
 		{
 			instr->excRegMask = AXP_CVTTQ(cpu, instr);
-
-			/*
-			 * This instruction completes immediately.
-			 */
-			instr->state = WaitingRetirement;
-			goto COMPLETION_OP;
+			goto COMPL_RETIRE;
 		}
 		goto RESERVED_OP;
 
@@ -1377,12 +1231,7 @@ OP_CVTLQ:		/* OPCODE: 0x17 */
 			goto RESERVED_OP;
 			break;
 	}
-
-	/*
-	 * These instructions complete immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_TRAPB:		/* OPCODE: 0x18 */
 	switch (instr->function)
@@ -1424,7 +1273,7 @@ OP_TRAPB:		/* OPCODE: 0x18 */
 
 		case AXP_FUNC_RC:
 			instr->excRegMask = AXP_RC(cpu, instr);
-			goto COMPLETION_OP;
+			goto COMPL_RETIRE;
 			break;
 
 		case AXP_FUNC_ECB:
@@ -1434,7 +1283,7 @@ OP_TRAPB:		/* OPCODE: 0x18 */
 
 		case AXP_FUNC_RS:
 			instr->excRegMask = AXP_RS(cpu, instr);
-			goto COMPLETION_OP;
+			goto COMPL_RETIRE;
 			break;
 
 		case AXP_FUNC_WH64:
@@ -1456,21 +1305,11 @@ OP_HW_MFPR:		/* OPCODE: 0x19 */
 	if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWMFPR(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_JMP:			/* OPCODE: 0x1a */
 	instr->excRegMask = AXP_JMP(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_HW_LD:		/* OPCODE: 0x1b */
 	if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
@@ -1565,40 +1404,24 @@ OP_SEXTB:		/* OPCODE: 0x1c */
 			goto RESERVED_OP;
 			break;
 	}
-
-	/*
-	 * These instructions complete immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_HW_MTPR:		/* OPCODE: 0x1d */
 	if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWMTPR(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_HW_RET:		/* OPCODE: 0x1e */
 	if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
 	instr->excRegMask = AXP_HWRET(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_HW_ST:		/* OPCODE: 0x1f */
 	if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
-	instr->excRegMask = AXP_HWST(cpu, instr);
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_LDF:			/* OPCODE: 0x20 */
 	instr->excRegMask = AXP_LDF(cpu, instr);
@@ -1666,151 +1489,83 @@ OP_STQ_C:		/* OPCODE: 0x2f */
 
 OP_BR:			/* OPCODE: 0x30 */
 	instr->excRegMask = AXP_BR(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_FBEQ:		/* OPCODE: 0x31 */
 	instr->excRegMask = AXP_FBEQ(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_FBLT:		/* OPCODE: 0x32 */
 	instr->excRegMask = AXP_FBLT(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_FBLE:		/* OPCODE: 0x33 */
 	instr->excRegMask = AXP_FBLE(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_BSR:			/* OPCODE: 0x34 */
 	instr->excRegMask = AXP_BSR(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_FBNE:		/* OPCODE: 0x35 */
 	instr->excRegMask = AXP_FBNE(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_FBGE:		/* OPCODE: 0x36 */
 	instr->excRegMask = AXP_FBGE(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_FBGT:		/* OPCODE: 0x37 */
 	instr->excRegMask = AXP_FBGT(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_BLBC:		/* OPCODE: 0x38 */
 	instr->excRegMask = AXP_BLBC(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_BEQ:			/* OPCODE: 0x39 */
 	instr->excRegMask = AXP_BEQ(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_BLT:			/* OPCODE: 0x3a */
 	instr->excRegMask = AXP_BLT(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_BLE:			/* OPCODE: 0x3b */
 	instr->excRegMask = AXP_BLE(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_BLBS:		/* OPCODE: 0x3c */
 	instr->excRegMask = AXP_BLBS(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_BNE:			/* OPCODE: 0x3d */
 	instr->excRegMask = AXP_BNE(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_BGE:			/* OPCODE: 0x3e */
 	instr->excRegMask = AXP_BGE(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 OP_BGT:			/* OPCODE: 0x3f */
 	instr->excRegMask = AXP_BGT(cpu, instr);
-
-	/*
-	 * This instruction completes immediately.
-	 */
-	instr->state = WaitingRetirement;
-	goto COMPLETION_OP;
+	goto COMPL_RETIRE;
 
 RESERVED_OP:
-	instr->excRegMask = IllegalOperand;
-	AXP_21264_Ibox_Event(
+
+	/*
+	 * We lock the ROB mutex while looking at it and potentially setting it.
+	 * We don't want some other thread changing the value of state while we are
+	 * looking at it and potentially setting it ourselves.  So, if it is not
+	 * in Executing state, then something else already occurred and we should
+	 * not report this event.
+	 */
+	pthread_mutex_lock(&cpu->robMutex);
+	locked = true;
+	if (instr->state == Executing)
+	{
+		instr->excRegMask = IllegalOperand;
+		AXP_21264_Ibox_Event(
 					cpu,
 					AXP_OPCDEC,
 					instr->pc,
@@ -1819,7 +1574,36 @@ RESERVED_OP:
 					AXP_UNMAPPED_REG,
 					false,
 					false);
-	instr->state = WaitingRetirement;
+	}
+
+	/*
+	 * It is the intent to fall through.
+	 */
+
+COMPL_RETIRE:
+
+	/*
+	 * If we didn't lock the ROB mutex above, then do so now.
+	 */
+	if (locked == false)
+		pthread_mutex_lock(&cpu->robMutex);
+
+	/*
+	 * If this instruction is in Executing state, then we can change it to
+	 * Waiting Retirment.
+	 */
+	if (instr->state == Executing)
+		instr->state = WaitingRetirement;
+
+	/*
+	 * OK, the ROB mutex can be unlocked.
+	 */
+	pthread_mutex_unlock(&cpu->robMutex);
+	locked = false;
+
+	/*
+	 * It is the intent to fall through.
+	 */
 
 COMPLETION_OP:
 

@@ -170,11 +170,6 @@ AXP_EXCEPTIONS AXP_ADDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetExcSum(instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -280,11 +275,6 @@ AXP_EXCEPTIONS AXP_ADDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetExcSum(instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -340,11 +330,6 @@ AXP_EXCEPTIONS AXP_CMPGEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (raised != 0)
 		AXP_FP_SetExcSum(instr, raised, false);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -407,11 +392,6 @@ AXP_EXCEPTIONS AXP_CMPGLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		AXP_FP_SetExcSum(instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -469,11 +449,6 @@ AXP_EXCEPTIONS AXP_CMPGLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (raised != 0)
 		AXP_FP_SetExcSum(instr, raised, false);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -609,11 +584,6 @@ AXP_EXCEPTIONS AXP_CVTGQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		AXP_FP_SetExcSum(instr, raised, true);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -666,11 +636,6 @@ AXP_EXCEPTIONS AXP_CVTQF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_fpNormalize(&instr->destv.fp.fpr);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -720,11 +685,6 @@ AXP_EXCEPTIONS AXP_CVTQG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Normalize the destination register.
 	 */
 	AXP_FP_fpNormalize(&instr->destv.fp.fpr);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -820,11 +780,6 @@ AXP_EXCEPTIONS AXP_CVTDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		AXP_FP_SetExcSum(instr, raised, true);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -916,11 +871,6 @@ AXP_EXCEPTIONS AXP_CVTGD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (raised != 0)
 		AXP_FP_SetExcSum(instr, raised, true);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1015,11 +965,6 @@ AXP_EXCEPTIONS AXP_CVTGF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (raised != 0)
 		AXP_FP_SetExcSum(instr, raised, true);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1178,11 +1123,6 @@ AXP_EXCEPTIONS AXP_DIVF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetExcSum(instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -1293,11 +1233,6 @@ AXP_EXCEPTIONS AXP_DIVG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetExcSum(instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -1341,11 +1276,6 @@ AXP_EXCEPTIONS AXP_ITOFF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.fp.sCvt.exponent = exp;
 	instr->destv.fp.sCvt.fraction = src1v->fraction;
 	instr->destv.fp.sCvt.zero = 0;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1497,11 +1427,6 @@ AXP_EXCEPTIONS AXP_MULF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetExcSum(instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -1607,11 +1532,6 @@ AXP_EXCEPTIONS AXP_MULG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetExcSum(instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -1702,11 +1622,6 @@ AXP_EXCEPTIONS AXP_SQRTF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetExcSum(instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -1794,11 +1709,6 @@ AXP_EXCEPTIONS AXP_SQRTG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * instruction).
 	 */
 	AXP_FP_SetExcSum(instr, raised, false);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1946,11 +1856,6 @@ AXP_EXCEPTIONS AXP_SUBF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetExcSum(instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -2054,11 +1959,6 @@ AXP_EXCEPTIONS AXP_SUBG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	raised &= (FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
 	AXP_FP_SetExcSum(instr, raised, false);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.

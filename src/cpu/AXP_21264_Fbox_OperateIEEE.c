@@ -151,11 +151,6 @@ AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetFPCR(cpu, instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -276,11 +271,6 @@ AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetFPCR(cpu, instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -338,11 +328,6 @@ AXP_EXCEPTIONS AXP_CMPTEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if (raised != 0)
 		AXP_FP_SetFPCR(cpu, instr, raised, false);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -404,11 +389,6 @@ AXP_EXCEPTIONS AXP_CMPTLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		AXP_FP_SetFPCR(cpu, instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -468,11 +448,6 @@ AXP_EXCEPTIONS AXP_CMPTLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		AXP_FP_SetFPCR(cpu, instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -510,11 +485,6 @@ AXP_EXCEPTIONS AXP_CMPTUN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		instr->destv.fp.uq = AXP_T_TWO;
 	else
 		instr->destv.fp.uq = AXP_FPR_ZERO;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -637,11 +607,6 @@ AXP_EXCEPTIONS AXP_CVTTQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetFPCR(cpu, instr, raised, true);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -736,11 +701,6 @@ AXP_EXCEPTIONS AXP_CVTQS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetFPCR(cpu, instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -833,11 +793,6 @@ AXP_EXCEPTIONS AXP_CVTQT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Set the FPCR and ExcSum registers.
 	 */
 	AXP_FP_SetFPCR(cpu, instr, raised, true);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -950,11 +905,6 @@ AXP_EXCEPTIONS AXP_CVTST(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Set the FPCR and ExcSum registers.
 	 */
 	AXP_FP_SetFPCR(cpu, instr, raised, true);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1076,11 +1026,6 @@ AXP_EXCEPTIONS AXP_CVTTS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Set the FPCR and ExcSum registers.
 	 */
 	AXP_FP_SetFPCR(cpu, instr, raised, true);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1208,11 +1153,6 @@ AXP_EXCEPTIONS AXP_DIVS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetFPCR(cpu, instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -1334,11 +1274,6 @@ AXP_EXCEPTIONS AXP_DIVT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetFPCR(cpu, instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -1376,11 +1311,6 @@ AXP_EXCEPTIONS AXP_FTOIS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		 ((instr->src1v.fp.uq & 0x07FFFFFFE0000000ll) >> 29));
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -1413,11 +1343,6 @@ AXP_EXCEPTIONS AXP_FTOIT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Execute the instruction.
 	 */
 	instr->destv.r.uq = instr->src1v.fp.uq;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1455,11 +1380,6 @@ AXP_EXCEPTIONS AXP_ITOFS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.fp = AXP_FP_CvtFloatToFPR(src1v);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -1492,11 +1412,6 @@ AXP_EXCEPTIONS AXP_ITOFT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Execute the instruction.
 	 */
 	instr->destv.fp.uq = instr->src1v.r.uq;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1623,11 +1538,6 @@ AXP_EXCEPTIONS AXP_MULS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetFPCR(cpu, instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -1746,11 +1656,6 @@ AXP_EXCEPTIONS AXP_MULT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Set the FPCR and ExcSum registers.
 	 */
 	AXP_FP_SetFPCR(cpu, instr, raised, false);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -1874,11 +1779,6 @@ AXP_EXCEPTIONS AXP_SQRTS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetFPCR(cpu, instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -1995,11 +1895,6 @@ AXP_EXCEPTIONS AXP_SQRTT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Set the FPCR and ExcSum registers.
 	 */
 	AXP_FP_SetFPCR(cpu, instr, raised, false);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -2126,11 +2021,6 @@ AXP_EXCEPTIONS AXP_SUBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_FP_SetFPCR(cpu, instr, raised, false);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -2250,11 +2140,6 @@ AXP_EXCEPTIONS AXP_SUBT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Set the FPCR and ExcSum registers.
 	 */
 	AXP_FP_SetFPCR(cpu, instr, raised, false);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.

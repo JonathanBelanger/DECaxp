@@ -112,11 +112,6 @@ AXP_EXCEPTIONS AXP_HWST(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		instr->src1v.r.uq);
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -168,13 +163,8 @@ AXP_EXCEPTIONS AXP_HWRET(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	AXP_EXCEPTIONS retVal = NoException;
 
 	/*
-	 * Implement the instruction.
+	 * TODO: Implement the HW_RET instruction.
 	 */
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -215,11 +205,6 @@ AXP_EXCEPTIONS AXP_HWMFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * instruction retirement.  This instruction is actually implemented in the
 	 * retirement code in the Ibox.
 	 *
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -259,10 +244,7 @@ AXP_EXCEPTIONS AXP_HWMTPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * retirement code in the Ibox.
 	 *
 	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
+	 *
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);

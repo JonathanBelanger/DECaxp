@@ -71,7 +71,8 @@
  *		do not match.
  *
  * Return Value:
- *	None.
+ *	true:	Prediction logic indicates to take the branch.
+ *	false:	Prediction logic indicates to not take the branch.
  */
 bool AXP_Branch_Prediction(
 				AXP_21264_CPU *cpu,
@@ -170,6 +171,8 @@ bool AXP_Branch_Prediction(
  *		a single CPU.
  *	vpc:
  *		A 64-bit value of the Virtual Program Counter.
+ *	taken:
+ *		A value indicating if the branch is being taken or not.
  *	localTaken:
  *		A value of what was predicted by the local predictor.
  *	globalTaken:
@@ -196,7 +199,7 @@ void AXP_Branch_Direction(
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
-				"Called into AXP_Branch_Direction for pc: 0x016llx",
+				"Called into AXP_Branch_Direction for pc: 0x%016llx",
 				*((u64 *) &vpc));
 		AXP_TRACE_END();
 	}
@@ -220,7 +223,7 @@ void AXP_Branch_Direction(
 		{
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite(
-					"AXP_Branch_Direction for pc: 0x016llx, "
+					"AXP_Branch_Direction for pc: 0x%016llx, "
 					"Local Prediction Correct",
 					*((u64 *) &vpc));
 			AXP_TRACE_END();
@@ -235,7 +238,7 @@ void AXP_Branch_Direction(
 	 *
 	 * NOTE:	If the branch taken does not match both the local and global
 	 *			predictions, then we don't update the choice at all (we had a
-	 *			mis-prediction).
+	 *			misprediction).
 	 */
 	else if ((taken != localTaken) && (taken == globalTaken))
 	{
@@ -243,7 +246,7 @@ void AXP_Branch_Direction(
 		{
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite(
-					"AXP_Branch_Direction for pc: 0x016llx, "
+					"AXP_Branch_Direction for pc: 0x%016llx, "
 					"Global Prediction Correct",
 					*((u64 *) &vpc));
 			AXP_TRACE_END();
@@ -268,7 +271,7 @@ void AXP_Branch_Direction(
 		{
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite(
-					"AXP_Branch_Direction for pc: 0x016llx, Branch Taken",
+					"AXP_Branch_Direction for pc: 0x%016llx, Branch Taken",
 					*((u64 *) &vpc));
 			AXP_TRACE_END();
 		}
@@ -283,7 +286,7 @@ void AXP_Branch_Direction(
 		{
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite(
-					"AXP_Branch_Direction for pc: 0x016llx, Branch Not Taken",
+					"AXP_Branch_Direction for pc: 0x%016llx, Branch Not Taken",
 					*((u64 *) &vpc));
 			AXP_TRACE_END();
 		}

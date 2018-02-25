@@ -466,7 +466,7 @@ void *AXP_21264_FboxOthMain(void *voidPtr)
  */
 void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 {
-	AXP_QUEUE_ENTRY		*entry;
+	AXP_QUEUE_ENTRY		*entry, *next;
 	bool				notMe = true;
 	bool				notFirstTime = false;
 	bool				fpEnabled;
@@ -514,9 +514,10 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			    (cpu->cpuState != ShuttingDown)) ||
 			   (notMe == true))
 		{
-			notMe = false;
 			pthread_cond_wait(&cpu->fBoxCondition, &cpu->fBoxMutex);
+			notMe = false;
 		}
+		notMe = false;
 
 		if (AXP_FBOX_OPT2)
 		{
@@ -562,6 +563,33 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 				}
 
 				/*
+				 * Get the next queued entry, because if an instruction was
+				 * aborted, but not yet dequeued, we are going to have to get
+				 * rid of this entry and not process it.
+				 */
+				next = (AXP_QUEUE_ENTRY *) entry->header.flink;
+
+				/*
+				 * First we need to lock the ROB mutex.  We don't want some
+				 * other thread changing the contents while we are looking at
+				 * it.  We are looking to see if the instruction was aborted.
+				 */
+				pthread_mutex_lock(&cpu->robMutex);
+				if (entry->ins->state != Queued)
+				{
+
+					/*
+					 * The instruction should only be in a Queued state on the
+					 * IQ, and it is not.  So, dequeue it and returning for
+					 * later processing.
+					 */
+					AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+					AXP_ReturnIQEntry(cpu, entry);
+					notMe = true;
+				}
+				pthread_mutex_unlock(&cpu->robMutex);
+
+				/*
 				 * We are only looking for entries that can be executed in the
 				 * correct Floating Point cluster and have only been queued for
 				 * processing and the registers needed for the instruction are
@@ -570,7 +598,8 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 				 */
 				if ((entry->ins->pipeline == pipeline) &&
 					(entry->ins->state == Queued) &&
-					(AXP_21264_Fbox_RegistersReady(cpu, entry) == true))
+					(AXP_21264_Fbox_RegistersReady(cpu, entry) == true) &&
+					(notMe == false))
 				{
 					if (AXP_FBOX_OPT2)
 					{
@@ -586,8 +615,12 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 					}
 					break;
 				}
-				else
-					entry = (AXP_QUEUE_ENTRY *) entry->header.flink;
+
+				/*
+				 * Go to the next entry.
+				 */
+				entry = next;
+				notMe = false;
 			}
 
 			/*
@@ -638,8 +671,10 @@ void AXP_21264_FboxMain(AXP_21264_CPU *cpu, AXP_PIPELINE pipeline)
 			 * dequeue it from the queue.  Then, dispatch it to the function
 			 * to execute the instruction.
 			 */
-			entry->ins->state = Executing;
 			AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+			pthread_mutex_lock(&cpu->robMutex);
+			entry->ins->state = Executing;
+			pthread_mutex_unlock(&cpu->robMutex);
 
 			/*
 			 * Now that we have the instruction to be executed, we can unlock

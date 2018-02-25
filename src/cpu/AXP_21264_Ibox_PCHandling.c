@@ -211,8 +211,8 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 }
 
 /*
- * AXP_21264_GetVPC
- * 	This function is called to get the Virtual Program Counter (VPC) to a
+ * AXP_21264_MakeVPC
+ * 	This function is called to set a Virtual Program Counter (VPC) to a
  * 	specific value.
  *
  * Input Parameters:
@@ -230,7 +230,7 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
  * Return Value:
  * 	The calculated VPC, based on a target virtual address.
  */
-AXP_PC AXP_21264_GetVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
+AXP_PC AXP_21264_MakeVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 {
 	union
 	{
@@ -355,19 +355,14 @@ AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *cpu)
  * Return Value:
  * 	The value of the PC with the displacement.
  */
-AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, i64 displacement)
+AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, AXP_PC pc, i64 displacement)
 {
-	AXP_PC vpc;
-
-	/*
-	 * Get the PC for the instruction just executed.
-	 */
-	vpc = AXP_21264_GetNextVPC(cpu);
+	AXP_PC vpc = pc;
 
 	/*
 	 * Increment and then add the displacement.
 	 */
-	vpc.pc = vpc.pc + 1 + displacement;
+	vpc.pc = vpc.pc + displacement;
 
 	if (AXP_IBOX_OPT2)
 	{

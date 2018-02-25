@@ -61,11 +61,6 @@ AXP_EXCEPTIONS AXP_MINUB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -103,11 +98,6 @@ AXP_EXCEPTIONS AXP_MINSB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	for (ii = 0; ii < (sizeof(i64)/sizeof(i8)); ii++)
 		Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -149,11 +139,6 @@ AXP_EXCEPTIONS AXP_MINUW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -191,11 +176,6 @@ AXP_EXCEPTIONS AXP_MINSW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	for (ii = 0; ii < (sizeof(i64)/sizeof(i16)); ii++)
 		Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -237,11 +217,6 @@ AXP_EXCEPTIONS AXP_MAXUB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -279,11 +254,6 @@ AXP_EXCEPTIONS AXP_MAXSB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	for (ii = 0; ii < (sizeof(i64)/sizeof(i8)); ii++)
 		Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -325,11 +295,6 @@ AXP_EXCEPTIONS AXP_MAXUW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -367,11 +332,6 @@ AXP_EXCEPTIONS AXP_MAXSW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	for (ii = 0; ii < (sizeof(i64)/sizeof(i16)); ii++)
 		Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -414,11 +374,6 @@ AXP_EXCEPTIONS AXP_PERR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.r.uq = temp;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -455,11 +410,6 @@ AXP_EXCEPTIONS AXP_PKLB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.r.uq = 0;
 	Rcv[0] = Rbv[0];
 	Rcv[1] = Rbv[8];
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -502,11 +452,6 @@ AXP_EXCEPTIONS AXP_PKWB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	Rcv[3] = Rbv[8];
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -543,11 +488,6 @@ AXP_EXCEPTIONS AXP_UNPKBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.r.uq = 0;
 	Rcv[0] = Rbv[0];
 	Rcv[8] = Rbv[1];
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -588,11 +528,6 @@ AXP_EXCEPTIONS AXP_UNPKBW(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	Rcv[2] = Rbv[1];
 	Rcv[3] = Rbv[2];
 	Rcv[6] = Rbv[3];
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.

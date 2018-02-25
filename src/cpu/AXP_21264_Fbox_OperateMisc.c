@@ -61,11 +61,6 @@ AXP_EXCEPTIONS AXP_CPYS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.fp.fpr.sign = instr->src1v.fp.fpr.sign;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -100,11 +95,6 @@ AXP_EXCEPTIONS AXP_CPYSE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.fp.fpr.sign = instr->src1v.fp.fpr.sign;
 	instr->destv.fp.fpr.exponent = instr->src1v.fp.fpr.exponent;
 	instr->destv.fp.fpr.fraction = instr->src2v.fp.fpr.fraction;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -142,11 +132,6 @@ AXP_EXCEPTIONS AXP_CPYSN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.fp.fpr.sign = ~instr->src1v.fp.fpr.sign;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -181,11 +166,6 @@ AXP_EXCEPTIONS AXP_CVTLQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	instr->destv.fp.qCvt.sign = instr->src1v.fp.l.sign;
 	instr->destv.fp.qCvt.integerHigh = instr->src1v.fp.l.integerHigh;
 	instr->destv.fp.qCvt.integerLow = instr->src1v.fp.l.integerLow;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -241,11 +221,6 @@ AXP_EXCEPTIONS AXP_CVTQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	}
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(retVal);
@@ -280,11 +255,6 @@ AXP_EXCEPTIONS AXP_FCMOVEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	if ((instr->src1v.fp.fpr.exponent == 0) &&
 		(instr->src1v.fp.fpr.fraction == 0))
 		instr->destv.fp.uq = instr->src2v.fp.uq;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -322,11 +292,6 @@ AXP_EXCEPTIONS AXP_FCMOVGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		instr->destv.fp.uq = instr->src2v.fp.uq;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -360,11 +325,6 @@ AXP_EXCEPTIONS AXP_FCMOVGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if ((instr->src1v.fp.fpr.sign == 0) && (instr->src1v.fp.uq != 0))
 		instr->destv.fp.uq = instr->src2v.fp.uq;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -402,11 +362,6 @@ AXP_EXCEPTIONS AXP_FCMOVLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		instr->destv.fp.uq = instr->src2v.fp.uq;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -440,11 +395,6 @@ AXP_EXCEPTIONS AXP_FCMOVLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 */
 	if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq != 0))
 		instr->destv.fp.uq = instr->src2v.fp.uq;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -482,11 +432,6 @@ AXP_EXCEPTIONS AXP_FCMOVNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		instr->destv.fp.uq = instr->src2v.fp.uq;
 
 	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
-
-	/*
 	 * Return back to the caller with any exception that may have occurred.
 	 */
 	return(NoException);
@@ -519,11 +464,6 @@ AXP_EXCEPTIONS AXP_MF_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Implement the instruction
 	 */
 	instr->destv.fp.uq = *((u64 *) &cpu->fpcr);
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
@@ -561,11 +501,6 @@ AXP_EXCEPTIONS AXP_MT_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * 		 instruction retirement.
 	 */
 	instr->destv.fp.uq = instr->src1v.fp.uq;
-
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.
