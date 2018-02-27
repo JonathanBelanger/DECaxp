@@ -27,8 +27,8 @@
  *	V01.001		29-Jun-2017	Jonathan D. Belanger
  *	Added instruction function prototypes.
  *
- *  V01.002		19-Jul-2017 Jonathan D. Belanger
- *  Added VAX Compatibility and Multimedia instruction prototypes.
+ *	V01.002		19-Jul-2017 Jonathan D. Belanger
+ *	Added VAX Compatibility and Multimedia instruction prototypes.
  *
  *	V01.003		20-Jul-2017	Jonathan D. Belanger
  *	Added the Miscellaneous instruction prototypes.
@@ -36,6 +36,10 @@
  *	V01.004		01-Jan-2018	Jonathan D. Belanger
  *	Changed the way instructions are completed when they need to utilize the
  *	Mbox.
+ *
+ *	V01.005		27-Feb-2018	Jonathan D. Belanger
+ *	The EboxMain and FboxMain functions were nearly identical, so they were
+ *	combined into one that is now in COMUTL.
  */
 #ifndef _AXP_21264_EBOX_DEFS_
 #define _AXP_21264_EBOX_DEFS_
@@ -227,7 +231,5 @@ void *AXP_21264_EboxU0Main(void *);
 void *AXP_21264_EboxU1Main(void *);
 void *AXP_21264_EboxL0Main(void *);
 void *AXP_21264_EboxL1Main(void *);
-void AXP_21264_EboxMain(AXP_21264_CPU *, int);
 
 #endif /* _AXP_21264_EBOX_DEFS_ */
-
