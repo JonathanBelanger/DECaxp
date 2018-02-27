@@ -36,11 +36,16 @@
  *	some point I'll add a main for each pipeline, each of which calls a common
  *	main with parameters to have the common main execute specific to the
  *	pipeline main that called it.
+ *
+ *	V01.004		27-Feb-2018	Jonathan D. Belanger
+ *	The EboxMain and FboxMain functions were nearly identical, so they were
+ *	combined into one that is now in COMUTL.
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Ebox.h"
 #include "AXP_21264_Ibox_InstructionInfo.h"
 #include "AXP_Trace.h"
+#include "AXP_Execute_Box.h"
 
 static char *pipelineStr[] = {"U0", "U1", "L0", "L1"};
 static char *insPipelineStr[] =
@@ -305,7 +310,13 @@ void *AXP_21264_EboxU0Main(void *voidPtr)
 	 * Call the actual main function with the information it needs to be able
 	 * to execute instructions for a specific Integer Pipeline.
 	 */
-	AXP_21264_EboxMain(cpu, AXP_U0_PIPELINE);
+	AXP_Execution_Box(
+				cpu,
+				EboxU0,
+				&cpu->iq,
+				&cpu->eBoxCondition,
+				&cpu->eBoxMutex,
+				&AXP_ReturnIQEntry);
 
 	/*
 	 * Return back to the caller.
@@ -346,7 +357,13 @@ void *AXP_21264_EboxU1Main(void *voidPtr)
 	 * Call the actual main function with the information it needs to be able
 	 * to execute instructions for a specific Integer Pipeline.
 	 */
-	AXP_21264_EboxMain(cpu, AXP_U1_PIPELINE);
+	AXP_Execution_Box(
+				cpu,
+				EboxU1,
+				&cpu->iq,
+				&cpu->eBoxCondition,
+				&cpu->eBoxMutex,
+				&AXP_ReturnIQEntry);
 
 	/*
 	 * Return back to the caller.
@@ -387,7 +404,13 @@ void *AXP_21264_EboxL0Main(void *voidPtr)
 	 * Call the actual main function with the information it needs to be able
 	 * to execute instructions for a specific Integer Pipeline.
 	 */
-	AXP_21264_EboxMain(cpu, AXP_L0_PIPELINE);
+	AXP_Execution_Box(
+				cpu,
+				EboxL0,
+				&cpu->iq,
+				&cpu->eBoxCondition,
+				&cpu->eBoxMutex,
+				&AXP_ReturnIQEntry);
 
 	/*
 	 * Return back to the caller.
@@ -428,305 +451,16 @@ void *AXP_21264_EboxL1Main(void *voidPtr)
 	 * Call the actual main function with the information it needs to be able
 	 * to execute instructions for a specific Integer Pipeline.
 	 */
-	AXP_21264_EboxMain(cpu, AXP_L1_PIPELINE);
+	AXP_Execution_Box(
+				cpu,
+				EboxL1,
+				&cpu->iq,
+				&cpu->eBoxCondition,
+				&cpu->eBoxMutex,
+				&AXP_ReturnIQEntry);
 
 	/*
 	 * Return back to the caller.
 	 */
 	return(NULL);
-}
-
-/*
- * AXP_21264_EboxMain
- *	This is the main function for all the Integer pipelines.  It is called with
- *	the information needed to perform the processing for a specific pipeline
- *	within the Ebox pipeline  It waits on something needing processing to be
- *	put onto the IQ.  It scans from oldest to newest looking for the next
- *	instruction to be able to be processed by the U0/U1/L0/L1 CPU pipeline.
- *
- *	The Ebox is broken up into 4 pipelines, U0, U1, L0, and L1.  Some
- *	instructions can execute in one or the other, and a few can execute in
- *	either.  Each of these pipelines is a separate thread, but they all share
- *	the same IQ.  In order to be able to handle this, there is a single
- *	mutex/condition variable.  To avoid one thread locking out another, the
- *	mutex is only locked while either looking for the next instruction to
- *	process or waiting for the condition variable to be broadcast.  Once a
- *	queued instruction is found that can be processed by this pipeline, its
- *	state will be set to executing and then the mutex unlocked.  If nothing is
- *	found that can be executed, then this thread will wait on the condition
- *	again, which will unlock the mutex.
- *
- * Input Parameters:
- *	cpu:
- *		A pointer to the Digital Alpha AXP 21264 cpu data structure.
- *	pipeline:
- *		A value indicating which pipeline this function will be executing.
- *
- * Output Parameters:
- *	None.
- *
- * Return Values:
- *	None.
- */
-void AXP_21264_EboxMain(AXP_21264_CPU *cpu, int pipeline)
-{
-	static AXP_PIPELINE	pipelineCond[AXP_EBOX_PIPELINE_MAX][3] =
-	{
-		{EboxU0, EboxU0U1, EboxL0L1U0U1},	/* U0 */
-		{EboxU1, EboxU0U1, EboxL0L1U0U1},	/* U1 */
-		{EboxL0, EboxL0L1, EboxL0L1U0U1},	/* L0 */
-		{EboxL1, EboxL0L1, EboxL0L1U0U1}	/* L1 */
-	};
-	AXP_QUEUE_ENTRY		*entry, *next;
-	bool				notMe = true;
-	bool				notFirstTime = false;
-
-	/*
-	 * While we are not shutting down, we'll continue to try and process
-	 * instructions.
-	 */
-	while (cpu->cpuState != ShuttingDown)
-	{
-
-		/*
-		 * This may seem odd to put this here, but before we wait for anything,
-		 * see if there is an instruction that needs to be retired.  Then make
-		 * sure we indicate that the Ebox is no longer waiting to retire an
-		 * instruction.
-		 */
-		if (notFirstTime)
-		{
-			if (AXP_EBOX_OPT2)
-			{
-				AXP_TRACE_BEGIN();
-				AXP_TraceWrite(
-						"Ebox %s is retiring any completed instructions.",
-						pipelineStr[pipeline]);
-				AXP_TRACE_END();
-			}
-			AXP_21264_Ibox_Retire(cpu);
-		}
-		else
-			notFirstTime = true;
-		cpu->eBoxWaitingRetirement = false;
-
-		/*
-		 * Before we go checking the queue, lock the Ebox mutex.
-		 */
-		pthread_mutex_lock(&cpu->eBoxMutex);
-
-		/*
-		 * Next we need to do is see if there is nothing to process,
-		 * then wait for something to get queued up.
-		 */
-		while (((AXP_CQUE_EMPTY(cpu->iq) == true) &&
-			    (cpu->eBoxWaitingRetirement == false) &&
-			    (cpu->cpuState != ShuttingDown)) ||
-			   (notMe == true))
-		{
-			pthread_cond_wait(&cpu->eBoxCondition, &cpu->eBoxMutex);
-			notMe = false;
-		}
-		notMe = false;
-
-		if (AXP_EBOX_OPT2)
-		{
-			AXP_TRACE_BEGIN();
-			AXP_TraceWrite(
-					"Ebox %s signaled an instruction has been put on the IQ.",
-					pipelineStr[pipeline]);
-			AXP_TRACE_END();
-		}
-
-		/*
-		 * If we are not shutting down, then we may have something to process.
-		 * Let's go looking for trouble.
-		 */
-		if (cpu->cpuState != ShuttingDown)
-		{
-			entry = (AXP_QUEUE_ENTRY *) cpu->iq.flink;
-
-			/*
-			 * Search through the queue of pending integer pipeline
-			 * instructions.  If we find one for this cluster, then break out
-			 * of this loop.  Otherwise, move on to the next entry in the
-			 * queue.  Since the queue eventually points back to the
-			 * parent/header, this will exit the loop as well.
-			 */
-			while ((void *) entry != (void *) &cpu->iq)
-			{
-				if (AXP_EBOX_OPT2)
-				{
-					AXP_TRACE_BEGIN();
-					AXP_TraceWrite(
-							"Ebox %s checking at "
-							"pc = 0x%016llx, "
-							"opcode = 0x%02x, "
-							"pipeline = %s, "
-							"state = %s.",
-							pipelineStr[pipeline],
-							*((u64 *) &entry->ins->pc),
-							(u32) entry->ins->opcode,
-							insPipelineStr[entry->ins->pipeline],
-							insStateStr[entry->ins->state]);
-					AXP_TRACE_END();
-				}
-
-				/*
-				 * Get the next queued entry, because if an instruction was
-				 * aborted, but not yet dequeued, we are going to have to get
-				 * rid of this entry and not process it.
-				 */
-				next = (AXP_QUEUE_ENTRY *) entry->header.flink;
-
-				/*
-				 * First we need to lock the ROB mutex.  We don't want some
-				 * other thread changing the contents while we are looking at
-				 * it.  We are looking to see if the instruction was aborted.
-				 */
-				pthread_mutex_lock(&cpu->robMutex);
-				if (entry->ins->state != Queued)
-				{
-
-					/*
-					 * The instruction should only be in a Queued state on the
-					 * IQ, and it is not.  So, dequeue it and returning for
-					 * later processing.
-					 */
-					AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
-					AXP_ReturnIQEntry(cpu, entry);
-					notMe = true;
-				}
-				pthread_mutex_unlock(&cpu->robMutex);
-
-				/*
-				 * We are only looking for entries that can be executed in the
-				 * correct Integer cluster and have only been queued for
-				 * processing and the registers needed for the instruction are
-				 * ready to be used (the source registers need to not be
-				 * waiting for previous instruction to write to it).
-				 */
-				if (((entry->ins->pipeline == pipelineCond[pipeline][0]) ||
-					 (entry->ins->pipeline == pipelineCond[pipeline][1]) ||
-					 (entry->ins->pipeline == pipelineCond[pipeline][2])) &&
-					(entry->ins->state == Queued) &&
-					(AXP_21264_Ebox_RegistersReady(cpu, entry) == true) &&
-					(notMe == false))
-				{
-					if (AXP_EBOX_OPT2)
-					{
-						AXP_TRACE_BEGIN();
-						AXP_TraceWrite(
-								"Ebox %s can execute "
-								"pc = 0x%016llx, "
-								"opcode = 0x%02x",
-								pipelineStr[pipeline],
-								*((u64 *) &entry->ins->pc),
-								(u32) entry->ins->opcode);
-						AXP_TRACE_END();
-					}
-					break;
-				}
-
-				/*
-				 * Go to the next entry.
-				 */
-				entry = next;
-				notMe = false;
-			}
-
-			/*
-			 * If we did not find an instruction to execute, then go back to
-			 * the beginning of the loop.  Since we did not unlock the mutex,
-			 * we do not need to lock it now.
-			 */
-			if ((void *) entry == (void *) &cpu->iq)
-			{
-				notMe = true;
-
-				if (AXP_EBOX_OPT2)
-				{
-					AXP_TRACE_BEGIN();
-					AXP_TraceWrite(
-							"Ebox %s has nothing to process.",
-							pipelineStr[pipeline]);
-					AXP_TRACE_END();
-				}
-
-				/*
-				 * Before going back to the top of the loop, unlock the Ebox
-				 * mutex.
-				 */
-				pthread_mutex_unlock(&cpu->eBoxMutex);
-				continue;
-			}
-
-			/*
-			 * OK, we have something to execute.  Mark the entry as such and
-			 * dequeue it from the queue.  Then, dispatch it to the function
-			 * to execute the instruction.
-			 */
-			if (AXP_EBOX_OPT2)
-			{
-				AXP_TRACE_BEGIN();
-				AXP_TraceWrite(
-						"Ebox %s has something to process at "
-						"pc = 0x%016llx, opcode = 0x%02x.",
-						pipelineStr[pipeline],
-						*((u64 *) &entry->ins->pc),
-						(u32) entry->ins->opcode);
-				AXP_TRACE_END();
-			}
-			AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
-			pthread_mutex_lock(&cpu->robMutex);
-			entry->ins->state = Executing;
-			pthread_mutex_unlock(&cpu->robMutex);
-
-			/*
-			 * Now that we have the instruction to be executed, we can unlock
-			 * the Ebox mutex and allow the other Ebox threads a chance to
-			 * execute.
-			 */
-			pthread_mutex_unlock(&cpu->eBoxMutex);
-
-			/*
-			 * Call the dispatcher to dispatch this instruction to the correct
-			 * function to execute the instruction.
-			 */
-			if (AXP_EBOX_OPT2)
-			{
-				AXP_TRACE_BEGIN();
-				AXP_TraceWrite(
-						"Ebox %s dispatching instruction, opcode = 0x%02x",
-						pipelineStr[pipeline],
-						entry->ins->opcode);
-				AXP_TRACE_END();
-			}
-			AXP_Dispatcher(cpu, entry->ins);
-			if (AXP_EBOX_OPT2)
-			{
-				AXP_TRACE_BEGIN();
-				AXP_TraceWrite(
-						"Ebox %s dispatched instruction, opcode = 0x%02x",
-						pipelineStr[pipeline],
-						entry->ins->opcode);
-				AXP_TRACE_END();
-			}
-
-			/*
-			 * Return the entry back to the pool for future instructions.
-			 */
-			AXP_ReturnIQEntry(cpu, entry);
-		}
-	}
-
-	/*
-	 * Last things last, lock the Ebox mutex.
-	 */
-	pthread_mutex_unlock(&cpu->eBoxMutex);
-
-	/*
-	 * Return back to the caller.
-	 */
-	return;
 }

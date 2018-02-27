@@ -27,6 +27,10 @@
  *	V01.002		01-Jan-2018	Jonathan D. Belanger
  *	Changed the way instructions are completed when they need to utilize the
  *	Mbox.
+ *
+ *	V01.003		27-Feb-2018	Jonathan D. Belanger
+ *	The EboxMain and FboxMain functions were nearly identical, so they were
+ *	combined into one that is now in COMUTL.
  */
 #ifndef _AXP_21264_FBOX_DEFS_
 #define _AXP_21264_FBOX_DEFS_
@@ -422,5 +426,4 @@ void AXP_21264_Fbox_Compl(AXP_21264_CPU *, AXP_INSTRUCTION *);
 bool AXP_21264_Fbox_Init(AXP_21264_CPU *);
 void *AXP_21264_FboxMulMain(void *);
 void *AXP_21264_FboxOthMain(void *);
-void AXP_21264_FboxMain(AXP_21264_CPU *, AXP_PIPELINE);
 #endif /* _AXP_21264_FBOX_DEFS_ */

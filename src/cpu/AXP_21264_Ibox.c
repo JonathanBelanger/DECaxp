@@ -1559,7 +1559,8 @@ void AXP_21264_Ibox_AbortIns(AXP_21264_CPU *cpu, u32 start)
  *	None.
  *
  * Return Values:
- *	None.
+ *	true:	Instructions are being aborted.
+ *	false:	No instructions were aborted.
  */
 void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 {
@@ -1570,6 +1571,7 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	bool			signalEbox = false;
 	bool			signalFbox = false;
 	bool			updateDest = false;
+	bool			retVal = false;
 
 	/*
 	 * First lock the ROB mutex so that it is not updated by anyone but this
@@ -1733,6 +1735,19 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 					 */
 					if (taken != rob->branchPredict)
 					{
+
+						/*
+						 * We are aborting instructions, as the Ibox made an
+						 * assumption that a branch would be or would not be
+						 * taken, but the assumption was wrong.  So, the Ibox
+						 * either loaded or did not load the correct set of
+						 * instructions.  The Step 4 above took to setting the
+						 * correct instruction PC.  We'll tell the Ibox to stop
+						 * loading instructions at the current PC so that it
+						 * can go start executing the correct set of
+						 * instructions.
+						 */
+						retVal = true;
 
 						/*
 						 * Call the function to abort all instructions
@@ -1917,7 +1932,7 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	/*
 	 * Return back to the caller.
 	 */
-	return;
+	return(retVal);;
 }
 
 /*
@@ -1950,6 +1965,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	u16				whichQueue;
 	int				qFull;
 	bool			noop;
+	bool			aborting;
 
 	/*
 	 * Make sure to initialize the line and set prediction information.
@@ -2056,7 +2072,8 @@ void *AXP_21264_IboxMain(void *voidPtr)
 		 */
 		if (AXP_IcacheFetch(cpu, nextPC, &nextCacheLine) == true)
 		{
-			for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
+			aborting = false;
+			for (ii = 0; ((ii < AXP_NUM_FETCH_INS) && (aborting == false)); ii++)
 			{
 
 				/*
@@ -2293,10 +2310,20 @@ void *AXP_21264_IboxMain(void *voidPtr)
 					decodedInstr->state = WaitingRetirement;
 
 				/*
-				 * Increment the PC, then add it to the PC list.
+				 * Go see if any of there are any instructions that can be
+				 * retired.
 				 */
-				nextPC = AXP_21264_IncrementVPC(cpu);
-				AXP_21264_AddVPC(cpu, nextPC);
+				aborting = AXP_21264_Ibox_Retire(cpu);
+
+				/*
+				 * If we are not aborting, go increment the PC, then add it to
+				 * the PC list.
+				 */
+				if (aborting == false)
+				{
+					nextPC = AXP_21264_IncrementVPC(cpu);
+					AXP_21264_AddVPC(cpu, nextPC);
+				}
 			}
 		}
 
@@ -2417,3 +2444,4 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	}
 	return(NULL);
 }
+
