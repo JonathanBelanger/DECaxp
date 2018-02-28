@@ -45,12 +45,46 @@ static AXP_PIPELINE pipeCond[AXP_PIPE_OPTIONS][3] =
 	{FboxOther,		FboxOther,		FboxOther}
 };
 
+static char *pipelineStr[] =
+{
+	"None",
+	"Ebox U0",
+	"Ebox U1",
+	"",
+	"Ebox L0",
+	"Ebox L1",
+	"",
+	"",
+	"Fbox Multiply",
+	"Fbox Other"
+};
+static char *insPipelineStr[] =
+{
+	"None",
+	"U0",
+	"U1",
+	"U0, U1",
+	"L0",
+	"L1",
+	"L0, L1",
+	"L0, L1, U0, U1",
+	"Multiply",
+	"Other"
+};
+static char *insStateStr[] =
+{
+	"Retired",
+	"Queued",
+	"Executing",
+	"WaitingRetirement"
+};
+
 /*
  * AXP_Execution_Box
  *	This function is called by both the Ebox and Fbox.  The processing loops
  *	for both of them are incredibly similar.  The only real differences are the
  *	determination if a particular pipeline is allowed to execute a particular
- *	instruction, and returing a completed instruction queue entry back to the
+ *	instruction, and returning a completed instruction queue entry back to the
  *	pool for a subsequent instruction.
  *
  * Input Parameters:
@@ -58,7 +92,7 @@ static AXP_PIPELINE pipeCond[AXP_PIPE_OPTIONS][3] =
  *		A pointer to the CPU structure where the instruction queues are
  *		located, along with a number of other
  *
- * Output Parmaeters:
+ * Output Parameters:
  *	None.
  *
  * Return Values:
@@ -74,7 +108,6 @@ void AXP_Execution_Box(
 {
 	AXP_QUEUE_ENTRY	*entry, *next;
 	bool			notMe = true;
-	bool			notFirstTime = false;
 	bool			fpEnable;
 
 	/*
@@ -102,7 +135,7 @@ void AXP_Execution_Box(
 		}
 		notMe = false;
 
-		if (AXP_COMUTL_OPT2)
+		if (AXP_UTL_OPT2)
 		{
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite(
@@ -128,7 +161,7 @@ void AXP_Execution_Box(
 			 */
 			while ((AXP_COUNTED_QUEUE *) entry != queue)
 			{
-				if (AXP_COMUTL_OPT2)
+				if (AXP_UTL_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite(
@@ -184,7 +217,7 @@ void AXP_Execution_Box(
 					 (entry->ins->pipeline == pipeCond[pipeline][2])) &&
 					(notMe == false))
 				{
-					if (AXP_COMUTL_OPT2)
+					if (AXP_UTL_OPT2)
 					{
 						AXP_TRACE_BEGIN();
 						AXP_TraceWrite(
@@ -215,7 +248,7 @@ void AXP_Execution_Box(
 			{
 				notMe = true;
 
-				if (AXP_COMUTL_OPT2)
+				if (AXP_UTL_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite(
@@ -237,7 +270,7 @@ void AXP_Execution_Box(
 			 * dequeue it from the queue.  Then, dispatch it to the function
 			 * to execute the instruction.
 			 */
-			if (AXP_COMUTL_OPT2)
+			if (AXP_UTL_OPT2)
 			{
 				AXP_TRACE_BEGIN();
 				AXP_TraceWrite(
@@ -269,16 +302,6 @@ void AXP_Execution_Box(
 			 */
 			if ((pipeline == FboxMul) || (pipeline == FboxOther))
 			{
-
-				/*
-				 * TODO:	Make sure the retirement code in the Ibox takes
-				 *			into consideration that a prior instruction that
-				 *			will set the fpe flag in the process context IPR
-				 *			has not completed by the time we reach here.  So,
-				 *			it is possible for a floating-point instruction to
-				 *			be executed prior to the instruction that disables
-				 *			floating-point operations in instruction order.
-				 */
 				pthread_mutex_lock(&cpu->iBoxIPRMutex);
 				fpEnable = cpu->pCtx.fpe == 1;
 				pthread_mutex_unlock(&cpu->iBoxIPRMutex);
@@ -293,7 +316,7 @@ void AXP_Execution_Box(
 				 * Call the dispatcher to dispatch this instruction to the correct
 				 * function to execute the instruction.
 				 */
-				if (AXP_COMUTL_OPT2)
+				if (AXP_UTL_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite(
@@ -303,7 +326,7 @@ void AXP_Execution_Box(
 					AXP_TRACE_END();
 				}
 				AXP_Dispatcher(cpu, entry->ins);
-				if (AXP_COMUTL_OPT2)
+				if (AXP_UTL_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite(
@@ -315,15 +338,15 @@ void AXP_Execution_Box(
 			}
 			else
 			{
-				if (AXP_COMUTL_OPT2)
+				if (AXP_UTL_OPT2)
 				{
 					AXP_TRACE_BEGIN();
 					AXP_TraceWrite(
 							"Fbox %s : Floating point instructions are "
 							"currently disabled.",
-							AXP_PIPE_STR(pipeline));
+							pipelineStr[pipeline]);
 					AXP_TRACE_END();
-				} 
+				}
 				entry->ins->excRegMask = FloatingDisabledFault;
 				entry->ins->state = WaitingRetirement;
 			}

@@ -1321,6 +1321,10 @@ void AXP_21264_Ibox_Retire_HW_MTPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  *		processor.
  *	start:
  *		A value indicating where we should begin within the ROB array.
+ *	split:
+ *		A pointer to a boolean for the recalculated split value.
+ *	end:
+ *		A pointer to an unsigned 32-bit integer for the recalculated end value.
  *
  * Output Parameters:
  *	None.
@@ -1328,7 +1332,11 @@ void AXP_21264_Ibox_Retire_HW_MTPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  * Return Values:
  *	None.
  */
-void AXP_21264_Ibox_AbortIns(AXP_21264_CPU *cpu, u32 start)
+void AXP_21264_Ibox_AbortIns(
+						AXP_21264_CPU *cpu,
+						u32 start,
+						bool *retSplit,
+						u32 *retEnd)
 {
 	AXP_INSTRUCTION		*rob;
 	AXP_21264_REG_STATE *destState;
@@ -1508,11 +1516,6 @@ void AXP_21264_Ibox_AbortIns(AXP_21264_CPU *cpu, u32 start)
 		}
 
 		/*
-		 * TODO: We need to go and clear out all events from the event queue.
-		 * TODO: We need to roll back the VPC stack.
-		 */
-
-		/*
 		 * Mark this instruction as being retired (its reset state).
 		 */
 		rob->state = Retired;
@@ -1532,9 +1535,19 @@ void AXP_21264_Ibox_AbortIns(AXP_21264_CPU *cpu, u32 start)
 	}
 
 	/*
-	 * The new end is the first aborted instruction.
+	 * The new end is the first aborted instruction, this include the VPC
+	 * stack.
 	 */
 	cpu->robEnd = start;
+	cpu->vpcEnd = start;
+
+	/*
+	 * Since we just change the end of the ROB, we need to recalculate the
+	 * split and end values (this will affect the while loop from which we are
+	 * called).
+	 */
+	*retSplit = cpu->robEnd < cpu->robStart;
+	*retEnd = (*retSplit ? AXP_INFLIGHT_MAX : cpu->robEnd);
 
 	/*
 	 * Return back to the caller.
@@ -1562,7 +1575,7 @@ void AXP_21264_Ibox_AbortIns(AXP_21264_CPU *cpu, u32 start)
  *	true:	Instructions are being aborted.
  *	false:	No instructions were aborted.
  */
-void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
+bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 {
 	AXP_INSTRUCTION	*rob;
 	u32				ii, end;
@@ -1646,16 +1659,35 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 			 * (physical) register.  If it is a store operation, then we need
 			 * to update the Dcache.
 			 */
-			if (rob->excRegMask != NoException)
+			if ((rob->excRegMask != NoException) && (retVal == false))
 			{
+				u32	fault = AXP_ARITH;
+
+				if (rob->excRegMask == FloatingDisabledFault)
+					fault = AXP_FEN;
 
 				/*
-				 * TODO:	There is quite a bit to re-do/do here.  Right now,
-				 *			events can be generated from the Mbox and Cbox for
-				 *			things that happen while executing an instruction.
-				 *			We need to do some of these in-line with retiring
-				 *			the instruction (namely, right here).
+				 * We are aborting instructions, as the current instruction
+				 * generated an event.  This means that subsequent instructions
+				 * need to be flushed and the PC set to the instruction after
+				 * this one.
 				 */
+				retVal = true;
+				AXP_21264_Ibox_Event(
+							cpu,
+							fault,rob->pc,
+							0,
+							rob->opcode,
+							0,
+							false,
+							true);
+
+				/*
+				 * Call the function to abort all instructions
+				 * immediately after the current one.  This may change
+				 * the value of cpu->robEnd.
+				 */
+				AXP_21264_Ibox_AbortIns(cpu, ii, &split, &end);
 			}
 			else
 			{
@@ -1754,14 +1786,7 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 						 * immediately after the current one.  This may change
 						 * the value of cpu->robEnd.
 						 */
-						AXP_21264_Ibox_AbortIns(cpu, ii);
-
-						/*
-						 * Since we just change the end of the ROB, we need to
-						 * recalculate the while loop values.
-						 */
-						split = cpu->robEnd < cpu->robStart;
-						end = (split ? AXP_INFLIGHT_MAX : cpu->robEnd);
+						AXP_21264_Ibox_AbortIns(cpu, ii, &split, &end);
 					}
 				}
 				else if (((rob->decodedReg.bits.dest & AXP_DEST_FLOAT) ==
@@ -1954,16 +1979,15 @@ void AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 void *AXP_21264_IboxMain(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+	AXP_INSTRUCTION	*decodedInstr;
+	AXP_QUEUE_ENTRY	*xqEntry;
 	AXP_PC			nextPC, branchPC;
 	AXP_INS_LINE	nextCacheLine;
 	AXP_EXCEPTIONS	exception;
-	AXP_INSTRUCTION	*decodedInstr;
-	AXP_QUEUE_ENTRY	*xqEntry;
 	u32				ii, fault;
+	u16				whichQueue;
 	bool			choice, wasRunning = false;
 	bool			_asm;
-	u16				whichQueue;
-	int				qFull;
 	bool			noop;
 	bool			aborting;
 
@@ -2062,6 +2086,12 @@ void *AXP_21264_IboxMain(void *voidPtr)
 			 * the Icache and Fetch those instructions.
 			 */
 			nextPC = AXP_21264_GetNextVPC(cpu);
+
+		/*
+		 * TODO:	The vpcStart, vpcEnd should be the same as the robStart and
+		 *			robEnd.  We should reduce these counters to just a single
+		 *			set.
+		 */
 
 		/*
 		 * The cache fetch will return true or false.  If true, we received the
@@ -2280,7 +2310,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 						xqEntry = AXP_GetNextIQEntry(cpu);
 						xqEntry->ins = decodedInstr;
 						pthread_mutex_lock(&cpu->eBoxMutex);
-						qFull = AXP_InsertCountedQueue(
+						AXP_InsertCountedQueue(
 								(AXP_QUEUE_HDR *) &cpu->iq,
 								(AXP_CQUE_ENTRY *) xqEntry);
 						pthread_cond_broadcast(&cpu->eBoxCondition);
@@ -2291,19 +2321,12 @@ void *AXP_21264_IboxMain(void *voidPtr)
 						xqEntry = AXP_GetNextFQEntry(cpu);
 						xqEntry->ins = decodedInstr;
 						pthread_mutex_lock(&cpu->fBoxMutex);
-						qFull = AXP_InsertCountedQueue(
+						AXP_InsertCountedQueue(
 								(AXP_QUEUE_HDR *) &cpu->fq,
 								(AXP_CQUE_ENTRY *) xqEntry);
 						pthread_cond_broadcast(&cpu->fBoxCondition);
 						pthread_mutex_unlock(&cpu->fBoxMutex);
 					}
-
-					/*
-					 * TODO:	We need to make sure that there is at least four
-					 *			entries available in the IQ/FQ, not just 1.
-					 */
-					if (qFull < 0)
-						printf("\n>>>>> We need to determine if there are any instructions to parse <<<<<\n");
 					decodedInstr->state = Queued;
 				}
 				else
@@ -2421,8 +2444,8 @@ void *AXP_21264_IboxMain(void *voidPtr)
 		 */
 		if (((cpu->excPend == false) &&
 			 (AXP_IcacheValid(cpu, nextPC) == false)) ||
-			((AXP_CountedQueueFull(&cpu->iq) < 0) ||
-			 (AXP_CountedQueueFull(&cpu->fq) < 0)))
+			((AXP_CountedQueueFull(&cpu->iq, AXP_NUM_FETCH_INS) < 0) ||
+			 (AXP_CountedQueueFull(&cpu->fq, AXP_NUM_FETCH_INS) < 0)))
 			pthread_cond_wait(&cpu->iBoxCondition, &cpu->iBoxMutex);
 	}
 	if (AXP_IBOX_OPT1)

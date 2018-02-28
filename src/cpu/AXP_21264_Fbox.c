@@ -47,28 +47,6 @@
 #include "AXP_Trace.h"
 #include "AXP_Execute_Box.h"
 
-static char *pipelineStr[] = {"Multiply", "FP Other"};
-#define AXP_PIPE_STR(pipe)	(pipe == FboxMul ? pipelineStr[0] : pipelineStr[1])
-static char *insPipelineStr[] =
-{
-	"None",
-	"U0",
-	"U1",
-	"U0, U1",
-	"L0",
-	"L1",
-	"L0, L1",
-	"L0, L1, U0, U1",
-	"Multiply",
-	"FP Other"
-};
-static char *insStateStr[] =
-{
-	"Retired",
-	"Queued",
-	"Executing",
-	"WaitingRetirement"
-};
 static char *regStateStr[] =
 {
 	"Free",
