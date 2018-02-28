@@ -62,7 +62,7 @@ void AXP_ReturnIQEntry(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
 void AXP_ReturnFQEntry(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
 void AXP_21264_Ibox_Event(AXP_21264_CPU *, u32, AXP_PC, u64, u8, u8, bool, bool);
 void AXP_21264_Ibox_UpdateIcache(AXP_21264_CPU *, u64, u8 *, u8);
-void AXP_21264_Ibox_Retire(AXP_21264_CPU *);
+bool AXP_21264_Ibox_Retire(AXP_21264_CPU *);
 void *AXP_21264_IboxMain(void *);
 
 #endif /* _AXP_21264_IBOX_DEFS_ */

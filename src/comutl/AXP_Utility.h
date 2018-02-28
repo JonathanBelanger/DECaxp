@@ -303,7 +303,7 @@ AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ);
  * Counted queue functions.
  */
 i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *, AXP_CQUE_ENTRY *);
-i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *);
+i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *, u32);
 i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *);
 
 /*

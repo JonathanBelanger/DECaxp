@@ -320,6 +320,9 @@ i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
  * Input Parameters:
  * 	parent:
  * 		A pointer to the parent (head) of the queue.
+ * 	headeRoom:
+ * 		A value indicating the minimum number of items allowed before the
+ * 		queue is considered empty.
  *
  * Output Parameters:
  *	None.
@@ -329,13 +332,13 @@ i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
  * 	0, if the queue is not empty.
  * 	1, if the queue is empty.
  */
-i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *parent)
+i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *parent, u32 headRoom)
 {
 	int		retVal;
 
 	if (parent->count == 0)
 		retVal = 1;
-	else if (parent->count == parent->max)
+	else if ((parent->count + headRoom) >= parent->max)
 		retVal = -1;
 	else
 		retVal = 0;
