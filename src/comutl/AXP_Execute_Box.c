@@ -58,6 +58,21 @@ static char *pipelineStr[] =
 	"Fbox Multiply",
 	"Fbox Other"
 };
+
+static char *queueStr[] =
+{
+	"None",
+	"IQ",
+	"IQ",
+	"",
+	"IQ",
+	"IQ",
+	"",
+	"",
+	"FQ",
+	"FQ"
+};
+
 static char *insPipelineStr[] =
 {
 	"None",
@@ -139,8 +154,9 @@ void AXP_Execution_Box(
 		{
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite(
-					"%s signaled an instruction has been put on the IQ.",
-					pipelineStr[pipeline]);
+					"%s signaled an instruction has been put on the %s.",
+					pipelineStr[pipeline],
+					queueStr[pipeline]);
 			AXP_TRACE_END();
 		}
 
@@ -191,16 +207,20 @@ void AXP_Execution_Box(
 				 * it.  We are looking to see if the instruction was aborted.
 				 */
 				pthread_mutex_lock(&cpu->robMutex);
-				if (entry->ins->state != Queued)
+				if ((entry->ins->state != Queued) || (cpu->aborting == true))
 				{
 
 					/*
 					 * The instruction should only be in a Queued state on the
 					 * IQ, and it is not.  So, dequeue it and return the
-					 * the entry for a subsequent instruction.
+					 * the entry for a subsequent instruction.  If the aborting
+					 * flag is set, then the iBox is already aborting things.
 					 */
-					AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
-					AXP_ReturnIQEntry(cpu, entry);
+					if (cpu->aborting == false)
+					{
+						AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+						AXP_ReturnIQEntry(cpu, entry);
+					}
 					notMe = true;
 				}
 				pthread_mutex_unlock(&cpu->robMutex);
@@ -244,7 +264,7 @@ void AXP_Execution_Box(
 			 * the beginning of the loop.  Since we did not unlock the mutex,
 			 * we do not need to lock it now.
 			 */
-			if ((AXP_COUNTED_QUEUE *) entry != queue)
+			if ((AXP_COUNTED_QUEUE *) entry == queue)
 			{
 				notMe = true;
 

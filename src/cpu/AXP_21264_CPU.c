@@ -156,6 +156,7 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 				cpu->fqEntries[ii].index = ii;
 			}
 		}
+		cpu->aborting = false;
 
 		/*
 		 * Go initialize the register map.
@@ -165,9 +166,14 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 		/*
 		 * Pull some configuration items out of the configuration and
 		 * initialize the appropriate CPU fields.
-		cpu->majorType = AXP_21264_Config.system.cpus.config->majorType;
 		 */
-		cpu->minorType = AXP_21264_Config.system.cpus.minorType;
+		qRet = AXP_ConfigGet_CPUType(&cpu->majorType, &cpu->minorType);
+
+		/*
+		 * Get the CPU-ID and store it in the WHAMI IPR/
+		 */
+		if (qRet == true)
+			cpu->whami = AXP_ConfigGet_UniqueCPUID();
 
 		/*
 		 * At this point everything should be initialize.  Time to create all

@@ -23,6 +23,10 @@
  *
  *	V01.000		28-Jan-2018	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		02-Mar-2018	Jonathan D. Belanger
+ *	Added functions to return values from the configuration structure.  Also
+ *	made the configuration structure static.
  */
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
@@ -81,7 +85,7 @@
 /*
  * Global variable used throughout the emulator.
  */
-AXP_21264_CONFIG	AXP_21264_Config =
+static AXP_21264_CONFIG	_axp_21264_config_=
 {
 	.owner.first = NULL,
 	.owner.mi = NULL,
@@ -103,6 +107,15 @@ AXP_21264_CONFIG	AXP_21264_Config =
 	.system.dimms.size = 0,
 	.system.dimms.count = 0
 };
+
+/*
+ * CPU Count
+ *	This value is used to identify each CPU as it is created.  This is where
+ *	the value for the WHAMI IPR is determined.  This CPU-ID has a mutex to make
+ *	sure no more than one CPU gets any particular ID.
+ */
+static u64 _axp_cpu_id_counter_;
+static pthread_mutex_t _axp_config_mutex_;
 
 /*
  * Module local variable used in parsing the XML configuration file.
@@ -1426,8 +1439,8 @@ static void parse_network_names(
 			 * are to store the information for this network device.
 			 */
 			ii = 0;
-			while ((ii < AXP_21264_Config.system.networkCount) &&
-				   (AXP_21264_Config.system.networks[ii].unit != unit))
+			while ((ii < _axp_21264_config_.system.networkCount) &&
+				   (_axp_21264_config_.system.networks[ii].unit != unit))
 				ii++;
 
 			/*
@@ -1448,17 +1461,17 @@ static void parse_network_names(
 			switch (parent)
 			{
 				case NetworkName:
-					AXP_21264_Config.system.networks[ii].name = realloc(
-									AXP_21264_Config.system.networks[ii].name,
+					_axp_21264_config_.system.networks[ii].name = realloc(
+									_axp_21264_config_.system.networks[ii].name,
 									(strlen(nodeValue) + 1));
-					strcpy(AXP_21264_Config.system.networks[ii].name, nodeValue);
+					strcpy(_axp_21264_config_.system.networks[ii].name, nodeValue);
 					break;
 
 				case NetworkMAC:
-					AXP_21264_Config.system.networks[ii].mac = realloc(
-									AXP_21264_Config.system.networks[ii].mac,
+					_axp_21264_config_.system.networks[ii].mac = realloc(
+									_axp_21264_config_.system.networks[ii].mac,
 									(strlen(nodeValue) + 1));
-					strcpy(AXP_21264_Config.system.networks[ii].mac, nodeValue);
+					strcpy(_axp_21264_config_.system.networks[ii].mac, nodeValue);
 					break;
 
 				case NoNetwork:
@@ -1574,14 +1587,14 @@ static void parse_networks_names(
 			 * We have a new network device to be configured.  Increment the
 			 * counter of these items.
 			 */
-			AXP_21264_Config.system.networkCount++;
+			_axp_21264_config_.system.networkCount++;
 
 			/*
 			 * Allocate an array large enough to handle an additional entry.
 			 */
-			AXP_21264_Config.system.networks = realloc(
-						AXP_21264_Config.system.networks,
-						(AXP_21264_Config.system.networkCount *
+			_axp_21264_config_.system.networks = realloc(
+						_axp_21264_config_.system.networks,
+						(_axp_21264_config_.system.networkCount *
 							sizeof(AXP_21264_NETWORK_INFO)));
 
 			/*
@@ -1589,10 +1602,10 @@ static void parse_networks_names(
 			 * the last one.  Also initialize the other fields so we don't get
 			 * a segmentation fault in the function are are about to call;
 			 */
-			ii = AXP_21264_Config.system.networkCount - 1;
-			AXP_21264_Config.system.networks[ii].unit = nodeUnit;
-			AXP_21264_Config.system.networks[ii].mac = NULL;
-			AXP_21264_Config.system.networks[ii].name = NULL;
+			ii = _axp_21264_config_.system.networkCount - 1;
+			_axp_21264_config_.system.networks[ii].unit = nodeUnit;
+			_axp_21264_config_.system.networks[ii].mac = NULL;
+			_axp_21264_config_.system.networks[ii].name = NULL;
 
 			/*
 			 * Parse out the other elements for the new network entry.
@@ -1704,7 +1717,7 @@ static void parse_console_names(
 		if (parent == Port)
 		{
 			parse_console_names(doc, cur_node->children, parent, nodeValue);
-			AXP_21264_Config.system.console.port = strtoul(nodeValue, &ptr, 10);
+			_axp_21264_config_.system.console.port = strtoul(nodeValue, &ptr, 10);
 			parent = NoConsole;
 		}
     }
@@ -1824,8 +1837,8 @@ static void parse_disk_names(
 			 * are to store the information for this network device.
 			 */
 			ii = 0;
-			while ((ii < AXP_21264_Config.system.diskCount) &&
-				   (AXP_21264_Config.system.disks[ii].unit != unit))
+			while ((ii < _axp_21264_config_.system.diskCount) &&
+				   (_axp_21264_config_.system.disks[ii].unit != unit))
 				ii++;
 
 			parse_disk_names(doc, cur_node->children, parent, unit, nodeValue);
@@ -1833,30 +1846,30 @@ static void parse_disk_names(
 			{
 				case DiskType:
 					if (strcmp(nodeValue, "CDROM") == 0)
-						AXP_21264_Config.system.disks[ii].type = CD_ROM;
+						_axp_21264_config_.system.disks[ii].type = CD_ROM;
 					else if (strcmp(nodeValue, "RWCDROM") == 0)
-						AXP_21264_Config.system.disks[ii].type = RW_CDROM;
+						_axp_21264_config_.system.disks[ii].type = RW_CDROM;
 					else
-						AXP_21264_Config.system.disks[ii].type = Disk;
+						_axp_21264_config_.system.disks[ii].type = Disk;
 					break;
 
 				case DiskName:
-					AXP_21264_Config.system.disks[ii].name = realloc(
-							AXP_21264_Config.system.disks[ii].name,
+					_axp_21264_config_.system.disks[ii].name = realloc(
+							_axp_21264_config_.system.disks[ii].name,
 							(strlen(nodeValue) + 1));
-					strcpy(AXP_21264_Config.system.disks[ii].name, nodeValue);
+					strcpy(_axp_21264_config_.system.disks[ii].name, nodeValue);
 					break;
 
 				case DiskSize:
-					AXP_21264_Config.system.disks[ii].size =
+					_axp_21264_config_.system.disks[ii].size =
 							AXP_cvtSizeStr(nodeValue);
 					break;
 
 				case DiskFile:
-					AXP_21264_Config.system.disks[ii].fileSpec = realloc(
-							AXP_21264_Config.system.disks[ii].fileSpec,
+					_axp_21264_config_.system.disks[ii].fileSpec = realloc(
+							_axp_21264_config_.system.disks[ii].fileSpec,
 							(strlen(nodeValue) + 1));
-					strcpy(AXP_21264_Config.system.disks[ii].fileSpec, nodeValue);
+					strcpy(_axp_21264_config_.system.disks[ii].fileSpec, nodeValue);
 					break;
 
 				case NoDisk:
@@ -1975,14 +1988,14 @@ static void parse_disks_names(
 			 * We have a new disk drive to be configured.  Increment the
 			 * counter of these items.
 			 */
-			AXP_21264_Config.system.diskCount++;
+			_axp_21264_config_.system.diskCount++;
 
 			/*
 			 * Allocate an array large enough to handle an additional entry.
 			 */
-			AXP_21264_Config.system.disks = realloc(
-						AXP_21264_Config.system.disks,
-						(AXP_21264_Config.system.diskCount *
+			_axp_21264_config_.system.disks = realloc(
+						_axp_21264_config_.system.disks,
+						(_axp_21264_config_.system.diskCount *
 							sizeof(AXP_21264_DISK_INFO)));
 
 			/*
@@ -1990,12 +2003,12 @@ static void parse_disks_names(
 			 * the last one.  Also initialize the other fields so we don't get
 			 * a segmentation fault in the function are are about to call;
 			 */
-			ii = AXP_21264_Config.system.diskCount - 1;
-			AXP_21264_Config.system.disks[ii].unit = nodeUnit;
-			AXP_21264_Config.system.disks[ii].size = 0;
-			AXP_21264_Config.system.disks[ii].type = Diskless;
-			AXP_21264_Config.system.disks[ii].name = NULL;
-			AXP_21264_Config.system.disks[ii].fileSpec = NULL;
+			ii = _axp_21264_config_.system.diskCount - 1;
+			_axp_21264_config_.system.disks[ii].unit = nodeUnit;
+			_axp_21264_config_.system.disks[ii].size = 0;
+			_axp_21264_config_.system.disks[ii].type = Diskless;
+			_axp_21264_config_.system.disks[ii].name = NULL;
+			_axp_21264_config_.system.disks[ii].fileSpec = NULL;
 
 			/*
 			 * Parse out the other elements for the new disk entry.
@@ -2113,12 +2126,12 @@ static void parse_dimms_names(
 			switch (parent)
 			{
 				case DIMMCount:
-					AXP_21264_Config.system.dimms.count =
+					_axp_21264_config_.system.dimms.count =
 							strtoul(nodeValue, &ptr, 10);
 					break;
 
 				case DIMMSize:
-					AXP_21264_Config.system.dimms.size =
+					_axp_21264_config_.system.dimms.size =
 							AXP_cvtSizeStr(nodeValue);
 					break;
 
@@ -2239,20 +2252,20 @@ static void parse_cpus_names(
 			switch (parent)
 			{
 				case CPUCount:
-					AXP_21264_Config.system.cpus.count =
+					_axp_21264_config_.system.cpus.count =
 							strtoul(nodeValue, &ptr, 10);
 					break;
 
 				case Generation:
 					ii = 0;
 					while ((AXP_CPU_Configurations[ii].genStr != NULL) &&
-						   (AXP_21264_Config.system.cpus.config == NULL))
+						   (_axp_21264_config_.system.cpus.config == NULL))
 					{
 						if (strcmp(
 								nodeValue,
 								AXP_CPU_Configurations[ii].genStr) == 0)
 						{
-							AXP_21264_Config.system.cpus.config =
+							_axp_21264_config_.system.cpus.config =
 								&AXP_CPU_Configurations[ii];
 						}
 						ii++;
@@ -2260,7 +2273,7 @@ static void parse_cpus_names(
 					break;
 
 				case MfgPass:
-					AXP_21264_Config.system.cpus.minorType =
+					_axp_21264_config_.system.cpus.minorType =
 							strtoul(nodeValue, &ptr, 10);
 					break;
 
@@ -2381,38 +2394,38 @@ static void parse_srom_names(
 			switch (parent)
 			{
 				case InitFile:
-					AXP_21264_Config.system.srom.initFile = realloc(
-							AXP_21264_Config.system.srom.initFile,
+					_axp_21264_config_.system.srom.initFile = realloc(
+							_axp_21264_config_.system.srom.initFile,
 							(strlen(nodeValue) + 1));
-					strcpy(AXP_21264_Config.system.srom.initFile, nodeValue);
+					strcpy(_axp_21264_config_.system.srom.initFile, nodeValue);
 					break;
 
 				case PALImage:
-					AXP_21264_Config.system.srom.PALImage = realloc(
-							AXP_21264_Config.system.srom.PALImage,
+					_axp_21264_config_.system.srom.PALImage = realloc(
+							_axp_21264_config_.system.srom.PALImage,
 							(strlen(nodeValue) + 1));
-					strcpy(AXP_21264_Config.system.srom.PALImage, nodeValue);
+					strcpy(_axp_21264_config_.system.srom.PALImage, nodeValue);
 					break;
 
 				case ROMImage:
-					AXP_21264_Config.system.srom.ROMImage = realloc(
-							AXP_21264_Config.system.srom.ROMImage,
+					_axp_21264_config_.system.srom.ROMImage = realloc(
+							_axp_21264_config_.system.srom.ROMImage,
 							(strlen(nodeValue) + 1));
-					strcpy(AXP_21264_Config.system.srom.ROMImage, nodeValue);
+					strcpy(_axp_21264_config_.system.srom.ROMImage, nodeValue);
 					break;
 
 				case NVRamFile:
-					AXP_21264_Config.system.srom.NVRamFile = realloc(
-							AXP_21264_Config.system.srom.NVRamFile,
+					_axp_21264_config_.system.srom.NVRamFile = realloc(
+							_axp_21264_config_.system.srom.NVRamFile,
 							(strlen(nodeValue) + 1));
-					strcpy(AXP_21264_Config.system.srom.NVRamFile, nodeValue);
+					strcpy(_axp_21264_config_.system.srom.NVRamFile, nodeValue);
 					break;
 
 				case CboxCSRs:
-					AXP_21264_Config.system.srom.CboxCSRFile = realloc(
-							AXP_21264_Config.system.srom.CboxCSRFile,
+					_axp_21264_config_.system.srom.CboxCSRFile = realloc(
+							_axp_21264_config_.system.srom.CboxCSRFile,
 							(strlen(nodeValue) + 1));
-					strcpy(AXP_21264_Config.system.srom.CboxCSRFile, nodeValue);
+					strcpy(_axp_21264_config_.system.srom.CboxCSRFile, nodeValue);
 					break;
 
 				case NoSROM:
@@ -2530,17 +2543,17 @@ static void parse_model_names(
 			switch (parent)
 			{
 				case ModelName:
-					AXP_21264_Config.system.model.name = realloc(
-							AXP_21264_Config.system.model.name,
+					_axp_21264_config_.system.model.name = realloc(
+							_axp_21264_config_.system.model.name,
 							(strlen(nodeValue) + 1));
-					strcpy(AXP_21264_Config.system.model.name, nodeValue);
+					strcpy(_axp_21264_config_.system.model.name, nodeValue);
 					break;
 
 				case ModelModel:
-					AXP_21264_Config.system.model.model = realloc(
-							AXP_21264_Config.system.model.model,
+					_axp_21264_config_.system.model.model = realloc(
+							_axp_21264_config_.system.model.model,
 							(strlen(nodeValue) + 1));
-					strcpy(AXP_21264_Config.system.model.model, nodeValue);
+					strcpy(_axp_21264_config_.system.model.model, nodeValue);
 					break;
 
 				case NoModel:
@@ -2798,44 +2811,44 @@ static void parse_name_names(
 			case FirstName:
 				parse_name_names(doc, cur_node->children, parent, nodeValue);
 				parent = NoName;
-				AXP_21264_Config.owner.first = realloc(
-												AXP_21264_Config.owner.first,
+				_axp_21264_config_.owner.first = realloc(
+												_axp_21264_config_.owner.first,
 												strlen(nodeValue)+1);
-				if (AXP_21264_Config.owner.first != NULL)
-					strcpy(AXP_21264_Config.owner.first, nodeValue);
+				if (_axp_21264_config_.owner.first != NULL)
+					strcpy(_axp_21264_config_.owner.first, nodeValue);
 				nodeValue[0] = '\0';
 				break;
 
 			case MI:
 				parse_name_names(doc, cur_node->children, parent, nodeValue);
 				parent = NoName;
-				AXP_21264_Config.owner.mi = realloc(
-												AXP_21264_Config.owner.mi,
+				_axp_21264_config_.owner.mi = realloc(
+												_axp_21264_config_.owner.mi,
 												strlen(nodeValue)+1);
-				if (AXP_21264_Config.owner.mi != NULL)
-					strcpy(AXP_21264_Config.owner.mi, nodeValue);
+				if (_axp_21264_config_.owner.mi != NULL)
+					strcpy(_axp_21264_config_.owner.mi, nodeValue);
 				nodeValue[0] = '\0';
 				break;
 
 			case LastName:
 				parse_name_names(doc, cur_node->children, parent, nodeValue);
 				parent = NoName;
-				AXP_21264_Config.owner.last = realloc(
-												AXP_21264_Config.owner.last,
+				_axp_21264_config_.owner.last = realloc(
+												_axp_21264_config_.owner.last,
 												strlen(nodeValue)+1);
-				if (AXP_21264_Config.owner.last != NULL)
-					strcpy(AXP_21264_Config.owner.last, nodeValue);
+				if (_axp_21264_config_.owner.last != NULL)
+					strcpy(_axp_21264_config_.owner.last, nodeValue);
 				nodeValue[0] = '\0';
 				break;
 
 			case NameSuffix:
 				parse_name_names(doc, cur_node->children, parent, nodeValue);
 				parent = NoName;
-				AXP_21264_Config.owner.suffix = realloc(
-												AXP_21264_Config.owner.suffix,
+				_axp_21264_config_.owner.suffix = realloc(
+												_axp_21264_config_.owner.suffix,
 												strlen(nodeValue)+1);
-				if (AXP_21264_Config.owner.suffix != NULL)
-					strcpy(AXP_21264_Config.owner.suffix, nodeValue);
+				if (_axp_21264_config_.owner.suffix != NULL)
+					strcpy(_axp_21264_config_.owner.suffix, nodeValue);
 				nodeValue[0] = '\0';
 				break;
 
@@ -3025,14 +3038,14 @@ static void parse_owner_names(
 
 			case CreationDate:
 				parse_owner_names(doc, cur_node->children, parent, nodeValue);
-				cvt_date_to_rm(nodeValue, &AXP_21264_Config.owner.create);
+				cvt_date_to_rm(nodeValue, &_axp_21264_config_.owner.create);
 				parent = NoOwner;
 				nodeValue[0] = '\0';
 				break;
 
 			case ModifyDate:
 				parse_owner_names(doc, cur_node->children, parent, nodeValue);
-				cvt_date_to_rm(nodeValue, &AXP_21264_Config.owner.modify);
+				cvt_date_to_rm(nodeValue, &_axp_21264_config_.owner.modify);
 				parent = NoOwner;
 				nodeValue[0] = '\0';
 				break;
@@ -3156,6 +3169,13 @@ int AXP_LoadConfig_File(char *fileName)
 	int		retVal = AXP_S_NORMAL;
 
 	/*
+	 * Since this needs to be called prior to allocating any CPUs, we need to
+	 * initialize the CPU-ID counter and associated mutex.
+	 */
+	pthread_mutex_init(&_axp_config_mutex_, NULL);
+	_axp_cpu_id_counter_ = 0;
+
+	/*
 	 * First check the version of the API we compiled against matches the
 	 * version of the API in the library.
 	 */
@@ -3196,14 +3216,321 @@ int AXP_LoadConfig_File(char *fileName)
 }
 
 /*
- * TODO:  We need the following configuration extraction functions:
- *			AXP_ConfigGet_InitFile
- *			AXP_ConfigGet_PALFile
- *			AXP_ConfigGet_ROMFile
- *			AXP_ConfigGet_CboxCSRFile
- *			AXP_ConfigGet_CPUMajorType
- *			AXP_ConfigGet_CPUMinorType
+ * AXP_ConfigGet_CPUType
+ *	This function is called to return the major and minor values for the type
+ *	of Digital Alpha AXP CPU being emulated.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	major:
+ *		A pointer to a 32-bit unsigned value to receive the CPU major type ID.
+ *	minor:
+ *		A pointer to a 32-bit unsigned value to receive the CPU minor type ID.
+ *
+ * Return Value:
+ * 	true:	Both values were returned.
+ * 	false:	One of the value was not returned.
  */
+bool AXP_ConfigGet_CPUType(u32 *major, u32 *minor)
+{
+	bool retVal = false;
+
+	/*
+	 * If one or the other returned parameters is not specified, then we return
+	 * nothing.
+	 */
+	if ((major != NULL) && (minor != NULL))
+	{
+
+		/*
+		 * Lock the interface mutex, get the major and minor CPU type values,
+		 * then unlock the mutex.
+		 */
+		pthread_mutex_lock(&_axp_config_mutex_);
+		*major = _axp_21264_config_.system.cpus.config->majorType;
+		*minor = _axp_21264_config_.system.cpus.minorType;
+		pthread_mutex_unlock(&_axp_config_mutex_);
+
+		/*
+		 * Indicate that we are returning a value for the two requested peices
+		 * of information.
+		 */
+		retVal = true;
+	}
+	return(retVal);
+}
+
+/*
+ * AXP_ConfigGet_UniqueCPUID
+ *	This function is called to return a unique CPU-ID (starting with a value of
+ *	zero).
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	A unique CPU-ID value, starting with 0.
+ */
+u64 AXP_ConfigGet_UniqueCPUID(void)
+{
+	u64	retVal;
+
+	/*
+	 * Lock the interface mutex, get the next CPU-ID, then unlock the mutex.
+	 */
+	pthread_mutex_lock(&_axp_config_mutex_);
+	retVal = _axp_cpu_id_counter_++;
+	pthread_mutex_unlock(&_axp_config_mutex_);
+
+	/*
+	 * Return the unique CPU-ID selected, back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_ConfigGet_InitFile
+ *	This function is called to return the value of the Initialization filename.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	initFile:
+ *		A pointer to a character string to receive the configuration defined
+ *		initialization filename.
+ *
+ * Return Values:
+ *	false:	Nothing was returned.
+ *	true:	A value was returned.  It could be a zero length string.
+ */
+bool AXP_ConfigGet_InitFile(char *initFile)
+{
+	bool	retVal = false;
+
+	/*
+	 * If we have a place to copy the value, then do so now.
+	 */
+	if (initFile != NULL)
+	{
+
+		/*
+		 * Lock the interface mutex, copy the value into the return variable,
+		 * then unlock the mutex.
+		 */
+		pthread_mutex_lock(&_axp_config_mutex_);
+		strcpy(initFile, _axp_21264_config_.system.srom.initFile);
+		pthread_mutex_unlock(&_axp_config_mutex_);
+
+		/*
+		 * Set the return value to true, indicating that something is being
+		 * returned to the caller.
+		 */
+		retVal = true;
+	}
+
+	/*
+	 * Return the outcome back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_ConfigGet_PALFile
+ *	This function is called to return the value of the Privileged Architecture
+ *	Logic filename.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	PALfile:
+ *		A pointer to a character string to receive the configuration defined
+ *		PAL filename.
+ *
+ * Return Values:
+ *	false:	Nothing was returned.
+ *	true:	A value was returned.  It could be a zero length string.
+ */
+bool AXP_ConfigGet_PALFile(char *PALfile)
+{
+	bool	retVal = false;
+
+	/*
+	 * If we have a place to copy the value, then do so now.
+	 */
+	if (PALfile != NULL)
+	{
+
+		/*
+		 * Lock the interface mutex, copy the value into the return variable,
+		 * then unlock the mutex.
+		 */
+		pthread_mutex_lock(&_axp_config_mutex_);
+		strcpy(PALfile, _axp_21264_config_.system.srom.PALImage);
+		pthread_mutex_unlock(&_axp_config_mutex_);
+
+		/*
+		 * Set the return value to true, indicating that something is being
+		 * returned to the caller.
+		 */
+		retVal = true;
+	}
+
+	/*
+	 * Return the outcome back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_ConfigGet_ROMFile
+ *	This function is called to return the value of the Read-Only Memory
+ *	filename.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	ROMFile:
+ *		A pointer to a character string to receive the configuration defined
+ *		ROM filename.
+ *
+ * Return Values:
+ *	false:	Nothing was returned.
+ *	true:	A value was returned.  It could be a zero length string.
+ */
+bool AXP_ConfigGet_ROMFile(char *ROMfile)
+{
+	bool	retVal = false;
+
+	/*
+	 * If we have a place to copy the value, then do so now.
+	 */
+	if (ROMfile != NULL)
+	{
+
+		/*
+		 * Lock the interface mutex, copy the value into the return variable,
+		 * then unlock the mutex.
+		 */
+		pthread_mutex_lock(&_axp_config_mutex_);
+		strcpy(ROMfile, _axp_21264_config_.system.srom.ROMImage);
+		pthread_mutex_unlock(&_axp_config_mutex_);
+
+		/*
+		 * Set the return value to true, indicating that something is being
+		 * returned to the caller.
+		 */
+		retVal = true;
+	}
+
+	/*
+	 * Return the outcome back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_ConfigGet_NVRAMFile
+ *	This function is called to return the value of the Non-Volatile Random
+ *	Access Memory filename.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	NVRAMfile:
+ *		A pointer to a character string to receive the configuration defined
+ *		NVRAM filename.
+ *
+ * Return Values:
+ *	false:	Nothing was returned.
+ *	true:	A value was returned.  It could be a zero length string.
+ */
+bool AXP_ConfigGet_NVRAMFile(char *NVRAMfile)
+{
+	bool	retVal = false;
+
+	/*
+	 * If we have a place to copy the value, then do so now.
+	 */
+	if (NVRAMfile != NULL)
+	{
+
+		/*
+		 * Lock the interface mutex, copy the value into the return variable,
+		 * then unlock the mutex.
+		 */
+		pthread_mutex_lock(&_axp_config_mutex_);
+		strcpy(NVRAMfile, _axp_21264_config_.system.srom.NVRamFile);
+		pthread_mutex_unlock(&_axp_config_mutex_);
+
+		/*
+		 * Set the return value to true, indicating that something is being
+		 * returned to the caller.
+		 */
+		retVal = true;
+	}
+
+	/*
+	 * Return the outcome back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_ConfigGet_CboxCSRFile
+ *	This function is called to return the value of the Cbox CPU-System Register
+ *	filename.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	CSRfile:
+ *		A pointer to a character string to receive the configuration defined
+ *		Cbox CSR filename.
+ *
+ * Return Values:
+ *	false:	Nothing was returned.
+ *	true:	A value was returned.  It could be a zero length string.
+ */
+bool AXP_ConfigGet_CboxCSRFile(char *CSRfile)
+{
+	bool	retVal = false;
+
+	/*
+	 * If we have a place to copy the value, then do so now.
+	 */
+	if (CSRfile != NULL)
+	{
+
+		/*
+		 * Lock the interface mutex, copy the value into the return variable,
+		 * then unlock the mutex.
+		 */
+		pthread_mutex_lock(&_axp_config_mutex_);
+		strcpy(CSRfile, _axp_21264_config_.system.srom.CboxCSRFile);
+		pthread_mutex_unlock(&_axp_config_mutex_);
+
+		/*
+		 * Set the return value to true, indicating that something is being
+		 * returned to the caller.
+		 */
+		retVal = true;
+	}
+
+	/*
+	 * Return the outcome back to the caller.
+	 */
+	return(retVal);
+}
 
 /*
  * AXP_TraceConfig
@@ -3228,20 +3555,20 @@ void AXP_TraceConfig(void)
 	int		ii;
 	bool	configComplete = false;
 
-	configComplete = ((AXP_21264_Config.owner.first != NULL) &&
-					  (AXP_21264_Config.owner.last != NULL) &&
-					  (AXP_21264_Config.system.model.name != NULL) &&
-					  (AXP_21264_Config.system.model.model != NULL) &&
-					  (AXP_21264_Config.system.cpus.count > 0) &&
-					  (AXP_21264_Config.system.cpus.config != NULL) &&
-					  (AXP_21264_Config.system.dimms.count > 0) &&
-					  (AXP_21264_Config.system.srom.initFile != NULL) &&
-					  (AXP_21264_Config.system.srom.PALImage != NULL) &&
-					  (AXP_21264_Config.system.srom.NVRamFile != NULL) &&
-					  (AXP_21264_Config.system.diskCount > 0) &&
-					  (AXP_21264_Config.system.disks != NULL) &&
-					  (AXP_21264_Config.system.networkCount > 0) &&
-					  (AXP_21264_Config.system.networks != NULL));
+	configComplete = ((_axp_21264_config_.owner.first != NULL) &&
+					  (_axp_21264_config_.owner.last != NULL) &&
+					  (_axp_21264_config_.system.model.name != NULL) &&
+					  (_axp_21264_config_.system.model.model != NULL) &&
+					  (_axp_21264_config_.system.cpus.count > 0) &&
+					  (_axp_21264_config_.system.cpus.config != NULL) &&
+					  (_axp_21264_config_.system.dimms.count > 0) &&
+					  (_axp_21264_config_.system.srom.initFile != NULL) &&
+					  (_axp_21264_config_.system.srom.PALImage != NULL) &&
+					  (_axp_21264_config_.system.srom.NVRamFile != NULL) &&
+					  (_axp_21264_config_.system.diskCount > 0) &&
+					  (_axp_21264_config_.system.disks != NULL) &&
+					  (_axp_21264_config_.system.networkCount > 0) &&
+					  (_axp_21264_config_.system.networks != NULL));
 
 	if (AXP_UTL_OPT1)
 	{
@@ -3250,58 +3577,58 @@ void AXP_TraceConfig(void)
 		{
 			AXP_TraceWrite("\tOwner:");
 			AXP_TraceWrite("\t\tName:");
-			AXP_TraceWrite("\t\t\tFirst:\t\t\t\'%s\'", AXP_21264_Config.owner.first);
-			if ((AXP_21264_Config.owner.mi != NULL) && (strlen(AXP_21264_Config.owner.mi) > 0))
-				AXP_TraceWrite("\t\t\tMiddle Initial:\t\t\'%s\'", AXP_21264_Config.owner.mi);
-			AXP_TraceWrite("\t\t\tLast:\t\t\t\'%s\'", AXP_21264_Config.owner.last);
-			if ((AXP_21264_Config.owner.suffix != NULL) && (strlen(AXP_21264_Config.owner.suffix) > 0))
-				AXP_TraceWrite("\t\t\tSuffix:\t\t\t\'%s\'", AXP_21264_Config.owner.suffix);
+			AXP_TraceWrite("\t\t\tFirst:\t\t\t\'%s\'", _axp_21264_config_.owner.first);
+			if ((_axp_21264_config_.owner.mi != NULL) && (strlen(_axp_21264_config_.owner.mi) > 0))
+				AXP_TraceWrite("\t\t\tMiddle Initial:\t\t\'%s\'", _axp_21264_config_.owner.mi);
+			AXP_TraceWrite("\t\t\tLast:\t\t\t\'%s\'", _axp_21264_config_.owner.last);
+			if ((_axp_21264_config_.owner.suffix != NULL) && (strlen(_axp_21264_config_.owner.suffix) > 0))
+				AXP_TraceWrite("\t\t\tSuffix:\t\t\t\'%s\'", _axp_21264_config_.owner.suffix);
 			AXP_TraceWrite(
 					"\t\tCreate Date:\t\t\t%02u-%s-%04u",
-					AXP_21264_Config.owner.create.tm_mday,
-					months[AXP_21264_Config.owner.create.tm_mon],
-					(AXP_21264_Config.owner.create.tm_year+1900));
+					_axp_21264_config_.owner.create.tm_mday,
+					months[_axp_21264_config_.owner.create.tm_mon],
+					(_axp_21264_config_.owner.create.tm_year+1900));
 			AXP_TraceWrite(
 					"\t\tModify Date:\t\t\t%02u-%s-%04u",
-					AXP_21264_Config.owner.modify.tm_mday,
-					months[AXP_21264_Config.owner.modify.tm_mon],
-					(AXP_21264_Config.owner.modify.tm_year+1900));
+					_axp_21264_config_.owner.modify.tm_mday,
+					months[_axp_21264_config_.owner.modify.tm_mon],
+					(_axp_21264_config_.owner.modify.tm_year+1900));
 			AXP_TraceWrite("\tSystem:");
 			AXP_TraceWrite("\t\tModel:");
-			AXP_TraceWrite("\t\t\tModel:\t\t\t%s", AXP_21264_Config.system.model.model);
-			AXP_TraceWrite("\t\t\tName:\t\t\t%s", AXP_21264_Config.system.model.name);
+			AXP_TraceWrite("\t\t\tModel:\t\t\t%s", _axp_21264_config_.system.model.model);
+			AXP_TraceWrite("\t\t\tName:\t\t\t%s", _axp_21264_config_.system.model.name);
 			AXP_TraceWrite("\t\tConsole:");
-			AXP_TraceWrite("\t\t\tPort:\t\t\t%u", AXP_21264_Config.system.console.port);
+			AXP_TraceWrite("\t\t\tPort:\t\t\t%u", _axp_21264_config_.system.console.port);
 			AXP_TraceWrite("\t\tSROM:");
 			AXP_TraceWrite("\t\t\tInitialization File:\t%s",
-					AXP_21264_Config.system.srom.initFile);
+					_axp_21264_config_.system.srom.initFile);
 			AXP_TraceWrite("\t\t\tPAL Image File:\t\t%s",
-					AXP_21264_Config.system.srom.PALImage);
+					_axp_21264_config_.system.srom.PALImage);
 			AXP_TraceWrite("\t\t\tNon-volatile RAM File:\t%s",
-					AXP_21264_Config.system.srom.NVRamFile);
+					_axp_21264_config_.system.srom.NVRamFile);
 			AXP_TraceWrite("\t\t\tROM Image File:\t\t%s",
-					AXP_21264_Config.system.srom.ROMImage);
+					_axp_21264_config_.system.srom.ROMImage);
 			AXP_TraceWrite("\t\tCPUs:");
 			AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
-					AXP_21264_Config.system.cpus.count);
+					_axp_21264_config_.system.cpus.count);
 			AXP_TraceWrite("\t\t\tGeneration:\t\t%s",
-					AXP_21264_Config.system.cpus.config->genStr);
+					_axp_21264_config_.system.cpus.config->genStr);
 			AXP_TraceWrite("\t\t\tName:\t\t\t%s",
-					AXP_21264_Config.system.cpus.config->name);
+					_axp_21264_config_.system.cpus.config->name);
 			AXP_TraceWrite("\t\t\tIntroduction Year:\t%u",
-					AXP_21264_Config.system.cpus.config->year);
+					_axp_21264_config_.system.cpus.config->year);
 			AXP_TraceWrite("\t\t\tMajor Type:\t\t%d",
-					AXP_21264_Config.system.cpus.config->majorType);
+					_axp_21264_config_.system.cpus.config->majorType);
 			AXP_TraceWrite("\t\t\tMinor Type:\t\t%d",
-					AXP_21264_Config.system.cpus.minorType);
-			cacheSize = AXP_21264_Config.system.cpus.config->iCacheSize;
+					_axp_21264_config_.system.cpus.minorType);
+			cacheSize = _axp_21264_config_.system.cpus.config->iCacheSize;
 			while (cacheSize > ONE_K)
 			{
 				cacheSize /= ONE_K;
 				idx++;
 			}
 			AXP_TraceWrite("\t\t\tI-Cache Size:\t\t%llu%s", cacheSize, bytes[idx]);
-			cacheSize = AXP_21264_Config.system.cpus.config->dCacheSize;
+			cacheSize = _axp_21264_config_.system.cpus.config->dCacheSize;
 			idx = 0;
 			while (cacheSize > ONE_K)
 			{
@@ -3309,7 +3636,7 @@ void AXP_TraceConfig(void)
 				idx++;
 			}
 			AXP_TraceWrite("\t\t\tD-Cache Size:\t\t%llu%s", cacheSize, bytes[idx]);
-			cacheSize = AXP_21264_Config.system.cpus.config->sCacheSize;
+			cacheSize = _axp_21264_config_.system.cpus.config->sCacheSize;
 			idx = 0;
 			while (cacheSize > ONE_K)
 			{
@@ -3317,7 +3644,7 @@ void AXP_TraceConfig(void)
 				idx++;
 			}
 			AXP_TraceWrite("\t\t\tS-Cache Size:\t\t%llu%s", cacheSize, bytes[idx]);
-			cacheSize = AXP_21264_Config.system.cpus.config->bCacheSizeLow;
+			cacheSize = _axp_21264_config_.system.cpus.config->bCacheSizeLow;
 			idx = 0;
 			while (cacheSize > ONE_K)
 			{
@@ -3325,7 +3652,7 @@ void AXP_TraceConfig(void)
 				idx++;
 			}
 			sprintf(buffer, "\t\t\tB-Cache Size:\t\tbetween %llu%s", cacheSize, bytes[idx]);
-			cacheSize = AXP_21264_Config.system.cpus.config->bCacheSizeHigh;
+			cacheSize = _axp_21264_config_.system.cpus.config->bCacheSizeHigh;
 			idx = 0;
 			while (cacheSize > ONE_K)
 			{
@@ -3335,8 +3662,8 @@ void AXP_TraceConfig(void)
 			AXP_TraceWrite("%s and %llu%s", buffer, cacheSize, bytes[idx]);
 			AXP_TraceWrite("\t\tDIMMs:");
 			AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
-					AXP_21264_Config.system.dimms.count);
-			cacheSize = AXP_21264_Config.system.dimms.size;
+					_axp_21264_config_.system.dimms.count);
+			cacheSize = _axp_21264_config_.system.dimms.size;
 			idx = 0;
 			while (cacheSize > ONE_K)
 			{
@@ -3346,28 +3673,28 @@ void AXP_TraceConfig(void)
 			AXP_TraceWrite("\t\t\tSize:\t\t\t%llu%s", cacheSize, bytes[idx]);
 			AXP_TraceWrite("\t\tNetworks:");
 			AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
-					AXP_21264_Config.system.networkCount);
-			for (ii = 0; ii < AXP_21264_Config.system.networkCount; ii++)
+					_axp_21264_config_.system.networkCount);
+			for (ii = 0; ii < _axp_21264_config_.system.networkCount; ii++)
 			{
 				AXP_TraceWrite("\t\t\t\t[%d] Unit:\t%d", ii,
-						AXP_21264_Config.system.networks[ii].unit);
+						_axp_21264_config_.system.networks[ii].unit);
 				AXP_TraceWrite("\t\t\t\t    Name:\t%s",
-						AXP_21264_Config.system.networks[ii].name);
+						_axp_21264_config_.system.networks[ii].name);
 				AXP_TraceWrite("\t\t\t\t    MAC Addr:\t%s",
-						AXP_21264_Config.system.networks[ii].mac);
+						_axp_21264_config_.system.networks[ii].mac);
 			}
 			AXP_TraceWrite("\t\tDisk Drives:");
 			AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
-					AXP_21264_Config.system.diskCount);
-			for (ii = 0; ii < AXP_21264_Config.system.diskCount; ii++)
+					_axp_21264_config_.system.diskCount);
+			for (ii = 0; ii < _axp_21264_config_.system.diskCount; ii++)
 			{
 				AXP_TraceWrite("\t\t\t\t[%d] Unit:\t%u", ii,
-						AXP_21264_Config.system.disks[ii].unit);
+						_axp_21264_config_.system.disks[ii].unit);
 				AXP_TraceWrite("\t\t\t\t   Name:\t%s",
-							AXP_21264_Config.system.disks[ii].name);
+							_axp_21264_config_.system.disks[ii].name);
 				AXP_TraceWrite("\t\t\t\t   File:\t%s",
-							AXP_21264_Config.system.disks[ii].fileSpec);
-				switch(AXP_21264_Config.system.disks[ii].type)
+							_axp_21264_config_.system.disks[ii].fileSpec);
+				switch(_axp_21264_config_.system.disks[ii].type)
 				{
 					case Disk:
 						strcpy(buffer, "Hard Disk");
@@ -3387,7 +3714,7 @@ void AXP_TraceConfig(void)
 						break;
 				}
 				AXP_TraceWrite("\t\t\t\t   Type:\t%s", buffer);
-				cacheSize = AXP_21264_Config.system.disks[ii].size;
+				cacheSize = _axp_21264_config_.system.disks[ii].size;
 				idx = 0;
 				while (cacheSize > ONE_K)
 				{

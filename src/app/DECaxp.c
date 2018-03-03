@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 		reconstituteFilename(argc, argv, filename);
 		if ((AXP_LoadConfig_File(filename) == AXP_S_NORMAL) &&
 			(AXP_TraceInit() == true))
-			cpu = AXP_21264_AllocateCPU(0);
+			cpu = AXP_21264_AllocateCPU();
 		if (cpu != NULL)
 		{
 			pthread_join(cpu->cBoxThreadID, NULL);

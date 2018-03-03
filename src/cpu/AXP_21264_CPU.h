@@ -335,6 +335,7 @@ typedef struct
 	 */
 	AXP_COUNTED_QUEUE		iq;
 	AXP_COUNTED_QUEUE		fq;
+	bool					aborting;
 
 	/*
 	 * Instruction Queue Pre-allocated Cache.
