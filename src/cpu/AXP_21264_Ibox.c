@@ -523,8 +523,8 @@ void AXP_21264_Ibox_Event(
  *	data:
  *		A pointer to a buffer containing data returned from a Load/Store from
  *		physical memory.
- *	status:
- *		A value indicating the bits to be set in the ITAG (dirty and shared).
+ *	dontSignal:
+ *		A boolean to indicate if we should signal the iBox or not.
  *
  * Output Parameters:
  *	None.
@@ -536,30 +536,42 @@ void AXP_21264_Ibox_UpdateIcache(
 						AXP_21264_CPU *cpu,
 						u64 pa,
 						u8 *data,
-						u8 status)
+						bool dontSignal)
 {
+	AXP_21264_TLB 	*itb;
+	u64				va;
 
 	/*
 	 * First things first, we have to lock the Mbox mutex.
 	 */
 	pthread_mutex_lock(&cpu->iBoxMutex);
 
-#pragma message "This function, AXP_21264_Ibox_UpdateIcache, is not even close to being finished."
+	/*
+	 * TODO: We need to convert the PA back into a virtual address.
+	 */
+	va = pa;
+
+	/*
+	 * Get the ITB associated with the virtual address.
+	 */
+	itb = AXP_findTLBEntry(cpu, va, false);
 
 	/*
 	 * Write the data to the Dcache block.
 	 */
-	AXP_IcacheAdd(cpu, *(AXP_PC *) &pa, (u32 *) data, NULL);
+	AXP_IcacheAdd(cpu, *(AXP_PC *) &va, (u32 *) data, itb);
 
 	/*
-	 * Let the Ibox know that there are more instructions to process.
+	 * If told to do so, let the Ibox know that there are more instructions to
+	 * process.
 	 */
-	pthread_cond_signal(&cpu->iBoxCondition);
+	if (dontSignal == false)
+		pthread_cond_signal(&cpu->iBoxCondition);
 
 	/*
 	 * Last things last, we have to unlock the Mbox mutex.
 	 */
-	pthread_mutex_unlock(&cpu->mBoxMutex);
+	pthread_mutex_unlock(&cpu->iBoxMutex);
 
 	/*
 	 * Return back to the caller.
@@ -1346,6 +1358,31 @@ void AXP_21264_Ibox_AbortIns(
 	bool				split, destFloat, found = false;
 	u32					ii, end;
 
+	if (AXP_IBOX_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("AXP_21264_Ibox_AbortIns called (start: %u)", start);
+		AXP_TRACE_END();
+	}
+
+	/*
+	 * Before we do anything we need to perform a couple of steps to prevent
+	 * the code from locking and also from trying to abort in multiple
+	 * threads.  First the Fbox and Ebox lock their own mutex while doing
+	 * their processing, and then lock the rob mutex.  In this code the rob
+	 * mutex is locked before this function gets called and then will
+	 * lock/unlock the Ebox mutex followed by the Fbox mutex.  If the timing is
+	 * right, this will cause a deadlock (the Ibox has the rob mutex locked and
+	 * the Ebox has its mutex locked; the iBox attempts to lock the Ebox mutex,
+	 * but the Ebox already has it locked; the Ebox attempts to lock the rob
+	 * mutex, but the Ibox already has it locked; deadlock).  So, first we have
+	 * to get both the Fbox and Ebox to unlock their mutex, which they'll do
+	 * when they are waiting for their condition variable to get signaled, then
+	 * we can complete the instruction abort processing here.
+	 */
+	cpu->aborting = true;
+	pthread_mutex_unlock(&cpu->robMutex);
+
 	/*
 	 * OK, we need to start at the next instruction in the Re-Order Buffer.
 	 */
@@ -1354,6 +1391,7 @@ void AXP_21264_Ibox_AbortIns(
 	/*
 	 * Are we going to wrap from the bottom of the array to the top?
 	 */
+	pthread_mutex_lock(&cpu->robMutex);
 	split = cpu->robEnd < start;
 	end = (split ? AXP_INFLIGHT_MAX : cpu->robEnd);
 	ii = start;
@@ -1550,6 +1588,11 @@ void AXP_21264_Ibox_AbortIns(
 	*retEnd = (*retSplit ? AXP_INFLIGHT_MAX : cpu->robEnd);
 
 	/*
+	 * We are no longer aborting.
+	 */
+	cpu->aborting = false;
+
+	/*
 	 * Return back to the caller.
 	 */
 	return;
@@ -1631,7 +1674,7 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	while ((ii < end) && (done == false))
 	{
 		rob = &cpu->rob[ii];
-		if (AXP_IBOX_BUFF)
+		if (AXP_IBOX_OPT2)
 		{
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite(
@@ -1767,6 +1810,16 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 					 */
 					if (taken != rob->branchPredict)
 					{
+						if (AXP_IBOX_OPT2)
+						{
+							AXP_TRACE_BEGIN();
+							AXP_TraceWrite(
+								"Branch MISPREDICT instruction at pc: "
+								"0x%016llx, opcode: 0x%02x",
+								rob->pc,
+								rob->opcode);
+							AXP_TRACE_END();
+						}
 
 						/*
 						 * We are aborting instructions, as the Ibox made an

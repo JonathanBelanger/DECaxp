@@ -230,24 +230,23 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 	bool					retVal = false;
 	bool					readResult = true;
 	FILE					*fp;
-	char					name[32];
+	char					name[80];
 	u32						value;
 	int						ii, csrCnt = 0;
 	AXP_21264_CBOX_CSR_VAL	csr;
 
+	retVal = !AXP_ConfigGet_CboxCSRFile(name);
 	if (AXP_CBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
-		AXP_TraceWrite(
-				"Cbox is loading CSR values from %s",
-				AXP_21264_Config.system.srom.CboxCSRFile);
+		AXP_TraceWrite("Cbox is loading CSR values from %s", name);
 		AXP_TRACE_END();
 	}
 
 	/*
 	 * Open the file to configure the CSRs for the Cbox.
 	 */
-	fp = AXP_Open_NVP_File(AXP_21264_Config.system.srom.CboxCSRFile);
+	fp = AXP_Open_NVP_File(name);
 	if (fp != NULL)
 	{
 
@@ -947,6 +946,7 @@ void *AXP_21264_CboxMain(void *voidPtr)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
 	AXP_SROM_HANDLE	sromHdl;
+	char			name[80];
 	u64				ii;
 	int				component = 0, jj, entry;
 	bool			initFailure = false, processed;
@@ -1069,13 +1069,12 @@ void *AXP_21264_CboxMain(void *voidPtr)
 							 * initialization code.  This is where the console
 							 * is loaded.
 							 */
-							initFailure = AXP_OpenRead_SROM(
-										AXP_21264_Config.system.srom.ROMImage,
-										&sromHdl);
+							initFailure = !AXP_ConfigGet_ROMFile(name);
+							if (initFailure == false)
+								initFailure = AXP_OpenRead_SROM(name, &sromHdl);
 							if (initFailure == false)
 							{
 								AXP_IBOX_ITB_PTE	pte;
-								AXP_21264_TLB		*itb;
 								AXP_PC				startingPC;
 								u32					instructions[AXP_ICACHE_LINE_INS];
 								int					retVal = 1;
@@ -1101,10 +1100,6 @@ void *AXP_21264_CboxMain(void *voidPtr)
 										sromHdl.destAddr,
 										sromHdl.destAddr,
 										false);
-								itb = AXP_findTLBEntry(
-										cpu,
-										sromHdl.destAddr,
-										false);
 
 								/*
 								 * Finally, load the ROM code into the SROM.
@@ -1121,11 +1116,11 @@ void *AXP_21264_CboxMain(void *voidPtr)
 											&sromHdl,
 											instructions,
 											AXP_ICACHE_LINE_INS);
-									AXP_IcacheAdd(
-											cpu,
-											*((AXP_PC*) &ii),
-											instructions,
-											itb);
+									AXP_21264_Ibox_UpdateIcache(
+														cpu,
+														ii,
+														(u8 *) instructions,
+														true);
 									if ((AXP_CBOX_INST) && (retVal > 0))
 									{
 										char	traceBuf[256];

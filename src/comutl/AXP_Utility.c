@@ -1369,10 +1369,9 @@ i32 AXP_Read_SROM(AXP_SROM_HANDLE *sromHandle, u32 *buf, u32 bufLen)
 			 * TODO:	This is not working for some reason.  We need to look
 			 *			into this.  For now, we'll ignore the error.
 			 */
-#if 0
 			if (sromHandle->verImgChecksum != sromHandle->imgChecksum)
 			{
-				retVal = AXP_E_BADSROMFILE;
+				/* retVal = AXP_E_BADSROMFILE; */
 				if (AXP_UTL_CALL)
 				{
 					AXP_TRACE_BEGIN();
@@ -1384,7 +1383,6 @@ i32 AXP_Read_SROM(AXP_SROM_HANDLE *sromHandle, u32 *buf, u32 bufLen)
 					AXP_TRACE_END();
 				}
 			}
-#endif
 		}
 	}
 	else
