@@ -365,6 +365,7 @@ void *AXP_21264_FboxMulMain(void *voidPtr)
 				&cpu->fq,
 				&cpu->fBoxCondition,
 				&cpu->fBoxMutex,
+				&AXP_21264_Fbox_RegistersReady,
 				&AXP_ReturnFQEntry);
 
 	/*
@@ -419,6 +420,7 @@ void *AXP_21264_FboxOthMain(void *voidPtr)
 				&cpu->fq,
 				&cpu->fBoxCondition,
 				&cpu->fBoxMutex,
+				&AXP_21264_Fbox_RegistersReady,
 				&AXP_ReturnFQEntry);
 
 	/*

@@ -295,6 +295,7 @@ void *AXP_21264_EboxU0Main(void *voidPtr)
 				&cpu->iq,
 				&cpu->eBoxCondition,
 				&cpu->eBoxMutex,
+				&AXP_21264_Ebox_RegistersReady,
 				&AXP_ReturnIQEntry);
 
 	/*
@@ -342,6 +343,7 @@ void *AXP_21264_EboxU1Main(void *voidPtr)
 				&cpu->iq,
 				&cpu->eBoxCondition,
 				&cpu->eBoxMutex,
+				&AXP_21264_Ebox_RegistersReady,
 				&AXP_ReturnIQEntry);
 
 	/*
@@ -389,6 +391,7 @@ void *AXP_21264_EboxL0Main(void *voidPtr)
 				&cpu->iq,
 				&cpu->eBoxCondition,
 				&cpu->eBoxMutex,
+				&AXP_21264_Ebox_RegistersReady,
 				&AXP_ReturnIQEntry);
 
 	/*
@@ -436,6 +439,7 @@ void *AXP_21264_EboxL1Main(void *voidPtr)
 				&cpu->iq,
 				&cpu->eBoxCondition,
 				&cpu->eBoxMutex,
+				&AXP_21264_Ebox_RegistersReady,
 				&AXP_ReturnIQEntry);
 
 	/*

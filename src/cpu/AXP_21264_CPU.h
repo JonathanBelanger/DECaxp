@@ -209,7 +209,9 @@ typedef struct
 {
 	AXP_CQUE_ENTRY		header;
 	AXP_INSTRUCTION		*ins;
+	AXP_PIPELINE		pipeline;
 	u32					index;
+	bool				processing;
 } AXP_QUEUE_ENTRY;
 
 /*
@@ -335,7 +337,6 @@ typedef struct
 	 */
 	AXP_COUNTED_QUEUE		iq;
 	AXP_COUNTED_QUEUE		fq;
-	bool					aborting;
 
 	/*
 	 * Instruction Queue Pre-allocated Cache.

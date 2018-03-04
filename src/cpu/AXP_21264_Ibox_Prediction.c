@@ -147,8 +147,9 @@ bool AXP_Branch_Prediction(
 	{
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite(
-				"Returning from AXP_Branch_Prediction for pc: 0x%016llx ,"
+				"Returning (%d) from AXP_Branch_Prediction for pc: 0x%016llx ,"
 				"local taken = %d, global taken = %d, choice = %d",
+				retVal,
 				*((u64 *) &vpc),
 				*localTaken,
 				*globalTaken,
