@@ -141,6 +141,7 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 				AXP_INIT_CQENTRY(cpu->iqEntries[ii].header, cpu->iq);
 				cpu->iqEntries[ii].ins = NULL;
 				cpu->iqEntries[ii].index = ii;
+				cpu->iqEntries[ii].processing = false;
 			}
 		}
 		if (qRet == true)
@@ -154,9 +155,9 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 				AXP_INIT_CQENTRY(cpu->fqEntries[ii].header, cpu->fq);
 				cpu->fqEntries[ii].ins = NULL;
 				cpu->fqEntries[ii].index = ii;
+				cpu->fqEntries[ii].processing = false;
 			}
 		}
-		cpu->aborting = false;
 
 		/*
 		 * Go initialize the register map.

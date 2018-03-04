@@ -85,10 +85,15 @@ static char *regStateStr[] =
  *	next:
  *		A pointer to a location to receive the next 4 instructions to be
  *		processed.
+ *	nextInstr:
+ *		A value indicating which of the 4 instructions is to be processed.
  *
  * Output Parameters:
  * 	decodedInsr:
  * 		A pointer to the decoded version of the instruction.
+ * 	pipeline:
+ * 		A pointer to a location to receive the pipelines this instruction is
+ * 		allowed to execute.
  *
  * Return value:
  * 	None.
@@ -96,7 +101,8 @@ static char *regStateStr[] =
 void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 					   AXP_INS_LINE *next,
 					   int nextInstr,
-					   AXP_INSTRUCTION *decodedInstr)
+					   AXP_INSTRUCTION *decodedInstr,
+					   AXP_PIPELINE *pipeline)
 {
 	bool			callingPAL = false;
 	bool			src1Float = false;
@@ -142,6 +148,7 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 
 		case Opr:
 			decodedInstr->function = next->instructions[nextInstr].oper1.func;
+			decodedInstr->useLiteral = next->instructions[nextInstr].oper1.fmt == 1;
 			break;
 
 		case Pcd:
@@ -193,9 +200,7 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 		function = decodedInstr->type_hint_index;
 	else
 		function = decodedInstr->function;
-	decodedInstr->pipeline = AXP_InstructionPipeline(
-										decodedInstr->opcode,
-										function);
+	*pipeline = AXP_InstructionPipeline(decodedInstr->opcode, function);
 
 	/*
 	 * Decode destination register
@@ -298,7 +303,13 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 			break;
 
 		case AXP_REG_RB:
-			decodedInstr->aSrc2 = next->instructions[nextInstr].oper1.rb;
+			if (decodedInstr->useLiteral == true)
+			{
+				decodedInstr->literal = next->instructions[nextInstr].oper2.lit;
+				decodedInstr->aSrc2 = AXP_UNMAPPED_REG;
+			}
+			else
+				decodedInstr->aSrc2 = next->instructions[nextInstr].oper1.rb;
 			break;
 
 		case AXP_REG_RC:
@@ -775,9 +786,24 @@ static void AXP_RenameRegisters(
 
 	/*
 	 * The destination register needs a little more work.  If the register
-	 * number is 31, it is not mapped.
+	 * number is 31, or it is mapped to one of the source registers, then it is
+	 * not mapped to a new destination register.
 	 */
-	if (decodedInstr->aDest != AXP_UNMAPPED_REG)
+	if (((decodedInstr->aDest == decodedInstr->aSrc1) &&
+		 (src1Map == destMap)) ||
+		((decodedInstr->aDest == decodedInstr->aSrc2) &&
+		 (src2Map == destMap)) ||
+		(decodedInstr->aDest == AXP_UNMAPPED_REG))
+	{
+
+		/*
+		 * No need to remap the destination register.  Use the existing
+		 * mapping.  Also, note, R31 and F31 are always mapped to PR31 and
+		 * PF31, respectively.  There is no need to change this.
+		 */
+		decodedInstr->dest = destMap[decodedInstr->aDest];
+	}
+	else
 	{
 
 		/*
@@ -824,15 +850,6 @@ static void AXP_RenameRegisters(
 		 * the counter to the beginning of the list, if we are at the end.
 		 */
 		*flStart = (*flStart + 1) % AXP_F_FREELIST_SIZE;
-	}
-	else
-	{
-
-		/*
-		 * No need to map R31 or F31 to a physical register on the free-list.
-		 * R31 and F31 always equal zero and writes to them do not occur.
-		 */
-		decodedInstr->dest = destMap[decodedInstr->aDest];
 	}
 
 	/*

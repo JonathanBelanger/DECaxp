@@ -1022,7 +1022,8 @@ typedef enum
 	Retired,
 	Queued,
 	Executing,
-	WaitingRetirement
+	WaitingRetirement,
+	Aborted
 } AXP_INS_STATE;
 
 /*
@@ -1066,7 +1067,6 @@ typedef struct
 	AXP_FBOX_FPCR	insFpcr;
 	AXP_IBOX_EXC_SUM excSum;
 	AXP_EXCEPTIONS	excRegMask;	/* Exception Register Mask */
-	AXP_PIPELINE	pipeline;
 	AXP_INS_FMT		instr;
 } AXP_INSTRUCTION;
 

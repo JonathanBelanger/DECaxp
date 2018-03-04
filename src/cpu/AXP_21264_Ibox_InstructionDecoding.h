@@ -21,12 +21,24 @@
  *
  * Revision History:
  *
- *	V01.000		15-Jan-2017	Jonathan D. Belanger
+ *	V01.000		15-Jan-2018	Jonathan D. Belanger
  *	Initially written from functions originally defined in AXP_21264_Ibox.c.
+ *
+ *	V01.001		03-Mar-2018	Jonathan D. Belanger
+ *	Moved the instruction pipeline variable out of the decoded instruction
+ *	structure.  The instruction really did not need to know, but the Ibox,
+ *	Ebox, and Fbox did.  So, it is better located at the queue entry that goes
+ *	on the IQ or FQ.  This also simplifies the mutex locking and avoids both
+ *	potential deadlocks and multiple threads trying to execute an instruction.
  */
 #ifndef _AXP_IBOX_INS_DECODE_DEFS_
 #define _AXP_IBOX_INS_DECODE_DEFS_	1
 
-void AXP_Decode_Rename(AXP_21264_CPU *, AXP_INS_LINE *, int, AXP_INSTRUCTION *);
+void AXP_Decode_Rename(
+				AXP_21264_CPU *,
+				AXP_INS_LINE *,
+				int,
+				AXP_INSTRUCTION *,
+				AXP_PIPELINE *);
 
 #endif	/* _AXP_IBOX_INS_DECODE_DEFS_ */

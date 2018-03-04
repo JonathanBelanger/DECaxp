@@ -333,7 +333,7 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 	if (AXP_IBOX_OPT1)
 	{
 		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Ibox Has initialized");
+		AXP_TraceWrite("Ibox has initialized");
 		AXP_TRACE_END();
 	}
 

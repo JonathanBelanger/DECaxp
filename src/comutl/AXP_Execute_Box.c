@@ -59,20 +59,6 @@ static char *pipelineStr[] =
 	"Fbox Other"
 };
 
-static char *queueStr[] =
-{
-	"None",
-	"IQ",
-	"IQ",
-	"",
-	"IQ",
-	"IQ",
-	"",
-	"",
-	"FQ",
-	"FQ"
-};
-
 static char *insPipelineStr[] =
 {
 	"None",
@@ -91,7 +77,8 @@ static char *insStateStr[] =
 	"Retired",
 	"Queued",
 	"Executing",
-	"WaitingRetirement"
+	"WaitingRetirement",
+	"Aborted"
 };
 
 /*
@@ -105,7 +92,26 @@ static char *insStateStr[] =
  * Input Parameters:
  *	cpu: 
  *		A pointer to the CPU structure where the instruction queues are
- *		located, along with a number of other
+ *		located.
+ *	pipeline:
+ *		A value indicating the pipeline this function is to process.  This can
+ *		be one of the following:
+ *			EboxU0
+ *			EboxU1
+ *			EboxL0
+ *			EboxL1
+ *			FboxMul
+ *			FboxOther
+ *	cond:
+ *		A pointer to the condition variable associated with the pipeline.
+ *	mutex:
+ *		A pointer to the mutex variable associated with the pipeline.
+ *	regCheckEntry:
+ *		A pointer to the function to determine if the registers are ready for
+ *		the instruction to be allowed to execute.
+ *	returnEntry:
+ *		A pointer to the function to return the dequeued entry back to the
+ *		pool for a later instruction to be executed.
  *
  * Output Parameters:
  *	None.
@@ -119,9 +125,11 @@ void AXP_Execution_Box(
 				AXP_COUNTED_QUEUE *queue,
 				pthread_cond_t *cond,
 				pthread_mutex_t *mutex,
+				bool (*regCheckEntry)(AXP_21264_CPU *, AXP_QUEUE_ENTRY *),
 				void (*returnEntry)(AXP_21264_CPU *, AXP_QUEUE_ENTRY *))
 {
 	AXP_QUEUE_ENTRY	*entry, *next;
+	AXP_INS_STATE	state;
 	bool			notMe = true;
 	bool			fpEnable;
 
@@ -147,18 +155,15 @@ void AXP_Execution_Box(
 		{
 			pthread_cond_wait(cond, mutex);
 			notMe = false;
+
+			if (AXP_UTL_OPT2)
+			{
+				AXP_TRACE_BEGIN();
+				AXP_TraceWrite("%s signaled.", pipelineStr[pipeline]);
+				AXP_TRACE_END();
+			}
 		}
 		notMe = false;
-
-		if (AXP_UTL_OPT2)
-		{
-			AXP_TRACE_BEGIN();
-			AXP_TraceWrite(
-					"%s signaled an instruction has been put on the %s.",
-					pipelineStr[pipeline],
-					queueStr[pipeline]);
-			AXP_TRACE_END();
-		}
 
 		/*
 		 * If we are not shutting down, then we may have something to process.
@@ -177,9 +182,24 @@ void AXP_Execution_Box(
 			 */
 			while ((AXP_COUNTED_QUEUE *) entry != queue)
 			{
+
+				/*
+				 * Get the next queued entry, because if an instruction was
+				 * aborted, but not yet dequeued, we are going to have to get
+				 * rid of this entry and not process it.
+				 */
+				next = (AXP_QUEUE_ENTRY *) entry->header.flink;
+
 				if (AXP_UTL_OPT2)
 				{
 					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+							"%s queue = 0x%016llx, entry = 0x%016llx, "
+							"next = 0x%016llx",
+							pipelineStr[pipeline],
+							queue,
+							entry,
+							next);
 					AXP_TraceWrite(
 							"%s checking at "
 							"pc = 0x%016llx, "
@@ -189,59 +209,27 @@ void AXP_Execution_Box(
 							pipelineStr[pipeline],
 							*((u64 *) &entry->ins->pc),
 							(u32) entry->ins->opcode,
-							insPipelineStr[entry->ins->pipeline],
+							insPipelineStr[entry->pipeline],
 							insStateStr[entry->ins->state]);
 					AXP_TRACE_END();
 				}
 
 				/*
-				 * Get the next queued entry, because if an instruction was
-				 * aborted, but not yet dequeued, we are going to have to get
-				 * rid of this entry and not process it.
+				 * If this instruction is not supposed to be executed by this
+				 * pipeline, then move onto the next entry.  Otherwise, dequeue
+				 * the entry from the queue and unlock the mutex, so that other
+				 * Ebox or Fbox threads can try to execute another queued
+				 * instruction, if one exists.
 				 */
-				next = (AXP_QUEUE_ENTRY *) entry->header.flink;
-
-				/*
-				 * First we need to lock the ROB mutex.  We don't want some
-				 * other thread changing the contents while we are looking at
-				 * it.  We are looking to see if the instruction was aborted.
-				 */
-				pthread_mutex_lock(&cpu->robMutex);
-				if ((entry->ins->state != Queued) || (cpu->aborting == true))
-				{
-
-					/*
-					 * The instruction should only be in a Queued state on the
-					 * IQ, and it is not.  So, dequeue it and return the
-					 * the entry for a subsequent instruction.  If the aborting
-					 * flag is set, then the iBox is already aborting things.
-					 */
-					if (cpu->aborting == false)
-					{
-						AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
-						AXP_ReturnIQEntry(cpu, entry);
-					}
-					notMe = true;
-				}
-				pthread_mutex_unlock(&cpu->robMutex);
-
-				/*
-				 * We are only looking for entries that can be executed in the
-				 * correct Integer cluster and have only been queued for
-				 * processing and the registers needed for the instruction are
-				 * ready to be used (the source registers need to not be
-				 * waiting for previous instruction to write to it).
-				 */
-				if (((entry->ins->pipeline == pipeCond[pipeline][0]) ||
-					 (entry->ins->pipeline == pipeCond[pipeline][1]) ||
-					 (entry->ins->pipeline == pipeCond[pipeline][2])) &&
-					(notMe == false))
+				if ((entry->pipeline != pipeCond[pipeline][0]) &&
+					(entry->pipeline != pipeCond[pipeline][1]) &&
+					(entry->pipeline != pipeCond[pipeline][2]))
 				{
 					if (AXP_UTL_OPT2)
 					{
 						AXP_TRACE_BEGIN();
 						AXP_TraceWrite(
-								"%s can execute "
+								"%s CANNOT execute "
 								"pc = 0x%016llx, "
 								"opcode = 0x%02x",
 								pipelineStr[pipeline],
@@ -249,6 +237,10 @@ void AXP_Execution_Box(
 								(u32) entry->ins->opcode);
 						AXP_TRACE_END();
 					}
+				}
+				else if (entry->processing == false)
+				{
+					entry->processing = true;
 					break;
 				}
 
@@ -256,7 +248,6 @@ void AXP_Execution_Box(
 				 * Go to the next entry.
 				 */
 				entry = next;
-				notMe = false;
 			}
 
 			/*
@@ -278,10 +269,48 @@ void AXP_Execution_Box(
 				}
 
 				/*
-				 * Before going back to the top of the loop, unlock the Ebox
-				 * mutex.
+				 * Before going back to the top of the loop, unlock the mutex.
 				 */
 				pthread_mutex_unlock(mutex);
+				continue;
+			}
+
+			/*
+			 * Unlock the mutex, we have what we need to process this
+			 * instruction.
+			 */
+			pthread_mutex_unlock(mutex);
+
+			/*
+			 * First we need to lock the ROB mutex.  We don't want some
+			 * other thread changing the contents while we are looking at
+			 * it.  We are looking to see if the instruction was aborted.
+			 */
+			pthread_mutex_lock(&cpu->robMutex);
+			state = entry->ins->state;
+			pthread_mutex_unlock(&cpu->robMutex);
+			if (state == Aborted)
+			{
+
+				/*
+				 * The instruction should only be in a Queued state on the
+				 * IQ, and it is not.  So, dequeue it and return the
+				 * the entry for a subsequent instruction.
+				 */
+				AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+				entry->processing = false;
+				AXP_ReturnIQEntry(cpu, entry);
+				continue;
+			}
+
+			/*
+			 * OK, the instruction was not aborted.  See if the registers are
+			 * ready to be used to execute the instruction.  If not, clear the
+			 * processing flag and go to the beginning of the loop.
+			 */
+			else if ((*regCheckEntry)(cpu, entry) == false)
+			{
+				entry->processing = false;
 				continue;
 			}
 
@@ -301,17 +330,16 @@ void AXP_Execution_Box(
 						(u32) entry->ins->opcode);
 				AXP_TRACE_END();
 			}
+			pthread_mutex_lock(mutex);
 			AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+			pthread_mutex_unlock(mutex);
+
+			/*
+			 * Before we change the state
+			 */
 			pthread_mutex_lock(&cpu->robMutex);
 			entry->ins->state = Executing;
 			pthread_mutex_unlock(&cpu->robMutex);
-
-			/*
-			 * Now that we have the instruction to be executed, we can unlock
-			 * the Ebox mutex and allow the other Ebox threads a chance to
-			 * execute.
-			 */
-			pthread_mutex_unlock(mutex);
 
 			/*
 			 * If Floating-Point instructions are enabled, then call the
@@ -367,13 +395,16 @@ void AXP_Execution_Box(
 							pipelineStr[pipeline]);
 					AXP_TRACE_END();
 				}
+				pthread_mutex_lock(&cpu->robMutex);
 				entry->ins->excRegMask = FloatingDisabledFault;
 				entry->ins->state = WaitingRetirement;
+				pthread_mutex_unlock(&cpu->robMutex);
 			}
 
 			/*
 			 * Return the entry back to the pool for future instructions.
 			 */
+			entry->processing = false;
 			(*returnEntry)(cpu, entry);
 		}
 	}
