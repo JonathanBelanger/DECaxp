@@ -109,7 +109,7 @@ void reconstituteFilename(int argc, char **argv, char *configFilename)
  */
 int main(int argc, char **argv)
 {
-	AXP_21264_CPU	*cpu;
+	AXP_21264_CPU	*cpu = NULL;
 	char			filename[167];
 	int				retVal = 0;
 
@@ -150,6 +150,7 @@ int main(int argc, char **argv)
 							false,
 							false);
 			}
+			AXP_TraceEnd();
 		}
 		else
 			printf("\n%%DECAXP-F-RUNNING, The Digital Alpha AXP 21264 CPU Emulator failed to successfully start.\n");

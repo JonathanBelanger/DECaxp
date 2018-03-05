@@ -713,7 +713,7 @@ static void AXP_RenameRegisters(
 						AXP_21264_CPU *cpu,
 						AXP_INSTRUCTION *decodedInstr)
 {
-	AXP_21264_REG_STATE *src1State, *src2State, *destState;
+	AXP_REGISTERS 		*src1Phys, *src2Phys, *destPhys;
 	u64					*reg;
 	u16					*src1Map, *src2Map, *destMap;
 	u16					*destFreeList, *flStart, *flEnd;
@@ -734,12 +734,12 @@ static void AXP_RenameRegisters(
 		decodedInstr->aSrc1 = AXP_REG(
 							decodedInstr->aSrc1,
 							decodedInstr->pc.pal);
-		src1State = cpu->prState;
+		src1Phys = cpu->pr;
 		src1Map = cpu->prMap;
 	}
 	else
 	{
-		src1State = cpu->pfState;
+		src1Phys = cpu->pf;
 		src1Map = cpu->pfMap;
 	}
 	if (src2Float == false)
@@ -747,12 +747,12 @@ static void AXP_RenameRegisters(
 		decodedInstr->aSrc2 = AXP_REG(
 							decodedInstr->aSrc2,
 							decodedInstr->pc.pal);
-		src2State = cpu->prState;
+		src2Phys = cpu->pr;
 		src2Map = cpu->prMap;
 	}
 	else
 	{
-		src2State = cpu->pfState;
+		src2Phys = cpu->pf;
 		src2Map = cpu->pfMap;
 	}
 	if (destFloat == false)
@@ -760,7 +760,7 @@ static void AXP_RenameRegisters(
 		decodedInstr->aDest = AXP_REG(
 							decodedInstr->aDest,
 							decodedInstr->pc.pal);
-		destState = cpu->prState;
+		destPhys = cpu->pr;
 		destMap = cpu->prMap;
 		destFreeList = cpu->prFreeList;
 		flStart = &cpu->prFlStart;
@@ -769,7 +769,7 @@ static void AXP_RenameRegisters(
 	}
 	else
 	{
-		destState = cpu->pfState;
+		destPhys = cpu->pf;
 		destMap = cpu->pfMap;
 		destFreeList = cpu->pfFreeList;
 		flStart = &cpu->pfFlStart;
@@ -779,77 +779,61 @@ static void AXP_RenameRegisters(
 
 	/*
 	 * The source registers just use the current register mapping (integer or
-	 * floating-point).  If the register number is 31, it is not mapped.
+	 * floating-point).  If the register number is 31, it is always mapped to
+	 * physical register 31.  If the current register mapping indicates that
+	 * this register is doubly mapped, we need to use the dest one.
 	 */
 	decodedInstr->src1 = src1Map[decodedInstr->aSrc1];
+	src1Phys[decodedInstr->src1].refCount++;
 	decodedInstr->src2 = src2Map[decodedInstr->aSrc2];
+	src2Phys[decodedInstr->src2].refCount++;
 
 	/*
 	 * The destination register needs a little more work.  If the register
-	 * number is 31, or it is mapped to one of the source registers, then it is
-	 * not mapped to a new destination register.
+	 * number is 31, then it is always mapped to the same physical register.
 	 */
-	if (((decodedInstr->aDest == decodedInstr->aSrc1) &&
-		 (src1Map == destMap)) ||
-		((decodedInstr->aDest == decodedInstr->aSrc2) &&
-		 (src2Map == destMap)) ||
-		(decodedInstr->aDest == AXP_UNMAPPED_REG))
+	if (decodedInstr->aDest == AXP_UNMAPPED_REG)
 	{
 
 		/*
-		 * No need to remap the destination register.  Use the existing
-		 * mapping.  Also, note, R31 and F31 are always mapped to PR31 and
-		 * PF31, respectively.  There is no need to change this.
+		 * No need to re-map the destination register.  Also, note, R31 and F31
+		 * are always mapped to PR31 and PF31, respectively.  There is no need
+		 * to change this.
 		 */
 		decodedInstr->dest = destMap[decodedInstr->aDest];
+		destPhys[decodedInstr->dest].refCount++;
 	}
 	else
 	{
 
 		/*
-		 * Get the next register off of the free-list.
+		 * First, save the previous mapping and value for the destination
+		 * register.
+		 */
+		decodedInstr->prevDestMap = destMap[decodedInstr->aDest];
+		decodedInstr->prevDestValue =
+				destPhys[decodedInstr->prevDestMap].value;
+
+		/*
+		 * Next determine if we need to put the currently mapped register onto
+		 * the free list.
+		 */
+		if (destPhys[destMap[decodedInstr->aDest]].refCount == 0)
+		{
+			destPhys[destMap[decodedInstr->aDest]].state = Free;
+			destFreeList[*flEnd] = destMap[decodedInstr->aDest];
+			*flEnd = (*flEnd + 1) % AXP_I_FREELIST_SIZE;
+		}
+
+		/*
+		 * Get the next register off of the free-list, and move the start index
+		 * to the next free register.
 		 */
 		decodedInstr->dest = destFreeList[*flStart];
-
-		/*
-		 * If the register for the previous mapping was not R31 or F31, and it
-		 * is in a Valid state, then, put this previous register back on the
-		 * free-list, then make the register we just took off the free-list the
-		 * current mapping.
-		 */
-		if ((destMap[decodedInstr->aDest] != AXP_UNMAPPED_REG) &&
-			(destState[destMap[decodedInstr->aDest]] == Valid))
-		{
-			if (AXP_IBOX_OPT1)
-			{
-				AXP_TRACE_BEGIN();
-				AXP_TraceWrite(
-					"AXP_RenameRegisters freeing register: P%c%02u (%s)",
-					(destFloat ? 'F' :'R'),
-					destMap[decodedInstr->aDest],
-					regStateStr[destState[destMap[decodedInstr->aDest]]]);
-				AXP_TRACE_END();
-			}
-			destFreeList[*flEnd] = destMap[decodedInstr->aDest];
-			*flEnd = (*flEnd + 1) % AXP_F_FREELIST_SIZE;
-			destState[destMap[decodedInstr->aDest]] = Free;
-		}
-		destMap[decodedInstr->aDest] = decodedInstr->dest;
-
-		/*
-		 * Until the instruction executes, the newly mapped register is
-		 * pending a value.  After execution, the state will be waiting to
-		 * retire.  After retirement, the value will be written to the
-		 * physical register.
-		 */
-		destState[decodedInstr->dest] = PendingUpdate;
-		reg[decodedInstr->dest] = 0;
-
-		/*
-		 * Compute the next free physical register on the free-list.  Wrap
-		 * the counter to the beginning of the list, if we are at the end.
-		 */
 		*flStart = (*flStart + 1) % AXP_F_FREELIST_SIZE;
+		destMap[decodedInstr->aDest] = decodedInstr->dest;
+		destPhys[decodedInstr->dest].state = PendingUpdate;
+		destPhys[decodedInstr->dest].value = 0;
 	}
 
 	/*
@@ -869,22 +853,169 @@ static void AXP_RenameRegisters(
 				decodedInstr->aSrc1,
 				(src1Float ? 'F' : 'R'),
 				decodedInstr->src1,
-				regStateStr[src1State[decodedInstr->src1]]);
+				regStateStr[src1Phys[decodedInstr->src1].state]);
 		AXP_TraceWrite(
 				"\t%c%02u --> P%c%02u (%s)",
 				(src2Float ? 'F' : 'R'),
 				decodedInstr->aSrc2,
 				(src2Float ? 'F' : 'R'),
 				decodedInstr->src2,
-				regStateStr[src2State[decodedInstr->src2]]);
+				regStateStr[src2Phys[decodedInstr->src2].state]);
 		AXP_TraceWrite(
 				"\t%c%02u --> P%c%02u (%s)",
 				(destFloat ? 'F' : 'R'),
 				decodedInstr->aDest,
 				(destFloat ? 'F' : 'R'),
 				decodedInstr->dest,
-				regStateStr[destState[decodedInstr->dest]]);
+				regStateStr[destPhys[decodedInstr->dest].state]);
 		AXP_TRACE_END();
 	}
+	return;
+}
+
+/*
+ *
+ */
+static void AXP_UpdateRegisters(
+						AXP_21264_CPU *cpu,
+						AXP_INSTRUCTION *decodedInstr)
+{
+	AXP_REGISTERS 		*src1Phys, *src2Phys, *destPhys;
+	u16					*src1Map, *src2Map, *destMap;
+	u16					*src1FreeList, *src2FreeList, *destFreeList;
+	u16					*src1FlStart, *src2FlStart, *destFlStart;
+	u16					*src1FlEnd, *src2FlEnd, *destFlEnd;
+	bool				src1Float = ((decodedInstr->decodedReg.bits.src1 & AXP_REG_FP) == AXP_REG_FP);
+	bool				src2Float = ((decodedInstr->decodedReg.bits.src2 & AXP_REG_FP) == AXP_REG_FP);
+	bool 				destFloat = ((decodedInstr->decodedReg.bits.dest & AXP_REG_FP) == AXP_REG_FP);
+
+	if (AXP_IBOX_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("AXP_UpdateRegisters called");
+		AXP_TRACE_END();
+	}
+
+	/*
+	 * Set up some pointers to simplify the code following this..
+	 */
+	if (src1Float == false)
+	{
+		src1Phys = cpu->pr;
+		src1Map = cpu->prMap;
+		src1FreeList = cpu->prFreeList;
+		src1FlStart = cpu->prFlStart;
+		src1FlEnd = cpu->prFlEnd;
+	}
+	else
+	{
+		src1Phys = cpu->pf;
+		src1Map = cpu->pfMap;
+		src1FreeList = cpu->pfFreeList;
+		src1FlStart = cpu->pfFlStart;
+		src1FlEnd = cpu->pfFlEnd;
+	}
+	if (src2Float == false)
+	{
+		src2Phys = cpu->pr;
+		src2Map = cpu->prMap;
+		src2FreeList = cpu->prFreeList;
+		src2FlStart = cpu->prFlStart;
+		src2FlEnd = cpu->prFlEnd;
+	}
+	else
+	{
+		src2Phys = cpu->pf;
+		src2Map = cpu->pfMap;
+		src2FreeList = cpu->pfFreeList;
+		src2FlStart = cpu->pfFlStart;
+		src2FlEnd = cpu->pfFlEnd;
+	}
+	if (destFloat == false)
+	{
+		destPhys = cpu->pr;
+		destMap = cpu->prMap;
+		destFreeList = cpu->prFreeList;
+		destFlStart = cpu->prFlStart;
+		destFlEnd = cpu->prFlEnd;
+	}
+	else
+	{
+		destPhys = cpu->pf;
+		destMap = cpu->pfMap;
+		destFreeList = cpu->pfFreeList;
+		destFlStart = cpu->pfFlStart;
+		destFlEnd = cpu->pfFlEnd;
+	}
+
+	/*
+	 * Dereference the source registers.
+	 */
+	src1Phys[decodedInstr->src1].refCount--;
+	src2Phys[decodedInstr->src1].refCount--;
+
+	/*
+	 * Move the value from executing the instruction into the physical
+	 * register.
+	 */
+	if (decodedInstr->aDest != AXP_UNMAPPED_REG)
+	{
+		destPhys[decodedInstr->dest].value = destFloat ?
+				decodedInstr->destv.fp.uq :
+				decodedInstr->destv.r.uq;
+		destPhys[decodedInstr->destv].state = Valid;
+	}
+	destPhys[decodedInstr->dest].refCount--;
+
+	/*
+	 * OK, now see if any of the registers mapped at the time of this
+	 * instruction's initial decoding can be returned to the free list.  We do
+	 * this by the following logic (all must be true):
+	 *
+	 *	1) The register is not R31 or F31
+	 *	2) The current register mapping is not the same since originally mapped
+	 *	3) The reference counter is down to zero.
+	 */
+	if ((decodedInstr->aSrc1 != AXP_UNMAPPED_REG) &&
+		(src1Map[decodedInstr->aSrc1] != decodedInstr->src1) &&
+		(src1Phys[decodedInstr->src1].refCount == 0))
+	{
+		src1Phys[src1Map[decodedInstr->aSrc1]].state = Free;
+		src1FreeList[*src1FlEnd] = src1Map[decodedInstr->aSrc1];
+		*src1FlEnd = (*src1FlEnd + 1) % AXP_I_FREELIST_SIZE;
+	}
+	if ((decodedInstr->aSrc2 != AXP_UNMAPPED_REG) &&
+		(src2Map[decodedInstr->aSrc2] != decodedInstr->src2) &&
+		(src2Phys[decodedInstr->src2].refCount == 0))
+	{
+		src2Phys[src2Map[decodedInstr->aSrc2]].state = Free;
+		src2FreeList[*src2FlEnd] = src2Map[decodedInstr->aSrc2];
+		*src2FlEnd = (*src2FlEnd + 1) % AXP_I_FREELIST_SIZE;
+	}
+	if ((decodedInstr->aDest != AXP_UNMAPPED_REG) &&
+		(destMap[decodedInstr->aDest] != decodedInstr->dest) &&
+		(destPhys[decodedInstr->dest].refCount == 0))
+	{
+		destPhys[destMap[decodedInstr->aDest]].state = Free;
+		destFreeList[*destFlEnd] = destMap[decodedInstr->aDest];
+		*destFlEnd = (*destFlEnd + 1) % AXP_I_FREELIST_SIZE;
+	}
+
+	/*
+	 * Signal either the Ebox or Fbox, depending upon whether the destination
+	 * register was a floating point register or not.  Also, we don't concern
+	 * ourselves about R31 or F31.
+	 */
+	if (decodedInstr->aDest != AXP_UNMAPPED_REG)
+	{
+		if (destFloat == true)
+			pthread_cond_signal(&cpu->fBoxCondition);
+		else
+			pthread_cond_signal(&cpu->eBoxCondition);
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
 	return;
 }

@@ -59,29 +59,34 @@ void AXP_21264_Ibox_ResetRegMap(AXP_21264_CPU *cpu)
 	cpu->pfFlStart = cpu->pfFlEnd = 0;
 	for (ii = 0; ii < AXP_INT_PHYS_REG; ii++)
 	{
+		cpu->pr[ii].value = 0;
+		cpu->pr[ii].refCount = 0;
 		if (ii < AXP_MAX_INT_REGISTERS)
 		{
-			cpu->pr[ii] = 0;
+			cpu->pr[ii].state = Valid;
 			cpu->prMap[ii] = ii;
-			cpu->prState[ii] = Valid;
 		}
 		else
 		{
+			cpu->pr[ii].state = Free;
 			cpu->prFreeList[cpu->prFlEnd] = ii;
-			cpu->prState[ii] = Free;
 			cpu->prFlEnd = (cpu->prFlEnd + 1) % AXP_I_FREELIST_SIZE;
 		}
-		if (ii < AXP_MAX_FP_REGISTERS)
+		if (ii < AXP_FP_PHYS_REG)
 		{
-			cpu->pf[ii] = 0;
-			cpu->pfMap[ii] = ii;
-			cpu->pfState[ii] = Valid;
-		}
-		else if (ii < AXP_FP_PHYS_REG)
-		{
-			cpu->pfFreeList[cpu->pfFlEnd] = ii;
-			cpu->pfState[ii] = Free;
-			cpu->pfFlEnd = (cpu->pfFlEnd + 1) % AXP_F_FREELIST_SIZE;
+			cpu->pf[ii].value = 0;
+			cpu->pf[ii].refCount = 0;
+			if (ii < AXP_MAX_FP_REGISTERS)
+			{
+				cpu->pf[ii].state = Valid;
+				cpu->pfMap[ii] = ii;
+			}
+			else
+			{
+				cpu->pf[ii].state = Free;
+				cpu->pfFreeList[cpu->pfFlEnd] = ii;
+				cpu->pfFlEnd = (cpu->pfFlEnd + 1) % AXP_F_FREELIST_SIZE;
+			}
 		}
 	}
 

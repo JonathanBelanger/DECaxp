@@ -848,7 +848,7 @@ AXP_EXCEPTIONS AXP_MSKQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Implement the instruction.
 	 */
 	instr->destv.r.uq = instr->src1v.r.uq &
-		~(AXP_LOW_QUAD << ((Rbv & AXP_LOW_3BITS) * 8));
+		~((u64) AXP_LOW_QUAD << ((Rbv & AXP_LOW_3BITS) * 8));
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.

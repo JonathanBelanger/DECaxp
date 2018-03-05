@@ -1036,25 +1036,6 @@ typedef enum
  */
 typedef struct
 {
-	u8				uniqueID;	/* A unique id for each instruction */
-	u8				opcode;		/* Operation code */
-	u8				aSrc1;		/* Architectural register R0-R30 or F0-F30 */
-	u8				src1;		/* Physical register PR0-PR79, PF0-PF71 */
-	u8				aSrc2;		/* Architectural register R0-R30 or F0-F30 */
-	u8				src2;		/* Physical register PR0-PR79, PF0-PF71 */
-	u8				aDest;		/* Architectural register R0-R30 or F0-F30 */
-	u8				dest;		/* Physical register PR0-PR79, PF0-PF71 */
-	u8				type_hint_index; /* HW_LD/ST type, HW_RET hint, HW_MxPR idx */
-	u8				scbdMask;	/* HW_MxPR scbd_mask */
-	u8				len_stall : 1; /* HW_LD/ST len, HW_RET stall */
-	bool			useLiteral;	/* Indicator that the literal value is valid */
-	bool			branchPredict; /* Prediction logic result */
-	bool			localPredict; /* Local branch predict */
-	bool			globalPredict; /* Global branch predict */
-	u32				function;	/* Function code for operation */
-	u32				slot;		/* Assigned Load/Store slot */
-	i64				displacement;/* Displacement from PC + 4 */
-	u64				literal;	/* Literal value */
 	AXP_REGISTER	src1v;		/* Value from src1 register */
 	AXP_REGISTER	src2v;		/* Value from src2 register */
 	AXP_REGISTER	destv;		/* Value to dest register */
@@ -1068,6 +1049,27 @@ typedef struct
 	AXP_IBOX_EXC_SUM excSum;
 	AXP_EXCEPTIONS	excRegMask;	/* Exception Register Mask */
 	AXP_INS_FMT		instr;
+	i64				displacement;/* Displacement from PC + 4 */
+	u64				literal;	/* Literal value */
+	u64				prevDestValue;/* Previous value in destination register */
+	u32				function;	/* Function code for operation */
+	u32				slot;		/* Assigned Load/Store slot */
+	u16				aSrc1;		/* Architectural register R0-R30 or F0-F30 */
+	u16				src1;		/* Physical register PR0-PR79, PF0-PF71 */
+	u16				aSrc2;		/* Architectural register R0-R30 or F0-F30 */
+	u16				src2;		/* Physical register PR0-PR79, PF0-PF71 */
+	u16				aDest;		/* Architectural register R0-R30 or F0-F30 */
+	u16				dest;		/* Physical register PR0-PR79, PF0-PF71 */
+	u16				prevDestMap;/* Previous physical register mapping */
+	u8				uniqueID;	/* A unique id for each instruction */
+	u8				opcode;		/* Operation code */
+	u8				type_hint_index; /* HW_LD/ST type, HW_RET hint, HW_MxPR idx */
+	u8				scbdMask;	/* HW_MxPR scbd_mask */
+	u8				len_stall : 1; /* HW_LD/ST len, HW_RET stall */
+	bool			useLiteral;	/* Indicator that the literal value is valid */
+	bool			branchPredict; /* Prediction logic result */
+	bool			localPredict; /* Local branch predict */
+	bool			globalPredict; /* Global branch predict */
 } AXP_INSTRUCTION;
 
 #endif /* _AXP_21264_INS_DEFS_ */

@@ -1421,6 +1421,7 @@ OP_HW_RET:		/* OPCODE: 0x1e */
 OP_HW_ST:		/* OPCODE: 0x1f */
 	if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
 		goto RESERVED_OP;
+	instr->excRegMask = AXP_HWST(cpu, instr);
 	goto COMPL_RETIRE;
 
 OP_LDF:			/* OPCODE: 0x20 */

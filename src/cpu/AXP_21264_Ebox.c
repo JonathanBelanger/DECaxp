@@ -79,6 +79,22 @@ static char *regStateStr[] =
  */
 bool AXP_21264_Ebox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 {
+	bool			retVal;
+	bool			src1Float;
+	bool			src2Float;
+	bool			destFloat;
+	AXP_REGISTERS	*src1Reg;
+	AXP_REGISTERS	*src2Reg;
+	AXP_REGISTERS	*destReg;
+
+	src1Float = ((entry->ins->decodedReg.bits.src1 & AXP_REG_FP) == AXP_REG_FP);
+	src2Float = ((entry->ins->decodedReg.bits.src2 & AXP_REG_FP) == AXP_REG_FP);
+	destFloat = ((entry->ins->decodedReg.bits.dest & AXP_REG_FP) == AXP_REG_FP);
+
+	src1Reg = (src1Float ? cpu->pf : cpu->pr);
+	src2Reg = (src2Float ? cpu->pf : cpu->pr);
+	destReg = (destFloat ? cpu->pf : cpu->pr);
+
 	if (AXP_EBOX_OPT2)
 	{
 		AXP_TRACE_BEGIN();
@@ -89,22 +105,43 @@ bool AXP_21264_Ebox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 		AXP_TraceWrite(
 				"\tSrc1(R%02u) = %s",
 				entry->ins->aSrc1,
-				regStateStr[cpu->prState[entry->ins->src1]]);
+				regStateStr[src1Reg[entry->ins->src1].state]);
 		AXP_TraceWrite(
 				"\tSrc2(R%02u) = %s",
 				entry->ins->aSrc2,
-				regStateStr[cpu->prState[entry->ins->src2]]);
+				regStateStr[src2Reg[entry->ins->src2].state]);
 		AXP_TraceWrite(
 				"\tDest(R%02u) = %s",
 				entry->ins->aDest,
-				regStateStr[cpu->prState[entry->ins->dest]]);
+				regStateStr[destReg[entry->ins->dest].state]);
 		AXP_TRACE_END();
 	}
 
-	return ((cpu->prState[entry->ins->src1] == Valid) &&
-			(cpu->prState[entry->ins->src2] == Valid) &&
-			(cpu->prState[entry->ins->dest] ==
-				(entry->ins->dest == AXP_UNMAPPED_REG ? Valid : PendingUpdate)));
+	retVal = ((src1Reg[entry->ins->src1].state == Valid) &&
+			  (src2Reg[entry->ins->src2].state == Valid) &&
+			  (destReg[entry->ins->dest].state ==
+					  ((entry->ins->dest == AXP_UNMAPPED_REG) ?
+							  Valid :
+							  PendingUpdate)));
+
+	/*
+	 * If the return value is true, then move the contents of the source
+	 * registers into the location where the instruction execution expects to
+	 * find them.
+	 */
+	if (src1Float)
+		entry->ins->src1v.fp.uq = src1Reg[entry->ins->src1].value;
+	else
+		entry->ins->src1v.r.uq = src1Reg[entry->ins->src1].value;
+	if (src2Float)
+		entry->ins->src1v.fp.uq = src2Reg[entry->ins->src1].value;
+	else
+		entry->ins->src1v.r.uq = src2Reg[entry->ins->src1].value;
+
+	/*
+	 * Return the result back to the caller.
+	 */
+	return(retVal);
 }
 
 /*
