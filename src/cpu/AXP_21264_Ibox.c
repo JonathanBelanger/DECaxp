@@ -102,6 +102,12 @@
  *	V01.012		15-Jan-2018	Jonathan D. Belanger
  *	Move the instruction decoding functions to their own module.  This was
  *	getting too large for eclipse to handle without crashing.
+ *
+ *	V01.013		04-Mar-2018	Jonathan D. Belanger
+ *	The original register renaming was not sophisticated enough.  It did not
+ *	take into account that multiple instructions could be in-flight at any one
+ *	time, and that the mapping at time of execution and retirement may not be
+ *	the same as that at the time the instruction was decoded.
  */
 #include "AXP_Configure.h"
 #include "AXP_Dumps.h"

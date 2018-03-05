@@ -74,6 +74,12 @@
  *	V01.010		24-Feb-2018	Jonathan D. Belanger
  *	Added some comments about what variables do what for the architectural to
  *	physical register mapping.  This is not overly clear within the code.
+ *
+ *	V01.011		04-Mar-2018	Jonathan D. Belanger
+ *	Register renaming needs to account for the condition where an architectural
+ *	register can be mapped to both a source and destination register in the
+ *	same instruction.  Therefore, the mapping registers cannot be a simple one,
+ *	but needs to account for this condition.
  */
 #ifndef _AXP_21264_CPU_DEFS_
 #define _AXP_21264_CPU_DEFS_
@@ -503,8 +509,7 @@ typedef struct
 	 *				each physical register) entries.  This array is index by
 	 *				the physical register number.
 	 */
-	u64						pr[AXP_INT_PHYS_REG];
-	AXP_21264_REG_STATE		prState[AXP_INT_PHYS_REG];
+	AXP_REGISTERS			pr[AXP_INT_PHYS_REG];
 	u16						prMap[AXP_MAX_INT_REGISTERS];
 	u16						prFreeList[AXP_I_FREELIST_SIZE];
 	u16						prFlStart;
@@ -609,8 +614,7 @@ typedef struct
 	 *				each physical register) entries.  This array is index by
 	 *				the physical register number.
 	 */
-	u64						pf[AXP_FP_PHYS_REG];
-	AXP_21264_REG_STATE		pfState[AXP_FP_PHYS_REG];
+	AXP_REGISTERS			pf[AXP_FP_PHYS_REG];
 	u16						pfMap[AXP_MAX_FP_REGISTERS];
 	u16						pfFreeList[AXP_F_FREELIST_SIZE];
 	u16						pfFlStart;

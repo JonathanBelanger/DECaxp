@@ -3164,7 +3164,7 @@ static void parse_parent_names(
  */
 int AXP_LoadConfig_File(char *fileName)
 {
-	xmlDoc	*axpCfgDoc = NULL;
+	xmlDoc	*axpCfgDoc;
 	xmlNode	*axpCfgElement = NULL;
 	int		retVal = AXP_S_NORMAL;
 

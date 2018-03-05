@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -33,6 +33,15 @@
  *	The structured defined in the above change is too complex to be useful.
  *	There just needs to be a field for each 4 bits (DEST, SRC1, SRC2, and
  *	OPCODEFUNC).
+ *
+ *	V01.003		04-Mar-2018	Jonathan D. Belanger
+ *	Register renaming needs to deal with the condition where a particular
+ *	architectural register is used as both a source and destination for a
+ *	single instruction (ie: ADDQ R00, #6, R00).  In this case, a new
+ *	destination physical register needs to be mapped, but the source physical
+ *	register needs to be the currently mapped one.  Also, in this case, when
+ *	this instruction is retired, the source mapped register needs to be put on
+ *	the free list.
  */
 #ifndef _AXP_REGISTER_RENAMING_DEFS_
 #define _AXP_REGISTER_RENAMING_DEFS_
@@ -102,10 +111,10 @@ typedef enum
 
 struct regDecode
 {
-	u16				src2 : 4;
-	u16				src1 : 4;
-	u16				dest : 4;
-	u16				opcodeRegDecode	: 4;
+	u16					src2 : 4;
+	u16					src1 : 4;
+	u16					dest : 4;
+	u16					opcodeRegDecode	: 4;
 };
 
 typedef union
@@ -113,5 +122,12 @@ typedef union
 	u16					raw;
 	struct regDecode	bits;
 } AXP_REG_DECODE;
+
+typedef struct
+{
+	u64					value;
+	AXP_21264_REG_STATE	state;
+	u16					refCount;
+} AXP_REGISTERS;
 
 #endif /* _AXP_REGISTER_RENAMING_DEFS_ */

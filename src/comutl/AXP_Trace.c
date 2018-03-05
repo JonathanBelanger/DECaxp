@@ -71,7 +71,7 @@ void AXP_TraceInit_Once(void)
 		}
 		else
 		{
-			sscanf(getEnvStr, "%s", _axp_trc_out_);
+			sscanf(getEnvStr, "%80s", _axp_trc_out_);
 			_axp_trc_fp_ = fopen(_axp_trc_out_, "w");
 		}
 		_axp_trc_active_ = true;
@@ -167,12 +167,17 @@ void AXP_TraceWrite(char *fmt, ...)
 	char			outBuf[41];
 	va_list			ap;
 	struct timeval	now;
+	struct tm		timeNow;
 
 	/*
 	 * Write out a time-stamp followed by a colon and a space character
 	 */
 	gettimeofday(&now, NULL);
-	strftime(outBuf, sizeof(outBuf), "%H:%M:%S", localtime(&now.tv_sec));
+	strftime(
+		outBuf,
+		sizeof(outBuf),
+		"%H:%M:%S",
+		localtime_r(&now.tv_sec, &timeNow));
 	fprintf(_axp_trc_fp_, "%s.%03ld: ", outBuf, (now.tv_usec / 1000));
 
 	/*

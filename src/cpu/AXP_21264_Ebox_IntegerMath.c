@@ -840,7 +840,7 @@ AXP_EXCEPTIONS AXP_UMULH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * Implement the instruction
 	 */
 	__builtin_mul_overflow(Rav, Rbv, &Rcv);
-	instr->destv.r.uq = (u64) ((Rcv >> 64) & AXP_LOW_QUAD);
+	instr->destv.r.uq = ((Rcv >> 64) & AXP_LOW_QUAD);
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.

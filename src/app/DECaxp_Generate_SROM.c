@@ -125,6 +125,11 @@ int main(int argc, char **argv)
 				else
 					retVal = -5;
 			}
+
+			/*
+			 * Close the input file.
+			 */
+			fclose(inFP);
 		}
 		else if (inFP == NULL)
 		{
