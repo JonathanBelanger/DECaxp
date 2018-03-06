@@ -47,103 +47,6 @@
 #include "AXP_Trace.h"
 #include "AXP_Execute_Box.h"
 
-static char *regStateStr[] =
-{
-	"Free",
-	"Pending Update",
-	"Valid"
-};
-
-/*
- * AXP_21264_Ebox_RegisterReady
- *	This function is called to determine if a queued instruction's registers
- *	are ready for execution.  If one or more registers is waiting for a
- *	previous instruction to finish its execution and store the value this
- *	instruction needs.
- *
- * Input Parameters:
- *	cpu:
- *		A pointer to the structure containing the information needed to emulate
- *		a single CPU.
- *	entry:
- *		A pointer to the entry containing all the pre-parsed information of the
- *		instruction so that we can determine which physical registers are being
- *		used and which are needed for this instruction.
- *
- * Output Parameters:
- *	None.
- *
- * Return Values:
- * 	true:	The registers for instruction execution are ready.
- * 	false:	The registers for instruction execution are NOT ready.
- */
-bool AXP_21264_Ebox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
-{
-	bool			retVal;
-	bool			src1Float;
-	bool			src2Float;
-	bool			destFloat;
-	AXP_REGISTERS	*src1Reg;
-	AXP_REGISTERS	*src2Reg;
-	AXP_REGISTERS	*destReg;
-
-	src1Float = ((entry->ins->decodedReg.bits.src1 & AXP_REG_FP) == AXP_REG_FP);
-	src2Float = ((entry->ins->decodedReg.bits.src2 & AXP_REG_FP) == AXP_REG_FP);
-	destFloat = ((entry->ins->decodedReg.bits.dest & AXP_REG_FP) == AXP_REG_FP);
-
-	src1Reg = (src1Float ? cpu->pf : cpu->pr);
-	src2Reg = (src2Float ? cpu->pf : cpu->pr);
-	destReg = (destFloat ? cpu->pf : cpu->pr);
-
-	if (AXP_EBOX_OPT2)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite(
-				"Ebox Checking registers at pc = 0x%016llx, opcode = 0x%02x:",
-				*((u64 *) &entry->ins->pc),
-				(u32) entry->ins->opcode);
-		AXP_TraceWrite(
-				"\tSrc1(R%02u) = %s",
-				entry->ins->aSrc1,
-				regStateStr[src1Reg[entry->ins->src1].state]);
-		AXP_TraceWrite(
-				"\tSrc2(R%02u) = %s",
-				entry->ins->aSrc2,
-				regStateStr[src2Reg[entry->ins->src2].state]);
-		AXP_TraceWrite(
-				"\tDest(R%02u) = %s",
-				entry->ins->aDest,
-				regStateStr[destReg[entry->ins->dest].state]);
-		AXP_TRACE_END();
-	}
-
-	retVal = ((src1Reg[entry->ins->src1].state == Valid) &&
-			  (src2Reg[entry->ins->src2].state == Valid) &&
-			  (destReg[entry->ins->dest].state ==
-					  ((entry->ins->dest == AXP_UNMAPPED_REG) ?
-							  Valid :
-							  PendingUpdate)));
-
-	/*
-	 * If the return value is true, then move the contents of the source
-	 * registers into the location where the instruction execution expects to
-	 * find them.
-	 */
-	if (src1Float)
-		entry->ins->src1v.fp.uq = src1Reg[entry->ins->src1].value;
-	else
-		entry->ins->src1v.r.uq = src1Reg[entry->ins->src1].value;
-	if (src2Float)
-		entry->ins->src1v.fp.uq = src2Reg[entry->ins->src1].value;
-	else
-		entry->ins->src1v.r.uq = src2Reg[entry->ins->src1].value;
-
-	/*
-	 * Return the result back to the caller.
-	 */
-	return(retVal);
-}
-
 /*
  * AXP_21264_Ebox_Compl
  *	This function is called by the Mbox for Integer Store operations.  This is
@@ -332,7 +235,6 @@ void *AXP_21264_EboxU0Main(void *voidPtr)
 				&cpu->iq,
 				&cpu->eBoxCondition,
 				&cpu->eBoxMutex,
-				&AXP_21264_Ebox_RegistersReady,
 				&AXP_ReturnIQEntry);
 
 	/*
@@ -380,7 +282,6 @@ void *AXP_21264_EboxU1Main(void *voidPtr)
 				&cpu->iq,
 				&cpu->eBoxCondition,
 				&cpu->eBoxMutex,
-				&AXP_21264_Ebox_RegistersReady,
 				&AXP_ReturnIQEntry);
 
 	/*
@@ -428,7 +329,6 @@ void *AXP_21264_EboxL0Main(void *voidPtr)
 				&cpu->iq,
 				&cpu->eBoxCondition,
 				&cpu->eBoxMutex,
-				&AXP_21264_Ebox_RegistersReady,
 				&AXP_ReturnIQEntry);
 
 	/*
@@ -476,7 +376,6 @@ void *AXP_21264_EboxL1Main(void *voidPtr)
 				&cpu->iq,
 				&cpu->eBoxCondition,
 				&cpu->eBoxMutex,
-				&AXP_21264_Ebox_RegistersReady,
 				&AXP_ReturnIQEntry);
 
 	/*

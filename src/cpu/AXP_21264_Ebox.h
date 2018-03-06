@@ -224,7 +224,6 @@ AXP_EXCEPTIONS AXP_HWMFPR(AXP_21264_CPU *, AXP_INSTRUCTION *);
 /*
  * Initialization and other functions for Ebox.
  */
-bool AXP_21264_Ebox_RegistersReady(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
 void AXP_21264_Ebox_Compl(AXP_21264_CPU *, AXP_INSTRUCTION *);
 bool AXP_21264_Ebox_Init(AXP_21264_CPU *);
 void *AXP_21264_EboxU0Main(void *);

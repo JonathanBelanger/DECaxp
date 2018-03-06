@@ -40,5 +40,6 @@ void AXP_Decode_Rename(
 				int,
 				AXP_INSTRUCTION *,
 				AXP_PIPELINE *);
-
+void AXP_UpdateRegisters(AXP_21264_CPU *, AXP_INSTRUCTION *);
+void AXP_AbortInstructions(AXP_21264_CPU *, AXP_INSTRUCTION *);
 #endif	/* _AXP_IBOX_INS_DECODE_DEFS_ */

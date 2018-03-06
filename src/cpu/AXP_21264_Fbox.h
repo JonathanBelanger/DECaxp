@@ -421,7 +421,6 @@ typedef enum
 /*
  * Initialization and Main Functions for Fbox.
  */
-bool AXP_21264_Fbox_RegistersReady(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
 void AXP_21264_Fbox_Compl(AXP_21264_CPU *, AXP_INSTRUCTION *);
 bool AXP_21264_Fbox_Init(AXP_21264_CPU *);
 void *AXP_21264_FboxMulMain(void *);
