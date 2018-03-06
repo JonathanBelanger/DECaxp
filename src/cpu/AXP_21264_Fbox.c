@@ -47,65 +47,6 @@
 #include "AXP_Trace.h"
 #include "AXP_Execute_Box.h"
 
-static char *regStateStr[] =
-{
-	"Free",
-	"Pending Update",
-	"Valid"
-};
-
-/*
- * AXP_21264_Fbox_RegisterReady
- *	This function is called to determine if a queued instruction's registers
- *	are ready for execution.  If one or more registers is waiting for a
- *	previous instruction to finish its execution and store the value this
- *	instruction needs.
- *
- * Input Parameters:
- *	cpu:
- *		A pointer to the structure containing the information needed to emulate
- *		a single CPU.
- *	entry:
- *		A pointer to the entry containing all the pre-parsed information of the
- *		instruction so that we can determine which physical registers are being
- *		used and which are needed for this instruction.
- *
- * Output Parameters:
- *	None.
- *
- * Return Values:
- * 	true:	The registers for instruction execution are ready.
- * 	false:	The registers for instruction execution are NOT ready.
- */
-bool AXP_21264_Fbox_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
-{
-	if (AXP_FBOX_OPT2)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite(
-				"Fbox Checking registers at pc = 0x%016llx, opcode = 0x%02x:",
-				*((u64 *) &entry->ins->pc),
-				(u32) entry->ins->opcode);
-		AXP_TraceWrite(
-				"\tSrc1(F%02u) = %s",
-				entry->ins->aSrc1,
-				regStateStr[cpu->pfState[entry->ins->src1]]);
-		AXP_TraceWrite(
-				"\tSrc2(F%02u) = %s",
-				entry->ins->aSrc2,
-				regStateStr[cpu->pfState[entry->ins->src2]]);
-		AXP_TraceWrite(
-				"\tDest(F%02u) = %s",
-				entry->ins->aDest,
-				regStateStr[cpu->pfState[entry->ins->dest]]);
-		AXP_TRACE_END();
-	}
-	return ((cpu->pfState[entry->ins->src1] == Valid) &&
-			(cpu->pfState[entry->ins->src2] == Valid) &&
-			(cpu->pfState[entry->ins->dest] ==
-				(entry->ins->dest == AXP_UNMAPPED_REG ? Valid : PendingUpdate)));
-}
-
 /*
  * AXP_21264_Fbox_Compl
  *	This function is called by the Mbox for Integer Store operations.  This is
@@ -365,7 +306,6 @@ void *AXP_21264_FboxMulMain(void *voidPtr)
 				&cpu->fq,
 				&cpu->fBoxCondition,
 				&cpu->fBoxMutex,
-				&AXP_21264_Fbox_RegistersReady,
 				&AXP_ReturnFQEntry);
 
 	/*
@@ -420,7 +360,6 @@ void *AXP_21264_FboxOthMain(void *voidPtr)
 				&cpu->fq,
 				&cpu->fBoxCondition,
 				&cpu->fBoxMutex,
-				&AXP_21264_Fbox_RegistersReady,
 				&AXP_ReturnFQEntry);
 
 	/*

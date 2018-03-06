@@ -1328,169 +1328,6 @@ void AXP_21264_Ibox_Retire_HW_MTPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 }
 
 /*
- * AXP_21264_Ibox_AbortIns
- *	This function is called to abort any instructions starting at the indicated
- *	location in the array to the end location.  Then reset the end to be the
- *	same as the indicated starting location.
- *
- * Input Parameters:
- *	cpu:
- *		A pointer to the CPU structure for the emulated Alpha AXP 21264
- *		processor.
- *	start:
- *		A value indicating where we should begin within the ROB array.
- *	split:
- *		A pointer to a boolean for the recalculated split value.
- *	end:
- *		A pointer to an unsigned 32-bit integer for the recalculated end value.
- *
- * Output Parameters:
- *	None.
- *
- * Return Values:
- *	None.
- */
-void AXP_21264_Ibox_AbortIns(
-						AXP_21264_CPU *cpu,
-						u32 start,
-						bool *retSplit,
-						u32 *retEnd)
-{
-	AXP_INSTRUCTION		*rob;
-	AXP_21264_REG_STATE *destState;
-	u16					*destMap;
-	u16					*destFreeList, *flEnd;
-	bool				split, destFloat = false;
-	u32					ii, end;
-
-	if (AXP_IBOX_CALL)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("AXP_21264_Ibox_AbortIns called (start: %u)", start);
-		AXP_TRACE_END();
-	}
-
-	/*
-	 * OK, we need to start at the next instruction in the Re-Order Buffer.
-	 *
-	 * NOTE:	The Ebox or Fbox will be responsible for putting away the IQ/FQ
-	 * 			entry.
-	 */
-	start = (start + 1) == AXP_INFLIGHT_MAX ? 0 : start + 1;
-	split = cpu->robEnd < start;
-	end = (split ? AXP_INFLIGHT_MAX : cpu->robEnd);
-	ii = start;
-	while (ii < end)
-	{
-
-		/*
-		 * Set up a pointer to the next instruction that needs to be aborted.
-		 */
-		rob = &cpu->rob[ii];
-
-		/*
-		 * Clear out any exceptions that may have occurred.
-		 */
-		rob->excRegMask = NoException;
-
-		/*
-		 * If the destination register was not R31/F31, then we need to return
-		 * it to the free list.
-		 */
-		if (rob->aDest != AXP_UNMAPPED_REG)
-		{
-
-			/*
-			 * Determine if the destination register is a floating-point or
-			 * integer register.
-			 */
-			destFloat =
-				((rob->decodedReg.bits.dest & AXP_DEST_FLOAT) ==
-						AXP_DEST_FLOAT);
-
-			/*
-			 * Set up some pointers so that the code below is a bit simpler.
-			 */
-			if (destFloat == true)
-			{
-				destState = cpu->pfState;
-				destMap = cpu->pfMap;
-				destFreeList = cpu->pfFreeList;
-				flEnd = &cpu->pfFlEnd;
-			}
-			else
-			{
-				destState = cpu->prState;
-				destMap = cpu->prMap;
-				destFreeList = cpu->prFreeList;
-				flEnd = &cpu->prFlEnd;
-			}
-
-			/*
-			 * Log what we are about to do.
-			 */
-			if (AXP_IBOX_OPT1)
-			{
-				AXP_TRACE_BEGIN();
-				AXP_TraceWrite(
-					"AXP_21264_Ibox_AbortIns freeing register: P%c%02u",
-					(destFloat ? 'F' :'R'),
-					destMap[rob->aDest]);
-				AXP_TRACE_END();
-			}
-
-			/*
-			 * Put the destination register back on to the free-list and mark
-			 * this physical register as being free.
-			 */
-			destFreeList[*flEnd] = destMap[rob->aDest];
-			*flEnd = (*flEnd + 1) % AXP_F_FREELIST_SIZE;
-			destState[destMap[rob->aDest]] = Free;
-		}
-
-		/*
-		 * Mark this instruction as being aborted.  The Ebox/Fbox will change
-		 * this to Retired, after freeing the entry queued to the IQ/FQ that
-		 * references this ROB entry.
-		 */
-		rob->state = Aborted;
-
-		/*
-		 * Increment the loop counter.  If we reached the end of the array and
-		 * it wrapped around, then reset the counter and the end value.  Also,
-		 * note that the split is no longer relevant (avoids an infinite loop).
-		 */
-		ii++;
-		if ((ii == end) && (split == true))
-		{
-			ii = 0;
-			end = cpu->robEnd;
-			split = false;
-		}
-	}
-
-	/*
-	 * The new end is the first aborted instruction, this include the VPC
-	 * stack.
-	 */
-	cpu->robEnd = start;
-	cpu->vpcEnd = start;
-
-	/*
-	 * Since we just change the end of the ROB, we need to recalculate the
-	 * split and end values (this will affect the while loop from which we are
-	 * called).
-	 */
-	*retSplit = cpu->robEnd < cpu->robStart;
-	*retEnd = (*retSplit ? AXP_INFLIGHT_MAX : cpu->robEnd);
-
-	/*
-	 * Return back to the caller.
-	 */
-	return;
-}
-
-/*
  * AXP_21264_Ibox_Retire
  *	This function is called whenever an instruction is transitioned to
  *	WaitingRetirement state.  This function will search through the ReOrder
@@ -1516,8 +1353,6 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	u32				ii, end;
 	bool			split;
 	bool			done = false;
-	bool			signalEbox = false;
-	bool			signalFbox = false;
 	bool			updateDest = false;
 	bool			retVal = false;
 
@@ -1618,11 +1453,11 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 							true);
 
 				/*
-				 * Call the function to abort all instructions
-				 * immediately after the current one.  This may change
-				 * the value of cpu->robEnd.
+				 * Call the function to abort all instructions immediately
+				 * after the current one.  This may change the value of
+				 * cpu->robEnd.
 				 */
-				AXP_21264_Ibox_AbortIns(cpu, ii, &split, &end);
+				AXP_AbortInstructions(cpu, rob);
 			}
 			else
 			{
@@ -1674,15 +1509,9 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 					{
 						if ((rob->decodedReg.bits.dest & AXP_DEST_FLOAT) ==
 							 AXP_DEST_FLOAT)
-						{
 							updateDest = true;
-							signalFbox = true;
-						}
 						else if (rob->decodedReg.bits.dest != 0)
-						{
 							updateDest = true;
-							signalEbox = true;
-						}
 					}
 
 					/*
@@ -1727,7 +1556,7 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 						 * immediately after the current one.  This may change
 						 * the value of cpu->robEnd.
 						 */
-						AXP_21264_Ibox_AbortIns(cpu, ii, &split, &end);
+						AXP_AbortInstructions(cpu, rob);
 
 						/*
 						 * Step 4:
@@ -1746,44 +1575,16 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 				}
 				else if ((rob->decodedReg.bits.dest & AXP_DEST_FLOAT) ==
 						  AXP_DEST_FLOAT)
-				{
 					updateDest = true;
-					signalFbox = true;
-				}
 				else if (rob->decodedReg.bits.dest != 0)
-				{
 					updateDest = true;
-					signalEbox = true;
-				}
 
 				/*
 				 * If the destination register needs to be updated, then do so
 				 * now.
 				 */
-				if ((updateDest == true) && (rob->aDest != AXP_UNMAPPED_REG))
-				{
-
-					/*
-					 * If we will be signaling the Fbox (floating-point
-					 * processing), then we need to update the destination
-					 * physical register.
-					 */
-					if (signalFbox == true)
-					{
-						cpu->pf[rob->dest] = rob->destv.fp.uq;
-						cpu->pfState[rob->dest] = Valid;
-					}
-
-					/*
-					 * We will be signaling the Ebox (integer processing), then
-					 * we need to update the destination physical register.
-					 */
-					else
-					{
-						cpu->pr[rob->dest] = rob->destv.r.uq;
-						cpu->prState[rob->dest] = Valid;
-					}
-				}
+				if (updateDest == true)
+					AXP_UpdateRegisters(cpu, rob);
 				updateDest = false;
 
 				/*
