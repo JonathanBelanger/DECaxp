@@ -1774,8 +1774,8 @@ void AXP_Decode_Instruction(
  */
 void AXP_Dump_Registers(
 				AXP_INSTRUCTION	*instr,
-				u64				*pr,
-				u64				*pf,
+				AXP_REGISTERS	*pr,
+				AXP_REGISTERS	*pf,
 				char			*regStr)
 {
 	int		offset;
@@ -1798,8 +1798,8 @@ void AXP_Dump_Registers(
 					AXP_REG_LETTER(instr->decodedReg.bits.src1),
 					instr->aSrc1,
 					((instr->decodedReg.bits.src1 & AXP_REG_FP) ?
-					 pf[instr->src1] :
-					 pr[instr->src1]));
+					 pf[instr->src1].value :
+					 pr[instr->src1].value));
 		offset += sprintf(&regStr[offset], Comma);
 		offset += sprintf(
 					&regStr[offset],
@@ -1807,8 +1807,8 @@ void AXP_Dump_Registers(
 					AXP_REG_LETTER(instr->decodedReg.bits.src2),
 					instr->aSrc2,
 					((instr->decodedReg.bits.src2 & AXP_REG_FP) ?
-					 pf[instr->src2] :
-					 pr[instr->src2]));
+					 pf[instr->src2].value :
+					 pr[instr->src2].value));
 		offset += sprintf(&regStr[offset], Comma);
 		sprintf(
 			&regStr[offset],
@@ -1816,8 +1816,8 @@ void AXP_Dump_Registers(
 			AXP_REG_LETTER(instr->decodedReg.bits.dest),
 			instr->aDest,
 			((instr->decodedReg.bits.dest & AXP_REG_FP) ?
-			 pf[instr->dest] :
-			 pr[instr->dest]));
+			 pf[instr->dest].value :
+			 pr[instr->dest].value));
 	}
 
 	/*
@@ -1832,8 +1832,8 @@ void AXP_Dump_Registers(
 					AXP_REG_LETTER(instr->decodedReg.bits.src1),
 					instr->aSrc1,
 					((instr->decodedReg.bits.src1 & AXP_REG_FP) ?
-					 pf[instr->src1] :
-					 pr[instr->src1]));
+					 pf[instr->src1].value :
+					 pr[instr->src1].value));
 		offset += sprintf(&regStr[offset], Comma);
 		sprintf(
 			&regStr[offset],
@@ -1841,8 +1841,8 @@ void AXP_Dump_Registers(
 			AXP_REG_LETTER(instr->decodedReg.bits.dest),
 			instr->aDest,
 			((instr->decodedReg.bits.dest & AXP_REG_FP) ?
-			 pf[instr->dest] :
-			 pr[instr->dest]));
+			 pf[instr->dest].value :
+			 pr[instr->dest].value));
 	}
 
 	/*
@@ -1857,8 +1857,8 @@ void AXP_Dump_Registers(
 					AXP_REG_LETTER(instr->decodedReg.bits.src2),
 					instr->aSrc2,
 					((instr->decodedReg.bits.src2 & AXP_REG_FP) ?
-					 pf[instr->src2] :
-					 pr[instr->src2]));
+					 pf[instr->src2].value :
+					 pr[instr->src2].value));
 		offset += sprintf(&regStr[offset], Comma);
 		sprintf(
 			&regStr[offset],
@@ -1866,8 +1866,8 @@ void AXP_Dump_Registers(
 			AXP_REG_LETTER(instr->decodedReg.bits.dest),
 			instr->aDest,
 			((instr->decodedReg.bits.dest & AXP_REG_FP) ?
-			 pf[instr->dest] :
-			 pr[instr->dest]));
+			 pf[instr->dest].value :
+			 pr[instr->dest].value));
 	}
 
 	/*
@@ -1882,8 +1882,8 @@ void AXP_Dump_Registers(
 					AXP_REG_LETTER(instr->decodedReg.bits.src1),
 					instr->aSrc1,
 					((instr->decodedReg.bits.src1 & AXP_REG_FP) ?
-					 pf[instr->src1] :
-					 pr[instr->src1]));
+					 pf[instr->src1].value :
+					 pr[instr->src1].value));
 		offset += sprintf(&regStr[offset], Comma);
 		offset += sprintf(
 					&regStr[offset],
@@ -1891,8 +1891,8 @@ void AXP_Dump_Registers(
 					AXP_REG_LETTER(instr->decodedReg.bits.src2),
 					instr->aSrc2,
 					((instr->decodedReg.bits.src2 & AXP_REG_FP) ?
-					 pf[instr->src2] :
-					 pr[instr->src2]));
+					 pf[instr->src2].value :
+					 pr[instr->src2].value));
 	}
 
 	/*
@@ -1906,8 +1906,8 @@ void AXP_Dump_Registers(
 			AXP_REG_LETTER(instr->decodedReg.bits.src1),
 			instr->aSrc1,
 			((instr->decodedReg.bits.src1 & AXP_REG_FP) ?
-			 pf[instr->src1] :
-			 pr[instr->src1]));
+			 pf[instr->src1].value :
+			 pr[instr->src1].value));
 	}
 
 	/*
@@ -1921,8 +1921,8 @@ void AXP_Dump_Registers(
 			AXP_REG_LETTER(instr->decodedReg.bits.src2),
 			instr->aSrc2,
 			((instr->decodedReg.bits.src2 & AXP_REG_FP) ?
-			 pf[instr->src2] :
-			 pr[instr->src2]));
+			 pf[instr->src2].value :
+			 pr[instr->src2].value));
 	}
 
 	/*
@@ -1936,8 +1936,8 @@ void AXP_Dump_Registers(
 			AXP_REG_LETTER(instr->decodedReg.bits.dest),
 			instr->aDest,
 			((instr->decodedReg.bits.dest & AXP_REG_FP) ?
-			 pf[instr->dest] :
-			 pr[instr->dest]));
+			 pf[instr->dest].value :
+			 pr[instr->dest].value));
 	}
 
 	/*

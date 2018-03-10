@@ -34,12 +34,16 @@
 #ifndef _AXP_IBOX_INS_DECODE_DEFS_
 #define _AXP_IBOX_INS_DECODE_DEFS_	1
 
+#define AXP_SIGNAL_NONE	0
+#define AXP_SIGNAL_EBOX	1
+#define AXP_SIGNAL_FBOX	2
+
 void AXP_Decode_Rename(
 				AXP_21264_CPU *,
 				AXP_INS_LINE *,
 				int,
 				AXP_INSTRUCTION *,
 				AXP_PIPELINE *);
-void AXP_UpdateRegisters(AXP_21264_CPU *, AXP_INSTRUCTION *);
+u32 AXP_UpdateRegisters(AXP_21264_CPU *, AXP_INSTRUCTION *);
 void AXP_AbortInstructions(AXP_21264_CPU *, AXP_INSTRUCTION *);
 #endif	/* _AXP_IBOX_INS_DECODE_DEFS_ */

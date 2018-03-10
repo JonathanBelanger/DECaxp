@@ -138,17 +138,26 @@ static bool AXP_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 				*((u64 *) &entry->ins->pc),
 				(u32) entry->ins->opcode);
 		AXP_TraceWrite(
-				"\tSrc1(R%02u) = %s",
+				"\tSrc1 (%c%02u) = %s",
+				(src1Float ? 'F' : 'R'),
 				entry->ins->aSrc1,
-				regStateStr[src1Reg[entry->ins->src1].state]);
+				regStateStr[src1Reg[entry->ins->src1].state],
+				(src1Float ? 'F' : 'R'),
+				entry->ins->src1);
 		AXP_TraceWrite(
-				"\tSrc2(R%02u) = %s",
+				"\tSrc2 (%c%02u) = %s",
+				(src2Float ? 'F' : 'R'),
 				entry->ins->aSrc2,
-				regStateStr[src2Reg[entry->ins->src2].state]);
+				regStateStr[src2Reg[entry->ins->src2].state],
+				(src2Float ? 'F' : 'R'),
+				entry->ins->src2);
 		AXP_TraceWrite(
-				"\tDest(R%02u) = %s",
+				"\tDest (%c%02u) = %s (P%c%02u)",
+				(destFloat ? 'F' : 'R'),
 				entry->ins->aDest,
-				regStateStr[destReg[entry->ins->dest].state]);
+				regStateStr[destReg[entry->ins->dest].state],
+				(destFloat ? 'F' : 'R'),
+				entry->ins->dest);
 		AXP_TRACE_END();
 	}
 

@@ -27,6 +27,7 @@
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
 #include "AXP_21264_Ibox.h"
+#include "AXP_21264_Ibox_InstructionDecoding.h"
 
 /*
  * Prototypes for local functions
@@ -714,7 +715,6 @@ static void AXP_RenameRegisters(
 						AXP_INSTRUCTION *decodedInstr)
 {
 	AXP_REGISTERS 		*src1Phys, *src2Phys, *destPhys;
-	u64					*reg;
 	u16					*src1Map, *src2Map, *destMap;
 	u16					*destFreeList, *flStart, *flEnd;
 	bool				src1Float = ((decodedInstr->decodedReg.bits.src1 & AXP_REG_FP) == AXP_REG_FP);
@@ -765,7 +765,6 @@ static void AXP_RenameRegisters(
 		destFreeList = cpu->prFreeList;
 		flStart = &cpu->prFlStart;
 		flEnd = &cpu->prFlEnd;
-		reg = cpu->pr;
 	}
 	else
 	{
@@ -774,7 +773,6 @@ static void AXP_RenameRegisters(
 		destFreeList = cpu->pfFreeList;
 		flStart = &cpu->pfFlStart;
 		flEnd = &cpu->pfFlEnd;
-		reg = cpu->pf;
 	}
 
 	/*
@@ -816,7 +814,7 @@ static void AXP_RenameRegisters(
 		 * Next determine if we need to put the currently mapped register onto
 		 * the free list.
 		 */
-		if (destPhys[destMap[decodedInstr->aDest]].refCount == 0)
+		if (destPhys[decodedInstr->dest].refCount == 0)
 		{
 			if (AXP_IBOX_OPT2)
 			{
@@ -824,13 +822,14 @@ static void AXP_RenameRegisters(
 				AXP_TraceWrite(
 						"AXP_RenameRegisters freeing P%c%02d back onto the "
 						"p%cFreeList[%u]",
-						decodedInstr->src1,
+						(destFloat ? 'F' : 'R'),
+						decodedInstr->dest,
 						(destFloat ? 'f' : 'r'),
 						*flEnd);
 				AXP_TRACE_END();
 			}
-			destPhys[destMap[decodedInstr->aDest]].state = Free;
-			destFreeList[*flEnd] = destMap[decodedInstr->aDest];
+			destPhys[decodedInstr->dest].state = Free;
+			destFreeList[*flEnd] = decodedInstr->dest;
 			*flEnd = (*flEnd + 1) % AXP_I_FREELIST_SIZE;
 		}
 
@@ -920,15 +919,17 @@ static void AXP_RenameRegisters(
  *	None.
  *
  * Return Value:
- *	None.
+ *	0:	Don't signal the Ebox or Fbox.
+ *	1:	Only Signal the Ebox.
+ *	2:	Only Signal the Fbox.
  */
-void AXP_UpdateRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
+u32 AXP_UpdateRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 	AXP_REGISTERS 		*src1Phys, *src2Phys, *destPhys;
 	u16					*src1Map, *src2Map, *destMap;
 	u16					*src1FreeList, *src2FreeList, *destFreeList;
-	u16					*src1FlStart, *src2FlStart, *destFlStart;
 	u16					*src1FlEnd, *src2FlEnd, *destFlEnd;
+	u32					retVal = AXP_SIGNAL_NONE;
 	bool				src1Float = ((instr->decodedReg.bits.src1 & AXP_REG_FP) == AXP_REG_FP);
 	bool				src2Float = ((instr->decodedReg.bits.src2 & AXP_REG_FP) == AXP_REG_FP);
 	bool 				destFloat = ((instr->decodedReg.bits.dest & AXP_REG_FP) == AXP_REG_FP);
@@ -948,48 +949,42 @@ void AXP_UpdateRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		src1Phys = cpu->pr;
 		src1Map = cpu->prMap;
 		src1FreeList = cpu->prFreeList;
-		src1FlStart = cpu->prFlStart;
-		src1FlEnd = cpu->prFlEnd;
+		src1FlEnd = &cpu->prFlEnd;
 	}
 	else
 	{
 		src1Phys = cpu->pf;
 		src1Map = cpu->pfMap;
 		src1FreeList = cpu->pfFreeList;
-		src1FlStart = cpu->pfFlStart;
-		src1FlEnd = cpu->pfFlEnd;
+		src1FlEnd = &cpu->pfFlEnd;
 	}
 	if (src2Float == false)
 	{
 		src2Phys = cpu->pr;
 		src2Map = cpu->prMap;
 		src2FreeList = cpu->prFreeList;
-		src2FlStart = cpu->prFlStart;
-		src2FlEnd = cpu->prFlEnd;
+		src2FlEnd = &cpu->prFlEnd;
 	}
 	else
 	{
 		src2Phys = cpu->pf;
 		src2Map = cpu->pfMap;
 		src2FreeList = cpu->pfFreeList;
-		src2FlStart = cpu->pfFlStart;
-		src2FlEnd = cpu->pfFlEnd;
+		src2FlEnd = &cpu->pfFlEnd;
 	}
 	if (destFloat == false)
 	{
 		destPhys = cpu->pr;
 		destMap = cpu->prMap;
 		destFreeList = cpu->prFreeList;
-		destFlStart = cpu->prFlStart;
-		destFlEnd = cpu->prFlEnd;
+		destFlEnd = &cpu->prFlEnd;
 	}
 	else
 	{
 		destPhys = cpu->pf;
 		destMap = cpu->pfMap;
 		destFreeList = cpu->pfFreeList;
-		destFlStart = cpu->pfFlStart;
-		destFlEnd = cpu->pfFlEnd;
+		destFlEnd = &cpu->pfFlEnd;
 	}
 
 	/*
@@ -1020,7 +1015,7 @@ void AXP_UpdateRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		destPhys[instr->dest].value = destFloat ?
 				instr->destv.fp.uq :
 				instr->destv.r.uq;
-		destPhys[instr->destv].state = Valid;
+		destPhys[instr->dest].state = Valid;
 	}
 	destPhys[instr->dest].refCount--;
 
@@ -1044,13 +1039,14 @@ void AXP_UpdateRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			AXP_TRACE_BEGIN();
 			AXP_TraceWrite(
 					"AXP_UpdateRegisters freeing P%c%02d back onto the "
-					"p%cFreeList[%u]",
+					"p%cFreeList[%u] : (src1)",
+					(src1Float ? 'F' : 'R'),
 					instr->src1,
-					(destFloat ? 'f' : 'r'),
-					*destFlEnd);
+					(src1Float ? 'f' : 'r'),
+					*src1FlEnd);
 			AXP_TRACE_END();
 		}
-		src1Phys[src1Map[instr->aSrc1]].state = Free;
+		src1Phys[instr->src1].state = Free;
 		src1FreeList[*src1FlEnd] = instr->src1;
 		*src1FlEnd = (*src1FlEnd + 1) % AXP_I_FREELIST_SIZE;
 	}
@@ -1059,7 +1055,19 @@ void AXP_UpdateRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		(instr->src2 != instr->src1) &&
 		(src2Phys[instr->src2].refCount == 0))
 	{
-		src2Phys[src2Map[instr->aSrc2]].state = Free;
+		if (AXP_IBOX_OPT2)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite(
+					"AXP_UpdateRegisters freeing P%c%02d back onto the "
+					"p%cFreeList[%u] : (src2)",
+					(src2Float ? 'F' : 'R'),
+					instr->src2,
+					(src2Float ? 'f' : 'r'),
+					*src2FlEnd);
+			AXP_TRACE_END();
+		}
+		src2Phys[instr->src2].state = Free;
 		src2FreeList[*src2FlEnd] = instr->src2;
 		*src2FlEnd = (*src2FlEnd + 1) % AXP_I_FREELIST_SIZE;
 	}
@@ -1069,7 +1077,19 @@ void AXP_UpdateRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		(instr->dest != instr->src2) &&
 		(destPhys[instr->dest].refCount == 0))
 	{
-		destPhys[destMap[instr->aDest]].state = Free;
+		if (AXP_IBOX_OPT2)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite(
+					"AXP_UpdateRegisters freeing P%c%02d back onto the "
+					"p%cFreeList[%u] : (dest)",
+					(destFloat ? 'F' : 'R'),
+					instr->dest,
+					(destFloat ? 'f' : 'r'),
+					*destFlEnd);
+			AXP_TRACE_END();
+		}
+		destPhys[instr->dest].state = Free;
 		destFreeList[*destFlEnd] = instr->dest;
 		*destFlEnd = (*destFlEnd + 1) % AXP_I_FREELIST_SIZE;
 	}
@@ -1083,15 +1103,15 @@ void AXP_UpdateRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	if (instr->aDest != AXP_UNMAPPED_REG)
 	{
 		if (destFloat == true)
-			pthread_cond_broadcast(&cpu->fBoxCondition);
+			retVal = AXP_SIGNAL_FBOX;
 		else
-			pthread_cond_broadcast(&cpu->eBoxCondition);
+			retVal = AXP_SIGNAL_EBOX;
 	}
 
 	/*
 	 * Return back to the caller.
 	 */
-	return;
+	return(retVal);
 }
 
 /*
@@ -1135,17 +1155,17 @@ void AXP_AbortInstructions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *inst)
 	if (AXP_IBOX_CALL)
 	{
 		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("AXP_AbortInstructions called");
+		AXP_TraceWrite(
+				"AXP_AbortInstructions called robStart = %u : robEnd = %u",
+				cpu->robStart,
+				cpu->robEnd);
 		AXP_TRACE_END();
 	}
 
 	/*
-	 * First lock the robMutex.  We son't want anyone playing with it while we
-	 * are.
-	 */
-	pthread_mutex_lock(&cpu->robMutex);
-
-	/*
+	 * The robMutex is already locked when we get here.  So, don't try and lock
+	 * it again.
+	 *
 	 * The rob indexes wrap around from the end to the beginning.  The end
 	 * always points to the next available entry.  So we need to look at the
 	 * entry previous to the one pointed to by the end index, but this,
@@ -1158,7 +1178,8 @@ void AXP_AbortInstructions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *inst)
 	 * we find the entry to which we were to rollback.
 	 */
 	rob = &cpu->rob[endIdx];
-	while((endIdx != cpu->robStart) && (rob->pc != inst->pc))
+	while((endIdx != cpu->robStart) &&
+		  (*((u64 *) &rob->pc) != *((u64 *) &inst->pc)))
 	{
 		rollbackRegisterMap = false;
 
@@ -1235,16 +1256,16 @@ void AXP_AbortInstructions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *inst)
 				destPhys = cpu->pf;
 				destMap = cpu->pfMap;
 				destFreeList = cpu->pfFreeList;
-				destFlStart = cpu->pfFlStart;
-				destFlEnd = cpu->pfFlEnd;
+				destFlStart = &cpu->pfFlStart;
+				destFlEnd = &cpu->pfFlEnd;
 			}
 			else
 			{
 				destPhys = cpu->pr;
 				destMap = cpu->prMap;
 				destFreeList = cpu->prFreeList;
-				destFlStart = cpu->prFlStart;
-				destFlEnd = cpu->prFlEnd;
+				destFlStart = &cpu->prFlStart;
+				destFlEnd = &cpu->prFlEnd;
 			}
 
 			/*
@@ -1315,8 +1336,7 @@ void AXP_AbortInstructions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *inst)
 	}
 
 	/*
-	 * Unlock the robMutex and return back to the caller.
+	 * Return back to the caller.
 	 */
-	pthread_mutex_lock(&cpu->robMutex);
 	return;
 }

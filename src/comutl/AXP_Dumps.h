@@ -32,6 +32,10 @@
 #include "AXP_21264_Instructions.h"
 
 void AXP_Decode_Instruction(AXP_PC *pc, AXP_INS_FMT, bool, char *);
-void AXP_Dump_Registers(AXP_INSTRUCTION *, u64 *, u64 *, char *);
+void AXP_Dump_Registers(
+				AXP_INSTRUCTION *,
+				AXP_REGISTERS *,
+				AXP_REGISTERS *,
+				char *);
 
 #endif	/* _AXP_DUMPS_DEFS_ */
