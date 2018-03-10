@@ -1351,6 +1351,7 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 {
 	AXP_INSTRUCTION	*rob;
 	u32				ii, end;
+	u32				signalWho = AXP_SIGNAL_NONE;
 	bool			split;
 	bool			done = false;
 	bool			updateDest = false;
@@ -1584,7 +1585,7 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 				 * now.
 				 */
 				if (updateDest == true)
-					AXP_UpdateRegisters(cpu, rob);
+					signalWho = AXP_UpdateRegisters(cpu, rob);
 				updateDest = false;
 
 				/*
@@ -1691,7 +1692,7 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	 * is one or more Queued Floating Point instructions that can now be
 	 * executed.
 	 */
-	if (signalFbox == true)
+	if (signalWho == AXP_SIGNAL_FBOX)
 		pthread_cond_broadcast(&cpu->fBoxCondition);
 
 	/*
@@ -1700,7 +1701,7 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	 * of them was for the Ebox, signal it to wake up and check to see if there
 	 * is one or more Queued Integer instructions that can now be executed.
 	 */
-	if (signalEbox == true)
+	if (signalWho == AXP_SIGNAL_EBOX)
 		pthread_cond_broadcast(&cpu->eBoxCondition);
 
 	/*

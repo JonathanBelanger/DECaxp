@@ -81,6 +81,8 @@ extern AXP_TRCLOG		_axp_trc_log_;
 #define AXP_SHIFT_SYS	16			/* bits to right shift */
 
 #define AXP_TRCLOG_INIT	((_axp_trc_active_ == false) ? AXP_TraceInit() : true)
+#define AXP_TRCLOG_WRITE(format, ...)	\
+	AXP_TraceWrite(__FILE__, __LINE__, format, __VA_ARGS__)
 
 /*
  * These macros return true when a type of tracing is to be performed.

@@ -1205,8 +1205,14 @@ void *AXP_21264_CboxMain(void *voidPtr)
 					{
 						AXP_TRACE_BEGIN();
 						AXP_TraceWrite(
+								"-------------------------------------"
+								"-----------------------------");
+						AXP_TraceWrite(
 								"The Digital Alpha AXP 21264 CPU Emulator is "
 								"now in a Running state");
+						AXP_TraceWrite(
+								"-------------------------------------"
+								"-----------------------------");
 						AXP_TRACE_END();
 					}
 				}
