@@ -127,10 +127,9 @@ AXP_EXCEPTIONS AXP_CALL_PAL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * The destination register was set to the R23 (R39) shadow register or
 	 * R27 (does not have a shadow register).
-	 *
-	 * TODO: This return address will need to be pushed onto the return stack.
 	 */
 	*retPC = AXP_21264_GetNextVPC(cpu);
+	AXP_PUSH(*retPC);
 
 	/*
 	 * CALL_PAL is just like a branch, but it is not predicted.
