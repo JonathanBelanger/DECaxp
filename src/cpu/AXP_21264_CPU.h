@@ -135,6 +135,32 @@
 #define AXP_21264_VDB_LEN		8
 #define AXP_21264_PQ_LEN		8
 #define AXP_21264_MAF_LEN		8
+#define AXP_21264_EBOX_L0		0
+#define AXP_21264_EBOX_L1		1
+#define AXP_21264_EBOX_U0		2
+#define AXP_21264_EBOX_U1		3
+#define AXP_21264_EBOX_CLUSTERS	4
+#define AXP_21264_FBOX_MULTIPLY	0
+#define AXP_21264_FBOX_OTHER	1
+#define AXP_21264_FBOX_CLUSTERS	2
+
+/*
+ * Prediction stack macros.
+ */
+#define AXP_PUSH(pc)										\
+	if (cpu->predStackIdx > 0)								\
+		cpu->predictionStack[--cpu->predStackIdx] = (pc)
+#define AXP_POP(pc)											\
+	if (cpu->predStackIdx < AXP_INFLIGHT_MAX)				\
+		pc = cpu->predictionStack[cpu->predStackIdx++]
+#define AXP_SWAP(pc)										\
+	if (cpu->predStackIdx < AXP_INFLIGHT_MAX)				\
+	{														\
+		AXP_PC tmpPC;										\
+		tmpPC = cpu->predictionStack[cpu->predStackIdx];	\
+		cpu->predictionStack[cpu->predStackIdx] = (pc);		\
+		pc = tmpPC;											\
+	}
 
 /*
  * PALcode Exception Entry Points
@@ -322,6 +348,8 @@ typedef struct
 	CPT						choicePredictor;
 	u16						globalPathHistory;
 	u8						instrCounter;	/* Unique ID for each instruction */
+	AXP_PC					predictionStack[AXP_INFLIGHT_MAX];
+	u8						predStackIdx;
 
 	/*
 	 * This is equivalent to the VPC
@@ -420,6 +448,15 @@ typedef struct
 	pthread_t				eBoxL1ThreadID;
 	pthread_mutex_t			eBoxMutex;
 	pthread_cond_t			eBoxCondition;
+
+	/*
+	 * An optimization for the Ebox is a counter that indicates the number of
+	 * instructions in the IQ that could be executed by a particular cluster.
+	 * If the counter is zero, there is nothing for that cluster.  Otherwise,
+	 * there is at least one instruction that could be executed by the cluster.
+	 * These counters are incremented in the Ibox and decremented in the Ebox.
+	 */
+	u16						eBoxClusterCounter[AXP_21264_EBOX_CLUSTERS];
 
 	/*
 	 * When the Mbox completes an instruction, it sets this flag and then
@@ -545,6 +582,15 @@ typedef struct
 	pthread_t				fBoxOthThreadID;
 	pthread_mutex_t			fBoxMutex;
 	pthread_cond_t			fBoxCondition;
+
+	/*
+	 * An optimization for the Fbox is a counter that indicates the number of
+	 * instructions in the FQ that could be executed by a particular cluster.
+	 * If the counter is zero, there is nothing for that cluster.  Otherwise,
+	 * there is at least one instruction that could be executed by the cluster.
+	 * These counters are incremented in the Ibox and decremented in the Fbox.
+	 */
+	u16						fBoxClusterCounter[AXP_21264_FBOX_CLUSTERS];
 
 	/*
 	 * When the Mbox completes an instruction, it sets this flag and then

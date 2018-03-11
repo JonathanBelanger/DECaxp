@@ -141,6 +141,12 @@ static AXP_PIPELINE hw_mxpr_pipe[] =
 		EboxL0,			/* SLEEP								- b'0001 0111' */
 		PipelineNone,
 		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
+		PipelineNone,
 		EboxL0,			/* DTB_TAG0								- b'0010 0000' */
 		EboxL0,			/* DTB_PTE0								- b'0010 0001' */
 		PipelineNone,
@@ -205,7 +211,7 @@ static AXP_PIPELINE hw_mxpr_pipe[] =
 		EboxL0,			/* PCXT[FPE, PPCE, ASTRR, ASN]			- b'0101 1101' */
 		EboxL0,			/* PCXT[FPE, PPCE, ASTRR, ASTER]		- b'0101 1110' */
 		EboxL0,			/* PCXT[FPE, PPCE, ASTRR, ASTER, ASN]	- b'0101 1111' */
-		EboxL0,			/* PCXT]								- b'0110 0000' */
+		EboxL0,			/* PCXT									- b'0110 0000' */
 		EboxL0,			/* PCXT[ASN]							- b'0110 0001' */
 		EboxL0,			/* PCXT[ASTER]							- b'0110 0010' */
 		EboxL0,			/* PCXT[ASTER, ASN]						- b'0110 0011' */
@@ -285,7 +291,7 @@ static AXP_PIPELINE hw_mxpr_pipe[] =
 		PipelineNone,
 		PipelineNone,
 		PipelineNone,
-		PipelineNone,	/*										- b'1100 0000' */
+		PipelineNone,	/*										- b'1011 0000' */
 		PipelineNone,
 		PipelineNone,
 		PipelineNone,

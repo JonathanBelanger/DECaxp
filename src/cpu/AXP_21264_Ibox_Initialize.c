@@ -48,6 +48,13 @@ void AXP_21264_Ibox_ResetRegMap(AXP_21264_CPU *cpu)
 {
 	int ii;
 
+	if (AXP_IBOX_OPT1)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("AXP_21264_Ibox_ResetRegMap called");
+		AXP_TRACE_END();
+	}
+
 	/*
 	 * First set up the mapping:
 	 *	R0 --> PR0, R1 --> PR1, ..., R38 --> PR38, R39 --> PR39
@@ -88,6 +95,28 @@ void AXP_21264_Ibox_ResetRegMap(AXP_21264_CPU *cpu)
 				cpu->pfFlEnd = (cpu->pfFlEnd + 1) % AXP_F_FREELIST_SIZE;
 			}
 		}
+	}
+
+	if (AXP_IBOX_OPT1)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("");
+		AXP_TraceWrite("\tInteger Physical Registers");
+		for (ii = 0; ii < AXP_MAX_INT_REGISTERS; ii++)
+			AXP_TraceWrite("\tR%02d --> PR%02u", ii, cpu->prMap[ii]);
+		AXP_TraceWrite("");
+		AXP_TraceWrite("\tStart = %u : End = %u", cpu->prFlStart, cpu->prFlEnd);
+		for (ii = 0; ii < AXP_I_FREELIST_SIZE; ii++)
+			AXP_TraceWrite("\tR-FreeList[%d] --> PR%02u", ii, cpu->prFreeList[ii]);
+		AXP_TraceWrite("");
+		AXP_TraceWrite("\tFloating-Point Physical Registers");
+		for (ii = 0; ii < AXP_MAX_FP_REGISTERS; ii++)
+			AXP_TraceWrite("\tF%02d --> PF%02u", ii, cpu->pfMap[ii]);
+		AXP_TraceWrite("");
+		AXP_TraceWrite("\tStart = %u : End = %u", cpu->pfFlStart, cpu->pfFlEnd);
+		for (ii = 0; ii < AXP_F_FREELIST_SIZE; ii++)
+			AXP_TraceWrite("\tF-FreeList[%d] --> PF%02u", ii, cpu->pfFreeList[ii]);
+		AXP_TRACE_END();
 	}
 
 	/*
@@ -142,6 +171,9 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 	for (ii = 0; ii < FOUR_K; ii++)
 		cpu->globalPredictor.gbl_pred[ii] = 0;
 	cpu->globalPathHistory = 0;
+	for (ii = 0; ii < AXP_INFLIGHT_MAX; ii++)
+		*((u64 *) &cpu->predictionStack[ii]) = 0;
+	cpu->predStackIdx = AXP_INFLIGHT_MAX;
 
 	/*
 	 * Initialize the Ibox IPRs.

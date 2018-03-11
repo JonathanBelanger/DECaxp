@@ -938,7 +938,7 @@ void AXP_21264_Ibox_Retire_HW_MTPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				break;
 
 			case AXP_IPR_SLEEP:
-				/* TODO: Pseudo register */
+				cpu->cpuState = Sleep;
 				break;
 
 			case AXP_IPR_PCXT0:
@@ -1822,10 +1822,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 		 */
 		if (cpu->excPend == true)
 		{
-
-			/*
-			 * TODO: Push the excAddr onto the prediction stack.
-			 */
+			AXP_PUSH(cpu->excPC);
 			nextPC = cpu->excPC;
 			cpu->excPend = false;
 
@@ -1850,8 +1847,6 @@ void *AXP_21264_IboxMain(void *voidPtr)
 		 * need to call the PALcode to add a TLB entry to the ITB and/or then
 		 * get the Cbox to fill the iCache.  If the former, store the faulting
 		 * PC and generate an exception.
-		 *
-		 * TODO: What if we branch to the middle of a set of 4 instructions?
 		 */
 		if (AXP_IcacheFetch(cpu, nextPC, &nextCacheLine) == true)
 		{
@@ -1982,18 +1977,31 @@ void *AXP_21264_IboxMain(void *voidPtr)
 						case INTS:
 						case LDQ_U:
 						case ITFP:
-							if (decodedInstr->aDest == AXP_UNMAPPED_REG)
-								noop = true;
+							noop = true;
 							break;
 
 						case FLTI:
 						case FLTL:
 						case FLTV:
-							if ((decodedInstr->aDest == AXP_UNMAPPED_REG) &&
-								(decodedInstr->function != AXP_FUNC_MT_FPCR))
+							if (decodedInstr->function != AXP_FUNC_MT_FPCR)
 								noop = true;
 							break;
 					}
+				}
+				if (AXP_IBOX_OPT2)
+				{
+					AXP_TRACE_BEGIN();
+					AXP_TraceWrite(
+						"opcode: 0x%02x, index = 0x%02x, src1 = %02u, src2 = %02u, "
+						"dest = %02u, pipeline = %d, NO_OP = %d",
+						decodedInstr->opcode,
+						decodedInstr->type_hint_index,
+						decodedInstr->aSrc1,
+						decodedInstr->aSrc2,
+						decodedInstr->aDest,
+						pipeline,
+						noop);
+					AXP_TRACE_END();
 				}
 				if (noop == false)
 				{
@@ -2065,6 +2073,30 @@ void *AXP_21264_IboxMain(void *voidPtr)
 						xqEntry->ins = decodedInstr;
 						xqEntry->pipeline = pipeline;
 						pthread_mutex_lock(&cpu->eBoxMutex);
+
+						/*
+						 * Increment the counters for the pipelines in which
+						 * this instruction can be executed.  This is used to
+						 * keep the pipeline specific Ebox from unnecessarily
+						 * processing the IQ when there is nothing for it to
+						 * process.
+						 */
+						if ((pipeline == EboxU0) ||
+							(pipeline == EboxU0U1) ||
+							(pipeline == EboxL0L1U0U1))
+							cpu->eBoxClusterCounter[AXP_21264_EBOX_U0]++;
+						if ((pipeline == EboxU1) ||
+							(pipeline == EboxU0U1) ||
+							(pipeline == EboxL0L1U0U1))
+							cpu->eBoxClusterCounter[AXP_21264_EBOX_U1]++;
+						if ((pipeline == EboxL0) ||
+							(pipeline == EboxL0L1) ||
+							(pipeline == EboxL0L1U0U1))
+							cpu->eBoxClusterCounter[AXP_21264_EBOX_L0]++;
+						if ((pipeline == EboxL1) ||
+							(pipeline == EboxL0L1) ||
+							(pipeline == EboxL0L1U0U1))
+							cpu->eBoxClusterCounter[AXP_21264_EBOX_L1]++;
 						AXP_InsertCountedQueue(
 								(AXP_QUEUE_HDR *) &cpu->iq,
 								(AXP_CQUE_ENTRY *) xqEntry);
@@ -2077,6 +2109,18 @@ void *AXP_21264_IboxMain(void *voidPtr)
 						xqEntry->pipeline = pipeline;
 						xqEntry->ins = decodedInstr;
 						pthread_mutex_lock(&cpu->fBoxMutex);
+
+						/*
+						 * Increment the counters for the pipelines in which
+						 * this instruction can be executed.  This is used to
+						 * keep the pipeline specific Fbox from unnecessarily
+						 * processing the FQ when there is nothing for it to
+						 * process.
+						 */
+						if (pipeline == FboxMul)
+							cpu->fBoxClusterCounter[AXP_21264_FBOX_MULTIPLY]++;
+						else
+							cpu->fBoxClusterCounter[AXP_21264_FBOX_OTHER]++;
 						AXP_InsertCountedQueue(
 								(AXP_QUEUE_HDR *) &cpu->fq,
 								(AXP_CQUE_ENTRY *) xqEntry);

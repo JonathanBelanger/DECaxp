@@ -534,14 +534,12 @@ AXP_EXCEPTIONS AXP_BSR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 *
-	 * TODO:	We need to use the hints for possible branch prediction and
-	 *			push the return address onto a branch-prediction stack.
-	 *
 	 * First we need the PC for the instruction immediately after the PC for
 	 * this branch instruction.
 	 */
 	pc = instr->pc;
 	pc.pc++;
+	AXP_PUSH(pc);
 
 	/*
 	 * We store the PC calculated above into the destination register value.
@@ -606,9 +604,6 @@ AXP_EXCEPTIONS AXP_JMP(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	/*
 	 * Implement the instruction.
 	 *
-	 * TODO:	We need to use the hints for possible branch prediction and
-	 *			push/pop the return address onto a branch-prediction stack.
-	 *
 	 * First we need the PC for the instruction immediately after the PC for
 	 * this branch instruction.
 	 */
@@ -619,6 +614,43 @@ AXP_EXCEPTIONS AXP_JMP(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 	 * We store the PC calculated above into the destination register value.
 	 */
 	instr->destv.r.uq = *((u64 *) &pc);
+
+	/*
+	 * Use the hint bits to determine what we are being asked to do.
+	 */
+	switch (AXP_JMP_TYPE(instr->displacement))
+	{
+		case AXP_HW_JMP:
+			instr->branchPC = AXP_21264_DisplaceVPC(
+										cpu,
+										pc,
+										instr->displacement);
+			break;
+
+		case AXP_HW_JSR:
+			AXP_PUSH(pc);
+			instr->branchPC = AXP_21264_DisplaceVPC(
+										cpu,
+										pc,
+										instr->displacement);
+			break;
+
+		case AXP_HW_RET:
+			AXP_POP(pc);
+			instr->branchPC = AXP_21264_MakeVPC(
+										cpu,
+										*((u64 *) &pc),
+										AXP_NORMAL_MODE);
+			break;
+
+		case AXP_HW_COROUTINE:
+			AXP_SWAP(pc);
+			instr->branchPC = AXP_21264_MakeVPC(
+										cpu,
+										*((u64 *) &pc),
+										AXP_NORMAL_MODE);
+			break;
+	}
 
 	/*
 	 * Now we use the PC indicated in src1 as the new PC.

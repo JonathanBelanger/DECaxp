@@ -160,11 +160,48 @@ AXP_EXCEPTIONS AXP_HWST(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_HWRET(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
+	AXP_EXCEPTIONS	retVal = NoException;
+	AXP_PC			pc;
 
 	/*
-	 * TODO: Implement the HW_RET instruction.
+	 * Implement the HW_RET instruction.
 	 */
+	switch(instr->type_hint_index)
+	{
+		case AXP_HW_JMP:
+			pc = instr->pc;
+			pc.pc++;
+			instr->branchPC = AXP_21264_DisplaceVPC(
+										cpu,
+										pc,
+										instr->displacement);
+			break;
+
+		case AXP_HW_JSR:
+			pc = instr->pc;
+			pc.pc++;
+			AXP_PUSH(pc);
+			instr->branchPC = AXP_21264_DisplaceVPC(
+										cpu,
+										pc,
+										instr->displacement);
+			break;
+
+		case AXP_HW_RET:
+			AXP_POP(pc);
+			instr->branchPC = AXP_21264_MakeVPC(
+										cpu,
+										instr->src2v.r.uq,
+										(instr->src2v.r.uq & AXP_PAL_MODE));
+			break;
+
+		case AXP_HW_COROUTINE:
+			pc = instr->pc;
+			pc.pc++;
+			AXP_SWAP(pc);
+			instr->branchPC = AXP_21264_MakeVPC(cpu, *((u64 *) &pc), pc.pal);
+			break;
+	}
 
 	/*
 	 * Return back to the caller with any exception that may have occurred.

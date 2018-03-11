@@ -814,7 +814,7 @@ static void AXP_RenameRegisters(
 		 * Next determine if we need to put the currently mapped register onto
 		 * the free list.
 		 */
-		if (destPhys[decodedInstr->dest].refCount == 0)
+		if (destPhys[destMap[decodedInstr->aDest]].refCount == 0)
 		{
 			if (AXP_IBOX_OPT2)
 			{
@@ -823,13 +823,13 @@ static void AXP_RenameRegisters(
 						"AXP_RenameRegisters freeing P%c%02d back onto the "
 						"p%cFreeList[%u]",
 						(destFloat ? 'F' : 'R'),
-						decodedInstr->dest,
+						destMap[decodedInstr->aDest],
 						(destFloat ? 'f' : 'r'),
 						*flEnd);
 				AXP_TRACE_END();
 			}
-			destPhys[decodedInstr->dest].state = Free;
-			destFreeList[*flEnd] = decodedInstr->dest;
+			destPhys[destMap[decodedInstr->aDest]].state = Free;
+			destFreeList[*flEnd] = destMap[decodedInstr->aDest];
 			*flEnd = (*flEnd + 1) % AXP_I_FREELIST_SIZE;
 		}
 
@@ -894,6 +894,12 @@ static void AXP_RenameRegisters(
 				regStateStr[destPhys[decodedInstr->dest].state]);
 		AXP_TRACE_END();
 	}
+
+	/*
+	 * This is temporary debugging code.
+	 */
+	AXP_RegisterRename_IntegrityCheck(cpu);
+
 	return;
 }
 
@@ -1107,6 +1113,11 @@ u32 AXP_UpdateRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 		else
 			retVal = AXP_SIGNAL_EBOX;
 	}
+
+	/*
+	 * This is temporary debugging code.
+	 */
+	AXP_RegisterRename_IntegrityCheck(cpu);
 
 	/*
 	 * Return back to the caller.
@@ -1336,7 +1347,95 @@ void AXP_AbortInstructions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *inst)
 	}
 
 	/*
+	 * This is temporary debugging code.
+	 */
+	AXP_RegisterRename_IntegrityCheck(cpu);
+
+	/*
 	 * Return back to the caller.
 	 */
+	return;
+}
+
+/*
+ * AXP_RegisterRename_IntegrityCheck
+ */
+void AXP_RegisterRename_IntegrityCheck(AXP_21264_CPU *cpu)
+{
+	u8		physInUse[AXP_INT_PHYS_REG];
+	int		ii, end;
+	bool	wrap;
+
+	/*
+	 * First Integer Registers
+	 */
+	for (ii = 0; ii < AXP_INT_PHYS_REG; ii++)
+		physInUse[ii] = 0;
+	for (ii = 0; ii < AXP_MAX_INT_REGISTERS; ii++)
+		physInUse[cpu->prMap[ii]]++;
+	wrap = cpu->prFlStart > cpu->prFlEnd;
+	end = wrap ? AXP_I_FREELIST_SIZE : cpu->prFlEnd;
+	ii = cpu->prFlStart;
+	while (ii < end)
+	{
+		physInUse[cpu->prFreeList[ii]]++;
+		ii++;
+		if ((ii == AXP_I_FREELIST_SIZE) && (wrap == true))
+		{
+			end = cpu->prFlEnd;
+			ii = 0;
+			wrap = false;
+		}
+	}
+	for (ii = 0; ii < AXP_INT_PHYS_REG; ii++)
+		if (physInUse[ii] != 1)
+		{
+			if (AXP_IBOX_OPT2)
+			{
+				AXP_TRACE_BEGIN();
+				AXP_TraceWrite(
+						">>>> Physical Register PR%02d is referenced "
+						"%u times.",
+						ii,
+						physInUse[ii]);
+				AXP_TRACE_END();
+			}
+		}
+
+	/*
+	 * Last Floating Registers
+	 */
+	for (ii = 0; ii < AXP_FP_PHYS_REG; ii++)
+		physInUse[ii] = 0;
+	for (ii = 0; ii < AXP_MAX_FP_REGISTERS; ii++)
+		physInUse[cpu->pfMap[ii]]++;
+	wrap = cpu->pfFlStart > cpu->pfFlEnd;
+	end = wrap ? AXP_I_FREELIST_SIZE : cpu->pfFlEnd;
+	ii = cpu->pfFlStart;
+	while (ii < end)
+	{
+		physInUse[cpu->pfFreeList[ii]]++;
+		ii++;
+		if ((ii == AXP_I_FREELIST_SIZE) && (wrap == true))
+		{
+			end = cpu->pfFlEnd;
+			ii = 0;
+			wrap = false;
+		}
+	}
+	for (ii = 0; ii < AXP_FP_PHYS_REG; ii++)
+		if (physInUse[ii] != 1)
+		{
+			if (AXP_IBOX_OPT2)
+			{
+				AXP_TRACE_BEGIN();
+				AXP_TraceWrite(
+						">>>> Physical Register PF%02d is referenced "
+						"%u times.",
+						ii,
+						physInUse[ii]);
+				AXP_TRACE_END();
+			}
+		}
 	return;
 }

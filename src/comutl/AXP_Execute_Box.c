@@ -88,6 +88,20 @@ static char *regStateStr[] =
 	"Valid"
 };
 
+static char *eBoxClusterStr[] =
+{
+	"L0",
+	"L1",
+	"U0",
+	"U1"
+};
+
+static char *fBoxClusterStr[] =
+{
+	"MULTIPLY",
+	"OTHER"
+};
+
 /*
  * AXP_RegisterReady
  *	This function is called to determine if a queued instruction's registers
@@ -113,13 +127,14 @@ static char *regStateStr[] =
  */
 static bool AXP_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 {
-	bool			retVal;
-	bool			src1Float;
-	bool			src2Float;
-	bool			destFloat;
 	AXP_REGISTERS	*src1Reg;
 	AXP_REGISTERS	*src2Reg;
 	AXP_REGISTERS	*destReg;
+	char			*warn = "";
+	bool			src1Float;
+	bool			src2Float;
+	bool			destFloat;
+	bool			retVal;
 
 	src1Float = ((entry->ins->decodedReg.bits.src1 & AXP_REG_FP) == AXP_REG_FP);
 	src2Float = ((entry->ins->decodedReg.bits.src2 & AXP_REG_FP) == AXP_REG_FP);
@@ -128,7 +143,9 @@ static bool AXP_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 	src1Reg = (src1Float ? cpu->pf : cpu->pr);
 	src2Reg = (src2Float ? cpu->pf : cpu->pr);
 	destReg = (destFloat ? cpu->pf : cpu->pr);
-
+	if (destReg[entry->ins->dest].state !=
+		((entry->ins->dest == AXP_UNMAPPED_REG) ? Valid : PendingUpdate))
+		warn = "******";
 	if (AXP_UTL_OPT2)
 	{
 		AXP_TRACE_BEGIN();
@@ -152,12 +169,13 @@ static bool AXP_RegistersReady(AXP_21264_CPU *cpu, AXP_QUEUE_ENTRY *entry)
 				(src2Float ? 'F' : 'R'),
 				entry->ins->src2);
 		AXP_TraceWrite(
-				"\tDest (%c%02u) = %s (P%c%02u)",
+				"\tDest (%c%02u) = %s (P%c%02u) %s",
 				(destFloat ? 'F' : 'R'),
 				entry->ins->aDest,
 				regStateStr[destReg[entry->ins->dest].state],
 				(destFloat ? 'F' : 'R'),
-				entry->ins->dest);
+				entry->ins->dest,
+				warn);
 		AXP_TRACE_END();
 	}
 
@@ -235,9 +253,53 @@ void AXP_Execution_Box(
 				void (*returnEntry)(AXP_21264_CPU *, AXP_QUEUE_ENTRY *))
 {
 	AXP_QUEUE_ENTRY	*entry, *next;
+	u16				*clusterCounter;
 	AXP_INS_STATE	state;
-	bool			notMe = true;
+	int				clusterCountIdx;
 	bool			fpEnable;
+	bool			eBox;
+
+	switch (pipeline)
+	{
+		case EboxL0:
+			clusterCountIdx = AXP_21264_EBOX_L0;
+			clusterCounter = cpu->eBoxClusterCounter;
+			eBox = true;
+			break;
+
+		case EboxL1:
+			clusterCountIdx = AXP_21264_EBOX_L1;
+			clusterCounter = cpu->eBoxClusterCounter;
+			eBox = true;
+			break;
+
+		case EboxU0:
+			clusterCountIdx = AXP_21264_EBOX_U0;
+			clusterCounter = cpu->eBoxClusterCounter;
+			eBox = true;
+			break;
+
+		case EboxU1:
+			clusterCountIdx = AXP_21264_EBOX_U1;
+			clusterCounter = cpu->eBoxClusterCounter;
+			eBox = true;
+			break;
+
+		case FboxMul:
+			clusterCountIdx = AXP_21264_FBOX_MULTIPLY;
+			clusterCounter = cpu->fBoxClusterCounter;
+			eBox = false;
+			break;
+
+		case FboxOther:
+			clusterCountIdx = AXP_21264_FBOX_OTHER;
+			clusterCounter = cpu->fBoxClusterCounter;
+			eBox = false;
+			break;
+
+		default:
+			break;
+	}
 
 	/*
 	 * While we are not shutting down, we'll continue to try and process
@@ -255,21 +317,24 @@ void AXP_Execution_Box(
 		 * Next we need to do is see if there is nothing to process,
 		 * then wait for something to get queued up.
 		 */
-		while (((AXP_CQUEP_EMPTY(queue) == true) &&
-			    (cpu->cpuState != ShuttingDown)) ||
-			   (notMe == true))
+		while ((cpu->cpuState != ShuttingDown) &&
+			   ((AXP_CQUEP_EMPTY(queue) == true) ||
+			    (clusterCounter[clusterCountIdx] == 0)))
 		{
 			pthread_cond_wait(cond, mutex);
-			notMe = false;
-
 			if (AXP_UTL_OPT2)
 			{
 				AXP_TRACE_BEGIN();
-				AXP_TraceWrite("%s signaled.", pipelineStr[pipeline]);
+				AXP_TraceWrite(
+						"%s signaled [%s] = %u.",
+						pipelineStr[pipeline],
+						(eBox ?
+							eBoxClusterStr[clusterCountIdx] :
+							fBoxClusterStr[clusterCountIdx]),
+						clusterCounter[clusterCountIdx]);
 				AXP_TRACE_END();
 			}
 		}
-		notMe = false;
 
 		/*
 		 * If we are not shutting down, then we may have something to process.
@@ -363,8 +428,6 @@ void AXP_Execution_Box(
 			 */
 			if ((AXP_COUNTED_QUEUE *) entry == queue)
 			{
-				notMe = true;
-
 				if (AXP_UTL_OPT2)
 				{
 					AXP_TRACE_BEGIN();
@@ -403,9 +466,31 @@ void AXP_Execution_Box(
 				 * IQ, and it is not.  So, dequeue it and return the
 				 * the entry for a subsequent instruction.
 				 */
+				pthread_mutex_lock(mutex);
 				AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+				if ((entry->pipeline == EboxU0) ||
+					(entry->pipeline == EboxU0U1) ||
+					(entry->pipeline == EboxL0L1U0U1))
+					cpu->eBoxClusterCounter[AXP_21264_EBOX_U0]--;
+				if ((entry->pipeline == EboxU1) ||
+					(entry->pipeline == EboxU0U1) ||
+					(entry->pipeline == EboxL0L1U0U1))
+					cpu->eBoxClusterCounter[AXP_21264_EBOX_U1]--;
+				if ((entry->pipeline == EboxL0) ||
+					(entry->pipeline == EboxL0L1) ||
+					(entry->pipeline == EboxL0L1U0U1))
+					cpu->eBoxClusterCounter[AXP_21264_EBOX_L0]--;
+				if ((entry->pipeline == EboxL1) ||
+					(entry->pipeline == EboxL0L1) ||
+					(entry->pipeline == EboxL0L1U0U1))
+					cpu->eBoxClusterCounter[AXP_21264_EBOX_L1]--;
+				if (entry->pipeline == FboxMul)
+					cpu->fBoxClusterCounter[AXP_21264_FBOX_MULTIPLY]--;
+				else if (entry->pipeline == FboxOther)
+					cpu->fBoxClusterCounter[AXP_21264_FBOX_OTHER]--;
 				entry->processing = false;
 				AXP_ReturnIQEntry(cpu, entry);
+				pthread_mutex_unlock(mutex);
 				continue;
 			}
 
@@ -438,6 +523,26 @@ void AXP_Execution_Box(
 			}
 			pthread_mutex_lock(mutex);
 			AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+			if ((entry->pipeline == EboxU0) ||
+				(entry->pipeline == EboxU0U1) ||
+				(entry->pipeline == EboxL0L1U0U1))
+				cpu->eBoxClusterCounter[AXP_21264_EBOX_U0]--;
+			if ((entry->pipeline == EboxU1) ||
+				(entry->pipeline == EboxU0U1) ||
+				(entry->pipeline == EboxL0L1U0U1))
+				cpu->eBoxClusterCounter[AXP_21264_EBOX_U1]--;
+			if ((entry->pipeline == EboxL0) ||
+				(entry->pipeline == EboxL0L1) ||
+				(entry->pipeline == EboxL0L1U0U1))
+				cpu->eBoxClusterCounter[AXP_21264_EBOX_L0]--;
+			if ((entry->pipeline == EboxL1) ||
+				(entry->pipeline == EboxL0L1) ||
+				(entry->pipeline == EboxL0L1U0U1))
+				cpu->eBoxClusterCounter[AXP_21264_EBOX_L1]--;
+			if (entry->pipeline == FboxMul)
+				cpu->fBoxClusterCounter[AXP_21264_FBOX_MULTIPLY]--;
+			else if (entry->pipeline == FboxOther)
+				cpu->fBoxClusterCounter[AXP_21264_FBOX_OTHER]--;
 			pthread_mutex_unlock(mutex);
 
 			/*
