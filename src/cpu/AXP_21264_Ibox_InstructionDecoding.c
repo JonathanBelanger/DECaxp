@@ -21,8 +21,13 @@
  *
  * Revision History:
  *
- *	V01.000		15-Jan-2017	Jonathan D. Belanger
+ *	V01.000		15-Jan-2018	Jonathan D. Belanger
  *	Initially written from functions originally defined in AXP_21264_Ibox.c.
+ *
+ *	V01.001		11-Mar-2018	Jonathan D. Belanger
+ *	Changed the way the len_stall flag worked.  It is now 2 flags.  The stall
+ *	flag will be used to instruct the Ibox to stall until the IQ and FQ or the
+ *	HW_RET_STALL instruction has been retired.
  */
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
@@ -127,6 +132,7 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 	decodedInstr->instr.instr = next->instructions[nextInstr].instr;
 	decodedInstr->format = next->instrType[nextInstr];
 	decodedInstr->opcode = next->instructions[nextInstr].pal.opcode;
+	decodedInstr->stall = false;
 	switch (decodedInstr->format)
 	{
 		case Bra:
@@ -141,10 +147,14 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 		case Mem:
 		case Mbr:
 			decodedInstr->displacement = next->instructions[nextInstr].mem.mem.disp;
+			decodedInstr->stall = ((decodedInstr->opcode == STL_C) ||
+								   (decodedInstr->opcode == STQ_C));
 			break;
 
 		case Mfc:
 			decodedInstr->function = next->instructions[nextInstr].mem.mem.func;
+			decodedInstr->stall = ((decodedInstr->opcode == MISC) &&
+								   (decodedInstr->function == AXP_FUNC_MB));
 			break;
 
 		case Opr:
@@ -164,13 +174,13 @@ void AXP_Decode_Rename(AXP_21264_CPU *cpu,
 				case HW_ST:
 					decodedInstr->displacement = next->instructions[nextInstr].hw_ld.disp;
 					decodedInstr->type_hint_index = next->instructions[nextInstr].hw_ld.type;
-					decodedInstr->len_stall = next->instructions[nextInstr].hw_ld.len;
+					decodedInstr->quadword = (next->instructions[nextInstr].hw_ld.len == 1);
 					break;
 
 				case HW_RET:
 					decodedInstr->displacement = next->instructions[nextInstr].hw_ret.disp;
 					decodedInstr->type_hint_index = next->instructions[nextInstr].hw_ret.hint;
-					decodedInstr->len_stall = next->instructions[nextInstr].hw_ret.stall;
+					decodedInstr->stall = (next->instructions[nextInstr].hw_ret.stall == 1);
 					break;
 
 				case HW_MFPR:

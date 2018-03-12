@@ -108,6 +108,13 @@
  *	take into account that multiple instructions could be in-flight at any one
  *	time, and that the mapping at time of execution and retirement may not be
  *	the same as that at the time the instruction was decoded.
+ *
+ *	V01.014		11-Mar-2018	Jonathan D. Belanger
+ *	Introduced a wait flag, which will allow the Ibox to only process
+ *	instruction retirements/aborts.  For MB, the instruction is stalled outside
+ *	the IQ and FQ and does not get queued up until both the IQ and FQ are
+ *	empty.  The HW_RET_STALL, STL_C, and STQ_C get queued up, but all
+ *	subsequent instructions will be stalled outside the IQ and FQ.
  */
 #include "AXP_Configure.h"
 #include "AXP_Dumps.h"
@@ -1960,6 +1967,10 @@ void *AXP_21264_IboxMain(void *voidPtr)
 						branchPredicted = true;
 					}
 				}
+
+				/*
+				 * TODO: Need to handle a Ibox stall at this point.
+				 */
 
 				/*
 				 * If this is one of the potential NOOP instructions, then the
