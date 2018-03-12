@@ -37,6 +37,11 @@
  *	V01.004		01-Jan-2018	Jonathan D. Belanger
  *	Changed the way instructions are completed when they need to utilize the
  *	Mbox.
+ *
+ *	V01.005		11-Mar-2018	Jonathan D. Belanger
+ *	Changed the LEN_STALL flag used for the HW_LD/ST and HW_RET instructions
+ *	into two separate flags.  One to indicate a quadword len, and the other to
+ *	indicate a stall in the Ibox.
  */
 #ifndef _AXP_21264_INS_DEFS_
 #define _AXP_21264_INS_DEFS_
@@ -1065,11 +1070,12 @@ typedef struct
 	u8				opcode;		/* Operation code */
 	u8				type_hint_index; /* HW_LD/ST type, HW_RET hint, HW_MxPR idx */
 	u8				scbdMask;	/* HW_MxPR scbd_mask */
-	u8				len_stall : 1; /* HW_LD/ST len, HW_RET stall */
 	bool			useLiteral;	/* Indicator that the literal value is valid */
 	bool			branchPredict; /* Prediction logic result */
 	bool			localPredict; /* Local branch predict */
 	bool			globalPredict; /* Global branch predict */
+	bool			stall;		/* Stall Ibox until IQ/FQ are empty */
+	bool			quadword;	/* HW_LD/ST len */
 } AXP_INSTRUCTION;
 
 #endif /* _AXP_21264_INS_DEFS_ */

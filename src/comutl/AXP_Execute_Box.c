@@ -21,8 +21,14 @@
  *
  *	Revision History:
  *
- *	V01.000		26-June-2018	Jonathan D. Belanger
+ *	V01.000		26-Jan-2018	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		11-Mar-2018	Jonathan D. Belanger
+ *	Introduced a flag to indicate that though there may be instructions to
+ *	process, we need to wait until signaled to be able to process them  This
+ *	avoids having the code loop until there is something to process.  Now it'll
+ *	just wait on its condition variable.
  */
 #include "AXP_Configure.h"
 #include "AXP_21264_Fbox.h"
@@ -258,6 +264,7 @@ void AXP_Execution_Box(
 	int				clusterCountIdx;
 	bool			fpEnable;
 	bool			eBox;
+	bool			nothingReadyForMe = false;
 
 	switch (pipeline)
 	{
@@ -319,8 +326,10 @@ void AXP_Execution_Box(
 		 */
 		while ((cpu->cpuState != ShuttingDown) &&
 			   ((AXP_CQUEP_EMPTY(queue) == true) ||
-			    (clusterCounter[clusterCountIdx] == 0)))
+			    (clusterCounter[clusterCountIdx] == 0) ||
+			    (nothingReadyForMe == true)))
 		{
+			nothingReadyForMe = false;
 			pthread_cond_wait(cond, mutex);
 			if (AXP_UTL_OPT2)
 			{
@@ -386,30 +395,23 @@ void AXP_Execution_Box(
 				}
 
 				/*
-				 * If this instruction is not supposed to be executed by this
-				 * pipeline, then move onto the next entry.  Otherwise, dequeue
-				 * the entry from the queue and unlock the mutex, so that other
-				 * Ebox or Fbox threads can try to execute another queued
-				 * instruction, if one exists.
+				 * If this entry can be executed by this pipeline, and the
+				 * registers are all ready, and some other pipeline has not
+				 * already started processing this entry, or the instruction is
+				 * being aborted, then we should process/abort it now.
+				 *
+				 * NOTE:	Because of the way we have to lock/unlock/lock the
+				 *			eBoxMutex/fBoxMutex and the robMutex, it is
+				 *			possible for an instruction that can be executed in
+				 *			more than one pipeline to have already been picked
+				 *			up for processing/aborting.
 				 */
-				if ((entry->pipeline != pipeCond[pipeline][0]) &&
-					(entry->pipeline != pipeCond[pipeline][1]) &&
-					(entry->pipeline != pipeCond[pipeline][2]))
-				{
-					if (AXP_UTL_OPT2)
-					{
-						AXP_TRACE_BEGIN();
-						AXP_TraceWrite(
-								"%s CANNOT execute "
-								"pc = 0x%016llx, "
-								"opcode = 0x%02x",
-								pipelineStr[pipeline],
-								*((u64 *) &entry->ins->pc),
-								(u32) entry->ins->opcode);
-						AXP_TRACE_END();
-					}
-				}
-				else if (entry->processing == false)
+				if (((((entry->pipeline == pipeCond[pipeline][0]) ||
+					   (entry->pipeline == pipeCond[pipeline][1]) ||
+					   (entry->pipeline == pipeCond[pipeline][0])) &&
+					  (AXP_RegistersReady(cpu, entry) == true)) ||
+					 (entry->ins->state == Aborted)) &&
+					(entry->processing == false))
 				{
 					entry->processing = true;
 					break;
@@ -436,6 +438,7 @@ void AXP_Execution_Box(
 							pipelineStr[pipeline]);
 					AXP_TRACE_END();
 				}
+				nothingReadyForMe = true;
 
 				/*
 				 * Before going back to the top of the loop, unlock the mutex.
@@ -456,7 +459,8 @@ void AXP_Execution_Box(
 			 * it.  We are looking to see if the instruction was aborted.
 			 */
 			pthread_mutex_lock(&cpu->robMutex);
-			state = entry->ins->state;
+			if ((state = entry->ins->state) == Queued)
+				entry->ins->state = Executing;
 			pthread_mutex_unlock(&cpu->robMutex);
 			if (state == Aborted)
 			{
@@ -489,19 +493,8 @@ void AXP_Execution_Box(
 				else if (entry->pipeline == FboxOther)
 					cpu->fBoxClusterCounter[AXP_21264_FBOX_OTHER]--;
 				entry->processing = false;
-				AXP_ReturnIQEntry(cpu, entry);
+				(*returnEntry)(cpu, entry);
 				pthread_mutex_unlock(mutex);
-				continue;
-			}
-
-			/*
-			 * OK, the instruction was not aborted.  See if the registers are
-			 * ready to be used to execute the instruction.  If not, clear the
-			 * processing flag and go to the beginning of the loop.
-			 */
-			else if (AXP_RegistersReady(cpu, entry) == false)
-			{
-				entry->processing = false;
 				continue;
 			}
 
@@ -544,13 +537,6 @@ void AXP_Execution_Box(
 			else if (entry->pipeline == FboxOther)
 				cpu->fBoxClusterCounter[AXP_21264_FBOX_OTHER]--;
 			pthread_mutex_unlock(mutex);
-
-			/*
-			 * Before we change the state
-			 */
-			pthread_mutex_lock(&cpu->robMutex);
-			entry->ins->state = Executing;
-			pthread_mutex_unlock(&cpu->robMutex);
 
 			/*
 			 * If Floating-Point instructions are enabled, then call the
