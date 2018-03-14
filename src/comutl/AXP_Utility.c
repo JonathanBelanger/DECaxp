@@ -252,6 +252,116 @@ AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ)
 		entry = (AXP_QUEUE_HDR *) lruQ->flink;
 	return(entry);
 }
+/*
+ *	TODO:	Queues are not working as expected.
+ *
+ * AXP_VerifyCountedQueue
+ *	This function is called with a single counted queue entry, locates the
+ *	parent and loops forward and backward through the queue to verify the
+ *	queue's integrity.
+ *
+ * Input Parameters:
+ *	entry:
+ *		A pointer to one of the entries in the counted queue, which will be
+ *		to gather the other information needed to verify the queues integrity.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	true:	The queue is valid.
+ *	false:	The queue has issues.
+ */
+bool AXP_VerifyCountedQueue(AXP_CQUE_ENTRY *entry)
+{
+	AXP_COUNTED_QUEUE	*parent = entry->parent;
+	AXP_CQUE_ENTRY		*next = parent->flink;
+	u32					entries = 0;
+	bool				retVal = true;
+	bool				flink = false;
+
+	if (AXP_UTL_BUFF)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"Checking integrity of flink for 0x%016llx",
+				(u64) parent);
+		AXP_TRACE_END();
+	}
+	while (((void *) next != (void *)parent) && (entries < parent->max))
+	{
+		if (AXP_UTL_BUFF)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite(
+					"\t0x%016llx --> 0x%016llx",
+					(u64) next,
+					(u64) next->flink);
+			AXP_TRACE_END();
+		}
+		entries++;
+		next = next->flink;
+	}
+
+	/*
+	 * If we got back to the parent and the number of entries we looked at is
+	 * less than or equal to the maximum number of entries, then go backwards
+	 * through the queue.
+	 */
+	if (((void *) next == (void *) parent) && (entries <= parent->max) && (entries == parent->count))
+	{
+		if (AXP_UTL_BUFF)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite(
+					"Checking integrity of blink for 0x%016llx",
+					(u64) parent);
+			AXP_TRACE_END();
+		}
+		next = parent->blink;
+		while (((void *) next != (void *)parent) && (entries > 0))
+		{
+			if (AXP_UTL_BUFF)
+			{
+				AXP_TRACE_BEGIN();
+				AXP_TraceWrite(
+						"\t0x%016llx <-- 0x%016llx",
+						(u64) next,
+						(u64) next->blink);
+				AXP_TRACE_END();
+			}
+			entries--;
+			next = next->blink;
+		}
+		if (((void *) next != (void *) parent) || (entries != 0))
+			retVal = false;
+	}
+	else
+	{
+		flink = true;
+		retVal = false;
+	}
+	if (retVal == false)
+	{
+		if (AXP_UTL_BUFF)
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite("%%%%%%%%%%%%%%%%%%%%%%%%");
+			AXP_TraceWrite(
+					"Queue @ 0x%016llx lost integrity in %s",
+					(u64) parent,
+					(flink ? "flink" : "blink"));
+			AXP_TraceWrite("%%%%%%%%%%%%%%%%%%%%%%%%");
+			AXP_TRACE_END();
+		}
+	}
+
+
+	/*
+	 * Return back to the caller.
+	 */
+	return(retVal);
+}
 
 /*
  * AXP_InsertCountedQueue
@@ -279,23 +389,37 @@ AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ)
  */
 i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
 {
-	i32 retVal;
+	AXP_QUEUE_HDR	*succ = pred->flink;
+	i32				retVal = -1;
 
-	if (entry->parent->count <= entry->parent->max)
+	if (AXP_UTL_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"AXP_InsertCountedQueue Called for 0x%016llx to "
+				"insert 0x%016llx",
+				(u64) entry->parent,
+				(u64) entry);
+		AXP_TRACE_END();
+	}
+
+	AXP_VerifyCountedQueue(entry);
+
+	if (entry->parent->count < entry->parent->max)
 	{
 
 		/*
 		 * Let's first have the entry we are inserting into the queue point to
 		 * its predecessor and its successor.
 		 */
-		entry->flink = pred->flink;
-		entry->blink = pred;
+		entry->flink = &succ->flink;
+		entry->blink = &pred->flink;
 
 		/*
-		 * Now get the predecessor and successor point to the entry.
+		 * Now get the predecessor forward link and successor backward link
+		 * point to the entry.
 		 */
-		((AXP_QUEUE_HDR *) pred->flink)->blink = (void *) entry;
-		pred->flink = (void *) entry;
+		pred->flink = succ->blink = &entry->flink;
 
 		/*
 		 * Finally, since this is a counted queue, increment the counter in the
@@ -304,8 +428,8 @@ i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
 		entry->parent->count++;
 		retVal = (entry->parent->count == 1) ? 1 : 0;	/* was queue empty */
 	}
-	else
-		retVal = -1;
+
+	AXP_VerifyCountedQueue(entry);
 
 	/*
 	 * Return back to the caller.
@@ -334,14 +458,25 @@ i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
  */
 i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *parent, u32 headRoom)
 {
-	int		retVal;
+	int		retVal = 0;
+
+	if (AXP_UTL_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"AXP_CountedQueueFull Called for 0x%016llx to "
+				"with head-room of %u",
+				(u64) parent,
+				headRoom);
+		AXP_TRACE_END();
+	}
+
+	AXP_VerifyCountedQueue((AXP_CQUE_ENTRY *) parent);
 
 	if (parent->count == 0)
 		retVal = 1;
 	else if ((parent->count + headRoom) >= parent->max)
 		retVal = -1;
-	else
-		retVal = 0;
 	return (retVal);
 }
 /*
@@ -366,16 +501,31 @@ i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *parent, u32 headRoom)
  */
 i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
 {
+	AXP_QUEUE_HDR	*pred = entry->blink;
+	AXP_QUEUE_HDR	*succ = entry->flink;
 	i32 retVal;
 
-	if (entry->parent->count != 0)
+	if (AXP_UTL_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"AXP_RemoveCountedQueue Called for 0x%016llx to "
+				"remove 0x%016llx",
+				(u64) entry->parent,
+				(u64) entry);
+		AXP_TRACE_END();
+	}
+
+	AXP_VerifyCountedQueue(entry);
+
+	if (entry->parent->count > 0)
 	{
 
 		/*
 		 * Let's first have the predecessor and successor point to each other.
 		 */
-		((AXP_QUEUE_HDR *) (entry->blink))->flink = entry->flink;
-		((AXP_QUEUE_HDR *) (entry->flink))->blink = entry->blink;
+		pred->flink = &succ->flink;
+		succ->blink = &pred->flink;
 
 		/*
 		 * Finally, since this is a counted queue, decrement the counter in the
@@ -386,6 +536,8 @@ i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
 	}
 	else
 		retVal = -1;
+
+	AXP_VerifyCountedQueue((AXP_CQUE_ENTRY *) entry->parent);
 
 	/*
 	 * Return back to the caller.
@@ -822,10 +974,13 @@ i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 
 	if (AXP_UTL_BUFF)
 	{
-		printf(
-			"\n\nDECaxp: opened executable file %s for reading\n\n",
-			fileName);
-		printf("Header bytes:\n");
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"DECaxp: opened executable file %s for reading",
+				fileName);
+		AXP_TraceWrite("");
+		AXP_TraceWrite("Header bytes:");
+		AXP_TRACE_END();
 	}
 
 	/*
@@ -848,14 +1003,24 @@ i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 			fread(&scratch[ii % 4], 1, 1, fp);
 			if (AXP_UTL_BUFF)
 			{
-				printf("%x", scratch[ii]);
+				char	traceBuf[256];
+				int		offset;
+
+				AXP_TRACE_BEGIN();
+				offset = sprintf(traceBuf, "%x", scratch[ii]);
 				if (((ii + 1) % 4) == 0)
 				{
-					printf("\t");
+					offset += sprintf(&traceBuf[offset], "\t");
 					for (jj = sizeof(u32)-1; jj >= 0; jj--)
-						printf("%c", (isprint(scratch[jj]) ? scratch[jj] : '.'));
-					printf("\n");
+						offset += sprintf(
+										&traceBuf[offset],
+										"%c",
+										(isprint(scratch[jj]) ?
+												scratch[jj] :
+												'.'));
+					AXP_TraceWrite("%s", traceBuf);
 				}
+				AXP_TRACE_END();
 			}
 		}
 
@@ -866,7 +1031,11 @@ i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 		 */
 		ii = 0;
 		if (AXP_UTL_BUFF)
-			printf("\n\nExecutable bytes:\n");
+		{
+			AXP_TRACE_BEGIN();
+			AXP_TraceWrite("Executable bytes:");
+			AXP_TRACE_END();
+		}
 		while ((eofHit == false) && (retVal == 0))
 		{
 			fread(&buffer[ii], 1, 1, fp);
@@ -885,15 +1054,21 @@ i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
 			}
 			if (AXP_UTL_BUFF)
 			{
-				printf("%x", buffer[ii]);
+				char	traceBuf[256];
+				int		offset;
+
+				offset = sprintf(traceBuf, "%x", buffer[ii]);
 				if (((ii + 1) % 4) == 0)
 				{
-					printf("\t");
+					offset += sprintf(&traceBuf[offset], "\t");
 					for (ii = 4; jj > 0; jj--)
-						printf(
-							"%c",
-							(isprint(buffer[ii-jj]) ? buffer[ii-jj] : '.'));
-					printf("\n");
+						offset += sprintf(
+									&traceBuf[offset],
+									"%c",
+									(isprint(buffer[ii-jj]) ?
+											buffer[ii-jj] :
+											'.'));
+					AXP_TraceWrite("%s", traceBuf);
 				}
 			}
 		}

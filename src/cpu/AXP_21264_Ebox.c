@@ -97,7 +97,7 @@ void AXP_21264_Ebox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 				break;
 
 			case HW_LD:
-				if (instr->len_stall == AXP_HW_LD_LONGWORD)
+				if (instr->quadword == false)
 					instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
 				break;
 

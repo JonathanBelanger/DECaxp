@@ -790,10 +790,10 @@ void AXP_21264_Mbox_LQ_Init(AXP_21264_CPU *cpu, u8 entry)
 			break;
 
 		case HW_LD:
-			if (lqEntry->instr->len_stall == AXP_HW_LD_LONGWORD)
-				lqEntry->len = 4;
-			else
+			if (lqEntry->instr->quadword == true)
 				lqEntry->len = 8;
+			else
+				lqEntry->len = 4;
 			break;
 	}
 
@@ -1161,15 +1161,15 @@ void AXP_21264_Mbox_SQ_Init(AXP_21264_CPU *cpu, u8 entry)
 			break;
 
 		case HW_ST:
-			if (sqEntry->instr->len_stall == AXP_HW_LD_LONGWORD)
-			{
-				sqEntry->len = 4;
-				sqEntry->value = sqEntry->instr->src1v.r.ul;
-			}
-			else
+			if (sqEntry->instr->quadword == true)
 			{
 				sqEntry->len = 8;
 				sqEntry->value = sqEntry->instr->src1v.r.uq;
+			}
+			else
+			{
+				sqEntry->len = 4;
+				sqEntry->value = sqEntry->instr->src1v.r.ul;
 			}
 			break;
 	}

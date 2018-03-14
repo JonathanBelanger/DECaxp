@@ -169,9 +169,6 @@ typedef struct
 #define AXP_HW_LD_VIRT_ALT	0x6		/* Virtual/Alt access DTB_ALT_MODE IPR	*/
 #define AXP_HW_LD_VIRT_WALT	0x7		/* Virual/WrChk/Alt combination above 2	*/
 
-#define AXP_HW_LD_LONGWORD	0
-#define AXP_HW_LD_QUADWORD	1
-
 /*
  * HW_ST Instruction Format (opcode = 0x1f)
  *		For len:
@@ -198,8 +195,8 @@ typedef struct
 #define AXP_HW_ST_VIRT		0x2		/* Virtual								*/
 #define AXP_HW_ST_VIRT_ALT	0x6		/* Virtual/Alt access DTB_ALT_MODE IPR	*/
 
-#define AXP_HW_ST_LONGWORD	0
-#define AXP_HW_ST_QUADWORD	1
+#define AXP_HW_LONGWORD		0
+#define AXP_HW_QUADWORD		1
 
 /*
  * HW_RET Instruction Format (opcode = 0x1e)
