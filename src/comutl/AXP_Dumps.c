@@ -815,8 +815,8 @@ static const AXP_FUNC_CMD hwStCmd[] =
 
 static const AXP_FUNC_CMD hwLen[] =
 {
-	{AXP_HW_LD_LONGWORD,	"LONG"},
-	{AXP_HW_LD_QUADWORD,	"QUAD"},
+	{AXP_HW_LONGWORD,	"LONG"},
+	{AXP_HW_QUADWORD,	"QUAD"},
 	{0, NULL}
 };
 

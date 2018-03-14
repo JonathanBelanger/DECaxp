@@ -1627,7 +1627,7 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 						 * we now need to flush the Icache.
 						 */
 						if ((rob->type_hint_index == AXP_HW_RET) &&
-							(rob->len_stall == 1) &&
+							(rob->stall == true) &&
 							(cpu->iCacheFlushPending == true))
 						{
 							AXP_IcacheFlush(cpu, false);
@@ -2110,7 +2110,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 							cpu->eBoxClusterCounter[AXP_21264_EBOX_L1]++;
 						AXP_InsertCountedQueue(
 								(AXP_QUEUE_HDR *) &cpu->iq,
-								(AXP_CQUE_ENTRY *) xqEntry);
+								&xqEntry->header);
 						pthread_cond_broadcast(&cpu->eBoxCondition);
 						pthread_mutex_unlock(&cpu->eBoxMutex);
 					}
@@ -2134,7 +2134,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 							cpu->fBoxClusterCounter[AXP_21264_FBOX_OTHER]++;
 						AXP_InsertCountedQueue(
 								(AXP_QUEUE_HDR *) &cpu->fq,
-								(AXP_CQUE_ENTRY *) xqEntry);
+								&xqEntry->header);
 						pthread_cond_broadcast(&cpu->fBoxCondition);
 						pthread_mutex_unlock(&cpu->fBoxMutex);
 					}

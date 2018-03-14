@@ -408,7 +408,7 @@ void AXP_Execution_Box(
 				 */
 				if (((((entry->pipeline == pipeCond[pipeline][0]) ||
 					   (entry->pipeline == pipeCond[pipeline][1]) ||
-					   (entry->pipeline == pipeCond[pipeline][0])) &&
+					   (entry->pipeline == pipeCond[pipeline][2])) &&
 					  (AXP_RegistersReady(cpu, entry) == true)) ||
 					 (entry->ins->state == Aborted)) &&
 					(entry->processing == false))
