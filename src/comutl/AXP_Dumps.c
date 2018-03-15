@@ -846,7 +846,8 @@ const char *hwRetStall[] =
 	((byte & 0x01) ? '1' : '0')
 
 const char regLetter[]	= {'R', 'F'};
-#define AXP_REG_LETTER(reg)	(reg & AXP_REG_FP) == FP ? regLetter[1] : regLetter[0]
+#define AXP_REG_LETTER(reg)			\
+	(reg & AXP_REG_FP) == AXP_REG_FP ? regLetter[1] : regLetter[0]
 
 const char *lineFmt		= "0x%016llx: %-31s %-31s ; 0x%08x '%c%c%c%c'";
 const char *Reg			= "R%02d";

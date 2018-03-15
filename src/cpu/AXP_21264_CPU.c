@@ -136,12 +136,14 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 		}
 		if (qRet == true)
 		{
+			cpu->iqEFlStart = cpu->iqEFlEnd = 0;
 			for(ii = 0; ii < AXP_IQ_LEN; ii++)
 			{
 				AXP_INIT_CQENTRY(cpu->iqEntries[ii].header, cpu->iq);
 				cpu->iqEntries[ii].ins = NULL;
 				cpu->iqEntries[ii].index = ii;
 				cpu->iqEntries[ii].processing = false;
+				cpu->iqEFreelist[ii] = ii;
 			}
 		}
 		if (qRet == true)
@@ -150,12 +152,14 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 		}
 		if (qRet == true)
 		{
+			cpu->fqEFlStart = cpu->fqEFlEnd = 0;
 			for(ii = 0; ii < AXP_FQ_LEN; ii++)
 			{
 				AXP_INIT_CQENTRY(cpu->fqEntries[ii].header, cpu->fq);
 				cpu->fqEntries[ii].ins = NULL;
 				cpu->fqEntries[ii].index = ii;
 				cpu->fqEntries[ii].processing = false;
+				cpu->fqEFreelist[ii] = ii;
 			}
 		}
 

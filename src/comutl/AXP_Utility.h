@@ -172,10 +172,10 @@ typedef struct
  * Define a basic queue.  This will be used to define a number of other queue
  * types.
  */
-typedef struct
+typedef struct queueHeader
 {
-	void 			*flink;
-	void 			*blink;
+	struct queueHeader	*flink;
+	struct queueHeader	*blink;
 } AXP_QUEUE_HDR;
 
 /*
@@ -190,21 +190,21 @@ typedef struct
  * A counted queue.  If maximum is specified as zero at initialization, then
  * the number of entries in the queue has no limit.
  */
-typedef struct
+typedef struct countedQueueEntry
 {
-	void			*flink;
-	void			*blink;
-	u32				count;
-	u32				max;
-} AXP_COUNTED_QUEUE;
-
-typedef struct
-{
-	void				*flink;
-	void				*blink;
-	AXP_COUNTED_QUEUE	*parent;
-	int					index;
+	struct countedQueueEntry	*flink;
+	struct countedQueueEntry	*blink;
+	struct countedQueueRoot		*parent;
+	int							index;
 } AXP_CQUE_ENTRY;
+
+typedef struct countedQueueRoot
+{
+	struct countedQueueEntry	*flink;
+	struct countedQueueEntry	*blink;
+	u32							count;
+	u32							max;
+} AXP_COUNTED_QUEUE;
 
 #define AXP_INIT_CQUE(queue, maximum)	\
 	AXP_INIT_QUE(queue);				\
@@ -237,41 +237,41 @@ typedef enum
 	AXPCountedCondQueue
 } AXP_COND_Q_TYPE;
 
-typedef struct
+typedef struct condQueueHeader
 {
-	void			*flink;
-	void			*blink;
-	void			*parent;
-	AXP_COND_Q_TYPE type;
+	struct condQueueHeader		*flink;
+	struct condQueueHeader		*blink;
+	struct condQueueRoot		*parent;
+	AXP_COND_Q_TYPE 			type;
 } AXP_COND_Q_HDR;
 
-typedef struct
+typedef struct condQueueLeaf
 {
-	void			*flink;
-	void			*blink;
-	void			*parent;
-	AXP_COND_Q_TYPE type;
-	pthread_mutex_t	qMutex;
-	pthread_cond_t	qCond;
-} AXP_COND_Q_ROOT;
-
-typedef struct
-{
-	void			*flink;
-	void			*blink;
-	void			*parent;
+	struct condQueueLeaf		*flink;
+	struct condQueueLeaf		*blink;
+	struct condQueueRoot		*parent;
 } AXP_COND_Q_LEAF;
 
-typedef struct
+typedef struct condQueueRoot
 {
-	void			*flink;
-	void			*blink;
-	void			*parent;
-	AXP_COND_Q_TYPE type;
-	pthread_mutex_t	qMutex;
-	pthread_cond_t	qCond;
-	u32				count;
-	u32				max;
+	AXP_COND_Q_LEAF				*flink;
+	AXP_COND_Q_LEAF				*blink;
+	struct condQueueRoot		*parent;
+	AXP_COND_Q_TYPE 			type;
+	pthread_mutex_t				qMutex;
+	pthread_cond_t				qCond;
+} AXP_COND_Q_ROOT;
+
+typedef struct condQueueCountRoot
+{
+	struct condQueueLeaf		*flink;
+	struct condQueueLeaf		*blink;
+	struct condQueueCountRoot	*parent;
+	AXP_COND_Q_TYPE 			type;
+	pthread_mutex_t				qMutex;
+	pthread_cond_t				qCond;
+	u32							count;
+	u32							max;
 } AXP_COND_Q_ROOT_CNT;
 
 /*
@@ -302,7 +302,7 @@ AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ);
 /*
  * Counted queue functions.
  */
-i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *, AXP_CQUE_ENTRY *);
+i32 AXP_InsertCountedQueue(AXP_CQUE_ENTRY *, AXP_CQUE_ENTRY *);
 i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *, u32);
 i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *);
 

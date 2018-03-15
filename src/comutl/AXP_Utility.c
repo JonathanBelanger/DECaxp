@@ -272,22 +272,26 @@ AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ)
  *	true:	The queue is valid.
  *	false:	The queue has issues.
  */
-bool AXP_VerifyCountedQueue(AXP_CQUE_ENTRY *entry)
+bool AXP_VerifyCountedQueue(AXP_COUNTED_QUEUE *parent)
 {
-	AXP_COUNTED_QUEUE	*parent = entry->parent;
-	AXP_CQUE_ENTRY		*next = parent->flink;
+	AXP_CQUE_ENTRY		*next;
 	u32					entries = 0;
 	bool				retVal = true;
-	bool				flink = false;
 
 	if (AXP_UTL_BUFF)
 	{
 		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv");
 		AXP_TraceWrite(
-				"Checking integrity of flink for 0x%016llx",
-				(u64) parent);
+				"Checking integrity of counted queue 0x%016llx, "
+				"with %u entries and a maximum of %u",
+				(u64) parent,
+				parent->count,
+				parent->max);
 		AXP_TRACE_END();
 	}
+
+	next = parent->flink;
 	while (((void *) next != (void *)parent) && (entries < parent->max))
 	{
 		if (AXP_UTL_BUFF)
@@ -337,25 +341,18 @@ bool AXP_VerifyCountedQueue(AXP_CQUE_ENTRY *entry)
 			retVal = false;
 	}
 	else
-	{
-		flink = true;
 		retVal = false;
-	}
-	if (retVal == false)
-	{
-		if (AXP_UTL_BUFF)
-		{
-			AXP_TRACE_BEGIN();
-			AXP_TraceWrite("%%%%%%%%%%%%%%%%%%%%%%%%");
-			AXP_TraceWrite(
-					"Queue @ 0x%016llx lost integrity in %s",
-					(u64) parent,
-					(flink ? "flink" : "blink"));
-			AXP_TraceWrite("%%%%%%%%%%%%%%%%%%%%%%%%");
-			AXP_TRACE_END();
-		}
-	}
 
+	if (AXP_UTL_BUFF)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite(
+				"Queue @ 0x%016llx integrity is %s",
+				(u64) parent,
+				(retVal ? "GOOD" : "BAD"));
+		AXP_TraceWrite("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		AXP_TRACE_END();
+	}
 
 	/*
 	 * Return back to the caller.
@@ -387,11 +384,12 @@ bool AXP_VerifyCountedQueue(AXP_CQUE_ENTRY *entry)
  * 	0, if the queue was not empty before adding the entry.
  * 	1, if the queue was empty.
  */
-i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
+i32 AXP_InsertCountedQueue(AXP_CQUE_ENTRY *pred, AXP_CQUE_ENTRY *entry)
 {
-	AXP_QUEUE_HDR	*succ = pred->flink;
-	i32				retVal = -1;
+	AXP_COUNTED_QUEUE	*parent = entry->parent;
+	i32					retVal = -1;
 
+#if 0
 	if (AXP_UTL_CALL)
 	{
 		AXP_TRACE_BEGIN();
@@ -403,33 +401,29 @@ i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
 		AXP_TRACE_END();
 	}
 
-	AXP_VerifyCountedQueue(entry);
+	AXP_VerifyCountedQueue(entry->parent);
+#endif
 
-	if (entry->parent->count < entry->parent->max)
+	if (parent->count < parent->max)
 	{
 
 		/*
-		 * Let's first have the entry we are inserting into the queue point to
-		 * its predecessor and its successor.
+		 * Insert the entry after the pred[ecessor].
 		 */
-		entry->flink = &succ->flink;
-		entry->blink = &pred->flink;
-
-		/*
-		 * Now get the predecessor forward link and successor backward link
-		 * point to the entry.
-		 */
-		pred->flink = succ->blink = &entry->flink;
+		entry->flink = pred->flink;
+		entry->blink = pred;
+		pred->flink = entry->flink->blink = entry;
 
 		/*
 		 * Finally, since this is a counted queue, increment the counter in the
 		 * parent.
 		 */
-		entry->parent->count++;
-		retVal = (entry->parent->count == 1) ? 1 : 0;	/* was queue empty */
+		parent->count++;
+		retVal = (parent->count == 1) ? 1 : 0;	/* was queue empty */
 	}
-
-	AXP_VerifyCountedQueue(entry);
+#if 0
+	AXP_VerifyCountedQueue(entry->parent);
+#endif
 
 	/*
 	 * Return back to the caller.
@@ -458,8 +452,9 @@ i32 AXP_InsertCountedQueue(AXP_QUEUE_HDR *pred, AXP_CQUE_ENTRY *entry)
  */
 i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *parent, u32 headRoom)
 {
-	int		retVal = 0;
+	int					retVal = 0;
 
+#if 0
 	if (AXP_UTL_CALL)
 	{
 		AXP_TRACE_BEGIN();
@@ -471,7 +466,8 @@ i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *parent, u32 headRoom)
 		AXP_TRACE_END();
 	}
 
-	AXP_VerifyCountedQueue((AXP_CQUE_ENTRY *) parent);
+	AXP_VerifyCountedQueue(parent);
+#endif
 
 	if (parent->count == 0)
 		retVal = 1;
@@ -501,10 +497,10 @@ i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *parent, u32 headRoom)
  */
 i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
 {
-	AXP_QUEUE_HDR	*pred = entry->blink;
-	AXP_QUEUE_HDR	*succ = entry->flink;
-	i32 retVal;
+	AXP_COUNTED_QUEUE	*parent = entry->parent;
+	i32 				retVal;
 
+#if 0
 	if (AXP_UTL_CALL)
 	{
 		AXP_TRACE_BEGIN();
@@ -516,28 +512,32 @@ i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
 		AXP_TRACE_END();
 	}
 
-	AXP_VerifyCountedQueue(entry);
+	AXP_VerifyCountedQueue(entry->parent);
+#endif
 
-	if (entry->parent->count > 0)
+	if (parent->count > 0)
 	{
 
 		/*
 		 * Let's first have the predecessor and successor point to each other.
 		 */
-		pred->flink = &succ->flink;
-		succ->blink = &pred->flink;
+		entry->flink->blink = entry->blink;
+		entry->blink->flink = entry->flink;
+		entry->flink = entry->blink = NULL;
 
 		/*
 		 * Finally, since this is a counted queue, decrement the counter in the
 		 * parent.
 		 */
-		entry->parent->count--;
-		retVal = (entry->parent->count == 0) ? 0 : 1;
+		parent->count--;
+		retVal = (parent->count == 0) ? 0 : 1;
 	}
 	else
 		retVal = -1;
 
-	AXP_VerifyCountedQueue((AXP_CQUE_ENTRY *) entry->parent);
+#if 0
+	AXP_VerifyCountedQueue(entry->parent);
+#endif
 
 	/*
 	 * Return back to the caller.
@@ -919,7 +919,7 @@ bool AXP_CondQueue_Empty(AXP_COND_Q_HDR *queue)
 	 * If the forward link equals the header, then there are no entries in the
 	 * queue (it is empty).
 	 */
-	retVal = parent->flink == parent;
+	retVal = (AXP_COND_Q_ROOT *) parent->flink == parent;
 
 	/*
 	 * If we locked the mutex above, then unlock it now.

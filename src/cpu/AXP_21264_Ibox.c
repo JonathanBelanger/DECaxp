@@ -229,7 +229,7 @@ static AXP_QUEUE_ENTRY *AXP_GetNextIQEntry(AXP_21264_CPU *cpu)
 {
 	AXP_QUEUE_ENTRY *retVal;
 
-	retVal = &cpu->iqEntries[cpu->iqEFlStart];
+	retVal = &cpu->iqEntries[cpu->iqEFreelist[cpu->iqEFlStart]];
 	cpu->iqEFlStart = (cpu->iqEFlStart + 1) % AXP_IQ_LEN;
 
 	/*
@@ -300,7 +300,7 @@ static AXP_QUEUE_ENTRY *AXP_GetNextFQEntry(AXP_21264_CPU *cpu)
 {
 	AXP_QUEUE_ENTRY *retVal;
 
-	retVal = &cpu->fqEntries[cpu->fqEFlStart];
+	retVal = &cpu->fqEntries[cpu->fqEFreelist[cpu->fqEFlStart]];
 	cpu->fqEFlStart = (cpu->fqEFlStart + 1) % AXP_FQ_LEN;
 
 	/*
@@ -1746,7 +1746,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	u16				whichQueue;
 	bool			choice, wasRunning = false;
 	bool			_asm;
-	bool			noop;
+	bool			noop, iqFull, fqFull;
 	bool			aborting, branchPredicted = false;
 
 	/*
@@ -2109,8 +2109,8 @@ void *AXP_21264_IboxMain(void *voidPtr)
 							(pipeline == EboxL0L1U0U1))
 							cpu->eBoxClusterCounter[AXP_21264_EBOX_L1]++;
 						AXP_InsertCountedQueue(
-								(AXP_QUEUE_HDR *) &cpu->iq,
-								&xqEntry->header);
+								(AXP_CQUE_ENTRY *) &cpu->iq,
+								(AXP_CQUE_ENTRY *) xqEntry);
 						pthread_cond_broadcast(&cpu->eBoxCondition);
 						pthread_mutex_unlock(&cpu->eBoxMutex);
 					}
@@ -2133,8 +2133,8 @@ void *AXP_21264_IboxMain(void *voidPtr)
 						else
 							cpu->fBoxClusterCounter[AXP_21264_FBOX_OTHER]++;
 						AXP_InsertCountedQueue(
-								(AXP_QUEUE_HDR *) &cpu->fq,
-								&xqEntry->header);
+								(AXP_CQUE_ENTRY *) &cpu->fq,
+								(AXP_CQUE_ENTRY *) xqEntry);
 						pthread_cond_broadcast(&cpu->fBoxCondition);
 						pthread_mutex_unlock(&cpu->fBoxMutex);
 					}
@@ -2264,10 +2264,15 @@ void *AXP_21264_IboxMain(void *voidPtr)
 		 * to process or places to put what needs to be processed (IQ and/or FQ
 		 * cannot handle another entry).
 		 */
+		pthread_mutex_lock(&cpu->eBoxMutex);
+		iqFull = AXP_CountedQueueFull(&cpu->iq, AXP_NUM_FETCH_INS) < 0;
+		pthread_mutex_unlock(&cpu->eBoxMutex);
+		pthread_mutex_lock(&cpu->fBoxMutex);
+		fqFull = AXP_CountedQueueFull(&cpu->fq, AXP_NUM_FETCH_INS) < 0;
+		pthread_mutex_unlock(&cpu->fBoxMutex);
 		if (((cpu->excPend == false) &&
 			 (AXP_IcacheValid(cpu, nextPC) == false)) ||
-			((AXP_CountedQueueFull(&cpu->iq, AXP_NUM_FETCH_INS) < 0) ||
-			 (AXP_CountedQueueFull(&cpu->fq, AXP_NUM_FETCH_INS) < 0)))
+			((iqFull == true) || (fqFull == true)))
 			pthread_cond_wait(&cpu->iBoxCondition, &cpu->iBoxMutex);
 	}
 	if (AXP_IBOX_OPT1)
