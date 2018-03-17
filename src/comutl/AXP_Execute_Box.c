@@ -309,6 +309,11 @@ void AXP_Execution_Box(
 	}
 
 	/*
+	 * Before we go into the loop, lock the E/Fbox mutex.
+	 */
+	pthread_mutex_lock(mutex);
+
+	/*
 	 * While we are not shutting down, we'll continue to try and process
 	 * instructions.
 	 */
@@ -316,16 +321,11 @@ void AXP_Execution_Box(
 	{
 
 		/*
-		 * Before we go checking the queue, lock the Ebox mutex.
-		 */
-		pthread_mutex_lock(mutex);
-
-		/*
 		 * Next we need to do is see if there is nothing to process,
 		 * then wait for something to get queued up.
 		 */
 		while ((cpu->cpuState != ShuttingDown) &&
-			   ((AXP_CQUEP_EMPTY(queue) == true) ||
+			   ((AXP_CountedQueueFull(queue, 0) == 1) ||
 			    (clusterCounter[clusterCountIdx] == 0) ||
 			    (nothingReadyForMe == true)))
 		{
@@ -351,6 +351,11 @@ void AXP_Execution_Box(
 		 */
 		if (cpu->cpuState != ShuttingDown)
 		{
+
+			/*
+			 * We need to prevent multiple threads trying to update this queue.
+			 */
+			AXP_LockCountedQueue(queue);
 			entry = (AXP_QUEUE_ENTRY *) queue->flink;
 
 			/*
@@ -439,19 +444,9 @@ void AXP_Execution_Box(
 					AXP_TRACE_END();
 				}
 				nothingReadyForMe = true;
-
-				/*
-				 * Before going back to the top of the loop, unlock the mutex.
-				 */
-				pthread_mutex_unlock(mutex);
+				AXP_UnlockCountedQueue(queue);
 				continue;
 			}
-
-			/*
-			 * Unlock the mutex, we have what we need to process this
-			 * instruction.
-			 */
-			pthread_mutex_unlock(mutex);
 
 			/*
 			 * First we need to lock the ROB mutex.  We don't want some
@@ -464,14 +459,7 @@ void AXP_Execution_Box(
 			pthread_mutex_unlock(&cpu->robMutex);
 			if (state == Aborted)
 			{
-
-				/*
-				 * The instruction should only be in a Queued state on the
-				 * IQ, and it is not.  So, dequeue it and return the
-				 * the entry for a subsequent instruction.
-				 */
-				pthread_mutex_lock(mutex);
-				AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+				AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry, true);
 				if ((entry->pipeline == EboxU0) ||
 					(entry->pipeline == EboxU0U1) ||
 					(entry->pipeline == EboxL0L1U0U1))
@@ -494,7 +482,6 @@ void AXP_Execution_Box(
 					cpu->fBoxClusterCounter[AXP_21264_FBOX_OTHER]--;
 				entry->processing = false;
 				(*returnEntry)(cpu, entry);
-				pthread_mutex_unlock(mutex);
 				continue;
 			}
 
@@ -514,8 +501,7 @@ void AXP_Execution_Box(
 						(u32) entry->ins->opcode);
 				AXP_TRACE_END();
 			}
-			pthread_mutex_lock(mutex);
-			AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry);
+			AXP_RemoveCountedQueue((AXP_CQUE_ENTRY *) entry, true);
 			if ((entry->pipeline == EboxU0) ||
 				(entry->pipeline == EboxU0U1) ||
 				(entry->pipeline == EboxL0L1U0U1))
@@ -536,7 +522,6 @@ void AXP_Execution_Box(
 				cpu->fBoxClusterCounter[AXP_21264_FBOX_MULTIPLY]--;
 			else if (entry->pipeline == FboxOther)
 				cpu->fBoxClusterCounter[AXP_21264_FBOX_OTHER]--;
-			pthread_mutex_unlock(mutex);
 
 			/*
 			 * If Floating-Point instructions are enabled, then call the
@@ -607,6 +592,19 @@ void AXP_Execution_Box(
 			 */
 			entry->processing = false;
 			(*returnEntry)(cpu, entry);
+
+			/*
+			 * Before we go process any more instructions, let's make sure that
+			 * the iBox is not stalled.  If it is, then it may have an
+			 * instruction that it can retire.
+			 *
+			 * NOTE:	We intentionally do not have the mutex locked.  Doing
+			 *			so causes the emulator to get locked up (the Ibox
+			 *			rarely unlocks the mutex, so we'd effectively get
+			 *			ourselves into a deadlock.
+			 */
+			if (cpu->stallWaitingRetirement == true)
+				pthread_cond_signal(&cpu->iBoxCondition);
 		}
 	}
 

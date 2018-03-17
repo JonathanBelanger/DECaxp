@@ -905,10 +905,13 @@ static void AXP_RenameRegisters(
 		AXP_TRACE_END();
 	}
 
+#ifdef AXP_VERIFY_REGISTERS
+
 	/*
-	 * This is temporary debugging code.
+	 * This is just for debugging the code.
 	 */
 	AXP_RegisterRename_IntegrityCheck(cpu);
+#endif
 
 	return;
 }
@@ -1124,10 +1127,13 @@ u32 AXP_UpdateRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 			retVal = AXP_SIGNAL_EBOX;
 	}
 
+#ifdef AXP_VERIFY_REGISTERS
+
 	/*
-	 * This is temporary debugging code.
+	 * This is just for debugging the code.
 	 */
 	AXP_RegisterRename_IntegrityCheck(cpu);
+#endif
 
 	/*
 	 * Return back to the caller.
@@ -1160,9 +1166,10 @@ u32 AXP_UpdateRegisters(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  *	None.
  *
  * Return Value:
- *	None.
+ *	true:	An instruction that stalled the Ibox was aborted.
+ *	false:	No instructions that stalled the Ibox were aborted.
  */
-void AXP_AbortInstructions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *inst)
+bool AXP_AbortInstructions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *inst)
 {
 	AXP_INSTRUCTION *rob;
 	AXP_REGISTERS 	*src1Phys, *src2Phys, *destPhys;
@@ -1172,6 +1179,7 @@ void AXP_AbortInstructions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *inst)
 	u16				*destFlEnd;
 	u32				endIdx = cpu->robEnd;
 	bool			rollbackRegisterMap;
+	bool			retVal = false;
 
 	if (AXP_IBOX_CALL)
 	{
@@ -1258,6 +1266,13 @@ void AXP_AbortInstructions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *inst)
 						rob->opcode);
 				AXP_TRACE_END();
 			}
+
+			/*
+			 * Before we go too far, this is a good place to determine if we
+			 * have or are aborting an instruction that stalled the Ibox.
+			 */
+			if (retVal == false)
+				retVal = rob->stall;
 
 			/*
 			 * The code for floating point and integer register mapping is
@@ -1356,16 +1371,21 @@ void AXP_AbortInstructions(AXP_21264_CPU *cpu, AXP_INSTRUCTION *inst)
 		rob = &cpu->rob[endIdx];
 	}
 
-	/*
-	 * This is temporary debugging code.
-	 */
-	AXP_RegisterRename_IntegrityCheck(cpu);
+#ifdef AXP_VERIFY_REGISTERS
 
 	/*
-	 * Return back to the caller.
+	 * This is just for debugging the code.
 	 */
-	return;
+	AXP_RegisterRename_IntegrityCheck(cpu);
+#endif
+
+	/*
+	 * Return the results of this processing back to the caller.
+	 */
+	return(retVal);
 }
+
+#ifdef AXP_VERIFY_REGISTERS
 
 /*
  * AXP_RegisterRename_IntegrityCheck
@@ -1397,6 +1417,7 @@ void AXP_RegisterRename_IntegrityCheck(AXP_21264_CPU *cpu)
 			wrap = false;
 		}
 	}
+
 	for (ii = 0; ii < AXP_INT_PHYS_REG; ii++)
 		if (physInUse[ii] != 1)
 		{
@@ -1449,3 +1470,4 @@ void AXP_RegisterRename_IntegrityCheck(AXP_21264_CPU *cpu)
 		}
 	return;
 }
+#endif

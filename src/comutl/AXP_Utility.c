@@ -252,9 +252,9 @@ AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ)
 		entry = (AXP_QUEUE_HDR *) lruQ->flink;
 	return(entry);
 }
+
+#ifdef AXP_VERIFY_QUEUES
 /*
- *	TODO:	Queues are not working as expected.
- *
  * AXP_VerifyCountedQueue
  *	This function is called with a single counted queue entry, locates the
  *	parent and loops forward and backward through the queue to verify the
@@ -359,6 +359,99 @@ bool AXP_VerifyCountedQueue(AXP_COUNTED_QUEUE *parent)
 	 */
 	return(retVal);
 }
+#endif
+
+/*
+ * AXP_InitCountedQueue
+ * 	This function is called to initialize a counted queue header (parent).
+ *
+ * Input Parameters:
+ * 	parent:
+ * 		A pointer to the queue head to be initialized.
+ *	max:
+ *		A value indicating the maximum number of entries allowed in the counted
+ *		queue.
+ *
+ * Output Parameters:
+ * 	parent:
+ * 		A pointer to the initialized queue head.
+ *
+ * Return Value:
+ *	true:	Queue initialized successfully.
+ *	false:	Queue initialization failed.
+ */
+bool AXP_InitCountedQueue(AXP_COUNTED_QUEUE *parent, u32 max)
+{
+	bool	retVal = true;
+
+	/*
+	 * Initialize the mutex for this queue.  If successful, then initialize the
+	 * rest of the queue structure.
+	 */
+	if (pthread_mutex_init(&parent->mutex, NULL) == 0)
+	{
+		parent->flink = parent->blink = (AXP_CQUE_ENTRY *) parent;
+		parent->max = max;
+		parent->count = 0;
+	}
+	else
+		retVal = false;
+
+	/*
+	 * Return the results of the initialization back to the caller.
+	 */
+	return(retVal);
+}
+
+/*
+ * AXP_LockCountedQueue
+ * 	This function is called to lock the mutex of a counted queue.
+ *
+ * Input Parameters:
+ * 	parent:
+ * 		A pointer to the queue head to be locked.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ *	true:	Queue locked successfully.
+ *	false:	Queue locked failed.
+ */
+bool AXP_LockCountedQueue(AXP_COUNTED_QUEUE *parent)
+{
+
+	/*
+	 * Lock the mutex for this queue.  If successful, return true, otherwise
+	 * false.
+	 */
+	return(pthread_mutex_lock(&parent->mutex) == 0);
+}
+
+/*
+ * AXP_UnlockCountedQueue
+ * 	This function is called to unlock the mutex of a counted queue.
+ *
+ * Input Parameters:
+ * 	parent:
+ * 		A pointer to the queue head to be unlocked.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ *	true:	Queue unlocked successfully.
+ *	false:	Queue unlocked failed.
+ */
+bool AXP_UnlockCountedQueue(AXP_COUNTED_QUEUE *parent)
+{
+
+	/*
+	 * Unlock the mutex for this queue.  If successful, return true, otherwise
+	 * false.
+	 */
+	return(pthread_mutex_unlock(&parent->mutex) == 0);
+}
 
 /*
  * AXP_InsertCountedQueue
@@ -389,7 +482,7 @@ i32 AXP_InsertCountedQueue(AXP_CQUE_ENTRY *pred, AXP_CQUE_ENTRY *entry)
 	AXP_COUNTED_QUEUE	*parent = entry->parent;
 	i32					retVal = -1;
 
-#if 0
+#ifdef AXP_VERIFY_QUEUES
 	if (AXP_UTL_CALL)
 	{
 		AXP_TRACE_BEGIN();
@@ -404,6 +497,14 @@ i32 AXP_InsertCountedQueue(AXP_CQUE_ENTRY *pred, AXP_CQUE_ENTRY *entry)
 	AXP_VerifyCountedQueue(entry->parent);
 #endif
 
+	/*
+	 * First things first, lock the mutex for this queue.
+	 */
+	pthread_mutex_lock(&parent->mutex);
+
+	/*
+	 * Check that there is more room in the queue for another entry.
+	 */
 	if (parent->count < parent->max)
 	{
 
@@ -421,13 +522,14 @@ i32 AXP_InsertCountedQueue(AXP_CQUE_ENTRY *pred, AXP_CQUE_ENTRY *entry)
 		parent->count++;
 		retVal = (parent->count == 1) ? 1 : 0;	/* was queue empty */
 	}
-#if 0
+#ifdef AXP_VERIFY_QUEUES
 	AXP_VerifyCountedQueue(entry->parent);
 #endif
 
 	/*
 	 * Return back to the caller.
 	 */
+	pthread_mutex_unlock(&parent->mutex);
 	return(retVal);
 }
 
@@ -452,9 +554,9 @@ i32 AXP_InsertCountedQueue(AXP_CQUE_ENTRY *pred, AXP_CQUE_ENTRY *entry)
  */
 i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *parent, u32 headRoom)
 {
-	int					retVal = 0;
+	int					retVal = 0;	/* not empty and not full */
 
-#if 0
+#ifdef AXP_VERIFY_QUEUES
 	if (AXP_UTL_CALL)
 	{
 		AXP_TRACE_BEGIN();
@@ -469,10 +571,29 @@ i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *parent, u32 headRoom)
 	AXP_VerifyCountedQueue(parent);
 #endif
 
+	/*
+	 * First things first, lock the mutex for this queue.
+	 */
+	pthread_mutex_lock(&parent->mutex);
+
+	/*
+	 * If the queue is empty, then return that indicator.
+	 */
 	if (parent->count == 0)
 		retVal = 1;
+
+	/*
+	 * Otherwise, if the current count, plus the headroom requested, is greater
+	 * than or equal to the maximum number of possible entries, then return
+	 * that indicator.
+	 */
 	else if ((parent->count + headRoom) >= parent->max)
 		retVal = -1;
+
+	/*
+	 * Return the results back to the caller.
+	 */
+	pthread_mutex_unlock(&parent->mutex);
 	return (retVal);
 }
 /*
@@ -489,18 +610,21 @@ i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *parent, u32 headRoom)
  * 	entry:
  * 		The predecessor entry points to the successor and the successor points
  * 		to the predecessor.
+ * 	locked:
+ * 		A boolean value indicating that the calling thread already locked the
+ * 		mutex.  The mutex will still be unlocked by this call.
  *
  * Return Value:
  * 	-1, if the queue is empty.
  * 	0, if the queue is empty after removing this entry.
  * 	1, if the queue is not empty after removing this entry.
  */
-i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
+i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry, bool locked)
 {
 	AXP_COUNTED_QUEUE	*parent = entry->parent;
 	i32 				retVal;
 
-#if 0
+#ifdef AXP_VERIFY_QUEUES
 	if (AXP_UTL_CALL)
 	{
 		AXP_TRACE_BEGIN();
@@ -515,6 +639,17 @@ i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
 	AXP_VerifyCountedQueue(entry->parent);
 #endif
 
+	/*
+	 * First things first, lock the mutex for this queue, but only if it has
+	 * not already been locked.
+	 */
+	if (locked == false)
+		pthread_mutex_lock(&parent->mutex);
+
+	/*
+	 * If there is at least one entry in the queue, then we can remove it.
+	 * Otherwise, the entry specified on the call was already not in the queue.
+	 */
 	if (parent->count > 0)
 	{
 
@@ -535,13 +670,14 @@ i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *entry)
 	else
 		retVal = -1;
 
-#if 0
+#ifdef AXP_VERIFY_QUEUES
 	AXP_VerifyCountedQueue(entry->parent);
 #endif
 
 	/*
-	 * Return back to the caller.
+	 * Return the results back to the caller.
 	 */
+	pthread_mutex_unlock(&parent->mutex);
 	return(retVal);
 }
 

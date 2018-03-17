@@ -293,6 +293,17 @@ typedef enum
 	BiSTSucceeded
 } AXP_21264_BIST_STATES;
 
+#define AXP_SCBD_BIT_0		0x01
+#define AXP_SCBD_BIT_1		0x02
+#define AXP_SCBD_BIT_2		0x04
+#define AXP_SCBD_BIT_3		0x08
+#define AXP_SCBD_BITS_0_3	0x0f
+#define AXP_SCBD_BIT_4		0x10
+#define AXP_SCBD_BIT_5		0x20
+#define AXP_SCBD_BIT_6		0x40
+#define AXP_SCBD_BIT_7		0x80
+#define AXP_SCBD_BITS_4_7	0xf0
+
 /*
  * This structure contains all the fields required to emulate an Alpha AXP
  * 21264 CPU.
@@ -367,8 +378,10 @@ typedef struct
 	u32						robEnd;
 
 	/*
-	 * Instruction Queues (Integer and Floating-Point).
+	 * Instruction Queues (Integer and Floating-Point), as well as the IQ
+	 * scoreboard bits.
 	 */
+	u8						scoreboard;
 	AXP_COUNTED_QUEUE		iq;
 	AXP_COUNTED_QUEUE		fq;
 
@@ -414,6 +427,7 @@ typedef struct
 	pthread_mutex_t			iCacheMutex;
 	AXP_ICACHE_BLK			iCache[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
 	bool					iCacheFlushPending;
+	bool					stallWaitingRetirement;
 
 	/*
 	 * This is the Instruction Address Translation (Look-aside) Table (ITB).

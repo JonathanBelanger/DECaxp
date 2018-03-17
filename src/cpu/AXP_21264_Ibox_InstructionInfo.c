@@ -1597,7 +1597,7 @@ COMPL_RETIRE:
 
 	/*
 	 * If this instruction is in Executing state, then we can change it to
-	 * Waiting Retirment.
+	 * Waiting Retirement.
 	 */
 	if (instr->state == Executing)
 		instr->state = WaitingRetirement;

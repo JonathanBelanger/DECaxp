@@ -126,14 +126,12 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 			qRet = false;
 
 		/*
-		 * Let's initialize the condition queues (these have both a mutex and a
+		 * Let's initialize the counted queues (these have both a mutex and a
 		 * condition variable.  We also have to initialize the preallocated
 		 * queue entries.
 		 */
 		if (qRet == true)
-		{
-			AXP_INIT_CQUE(cpu->iq, AXP_IQ_LEN);
-		}
+			AXP_InitCountedQueue(&cpu->iq, AXP_IQ_LEN);
 		if (qRet == true)
 		{
 			cpu->iqEFlStart = cpu->iqEFlEnd = 0;
@@ -147,9 +145,7 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 			}
 		}
 		if (qRet == true)
-		{
-			AXP_INIT_CQUE(cpu->fq, AXP_IQ_LEN);
-		}
+			AXP_InitCountedQueue(&cpu->fq, AXP_IQ_LEN);
 		if (qRet == true)
 		{
 			cpu->fqEFlStart = cpu->fqEFlEnd = 0;

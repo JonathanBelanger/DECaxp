@@ -49,7 +49,7 @@ FILE *AXP_Open_NVP_File(char *filename)
 	retVal = fopen(filename, "r");
 
 	/*
-	 * TODO: We may want to receive a parse table to convert a string name from
+	 * NOTE: We may want to receive a parse table to convert a string name from
 	 * the name portion of the NVP to a numeric value.
 	 *
 	 * For now, just return back to the caller.
