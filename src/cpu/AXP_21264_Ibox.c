@@ -1362,6 +1362,7 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	bool			split;
 	bool			done = false;
 	bool			updateDest = false;
+	bool			stallRetired = false;
 	bool			retVal = false;
 
 	if (AXP_IBOX_CALL)
@@ -1465,7 +1466,9 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 				 * after the current one.  This may change the value of
 				 * cpu->robEnd.
 				 */
-				AXP_AbortInstructions(cpu, rob);
+				if ((AXP_AbortInstructions(cpu, rob) == true) &&
+					(stallRetired == false))
+					stallRetired = true;
 			}
 			else
 			{
@@ -1564,7 +1567,9 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 						 * immediately after the current one.  This may change
 						 * the value of cpu->robEnd.
 						 */
-						AXP_AbortInstructions(cpu, rob);
+						if ((AXP_AbortInstructions(cpu, rob) == true) &&
+							(stallRetired == false))
+							stallRetired = true;
 
 						/*
 						 * Step 4:
@@ -1640,10 +1645,19 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 			}
 
 			/*
+			 * If the instruction being retired indicates that instruction
+			 * decoding and queuing has stalled in the Ibox, let the Ibox know
+			 * that it can begin processing instructions again.
+			 */
+			if (stallRetired == false)
+				stallRetired = rob->stall;
+
+			/*
 			 * Mark the instruction retired and move the top of the stack to
 			 * the next instruction location.
 			 */
-			cpu->rob[ii].state = Retired;
+			rob->state = Retired;
+
 			cpu->robStart = (cpu->robStart + 1) % AXP_INFLIGHT_MAX;
 			if (AXP_IBOX_INST)
 			{
@@ -1691,6 +1705,15 @@ bool AXP_21264_Ibox_Retire(AXP_21264_CPU *cpu)
 	 * thread.
 	 */
 	pthread_mutex_unlock(&cpu->robMutex);
+
+	/*
+	 * If a stall was retired, then we need to let the Ibox know, so that it
+	 * can begin processing instructions after the instruction that stalled it.
+	 */
+	if (stallRetired == true)
+	{
+		cpu->stallWaitingRetirement = false;
+	}
 
 	/*
 	 * There may have been an instruction that was waiting for one of the
@@ -1746,7 +1769,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 	u16				whichQueue;
 	bool			choice, wasRunning = false;
 	bool			_asm;
-	bool			noop, iqFull, fqFull;
+	bool			noop;
 	bool			aborting, branchPredicted = false;
 
 	/*
@@ -1841,12 +1864,6 @@ void *AXP_21264_IboxMain(void *voidPtr)
 			 * the Icache and Fetch those instructions.
 			 */
 			nextPC = AXP_21264_GetNextVPC(cpu);
-
-		/*
-		 * TODO:	The vpcStart, vpcEnd should be the same as the robStart and
-		 *			robEnd.  We should reduce these counters to just a single
-		 *			set.
-		 */
 
 		/*
 		 * The cache fetch will return true or false.  If true, we received the
@@ -1944,7 +1961,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 							 * 			hit in the Bcache, before requesting
 							 * 			it.  Also, not if we fill in the Icache
 							 * 			from the Bcache, then we need to check
-							 * 			the value of cpu->->hwIntClr.fbtp to
+							 * 			the value of cpu->hwIntClr.fbtp to
 							 * 			generate a 'Bad Icache fill parity'.
 							 */
 							AXP_21264_Add_MAF(
@@ -1969,8 +1986,13 @@ void *AXP_21264_IboxMain(void *voidPtr)
 				}
 
 				/*
-				 * TODO: Need to handle a Ibox stall at this point.
+				 * We need to set the flag indicating that the Ibox has stalled
+				 * queuing up instructions to either the IQ or FQ.  When the
+				 * instruction that is causing this stall retires, then the
+				 * Ibox will resume processing instructions to be executed by
+				 * the Ebox or Fbox.
 				 */
+				cpu->stallWaitingRetirement = decodedInstr->stall;
 
 				/*
 				 * If this is one of the potential NOOP instructions, then the
@@ -2080,10 +2102,13 @@ void *AXP_21264_IboxMain(void *voidPtr)
 					decodedInstr->state = Queued;
 					if (whichQueue == AXP_IQ)
 					{
+
+						/*
+						 * Scoreboard processing.
+						 */
 						xqEntry = AXP_GetNextIQEntry(cpu);
 						xqEntry->ins = decodedInstr;
 						xqEntry->pipeline = pipeline;
-						pthread_mutex_lock(&cpu->eBoxMutex);
 
 						/*
 						 * Increment the counters for the pipelines in which
@@ -2111,6 +2136,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 						AXP_InsertCountedQueue(
 								(AXP_CQUE_ENTRY *) &cpu->iq,
 								(AXP_CQUE_ENTRY *) xqEntry);
+						pthread_mutex_lock(&cpu->eBoxMutex);
 						pthread_cond_broadcast(&cpu->eBoxCondition);
 						pthread_mutex_unlock(&cpu->eBoxMutex);
 					}
@@ -2119,7 +2145,6 @@ void *AXP_21264_IboxMain(void *voidPtr)
 						xqEntry = AXP_GetNextFQEntry(cpu);
 						xqEntry->pipeline = pipeline;
 						xqEntry->ins = decodedInstr;
-						pthread_mutex_lock(&cpu->fBoxMutex);
 
 						/*
 						 * Increment the counters for the pipelines in which
@@ -2135,6 +2160,7 @@ void *AXP_21264_IboxMain(void *voidPtr)
 						AXP_InsertCountedQueue(
 								(AXP_CQUE_ENTRY *) &cpu->fq,
 								(AXP_CQUE_ENTRY *) xqEntry);
+						pthread_mutex_lock(&cpu->fBoxMutex);
 						pthread_cond_broadcast(&cpu->fBoxCondition);
 						pthread_mutex_unlock(&cpu->fBoxMutex);
 					}
@@ -2144,9 +2170,17 @@ void *AXP_21264_IboxMain(void *voidPtr)
 
 				/*
 				 * Go see if any of there are any instructions that can be
-				 * retired.
+				 * retired.  If we are stalled, then loop truing to retire
+				 * instructions until either the instruction that caused the
+				 * stall is retired or aborted.
 				 */
-				aborting = AXP_21264_Ibox_Retire(cpu);
+				do
+				{
+					aborting = AXP_21264_Ibox_Retire(cpu);
+					if (cpu->stallWaitingRetirement == true)
+						pthread_cond_wait(&cpu->iBoxCondition, &cpu->iBoxMutex);
+				}
+				while (cpu->stallWaitingRetirement == true);
 
 				/*
 				 * If we aborted instructions, the aborting code has already
@@ -2264,15 +2298,10 @@ void *AXP_21264_IboxMain(void *voidPtr)
 		 * to process or places to put what needs to be processed (IQ and/or FQ
 		 * cannot handle another entry).
 		 */
-		pthread_mutex_lock(&cpu->eBoxMutex);
-		iqFull = AXP_CountedQueueFull(&cpu->iq, AXP_NUM_FETCH_INS) < 0;
-		pthread_mutex_unlock(&cpu->eBoxMutex);
-		pthread_mutex_lock(&cpu->fBoxMutex);
-		fqFull = AXP_CountedQueueFull(&cpu->fq, AXP_NUM_FETCH_INS) < 0;
-		pthread_mutex_unlock(&cpu->fBoxMutex);
 		if (((cpu->excPend == false) &&
 			 (AXP_IcacheValid(cpu, nextPC) == false)) ||
-			((iqFull == true) || (fqFull == true)))
+			((AXP_CountedQueueFull(&cpu->iq, AXP_NUM_FETCH_INS) < 0) ||
+			 (AXP_CountedQueueFull(&cpu->fq, AXP_NUM_FETCH_INS) < 0)))
 			pthread_cond_wait(&cpu->iBoxCondition, &cpu->iBoxMutex);
 	}
 	if (AXP_IBOX_OPT1)

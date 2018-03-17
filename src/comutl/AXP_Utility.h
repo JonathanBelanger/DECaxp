@@ -204,26 +204,13 @@ typedef struct countedQueueRoot
 	struct countedQueueEntry	*blink;
 	u32							count;
 	u32							max;
+	pthread_mutex_t				mutex;
 } AXP_COUNTED_QUEUE;
 
-#define AXP_INIT_CQUE(queue, maximum)	\
-	AXP_INIT_QUE(queue);				\
-	queue.max = maximum;				\
-	queue.count = 0
-#define AXP_INIT_CQUEP(queue, maximum)	\
-	AXP_INIT_QUEP(queue);				\
-	queue->max = maximum;				\
-	queue->count = 0
 #define AXP_INIT_CQENTRY(queue, prent)	\
 		queue.flink = NULL;				\
 		queue.blink = NULL;				\
 		queue.parent = &prent;
-#define AXP_CQUE_EMPTY(queue)	(queue.count == 0)
-#define AXP_CQUEP_EMPTY(queue)	(queue->count == 0)
-#define AXP_CQUE_FULL(queue)	((queue.maximum !=0 ? (queue.count == queue.maximum) ? false)
-#define AXP_CQUEP_FULL(queue)	((queue->maximum !=0 ? (queue->count == queue->maximum) ? false)
-#define AXP_CQUE_COUNT(queue)	(queue.count)
-#define AXP_CQUEP_COUNT(queue)	(queue->count)
 
 /*
  * Conditional queues (using pthreads)
@@ -302,9 +289,12 @@ AXP_QUEUE_HDR *AXP_LRUReturn(AXP_QUEUE_HDR *lruQ);
 /*
  * Counted queue functions.
  */
+bool AXP_InitCountedQueue(AXP_COUNTED_QUEUE *, u32);
+bool AXP_LockCountedQueue(AXP_COUNTED_QUEUE *);
+bool AXP_UnlockCountedQueue(AXP_COUNTED_QUEUE *);
 i32 AXP_InsertCountedQueue(AXP_CQUE_ENTRY *, AXP_CQUE_ENTRY *);
 i32 AXP_CountedQueueFull(AXP_COUNTED_QUEUE *, u32);
-i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *);
+i32 AXP_RemoveCountedQueue(AXP_CQUE_ENTRY *, bool);
 
 /*
  * Conditional queue (non-counted and counted) Functions.

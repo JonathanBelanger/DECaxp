@@ -369,9 +369,13 @@ AXP_EXCEPTIONS AXP_MB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
 	/*
-	 * TODO:	We need to make sure that the load and store queues are all
-	 *			completed and written out to or read from memory (the queues
-	 *			should be empty).  Not sure if we do it here or in the caller.
+	 * TODO:	The Cbox needs to be told that an MB is pending.  The Cbox will
+	 *			perform some processing to make sure that instruction execution
+	 *			can begin with the instruction after the MB.  It does this by
+	 *			indicating to the Ibox that the MB instruction can be retired.
+	 *			Since the MB can be executed speculatively, then it is possible
+	 *			to have to abort it, in the case of an exception or
+	 *			mispredicted branch.
 	 */
 
 	/*
@@ -619,9 +623,10 @@ AXP_EXCEPTIONS AXP_WMB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
 	/*
-	 * TODO:	We need to make sure that the store queue is all completed and
-	 *			written out to memory (the queue should be empty).  Not sure if
-	 *			we do it here or in the caller.
+	 * TODO:	Unlike the MB, the WMB needs to be sent to the Mbox.  The Mbox
+	 *			will hold onto the WMB until all prior store instructions
+	 *			become writable.  When this happens, the Mbox will indicate
+	 *			that the WMB can be retired.
 	 */
 
 	/*

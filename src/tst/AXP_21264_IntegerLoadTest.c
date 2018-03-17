@@ -30,7 +30,7 @@
 #include "AXP_21264_Ebox.h"
 
 /*
- * TODO:	We need to run a series of tests to utilize the various
+ * NOTE:	We need to run a series of tests to utilize the various
  *		load/store instructions at various parts of the load/store
  *		process.  We can use the existing test data.
  */

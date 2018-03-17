@@ -202,7 +202,6 @@ void AXP_21264_Fbox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 {
 	bool		retVal = false;
-	int			ii;
 
 	if (AXP_FBOX_OPT1)
 	{
@@ -230,22 +229,6 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 	cpu->fpcr.unfd = 0;
 	cpu->fpcr.ined = 0;
 	cpu->fpcr.sum = 0;
-
-	/*
-	 * Initialize the instruction queue for the Fbox.
-	 */
-	AXP_INIT_CQUE(cpu->fq, AXP_FQ_LEN);
-
-	/*
-	 * Initialize the instruction queue cache.  These are pre-allocated queue
-	 * entries for the above.
-	 */
-	for (ii = 0; ii < AXP_FQ_LEN; ii++)
-	{
-		cpu->fqEFreelist[cpu->fqEFlEnd++] = ii;
-		AXP_INIT_CQENTRY(cpu->fqEntries[ii].header, cpu->fq);
-		cpu->fqEntries[ii].index = ii;
-	}
 
 	if (AXP_FBOX_OPT1)
 	{
