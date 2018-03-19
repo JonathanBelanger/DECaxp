@@ -27,6 +27,10 @@
 #ifndef _AXP_21274_REGISTERS_H_
 #define _AXP_21274_REGISTERS_H_
 
+/****************************************************************************
+ *							HRM 10.2.2 Cchip CSRs							*
+ ****************************************************************************/
+
 /*
  * HRM 10.2.2.1 - Cchip Configuration Register (CSC - RW) (page 10-19)
  *
@@ -272,6 +276,9 @@ typedef struct
 	u64	res_63	: 1;	/* Reserved at bit 63 */
 } AXP_21274_CSC;
 
+/*
+ * Definitions for the values in various fields in the CSC.
+ */
 #define AXP_EFT_0_CYCLES			0
 #define AXP_EFT_1_CYCLES			1
 #define AXP_QDI_DISABLE_DRAINING	0
@@ -297,6 +304,29 @@ typedef struct
 #define AXP_DWTP_3_CYCLES			1
 #define AXP_DWTP_4_CYCLES			2	/* (rev 0 Dchip) */
 #define AXP_DWTP_5_CYCLES			3
+#define AXP_IDDW_3_CYCLES			0
+#define AXP_IDDW_4_CYCLES			1
+#define AXP_IDDW_5_CYCLES			2
+#define AXP_IDDW_6_CYCLES			3
+#define AXP_IDDR_5_CYCLES			0
+#define AXP_IDDR_6_CYCLES			1
+#define AXP_IDDR_7_CYCLES			2
+#define AXP_IDDR_8_CYCLES			3
+#define AXP_IDDR_9_CYCLES			4
+#define AXP_IDDR_10_CYCLES			5
+#define AXP_IDDR_11_CYCLES			6
+#define AXP_AW_16_BYTES				0
+#define AXP_AW_32_BYTES				1
+#define AXP_SFD_2_CYCLES			0
+#define AXP_SFD_3_CYCLES			1
+#define AXP_SED_2_CYCLES			0
+#define AXP_SED_3_CYCLES			1
+#define AXP_SED_4_CYCLES			2
+#define AXP_SED_5_CYCLES			3
+#define AXP_BC_2D_1M				0	/* 2 Dchips, 1 memory bus */
+#define AXP_BC_4D_1M				1	/* 4 Dchips, 1 memory bus */
+#define AXP_BC_4D_2M				2	/* 4 Dchips, 2 memory buses */
+#define AXP_BC_8D_2M				3	/* 8 Dchips, 1 memory buses */
 
 /*
  * HRM 10.2.2.2 - Memory Timing Register(MTR - RW) (page 10-26)
@@ -465,6 +495,31 @@ typedef struct
 } AXP_21274_MTR;
 
 /*
+ * Definitions for the values in various fields in the MTR.
+ */
+#define AXP_MPD__NO_DELAY			0
+#define AXP_MPD_ONE_PIPELINE_STAGE	1
+#define AXP_RRD_2_CYCLES			0
+#define AXP_RRD_3_CYCLES			1
+#define AXP_RPT_2_CYCLES			0
+#define AXP_RPT_3_CYCLES			1
+#define AXP_RPT_4_CYCLES			2
+#define AXP_RPW_4_CYCLES			0
+#define AXP_RPW_5_CYCLES			1
+#define AXP_RPW_6_CYCLES			2
+#define AXP_RPW_7_CYCLES			3
+#define AXP_IRD_0_CYCLES			0
+#define AXP_IRD_1_CYCLES			1
+#define AXP_IRD_2_CYCLES			2
+#define AXP_IRD_3_CYCLES			3
+#define AXP_IRD_4_CYCLES			4
+#define AXP_IRD_5_CYCLES			5
+#define AXP_CAT_2_CYCLES			0
+#define AXP_CAT_3_CYCLES			1
+#define AXP_RCD_2_CYCLES			0
+#define AXP_RCD_3_CYCLES			1
+
+/*
  * HRM 10.2.2.3 Miscellaneous Register (MISC – RW) (page 10-29)
  *
  * This register is designed so that there are no read side effects, and that
@@ -563,6 +618,46 @@ typedef struct
 } AXP_21274_MISC;
 
 /*
+ * Definitions for the values in various fields in the MISC.
+ */
+#define AXP_DEVSUP_CPU0				0x1	/*  0  0  0  1 */
+#define AXP_DEVSUP_CPU1				0x2	/*  0  0  1  0 */
+#define AXP_DEVSUP_CPU2				0x4	/*  0  1  0  0 */
+#define AXP_DEVSUP_CPU3				0x8	/*  1  0  0  0 */
+#define AXP_REV_TSUNAMI				1
+#define AXP_REV_TYPHOON				8
+#define AXP_NXS_CPU0				0
+#define AXP_NXS_CPU1				1
+#define AXP_NXS_CPU2				2
+#define AXP_NXS_CPU3				3
+#define AXP_NXS_PCHIP0				4
+#define AXP_NXS_PCHIP1				5
+#define AXP_ABT_CPU0				0x1	/*  0  0  0  1 */
+#define AXP_ABT_CPU1				0x2	/*  0  0  0  1 */
+#define AXP_ABT_CPU2				0x4	/*  0  0  0  1 */
+#define AXP_ABT_CPU3				0x8	/*  0  0  0  1 */
+#define AXP_ABW_CPU0				0x1	/*  0  0  0  1 */
+#define AXP_ABW_CPU1				0x2	/*  0  0  0  1 */
+#define AXP_ABW_CPU2				0x4	/*  0  0  0  1 */
+#define AXP_ABW_CPU3				0x8	/*  0  0  0  1 */
+#define AXP_IPREQ_CPU0				0x1	/*  0  0  0  1 */
+#define AXP_IPREQ_CPU1				0x2	/*  0  0  0  1 */
+#define AXP_IPREQ_CPU2				0x4	/*  0  0  0  1 */
+#define AXP_IPREQ_CPU3				0x8	/*  0  0  0  1 */
+#define AXP_IPINTR_CPU0				0x1	/*  0  0  0  1 */
+#define AXP_IPINTR_CPU1				0x2	/*  0  0  0  1 */
+#define AXP_IPINTR_CPU2				0x4	/*  0  0  0  1 */
+#define AXP_IPINTR_CPU3				0x8	/*  0  0  0  1 */
+#define AXP_ITINTR_CPU0				0x1	/*  0  0  0  1 */
+#define AXP_ITINTR_CPU1				0x2	/*  0  0  0  1 */
+#define AXP_ITINTR_CPU2				0x4	/*  0  0  0  1 */
+#define AXP_ITINTR_CPU3				0x8	/*  0  0  0  1 */
+#define AXP_CPUID_CPU0				0
+#define AXP_CPUID_CPU1				1
+#define AXP_CPUID_CPU2				2
+#define AXP_CPUID_CPU3				3
+
+/*
  * HRM 10.2.2.4 Memory Presence Detect Register (MPD – RW)
  *
  * The memory presence detect register is connected to two open-drain pins on
@@ -589,6 +684,12 @@ typedef struct
 	u64	dr		: 1;	/* Data receive */
 	u64	res_4	: 60;	/* Reserved at bits 63:4 */
 } AXP_21274_MPD;
+
+/*
+ * Definitions for the values in various fields in the MPD.
+ */
+#define AXP_MPD_CLEAR				0
+#define AXP_MPD_SET					1
 
 /*
  * HRM 10.2.2.5 Array Address Register (AAR0, AAR1, AAR2, AAR3 – RW)
@@ -669,6 +770,33 @@ typedef struct
 } AXP_21274_ARRx;
 
 /*
+ * Definitions for the values in various fields in the AARx.
+ */
+#define AXP_ADDR_MASK_TSUNAMI	0x00000000ff000000ll
+#define AXP_ADDR_MASK_TYPHOON	0x00000007f0000000ll
+#define AXP_ASIZ_DISABLED		0
+#define AXP_ASIZ_16MB			1
+#define AXP_ASIZ_32MB			2
+#define AXP_ASIZ_64MB			3
+#define AXP_ASIZ_128MB			4
+#define AXP_ASIZ_256MB			5
+#define AXP_ASIZ_512MB			6
+#define AXP_ASIZ_1GB			7
+#define AXP_ASIZ_2GB			8
+#define AXP_ASIZ_4GB			9
+#define AXP_ASIZ_8GB			10
+#define AXP_TSA_DISABLED		0
+#define AXP_TSA_ENABLED			1
+#define AXP_SA_DISABLED			0
+#define AXP_SA_ENABLED			1
+#define AXP_ROWS_11_BITS		0
+#define AXP_ROWS_12_BITS		1
+#define AXP_ROWS_13_BITS		2
+#define AXP_BNKS_1_BITS			0
+#define AXP_BNKS_2_BITS			1
+#define AXP_BNKS_3_BITS			2
+
+/*
  * HRM 10.2.2.6 Device Interrupt Mask Register (DIMn, n=0,3 – RW)
  *
  * Register n applies to CPUn. (Typhoon only: n=2,3.)
@@ -688,6 +816,74 @@ typedef struct
  *	---------------------------------------------------------------------------
  */
 typedef u64 AXP_21274_DIMn;
+
+/*
+ * Definitions for the values in various fields in the DIMx.
+ */
+#define AXP_DIM_INTR_0		0x0000000000000001ll
+#define AXP_DIM_INTR_1		0x0000000000000002ll
+#define AXP_DIM_INTR_2		0x0000000000000004ll
+#define AXP_DIM_INTR_3		0x0000000000000008ll
+#define AXP_DIM_INTR_4		0x0000000000000010ll
+#define AXP_DIM_INTR_5		0x0000000000000020ll
+#define AXP_DIM_INTR_6		0x0000000000000040ll
+#define AXP_DIM_INTR_7		0x0000000000000080ll
+#define AXP_DIM_INTR_8		0x0000000000000100ll
+#define AXP_DIM_INTR_9		0x0000000000000200ll
+#define AXP_DIM_INTR_10		0x0000000000000400ll
+#define AXP_DIM_INTR_11		0x0000000000000800ll
+#define AXP_DIM_INTR_12		0x0000000000001000ll
+#define AXP_DIM_INTR_13		0x0000000000002000ll
+#define AXP_DIM_INTR_14		0x0000000000004000ll
+#define AXP_DIM_INTR_15		0x0000000000008000ll
+#define AXP_DIM_INTR_16		0x0000000000010000ll
+#define AXP_DIM_INTR_17		0x0000000000020000ll
+#define AXP_DIM_INTR_18		0x0000000000040000ll
+#define AXP_DIM_INTR_19		0x0000000000080000ll
+#define AXP_DIM_INTR_20		0x0000000000100000ll
+#define AXP_DIM_INTR_21		0x0000000000200000ll
+#define AXP_DIM_INTR_22		0x0000000000400000ll
+#define AXP_DIM_INTR_23		0x0000000000800000ll
+#define AXP_DIM_INTR_24		0x0000000001000000ll
+#define AXP_DIM_INTR_25		0x0000000002000000ll
+#define AXP_DIM_INTR_26		0x0000000004000000ll
+#define AXP_DIM_INTR_27		0x0000000008000000ll
+#define AXP_DIM_INTR_28		0x0000000010000000ll
+#define AXP_DIM_INTR_29		0x0000000020000000ll
+#define AXP_DIM_INTR_30		0x0000000040000000ll
+#define AXP_DIM_INTR_31		0x0000000080000000ll
+#define AXP_DIM_INTR_32		0x0000000100000000ll
+#define AXP_DIM_INTR_33		0x0000000200000000ll
+#define AXP_DIM_INTR_34		0x0000000400000000ll
+#define AXP_DIM_INTR_35		0x0000000800000000ll
+#define AXP_DIM_INTR_36		0x0000001000000000ll
+#define AXP_DIM_INTR_37		0x0000002000000000ll
+#define AXP_DIM_INTR_38		0x0000004000000000ll
+#define AXP_DIM_INTR_39		0x0000008000000000ll
+#define AXP_DIM_INTR_40		0x0000010000000000ll
+#define AXP_DIM_INTR_41		0x0000020000000000ll
+#define AXP_DIM_INTR_42		0x0000040000000000ll
+#define AXP_DIM_INTR_43		0x0000080000000000ll
+#define AXP_DIM_INTR_44		0x0000100000000000ll
+#define AXP_DIM_INTR_45		0x0000200000000000ll
+#define AXP_DIM_INTR_46		0x0000400000000000ll
+#define AXP_DIM_INTR_47		0x0000800000000000ll
+#define AXP_DIM_INTR_48		0x0001000000000000ll
+#define AXP_DIM_INTR_49		0x0002000000000000ll
+#define AXP_DIM_INTR_50		0x0004000000000000ll
+#define AXP_DIM_INTR_51		0x0008000000000000ll
+#define AXP_DIM_INTR_52		0x0010000000000000ll
+#define AXP_DIM_INTR_53		0x0020000000000000ll
+#define AXP_DIM_INTR_54		0x0040000000000000ll
+#define AXP_DIM_INTR_55		0x0080000000000000ll
+#define AXP_DIM_INTR_56		0x0100000000000000ll
+#define AXP_DIM_INTR_57		0x0200000000000000ll
+#define AXP_DIM_INTR_58		0x0400000000000000ll
+#define AXP_DIM_INTR_59		0x0800000000000000ll
+#define AXP_DIM_INTR_60		0x1000000000000000ll
+#define AXP_DIM_INTR_61		0x2000000000000000ll
+#define AXP_DIM_INTR_62		0x4000000000000000ll
+#define AXP_DIM_INTR_63		0x8000000000000000ll
 
 /*
  * HRM 10.2.2.7 Device Interrupt Request Register (DIRn, n=0,3 – RO)
@@ -724,6 +920,14 @@ typedef struct
 } AXP_21274_DIRn;
 
 /*
+ * Definitions for the values in various fields in the DIRx.
+ */
+#define AXP_ERR_NXM					0x20
+#define AXP_ERR_PCHIP0				0x10
+#define AXP_ERR_PCHIP1				0x80
+/* TODO: What are we supposed to do with the DEV field */
+
+/*
  * HRM 10.2.2.8 Device Raw Interrupt Request Register (DRIR – RO)
  *
  * DRIR indicates which of the 64 possible device interrupts is asserted. Table
@@ -737,6 +941,74 @@ typedef struct
  *	---------------------------------------------------------------------------
  */
 typedef u64 AXP_21274_DRIR;
+
+/*
+ * Definitions for the values in various fields in the DRIR.
+ */
+#define AXP_DRIR_INTR_0		0x0000000000000001ll
+#define AXP_DRIR_INTR_1		0x0000000000000002ll
+#define AXP_DRIR_INTR_2		0x0000000000000004ll
+#define AXP_DRIR_INTR_3		0x0000000000000008ll
+#define AXP_DRIR_INTR_4		0x0000000000000010ll
+#define AXP_DRIR_INTR_5		0x0000000000000020ll
+#define AXP_DRIR_INTR_6		0x0000000000000040ll
+#define AXP_DRIR_INTR_7		0x0000000000000080ll
+#define AXP_DRIR_INTR_8		0x0000000000000100ll
+#define AXP_DRIR_INTR_9		0x0000000000000200ll
+#define AXP_DRIR_INTR_10	0x0000000000000400ll
+#define AXP_DRIR_INTR_11	0x0000000000000800ll
+#define AXP_DRIR_INTR_12	0x0000000000001000ll
+#define AXP_DRIR_INTR_13	0x0000000000002000ll
+#define AXP_DRIR_INTR_14	0x0000000000004000ll
+#define AXP_DRIR_INTR_15	0x0000000000008000ll
+#define AXP_DRIR_INTR_16	0x0000000000010000ll
+#define AXP_DRIR_INTR_17	0x0000000000020000ll
+#define AXP_DRIR_INTR_18	0x0000000000040000ll
+#define AXP_DRIR_INTR_19	0x0000000000080000ll
+#define AXP_DRIR_INTR_20	0x0000000000100000ll
+#define AXP_DRIR_INTR_21	0x0000000000200000ll
+#define AXP_DRIR_INTR_22	0x0000000000400000ll
+#define AXP_DRIR_INTR_23	0x0000000000800000ll
+#define AXP_DRIR_INTR_24	0x0000000001000000ll
+#define AXP_DRIR_INTR_25	0x0000000002000000ll
+#define AXP_DRIR_INTR_26	0x0000000004000000ll
+#define AXP_DRIR_INTR_27	0x0000000008000000ll
+#define AXP_DRIR_INTR_28	0x0000000010000000ll
+#define AXP_DRIR_INTR_29	0x0000000020000000ll
+#define AXP_DRIR_INTR_30	0x0000000040000000ll
+#define AXP_DRIR_INTR_31	0x0000000080000000ll
+#define AXP_DRIR_INTR_32	0x0000000100000000ll
+#define AXP_DRIR_INTR_33	0x0000000200000000ll
+#define AXP_DRIR_INTR_34	0x0000000400000000ll
+#define AXP_DRIR_INTR_35	0x0000000800000000ll
+#define AXP_DRIR_INTR_36	0x0000001000000000ll
+#define AXP_DRIR_INTR_37	0x0000002000000000ll
+#define AXP_DRIR_INTR_38	0x0000004000000000ll
+#define AXP_DRIR_INTR_39	0x0000008000000000ll
+#define AXP_DRIR_INTR_40	0x0000010000000000ll
+#define AXP_DRIR_INTR_41	0x0000020000000000ll
+#define AXP_DRIR_INTR_42	0x0000040000000000ll
+#define AXP_DRIR_INTR_43	0x0000080000000000ll
+#define AXP_DRIR_INTR_44	0x0000100000000000ll
+#define AXP_DRIR_INTR_45	0x0000200000000000ll
+#define AXP_DRIR_INTR_46	0x0000400000000000ll
+#define AXP_DRIR_INTR_47	0x0000800000000000ll
+#define AXP_DRIR_INTR_48	0x0001000000000000ll
+#define AXP_DRIR_INTR_49	0x0002000000000000ll
+#define AXP_DRIR_INTR_50	0x0004000000000000ll
+#define AXP_DRIR_INTR_51	0x0008000000000000ll
+#define AXP_DRIR_INTR_52	0x0010000000000000ll
+#define AXP_DRIR_INTR_53	0x0020000000000000ll
+#define AXP_DRIR_INTR_54	0x0040000000000000ll
+#define AXP_DRIR_INTR_55	0x0080000000000000ll
+#define AXP_DRIR_INTR_56	0x0100000000000000ll
+#define AXP_DRIR_INTR_57	0x0200000000000000ll
+#define AXP_DRIR_INTR_58	0x0400000000000000ll
+#define AXP_DRIR_INTR_59	0x0800000000000000ll
+#define AXP_DRIR_INTR_60	0x1000000000000000ll
+#define AXP_DRIR_INTR_61	0x2000000000000000ll
+#define AXP_DRIR_INTR_62	0x4000000000000000ll
+#define AXP_DRIR_INTR_63	0x8000000000000000ll
 
 /*
  * HRM 10.2.2.9 Probe Enable Register (PRBEN – RW)
@@ -760,6 +1032,12 @@ typedef struct
 	u64	prben	: 1;	/* Probe enable bit */
 	u64	res_2	: 63;	/* Reserved at bits 63:2 */
 } AXP_21274_PRBEN;
+
+/*
+ * Definitions for the values in various fields in the PRBEN.
+ */
+#define AXP_PRBEN_DISABLED			0
+#define AXP_PRBEN_ENABLED			1
 
 /*
  * HRM Interval Ignore Count Register (IICn, n=0,3 – RW)
@@ -792,6 +1070,12 @@ typedef struct
 	u64 of		: 1;	/* Overflow, indicates negative count */
 	u64	res_25	: 39;
 } AXP_21274_IICn;
+
+/*
+ * Definitions for the values in various fields in the IICn.
+ */
+#define AXP_OF_POSITIVE			0
+#define AXP_OF_NEGATIVE			1
 
 /*
  * HRM 10.2.2.11 Wake-Up Delay Register (WDR – RW)
@@ -844,5 +1128,698 @@ typedef struct
  * registers.
  */
 typedef u64 AXP_21274_MCTL;
+
+/*
+ * HRM 10.2.2.14 TIGbus Timing Register (TTR – RW)
+ *
+ * The TIGbus timing register controls the nonaddress-specific timing of the
+ * TIGbus.  Table 10–23 describes the TIGbus timing register (TTR). See Section
+ * 6.3 for timing diagrams and information.
+ *
+ *	Table 10–23 TIGbus Timing Register (TTR – RW)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:15>		MBZ,RAZ	0		Reserved.
+ *	ID			<14:12>		RW		7		Interrupt starting device – If
+ *											there are fewer than eight
+ *											interrupt buffers present on the
+ *											module, this field determines the
+ *											lowest-order byte number that gets
+ *											read in – Devices <7:ID> all
+ *											present is a requirement.
+ *	RES			<11:10>		MBZ,RAZ	0		Reserved.
+ *	IRT			<9:8>		RW		3		Interrupt read time – The number of
+ *											cycles that the interrupt driver is
+ *											enabled on the TIGbus before the
+ *											interrupt data is latched in the
+ *											Cchip.
+ *											-----------------------------------
+ *											Value	Cycles
+ *											-----------------------------------
+ *											0		1 cycle
+ *											1		2 cycles
+ *											2		3 cycles
+ *											3		4 cycles
+ *											-----------------------------------
+ *	RES			<7:6>		MBZ,RAZ	0		Reserved.
+ *	IS			<5:4>		RW		3		Interrupt setup time – The number
+ *											of cycles that the Cchip drives the
+ *											IRQ data on the TIGbus before
+ *											asserting b_tis to strobe the data
+ *											into a register on the module.
+ *											-----------------------------------
+ *											Value	Cycles
+ *											-----------------------------------
+ *											0		1 cycle
+ *											1		2 cycles
+ *											2		3 cycles
+ *											3		4 cycles
+ *											-----------------------------------
+ *	RES			<3:2>		MBZ,RAZ	0		Reserved
+ *	AH			<1>			RW		0		Address hold after as_l before
+ *											cs_l.
+ *											-----------------------------------
+ *											Value	Cycles
+ *											-----------------------------------
+ *											0		1 cycle
+ *											1		2 cycles
+ *											-----------------------------------
+ *	AS			<0>			RW		0		Address setup to the address latch
+ *											before as_l.
+ *											-----------------------------------
+ *											Value	Cycles
+ *											-----------------------------------
+ *											0		1 cycle
+ *											1		2 cycles
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	as		: 1;	/* Address setup to the address latch before as_1 */
+	u64	ah		: 1;	/* Address hold after as_1 before cs_1 */
+	u64	res_2	: 2;	/* Reserved at bits 3:2 */
+	u64	is		: 2;	/* Interrupt setup time */
+	u64	res_6	: 2;	/* Reserved at bits 7:6 */
+	u64	irt		: 2;	/* Interrupt read time */
+	u64	res_10	: 2;	/* Reserved at bits 11:10 */
+	u64	id		: 3;	/* Interrupt starting device */
+	u64 res_15	: 49;	/* Reserved at bits 63:15 */
+} AXP_21274_TTR;
+
+/*
+ * Definitions for the values in various fields in the TTR.
+ */
+#define AXP_IRT_1_CYCLE			0
+#define AXP_IRT_2_CYCLE			1
+#define AXP_IRT_3_CYCLE			2
+#define AXP_IRT_4_CYCLE			3
+#define AXP_IS_1_CYCLE			0
+#define AXP_IS_2_CYCLE			1
+#define AXP_IS_3_CYCLE			2
+#define AXP_IS_4_CYCLE			3
+#define AXP_AH_1_CYCLE			0
+#define AXP_AH_2_CYCLE			1
+#define AXP_AS_1_CYCLE			0
+#define AXP_AS_2_CYCLE			1
+
+/*
+ * HRM 10.2.2.15 TIGbus Device Timing Register (TDR – RW)
+ *
+ * One 16-bit field of this register is selected by TIG address bits <23:22> to\
+ * allow up to four different timing domains on the TIGbus. All values in the
+ * register are expressed in cycles. The state machine stays in each state one
+ * cycle longer than the number in the register (that is, a value of 0 means
+ * one cycle). See Section 6.3 for timing diagrams describing these fields.
+ *
+ * Table 10–24 describes the TIGbus device timing register (TDR).
+ *
+ *	Table 10–24 TIGbus Device Timing Register (TDR)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	WH3			<63>		RW		0		See bit WH0
+ *	WP3			<62:60>		RW		0		See bit WP0
+ *	RES			<59:58>		MBZ,RAZ	0		Reserved
+ *	WS3			<57:56>		RW		0		See bit WS0
+ *	RES			<55>		MBZ,RAZ	0		Reserved
+ *	RD3			<54:52>		RW		0		See bit RD0
+ *	RA3			<51:48>		RW		0		See bit RA0
+ *	WH2			<47>		RW		0		See bit WH0
+ *	WP2			<46:44>		RW		0		See bit WP0
+ *	RES			<43:42>		MBZ,RAZ	0		Reserved
+ *	WS2			<41:40>		RW		0		See bit WS0
+ *	RES			<39>		MBZ,RAZ	0		Reserved
+ *	RD2			<38:36>		RW		0		See bit RD0
+ *	RA2			<35:32>		RW		0		See bit RA0
+ *	WH1			<31>		RW		0		See bit WH0
+ *	WP1			<30:28>		RW		0		See bit WP0
+ *	RES			<27:26>		MBZ,RAZ	0		Reserved
+ *	WS1			<25:24>		RW		0		See bit WS0
+ *	RES			<23>		MBZ,RAZ	0		Reserved
+ *	RD1			<22:20>		RW		0		See bit RD0
+ *	RA1			<19:16>		RW		0		See bit RA0
+ *	WH0			<15>		RW		0		Write hold time – The number of
+ *											cycles that cs_l, the address, and
+ *											the data are held once we_l is
+ *											deasserted
+ *	WP0			<14:12>		RW		0		Write pulse width – The number of
+ *											cycles that we_l is held asserted
+ *	RES			<11:10>		MBZ,RAZ	0		Reserved
+ *	WS0			<9:8>		RW		0		Write setup time – The number of
+ *											cycles that the address and data
+ *											are held stable to the device
+ *											before we_l is asserted
+ *	RES			<7>			MBZ,RAZ	0		Reserved
+ *	RD0			<6:4>		RW		0		Read output disable time – The
+ *											number of cycles that the device
+ *											takes to turn off its output
+ *											drivers once oe_l is deasserted
+ *	RA0			<3:0>		RW		0		Read access time – The number of
+ *											cycles that cs_l and oe_l are
+ *											asserted to the device before the
+ *											data is latched in from the TIGbus
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	ra0		: 4;	/* Read access time */
+	u64	rd0		: 3;	/* Read output disable time */
+	u64	res_7	: 1;	/* Reserved at bit 7 */
+	u64	ws0		: 2;	/* Write setup time */
+	u64	res_10	: 2;	/* Reserved at bits 11:10 */
+	u64	wp0		: 3;	/* Write pulse width */
+	u64	wh0		: 1;	/* Write hold time */
+	u64	ra1		: 4;	/* Read access time */
+	u64	rd1		: 3;	/* Read output disable time */
+	u64	res_23	: 1;	/* Reserved at bit 7 */
+	u64	ws1		: 2;	/* Write setup time */
+	u64	res_26	: 2;	/* Reserved at bits 11:10 */
+	u64	wp1		: 3;	/* Write pulse width */
+	u64	wh1		: 1;	/* Write hold time */
+	u64	ra2		: 4;	/* Read access time */
+	u64	rd2		: 3;	/* Read output disable time */
+	u64	res_39	: 1;	/* Reserved at bit 7 */
+	u64	ws2		: 2;	/* Write setup time */
+	u64	res_42	: 2;	/* Reserved at bits 11:10 */
+	u64	wp2		: 3;	/* Write pulse width */
+	u64	wh2		: 1;	/* Write hold time */
+	u64	ra3		: 4;	/* Read access time */
+	u64	rd3		: 3;	/* Read output disable time */
+	u64	res_55	: 1;	/* Reserved at bit 7 */
+	u64	ws3		: 2;	/* Write setup time */
+	u64	res_58	: 2;	/* Reserved at bits 11:10 */
+	u64	wp3		: 3;	/* Write pulse width */
+	u64	wh3		: 1;	/* Write hold time */
+} AXP_21274_TDR;
+
+/*
+ * HRM 10.2.2.16 Power Management Control (PWR – RW)
+ *
+ * This register controls chipset management features. To date, only SDRAM
+ * self-refresh mode is implemented.
+ *
+ * Warning:	Software must ensure that there are no DRAM accesses active in the
+ *			21272 when self-refresh mode is active.
+ *
+ * Table 10–25 describes the power management control register (PWR).
+ *
+ *	Table 10–25 Power Management Control Register (PWR – RW)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:1>		MBZ,RAZ	0		Reserved.
+ *	SR			<0>			RW		0		-----------------------------------
+ *											Value	Meaning
+ *											-----------------------------------
+ *											0		Normal operation.
+ *											1		Self-refresh mode; standard
+ *													refreshing is suppressed,
+ *													regardless of MTR<RI>.
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	sr		: 1;	/* Self Refresh */
+	u64	res_1	: 63;	/* Reserved at bits 63:1 */
+} AXP_21274_PWR;
+
+/*
+ * Definitions for the values in various fields in the PWR.
+ */
+#define AXP_SR_NORMAL			0
+#define AXP_SR_SELF_REFRESH		1
+
+/*
+ * HRM 10.2.3 Cchip Monitor Control (CMONCTLA, CMONCTLB - RW) - Typhoon only
+ *
+ * All fields in the CMONCTLA and CMONCTLB registers are RW. They are cleared
+ * by reset. Some monitor signals are hardwired to select a specific CPU. The
+ * mask and match/entry fields provide wide flexibility in the selection of
+ * events to count.
+ *
+ * Table 10–26 describes the Cchip monitor control register CMONCTLA and Table
+ * 10–27 describes register CMONCTLB.
+ *
+ *	Table 10–26 Cchip Monitor Control Register (CMONCTLA)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:62>		MBZ,RAZ	0		Reserved.
+ *	MSK23		<61:52>		RW		0		Mask field – For ECNT2 and ECNT3,
+ *											the match/entry fields can be used
+ *											to qualify the value in the <SLCTn>
+ *											field.
+ *	RES			<51:50>		MBZ,RAZ	0		Reserved.
+ *	MSK01		<49:40>		RW		0		Mask field – For ECNT0 and ECNT1.
+ *	STKDIS3		<39>		RW		0		ECNT3 stick disable.
+ *											-----------------------------------
+ *											Value	Description
+ *											-----------------------------------
+ *											0		ECNT3 sticks at all ones
+ *											1		ECNT3 wraps
+ *											-----------------------------------
+ *	STKDIS2		<38>		RW		0
+ *	STKDIS1		<37>		RW		0
+ *	STKDIS0		<36>		RW		0
+ *	RES			<35:34>		MBZ,RAZ	0		Reserved.
+ *	SLCTMBL		<33:32>		RW		0		Select memory bus monitor low bits.
+ *											Note: Memory bus monitor bits
+ *											<20:16> are fixed.
+ *											-----------------------------------
+ *											Value	Group
+ *											-----------------------------------
+ *											0		mem bus monitor <15:0> =
+ *													mgroup0
+ *											1		mem bus monitor <15:0> =
+ *													mgroup1
+ *											2		mem bus monitor <15:0> =
+ *													mgroup2
+ *											3		mem bus monitor <15:0> =
+ *													mgroup3
+ *											-----------------------------------
+ *	SLCT3		<31:24>		RW		0		Select B MONITOR<3>; Select Event
+ *											3.
+ *	SLCT2		<23:16>		RW		0		Select B MONITOR<2>; Select Event
+ *											2.
+ *	SLCT1		<15:8>		RW		0		Select B MONITOR<1>; Select Event
+ *											1.
+ *	SLCT0		<7:0>		RW		0		Select B MONITOR<0>; Select Event
+ *											0.
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	slct0	: 8;	/* Select B Minitor<0> */
+	u64	slct1	: 8;	/* Select B Minitor<1> */
+	u64	slct2	: 8;	/* Select B Minitor<2> */
+	u64	slct3	: 8;	/* Select B Minitor<3> */
+	u64	slctmbl	: 2;	/* Select memory bus monitor low bits */
+	u64	res_34	: 2;	/* Reserved at bits 35:34 */
+	u64	stkdis0	: 1;	/* ECNT0 stick disable */
+	u64	stkdis1	: 1;	/* ECNT1 stick disable */
+	u64	stkdis2	: 1;	/* ECNT2 stick disable */
+	u64	stkdis3	: 1;	/* ECNT3 stick disable */
+	u64	msk01	: 10;	/* Mask field for ECNT0 and ECNT1 */
+	u64	res_50	: 2;	/* Reserverd at bits 51:50 */
+	u64	msk23	: 10;	/* Mask field for ECNT2 and ECNT3 */
+	u64	res_62	: 2;	/* Reserved at bits 63:52 */
+} AXP_21274_CMONCTLA;
+
+/*
+ * Definitions for the values in various fields in the CMONCTLA.
+ */
+#define AXP_STKDIS_ALL_ONES			0
+#define AXP_STKDIS_WRAPS			1
+#define AXP_SLCTMBL_MGROUP0			0
+#define AXP_SLCTMBL_MGROUP1			1
+#define AXP_SLCTMBL_MGROUP2			2
+#define AXP_SLCTMBL_MGROUP3			3
+
+/*
+ * HRM Table 10–27 Cchip Monitor Control Register (CMONCTLB)
+ *
+ *	Table 10–27 Cchip Monitor Control Register (CMONCTLB)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:62>		MBZ,RAZ	0		Reserved
+ *	MTE3		<61:52>		RW		0		Match/entry field – for ECNT3
+ *											The match/entry and mask fields can
+ *											be used to qualify the value in the
+ *											<SLCTn> field.
+ *	RES			<51:50>		MBZ,RAZ	0		Reserved
+ *	MTE2		<49:40>		RW		0		Match/entry field – for ECNT2
+ *	RES			<39:38>		MBZ,RAZ	0		Reserved
+ *	MTE1		<37:28>		RW		0		Match/entry field – for ECNT1
+ *	RES			<27:26>		MBZ,RAZ	0		Reserved
+ *	MTE0		<25:16>		RW		0		Match/entry field – for ECNT0
+ *	RES			<15:1>		MBZ,RAZ	0		Reserved
+ *	DIS			<0>			RW		0		Disable monitor output signals:
+ *											-----------------------------------
+ *											Value	Description
+ *											-----------------------------------
+ *											0		B_MONITOR outputs in use
+ *													for monitor
+ *											1		B_MONITOR outputs static at
+ *													zero
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	dis		: 1;	/* Disable monitor output signals */
+	u64	res_1	: 15;	/* Reserved at bits 15:1 */
+	u64	mte0	: 10;	/* Match/entry field - for ECNT0 */
+	u64	res_26	: 2;	/* Reserved at bits 27:26 */
+	u64	mte1	: 10;	/* Match/entry field - for ECNT1 */
+	u64	res_38	: 2;	/* Reserved at bits 39:38 */
+	u64	mte2	: 10;	/* Match/entry field - for ECNT2 */
+	u64	res_50	: 2;	/* Reserved at bits 51:50 */
+	u64	mte3	: 10;	/* Match/entry field - for ECNT3 */
+	u64	res_62	: 2;	/* Reserved at bits 63:62 */
+} AXP_21274_CMONCTLB;
+
+/*
+ * Definitions for the values in various fields in the CMONCTLB.
+ */
+#define AXP_DIS_IN_USE				0
+#define AXP_DIS_STATIC				1
+
+/*
+ * HRM 10.2.3.1 Cchip Monitor Counters (CMONCNT01, CMONCNT23 – R0)
+ *
+ * The 21272 has four 23-bit event counters. The event counted by counter n
+ * (ECNTn) is selected by the CMONCTL<SLCTn> field. One of the possible events
+ * selected is the carry-out of the previous counter, which allows both
+ * counters to be used as two 64-bit counters. In this case, the
+ * CMONCTL<STKDISn> bit must be set to ensure that the low-order 32-bit counter
+ * does not stick at all ones.
+ *
+ * Both counters hold their values for four cycles
+ * each time that a read to CMONCNTx is performed, so that a slight inaccuracy
+ * can result if the events being counted continue to occur at the time of
+ * reading.
+ *
+ * The <SLCTn> field may specify the use of the CMONCTL fields <MTEx> and
+ * <MSKy> to further qualify the selection. In this case, a fixed
+ * correspondence occurs between the ECNT field to be updated and the
+ * combination MTE/MSK qualifier field used. Table 10–28 shows this
+ * correspondence.
+ *
+ *	Table 10–28 Correspondence Between ECNT and MTE/MSK
+ *	---------------------------------------------------------------------------
+ *	Field to Increment		MTE Field Used		MSK Field Used
+ *	---------------------------------------------------------------------------
+ *	ECNT3					MTE3				MSK23
+ *	ECNT2					MTE2				MSK23
+ *	ECNT1					MTE1				MSK01
+ *	ECNT0					MTE0				MSK01
+ *	---------------------------------------------------------------------------
+ *
+ * CMONCNT01 Registers – Typhoon Only
+ *
+ * All fields in the CMONCNT01 registers are Read/Write; however, the write
+ * feature is only for diagnostic purposes. Writing a value of all ones to any
+ * field of CMONCNT is not supported due to implementation considerations (the
+ * carry-out is precomputed).
+ *
+ * All fields of CMONCNT are cleared by reset and when CMONCTLA or CMONCTLB is
+ * written. The expected usage is to write CMONCTL, wait for a while, read
+ * CMONCNT, and repeat. Table 10–29 shows the CMONCNT01 registers.
+ *
+ *	Table 10–29 CMONCNT01 Registers
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Values	Description
+ *	---------------------------------------------------------------------------
+ *	ECNT1		<63:32>		RW		0		—		Increments when Event 1 is
+ *													true
+ *	ECNT0		<31:0>		RW		0		—		Increments when Event 0 is
+ *													true
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+		u32	ecnt0;			/* Increments when Event 0 is true */
+		u32	ecnt1;			/* Increments when Event 1 is true */
+} AXP_21274_CMONCNT01;
+
+/*
+ * CMONCNT23 Registers – Typhoon Only
+ *
+ * The operation of CMONCNT23 is the same as that for CMONCNT01. Table 10–30
+ * shows the CMONCNT23 registers.
+ *
+ *	Table 10–30 CMONCNT23 Registers
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Values	Description
+ *	---------------------------------------------------------------------------
+ *	ECNT3		<63:32>		RW		0		—		Increments when Event 3 is
+ *													true
+ *	ECNT2		<31:0>		RW		0		—		Increments when Event 2 is
+ *													true
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+		u32	ecnt2;			/* Increments when Event 0 is true */
+		u32	ecnt3;			/* Increments when Event 1 is true */
+} AXP_21274_CMONCNT01;
+
+/****************************************************************************
+ *							HRM 10.2.3 Dchip CSRs							*
+ ****************************************************************************/
+
+/*
+ * HRM 10.2.4.1 Dchip System Configuration Register (DSC – RO)
+ *
+ *	Table 10–31 Dchip System Configuration Register (DSC)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:8>		Special	0		—
+ *							(1)
+ *	RES			<7>			RAZ 	0 		Reserved
+ *	P1P			<6>			RO 		—(2)	Pchip 1 present
+ *	C3CFP		<5>			RO 		—(2)	CPU3 clock forward preset (see
+ *											Chapter 11)
+ *	C2CFP		<4>			RO 		—(2)	CPU2 clock forward preset (see
+ *											Chapter 11)
+ *	C1CFP		<3>			RO 		—(2)	CPU1 clock forward preset (see
+ *											Chapter 11)
+ *	C0CFP		<2>			RO 		—(2)	CPU0 clock forward preset (see
+ *											Chapter 11)
+ *	BC			<1:0>		RO 		—(2)	Base configuration
+ *											-----------------------------------
+ *											Value	Configuration
+ *											-----------------------------------
+ *											0		2 Dchips, 1 memory bus
+ *											1		4 Dchips, 1 memory bus
+ *											2		4 Dchips, 2 memory buses
+ *											3		8 Dchips, 2 memory buses
+ *	---------------------------------------------------------------------------
+ *	(1)	This is an 8-bit register that mirrors some information in CSC. It is
+ *		special, however, in that it is byte-sliced across eight Dchips.
+ *		Therefore, it is read as a quadword with the same value repeated in all
+ *		eight bytes.
+ *	(2)	This register powers up to the value present on bits <6:0> of the CPM
+ *		command from the Cchip.
+ */
+typedef struct
+{
+	union
+	{
+		struct
+		{
+			u8	bc		: 2;	/* Base configuration */
+			u8	c0cfp	: 1;	/* CPU0 clock forward preset */
+			u8	c1cfp	: 1;	/* CPU1 clock forward preset */
+			u8	c2cfp	: 1;	/* CPU2 clock forward preset */
+			u8	c3cfp	: 1;	/* CPU3 clock forward preset */
+			u8	p1p		: 1;	/* Pchip 1 present */
+			u8	res_7	: 1;	/* Reserved at bit 7 */
+		};
+		u8	dchip0;
+	};
+	u8	dchip1;
+	u8	dchip2;
+	u8	dchip3;
+	u8	dchip4;
+	u8	dchip5;
+	u8	dchip6;
+	u8	dchip7;
+} AXP_21274_DSC;
+
+/*
+ * HRM 10.2.4.2 Dchip System Configuration Register 2 (DSC2 – R0)
+ *
+ * These registers are for future use, for a Dchip that implements wide PADbus
+ * support.  Table 10–32 describes the Dchip system configuration register 2.
+ *
+ *	Table 10–32 Dchip System Configuration Register 2 (DSC2)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:5>		RO		0		Reserved
+ *	RES			<4:2>		RO		—(1)	Reserved
+ *	P1W			<1>			RO		—(1)	Reserved
+ *											0 = Wide PADbus1 (Typhoon only)
+ *	P0W			<0>			RO		—(1)	Reserved
+ *											0 = Wide PADbus0 (Typhoon only)
+ *	---------------------------------------------------------------------------
+ *	(1)	This register powers up to the value present on bits <4:0> of the
+ *		PADCMD bus from the Cchip.
+ */
+typedef struct
+{
+		u64	p0w		: 1;	/* Reserved */
+		u64	p1w		: 1;	/* Reserved */
+		u64	res_2	: 3;	/* Reserved at bits 4:2 */
+		u64	res_5	: 59;	/* Reserved at bits 63:5 */
+} AXP_21274_DSC2;
+
+/*
+ * HRM 10.2.4.3 System Timing Register (STR – RW)
+ *
+ * When the system timing register is written, all Dchips, as well as the
+ * corresponding fields in the CSC register, are updated at the same time. The
+ * corresponding fields in the CSC register are read-only, so the only way to
+ * update them is to write this register.
+ *
+ * Note:	Follow the rules listed in Chapter 12 when writing to this CSR.
+ * 			After writing to this register, a delay is required to ensure that
+ * 			subsequent accesses to the 21272 will succeed.
+ *
+ * IDDR, IDDW, and IRD (set in CSC) must be set as follows before accessing
+ * memory:
+ *
+ * - RCD is the RAS-to-CAS delay in the DRAMs (set in CSC).
+ * - CAT is the CAS access time in the DRAMs (set in CSC).
+ * - SED is the SysDC extract delay (set in the CSC).
+ * - b is the burst length (2 for 32-byte memories and 4 for 16-byte memories).
+ * - p is the number of pipeline stages on the control signals between the
+ * 	 Cchip and the SDRAMs (0, 1, or 2).
+ * 	 IDDR = RCD + CAT + p + b – 1
+ * 	 IDDW = MAX (RCD + p – 1, SED + 1, IDDR – 2b + 1)
+ * 	 IRD = IDDW – RCD – p + 1
+ *
+ * If software wishes to set IDDW to a value other than the power-up default,
+ * and knows that memory will not yet be accessed, then the restriction is
+ * relaxed to:
+ *
+ * 		IDDW > SED
+ *
+ * Table 10–33 describes the system timing register (STR).
+ *
+ *	Table 10–33 System Timing Register (STR)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:8>		Special	0 		—(1)
+ *							(1)
+ *	RES			<7:6>		MBZ,RAZ	0		Reserved
+ *	IDDW		<5:4>		RW		2		Issue to data delay for all
+ *											transactions except memory reads
+ *											(see Table 7–5)
+ *											-----------------------------------
+ *											Value	Cycles
+ *											-----------------------------------
+ *											0		3 cycles
+ *											1		4 cycles
+ *											2		5 cycles
+ *											3		6 cycles
+ *											-----------------------------------
+ *	IDDR		<3:1>		RW		4		Issue to data delay for memory
+ *											reads (see Table 7–5)
+ *											-----------------------------------
+ *											Value	Cycles
+ *											-----------------------------------
+ *											0		5 cycles
+ *											1		6 cycles
+ *											2		7 cycles
+ *											3		8 cycles
+ *											4		9 cycles
+ *											5		10 cycles
+ *											6		11 cycles
+ *											7		Reserved
+ *											-----------------------------------
+ *	AW			<0>			RW		0		Array width
+ *											-----------------------------------
+ *											Value	Cycles
+ *											-----------------------------------
+ *											0		16 bytes
+ *											1		32 bytes
+ *	---------------------------------------------------------------------------
+ *	(1)	This is an 8-bit register corresponding to bits CSC<13:8>. It is
+ *		special, however, in that it must be written to up to eight Dchips
+ *		simultaneously. Therefore, it is written as a quadword with the same
+ *		value repeated in all eight bytes. That way, all Dchips are configured
+ *		properly regardless of system configuration.
+ */
+typedef struct
+{
+	union
+	{
+		struct
+		{
+			u8	aw		: 1;	/* Array width */
+			u8	iddr	: 3;	/* Issue to data delay for memory reads */
+			u8	iddw	: 2;	/* issue to data delay for non reads */
+			u8	res_7	: 2;	/* Reserved at bit 7 */
+		};
+		u8	dchip0;
+	};
+	u8	dchip1;
+	u8	dchip2;
+	u8	dchip3;
+	u8	dchip4;
+	u8	dchip5;
+	u8	dchip6;
+	u8	dchip7;
+} AXP_21274_STR;
+
+/*
+ * HRM 10.2.4.4 Dchip Revision Register (DREV – RO)
+ *
+ *	Table 10–34 Dchip Revision Register (DREV)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:60>		RAZ		0		Reserved
+ *	REV7		<59:56>		RO		1		Dchip 7 revision. This field
+ *											indicates the latest revision of
+ *											the Dchip.
+ *	RES			<55:52>		RAZ		0		Reserved
+ *	REV6		<51:48>		RO		1		Dchip 6 revision. This field
+ *											indicates the latest revision of
+ *											the Dchip.
+ *	RES			<47:44>		RAZ		0		Reserved
+ *	REV5		<43:40>		RO		1		Dchip 5 revision. This field
+ *											indicates the latest revision of
+ *											the Dchip.
+ *	RES			<39:36>		RAZ		0		Reserved
+ *	REV4		<35:32>		RO		1		Dchip 4 revision. This field
+ *											indicates the latest revision of
+ *											the Dchip.
+ *	RES			<31:28>		RAZ		0		Reserved
+ *	REV3		<27:24>		RO		1		Dchip 3 revision. This field
+ *											indicates the latest revision of
+ *											the Dchip.
+ *	RES			<23:20>		RAZ		0		Reserved
+ *	REV2		<19:16>		RO		1		Dchip 2 revision. This field
+ *											indicates the latest revision of
+ *											the Dchip.
+ *	RES			<15:12>		RAZ		0		Reserved
+ *	REV1		<11:8>		RO		1		Dchip 1 revision. This field
+ *											indicates the latest revision of
+ *											the Dchip.
+ *	RES			<7:4>		RAZ		0		Reserved
+ *	REV0		<3:0>		RO		1		Dchip 0 revision. This field
+ *											indicates the latest revision of
+ *											the Dchip.
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	rev0	: 4;	/* Dchip 0 revision */
+	u64 res_4	: 4;	/* Reserved at bits 7:4 */
+	u64	rev1	: 4;	/* Dchip 1 revision */
+	u64 res_12	: 4;	/* Reserved at bits 7:4 */
+	u64	rev2	: 4;	/* Dchip 2 revision */
+	u64 res_20	: 4;	/* Reserved at bits 7:4 */
+	u64	rev3	: 4;	/* Dchip 3 revision */
+	u64 res_28	: 4;	/* Reserved at bits 7:4 */
+	u64	rev4	: 4;	/* Dchip 4 revision */
+	u64 res_36	: 4;	/* Reserved at bits 7:4 */
+	u64	rev5	: 4;	/* Dchip 5 revision */
+	u64 res_44	: 4;	/* Reserved at bits 7:4 */
+	u64	rev6	: 4;	/* Dchip 6 revision */
+	u64 res_52	: 4;	/* Reserved at bits 7:4 */
+	u64	rev7	: 4;	/* Dchip 7 revision */
+	u64 res_60	: 4;	/* Reserved at bits 7:4 */
+} AXP_21274_DREV;
+
+/****************************************************************************
+ *							HRM 10.2.5 Pchip CSRs							*
+ ****************************************************************************/
 
 #endif /* _AXP_21274_REGISTERS_H_ */
