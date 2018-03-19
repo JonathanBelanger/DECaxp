@@ -369,6 +369,70 @@ void AXP_Execution_Box(
 			{
 
 				/*
+				 * TODO:	We need to take into account the scoreboard bits.
+				 *
+				 * HRM: 6.5.1 IPR Scoreboard Bits (page 6-8)
+				 *
+				 * In previous Alpha implementations, IPR registers were not
+				 * scoreboarded in hardware.  Software was required to schedule
+				 * HW_MTPR and HW_MFPR instructions for each machine’s pipeline
+				 * organization in order to ensure correct behavior. This
+				 * software scheduling task is more difficult in the 21264
+				 * because the Ibox performs dynamic scheduling. Hence, eight
+				 * extra scoreboard bits are used within the IQ to help
+				 * maintain correct IPR access order. The HW_MTPR and HW_MFPR
+				 * instruction formats contain an 8-bit field that is used as
+				 * an IPR scoreboard bit mask to specify which of the eight IPR
+				 * scoreboard bits are to be applied to the instruction.
+				 *
+				 * If any of the unmasked scoreboard bits are set when an
+				 * instruction is about to enter the IQ, then the instruction,
+				 * and those behind it, are stalled outside the IQ until all
+				 * the unmasked scoreboard bits are clear and the queue does
+				 * not contain any implicit or explicit readers that were
+				 * dependent on those bits when they entered the queue. When
+				 * all the unmasked scoreboard bits are clear, and the queue
+				 * does not contain any of those readers, the instruction
+				 * enters the IQ and the unmasked scoreboard bits are set.
+				 *
+				 * HW_MFPR instructions are stalled in the IQ until all their
+				 * unmasked IPR scoreboard bits are clear.
+				 *
+				 * When scoreboard bits [3:0] and [7:4] are set, their effect
+				 * on other instructions is different, and they are cleared in
+				 * a different manner.  If any of scoreboard bits [3:0] are set
+				 * when a load or store instruction enters the IQ, that load or
+				 * store instruction will not be issued from the IQ until those
+				 * scoreboard bits are clear.
+				 *
+				 * Scoreboard bits [3:0] are cleared when the HW_MTPR
+				 * instructions that set them are issued (or are aborted).
+				 * Bits [7:4] are cleared when the HW_MTPR instructions that
+				 * set them are retired (or are aborted).
+				 *
+				 * Bits [3:0] are used for the DTB_TAG and DTB_PTE register
+				 * pairs within the DTB fill flows. These bits can be used to
+				 * order writes to the DTB for load and store instructions.
+				 * See Sections 5.3.1 and 6.9.1.
+				 *
+				 * Bit [0] is used in both DTB and ITB fill flows to trigger,
+				 * in hardware, a lightweight memory barrier (TB-MB) to be
+				 * inserted between a LD_VPTE and the corresponding
+				 * virtual-mode load instruction that missed in the TB.
+				 *
+				 * NOTE: Because of the out-of-order execution of the IQ and
+				 *		 FQ, this code needs to keep track of the scoreboard
+				 *		 bits as the instruction is considered for execution.
+				 *		 What we don't want to happen is have a load/store
+				 *		 executed before the HW_MTPR DTB_TAG and DTB_PTE that
+				 *		 could change the addresses the load/store utilize.  We
+				 *		 also need to maintain a current scoreboard, that is
+				 *		 will be used by the Ibox to know when to queue up or
+				 *		 not more instructions that may depend on the value of
+				 *		 the IPRs.
+				 */
+
+				/*
 				 * Get the next queued entry, because if an instruction was
 				 * aborted, but not yet dequeued, we are going to have to get
 				 * rid of this entry and not process it.
@@ -422,10 +486,23 @@ void AXP_Execution_Box(
 					break;
 				}
 
+				pthread_mutex_lock(&cpu->iBoxIPRMutex);
+
 				/*
-				 * Go to the next entry.
+				 * HRM 5.2.14 - Ibox Control Register (page 5-18)
+				 *
+				 * If we are in Single Issue Mode, when set, this bit forces
+				 * instructions to issue only from the bottom-most entries of
+				 * the IQ and FQ.  Bottom-most in this implementation is
+				 * pointed to by the forward link of the queue head.  Setting
+				 * the next entry to look at as the queue head will cause this
+				 * while loop to exit.
 				 */
-				entry = next;
+				if (cpu->iCtl.single_issue_h == 1)
+					entry = (AXP_QUEUE_ENTRY *) queue;
+				else
+					entry = next;
+				pthread_mutex_unlock(&cpu->iBoxIPRMutex);
 			}
 
 			/*

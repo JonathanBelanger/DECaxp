@@ -54,9 +54,9 @@
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
 
+#include "../system/AXP_21274_System.h"
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
-#include "AXP_System.h"
 
 /*
  * HRM Tables 5-23 and 5-24
