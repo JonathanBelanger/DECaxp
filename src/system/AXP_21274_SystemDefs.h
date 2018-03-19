@@ -118,4 +118,13 @@ typedef enum
 	HitSharedDirty
 } AXP_21264_PROBE_STAT;
 
+typedef struct
+{
+
+	/*
+	 * Tsunami/Typhoon Chipset Registers
+	 *
+	 */
+} AXP_21274_SYSTEM;
+
 #endif	/* AXP_SYSTEM_INTERFACE_DEFS_ */

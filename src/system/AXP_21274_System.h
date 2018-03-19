@@ -26,9 +26,9 @@
 #ifndef _AXP_SYSTEM_DEFS_
 #define _AXP_SYSTEM_DEFS_	1
 
+#include "AXP_21274_SystemDefs.h"
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
-#include "AXP_System_InterfaceDefs.h"
 
 void AXP_System_CommandSend(
 					AXP_21264_TO_SYS_CMD, bool, int, bool,
