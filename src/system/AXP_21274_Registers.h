@@ -27,6 +27,13 @@
 #ifndef _AXP_21274_REGISTERS_H_
 #define _AXP_21274_REGISTERS_H_
 
+/*
+ * Definitions for bits that are either on or off, but do not mean any thing
+ * else, really.
+ */
+#define AXP_BIT_OFF					0
+#define AXP_BIT_ON					1
+
 /****************************************************************************
  *							HRM 10.2.2 Cchip CSRs							*
  ****************************************************************************/
@@ -1821,5 +1828,691 @@ typedef struct
 /****************************************************************************
  *							HRM 10.2.5 Pchip CSRs							*
  ****************************************************************************/
+
+/*
+ * HRM 10.2.5.1 Window Space Base Address Register (WSBAn – RW)
+ *
+ * Because the information in the WSBAn registers and WSMn registers (Section
+ * 10.2.5.2) is used to compare against the PCI address, a clock-domain
+ * crossing (from i_sysclk to i_pclko<7:0>) is made when these registers are
+ * written. Therefore, for a period of several clock cycles, a window is
+ * disabled when its contents are disabled. If PCI bus activity, which accesses
+ * the window in question, is not stopped before updating that window, the
+ * Pchip might fail to respond with b_devsel_l when it should. This would
+ * result in a master abort condition on the PCI bus. Therefore, before a
+ * window (base or mask) is updated, all PCI activity accessing that window
+ * must be stopped, even if only some activity is being added or deleted.
+ *
+ * The contents of the window may be read back to confirm that the update has
+ * taken place. Then PCI activity through that window can be resumed.
+ *
+ * Table 10–35 describes the window space base address registers WSBA0, 1, and
+ * 2.
+ * Table 10–36 describes WSBA3.
+ *
+ *	Table 10–35 Window Space Base Address Register (WSBA0, 1, 2)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:32>		MBZ,RAZ	0		Reserved
+ *	ADDR		<31:20>		RW		0		Base address
+ *	RES			<19:2>		MBZ,RAZ	0		Reserved
+ *	SG			<1>			RW		0		Scatter-gather
+ *	ENA			<0>			RW		0		Enable
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	ena		: 1;	/* Enable */
+	u64	sg		: 1;	/* Scatter-gather */
+	u64	res_2	: 18;	/* Reserved at bits 19:2 */
+	u64	addr	: 12;	/* Base address */
+	u64	res_32	: 32;	/* Reserved at bits 63:32 */
+} AXP_21274_WSBAn;
+
+/*
+ * Definitions for the values in various fields in the WSBAn and WSBA3.
+ */
+#define AXP_ENA_DISABLE				0
+#define AXP_ENA_ENABLE				1
+#define AXP_SG_DISABLE				0
+#define AXP_SG_ENABLE				1
+
+/*	Table 10–36 Window Space Base Address Register (WSBA3)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:40>		MBZ,RAZ	0		Reserved
+ *	DAC			<39>		RW		0		DAC enable
+ *	RES			<38:32>		MBZ,RAZ	0		Reserved
+ *	ADDR		<31:20>		RW		0		Base address if DAC enable = 0
+ *											Not used if DAC enable = 1
+ *	RES			<19:2>		MBZ,RAZ	0		Reserved
+ *	SG			<1>			RO		1		Scatter-gather always enabled
+ *	ENA			<0>			RW		0		Enable
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	ena		: 1;	/* Enable */
+	u64	sg		: 1;	/* Scatter-gather always enabled */
+	u64	res_2	: 18;	/* Reserved at bits 19:2 */
+	u64	addr	: 12;	/* Base address id DAC enable = 0, not used otherwise */
+	u64	res_32	: 7;	/* Reserved at bits 38:32 */
+	u64	dac		: 1;	/* DAC enable */
+	u64	res_40	: 24;	/* Reserved at bits 63:40 */
+} AXP_21274_WSBA3;
+
+/*
+ * Definitions for the values in various fields in the WSBA3.
+ */
+#define AXP_DAC_DISABLE				0
+#define AXP_DAC_ENABLE				1
+
+/*
+ * HRM 10.2.5.2 Window Space Mask Register (WSM0, WSM1, WSM2, WSM3 – RW)
+ *
+ * Table 10–37 describes the window space mask registers. Refer to the WSBAn
+ * register description (Section 10.2.5.1) for a brief description of the
+ * window space mask register.
+ *
+ *	Table 10–37 Window Space Mask Register (WSMn)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:32>		MBZ,RAZ	0		Reserved
+ *	AM			<31:20>		RW		0		Address mask
+ *	RES			<19:0>		MBZ,RAZ	0		Reserved
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	res_0	: 20;	/* Reserved at bits 19:0 */
+	u64	am		: 12;	/* Address mask */
+	u64 res_32	: 32;	/* Reserved at bits 63-32 */
+} AXP_21274_WSMn;
+
+/*
+ * HRM 10.2.5.3 Translated Base Address Register (TBAn – RW)
+ *
+ * Table 10–38 describes the translated base address registers TBA0, 1, and 2.
+ * Table 10–39 describes TBA3.
+ *
+ *	Table 10–38 Translated Base Address Registers (TBA0, 1, and 2)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:35>		MBZ,RAZ	0		Reserved
+ *	ADDR		<34:10>		RW		0		Translated address base
+ *	RES			<9:0>		MBZ,RAZ	0		Reserved
+ *	---------------------------------------------------------------------------
+ *
+ * 	Table 10–39 Translated Base Address Registers (TBA3)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:35>		MBZ,RAZ	0		Reserved
+ *	ADDR		<34:10>		RW		0		If DAC enable = 1, bits <34:22> are
+ *											the Page Table Origin address
+ *											<34:22> and bits <21:10> are
+ *											ignored.
+ *											If DAC enable = 0, this is the
+ *											translated address base.
+ *	RES			<9:0>		MBZ,RAZ	0		Reserved
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	res_0	: 10;	/* Reserved at bits 9:0 */
+	u64	addr	: 25;	/* See above TBAn and TBA3 descriptions */
+	u64	res_35	: 29;	/* Reserved at bits 63:35 */
+} AXP_21274_TBAn;
+
+/*
+ * HRM 10.2.5.4 Pchip Control Register (PCTL – RW)
+ *
+ *	Table 10–40 Pchip Control Register (PCTL)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:48>		MBZ,RAZ	0		Reserved.
+ *	PID			<47:46>		RO 		—(1)	Pchip ID.
+ *	RPP			<45>		RO 		—(2)	Remote Pchip present.
+ *	PTEVRFY		<44>		RW 		—		PTE verify for DMA read.
+ *											-----------------------------------
+ *											Value	Description
+ *											-----------------------------------
+ *											0		If TLB miss, then make DMA
+ *													read request as soon as
+ *													possible and discard data
+ *													if PTE was not valid –
+ *													could cause Cchip
+ *													nonexistent memory error.
+ *											1		If TLB miss, then delay
+ *													read request until PTE is
+ *													verified as valid – no
+ *													request if not valid.
+ *	FDWDIS		<43>		RW		—		Fast DMA read cache block wrap
+ *											request disable.
+ *											-----------------------------------
+ *											Value	Description
+ *											-----------------------------------
+ *											0		Normal operation
+ *											1		Reserved for testing
+ *													purposes only
+ *	FDSDIS		<42>		RW		—		Fast DMA start and SGTE request
+ *											disable.
+ *											-----------------------------------
+ *											Value	Description
+ *											-----------------------------------
+ *											0		Normal operation
+ *											1		Reserved for testing
+ *													purposes only
+ *	PCLKX		<41:40>		RO		—(3)	PCI clock frequency multiplier
+ *											-----------------------------------
+ *											Value	Multiplier
+ *											-----------------------------------
+ *											0		x6
+ *											1		x4
+ *											2		x5
+ *											3		Reserved
+ *	PTPMAX		<39:36>		RW		2		Maximum PTP requests to Cchip from
+ *											both Pchips until returned on
+ *											CAPbus, modulo 16 (minimum = 2)
+ *											(use 4 for pass 1 Cchip and Dchip).
+ *	CRQMAX		<35:32>		RW		1		Maximum requests to Cchip from both
+ *											Pchips until Ack, modulo 16 (use 4
+ *											for Cchip).
+ *											(Use 3 or less for Typhoon because
+ *											there is one less skid buffer in
+ *											the C4 chip.)
+ *	REV			<31:24>		RO		0		In conjunction with the state of
+ *											PMONCTL<0>, this field indicates
+ *											the revision of the Pchip (see
+ *											Section 8.10).
+ *	CDQMAX		<23:20>		RW		1		Maximum data transfers to Dchips
+ *											from both Pchips until Ack, modulo
+ *											16 (use 4 for Dchip). Must be same
+ *											as Cchip CSR CSC<FPQPMAX>.
+ *	PADM		<19>		RW		—(4)	PADbus mode.
+ *											-----------------------------------
+ *											Value	Mode
+ *											-----------------------------------
+ *											0		8-nibble, 8-check bit mode
+ *											1		4-byte, 4-check bit mode
+ *	ECCEN		<18>		RW		0		ECC enable for DMA and SGTE
+ *											accesses.
+ *	RES			<17:16>		MBZ,RAZ	0		Reserved.
+ *	PPRI		<15>		—		0		Arbiter priority group for the
+ *											Pchip.
+ *	PRIGRP		<14:8>		RW		0		Arbiter priority group; one bit per
+ *											PCI slot with bits <14:8>
+ *											corresponding to input
+ *											b_req_l<6:0>.
+ *											-----------------------------------
+ *											Value	Group
+ *											-----------------------------------
+ *											0		Low-priority group
+ *											1		High-priority group
+ *	ARBENA		<7>			RW		0		Internal arbiter enable.
+ *	MWIN		<6>			RW		0		Monster window enable.
+ *	HOLE		<5>			RW		0		512KB-to-1MB window hole enable.
+ *	TGTLAT		<4>			RW		0		Target latency timers enable.
+ *											-----------------------------------
+ *											Value	Mode
+ *											-----------------------------------
+ *											0		Retry/disconnect after 128
+ *													PCI clocks without data.
+ *											1		Retry initial request after
+ *													32 PCI clocks without data;
+ *													disconnect subsequent
+ *													transfers after 8 PCI
+ *													clocks without data.
+ *	CHAINDIS	<3>			RW		0		Disable chaining.
+ *	THDIS		<2>			RW		0		Disable antithrash mechanism for
+ *											TLB.
+ *											-----------------------------------
+ *											Value	Mode
+ *											-----------------------------------
+ *											0		Normal operation
+ *											1		Testing purposes only
+ *	FBTB		<1>			RW		0		Fast back-to-back enable.
+ *	FDSC		<0>			RW		0		Fast discard enable.
+ *											-----------------------------------
+ *											Value	Mode
+ *											-----------------------------------
+ *											0		Discard data if no retry
+ *													after 215 PCI clocks.
+ *											1	Discard data if no retry after
+ *												210 PCI clocks.
+ *	---------------------------------------------------------------------------
+ *	(1)	This field is initialized from the PID pins.
+ *	(2)	This field is initialized from the assertion of CREQRMT_L pin at system
+ *		reset.
+ *	(3)	This field is initialized from the PCI i_pclkdiv<1:0> pins.
+ *	(4)	This field is initialized from a decode of the b_cap<1:0> pins.
+ */
+typedef struct
+{
+	u64	fdsc	: 1;	/* Fast discard enable */
+	u64	fbtb	: 1;	/* Fast back-to-back enable */
+	u64	thdis	: 1;	/* Disable antithrash mechanism for TLB */
+	u64	chaindis : 1;	/* Disable chaining */
+	u64 tgtlat	: 1;	/* Target latency timers enable */
+	u64	hole	: 1;	/* 512KB-to-1MB window hole enable */
+	u64	mwin	: 1;	/* Monster window enable */
+	u64	arbena	: 1;	/* Internal arbiter enable */
+	u64	prigrp	: 7;	/* Arbiter priority group */
+	u64	ppri	: 1;	/* Arbiter priority group for the Pchip */
+	u64	res_16	: 2;	/* Reserved at bits 17:16 */
+	u64	eccen	: 1;	/* ECC ebavle for DMA and SGTE accesses */
+	u64	padm	: 1;	/* PADbus mode */
+	u64	cdqmax	: 4;	/* Maximum data transfers to Dchips from both Pchips */
+	u64	rev		: 8;	/* Revision of the Pchip (see Section 8.10) */
+	u64	crqmax	: 4;	/* Maximum requests to Cchip from both Pchips */
+	u64	ptpmax	: 4;	/* Maximum PTP requests to Cchip from both Pchips */
+	u64	pclkx	: 2;	/* PCI clock frequency multiplier */
+	u64	fdsdis	: 1;	/* Fast DMA start and SGTE request disable */
+	u64	fdedis	: 1;	/* Fast DMA read cache block wrap request disable */
+	u64	ptevrfy	: 1;	/* PTE verify for DMA read */
+	u64	rpp		: 1;	/* Remote Pchip present */
+	u64	pid		: 2;	/* Pchip ID */
+	u64	res_48	: 16;	/* Reserved at bits 63:48 */
+} AXP_21274_PCTL;
+
+/*
+ * Definitions for the values in various fields in the PCTL.
+ */
+#define AXP_RPP_NOT_PRESENT			0
+#define AXP_RPP_PRESENT				1
+#define AXP_PTEVRFY_DISABLE			0
+#define AXP_PTEVRFY_ENABLE			1
+#define AXP_FDWDIS_NORMAL			0
+#define AXP_FDWDIS_TEST				1
+#define AXP_FDSDIS_NORMAL			0
+#define AXP_FDSDIS_TEST				1
+#define AXP_PCLKX_6_TIMES			0
+#define AXP_PCLKX_4_TIMES			1
+#define AXP_PCLKX_5_TIMES			2
+#define AXP_PADM_8_8				0
+#define AXP_PADM_4_4				1
+#define AXP_ECCEN_DISABLE			0
+#define AXP_ECCEN_ENABLE			1
+#define AXP_PPRI_LOW				0
+#define AXP_PPRI_HIGH				1
+#define AXP_PRIGRP_PICx_LOW			0x00	/* x000 0000 */
+#define AXP_PRIGRP_PCI0_HIGH		0x01	/* x000 0001 */
+#define AXP_PRIGRP_PCI1_HIGH		0x02	/* x000 0010 */
+#define AXP_PRIGRP_PCI2_HIGH		0x04	/* x000 0100 */
+#define AXP_PRIGRP_PCI3_HIGH		0x08	/* x000 1000 */
+#define AXP_PRIGRP_PCI4_HIGH		0x10	/* x001 0000 */
+#define AXP_PRIGRP_PCI5_HIGH		0x20	/* x010 0000 */
+#define AXP_PRIGRP_PCI6_HIGH		0x40	/* x100 0000 */
+#define AXP_ARBENA_DISABLE			0
+#define AXP_ARBENA_ENABLE			1
+#define AXP_MWIN_DISABLE			0
+#define AXP_MWIN_ENABLE				1
+#define AXP_HOLE_DISABLE			0
+#define AXP_HOLE_ENABLE				1
+#define AXP_TGTLAT_DISABLE			0
+#define AXP_TGTLAT_ENABLE			1
+#define AXP_CHAINDIS_DISABLE		0
+#define AXP_CHAINDIS_ENABLE			1
+#define AXP_THDIS_NORMAL			0
+#define AXP_THDIS_TEST				1
+#define AXP_FBTB_DISABLE			0
+#define AXP_FBTB_ENABLE				1
+#define AXP_FDSC_DISABLE			0
+#define AXP_FDSC_ENABLE				1
+
+/*
+ * HRM 10.2.5.5 Pchip Master Latency Register (PLAT – RW)
+ *
+ * Table 10–41 describes the Pchip master latency register (PLAT).
+ *
+ *	Table 10–41 Pchip Master Latency Register (PLAT)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:16>		MBZ,RAZ	0		Reserved
+ *	LAT			<15:8>		RW		0		Master latency timer
+ *	RES			<7:0>		MBZ,RAZ	0		Reserved
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u8	res_0;			/* Reserved at bits 7:0 */
+	u8	rw;				/* Master latency timer */
+	u16	res_16;			/* Reserved at bits 31-16 */
+	u32	res_32;			/* Reserved at bits 63-32 */
+} AXP_21274_PLAT;
+
+/*
+ * HRM 10.2.5.6 Pchip Error Register (PERROR – RW)
+ *
+ * If any of bits <11:0> are set, then this entire register is frozen and the
+ * Pchip output signal b_error is asserted. Only bit <0> can be set after that.
+ * All other values will be held until all of bits <11:0> are clear. When an
+ * error is detected and one of bits <11:0> becomes set, the associated
+ * information is captured in bits <63:16> of this register. After the
+ * information is captured, the INV bit is cleared, but the information is not
+ * valid and should not be used if INV is set.
+ *
+ * In rare circumstances involving more than one error, INV may remain set
+ * because the Pchip cannot correctly capture the SYN, CMD, or ADDR field.
+ *
+ * Furthermore, if software reads PERROR in a polling loop, or reads PERROR
+ * before the Pchip’s error signal is reflected in the Cchip’s DRIR CSR, the
+ * INV bit may also be set.  To avoid the latter condition, read PERROR only
+ * after receiving an IRQ0 interrupt, then read the Cchip DIR CSR to determine
+ * that this Pchip has detected an error.
+ *
+ * Table 10–42 describes the Pchip error register (PERROR).
+ *
+ *	Table 10–42 Pchip Error Register (PERROR)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	SYN			<63:56>		RO		0		ECC syndrome of error if CRE or
+ *											UECC.
+ *	CMD			<55:52>		RO		0		PCI command of transaction when
+ *											error detected if not CRE and not
+ *											UECC.
+ *											If CRE or UECC, then:
+ *											-----------------------------------
+ *											Value	Command
+ *											-----------------------------------
+ *											0000	DMA read
+ *											0001	DMA RMW
+ *											0011	SGTE read
+ *											Others	Reserved
+ *											-----------------------------------
+ *	INV			<51>		RO Rev1	0		Info Not Valid – only meaningful
+ *							RAZ Rev0		when one of bits <11:0> is set.
+ *						   					Indicates validity of <SYN>, <CMD>,
+ *											and <ADDR> fields.
+ *											-----------------------------------
+ *											Value	Mode
+ *											-----------------------------------
+ *											0		Info fields are valid.
+ *											1		Info fields are not valid.
+ *											-----------------------------------
+ *	ADDR		<50:16>		RO		0		If CRE or UECC, then ADDR<50:19> =
+ *											system address <34:3> of erroneous
+ *											quadword and ADDR<18:16> = 0.
+ *											If not CRE and not UECC, then
+ *											ADDR<50:48> = 0;
+ *											ADDR<47:18> = starting PCI address
+ *											<31:2> of transaction when error
+ *											was detected;
+ *											ADDR<17:16> = 00 --> not a DAC
+ *											operation;
+ *											ADDR<17:16> = 01 --> via DAC SG
+ *											Window 3;
+ *											ADDR<17> = 1 --> via Monster Window
+ *	RES			<15:12>		MBZ,RAZ	0		Reserved.
+ *	CRE			<11>		R,W1C	0		Correctable ECC error.
+ *	UECC		<10>		R,W1C	0		Uncorrectable ECC error.
+ *	RES			<9>			MBZ,RAZ	0		Reserved.
+ *	NDS			<8>			R,W1C	0		No b_devsel_l as PCI master.
+ *	RDPE		<7>			R,W1C	0		PCI read data parity error as PCI
+ *											master.
+ *	TA			<6>			R,W1C	0		Target abort as PCI master.
+ *	APE			<5>			R,W1C	0		Address parity error detected as
+ *											potential PCI target.
+ *	SGE			<4>			R,W1C	0		Scatter-gather had invalid page
+ *											table entry.
+ *	DCRTO		<3>			R,W1C	0		Delayed completion retry timeout as
+ *											PCI target.
+ *	PERR		<2>			R,W1C	0		b_perr_l sampled asserted.
+ *	SERR		<1>			R,W1C	0		b_serr_l sampled asserted.
+ *	LOST		<0>			R,W1C	0		Lost an error because it was
+ *											detected after this register was
+ *											frozen, or while in the process of
+ *											clearing this register.
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	lost	: 1;	/* Lost and error */
+	u64	serr	: 1;	/* b_serr_1 sampled asserted */
+	u64	perr	: 1;	/* b_perr_1 sampled asserted */
+	u64	dcrto	: 1;	/* Delayed completion retry timeout as PCI target */
+	u64	sge		: 1;	/* Scatter-gather had invalid page table entry */
+	u64	ape		: 1;	/* Address parity error detected as potential PCI target */
+	u64	ta		: 1;	/* Target abort as PCI master */
+	u64	rdpe	: 1;	/* PCI read data parity error as PCI master */
+	u64	nds		: 1;	/* No b-devsel_1 as PCI master */
+	u64	res		: 1;	/* Reserved at bit 9 */
+	u64	uecc	: 1;	/* Uncorrectable ECC error */
+	u64	cre		: 1;	/* Correctable ECC error */
+	u64	res_12	: 4;	/* Reserved at bits 15:12 */
+	u64	addr	: 35;	/* CRE or UECC address */
+	u64	inv		: 1;	/* Info Not Valid */
+	u64 cmd		: 4;	/* PCI command of trasnaction when error detected */
+	u64	syn		: 8;	/* ECC syndrome of error if CRE or UECC */
+} AXP_21274_PERROR;
+
+/*
+ * Definitions for the values in various fields in the PERROR.
+ */
+#define AXP_CMD_DMA_READ			0	/* 0000 */
+#define AXP_CMD_DMA_RMW				1	/* 0001 */
+#define AXP_CMD_SGTE_READ			3	/* 0011	*/
+#define AXP_INFO_VALID				0
+#define AXP_INFO_NOT_VALID			1
+
+/*
+ * HRM 10.2.5.7 Pchip Error Mask Register (PERRMASK – RW)
+ *
+ * If any of the MASK bits have the value 0, they prevent the setting of the
+ * corresponding bit in the PERROR register, regardless of the detection of
+ * errors or writing to PERRSET.  The default is for all errors to be disabled.
+ *
+ * Beside masking the reporting of errors in PERROR, certain bits of PERRMASK
+ * have the following additional effects:
+ * 	- If PERROR<RDPE> = 0, the Pchip ignores read data parity as the PCI master.
+ * 	- If PERROR<PERR> = 0, the Pchip ignores write data parity as the PCI target.
+ * 	- If PERROR<APE> = 0, the Pchip ignores address parity.
+ *
+ * Table 10–43 describes the Pchip error mask register (PERRMASK).
+ *
+ *	Table 10–43 Pchip Error Mask Register (PERRMASK)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:12>		MBZ,RAZ	0		Reserved
+ *	MASK		<11:0>		RW		0		PERROR register bit enables (see
+ *											the text in this section and in
+ *											Section 10.2.5.6)
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	mask	: 12;	/* PERROR register bit enables */
+	u64	res_12	: 52;	/* Reserved at bits 63:12 */
+} AXP_21274_PERRMASK;
+
+/*
+ * HRM 10.2.5.8 Pchip Error Set Register (PERRSET – WO)
+ *
+ * If any of the SET bits = 1, and the corresponding MASK bits in PERRMASK also
+ * = 1, they cause the setting of the corresponding bits in the PERROR
+ * register, the capture of the INFO into the corresponding bits in the PERROR
+ * register, and the freezing of the PERROR register. Zero (0) values in the
+ * PERRMASK register override one (1) values in the PERRSET register. If the
+ * PERROR register is already frozen when PERRSET is written, only the LOST bit
+ * will be additionally set in PERROR.
+ *
+ * Table 10–44 describes the Pchip error set register (PERRSET).
+ *
+ *	Table 10–44 Pchip Error Set Register (PERRSET)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	INFO		<63:16>		WO		0		PERROR register information (see
+ *											the text in this section)
+ *	RES			<15:12>		MBZ		0		Reserved
+ *	SET			<11:0>		WO		0		PERROR register bit set (see the
+ *											text in this section and in Section
+ *											10.2.5.6)
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	set		: 12;	/* PERROR register bit set */
+	u64	res_12	: 4;	/* Reserved at bits 15:12 */
+	u64	info	: 48;	/* PERROR register information */
+} AXP_21274_PERRSET;
+
+/*
+ * HRM 10.2.5.9 Translation Buffer Invalidate Virtual Register (TLBIV – WO)
+ *
+ * A write to this register invalidates all scatter-gather TLB entries that
+ * correspond to PCI addresses whose bits <31:16> and bit 39 match the value
+ * written in bits <19:4> and 27 respectively. This invalidates up to eight
+ * PTEs at a time, which are the number that can be defined in one 21264 cache
+ * block (64 bytes). Because a single TLB PCI tag covers four entries, at most
+ * two tags are actually invalidated. PTE bits <22:4> correspond to system
+ * address bits <34:16> – where PCI<34:32> must be zeros for scatter-gather
+ * window hits – in generating the resulting system address, providing 8-page
+ * (8KB) granularity.
+ *
+ * Table 10–45 describes the translation buffer invalidate virtual register (TLBIV).
+ *
+ *	Table 10–45 Translation Buffer Invalidate Virtual Register (TLBIV)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:28>		WO,MBZ	0		Reserved
+ *	DAC			<27>		WO		0		Only invalidate if match PCI
+ *											address <39>
+ *	RES			<26:20>		WO,MBZ	0		Reserved
+ *	ADDR		<19:4>		WO		0		Only invalidate if match against
+ *											PCI address <31:16>
+ *	RES			<3:0>		WO,MBZ	0		Reserved
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	res_0	: 4;	/* Reserved at bits 3:0 */
+	u64	addr	: 16;	/* Only invalidate if match against PCI address 31:16 */
+	u64	res_20	: 7;	/* Reserved at bits 26:20 */
+	u64	dac		: 1;	/* Only invalidate if match PCI address bit 39 */
+	u64	res_28	: 36;	/* Reserved at bits 63:28 */
+} AXP_21274_TLBIV;
+
+/*
+ * HRM 10.2.5.11 Pchip Monitor Control Register (PMONCTL – RW)
+ *
+ * This register has two fields — one each for selecting among a set of
+ * internal signals. The set of selectable signals is identical for each field.
+ * SLCT0 selects the signal that is brought to the chip output b_monitor<0>.
+ * SLCT1 selects the signal that is brought to the chip output b_monitor<1>.
+ * The chip monitor outputs are two i_sysclk cycles later than the defined
+ * signal. All of the defined signals are synchronized to the system clock (not
+ * the PCI clock). Also, some of the signals derived from PCI clocked signals
+ * are gated with UREN_D1_R (see Section 8.1.2.3) so that they can be used to
+ * count events that occur in the PCI clock domain, regardless of the PCI clock
+ * frequency. Others are not gated this way, so that durations can be measured
+ * in terms of system clocks.
+ *
+ * In addition, b_monitor<0> is used as the input to the CNT0 field in PMONCNT,
+ * and b_monitor<1> is used as the input to the least significant bit in the
+ * CNT1 field in PMONCNT.
+ *
+ * Writing any value to PMONCTL clears both fields of PMONCNT.
+ *
+ * In normal operation, the two counters in PMONCNT stick at the value of all
+ * 1s (so that overflow can be detected). The two STKDIS control bits can
+ * disable this behavior for either counter, so that the associated counter
+ * wraps back to all 0s and continues counting. This is useful if one counter’s
+ * carry-out is used as the input to the other counter.
+ *
+ * Table 10–47 describes the Pchip monitor control register (PMONCTL).
+ *
+ *	Table 10–47 Pchip Monitor Control (PMONCTL)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	RES			<63:18>		MBZ,RAZ	0		Reserved
+ *	STKDIS1		<17>		RW		0		Sticky count1 disable
+ *											-----------------------------------
+ *											Value	Mode
+ *											-----------------------------------
+ *											0		PMONCNT<CNT1> sticks at all
+ *													1s.
+ *											1		PMONCNT<CNT1> wraps at all
+ *													1s.
+ *											-----------------------------------
+ *	STKDIS0		<16>		RW		0		Sticky count0 disable
+ *											-----------------------------------
+ *											Value	Mode
+ *											-----------------------------------
+ *											0		PMONCNT<CNT0> sticks at all
+ *													1s.
+ *											1		PMONCNT<CNT0> wraps at all
+ *													1s.
+ *											-----------------------------------
+ *	SLCT1		<15:8>		RW		0		Selects chip output b_monitor<1>,
+ *											which is also the input to the
+ *											least significant bit of
+ *											PMONCNT<CNT1>.
+ *	SLCT0		<7:0>		RW		1		Selects chip output b_monitor<0> on
+ *											reset; used to differentiate
+ *											between current and previous
+ *											revisions of the Pchip. Also input
+ *											to the least significant bit of
+ *											PMONCNT<CNT0>.
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+	u64	slct0	: 8;	/* Selects chip output b_monitor<0> on reset */
+	u64	slct1	: 8;	/* Selects chip output b_monitor<1> on reset */
+	u64	stkdis0	: 1;	/* Sticky count0 disable */
+	u64	stkdis1	: 1;	/* Sticky count1 disable */
+	u64	res_18	: 46;	/* Reserved at bits 63:18 */
+} AXP_21274_PMONCTL;
+
+/*
+ * Definitions for the values in various fields in the PMONCTL.
+ */
+#define AXP_STKDIS_STICKS_1S	0
+#define AXP_STKDIS_WRAPS_1S		1
+
+/*
+ * HRM 10.2.5.12 Pchip Monitor Counters (PMONCNT – RO)
+ *
+ * The two fields CNT0 and CNT1 count the system clock cycles during which the
+ * b_monitor<0> and b_monitor<1> signals respectively (selected by
+ * PMONCTL<SLCT0> and PMONCTL<SLCT1>) are asserted.
+ *
+ * Both fields are cleared when any value is written to PMONCTL.
+ *
+ * Each of the counters sticks at the value of all 1s, unless the associated
+ * STKDIS bit is set in PMONCTL.
+ *
+ * The counters both hold their values for four cycles each time that a read to
+ * PMONCNT is performed. A slight inaccuracy can result if the events being
+ * counted continue to occur at the time of the reading.
+ *
+ * Table 10–48 describes the Pchip monitor counters (PMONCNT).
+ *
+ *	Table 10–48 Pchip Monitor Counters (PMONCNT)
+ *	---------------------------------------------------------------------------
+ *	Field		Bits		Type	Init	Description
+ *	---------------------------------------------------------------------------
+ *	CNT1		<63:32>		RO		0		Counts i_sysclk cycles that
+ *											b_monitor<1> is asserted
+ *	CNT0		<31:0>		RO		0		Counts sysclk cycles that
+ *											monitor<0> is asserted
+ *	---------------------------------------------------------------------------
+ */
+typedef struct
+{
+		u32	cnt0;			/* Counts sysclk cycles that monitor<0> is asserted */
+		u32	cnt1;			/* Counts i_sysclk cycles that monitor<0> is asserted */
+} AXP_21274_PMONCNT;
 
 #endif /* _AXP_21274_REGISTERS_H_ */
