@@ -774,7 +774,7 @@ typedef struct
 	u64	res_17	: 7;	/* Reserved at bits 23:17 */
 	u64	addr	: 11;	/* Base address */
 	u64	res_35	: 29;	/* Reserved at bits 63:35 */
-} AXP_21274_ARRx;
+} AXP_21274_AARx;
 
 /*
  * Definitions for the values in various fields in the AARx.
@@ -1570,7 +1570,7 @@ typedef struct
 {
 		u32	ecnt2;			/* Increments when Event 0 is true */
 		u32	ecnt3;			/* Increments when Event 1 is true */
-} AXP_21274_CMONCNT01;
+} AXP_21274_CMONCNT23;
 
 /****************************************************************************
  *							HRM 10.2.3 Dchip CSRs							*
@@ -2514,5 +2514,11 @@ typedef struct
 		u32	cnt0;			/* Counts sysclk cycles that monitor<0> is asserted */
 		u32	cnt1;			/* Counts i_sysclk cycles that monitor<0> is asserted */
 } AXP_21274_PMONCNT;
+
+/*
+ * This register is not completely documented, but referred to in a number of
+ * places in the HRM.  The CSR for this is used as the Soft PCI Reset Register.
+ */
+typedef u64 AXP_21274_SPRST;
 
 #endif /* _AXP_21274_REGISTERS_H_ */
