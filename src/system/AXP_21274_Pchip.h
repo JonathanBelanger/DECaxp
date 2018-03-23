@@ -30,5 +30,6 @@
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
+#include "AXP_21274_Registers.h"
 
 #endif /* _AXP_21274_PCHIP_H_ */

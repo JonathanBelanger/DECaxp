@@ -298,7 +298,7 @@ typedef struct
 #define AXP_FET_2_CYCLE				1
 #define AXP_FET_3_CYCLE				2
 #define AXP_QPM_ROUND_ROBIN			0
-#define AXP_QPM_MODIFIED_RR			0
+#define AXP_QPM_MODIFIED_RR			1
 #define AXP_DRTP_2_CYCLES			0	/* (rev 0 Dchip) */
 #define AXP_DRTP_3_CYCLES			1
 #define AXP_DRTP_4_CYCLES			2
@@ -827,6 +827,7 @@ typedef u64 AXP_21274_DIMn;
 /*
  * Definitions for the values in various fields in the DIMx.
  */
+#define AXP_DIM_INTR_NONE	0x0000000000000000ll
 #define AXP_DIM_INTR_0		0x0000000000000001ll
 #define AXP_DIM_INTR_1		0x0000000000000002ll
 #define AXP_DIM_INTR_2		0x0000000000000004ll
@@ -952,6 +953,7 @@ typedef u64 AXP_21274_DRIR;
 /*
  * Definitions for the values in various fields in the DRIR.
  */
+#define AXP_DRIR_INTR_NONE	0x0000000000000000ll
 #define AXP_DRIR_INTR_0		0x0000000000000001ll
 #define AXP_DRIR_INTR_1		0x0000000000000002ll
 #define AXP_DRIR_INTR_2		0x0000000000000004ll
@@ -2113,7 +2115,7 @@ typedef struct
 	u64	ptpmax	: 4;	/* Maximum PTP requests to Cchip from both Pchips */
 	u64	pclkx	: 2;	/* PCI clock frequency multiplier */
 	u64	fdsdis	: 1;	/* Fast DMA start and SGTE request disable */
-	u64	fdedis	: 1;	/* Fast DMA read cache block wrap request disable */
+	u64	fdwdis	: 1;	/* Fast DMA read cache block wrap request disable */
 	u64	ptevrfy	: 1;	/* PTE verify for DMA read */
 	u64	rpp		: 1;	/* Remote Pchip present */
 	u64	pid		: 2;	/* Pchip ID */
@@ -2182,7 +2184,7 @@ typedef struct
 typedef struct
 {
 	u8	res_0;			/* Reserved at bits 7:0 */
-	u8	rw;				/* Master latency timer */
+	u8	lat;			/* Master latency timer */
 	u16	res_16;			/* Reserved at bits 31-16 */
 	u32	res_32;			/* Reserved at bits 63-32 */
 } AXP_21274_PLAT;

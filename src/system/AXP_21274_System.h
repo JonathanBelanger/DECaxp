@@ -88,7 +88,7 @@ typedef struct
 	AXP_21274_WSBAn		p0Wsba0;	/* Address: 801.8000.0000 */
 	AXP_21274_WSBAn		p0Wsba1;	/* Address: 801.8000.0040 */
 	AXP_21274_WSBAn		p0Wsba2;	/* Address: 801.8000.0080 */
-	AXP_21274_WSBA3		p0Wsba4;	/* Address: 801.8000.00c0 */
+	AXP_21274_WSBA3		p0Wsba3;	/* Address: 801.8000.00c0 */
 	AXP_21274_WSMn		p0Wsm0;		/* Address: 801.8000.0100 */
 	AXP_21274_WSMn		p0Wsm1;		/* Address: 801.8000.0140 */
 	AXP_21274_WSMn		p0Wsm2;		/* Address: 801.8000.0180 */
@@ -110,7 +110,7 @@ typedef struct
 	AXP_21274_WSBAn		p1Wsba0;	/* Address: 803.8000.0000 */
 	AXP_21274_WSBAn		p1Wsba1;	/* Address: 803.8000.0040 */
 	AXP_21274_WSBAn		p1Wsba2;	/* Address: 803.8000.0080 */
-	AXP_21274_WSBA3		p1Wsba4;	/* Address: 803.8000.00c0 */
+	AXP_21274_WSBA3		p1Wsba3;	/* Address: 803.8000.00c0 */
 	AXP_21274_WSMn		p1Wsm0;		/* Address: 803.8000.0100 */
 	AXP_21274_WSMn		p1Wsm1;		/* Address: 803.8000.0140 */
 	AXP_21274_WSMn		p1Wsm2;		/* Address: 803.8000.0180 */

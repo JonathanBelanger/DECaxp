@@ -30,6 +30,7 @@
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
+#include "AXP_21274_Registers.h"
 
 #define AXP_21274_SYSDATA_LEN	sizeof(u64)
 
@@ -115,5 +116,10 @@ typedef struct
 	bool					rqValid;
 	bool					cacheHit;
 } AXP_21274_RQ_ENTRY;
+
+/*
+ * Function prototypes
+ */
+void AXP_21274_CchipInit(AXP_21274_SYSTEM *);
 
 #endif /* _AXP_21274_CCHIP_H_ */

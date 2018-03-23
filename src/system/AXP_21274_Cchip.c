@@ -84,20 +84,20 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	sys->csc.b2d = 0;
 	sys->csc.b1d = 0;
 	sys->csc.fti = 0;
-	sys->csc.eft = 1;
-	sys->csc.qdi = 0;
-	sys->csc.fet = 2;
-	sys->csc.qpm = 0;
+	sys->csc.eft = AXP_EFT_1_CYCLES;
+	sys->csc.qdi = AXP_QDI_DISABLE_DRAINING;
+	sys->csc.fet = AXP_FET_3_CYCLE;
+	sys->csc.qpm = AXP_QPM_ROUND_ROBIN;
 	sys->csc.pme = 0;
 	sys->csc.res_22 = 0;
-	sys->csc.drtp = 3;
-	sys->csc.dwfp = 3;
-	sys->csc.dwtp = 3;
+	sys->csc.drtp = AXP_DRTP_5_CYCLES;
+	sys->csc.dwfp = AXP_DWFP_5_CYCLES;
+	sys->csc.dwtp = AXP_DWTP_5_CYCLES;
 	sys->csc.res_15 = 0;
 	sys->csc.pip = -1;	/* Powers up to the value present on the CAPREQ<1> pin */
-	sys->csc.iddw = 3;
-	sys->csc.iddr = 4;
-	sys->csc.aw = 0;
+	sys->csc.iddw = AXP_IDDW_6_CYCLES;
+	sys->csc.iddr = AXP_IDDR_9_CYCLES;
+	sys->csc.aw = AXP_AW_16_BYTES;
 	sys->csc.fw = -1;	/* Byte 0 powers up to the value present on bits <7:0> of the TIGbus */
 	sys->csc.sfd = -1;	/* Byte 0 powers up to the value present on bits <7:0> of the TIGbus */
 	sys->csc.sed = -1;	/* Byte 0 powers up to the value present on bits <7:0> of the TIGbus */
@@ -116,25 +116,25 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	sys->mtr.ri = 0;
 	sys->mtr.mpd = 0;
 	sys->mtr.res_17 = 0;
-	sys->mtr.rrd = 0;
+	sys->mtr.rrd = AXP_RRD_2_CYCLES;
 	sys->mtr.res_14 = 0;
-	sys->mtr.rpt = 0;
+	sys->mtr.rpt = AXP_RPT_2_CYCLES;
 	sys->mtr.res_10 = 0;
-	sys->mtr.rpw = 0;
+	sys->mtr.rpw = AXP_RPW_4_CYCLES;
 	sys->mtr.res_7 = 0;
-	sys->mtr.ird = 0;
+	sys->mtr.ird = AXP_IRD_0_CYCLES;
 	sys->mtr.res_3 = 0;
-	sys->mtr.cat = 0;
+	sys->mtr.cat = AXP_CAT_2_CYCLES;
 	sys->mtr.res_1 = 0;
-	sys->mtr.rcd = 0;
+	sys->mtr.rcd = AXP_RCD_2_CYCLES;
 
 	/*
 	 * Initialization for MISC (HRM Table 10-12)
 	 */
 	sys->misc.res_44 = 0;
 	sys->misc.devSup = 0;
-	sys->misc.rev = 8;	/* Tsunami (21272) = 1, Typhoon (21274) = 8 */
-	sys->misc.nxs = 0;
+	sys->misc.rev = AXP_REV_TYPHOON;
+	sys->misc.nxs = AXP_NXS_CPU0;
 	sys->misc.nxm = 0;
 	sys->misc.res_25 = 0;
 	sys->misc.acl = 0;
@@ -144,16 +144,16 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	sys->misc.ipintr = 0;
 	sys->misc.itintr = 0;
 	sys->misc.res_2 = 0;
-	sys->misc.cpuID = 0;
+	sys->misc.cpuID = AXP_CPUID_CPU0;
 
 	/*
 	 * Initialization for MPD (HRM Table 10-13)
 	 */
 	sys->mpd.res_4 = 0;
-	sys->mpd.dr = 1;
-	sys->mpd.ckr = 1;
-	sys->mpd.ds = 1;
-	sys->mpd.cks = 1;
+	sys->mpd.dr = AXP_MPD_SET;
+	sys->mpd.ckr = AXP_MPD_SET;
+	sys->mpd.ds = AXP_MPD_SET;
+	sys->mpd.cks = AXP_MPD_SET;
 
 	/*
 	 * Initialization for AAR0, AAR1, AAR2, AAR3 (HRM Table 10-15)
@@ -162,57 +162,57 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	sys->aar0.addr = 0;
 	sys->aar0.res_17 = 0;
 	sys->aar0.dbg = 0;
-	sys->aar0.asiz = 0;
+	sys->aar0.asiz = AXP_ASIZ_DISABLED;
 	sys->aar0.res_10 = 0;
-	sys->aar0.tsa = 0;
-	sys->aar0.sa = 0;
+	sys->aar0.tsa = AXP_TSA_DISABLED;
+	sys->aar0.sa = AXP_SA_DISABLED;
 	sys->aar0.res_4 = 0;
-	sys->aar0.rows = 0;
-	sys->aar0.bnks = 0;
+	sys->aar0.rows = AXP_ROWS_11_BITS;
+	sys->aar0.bnks = AXP_BNKS_1_BITS;
 
 	sys->aar1.res_35 = 0;
 	sys->aar1.addr = 0;
 	sys->aar1.res_17 = 0;
 	sys->aar1.dbg = 0;
-	sys->aar1.asiz = 0;
+	sys->aar1.asiz = AXP_ASIZ_DISABLED;
 	sys->aar1.res_10 = 0;
-	sys->aar1.tsa = 0;
-	sys->aar1.sa = 0;
+	sys->aar1.tsa = AXP_TSA_DISABLED;
+	sys->aar1.sa = AXP_SA_DISABLED;
 	sys->aar1.res_4 = 0;
-	sys->aar1.rows = 0;
-	sys->aar1.bnks = 0;
+	sys->aar1.rows = AXP_ROWS_11_BITS;
+	sys->aar1.bnks = AXP_BNKS_1_BITS;
 
 	sys->aar2.res_35 = 0;
 	sys->aar2.addr = 0;
 	sys->aar2.res_17 = 0;
 	sys->aar2.dbg = 0;
-	sys->aar2.asiz = 0;
+	sys->aar2.asiz = AXP_ASIZ_DISABLED;
 	sys->aar2.res_10 = 0;
-	sys->aar2.tsa = 0;
-	sys->aar2.sa = 0;
+	sys->aar2.tsa = AXP_TSA_DISABLED;
+	sys->aar2.sa = AXP_SA_DISABLED;
 	sys->aar2.res_4 = 0;
-	sys->aar2.rows = 0;
-	sys->aar2.bnks = 0;
+	sys->aar2.rows = AXP_ROWS_11_BITS;
+	sys->aar2.bnks = AXP_BNKS_1_BITS;
 
 	sys->aar3.res_35 = 0;
 	sys->aar3.addr = 0;
 	sys->aar3.res_17 = 0;
 	sys->aar3.dbg = 0;
-	sys->aar3.asiz = 0;
+	sys->aar3.asiz = AXP_ASIZ_DISABLED;
 	sys->aar3.res_10 = 0;
-	sys->aar3.tsa = 0;
-	sys->aar3.sa = 0;
+	sys->aar3.tsa = AXP_TSA_DISABLED;
+	sys->aar3.sa = AXP_SA_DISABLED;
 	sys->aar3.res_4 = 0;
-	sys->aar3.rows = 0;
-	sys->aar3.bnks = 0;
+	sys->aar3.rows = AXP_ROWS_11_BITS;
+	sys->aar3.bnks = AXP_BNKS_1_BITS;
 
 	/*
 	 * Initialization for DIM0, DIM1, DIM2, DIM3 (HRM Table 10-16)
 	 */
-	sys->dim0 = 0;
-	sys->dim1 = 0;
-	sys->dim2 = 0;
-	sys->dim3 = 0;
+	sys->dim0 = AXP_DIM_INTR_NONE;
+	sys->dim1 = AXP_DIM_INTR_NONE;
+	sys->dim2 = AXP_DIM_INTR_NONE;
+	sys->dim3 = AXP_DIM_INTR_NONE;
 
 	/*
 	 * Initialization for DIR0, DIR1, DIR2, DIR3 (HRM Table 10-17)
@@ -236,31 +236,31 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	/*
 	 * Initialization for DRIR (HRM Table 10-18)
 	 */
-	sys->drir = 0;
+	sys->drir = AXP_DRIR_INTR_NONE;
 
 	/*
 	 * Initialization for PRBEN (HRM Table 10-19)
 	 */
 	sys->prbEn.res_2 = 0;
-	sys->prbEn.prben = 0;
+	sys->prbEn.prben = AXP_PRBEN_DISABLED;
 
 	/*
 	 * Initialization for IIC0, IIC1, IIC2, IIC3 (HRM Table 10-20)
 	 */
 	sys->iic0.res_25 = 0;
-	sys->iic0.of = 0;
+	sys->iic0.of = AXP_OF_POSITIVE;
 	sys->iic0.iCnt = 0;
 
 	sys->iic1.res_25 = 0;
-	sys->iic1.of = 0;
+	sys->iic1.of = AXP_OF_POSITIVE;
 	sys->iic1.iCnt = 0;
 
 	sys->iic2.res_25 = 0;
-	sys->iic2.of = 0;
+	sys->iic2.of = AXP_OF_POSITIVE;
 	sys->iic2.iCnt = 0;
 
 	sys->iic3.res_25 = 0;
-	sys->iic3.of = 0;
+	sys->iic3.of = AXP_OF_POSITIVE;
 	sys->iic3.iCnt = 0;
 
 	/*
@@ -284,12 +284,113 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	sys->ttr.res_15 = 0;
 	sys->ttr.id = 7;
 	sys->ttr.res_10 = 0;
-	sys->ttr.irt = 3;
+	sys->ttr.irt = AXP_IRT_4_CYCLE;
 	sys->ttr.res_6 = 0;
-	sys->ttr.is = 3;
+	sys->ttr.is = AXP_IS_4_CYCLE;
 	sys->ttr.res_2 = 0;
-	sys->ttr.ah = 0;
-	sys->ttr.as = 0;
+	sys->ttr.ah = AXP_AH_1_CYCLE;
+	sys->ttr.as = AXP_AS_1_CYCLE;
+
+	/*
+	 * Initialization for TDR (HRM Table 10-24)
+	 */
+	sys->tdr.wh3 = 0;
+	sys->tdr.wp3 = 0;
+	sys->tdr.res_58 = 0;
+	sys->tdr.ws3 = 0;
+	sys->tdr.res_55 = 0;
+	sys->tdr.ra3 = 0;
+
+	sys->tdr.wh2 = 0;
+	sys->tdr.wp2 = 0;
+	sys->tdr.res_42 = 0;
+	sys->tdr.ws2 = 0;
+	sys->tdr.res_39 = 0;
+	sys->tdr.ra2 = 0;
+
+	sys->tdr.wh1 = 0;
+	sys->tdr.wp1 = 0;
+	sys->tdr.res_26 = 0;
+	sys->tdr.ws1 = 0;
+	sys->tdr.res_23 = 0;
+	sys->tdr.ra1 = 0;
+
+	sys->tdr.wh0 = 0;
+	sys->tdr.wp0 = 0;
+	sys->tdr.res_10 = 0;
+	sys->tdr.ws0 = 0;
+	sys->tdr.res_7 = 0;
+	sys->tdr.ra0 = 0;
+
+	/*
+	 * Initialization for PWR (HRM Table 10-25)
+	 */
+	sys->pwr.res_1 = 0;
+	sys->pwr.sr = AXP_SR_NORMAL;
+
+	/*
+	 * Initialization for CMONCTLA (HRM Table 10-26)
+	 */
+	sys->cmonctla.res_62 = 0;
+	sys->cmonctla.msk23 = 0;
+	sys->cmonctla.res_50 = 0;
+	sys->cmonctla.msk01 = 0;
+	sys->cmonctla.stkdis3 = AXP_STKDIS_ALL_ONES;
+	sys->cmonctla.stkdis2 = AXP_STKDIS_ALL_ONES;
+	sys->cmonctla.stkdis1 = AXP_STKDIS_ALL_ONES;
+	sys->cmonctla.stkdis0 = AXP_STKDIS_ALL_ONES;
+	sys->cmonctla.res_34 = 0;
+	sys->cmonctla.slctmbl = AXP_SLCTMBL_MGROUP0;
+	sys->cmonctla.slct3 = 0;
+	sys->cmonctla.slct2 = 0;
+	sys->cmonctla.slct1 = 0;
+	sys->cmonctla.slct0 = 0;
+
+	/*
+	 * Initialization for CMONCTLB (HRM Table 10-27)
+	 */
+	sys->cmonctlb.res_62 = 0;
+	sys->cmonctlb.mte3 = 0;
+	sys->cmonctlb.res_50 = 0;
+	sys->cmonctlb.mte2 = 0;
+	sys->cmonctlb.res_38 = 0;
+	sys->cmonctlb.mte1 = 0;
+	sys->cmonctlb.res_26 = 0;
+	sys->cmonctlb.mte0 = 0;
+	sys->cmonctlb.res_1 = 0;
+	sys->cmonctlb.dis = AXP_DIS_IN_USE;
+
+	/*
+	 * Initialization for CMONCNT01 (HRM Table 10-29)
+	 *
+	 *	Table 10–28 Correspondence Between ECNT and MTE/MSK
+	 *	-----------------------------------------------------------------------
+	 *	Field to Increment		MTE Field Used		MSK Field Used
+	 *	-----------------------------------------------------------------------
+	 *	ECNT3					MTE3				MSK23
+	 *	ECNT2					MTE2				MSK23
+	 *	ECNT1					MTE1				MSK01
+	 *	ECNT0					MTE0				MSK01
+	 *	-----------------------------------------------------------------------
+	 */
+	sys->cmoncnt01.ecnt1 = 0;
+	sys->cmoncnt01.ecnt0 = 0;
+
+	/*
+	 * Initialization for CMONCNT23 (HRM Table 10-30)
+	 *
+	 *	Table 10–28 Correspondence Between ECNT and MTE/MSK
+	 *	-----------------------------------------------------------------------
+	 *	Field to Increment		MTE Field Used		MSK Field Used
+	 *	-----------------------------------------------------------------------
+	 *	ECNT3					MTE3				MSK23
+	 *	ECNT2					MTE2				MSK23
+	 *	ECNT1					MTE1				MSK01
+	 *	ECNT0					MTE0				MSK01
+	 *	-----------------------------------------------------------------------
+	 */
+	sys->cmoncnt23.ecnt3 = 0;
+	sys->cmoncnt23.ecnt2 = 0;
 
 	/*
 	 * Return back to the caller.
