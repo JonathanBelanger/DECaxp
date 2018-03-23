@@ -30,5 +30,8 @@
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
+#include "AXP_21274_Registers.h"
+
+void AXP_21274_DchipInit(AXP_21274_SYSTEM *);
 
 #endif /* _AXP_21274_DCHIP_H_ */
