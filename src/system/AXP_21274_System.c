@@ -27,6 +27,9 @@
 #include "AXP_Utility.h"
 #include "AXP_21264_CPU.h"
 #include "AXP_21264_CboxDefs.h"
+#include "AXP_21274_System.h"
+
+AXP_21274_SYSTEM *sys;
 
 /*
  * AXP_System_CommandSend
@@ -42,8 +45,25 @@ void AXP_System_CommandSend(
 					u8 *sysData,
 					int sysDataLen)
 {
+	AXP_21274_RQ_ENTRY rq = &sys->rq[sys->rqEnd];
 
-	printf("\n%%DECAXP-I-SYSCMD, AXP_System_CommandSend Called.\n");
+	/*
+	 * Copy the values into the next request buffer for the Cchip.
+	 */
+	rq->cmd = sysCmd;
+	rq->miss2 = miss2;
+	rq->entry = entry;
+	rq->rqValid = rqValid;
+	rq->mask = mask;
+	rq->cacheHit = cacheHit;
+	rq->pa = pa;
+	memcpy(rq->sysData, sysData, sysDataLen);
+	rq->sysDataLen = sysDataLen;
+
+	/*
+	 * Set the index to the next location to be filled in by a request.
+	 */
+	sys->rqEnd++;
 	return;
 }
 

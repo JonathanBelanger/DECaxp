@@ -195,19 +195,24 @@ void AXP_21274_PchipInit(AXP_21274_SYSTEM *sys)
 
 	/*
 	 * Initialization for PCTL (HRM Table 10-40), for both Pchip0 and Pchip1.
+	 *
+	 * TODO:	Initialize pid from the PID pins.
+	 * TODO:	Initialize rpp from the CREQRMT_L pin at system reset.
+	 * TODO:	Initialize pclkx from the PCI i_pclkdiv<1:0> pins.
+	 * TODO:	Initialize padm from a decode of the b_cap<1:0> pins.
 	 */
 	sys->p0Pctl.res_48 = 0;
-	sys->p0Pctl.pid = 0;	/* Initialized from the PID pins */
-	sys->p0Pctl.rpp = AXP_RPP_NOT_PRESENT;	/* Initialized from the CREQRMT_L pin at sys reset */
+	sys->p0Pctl.pid = 0;
+	sys->p0Pctl.rpp = AXP_RPP_NOT_PRESENT;
 	sys->p0Pctl.ptevrfy = AXP_PTEVRFY_DISABLE;
 	sys->p0Pctl.fdwdis = AXP_FDWDIS_NORMAL;
 	sys->p0Pctl.fdsdis = AXP_FDSDIS_NORMAL;
-	sys->p0Pctl.pclkx = AXP_PCLKX_6_TIMES; /* Initialized from the PCI i_pclkdiv<1:0> pins */
+	sys->p0Pctl.pclkx = AXP_PCLKX_6_TIMES;
 	sys->p0Pctl.ptpmax = 2;
 	sys->p0Pctl.crqmax = 1;
 	sys->p0Pctl.rev = 0;
 	sys->p0Pctl.cdqmax = 1;
-	sys->p0Pctl.padm = 0;	/* initialized from a decode of the b_cap<1:0> pins */
+	sys->p0Pctl.padm = 0;
 	sys->p0Pctl.eccen = AXP_ECCEN_DISABLE;
 	sys->p0Pctl.res_16 = 0;
 	sys->p0Pctl.ppri = AXP_PPRI_LOW;
@@ -222,17 +227,17 @@ void AXP_21274_PchipInit(AXP_21274_SYSTEM *sys)
 	sys->p0Pctl.fdsc = AXP_FDSC_ENABLE;
 
 	sys->p1Pctl.res_48 = 0;
-	sys->p1Pctl.pid = 0;	/* Initialized from the PID pins */
-	sys->p1Pctl.rpp = AXP_RPP_NOT_PRESENT;	/* Initialized from the CREQRMT_L pin at sys reset */
+	sys->p1Pctl.pid = 0;
+	sys->p1Pctl.rpp = AXP_RPP_NOT_PRESENT;
 	sys->p1Pctl.ptevrfy = AXP_PTEVRFY_DISABLE;
 	sys->p1Pctl.fdwdis = AXP_FDWDIS_NORMAL;
 	sys->p1Pctl.fdsdis = AXP_FDSDIS_NORMAL;
-	sys->p1Pctl.pclkx = AXP_PCLKX_6_TIMES; /* Initialized from the PCI i_pclkdiv<1:0> pins */
+	sys->p1Pctl.pclkx = AXP_PCLKX_6_TIMES;
 	sys->p1Pctl.ptpmax = 2;
 	sys->p1Pctl.crqmax = 1;
 	sys->p1Pctl.rev = 0;
 	sys->p1Pctl.cdqmax = 1;
-	sys->p1Pctl.padm = 0;	/* initialized from a decode of the b_cap<1:0> pins */
+	sys->p1Pctl.padm = 0;
 	sys->p1Pctl.eccen = AXP_ECCEN_DISABLE;
 	sys->p1Pctl.res_16 = 0;
 	sys->p1Pctl.ppri = AXP_PPRI_LOW;
@@ -258,6 +263,114 @@ void AXP_21274_PchipInit(AXP_21274_SYSTEM *sys)
 	sys->p1Plat.res_16 = 0;
 	sys->p1Plat.lat = 0;
 	sys->p1Plat.res_0 = 0;
+
+	/*
+	 * Initialization for PERROR (HRM Table 10-42), for both Pchip0 and Pchip1.
+	 */
+	sys->p0Perror.syn = 0;
+	sys->p0Perror.cmd = AXP_CMD_DMA_READ;
+	sys->p0Perror.inv = AXP_INFO_VALID;
+	sys->p0Perror.addr = 0;
+	sys->p0Perror.res_12 = 0;
+	sys->p0Perror.cre = 0;
+	sys->p0Perror.uecc = 0;
+	sys->p0Perror.res_9 = 0;
+	sys->p0Perror.nds = 0;
+	sys->p0Perror.rdpe = 0;
+	sys->p0Perror.ta = 0;
+	sys->p0Perror.ape = 0;
+	sys->p0Perror.sge = 0;
+	sys->p0Perror.dcrto = 0;
+	sys->p0Perror.perr = 0;
+	sys->p0Perror.serr = 0;
+	sys->p0Perror.lost = AXP_LOST_NOT_LOST;
+
+	sys->p1Perror.syn = 0;
+	sys->p1Perror.cmd = AXP_CMD_DMA_READ;
+	sys->p1Perror.inv = AXP_INFO_VALID;
+	sys->p1Perror.addr = 0;
+	sys->p1Perror.res_12 = 0;
+	sys->p1Perror.cre = 0;
+	sys->p1Perror.uecc = 0;
+	sys->p1Perror.res_9 = 0;
+	sys->p1Perror.nds = 0;
+	sys->p1Perror.rdpe = 0;
+	sys->p1Perror.ta = 0;
+	sys->p1Perror.ape = 0;
+	sys->p1Perror.sge = 0;
+	sys->p1Perror.dcrto = 0;
+	sys->p1Perror.perr = 0;
+	sys->p1Perror.serr = 0;
+	sys->p1Perror.lost = AXP_LOST_NOT_LOST;
+
+	/*
+	 * Initialization for PERRMASK (HRM Table 10-43), for both Pchip0 and
+	 * Pchip1.
+	 */
+	sys->p0PerMask.res_12 = 0;
+	sys->p0PerMask.mask = 0;
+
+	sys->p1PerMask.res_12 = 0;
+	sys->p1PerMask.mask = 0;
+
+	/*
+	 * Initialization for PERRSET (HRM Table 10-44), for both Pchip0 an
+	 * Pchip1.
+	 */
+	sys->p0PerrSet.info = 0;
+	sys->p0PerrSet.res_12 = 0;
+	sys->p0PerrSet.set = 0;
+
+	sys->p1PerrSet.info = 0;
+	sys->p1PerrSet.res_12 = 0;
+	sys->p1PerrSet.set = 0;
+
+	/*
+	 * Initialization for TLBIV (HRM Table 10-45), for both Pchip0 an Pchip1.
+	 */
+	sys->p0Tlbiv.res_28 = 0;
+	sys->p0Tlbiv.dac = 0;
+	sys->p0Tlbiv.res_20 = 0;
+	sys->p0Tlbiv.addr = 0;
+	sys->p0Tlbiv.res_0 = 0;
+
+	sys->p1Tlbiv.res_28 = 0;
+	sys->p1Tlbiv.dac = 0;
+	sys->p1Tlbiv.res_20 = 0;
+	sys->p1Tlbiv.addr = 0;
+	sys->p1Tlbiv.res_0 = 0;
+
+	/*
+	 * The registers for P0-TLBIA and P1-TLBIA (HRM Table 10-46) are really
+	 * pseudo registers.  As such, writes to them are ignored.  A write to this
+	 * register will simply invalidate the scatter-gather TLB associated with
+	 * that Pchip.  Therefore, there is no need to define the register or
+	 * initialize it.
+	 */
+
+	/*
+	 * Initialization for PMONCTL (HRM Table 10-47), for both Pchip0 an Pchip1.
+	 */
+	sys->p0MonCtl.res_18 = 0;
+	sys->p0MonCtl.stkdis1 = AXP_STKDIS_STICKS_1S;
+	sys->p0MonCtl.stkdis0 = AXP_STKDIS_STICKS_1S;
+	sys->p0MonCtl.slct1 = 0;
+	sys->p0MonCtl.slct1 = 1;
+
+	sys->p1MonCtl.res_18 = 0;
+	sys->p1MonCtl.stkdis1 = AXP_STKDIS_STICKS_1S;
+	sys->p1MonCtl.stkdis0 = AXP_STKDIS_STICKS_1S;
+	sys->p1MonCtl.slct1 = 0;
+	sys->p1MonCtl.slct1 = 1;
+
+	/*
+	 * Initialization for PMONCNT (HRM Table 10-48), for both Pchip0 an Pchip1.
+	 */
+	sys->p0MonCnt.cnt1 = 0;
+	sys->p0MonCnt.cnt0 = 0;
+
+	sys->p1MonCnt.cnt1 = 0;
+	sys->p1MonCnt.cnt0 = 0;
 
 	/*
 	 * Return back to the caller.
