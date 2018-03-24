@@ -2285,13 +2285,13 @@ typedef struct
 	u64	ta		: 1;	/* Target abort as PCI master */
 	u64	rdpe	: 1;	/* PCI read data parity error as PCI master */
 	u64	nds		: 1;	/* No b-devsel_1 as PCI master */
-	u64	res		: 1;	/* Reserved at bit 9 */
+	u64	res_9	: 1;	/* Reserved at bit 9 */
 	u64	uecc	: 1;	/* Uncorrectable ECC error */
 	u64	cre		: 1;	/* Correctable ECC error */
 	u64	res_12	: 4;	/* Reserved at bits 15:12 */
 	u64	addr	: 35;	/* CRE or UECC address */
 	u64	inv		: 1;	/* Info Not Valid */
-	u64 cmd		: 4;	/* PCI command of trasnaction when error detected */
+	u64 cmd		: 4;	/* PCI command of transaction when error detected */
 	u64	syn		: 8;	/* ECC syndrome of error if CRE or UECC */
 } AXP_21274_PERROR;
 
@@ -2303,6 +2303,8 @@ typedef struct
 #define AXP_CMD_SGTE_READ			3	/* 0011	*/
 #define AXP_INFO_VALID				0
 #define AXP_INFO_NOT_VALID			1
+#define AXP_LOST_NOT_LOST			0
+#define AXP_LOST_LOST				1
 
 /*
  * HRM 10.2.5.7 Pchip Error Mask Register (PERRMASK – RW)

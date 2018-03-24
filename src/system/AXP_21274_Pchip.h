@@ -31,5 +31,12 @@
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
 #include "AXP_21274_Registers.h"
+#include "AXP_21274_Cchip.h"
+#include "AXP_21274_Dchip.h"
+
+/*
+ * Pchip Function Prototypes
+ */
+void AXP_21274_PchipInit(AXP_21274_SYSTEM *);
 
 #endif /* _AXP_21274_PCHIP_H_ */

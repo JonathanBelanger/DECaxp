@@ -60,9 +60,17 @@
  */
 void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 {
+	u32		ii, jj;
 
 	/*
 	 * Initialization for CSC (HRM Table 10-10)
+	 *
+	 * TODO:	p1w and p0w loaded from CAPbus<13:12> during reset.
+	 * TODO:	pip powers up to the value present on the CAPREQ<1> pin.
+	 * TODO:	iddw, iddr, and aw are updated when the Dchip STR register is
+	 *			written.
+	 * TODO:	Byte 0 powers up to the value present on bits <7:0> of the
+	 * 			TIGbus.  This includes fw, sed, c1cfp, c0cfp, and bc fields.
 	 */
 	sys->csc.res_63 = 0;
 	sys->csc.res_62 = 0;
@@ -94,16 +102,16 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	sys->csc.dwfp = AXP_DWFP_5_CYCLES;
 	sys->csc.dwtp = AXP_DWTP_5_CYCLES;
 	sys->csc.res_15 = 0;
-	sys->csc.pip = -1;	/* Powers up to the value present on the CAPREQ<1> pin */
+	sys->csc.pip = 0;
 	sys->csc.iddw = AXP_IDDW_6_CYCLES;
 	sys->csc.iddr = AXP_IDDR_9_CYCLES;
 	sys->csc.aw = AXP_AW_16_BYTES;
-	sys->csc.fw = -1;	/* Byte 0 powers up to the value present on bits <7:0> of the TIGbus */
-	sys->csc.sfd = -1;	/* Byte 0 powers up to the value present on bits <7:0> of the TIGbus */
-	sys->csc.sed = -1;	/* Byte 0 powers up to the value present on bits <7:0> of the TIGbus */
-	sys->csc.c1cfp = -1;/* Byte 0 powers up to the value present on bits <7:0> of the TIGbus */
-	sys->csc.c0cfp = -1;/* Byte 0 powers up to the value present on bits <7:0> of the TIGbus */
-	sys->csc.bc = -1;	/* Byte 0 powers up to the value present on bits <7:0> of the TIGbus */
+	sys->csc.fw = 0;
+	sys->csc.sfd = 0;
+	sys->csc.sed = 0;
+	sys->csc.c1cfp = 0;
+	sys->csc.c0cfp = 0;
+	sys->csc.bc = 0;
 
 	/*
 	 * Initialization for MTR (HRM Table 10-11)
@@ -391,6 +399,27 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	 */
 	sys->cmoncnt23.ecnt3 = 0;
 	sys->cmoncnt23.ecnt2 = 0;
+
+	/*
+	 * Initialize the request queue.
+	 */
+	for (ii = 0; ii < AXP_21274_CCHIP_RQ_LEN; ii++)
+	{
+		for (jj = 0; jj < AXP_21274_SYSDATA_LEN; jj++)
+			sys->rq[ii].sysData[jj] = 0;
+		sys->rq[ii].mask;
+		sys->rq[ii].pa;
+		sys->rq[ii].cmd = NOPcmd;
+		sys->rq[ii].status = HitClean;
+		sys->rq[ii].phase = phase0;
+		sys->rq[ii].entry = 0;
+		sys->rq[ii].sysDataLen = 0;
+		sys->rq[ii].waitVector = 0;
+		sys->rq[ii].miss2 = false;
+		sys->rq[ii].rqValid = false;
+		sys->rq[ii].cacheHit = false;
+	}
+	sys->rqStart = sys->rqEnd = 0;
 
 	/*
 	 * Return back to the caller.
