@@ -177,6 +177,15 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 			cpu->whami = AXP_ConfigGet_UniqueCPUID();
 
 		/*
+		 * At this point, we lock the CPU mutex, to hold back any of the CPU
+		 * initialization that will occur when the iBox, mBox, dBox, eBoxes,
+		 * fBoxes, and cBox threads are created.  We'll unlock it after the
+		 * system has done its initialization and is ready for the CPUs.
+		 */
+		if (qRet == true)
+			pthreadRet = pthread_mutex_lock(cpu->cpuMutex);
+
+		/*
 		 * At this point everything should be initialize.  Time to create all
 		 * the threads.
 		 */
@@ -248,4 +257,55 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 		}
 	}
 	return(cpu);
+}
+
+/*
+ * AXP_21264_Save_WHAMI
+ *	This function is called by the System after creating the CPU structure.  It
+ *	stores the identifier for the specified CPU into the specified location.
+ */
+void AXP_21264_Save_WHAMI(void *cpuPtr, u64 *cpuID)
+{
+	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) cpuPtr;
+
+	/*
+	 * TODO:
+	 */
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_Save_SystemInterfaces
+ *	This function is called by the System after creating the CPU structure.  It
+ *	stores the information required for the CPU to be able to send to the
+ *	system and the system to the CPU.
+ */
+void AXP_21264_Save_SystemInterfaces(
+						void *cpuPtr,
+						pthread_mutex_t *mutex,
+						pthread_cond_t *cond,
+						void *pqPtr,
+						u8 *pqTop,
+						u8 *pqBottom,
+						u8 *irq_H,
+						void *rqPtr,
+						u32	*rqStart,
+						u32 *rqEnd)
+{
+	AXP_21264_CPU		*cpu = (AXP_21264_CPU *) cpuPtr;
+	AXP_21264_CBOX_PQ	*pq = (AXP_21264_CBOX_PQ *) pqPtr;
+	AXP_21264_RQ_ENTRY	*rq = (AXP_21264_RQ_ENTRY *) rqPtr;
+
+	/*
+	 * TODO:
+	 */
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
 }

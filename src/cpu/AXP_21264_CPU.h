@@ -95,6 +95,7 @@
 #include "AXP_21264_MboxDefs.h"
 #include "AXP_21264_RegisterRenaming.h"
 #include "AXP_Exceptions.h"
+#include "AXP_21264_21274_Common.h"
 
 #define AXP_RESULTS_REG			41
 #define AXP_NUM_FETCH_INS		4
@@ -133,7 +134,6 @@
 #define AXP_2_WAY_CACHE			2
 #define AXP_21264_IOWB_LEN		4
 #define AXP_21264_VDB_LEN		8
-#define AXP_21264_PQ_LEN		8
 #define AXP_21264_MAF_LEN		8
 #define AXP_21264_EBOX_L0		0
 #define AXP_21264_EBOX_L1		1
@@ -305,11 +305,25 @@ typedef enum
 #define AXP_SCBD_BITS_4_7	0xf0
 
 /*
+ * Structure to hold information about the System we are connected to so that
+ * we can send and receive data between us.
+ */
+typedef struct
+{
+	pthread_mutex_t			*mutex;
+	pthread_cond_t			*cond;
+	AXP_21274_RQ_ENTRY		*rq;
+	u32						*rqStart;
+	u32						*rqEnd;
+} AXP_21264_SYSTEM;
+
+/*
  * This structure contains all the fields required to emulate an Alpha AXP
  * 21264 CPU.
  */
 typedef struct
 {
+
 	/*
 	 * This field needs to be at the top of all data blocks/structures
 	 * that need to be specifically allocated by the Blocks module.
@@ -841,6 +855,12 @@ typedef struct
 	AXP_BASE_VIRBND			virBnd;		/* Virtual Address Boundary			*/
 	AXP_BASE_VPTB			vptb;		/* Virtual Page Table Base			*/
 	AXP_BASE_WHAMI			whami;		/* Who-Am-I							*/
+
+	/*
+	 * Information about the System, to which we send and receive commands and
+	 * data.
+	 */
+	AXP_21264_SYSTEM		system;
 
 	/*
 	 * Miscellaneous stuff the should probably go someplace else.

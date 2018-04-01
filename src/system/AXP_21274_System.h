@@ -28,11 +28,31 @@
 
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
-#include "AXP_21274_SystemDefs.h"
+#include "AXP_21274_21264_Common.h"
 #include "AXP_21274_Registers.h"
 #include "AXP_21274_Cchip.h"
 #include "AXP_21274_Dchip.h"
 #include "AXP_21274_Pchip.h"
+
+/*
+ * The following structure contains the information needed to be able to
+ * communication with a CPU.
+ */
+typedef struct
+{
+	pthread_mutex_t		*mutex;
+	pthread_cond_t		*cond;
+	AXP_21274_CBOX_PQ	*pq;
+	u8					*pqTop;
+	u8					*pqBottom;
+	u8					*irq_H;
+	AXP_21274_RQ_ENTRY	rq[AXP_21274_CCHIP_RQ_LEN];
+	u32					rqStart;
+	u32					rqEnd;
+} AXP_21274_CPU;
+
+#define AXP_21274_MAX_CPUS		4
+#define AXP_21274_MAX_ARRAYS	4
 
 /*
  * HRM 2.1 System Building Block Variables
@@ -95,12 +115,18 @@
 typedef struct
 {
 
+	/*
+	 * This field needs to be at the top of all data blocks/structures
+	 * that need to be specifically allocated by the Blocks module.
+	 */
+	AXP_BLOCK_DSC 			header;
+
 	/*************************************************************************
 	 * Cchip Data and Information											 *
 	 *************************************************************************/
-	AXP_21274_RQ_ENTRY	rq[AXP_21274_CCHIP_RQ_LEN];
-	u32					rqStart;
-	u32					rqEnd;
+	pthread_mutex_t		cChipMutex;
+	pthread_cond_t		cChipCond;
+	AXP_21274_CPU		cpu[AXP_21274_MAX_CPUS];
 
 	/*
 	 * Cchip Registers
@@ -139,6 +165,15 @@ typedef struct
 	AXP_21274_CMONCNT01	cmoncnt01;	/* Address" 801.a000.0c80 */
 	AXP_21274_CMONCNT23	cmoncnt23;	/* Address" 801.a000.0cc0 */
 
+	/*************************************************************************
+	 * Dchip Data and Information											 *
+	 *************************************************************************/
+	pthread_mutex_t		dChipMutex;
+	pthread_cond_t		dChipCond;
+	u32					arrayCount;
+	u64					*array[AXP_21274_MAX_ARRAYS];
+	u64					arraySizes;
+
 	/*
 	 * Dchip Registers
 	 */
@@ -146,6 +181,14 @@ typedef struct
 	AXP_21274_STR		str;		/* Address: 801.b000.0840 */
 	AXP_21274_DREV		dRev;		/* Address: 801.b000.0880 */
 	AXP_21274_DSC2		dsc2;		/* Address: 801.b000.08c0 */
+
+	/*************************************************************************
+	 * Pchip Data and Information											 *
+	 *************************************************************************/
+	pthread_mutex_t		p0Mutex;
+	pthread_cond_t		p0Cond;
+	pthread_mutex_t		p1Mutex;
+	pthread_cond_t		p1Cond;
 
 	/*
 	 * Pchip Registers
@@ -195,10 +238,5 @@ typedef struct
 	AXP_21274_PMONCNT	p1MonCnt;	/* Address: 803.8000.0540 */
 	AXP_21274_SPRST		p1SprSt;	/* Address: 803.8000.0800 */
 } AXP_21274_SYSTEM;
-
-void AXP_System_CommandSend(
-					AXP_21264_TO_SYS_CMD, bool, int, bool,
-					u64, bool, u64, u8 *, int);
-void AXP_System_ProbeResponse(bool, bool, u8, bool, u8, AXP_21264_PROBE_STAT);
 
 #endif	/* _AXP_SYSTEM_DEFS_ */

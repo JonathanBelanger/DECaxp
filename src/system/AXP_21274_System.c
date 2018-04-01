@@ -25,60 +25,38 @@
  */
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
-#include "AXP_21264_CPU.h"
-#include "AXP_21264_CboxDefs.h"
+#include "AXP_Blocks.h"
 #include "AXP_21274_System.h"
 
-AXP_21274_SYSTEM *sys;
-
-/*
- * AXP_System_CommandSend
- */
-void AXP_System_CommandSend(
-					AXP_21264_TO_SYS_CMD sysCmd,
-					bool miss2,
-					int entry,
-					bool rqValid,
-					u64 mask,
-					bool cacheHit,
-					u64 pa,
-					u8 *sysData,
-					int sysDataLen)
+AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 {
-	AXP_21274_RQ_ENTRY rq = &sys->rq[sys->rqEnd];
+	AXP_21274_SYSTEM *sys = NULL;
+	int				pthreadRet;
+	int				ii;
+	bool			qRet = true;
+
+	sys = AXP_Allocate_Block(AXP_21274_SYS_BLK);
+	if (sys != NULL)
+	{
+		pthreadRet = pthread_mutex_init(&sys->cChipMutex, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&sys->dChipMutex, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&sys->p0Mutex, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&sys->p1Mutex, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&sys->cChipCond, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&sys->dChipCond, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&sys->p0Cond, NULL);
+		if (pthreadRet == 0)
+			pthreadRet = pthread_mutex_init(&sys->p1Cond, NULL);
+	}
 
 	/*
-	 * Copy the values into the next request buffer for the Cchip.
+	 * Return what we allocated back to the caller
 	 */
-	rq->cmd = sysCmd;
-	rq->miss2 = miss2;
-	rq->entry = entry;
-	rq->rqValid = rqValid;
-	rq->mask = mask;
-	rq->cacheHit = cacheHit;
-	rq->pa = pa;
-	memcpy(rq->sysData, sysData, sysDataLen);
-	rq->sysDataLen = sysDataLen;
-
-	/*
-	 * Set the index to the next location to be filled in by a request.
-	 */
-	sys->rqEnd++;
-	return;
-}
-
-/*
- * AXP_System_ProbeResponse
- */
-void AXP_System_ProbeResponse(
-					bool dataMovement,
-					bool victimSent,
-					u8 vdbID,
-					bool mafAddrSent,
-					u8 mafID,
-					AXP_21264_PROBE_STAT status)
-{
-
-	printf("\n%%DECAXP-I-PRBRSP, AXP_System_ProbeResponse Called.\n");
-	return;
+	return(sys);
 }

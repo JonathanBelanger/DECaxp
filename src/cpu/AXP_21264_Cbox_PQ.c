@@ -26,6 +26,7 @@
  */
 #include "AXP_21264_Cbox.h"
 #include "AXP_Configure.h"
+#include "AXP_21264_21274_Common.h"
 #include "AXP_21264_CacheDefs.h"
 #include "AXP_21264_Mbox.h"
 #include "AXP_21264_Ebox.h"
@@ -309,7 +310,7 @@ int AXP_21264_PQ_Empty(AXP_21264_CPU *cpu)
 void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 {
 	AXP_21264_CBOX_PQ		*pq = &cpu->pq[entry];
-	AXP_21264_PROBE_STAT	probeStatus;
+	AXP_21264_ProbeStatus	probeStatus;
 	AXP_VA					physAddr = {.va = pq->pa};
 	u32						ctagIndex = physAddr.vaIdxInfo.index;
 	u32						setToUse;
@@ -636,14 +637,11 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 		 */
 		switch (pq->sysDc)
 		{
-			case NOPsysdc:
+			case SysDC_Nop:
 				break;
 
 			case ReleaseBuffer:
-			case WriteData0:
-			case WriteData1:
-			case WriteData2:
-			case WriteData3:
+			case WriteData:
 				if (pq->rpb == true)
 					AXP_21264_ClearP_VDB(cpu, pq->ID);
 				if (pq->rvb == true)
@@ -883,10 +881,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 									pq->sysData);
 				break;
 
-			case ReadData0:
-			case ReadData1:
-			case ReadData2:
-			case ReadData3:
+			case ReadData:
 				AXP_21264_Complete_MAF(
 									cpu,
 									pq->ID,
@@ -894,10 +889,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 									pq->sysData);
 				break;
 
-			case ReadDataDirty0:
-			case ReadDataDirty1:
-			case ReadDataDirty2:
-			case ReadDataDirty3:
+			case ReadDataDirty:
 				AXP_21264_Complete_MAF(
 									cpu,
 									pq->ID,
@@ -905,10 +897,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 									pq->sysData);
 				break;
 
-			case ReadDataShared0:
-			case ReadDataShared1:
-			case ReadDataShared2:
-			case ReadDataShared3:
+			case ReadDataShared:
 				AXP_21264_Complete_MAF(
 									cpu,
 									pq->ID,
@@ -916,10 +905,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 									pq->sysData);
 				break;
 
-			case ReadDataSharedDirty0:
-			case ReadDataSharedDirty1:
-			case ReadDataSharedDirty2:
-			case ReadDataSharedDirty3:
+			case ReadDataSharedDirty:
 				AXP_21264_Complete_MAF(
 									cpu,
 									pq->ID,
@@ -1063,7 +1049,7 @@ void AXP_21264_SendRsps_PQ(AXP_21264_CPU *cpu)
 void AXP_21264_Add_PQ(
 				AXP_21264_CPU *cpu,
 				int probe,
-				AXP_21264_SYSDC_RSP sysDc,
+				AXP_21264_SYSDC sysDc,
 				u64 pa,
 				u8 id,
 				u8 *sysData,
@@ -1104,26 +1090,14 @@ void AXP_21264_Add_PQ(
 	switch(sysDc)
 	{
 		case ReadDataError:
-			memset(pq->sysData, 0xff, AXP_21264_SIZE_QUAD);
+			memset(pq->sysData, 0xff, AXP_21264_DATA_SIZE);
 			break;
 
-		case ReadData0:
-		case ReadData1:
-		case ReadData2:
-		case ReadData3:
-		case ReadDataDirty0:
-		case ReadDataDirty1:
-		case ReadDataDirty2:
-		case ReadDataDirty3:
-		case ReadDataShared0:
-		case ReadDataShared1:
-		case ReadDataShared2:
-		case ReadDataShared3:
-		case ReadDataSharedDirty0:
-		case ReadDataSharedDirty1:
-		case ReadDataSharedDirty2:
-		case ReadDataSharedDirty3:
-			memcpy(pq->sysData, sysData, AXP_21264_SIZE_QUAD);
+		case ReadData:
+		case ReadDataDirty:
+		case ReadDataShared:
+		case ReadDataSharedDirty:
+			memcpy(pq->sysData, sysData, AXP_21264_DATA_SIZE);
 			break;
 
 		default:
