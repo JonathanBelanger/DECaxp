@@ -60,7 +60,7 @@
  *				Count				number
  *				Generation			string
  *				Pass				number
- *			DIMMS
+ *			DARRAY
  *				Count				number
  *				Size				decimal(MB, GB)
  *			Disks
@@ -104,8 +104,8 @@ static AXP_21264_CONFIG	_axp_21264_config_=
 	.system.cpus.config = NULL,
 	.system.cpus.count = 0,
 	.system.cpus.minorType = 0,
-	.system.dimms.size = 0,
-	.system.dimms.count = 0
+	.system.darrays.size = 0,
+	.system.darrays.count = 0
 };
 
 /*
@@ -155,10 +155,10 @@ struct AXP_CPUS
 	char					*token;
 	AXP_21264_CONFIG_CPUS	node;
 };
-struct AXP_DIMMS
+struct AXP_DARRAYS
 {
 	char					*token;
-	AXP_21264_CONFIG_DIMMS	node;
+	AXP_21264_CONFIG_DARRAYS node;
 };
 struct AXP_Disks
 {
@@ -223,7 +223,7 @@ static struct AXP_System _system_level_nodes[] =
 	{"Model", Model},
 	{"SROM", SROM},
 	{"CPUs", CPUS},
-	{"DIMMs", DIMMS},
+	{"DARRAYs", DARRAYS},
 	{"Disks", Disks},
 	{"Console", Console},
 	{"Networks", Networks},
@@ -253,11 +253,11 @@ static struct AXP_CPUS _cpu_level_nodes[] =
 	{"Pass", MfgPass},
 	{NULL, NoCPUs}
 };
-static struct AXP_DIMMS _dimm_level_nodes[] =
+static struct AXP_DARRAYS _darray_level_nodes[] =
 {
-	{"Count", DIMMCount},
-	{"Size", DIMMSize},
-	{NULL, NoDIMMs}
+	{"Count", DARRAYCount},
+	{"Size", DARRAYSize},
+	{NULL, NoDARRAYs}
 };
 static struct AXP_Disks _disks_level_nodes[] =
 {
@@ -2025,15 +2025,15 @@ static void parse_disks_names(
 }
 
 /*
- * parse_dimms_names
- *	This function parses the elements within the DIMMs Node in the XML
+ * parse_darrays_names
+ *	This function parses the elements within the DARRAYs Node in the XML
  *	formatted configuration file.  It extracts the value for each of the
  *	components and stores them in the configuration.  The format for the
- *	subnodes in the DIMMs node are as follows:
- *		<DIMMs>
+ *	subnodes in the DARRAYs node are as follows:
+ *		<DARRAYs>
  *			<Count>4</Count>
  *			<Size>4.0GB</Size>
- *		</DIMMs>
+ *		</DARRAYs>
  *
  * Input Parameters:
  *	doc:
@@ -2052,10 +2052,10 @@ static void parse_disks_names(
  * Return Values:
  *	None.
  */
-static void parse_dimms_names(
+static void parse_darray_names(
 					xmlDocPtr doc,
 					xmlNode *a_node,
-					AXP_21264_CONFIG_DIMMS parent,
+					AXP_21264_CONFIG_DARRAYS parent,
 					char *value)
 {
 	xmlNode	*cur_node = NULL;
@@ -2090,12 +2090,12 @@ static void parse_dimms_names(
 		{
 			found = false;
 			for (ii = 0;
-				 ((_dimm_level_nodes[ii].token != NULL) && (found == false));
+				 ((_darray_level_nodes[ii].token != NULL) && (found == false));
 				 ii++)
 			{
-				if (strcmp((char *) cur_node->name, _dimm_level_nodes[ii].token) == 0)
+				if (strcmp((char *) cur_node->name, _darray_level_nodes[ii].token) == 0)
 				{
-					parent = _dimm_level_nodes[ii].node;
+					parent = _darray_level_nodes[ii].node;
 					found = true;
 				}
 			}
@@ -2120,26 +2120,26 @@ static void parse_dimms_names(
 		 * Parse out the relevant configuration information from the read in
 		 * configuration file.
 		 */
-		if (parent != NoDIMMs)
+		if (parent != NoDARRAYs)
 		{
-			parse_dimms_names(doc, cur_node->children, parent, nodeValue);
+			parse_darrays_names(doc, cur_node->children, parent, nodeValue);
 			switch (parent)
 			{
-				case DIMMCount:
-					_axp_21264_config_.system.dimms.count =
+				case DARRAYCount:
+					_axp_21264_config_.system.darrays.count =
 							strtoul(nodeValue, &ptr, 10);
 					break;
 
-				case DIMMSize:
-					_axp_21264_config_.system.dimms.size =
+				case DARRAYSize:
+					_axp_21264_config_.system.darrays.size =
 							AXP_cvtSizeStr(nodeValue);
 					break;
 
-				case NoDIMMs:
+				case NoDARRAYs:
 				default:
 					break;
 			}
-			parent = NoDIMMs;
+			parent = NoDARRAYs;
 		}
     }
 
@@ -2580,7 +2580,7 @@ static void parse_model_names(
  *			<Model>...</Model>
  *			<SROM>...</SROM>
  *			<CPUs>...</CPUs>
- *			<DIMMs>...</DIMMs>
+ *			<DARRAYs>...</DARRAYs>
  *			<Disks>...</Disks>
  *			<Console>...</Console>
  *			<Networks>...</Networks>
@@ -2661,8 +2661,8 @@ static void parse_system_names(
 				parent = NoSystem;
 				break;
 
-			case DIMMS:
-				parse_dimms_names(doc, cur_node->children, NoDIMMs, NULL);
+			case DARRAYS:
+				parse_darrays_names(doc, cur_node->children, NoDARRAYs, NULL);
 				parent = NoSystem;
 				break;
 
@@ -3561,7 +3561,7 @@ void AXP_TraceConfig(void)
 					  (_axp_21264_config_.system.model.model != NULL) &&
 					  (_axp_21264_config_.system.cpus.count > 0) &&
 					  (_axp_21264_config_.system.cpus.config != NULL) &&
-					  (_axp_21264_config_.system.dimms.count > 0) &&
+					  (_axp_21264_config_.system.darrays.count > 0) &&
 					  (_axp_21264_config_.system.srom.initFile != NULL) &&
 					  (_axp_21264_config_.system.srom.PALImage != NULL) &&
 					  (_axp_21264_config_.system.srom.NVRamFile != NULL) &&
@@ -3660,10 +3660,10 @@ void AXP_TraceConfig(void)
 				idx++;
 			}
 			AXP_TraceWrite("%s and %llu%s", buffer, cacheSize, bytes[idx]);
-			AXP_TraceWrite("\t\tDIMMs:");
+			AXP_TraceWrite("\t\tDARRAYs:");
 			AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
-					_axp_21264_config_.system.dimms.count);
-			cacheSize = _axp_21264_config_.system.dimms.size;
+					_axp_21264_config_.system.darrays.count);
+			cacheSize = _axp_21264_config_.system.darrays.size;
 			idx = 0;
 			while (cacheSize > ONE_K)
 			{

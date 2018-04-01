@@ -30,11 +30,10 @@
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
+#include "AXP_21274_21264_Common.h"
 #include "AXP_21274_Registers.h"
 #include "AXP_21274_Dchip.h"
 #include "AXP_21274_Pchip.h"
-
-#define AXP_21274_SYSDATA_LEN	sizeof(u64)
 
 typedef enum
 {
@@ -71,54 +70,6 @@ typedef enum
  */
 #define AXP_21264_ENTRY(bitVector, entry)	\
 	(((bitVecotr) >> ((entry * 2)) & AXP_21274_AGE_MASK)
-
-/*
- * HRM 6.1.1 Memory Access Request Queues, Skid Buffers, and Dispatch Register
- *
- * Each new request that arrives from a CPU or Pchip is eventually dispatched
- * into one of four request queues. Request queues have the following
- * characteristics:
- *
- *	- Each queue corresponds to one of the memory arrays controlled by the Cchip.
- *	- Each queue has six entries.
- *
- * HRM 6.1.4 Request Queue Maintenance
- *
- * The request queue is a unified queue of all requests from the CPUs and the
- * Pchips. In an implementation-dependent manner, the relative ages of any set
- * of entries can be determined. Each queue entry contains the following
- * information:
- *
- *	- Command and other information, such as; CPU MAF/VAF id, number of QW for
- *	  DMA ops, and PIO mask
- *	- Address
- *	- Phase, Valid
- *	- Status (such as probe results)
- *	- Address match wait vector – A bit vector identifying the older requests
- *	  in this queue with (nearly) the same address, and for which this request
- *	  must wait
- *	- Page hit vector – A bit vector identifying the older requests in this
- *	  queue with the same DRAM page address, so that this request can issue
- *	  after a previous request without waiting for RAS precharge delay
- *	- Older request vector – A bit vector identifying all older requests in
- *	  this queue (used to arbitrate among otherwise equal ready requests)
- */
-typedef struct
-{
-	u8						sysData[AXP_21274_SYSDATA_LEN];
-	u64						mask;
-	u64						pa;
-	AXP_21264_TO_SYS_CMD	cmd;
-	AXP_21264_PROBE_STAT	status;
-	AXP_21274_PHASES		phase;
-	int						entry;
-	int						sysDataLen;
-	u16						waitVector;
-	bool					miss2;
-	bool					rqValid;
-	bool					cacheHit;
-} AXP_21274_RQ_ENTRY;
-#define AXP_21274_CCHIP_RQ_LEN	24
 
 /*
  * HRM Table 6-7 Cchip-to-Pchip Commands

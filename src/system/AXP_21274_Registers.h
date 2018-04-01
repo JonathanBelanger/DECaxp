@@ -1530,7 +1530,7 @@ typedef struct
  * All fields in the CMONCNT01 registers are Read/Write; however, the write
  * feature is only for diagnostic purposes. Writing a value of all ones to any
  * field of CMONCNT is not supported due to implementation considerations (the
- * carry-out is precomputed).
+ * carry-out is pre-computed).
  *
  * All fields of CMONCNT are cleared by reset and when CMONCTLA or CMONCTLB is
  * written. The expected usage is to write CMONCTL, wait for a while, read

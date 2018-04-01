@@ -38,6 +38,7 @@
  *	V01.000		18-Mar-2018	Jonathan D. Belanger
  *	Initially written.
  */
+#include "AXP_21274_System.h"
 #include "AXP_21274_Cchip.h"
 
 /*
@@ -60,7 +61,7 @@
  */
 void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 {
-	u32		ii, jj;
+	u32		hh, ii, jj;
 
 	/*
 	 * Initialization for CSC (HRM Table 10-10)
@@ -403,23 +404,28 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	/*
 	 * Initialize the request queue.
 	 */
-	for (ii = 0; ii < AXP_21274_CCHIP_RQ_LEN; ii++)
+	for (hh = 0; hh < AXP_21274_MAX_CPUS; hh++)
 	{
-		for (jj = 0; jj < AXP_21274_SYSDATA_LEN; jj++)
-			sys->rq[ii].sysData[jj] = 0;
-		sys->rq[ii].mask;
-		sys->rq[ii].pa;
-		sys->rq[ii].cmd = NOPcmd;
-		sys->rq[ii].status = HitClean;
-		sys->rq[ii].phase = phase0;
-		sys->rq[ii].entry = 0;
-		sys->rq[ii].sysDataLen = 0;
-		sys->rq[ii].waitVector = 0;
-		sys->rq[ii].miss2 = false;
-		sys->rq[ii].rqValid = false;
-		sys->rq[ii].cacheHit = false;
+		for (ii = 0; ii < AXP_21274_CCHIP_RQ_LEN; ii++)
+		{
+			for (jj = 0; jj < AXP_21274_DATA_SIZE; jj++)
+			{
+				sys->cpu[hh].rq[ii].sysData[jj] = 0;
+			}
+			sys->cpu[hh].rq[ii].mask;
+			sys->cpu[hh].rq[ii].pa;
+			sys->cpu[hh].rq[ii].cmd = Sysbus_NOP;
+			sys->cpu[hh].rq[ii].status = HitClean;
+			sys->cpu[hh].rq[ii].phase = phase0;
+			sys->cpu[hh].rq[ii].entry = 0;
+			sys->cpu[hh].rq[ii].sysDataLen = 0;
+			sys->cpu[hh].rq[ii].waitVector = 0;
+			sys->cpu[hh].rq[ii].miss2 = false;
+			sys->cpu[hh].rq[ii].rqValid = false;
+			sys->cpu[hh].rq[ii].cacheHit = false;
+		}
+		sys->cpu[hh].rqStart = sys->cpu[hh].rqEnd = 0;
 	}
-	sys->rqStart = sys->rqEnd = 0;
 
 	/*
 	 * Return back to the caller.

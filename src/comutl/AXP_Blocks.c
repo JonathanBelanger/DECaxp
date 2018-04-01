@@ -31,6 +31,7 @@
 #include "AXP_Configure.h"
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
+#include "AXP_21274_System.h"
 
 void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 {
@@ -53,6 +54,20 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 					cpu->header.type = blockType;
 					cpu->header.size = sizeof(AXP_21264_CPU);
 					cpu->cpuState = Cold;
+				}
+			}
+			break;
+
+		case AXP_21274_SYS_BLK:
+			{
+				AXP_21274_SYSTEM *sys = NULL;
+
+				retBlock = calloc(1, sizeof(AXP_21274_SYSTEM));
+				if (retBlock != NULL)
+				{
+					sys = (AXP_21274_SYSTEM *) retBlock;
+					sys->header.type = blockType;
+					sys->header.size = sizeof(AXP_21274_SYSTEM);
 				}
 			}
 			break;

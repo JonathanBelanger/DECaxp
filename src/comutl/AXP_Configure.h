@@ -69,7 +69,7 @@
  *				Generation			number
  *				Pass				number
  *				Name				string
- *			DIMMS
+ *			DARRAY
  *				Size				decimal
  *				Count				decimal
  *			Disks
@@ -122,7 +122,7 @@ typedef enum
 	Model,
 	SROM,
 	CPUS,
-	DIMMS,
+	DARRAYS,
 	Disks,
 	Console,
 	Networks,
@@ -157,10 +157,10 @@ typedef enum
 
 typedef enum
 {
-	NoDIMMs,
-	DIMMSize,
-	DIMMCount
-} AXP_21264_CONFIG_DIMMS;
+	NoDARRAYs,
+	DARRAYSize,
+	DARRAYCount
+} AXP_21264_CONFIG_DARRAYS;
 
 typedef enum
 {
@@ -367,20 +367,20 @@ typedef struct
 } AXP_21264_CPU_INFO;
 
 /*
- * There can be one to four Dual In-line Memory Modules (DIMMs).  Each DIMM can
+ * There can be one to four Dynamic Memory Arrays (DARRAYs).  Each DARRAY can
  * be either 4x64MB (256MB), 4x128MB (512MB), 4x256MB (1.0GB), 4x512MB (2.0GB),
  * for up to 8GB of memory.
  *
  *		System
- *			DIMMS
- *				Size			decimal(MB)
+ *			DARRAY
+ *				Size			decimal(MB,GB)
  *				Count			decimal	[1,2,3,4]
  */
 typedef struct
 {
 	u64						size;
 	u32						count;
-} AXP_21264_DIMM_INFO;
+} AXP_21264_DARRAY_INFO;
 
 /*
  * There can be one or more disk drives.  There has to be at least one for the
@@ -480,18 +480,18 @@ typedef struct
  */
 typedef struct
 {
-	AXP_21264_OWNER_INFO	owner;
+	AXP_21264_OWNER_INFO		owner;
 	struct
 	{
-		AXP_21264_DISK_INFO	*disks;
-		AXP_21264_NETWORK_INFO *networks;
-		AXP_21264_MODEL_INFO model;
-		AXP_21264_SROM_INFO	srom;
-		AXP_21264_CPU_INFO	cpus;
-		AXP_21264_DIMM_INFO	dimms;
-		AXP_21264_CONSOLE_INFO console;
-		u32					diskCount;
-		u32					networkCount;
+		AXP_21264_DISK_INFO		*disks;
+		AXP_21264_NETWORK_INFO 	*networks;
+		AXP_21264_MODEL_INFO	model;
+		AXP_21264_SROM_INFO		srom;
+		AXP_21264_CPU_INFO		cpus;
+		AXP_21264_DARRAY_INFO	darrays;
+		AXP_21264_CONSOLE_INFO	console;
+		u32						diskCount;
+		u32						networkCount;
 	} system;
 } AXP_21264_CONFIG;
 

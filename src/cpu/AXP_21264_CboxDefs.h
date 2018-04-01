@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2018.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -50,13 +50,21 @@
  *	We need a merge length a store length in each IOWB.  The store length is
  *	used to determine how big the data was for the store that allocated the
  *	IOWB.  This is used to make sure we merge like sizes only.
+ *
+ *	V01.007		31-Mar-2018	Jonathan D. Belanger
+ *	Move the definitions out of this header file that need to be common between
+ *	the CPU and System emulations.  This is the requests and responses sent
+ *	between the 2 emulations.  These definitions have to be maintained so that
+ *	they are identical, except in name.  This way the CPU does not have to
+ *	include all the System header files and the System the CPU header files.
  */
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
 
-#include "../system/AXP_21274_System.h"
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
+#include "AXP_21264_21274_Common.h"
+#include "AXP_21264_to_System.h"
 
 /*
  * HRM Tables 5-23 and 5-24
@@ -336,6 +344,17 @@ typedef struct
 #define AXP_21264_SIZE_LONG		32
 #define AXP_21264_SIZE_QUAD		64
 
+
+/*
+ * sysData size in quadwords
+ *
+ * NOTE:	This definition must match with the AXP_21274_DATA_SIZE definition
+ *			in the system/AXP_21274_to_CPU.h and the AXP_21264_DATA_SIZE
+ *			definition in the cpu/AXP_21264_CboxDefs.h.
+ */
+#define AXP_21264_DATA_SIZE	8
+
+
 /*
  * HRM 2.1.4.1
  * This structure is the definition for one of the Victim Address File (VAF)
@@ -356,41 +375,15 @@ typedef enum
 
 typedef struct
 {
-	AXP_21264_VDB_TYPE			type;
+	u64							sysData[AXP_21264_DATA_SIZE];
 	u64							pa;
+	AXP_21264_VDB_TYPE			type;
 	bool						validVictim;
 	bool						validProbe;
 	bool						processed;
 	bool						valid;
 	bool						marked;
-	u8							sysData[AXP_21264_SIZE_QUAD];
 } AXP_21264_CBOX_VIC_BUF;
-
-/*
- * HRM 2.1.4.3
- * This structure is the definition for a single entry in the probe queue (PQ)
- */
-typedef struct
-{
-	u64							pa;
-	AXP_21264_SYSDC_RSP			sysDc;
-	AXP_21264_PROBE_STAT		probeStatus;
-	int							probe;
-	bool						rvb;
-	bool						rpb;
-	bool						a;
-	bool						c;
-	bool						processed;
-	bool						valid;
-	bool						pendingRsp;
-	bool						dm;
-	bool						vs;
-	bool						ms;
-	u8							ID;
-	u8							sysData[AXP_21264_SIZE_QUAD];
-	u8							vdb;
-	u8							maf;
-} AXP_21264_CBOX_PQ;
 
 /*
  * In HRM Section 2, the MAF is documented as being in the Mbox/Memory
@@ -437,14 +430,14 @@ typedef struct
  */
 typedef struct
 {
+	u64					sysData[AXP_21264_DATA_SIZE];
+	u64					pa;
+	int					bufLen;
 	bool				processed;
 	bool				valid;
-	u64					pa;
-	u64					mask;
-	i8					lqSqEntry[AXP_21264_MBOX_MAX];
+	u8					mask;
 	u8					storeLen;
-	u8					sysData[AXP_21264_SIZE_QUAD];
-	int					bufLen;
+	i8					lqSqEntry[AXP_21264_MBOX_MAX];
 } AXP_21264_CBOX_IOWB;
 
 #define AXP_IOWB_ID_MASK		0x08
