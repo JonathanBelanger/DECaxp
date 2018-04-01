@@ -506,12 +506,13 @@ extern AXP_CPU_CONFIG AXP_CPU_Configurations[];
  */
 int AXP_LoadConfig_File(char *);
 bool AXP_ConfigGet_CPUType(u32 *, u32 *);
-u64 AXP_ConfigGet_UniqueCPUID(void);
+u32	AXP_ConfigGet_CPUCount(void);
 bool AXP_ConfigGet_InitFile(char *);
 bool AXP_ConfigGet_PALFile(char *);
 bool AXP_ConfigGet_ROMFile(char *);
 bool AXP_ConfigGet_NVRAMFile(char *);
 bool AXP_ConfigGet_CboxCSRFile(char *);
+void AXP_ConfigGet_DarrayInfo(u32 *, u64 *);
 void AXP_TraceConfig(void);
 
 #endif /* _AXP_CONFIGURE_DEFS_ */

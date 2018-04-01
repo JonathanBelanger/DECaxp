@@ -35,14 +35,6 @@
 #include "AXP_21274_Dchip.h"
 #include "AXP_21274_Pchip.h"
 
-typedef enum
-{
-	phase0,
-	phase1,
-	phase2,
-	phase3
-} AXP_21274_PHASES;
-
 /*
  * The following definitions are used for the bit vectors, addrMatchWait,
  * pageHit, and olderRqs.  Each bit represents an entry in the queue of 6
