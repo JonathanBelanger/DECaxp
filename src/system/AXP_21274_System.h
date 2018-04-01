@@ -46,9 +46,9 @@ typedef struct
 	u8					*pqTop;
 	u8					*pqBottom;
 	u8					*irq_H;
-	AXP_21274_RQ_ENTRY	rq[AXP_21274_CCHIP_RQ_LEN];
-	u32					rqStart;
-	u32					rqEnd;
+	AXP_21274_RQ_ENTRY	skidBuffer[AXP_21274_CCHIP_RQ_LEN];
+	u32					skidStart;
+	u32					skidEnd;
 } AXP_21274_CPU;
 
 #define AXP_21274_MAX_CPUS		4
@@ -124,6 +124,7 @@ typedef struct
 	/*************************************************************************
 	 * Cchip Data and Information											 *
 	 *************************************************************************/
+	pthread_t			cChipThreadID;
 	pthread_mutex_t		cChipMutex;
 	pthread_cond_t		cChipCond;
 	AXP_21274_CPU		cpu[AXP_21274_MAX_CPUS];
@@ -168,6 +169,7 @@ typedef struct
 	/*************************************************************************
 	 * Dchip Data and Information											 *
 	 *************************************************************************/
+	pthread_t			dChipThreadID;
 	pthread_mutex_t		dChipMutex;
 	pthread_cond_t		dChipCond;
 	u32					arrayCount;
@@ -185,8 +187,10 @@ typedef struct
 	/*************************************************************************
 	 * Pchip Data and Information											 *
 	 *************************************************************************/
+	pthread_t			p0ThreadID;
 	pthread_mutex_t		p0Mutex;
 	pthread_cond_t		p0Cond;
+	pthread_t			p1ThreadID;
 	pthread_mutex_t		p1Mutex;
 	pthread_cond_t		p1Cond;
 

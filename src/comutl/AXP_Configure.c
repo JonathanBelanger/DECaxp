@@ -109,12 +109,10 @@ static AXP_21264_CONFIG	_axp_21264_config_=
 };
 
 /*
- * CPU Count
- *	This value is used to identify each CPU as it is created.  This is where
- *	the value for the WHAMI IPR is determined.  This CPU-ID has a mutex to make
- *	sure no more than one CPU gets any particular ID.
+ * This mutex is used to make sure multiple threads are not accessing the same
+ * information simulateously.  This, in effect, single threads the code that
+ * returns configuration information.
  */
-static u64 _axp_cpu_id_counter_;
 static pthread_mutex_t _axp_config_mutex_;
 
 /*
@@ -3259,36 +3257,32 @@ bool AXP_ConfigGet_CPUType(u32 *major, u32 *minor)
 		 */
 		retVal = true;
 	}
+
+	/*
+	 * Return the result of this call.
+	 */
 	return(retVal);
 }
 
 /*
- * AXP_ConfigGet_UniqueCPUID
- *	This function is called to return a unique CPU-ID (starting with a value of
- *	zero).
- *
- * Input Parameters:
- *	None.
- *
- * Output Parameters:
- *	None.
- *
- * Return Values:
- *	A unique CPU-ID value, starting with 0.
+ * AXP_ConfigGet_CPUCount
+ *	This function is called to return the number of CPUs defined in the
+ *	configuration file.
  */
-u64 AXP_ConfigGet_UniqueCPUID(void)
+u32	AXP_ConfigGet_CPUCount(void)
 {
-	u64	retVal;
+	u32		retVal = 0;
 
 	/*
-	 * Lock the interface mutex, get the next CPU-ID, then unlock the mutex.
+	 * Lock the interface mutex, get the major and minor CPU type values,
+	 * then unlock the mutex.
 	 */
 	pthread_mutex_lock(&_axp_config_mutex_);
-	retVal = _axp_cpu_id_counter_++;
+	retVal = _axp_21264_config_.system.cpus.count;
 	pthread_mutex_unlock(&_axp_config_mutex_);
 
 	/*
-	 * Return the unique CPU-ID selected, back to the caller.
+	 * Return back to the caller.
 	 */
 	return(retVal);
 }
@@ -3530,6 +3524,51 @@ bool AXP_ConfigGet_CboxCSRFile(char *CSRfile)
 	 * Return the outcome back to the caller.
 	 */
 	return(retVal);
+}
+
+/*
+ * AXP_ConfigGet_DarrayInfo
+ *	This function is called to return the size and number of Memory Arrays
+ *	configured for this emulation.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	memArrayCnt:
+ *		A pointer to a 32-bit unsigned integer to receive the number of memory
+ *		arrays specified in the configuration definition.
+ *	memArraySize:
+ *		A pointer to a 64-bit unsigned integer to receive the size, in bytes,
+ *		of the size of each memory array.  This implementation makes all the
+ *		arrays the same size.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_ConfigGet_DarrayInfo(u32 *memArrayCnt, u64 *memArraySize)
+{
+
+	/*
+	 * If we have places to copy the values, then do so now.
+	 */
+	if ((memArrayCnt != NULL) && (memArraySize != NULL))
+	{
+
+		/*
+		 * Lock the interface mutex, copy the values into the return variables,
+		 * then unlock the mutex.
+		 */
+		pthread_mutex_lock(&_axp_config_mutex_);
+		*memArrayCnt = _axp_21264_config_.system.darrays.count;
+		*memArraySize = _axp_21264_config_.system.darrays.size;
+		pthread_mutex_unlock(&_axp_config_mutex_);
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
 }
 
 /*

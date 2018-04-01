@@ -40,6 +40,7 @@
  */
 #include "AXP_21274_System.h"
 #include "AXP_21274_Cchip.h"
+#include "AXP_21274_21264_Common.h"
 
 /*
  * AXP_21274_CchipInit
@@ -66,8 +67,6 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	/*
 	 * Initialization for CSC (HRM Table 10-10)
 	 *
-	 * TODO:	p1w and p0w loaded from CAPbus<13:12> during reset.
-	 * TODO:	pip powers up to the value present on the CAPREQ<1> pin.
 	 * TODO:	iddw, iddr, and aw are updated when the Dchip STR register is
 	 *			written.
 	 * TODO:	Byte 0 powers up to the value present on bits <7:0> of the
@@ -103,13 +102,13 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	sys->csc.dwfp = AXP_DWFP_5_CYCLES;
 	sys->csc.dwtp = AXP_DWTP_5_CYCLES;
 	sys->csc.res_15 = 0;
-	sys->csc.pip = 0;
+	sys->csc.pip = 1;	/* in this implementation P1 is always present */
 	sys->csc.iddw = AXP_IDDW_6_CYCLES;
 	sys->csc.iddr = AXP_IDDR_9_CYCLES;
 	sys->csc.aw = AXP_AW_16_BYTES;
 	sys->csc.fw = 0;
-	sys->csc.sfd = 0;
-	sys->csc.sed = 0;
+	sys->csc.sfd = AXP_SFD_2_CYCLES;
+	sys->csc.sed = AXP_SED_2_CYCLES;
 	sys->csc.c1cfp = 0;
 	sys->csc.c0cfp = 0;
 	sys->csc.bc = 0;
@@ -410,21 +409,21 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 		{
 			for (jj = 0; jj < AXP_21274_DATA_SIZE; jj++)
 			{
-				sys->cpu[hh].rq[ii].sysData[jj] = 0;
+				sys->cpu[hh].skidBuffer[ii].sysData[jj] = 0;
 			}
-			sys->cpu[hh].rq[ii].mask;
-			sys->cpu[hh].rq[ii].pa;
-			sys->cpu[hh].rq[ii].cmd = Sysbus_NOP;
-			sys->cpu[hh].rq[ii].status = HitClean;
-			sys->cpu[hh].rq[ii].phase = phase0;
-			sys->cpu[hh].rq[ii].entry = 0;
-			sys->cpu[hh].rq[ii].sysDataLen = 0;
-			sys->cpu[hh].rq[ii].waitVector = 0;
-			sys->cpu[hh].rq[ii].miss2 = false;
-			sys->cpu[hh].rq[ii].rqValid = false;
-			sys->cpu[hh].rq[ii].cacheHit = false;
+			sys->cpu[hh].skidBuffer[ii].mask;
+			sys->cpu[hh].skidBuffer[ii].pa;
+			sys->cpu[hh].skidBuffer[ii].cmd = Sysbus_NOP;
+			sys->cpu[hh].skidBuffer[ii].status = HitClean;
+			sys->cpu[hh].skidBuffer[ii].phase = phase0;
+			sys->cpu[hh].skidBuffer[ii].entry = 0;
+			sys->cpu[hh].skidBuffer[ii].sysDataLen = 0;
+			sys->cpu[hh].skidBuffer[ii].waitVector = 0;
+			sys->cpu[hh].skidBuffer[ii].miss2 = false;
+			sys->cpu[hh].skidBuffer[ii].rqValid = false;
+			sys->cpu[hh].skidBuffer[ii].cacheHit = false;
 		}
-		sys->cpu[hh].rqStart = sys->cpu[hh].rqEnd = 0;
+		sys->cpu[hh].skidStart = sys->cpu[hh].skidEnd = 0;
 	}
 
 	/*

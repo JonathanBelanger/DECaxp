@@ -80,6 +80,12 @@
  *	register can be mapped to both a source and destination register in the
  *	same instruction.  Therefore, the mapping registers cannot be a simple one,
  *	but needs to account for this condition.
+ *
+ *	V01.012		01-Apr-2018	Jonathan D. Belanger
+ *	Moved the function prototype for the call to allocate a CPU structure to
+ *	the system/AXP_21274_21264_Common.h file.  When the System structure is
+ *	allocated, it will call the CPU allocation function for each of the CPUs
+ *	configured on the system.
  */
 #ifndef _AXP_21264_CPU_DEFS_
 #define _AXP_21264_CPU_DEFS_
@@ -884,10 +890,5 @@ typedef struct
  * Bits associated with a naturally aligned 64-byte block of memory.
  */
 #define AXP_21264_ALIGN_MEM_BLK		0xffffffffffffffc0ll
-
-/*
- * CPU Allocation Function Prototype.
- */
-AXP_21264_CPU *AXP_21264_AllocateCPU(void);
 
 #endif /* _AXP_21264_CPU_DEFS_ */

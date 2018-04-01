@@ -44,16 +44,17 @@
  * 	threads have been created in here.
  *
  * Input Parameters:
- * 	None.
+ *	cpuID:
+ *		A 64-bit unsigned value to be assigned to this allocated CPU.
  *
  * Output Parameters:
- * 	None.
+ *	None.
  *
  * Return Value:
- * 	NULL:	An error occurred allocating and initializing the CPU structure.
- * 	!NULL:	Normal successful completion.
+ *	NULL:	An error occurred allocating and initializing the CPU structure.
+ *	!NULL:	Normal successful completion.
  */
-AXP_21264_CPU *AXP_21264_AllocateCPU(void)
+void *AXP_21264_AllocateCPU(u64 cpuID)
 {
 	AXP_21264_CPU	*cpu;
 	int				pthreadRet;
@@ -173,8 +174,7 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 		/*
 		 * Get the CPU-ID and store it in the WHAMI IPR/
 		 */
-		if (qRet == true)
-			cpu->whami = AXP_ConfigGet_UniqueCPUID();
+		cpu->whami = cpuID;
 
 		/*
 		 * At this point, we lock the CPU mutex, to hold back any of the CPU
@@ -256,21 +256,39 @@ AXP_21264_CPU *AXP_21264_AllocateCPU(void)
 			cpu = NULL;
 		}
 	}
-	return(cpu);
+
+	/*
+	 * Return the address of the allocated CPU structure to the caller.
+	 */
+	return((void *) cpu);
 }
 
 /*
  * AXP_21264_Save_WHAMI
  *	This function is called by the System after creating the CPU structure.  It
  *	stores the identifier for the specified CPU into the specified location.
+ *
+ * Input Parameters:
+ *	cpuPtr:
+ *		A void pointer to the CPU structure.  This will be recast so that the
+ *		System does not have to have knowledge of the specifics of the CPU.
+ *
+ * Output Parameters:
+ *	cpuID:
+ *		A pointer to an unsigned 64-bit value, the size of the WHAMI register,
+ *		to receive the ID assigned to this particular CPU.
+ *
+ * Return Values:
+ *	None.
  */
 void AXP_21264_Save_WHAMI(void *cpuPtr, u64 *cpuID)
 {
 	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) cpuPtr;
 
 	/*
-	 * TODO:
+	 * Set the CPU ID for this CPU into the output parameter.
 	 */
+	*cpuID = cpu->whami;
 
 	/*
 	 * Return back to the caller.
@@ -283,26 +301,122 @@ void AXP_21264_Save_WHAMI(void *cpuPtr, u64 *cpuID)
  *	This function is called by the System after creating the CPU structure.  It
  *	stores the information required for the CPU to be able to send to the
  *	system and the system to the CPU.
+ *
+ * Input Parameters:
+ *	cpuPtr:
+ *		A void pointer to the CPU structure.  This will be recast so that the
+ *		System does not have to have knowledge of the specifics of the CPU.
+ *	sysMutex:
+ *		A pointer to the System Interface mutex to be stored into the CPU.
+ *	sysCond:
+ *		A pointer to the System Interface condition variable to be stored into
+ *		the CPU.
+ *	rq:
+ *		A pointer to the System Interface request queue, where requests from
+ *		the CPU will be queued up for processing by the System.
+ *	rqStart:
+ *		A pointer to the System Interface request queue starting entry.  This
+ *		is the location where the System will remove entries for processing.
+ *	rqEnd:
+ *		A pointer to the System Interface request queue last entry.  This is
+ *		incremented to the next location where the CPU will add entries to be
+ *		processed by the System.
+ *
+ * Output Parameters:
+ * 	cpuMutex:
+ *		A pointer to the address where the CPU's System Interface mutex is to
+ *		be stored.
+ * 	cpuCond:
+ *		A pointer to the address where the CPU's System Interface condition
+ *		variable is to be stored.
+ *	pq:
+ *		A pointer to the address, of type void in this function, of the CPU's
+ *		Probe Queue (System Interface), where the System queues up requests for
+ *		the CPU to process.
+ *	pqTop:
+ *		A pointer to an unsigned 8-bit value where the CPU can store the top
+ *		entry to be processed by the CPU.  The CPU removes entries from this
+ *		location within the PQ for processing.
+ *	pqBottm:
+ *		A pointer to an unsigned 8-bit value where the CPU can store the bottom
+ *		entry to be processed by the CPU.  The System adds entries to  this
+ *		location within the PQ.
+ *	irq_H:
+ *		A pointer to an unsigned 8-bit value where the System can store the
+ *		interrupts for the CPU to process.
+ *
+ * Return Values:
+ *	None.
  */
 void AXP_21264_Save_SystemInterfaces(
 						void *cpuPtr,
-						pthread_mutex_t *mutex,
-						pthread_cond_t *cond,
-						void *pqPtr,
+						pthread_mutex_t **cpuMutex,
+						pthread_cond_t **cpuCond,
+						void **pq,
 						u8 *pqTop,
 						u8 *pqBottom,
 						u8 *irq_H,
-						void *rqPtr,
+						pthread_mutex_t *sysMutex,
+						pthread_cond_t *sysCond,
+						void *rq,
 						u32	*rqStart,
 						u32 *rqEnd)
 {
 	AXP_21264_CPU		*cpu = (AXP_21264_CPU *) cpuPtr;
-	AXP_21264_CBOX_PQ	*pq = (AXP_21264_CBOX_PQ *) pqPtr;
-	AXP_21264_RQ_ENTRY	*rq = (AXP_21264_RQ_ENTRY *) rqPtr;
 
 	/*
-	 * TODO:
+	 * First, set the data needed for the CPU to be able to communicate with
+	 * the System into the CPU structure.
 	 */
+	cpu->system.cond = sysCond;
+	cpu->system.mutex = sysMutex;
+	cpu->system.rq = (AXP_21264_RQ_ENTRY *) rq;
+	cpu->system.rqStart = rqStart;
+	cpu->system.rqEnd = rqEnd;
+
+	/*
+	 * Finally, set the data needed for the System to be able to communicate
+	 * with the CPU into the output parameters.
+	 */
+	*cpuMutex = &cpu->cBoxInterfaceMutex;
+	*cpuCond = &cpu->cBoxInterfaceCond;
+	*pq = (void *) cpu->pq;
+	*pqTop = &cpu->pqTop;
+	*pqBottom = &cpu->pqBottom;
+	*irq_H = &cpu->irqH;
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21264_Unlock_CPU
+ *	This function is called to unlock the CPU mutex.  It is locked prior to the
+ *	CPU threads getting created, so that the BiST will not execute and an
+ *	initial load requested until the system is ready.
+ *
+ * Input Parameters:
+ *	cpuPtr:
+ *		A void pointer to the CPU structure.  This will be recast so that the
+ *		System does not have to have knowledge of the specifics of the CPU.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_21264_Unlock_CPU(void *cpuPtr)
+{
+	AXP_21264_CPU		*cpu = (AXP_21264_CPU *) cpuPtr;
+
+	/*
+	 * Unlock the CPU mutex.  This will allow all the CPU threads to being
+	 * there executions.
+	 */
+	pthread_mutex_unlock(cpu->cpuMutex);
 
 	/*
 	 * Return back to the caller.
