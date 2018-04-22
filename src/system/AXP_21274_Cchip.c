@@ -409,25 +409,107 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 		{
 			for (jj = 0; jj < AXP_21274_DATA_SIZE; jj++)
 			{
-				sys->cpu[hh].skidBuffer[ii].sysData[jj] = 0;
+				sys->skidBuffer[ii].sysData[jj] = 0;
 			}
-			sys->cpu[hh].skidBuffer[ii].mask;
-			sys->cpu[hh].skidBuffer[ii].pa;
-			sys->cpu[hh].skidBuffer[ii].cmd = Sysbus_NOP;
-			sys->cpu[hh].skidBuffer[ii].status = HitClean;
-			sys->cpu[hh].skidBuffer[ii].phase = phase0;
-			sys->cpu[hh].skidBuffer[ii].entry = 0;
-			sys->cpu[hh].skidBuffer[ii].sysDataLen = 0;
-			sys->cpu[hh].skidBuffer[ii].waitVector = 0;
-			sys->cpu[hh].skidBuffer[ii].miss2 = false;
-			sys->cpu[hh].skidBuffer[ii].rqValid = false;
-			sys->cpu[hh].skidBuffer[ii].cacheHit = false;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].mask;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].pa;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].cmd = Sysbus_NOP;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].status = HitClean;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].phase = phase0;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].entry = 0;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].cpuID = 0;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].sysDataLen = 0;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].waitVector = 0;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].miss2 = false;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].rqValid = false;
+			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].cacheHit = false;
 		}
-		sys->cpu[hh].skidStart = sys->cpu[hh].skidEnd = 0;
+		sys->skidStart = sys->skidEnd = 0;
 	}
 
 	/*
 	 * Return back to the caller.
 	 */
 	return;
+}
+
+/*
+ * AXP_21274_Cbox_Main
+ * 	This is the main function for the Cchip.  It looks at its queues to
+ * 	determine if there is anything that needs to be processed from the CPUs or
+ * 	devices (PCI).
+ *
+ * Input Parameters:
+ * 	sys:
+ * 		A pointer to the System structure for the emulated DECchip 21272/21274
+ * 		chipsets.
+ *
+ * Output Parameters:
+ * 	None.
+ *
+ * Return Value:
+ * 	None.
+ */
+void *AXP_21274_CchipMain(void *voidPtr)
+{
+	AXP_21274_SYSTEM	*sys = (AXP_21274_SYSTEM *) voidPtr;
+
+	/*
+	 * Log that we are starting.
+	 */
+	if (AXP_SYS_CALL)
+	{
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("Cchip is starting");
+		AXP_TRACE_END();
+	}
+
+	/*
+	 * First lock the Cchips mutex so that we can make sure to coordinate
+	 * access to the Cchip's queues.
+	 */
+	pthread_mutex_lock(&sys->cChipMutex);
+
+	/*
+	 * TODO: Need to determine what the end condition for this loop should be.
+	 */
+	while (true)
+	{
+
+		/*
+		 * The Cchip performs the following functions:
+		 * 	- Accepts requests from the Pchips and the CPUs
+		 * 	- Orders the arriving requests as required
+		 * 	- Selects among the requests to issue controls to the DRAMs
+		 * 	- Issues probes to the CPUs as appropriate to the selected requests
+		 * 	- Translates CPU PIO addresses to PCI and CSR addresses
+		 * 	- Issues commands to the Pchip as appropriate to the selected (PIO
+		 * 	  or PTP) requests
+		 * 	- Issues responses to the Pchip and CPU as appropriate to the
+		 * 	  issued requests
+		 * 	- Issues controls to the Dchip as appropriate to the DRAM accesses,
+		 * 	  and the probe and Pchip responses
+		 * 	- Controls the TIGbus to manage interrupts, and maintains CSRs
+		 * 	  including those that represent interrupt status
+		 *
+		 * This first thing we need to do is wait for something to arrive to be
+		 * processed.
+		 */
+		while (sys->skidStart == sys->skidEnd)
+			pthread_cond_wait(&sys->cChipCond, &sys->cChipMutex);
+
+		/*
+		 * HRM 6.1.3 Request, Probe, and Data Ordering.
+		 */
+
+	}
+
+	/*
+	 * We are shutting down.  Since we started everything, we need
+	 * to clean ourself up.  The main function will be joining to
+	 * all the threads it created and then freeing up the memory
+	 * and exiting the image.
+	 */
+	pthread_exit(NULL);
+	return(NULL);
 }
