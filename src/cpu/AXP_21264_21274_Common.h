@@ -246,6 +246,7 @@ typedef struct
 	AXP_21264_PHASES		phase;
 	int						entry;
 	int						sysDataLen;
+	u32						cpuID;
 	u16						waitVector;
 	bool					miss1;
 	bool					miss2;

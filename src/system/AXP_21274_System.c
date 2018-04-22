@@ -30,12 +30,11 @@
 
 AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 {
-	AXP_21274_SYSTEM *sys = NULL;
+	AXP_21274_SYSTEM *sys;
 	void			*cpu[AXP_21274_MAX_CPUS];
 	int				pthreadRet;
 	int				ii;
 	u32				cpuCount;
-	u64				cpuID;
 	bool			qRet = true;
 
 	sys = AXP_Allocate_Block(AXP_21274_SYS_BLK);
@@ -90,9 +89,9 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 												&sys->cpu[ii].irq_H,
 												&sys->cChipMutex,
 												&sys->cChipCond,
-												sys->cpu[ii].skidBuffer,
-												&sys->cpu[ii].skidStart,
-												&sys->cpu[ii].skidEnd);
+												sys->skidBuffer,
+												&sys->skidStart,
+												&sys->skidEnd);
 
 					}
 					else
