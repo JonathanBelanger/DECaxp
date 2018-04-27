@@ -52,6 +52,9 @@
  *	WrBytes/WrLWs/WrQWs or ReadBytes/ReadLWs/ReadQWs.  We need to mimic this,
  *	but do it in a single step.  We need some macros to set/decode the
  *	appropriate set of mask bits (each bit represent a single byte).
+ *
+ *	V01.006		26-Apr-2018	Jonathan D. Belanger
+ *	Added macros to INSQUE and REMQUE entries from a doubly linked list.
  */
 #ifndef _AXP_UTIL_DEFS_
 #define _AXP_UTIL_DEFS_
@@ -185,6 +188,21 @@ typedef struct queueHeader
 #define AXP_INIT_QUEP(queue)	queue->flink = queue->blink = (void *) queue
 #define AXP_QUE_EMPTY(queue)	(queue.flink == (void *) &queue.flink)
 #define AXP_QUEP_EMPTY(queue)	(queue->flink == (void *) &queue->flink)
+#define AXP_REMQUE(entry) 													\
+	{																		\
+		(AXP_QUEUE_HDR *) ((AXP_QUEUE_HDR *) (entry)->blink)->flink =		\
+			(AXP_QUEUE_HDR *) (entry)->flink;								\
+		(AXP_QUEUE_HDR *) ((AXP_QUEUE_HDR *) (entry)->flink)->blink =		\
+			(AXP_QUEUE_HDR *) (entry)-blink;								\
+	}
+#define AXP_INSQUE(queue, entry)											\
+	{																		\
+		(AXP_QUEUE_HDR *) (entry)->blink = (AXP_QUEUE_HDR *) (queue);		\
+		(AXP_QUEUE_HDR *) (entry)->flink = (AXP_QUEUE_HDR *) (queue)->flink;\
+		(AXP_QUEUE_HDR *) ((AXP_QUEUE_HDR *) (queue)->flink)->blink =		\
+			(AXP_QUEUE_HDR *) (entry);										\
+		(AXP_QUEUE_HDR *) (queue)->flink = (AXP_QUEUE_HDR *) (entry;		\
+	}
 
 /*
  * A counted queue.  If maximum is specified as zero at initialization, then
