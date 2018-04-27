@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  * Copyright (C) Jonathan D. Belanger 2018.
  * All Rights Reserved.
  *
@@ -227,17 +227,18 @@ typedef enum
  *	- Address
  *	- Phase, Valid
  *	- Status (such as probe results)
- *	- Address match wait vector – A bit vector identifying the older requests
+ *	- Address match wait vector ï¿½ A bit vector identifying the older requests
  *	  in this queue with (nearly) the same address, and for which this request
  *	  must wait
- *	- Page hit vector – A bit vector identifying the older requests in this
+ *	- Page hit vector ï¿½ A bit vector identifying the older requests in this
  *	  queue with the same DRAM page address, so that this request can issue
  *	  after a previous request without waiting for RAS precharge delay
- *	- Older request vector – A bit vector identifying all older requests in
+ *	- Older request vector ï¿½ A bit vector identifying all older requests in
  *	  this queue (used to arbitrate among otherwise equal ready requests)
  */
 typedef struct
 {
+	AXP_QUEUE_HDR			header;
 	u64						sysData[AXP_21274_DATA_SIZE];
 	u64						mask;
 	u64						pa;
@@ -251,6 +252,7 @@ typedef struct
 	bool					miss2;
 	bool					rqValid;
 	bool					cacheHit;
+	bool					inUse;
 } AXP_21274_RQ_ENTRY;
 
 #define AXP_21274_CCHIP_RQ_LEN	6	/* Per CPU */

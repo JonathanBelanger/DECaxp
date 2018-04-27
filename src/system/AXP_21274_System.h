@@ -64,9 +64,9 @@ typedef struct
  *		- Type of DRAM SIMMs (synchronous 16MB or 64MB, with various timing
  *		  parameters)
  *
- * The combinations for possible system configurations are listed in Table 2–1.
+ * The combinations for possible system configurations are listed in Table 2?1.
  *
- *	Table 2–1 System Configurations
+ *	Table 2?1 System Configurations
  *	--------------------------------------------------------------------------------------
  *										Pchip-to-
  *	Number of	Number of	Number of	Dchip Bus	Number		Number of		Memory Bus
@@ -82,7 +82,7 @@ typedef struct
  *	(2) Preferable for dual processors.
  *	(3) Two memory buses are recommended when using two or four CPUs.
  *
- * The following notes also apply to Table 2–1.
+ * The following notes also apply to Table 2?1.
  *		- A 32-byte memory bus can be half-populated, in which case, it
  *		  operates as a 16-byte memory bus. The difference is that the maximum
  *		  number of arrays on the bus is still four.
@@ -95,7 +95,7 @@ typedef struct
  *		- The PADbus (Pchip-to-Dchip) can run at 83 MHz for a raw bandwidth of
  *		  400-MB/s, ignoring turnaround cycles.
  *		- In a system with eight Dchips, each Dchip transfers 1 check bit, but
- *		  only ½ byte per cycle. So the Pchip transfers 8 bytes with check bits
+ *		  only ? byte per cycle. So the Pchip transfers 8 bytes with check bits
  *		  every two cycles over a 40-wire interface.
  *		- In a system with eight Dchips, the Dchips support up to four CPUs,
  *		  but the Cchip only supports one or two CPUs.
@@ -124,9 +124,9 @@ typedef struct
 	pthread_t			cChipThreadID;
 	pthread_mutex_t		cChipMutex;
 	pthread_cond_t		cChipCond;
-	AXP_21274_RQ_ENTRY	skidBuffer[AXP_21274_CCHIP_RQ_LEN * AXP_21274_MAX_CPUS];
-	u32					skidStart;
-	u32					skidEnd;
+	AXP_QUEUE_HDR		skidBufferQ;
+	AXP_21274_RQ_ENTRY	skidBuffers[AXP_21274_CCHIP_RQ_LEN * AXP_21274_MAX_CPUS];
+	u32					skidLastUsed;
 	AXP_21274_CPU		cpu[AXP_21274_MAX_CPUS];
 
 	/*
