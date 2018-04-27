@@ -43,6 +43,54 @@
 #include "AXP_21274_21264_Common.h"
 
 /*
+ * Table 10–1 System Address Map
+ *	Space			Size	System Address <43:0>		Comments
+ *	System memory	4GB		000.0000.0000–000.FFFF.FFFF	Cacheable and
+ *														prefetchable.
+ *	Reserved		8188GB	001.0000.0000–7FF.FFFF.FFFF	—
+ *	Pchip0 PCI		4GB		800.0000.0000–800.FFFF.FFFF Linear addressing.
+ *	memory
+ *	TIGbus			1GB		801.0000.0000–801.3FFF.FFFF	addr<5:0> = 0.
+ *														Single byte valid in
+ *														quadword access.
+ *														16MB accessible.
+ *	Reserved		1GB		801.4000.0000–801.7FFF.FFFF	—
+ *	Pchip0 CSRs		256MB	801.8000.0000–801.8FFF.FFFF	addr<5:0> = 0.
+ *														Quadword access.
+ *	Reserved		256MB	801.9000.0000–801.9FFF.FFFF	—
+ *	Cchip CSRs		256MB	801.A000.0000–801.AFFF.FFFF	addr<5:0> = 0.
+ *														Quadword access.
+ *	Dchip CSRs		256MB	801.B000.0000–801.BFFF.FFFF	addr<5:0> = 0.
+ *														All eight bytes in
+ *														quadword access must be
+ *														identical.
+ *	Reserved		768MB	801.C000.0000–801.EFFF.FFFF	—
+ *	Reserved		128MB	801.F000.0000–801.F7FF.FFFF	—
+ *	PCI IACK/		64MB	801.F800.0000–801.FBFF.FFFF	Linear addressing.
+ *	special Pchip0
+ *	Pchip0 PCI I/O	32MB	801.FC00.0000–801.FDFF.FFFF	Linear addressing.
+ *	Pchip0 PCI		16MB	801.FE00.0000–801.FEFF.FFFF	Linear addressing.
+ *	configuration
+ *	Reserved		16MB	801.FF00.0000–801.FFFF.FFFF	—
+ *	Pchip1 PCI		4GB		802.0000.0000–802.FFFF.FFFF	Linear addressing.
+ *	memory
+ *	Reserved		2GB		803.0000.0000–803.7FFF.FFFF	—
+ *	Pchip1 CSRs		256MB	803.8000.0000–803.8FFF.FFFF	addr<5:0> = 0,
+ *														quadword access.
+ *	Reserved		1536MB	803.9000.0000–803.EFFF.FFFF	—
+ *	Reserved		128MB	803.F000.0000–803.F7FF.FFFF	—
+ *	PCI IACK/		64MB	803.F800.0000–803.FBFF.FFFF	Linear addressing.
+ *	special Pchip1
+ *	Pchip1 PCI I/O	32MB	803.FC00.0000–803.FDFF.FFFF	Linear addressing.
+ *	Pchip1 PCI		16MB	803.FE00.0000–803.FEFF.FFFF	Linear addressing.
+ *	configuration
+ *	Reserved		16MB	803.FF00.0000–803.FFFF.FFFF	—
+ *	Reserved		8172GB	804.0000.0000–FFF.FFFF.FFFF	Bits <42:35> are don’t
+ *														cares if bit <43> is
+ *														asserted.
+ */
+
+/*
  * AXP_21274_CchipInit
  *	This function is called to initialize the Cchip CSRs as documented in HRM
  *	10.2 Chipset Registers.
@@ -371,7 +419,7 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	/*
 	 * Initialization for CMONCNT01 (HRM Table 10-29)
 	 *
-	 *	Table 10–28 Correspondence Between ECNT and MTE/MSK
+	 *	Table 10?28 Correspondence Between ECNT and MTE/MSK
 	 *	-----------------------------------------------------------------------
 	 *	Field to Increment		MTE Field Used		MSK Field Used
 	 *	-----------------------------------------------------------------------
@@ -387,7 +435,7 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	/*
 	 * Initialization for CMONCNT23 (HRM Table 10-30)
 	 *
-	 *	Table 10–28 Correspondence Between ECNT and MTE/MSK
+	 *	Table 10?28 Correspondence Between ECNT and MTE/MSK
 	 *	-----------------------------------------------------------------------
 	 *	Field to Increment		MTE Field Used		MSK Field Used
 	 *	-----------------------------------------------------------------------
@@ -453,6 +501,7 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 void *AXP_21274_CchipMain(void *voidPtr)
 {
 	AXP_21274_SYSTEM	*sys = (AXP_21274_SYSTEM *) voidPtr;
+	AXP_21274_RQ_ENTRY	*rq;
 
 	/*
 	 * Log that we are starting.
@@ -495,13 +544,118 @@ void *AXP_21274_CchipMain(void *voidPtr)
 		 * This first thing we need to do is wait for something to arrive to be
 		 * processed.
 		 */
-		while (sys->skidStart == sys->skidEnd)
+		while AXP_QUE_EMPTY(sys->skidBufferQ)
 			pthread_cond_wait(&sys->cChipCond, &sys->cChipMutex);
+		
+		/*
+		 * We have something to process.
+		 */
+		rq = (AXP_21274_RQ_ENTRY *) sys->skidBufferQ.flink;
+		AXP_REMQUE(rq);
 
 		/*
-		 * HRM 6.1.3 Request, Probe, and Data Ordering.
+		 * At this point, we can unlock the Cchip mutex so that other threads
+		 * can send requests to the Cchip.  We'll lock it before we mark the
+		 * request to be processed as no longer in use.
 		 */
+		pthread_mutex_unlock(&sys->cChipMutex);
 
+		/*
+		 * Determine what has been requested and make the call needed to
+		 * complete request.
+		 */
+		switch (rq->cmd)
+		{
+
+			/*
+			 * A CPU responded to a probe request form the system.  There
+			 * should be another request being processed in the request queue.
+			 */
+			case ProbeResponse:
+				break;
+
+			/*
+			 * These are no-ops and can be ignored.
+			 */
+			case Sysbus_NOP:
+			case NZNOP:
+				break;
+
+			/*
+			 * The CPU has requested that a Victim block be flushed.
+			 */
+			case VDBFlushRequest:
+				break;
+
+			/*
+			 * These are Memory access requests.  These are requests to and
+			 * from memory.
+			 */
+			case WrVictimBlk:
+			case CleanVictimBlk:
+				break;
+
+			/*
+			 * These are control messages for the caches and memory.  It makes
+			 * sure that all memory access, reads and writes, initiated prior
+			 * to the MB are completed and that the block in question is
+			 * evicted from the cache.
+			 */
+			case Evict:
+			case Sysbus_MB:
+				break;
+
+			/*
+			 * These are PIO requests.  These are requests to and from CSRs and
+			 * I/O Devices.
+			 */
+			case ReadBytes:
+			case ReadLWs:
+			case ReadQWs:
+				AXP_21274_Cchip_PIORead(sys, rq);
+				break;
+
+			case WrBytes:
+			case WrLWs:
+			case WrQWs:
+				AXP_21274_Cchip_PIOWrite(sys, rq);
+				break;
+
+			/*
+			 * These are Memory access requests.  These are requests to and
+			 * from memory.
+			 */
+			case ReadBlk:
+			case ReadBlkMod:
+			case ReadBlkI:
+			case FetchBlk:
+			case ReadBlkSpec:
+			case ReadBlkModSpec:
+			case ReadBlkSpecI:
+			case FetchBlkSpec:
+			case ReadBlkVic:
+			case ReadBlkModVic:
+			case ReadBlkVicI:
+				break;
+
+			/*
+			 * These are cache state change requests.
+			 */
+			case InvalToDirtyVic:
+			case CleanToDirty:
+			case SharedToDirty:
+			case STCChangeToDirty:
+			case InvalToDirty:
+				break;
+		}
+
+		/*
+		 * At this point, we have to relock the Cchip mutex so that other
+		 * threads don't interrupt the Cchip while it is using memory that is
+		 * accessed and potentially updated by other threads.
+		 */
+		pthread_mutex_lock(&sys->cChipMutex);
+		rq->inUse = false;
 	}
 
 	/*

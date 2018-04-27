@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  * Copyright (C) Jonathan D. Belanger 2018.
  * All Rights Reserved.
  *
@@ -72,7 +72,7 @@
  * 0001 PCI special cycle				2			T, Mask
  * 0010 PCI IO read						2			T, Mask
  * 0011 PCI IO write					2			T, Mask
- * 0100 Reserved						—			—
+ * 0100 Reserved						ï¿½			ï¿½
  * 0101 PCI memory write, PTP			2			T, Mask
  * 0110 PCI memory read					2			T, Mask
  * 0111 PCI memory write, from CPU		2			T, Mask
@@ -81,34 +81,34 @@
  * 1010 PCI configuration read			2			T, Mask
  * 1011 PCI configuration write			2			T, Mask
  * 1100 Load PADbus data downstream		1			LDP
- * 1101 Reserved (Pchip upstream LoadP)	—			—
- * 1110 Reserved						—			—
- * 1111 No-op							1			—
+ * 1101 Reserved (Pchip upstream LoadP)	ï¿½			ï¿½
+ * 1110 Reserved						ï¿½			ï¿½
+ * 1111 No-op							1			ï¿½
  * ----------------------------------------------------------------------------
  * (1) For details, refer to command descriptions.
  *
- * HRM Table 6–8 Pchip-to-Cchip and Pchip-to-Pchip Bypass Commands
+ * HRM Table 6ï¿½8 Pchip-to-Cchip and Pchip-to-Pchip Bypass Commands
  * ----------------------------------------------------------------------------
  * Code	Command 								Cycles		Valid Fields
  * ----------------------------------------------------------------------------
  * 0000	DMA read N QW							2			T=10, Mask
  * 0001	Scatter-gather table entry read N QW	2			T=10, Mask
- * 0010	Reserved								—			—
- * 0011	Reserved								—			—
- * 0100	Reserved								—			—
- * 0101	Reserved								—			—
+ * 0010	Reserved								ï¿½			ï¿½
+ * 0011	Reserved								ï¿½			ï¿½
+ * 0100	Reserved								ï¿½			ï¿½
+ * 0101	Reserved								ï¿½			ï¿½
  * 0110	PTP memory read							2			T, Mask
  * 0111	PTP memory write						2			T=10, Mask
  * 1000	DMA RMW QW								2			T=10, only one mask
  * 															bit set
  * 1001	DMA write N QW							2			T=10, Mask
- * 1010	Reserved								—			—
- * 1011	Reserved								—			—
- * 1100	Reserved (Cchip downstream LoadP)		—			—
+ * 1010	Reserved								ï¿½			ï¿½
+ * 1011	Reserved								ï¿½			ï¿½
+ * 1100	Reserved (Cchip downstream LoadP)		ï¿½			ï¿½
  * 1101	Load PADbus data upstream				2 or 5(1)	LDP
  * 1110	PTP write byte-mask bypass				2			See text in Section
  * 															6.2.3.2
- * 1111	No-op									1			—
+ * 1111	No-op									1			ï¿½
  * ----------------------------------------------------------------------------
  * (1) For details, refer to command descriptions.
  */
@@ -138,7 +138,7 @@ typedef enum
 } AXP_CAPbus_Command;
 
 /*
- * Table 6–4 Encoding of T Field T Mask Type PADbus Transfer Characteristics
+ * Table 6ï¿½4 Encoding of T Field T Mask Type PADbus Transfer Characteristics
  * ----------------------------------------------------------------------------
  * T	Mask Type	PADbus Transfer Characteristics
  * ----------------------------------------------------------------------------
@@ -164,7 +164,7 @@ typedef enum
 } AXP_MaskType;
 
 /*
- * Table 6–5 C-Bit Encoding
+ * Table 6ï¿½5 C-Bit Encoding
  * ----------------------------
  * C-Bit	Meaning
  * ----------------------------
@@ -179,7 +179,7 @@ typedef enum
 } AXP_CAPbusCbit;
 
 /*
- * Table 6–6 LDP Encoding
+ * Table 6ï¿½6 LDP Encoding
  * -------------------------------------------------------------------
  * LDP		Meaning for Downstream LoadP	Meaning for Upstream LoadP
  * -------------------------------------------------------------------
@@ -200,7 +200,7 @@ typedef enum
 /*
  * HRM 6.2.3 CAPbus Command Encodings
  *
- * Figure 6–3 shows the format of the 2-cycle CAPbus commands. Table 6–4 lists
+ * Figure 6ï¿½3 shows the format of the 2-cycle CAPbus commands. Table 6ï¿½4 lists
  * the encoding of the T field, the number of quadwords for which the PADbus is
  * busy with the transfer, and the address of the first quadword transferred.
  * The mask field denotes which data is valid in the transfer, and is aligned
@@ -209,7 +209,7 @@ typedef enum
  * represent four quadwords. For quadword transfers, the eight bits represent
  * up to a full cache block (eight quadwords).
  *
- *	Figure 6–3 Format of 2-Cycle Commands
+ *	Figure 6ï¿½3 Format of 2-Cycle Commands
  *
  *			 2  2  2  2  1  1  1  1  1  1  1  1  1  1
  *			 3  2  1  0  9  8  7  6  5  4  3  2  1  0  9  8  7  6  5  4  3  2  1  0
@@ -219,7 +219,7 @@ typedef enum
  *	Phase 2	| T| X|				Mask			|		  Address<34:32><11:3>		|
  *			+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
  *
- *	Figure 6–4 Format of 2-Cycle Commands
+ *	Figure 6ï¿½4 Format of 2-Cycle Commands
  *
  *			 2  2  2  2  1  1  1  1  1  1  1  1  1  1
  *			 3  2  1  0  9  8  7  6  5  4  3  2  1  0  9  8  7  6  5  4  3  2  1  0
