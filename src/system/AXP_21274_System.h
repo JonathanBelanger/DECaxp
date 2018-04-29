@@ -213,7 +213,7 @@ typedef struct
 	AXP_21274_PLAT		p0Plat;		/* Address: 801.8000.0340 */
 	/* AXP_21274_RES	p0Res;		 * Address: 801.8000.0380 */
 	AXP_21274_PERROR	p0Perror;	/* Address: 801.8000.03c0 */
-	AXP_21274_PERRMASK	p0PerMask;	/* Address: 801.8000.0400 */
+	AXP_21274_PERRMASK	p0PerrMask;	/* Address: 801.8000.0400 */
 	AXP_21274_PERRSET	p0PerrSet;	/* Address: 801.8000.0440 */
 	AXP_21274_TLBIV		p0Tlbiv;	/* Address: 801.8000.0480 */
 	AXP_21274_PMONCTL	p0MonCtl;	/* Address: 801.8000.0500 */
@@ -235,7 +235,7 @@ typedef struct
 	AXP_21274_PLAT		p1Plat;		/* Address: 803.8000.0340 */
 	/* AXP_21274_RES	p1Res;		 * Address: 803.8000.0380 */
 	AXP_21274_PERROR	p1Perror;	/* Address: 803.8000.03c0 */
-	AXP_21274_PERRMASK	p1PerMask;	/* Address: 803.8000.0400 */
+	AXP_21274_PERRMASK	p1PerrMask;	/* Address: 803.8000.0400 */
 	AXP_21274_PERRSET	p1PerrSet;	/* Address: 803.8000.0440 */
 	AXP_21274_TLBIV		p1Tlbiv;	/* Address: 803.8000.0480 */
 	AXP_21274_PMONCTL	p1MonCtl;	/* Address: 803.8000.0500 */

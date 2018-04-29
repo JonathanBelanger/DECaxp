@@ -1032,14 +1032,25 @@ typedef u64 AXP_21274_DRIR;
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
- *	RES			<63:1>		MBZ		0		Reserved
- *	PRBEN		<0>			RTC,WTS	0		Probe enable bit
+ *	RES			<63:4>		MBZ		0		Reserved
+ *	PRBEN3		<3>			RTC,WTS	0		Probe enable bit for CPU3
+ *	PRBEN2		<2>			RTC,WTS	0		Probe enable bit for CPU2
+ *	PRBEN1		<1>			RTC,WTS	0		Probe enable bit for CPU1
+ *	PRBEN0		<0>			RTC,WTS	0		Probe enable bit for CPU0
  *	---------------------------------------------------------------------------
+ *	NOTE:	This register is read from to clean the bit and written to to set
+ *			the bit.  It is never returned or anything.  So, to help things
+ *			along, I introduced 3 more bit, so that there is now one bit for
+ *			each CPU.  This is different than the HRM, but this is actually a
+ *			pseudo-register and is never returned on reading.
  */
 typedef struct
 {
-	u64	prben	: 1;	/* Probe enable bit */
-	u64	res_2	: 63;	/* Reserved at bits 63:2 */
+	u64	prben0	: 1;	/* Probe enable bit CPU0 */
+	u64	prben1	: 1;	/* Probe enable bit CPU1 */
+	u64	prben2	: 1;	/* Probe enable bit CPU2 */
+	u64	prben3	: 1;	/* Probe enable bit CPU3 */
+	u64	res_2	: 60;	/* Reserved at bits 63:4 */
 } AXP_21274_PRBEN;
 
 /*
