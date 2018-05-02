@@ -50,12 +50,12 @@
  * Cchip on power-up. Bits <13:8> are written whenever the Dchip register STR
  * is written. This ensures that the Cchip and Dchip versions of these fields
  * are always synchronized, because the system will not function correctly if
- * they are not the same. Table 10–9 describes the Tsunami Cchip configuration
- * register (CSC). Table 10–10 describes the Typhoon Cchip configuration
+ * they are not the same. Table 10?9 describes the Tsunami Cchip configuration
+ * register (CSC). Table 10?10 describes the Typhoon Cchip configuration
  * register (CSC).  Below is the Typhoon CSC, as this is a superset of the
  * Tsunami CSC.
  *
- *	Table 10–10 Cchip System Configuration Register (CSC) (Typhoon Only)
+ *	Table 10-10 Cchip System Configuration Register (CSC) (Typhoon Only)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -64,11 +64,11 @@
  *	P1W(1)		<61>		RO		1		= Wide PADbus 1. (Typhoon only)
  *	P0W(1)		<60>		RO		1		= Wide PADbus 0. (Typhoon only)
  *	RES			<59>		MBZ,RAZ	0		Reserved.
- *	PBQMAX(2)	<58:56>		RW		1		CPU probe queue maximum – 0
+ *	PBQMAX(2)	<58:56>		RW		1		CPU probe queue maximum - 0
  *											indicates 8 entries.
  *	RES			<55>		MBZ,RAZ	0		Reserved.
  *	PRQMAX		<54:52>		RW		2		Maximum requests to one Pchip until
- *											ACK, modulo 8 – the value 1 is
+ *											ACK, modulo 8 - the value 1 is
  *											illegal. Pchip Rev. 0 allows up to
  *											4.
  *	RES			<51>		MBZ,RAZ	0		Reserved.
@@ -116,11 +116,11 @@
  *											-----------------------------------
  *											Value	Cycles
  *											-----------------------------------
- *											0		1 cycle – SED must be 2 or
+ *											0		1 cycle - SED must be 2 or
  *													3 cycles.
- *											1		2 cycles – SED must be 3,
+ *											1		2 cycles - SED must be 3,
  *													4, or 5 cycles.
- *											2		3 cycles – SED must be 3,
+ *											2		3 cycles - SED must be 3,
  *													4, or 5 cycles.
  *											3		Reserved.
  *											-----------------------------------
@@ -167,7 +167,7 @@
  *	P1P(3)		<14>		RO				Pchip 1 present.
  *	IDDW		<13:12>		RO(4)	3		Issue to data delay for all
  *											transactions except memory reads
- *											(see Table 7–5).
+ *											(see Table 7-5).
  *											-----------------------------------
  *											Value	Cycles
  *											-----------------------------------
@@ -177,7 +177,7 @@
  *											3		6 cycles
  *											-----------------------------------
  *	IDDR		<11:9>		RO(4)	4		Issue to data delay for memory
- *											reads (see Table 7–5).
+ *											reads (see Table 7-5).
  *											-----------------------------------
  *											Value Cycles
  *											-----------------------------------
@@ -208,7 +208,7 @@
  *											0		2 cycles
  *											1		3 cycles
  *											-----------------------------------
- *	SED(5)		<5:4>		RO				SysDC extract delay – The number of
+ *	SED(5)		<5:4>		RO				SysDC extract delay - The number of
  *											cycles from the SysDC cycle to the
  *											first CPU data cycle when moving
  *											data out of the CPU.
@@ -284,6 +284,15 @@ typedef struct
 } AXP_21274_CSC;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_CSC_RMASK	0x377777FFFF3F7FFF
+#define AXP_21274_CSC_WMASK	0x077777FFFF3F0000
+
+/*
  * Definitions for the values in various fields in the CSC.
  */
 #define AXP_EFT_0_CYCLES			0
@@ -338,60 +347,61 @@ typedef struct
 /*
  * HRM 10.2.2.2 - Memory Timing Register(MTR - RW) (page 10-26)
  *
- *	Table 10–11 Memory Timing Register (MTR) (Continued)
+ *	Table 10-11 Memory Timing Register (MTR) (Continued)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
  *	RES			<63:46>		MBX,RAZ	0		Reserved.
- *	MPH			<45:40>		RW		0		Maximum page hits – The most page
+ *	MPH			<45:40>		RW		0		Maximum page hits - The most page
  *											hits the memory controller allows
  *											before forcing a page to be closed.
  *											The issue unit can, under some
  *											circumstances, sneak in one more
  *											page hit than this parameter
  *											allows.
- *	PHCW		<39:36>		RW		14		Page hit cycles for writes – The
+ *	PHCW		<39:36>		RW		14		Page hit cycles for writes - The
  *											number of cycles that the memory
  *											controller must wait after a write
  *											is issued until it attempts to
  *											close the page.
  *
  *											Note: Must be greater than or equal
- *											to the greater of (IRD + RPW – 2)
- *											and (IRD + RCD + bl + tRWL – 3),
+ *											to the greater of (IRD + RPW - 2)
+ *											and (IRD + RCD + bl + tRWL - 3),
  *											where bl is 4 for 16-byte buses and
  *											2 for 32-byte buses.
  *
  *											Note: Initializes as 14 in the Rev.
  *											C Cchip; initializes as 15 in the
  *											Rev. B Cchip.
- *	PHCR		<35:32>		RW		15		Page hit cycles for reads – The
+ *	PHCR		<35:32>		RW		15		Page hit cycles for reads - The
  *											number of cycles that the memory
  *											controller must wait after a read
  *											is issued until it attempts to
  *											close the page.
  *
  *											Note: Must be greater than or equal
- *											to the greater of (RPW – 2) and
- *											(RCD + bl – 2) where bl is 4 for
+ *											to the greater of (RPW - 2) and
+ *											(RCD + bl - 2) where bl is 4 for
  *											16-byte buses and 2 for 32-byte
  *											buses.
  *	RES			<31:30>		MBZ,RAZ	0		Reserved.
- *	RI			<29:24>		RW		0		Refresh interval – The number of
+ *	RI			<29:24>		RW		0		Refresh interval - The number of
  *											cycles per refresh interval divided
  *											by 64. Each DRAM is refreshed once
  *											per refresh interval. A value of 0
  *											disables refreshing.  The values 1,
  *											2, and 3 are illegal.
  *	RES			<23:21>		MBZ,RAZ	0		Reserved.
- *	MPD			<20>		RW		0		Mask pipeline delay – The
+ *	MPD			<20>		RW		0		Mask pipeline delay - The
  *											b_mndqm<1:0> signals to the SDRAMs
  *											may need to be buffered. Setting
  *											this bit causes the memory
  *											controllers to signal the DQM masks
  *											one cycle earlier to compensate.
+ *	RES			<19:17>		MBZ,RAZ	0		Reserved.
  *	RRD			<16>		RW		0		Minimum same-array different-bank
- *											RAS-to-RAS delay – The minimum
+ *											RAS-to-RAS delay - The minimum
  *											number of cycles from the Row
  *											Activate or Refresh command to the
  *											next Row Activate or Refresh
@@ -404,7 +414,7 @@ typedef struct
  *											1		3
  *											-----------------------------------
  *	RES			<15:14>		MBZ,RAZ	0		Reserved.
- *	RPT			<13:12>		RW		0		Minimum RAS precharge time – The
+ *	RPT			<13:12>		RW		0		Minimum RAS precharge time - The
  *											minimum number of cycles from a
  *											Precharge command to the next Row
  *											Activate or Refresh command to the
@@ -418,7 +428,7 @@ typedef struct
  *											3		Reserved
  *											-----------------------------------
  *	RES			<11:10>		MBZ,RAZ	0		Reserved.
- *	RPW			<9:8>		RW		0		Minimum RAS pulse width (tRAS) –
+ *	RPW			<9:8>		RW		0		Minimum RAS pulse width (tRAS) -
  *											The minimum number of cycles from a
  *											Row Activate or Refresh command to
  *											the next Precharge command to the
@@ -434,7 +444,7 @@ typedef struct
  *											3		7
  *											-----------------------------------
  *	RES			<7>			MBZ,RAZ	0		Reserved.
- *	IRD			<6:4>		RW		0		Issue to RAS delay – For memory
+ *	IRD			<6:4>		RW		0		Issue to RAS delay - For memory
  *											writes this is the number of cycles
  *											from when the arbitrator issues the
  *											request, to when the DRAM row is
@@ -453,7 +463,7 @@ typedef struct
  *											7		Reserved
  *											-----------------------------------
  *	RES			<3>			MBZ,RAZ	0		Reserved.
- *	CAT			<2>			RW		0		CAS access time – The number of
+ *	CAT			<2>			RW		0		CAS access time - The number of
  *											cycles from the CAS command to when
  *											data appears on the DRAM outputs.
  *											Must be greater than or equal to
@@ -465,7 +475,7 @@ typedef struct
  *											1		3
  *											-----------------------------------
  *	RES			<1>			MBZ,RAZ	0		Reserved.
- *	RCD			<0>			RW		0		RAS-to-CAS delay – The number of
+ *	RCD			<0>			RW		0		RAS-to-CAS delay - The number of
  *											cycles from the Row Activate
  *											command to the next Read or Write
  *											command to the same bank. Must be
@@ -502,6 +512,15 @@ typedef struct
 } AXP_21274_MTR;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_MTR_RMASK	0x00003FFF3F113375
+#define AXP_21274_MTR_WMASK	0x00003FFF3F113375
+
+/*
  * Definitions for the values in various fields in the MTR.
  */
 #define AXP_MPD__NO_DELAY			0
@@ -527,7 +546,7 @@ typedef struct
 #define AXP_RCD_3_CYCLES			1
 
 /*
- * HRM 10.2.2.3 Miscellaneous Register (MISC – RW) (page 10-29)
+ * HRM 10.2.2.3 Miscellaneous Register (MISC - RW) (page 10-29)
  *
  * This register is designed so that there are no read side effects, and that
  * writing a 0 to any bit has no effect. Therefore, when software wants to
@@ -538,10 +557,10 @@ typedef struct
  * NXM field. The ABW (arbitration won) field is locked if either ABW bit is
  * set, so the first CPU to write it locks out the other CPU. Writing a 1 to
  * ACL (arbitration clear) clears both ABW bits and both ABT (arbitration try)
- * bits and unlocks the ABW field. Table 10–12 describes the miscellaneous
+ * bits and unlocks the ABW field. Table 10-12 describes the miscellaneous
  * register (MISC).
  *
- * 	Table 10–12 Miscellaneous Register (MISC)
+ * 	Table 10-12 Miscellaneous Register (MISC)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -552,11 +571,11 @@ typedef struct
  *											polling machine has completed a
  *											poll of all PCI devices.
  *											(<43:42> are used in Typhoon only)
- *	REV			<39:32>		RO		—		Latest revision of Cchip:
+ *	REV			<39:32>		RO		-		Latest revision of Cchip:
  *									1		21272 (Tsunami)
  *									8		21274 (Typhoon)
- *	NXS			<31:29>		RO		0		NXM source – Device that caused the
- *											NXM – UNPREDICTABLE if NXM is not
+ *	NXS			<31:29>		RO		0		NXM source - Device that caused the
+ *											NXM - UNPREDICTABLE if NXM is not
  *											set.
  *											-----------------------------------
  *											Value	Source
@@ -564,9 +583,9 @@ typedef struct
  *											0		CPU 0
  *											1		CPU 1
  *											2		Reserved
- *													CPU2 – Typhoon only
+ *													CPU2 - Typhoon only
  *											3		Reserved
- *													CPU3 – Typhoon only
+ *													CPU3 - Typhoon only
  *											4		Pchip 0
  *											5		Pchip 1
  *											6, 7	Reserved
@@ -575,35 +594,35 @@ typedef struct
  *											detected.  Sets DRIR<63> and locks
  *											the NXS field until it is cleared.
  *	RES			<27:25>		MBZ,RAZ	0		Reserved.
- *	ACL			<24>		WO		0		Arbitration clear – writing a 1 to
+ *	ACL			<24>		WO		0		Arbitration clear - writing a 1 to
  *											this bit clears the ABT and ABW
  *											fields.
- *	ABT			<23:20>		R,W1S	0		Arbitration try – writing a 1 to
+ *	ABT			<23:20>		R,W1S	0		Arbitration try - writing a 1 to
  *											these bits sets them. (<23:22> are
  *											used in Typhoon only)
- *	ABW			<19:16>		R,W1S	0		Arbitration won – writing a 1 to
+ *	ABW			<19:16>		R,W1S	0		Arbitration won - writing a 1 to
  *											these bits sets them unless one is
  *											already set, in which case the
  *											write is ignored.
  *											(<19:18> are used in Typhoon only)
- *	IPREQ		<15:12>		WO		0		Interprocessor interrupt request –
+ *	IPREQ		<15:12>		WO		0		Interprocessor interrupt request -
  *											write a 1 to the bit corresponding
  *											to the CPU you want to interrupt.
  *											Writing a 1 here sets the
  *											corresponding bit in the IPINTR.
  *											(<15:14> are used in Typhoon only)
- *	IPINTR		<11:8>		R,W1C	0		Interprocessor interrupt pending –
+ *	IPINTR		<11:8>		R,W1C	0		Interprocessor interrupt pending -
  *											one bit per CPU. Pin irq<3> is
  *											asserted to the CPU corresponding
  *											to a 1 in this field.
  *											(<11:10> are used in Typhoon only)
- *	ITINTR		<7:4>		R,W1C	0		Interval timer interrupt pending –
+ *	ITINTR		<7:4>		R,W1C	0		Interval timer interrupt pending -
  *											one bit per CPU. Pin irq<2> is
  *											asserted to the CPU corresponding
  *											to a 1 in this field.
  *											(<7:6> are used in Typhoon only)
  *	RES			<3:2>		MBZ,RAZ	0		Reserved.
- *	CPUID		<1:0>		RO		—		ID of the CPU performing the read.
+ *	CPUID		<1:0>		RO		-		ID of the CPU performing the read.
  *											(<1> are used in Typhoon only)
  */
 typedef struct
@@ -623,6 +642,20 @@ typedef struct
 	u64	devSup	: 4;	/* Suppress IRQ 1 (device) interrupts to the CPU */
 	u64	res_44	: 20;	/* Reserved at bits 63:44 */
 } AXP_21274_MISC;
+
+/*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, Read-WriteOneClear, and Read-WriteOneSet.  Reserved is masked
+ * out for both reads and writes.  Read-Only are masked out for writes.
+ * Write-only are masked out for reads.  Read-WriteOneClear are masked in for
+ * reads and certain writes where writing a 1 will actually clear the bit.
+ * Read-WriteOneSet are masked in for reads and certain writes where writing
+ * a 1 will set the bit.
+ */
+#define AXP_21274_MISC_RMASK	0x000000FFF0FF0FF3
+#define AXP_21274_MISC_WOMASK	0x00000F000100F000
+#define AXP_21274_MISC_W1SMASK	0x0000000000FF0000
+#define AXP_21274_MISC_W1CMASK	0x0000000010000FF0
 
 /*
  * Definitions for the values in various fields in the MISC.
@@ -665,21 +698,21 @@ typedef struct
 #define AXP_CPUID_CPU3				3
 
 /*
- * HRM 10.2.2.4 Memory Presence Detect Register (MPD – RW)
+ * HRM 10.2.2.4 Memory Presence Detect Register (MPD - RW)
  *
  * The memory presence detect register is connected to two open-drain pins on
  * the Cchip.  These pins can be used by software to implement the I2C protocol
- * to read the serial presence detect pins on the SDRAM DIMMs. Table 10–13
+ * to read the serial presence detect pins on the SDRAM DIMMs. Table 10-13
  * describes the memory presence detect register (MPD).
  *
- * Table 10–13 Memory Presence Detect Register (MPD)
+ * Table 10-13 Memory Presence Detect Register (MPD)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
  *	RES			<63:4>		MBZ,RAZ	0		Reserved
  *	DR			<3>			RO		1		Data receive
  *	CKR			<2>			RO		1		Clock receive
- *	DS			<1>			WO		1		Data send – Must be a 1 to receive
+ *	DS			<1>			WO		1		Data send - Must be a 1 to receive
  *	CKS			<0>			WO		1		Clock send
  *	---------------------------------------------------------------------------
  */
@@ -693,20 +726,29 @@ typedef struct
 } AXP_21274_MPD;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_MPD_RMASK	0x000000000000000C
+#define AXP_21274_MPD_WMASK	0x0000000000000003
+
+/*
  * Definitions for the values in various fields in the MPD.
  */
 #define AXP_MPD_CLEAR				0
 #define AXP_MPD_SET					1
 
 /*
- * HRM 10.2.2.5 Array Address Register (AAR0, AAR1, AAR2, AAR3 – RW)
+ * HRM 10.2.2.5 Array Address Register (AAR0, AAR1, AAR2, AAR3 - RW)
  *
- *	Table 10–15 Array Address Register (AAR0, AAR1, AAR2, AAR3) (Typhoon Only)
+ *	Table 10-15 Array Address Register (AAR0, AAR1, AAR2, AAR3) (Typhoon Only)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
  *	RES			<63:35>		MBZ,RAZ	0		Reserved.
- *	ADDR		<34:24>		RW		0		Base address – Bits <34:24> of the
+ *	ADDR		<34:24>		RW		0		Base address - Bits <34:24> of the
  *											physical byte address of the first
  *											byte in the array.
  *											(<27:24> are used in Tsunami only;
@@ -735,7 +777,7 @@ typedef struct
  *														Typhoon only)
  *											1010	8GB (Reserved Tsunami;
  *														Typhoon only)
- *											1011–	Reserved.
+ *											1011-	Reserved.
  *											 1111
  *											-----------------------------------
  *	RES			<11:10>		MBZ,RAZ	0		Reserved.
@@ -777,6 +819,15 @@ typedef struct
 } AXP_21274_AARx;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_ARRx_RMASK	0x00000007FF01F30F
+#define AXP_21274_ARRx_WMASK	0x00000007FF01F30F
+
+/*
  * Definitions for the values in various fields in the AARx.
  */
 #define AXP_ADDR_MASK_TSUNAMI	0x00000000ff000000ll
@@ -804,17 +855,17 @@ typedef struct
 #define AXP_BNKS_3_BITS			2
 
 /*
- * HRM 10.2.2.6 Device Interrupt Mask Register (DIMn, n=0,3 – RW)
+ * HRM 10.2.2.6 Device Interrupt Mask Register (DIMn, n=0,3 - RW)
  *
  * Register n applies to CPUn. (Typhoon only: n=2,3.)
  *
  * These two mask registers control which interrupts are allowed to go through
  * to the CPUs. No interrupt in DRIR will get through to the masked interrupt
  * registers (and on to interrupt the CPUs) unless the corresponding mask bit
- * is set in DIMn. All bits are initialized to 0 at reset. Table 10–16
+ * is set in DIMn. All bits are initialized to 0 at reset. Table 10-16
  * describes the device interrupt mask registers.
  *
- *	Table 10–16 Device Interrupt Mask Register (DIMn)
+ *	Table 10-16 Device Interrupt Mask Register (DIMn)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -894,17 +945,17 @@ typedef u64 AXP_21274_DIMn;
 #define AXP_DIM_INTR_63		0x8000000000000000ll
 
 /*
- * HRM 10.2.2.7 Device Interrupt Request Register (DIRn, n=0,3 – RO)
+ * HRM 10.2.2.7 Device Interrupt Request Register (DIRn, n=0,3 - RO)
  *
  * Register n applies to CPUn. (Typhoon only: n=2,3.)
  *
  * These two registers indicate which interrupts are pending to the CPUs. If a
  * raw request bit is set and the corresponding mask bit is set, then the
  * corresponding bit in this register will be set and the appropriate CPU will
- * be interrupted. Table 10–17 describes the device interrupt request
+ * be interrupted. Table 10-17 describes the device interrupt request
  * registers.
  *
- *	Table 10–17 Device Interrupt Request Register (DIRn)
+ *	Table 10-17 Device Interrupt Request Register (DIRn)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -914,7 +965,7 @@ typedef u64 AXP_21274_DIMn;
  *											error
  *											<61> recommended hookup to Pchip1
  *											error
- *											Others per module designer’s choice
+ *											Others per module designer-s choice
  *	RES			<57:56>		RO		0		Reserved
  *	DEV			<55:0>		RO		0		IRQ1 PCI interrupts pending to the
  *											CPU
@@ -928,6 +979,11 @@ typedef struct
 } AXP_21274_DIRn;
 
 /*
+ * The following macros mask in bits that are Read-Only.
+ */
+#define AXP_21274_DIRn_RMASK	0xFCFFFFFFFFFFFFFF
+
+/*
  * Definitions for the values in various fields in the DIRx.
  */
 #define AXP_ERR_NXM					0x20
@@ -936,12 +992,12 @@ typedef struct
 /* TODO: What are we supposed to do with the DEV field */
 
 /*
- * HRM 10.2.2.8 Device Raw Interrupt Request Register (DRIR – RO)
+ * HRM 10.2.2.8 Device Raw Interrupt Request Register (DRIR - RO)
  *
  * DRIR indicates which of the 64 possible device interrupts is asserted. Table
- * 10–18 describes the device raw interrupt request register (DRIR).
+ * 10-18 describes the device raw interrupt request register (DRIR).
  *
- *	Table 10–18 Device Interrupt Mask Register (DIMn)
+ *	Table 10-18 Device Interrupt Mask Register (DIMn)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -1020,15 +1076,15 @@ typedef u64 AXP_21274_DRIR;
 #define AXP_DRIR_INTR_63	0x8000000000000000ll
 
 /*
- * HRM 10.2.2.9 Probe Enable Register (PRBEN – RW)
+ * HRM 10.2.2.9 Probe Enable Register (PRBEN - RW)
  *
  * This register is special in that reads do not return the value of the
  * register, but rather cause the probe enable bit for the requesting CPU to be
  * cleared. The return data is UNPREDICTABLE. Writing to this register causes
  * the probe enable bit for the requesting CPU to be set, regardless of the
- * value written. Table 10–19 describes the probe enable register (PRBEN).
+ * value written. Table 10-19 describes the probe enable register (PRBEN).
  *
- *	Table 10–19 Probe Enable Register (PRBEN)
+ *	Table 10-19 Probe Enable Register (PRBEN)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -1060,7 +1116,7 @@ typedef struct
 #define AXP_PRBEN_ENABLED			1
 
 /*
- * HRM Interval Ignore Count Register (IICn, n=0,3 – RW)
+ * HRM Interval Ignore Count Register (IICn, n=0,3 - RW)
  *
  * Register n applies to CPUn. (Typhoon only: n=2,3.)
  *
@@ -1071,15 +1127,15 @@ typedef struct
  * to 0, the next interval timer interrupt will be sent through to the CPU.
  * After the wake-up tick is received, the count goes negative, and the OF bit
  * is set on the next timer interval tick. This allows the CPU to determine
- * exactly how many interval timer ticks were skipped. Table 10–20 describes
+ * exactly how many interval timer ticks were skipped. Table 10-20 describes
  * the interval ignore count register (IIC).
  *
- *	Table 10–20 Interval Ignore Count Register (IIC)
+ *	Table 10-20 Interval Ignore Count Register (IIC)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
  *	RES			<63:25>		MBZ,RAZ	0		Reserved
- *	OF			<24>		RO		0		Overflow – Indicates negative count
+ *	OF			<24>		RO		0		Overflow - Indicates negative count
  *	ICNT		<23:0>		RW		0		Count of remaining interrupts to
  *											ignore
  *	---------------------------------------------------------------------------
@@ -1092,19 +1148,28 @@ typedef struct
 } AXP_21274_IICn;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_IICn_RMASK	0x0000000001FFFFFF
+#define AXP_21274_IICn_WMASK	0x0000000000FFFFFF
+
+/*
  * Definitions for the values in various fields in the IICn.
  */
 #define AXP_OF_POSITIVE			0
 #define AXP_OF_NEGATIVE			1
 
 /*
- * HRM 10.2.2.11 Wake-Up Delay Register (WDR – RW)
+ * HRM 10.2.2.11 Wake-Up Delay Register (WDR - RW)
  *
  * The WDR register determines how long (in system cycles) the chipset waits
  * after a reset, or after sending a wake-up interrupt to a sleeping CPU,
  * before deasserting b_cfrst<1:0>.
  *
- *	Table 10–21 Wake-Up Delay Register (WDR)
+ *	Table 10-21 Wake-Up Delay Register (WDR)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -1119,18 +1184,27 @@ typedef struct
 } AXP_21274_WDR;
 
 /*
- * HRM 10.2.2.12 Memory Programming Register (MPR0, MPR1, MPR2, MPR3 – WO)
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_WDR_RMASK	0x0000000001FFFFFF
+#define AXP_21274_WDR_WMASK	0x0000000001FFFFFF
+
+/*
+ * HRM 10.2.2.12 Memory Programming Register (MPR0, MPR1, MPR2, MPR3 - WO)
  *
  * A write to these registers causes a RAM program cycle (a mode register set
  * command) to the associated memory array using the data written to the MPRDAT
- * field. Table 10–22 describes the memory programming registers.
+ * field. Table 10-22 describes the memory programming registers.
  *
- *	Table 10–22 Memory Programming Register (MPRn)
+ *	Table 10-22 Memory Programming Register (MPRn)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
  *	RES			<63:13>		MBZ		0		Reserved
- *	MPRDAT		<12:0>		WO		—		Data to be written on address lines
+ *	MPRDAT		<12:0>		WO		-		Data to be written on address lines
  *											<12:0>
  *	---------------------------------------------------------------------------
  */
@@ -1141,7 +1215,13 @@ typedef struct
 } AXP_21274_MPRn;
 
 /*
- * HRM 10.2.2.13 M-Port Control Register (MCTL – MBZ)
+ * The following macro mask in Reserved, and Write-Only.  Reserved is masked
+ * out.
+ */
+#define AXP_21274_MPRn_WMASK	0x0000000000003FFF
+
+/*
+ * HRM 10.2.2.13 M-Port Control Register (MCTL - MBZ)
  *
  * The M-port control register controls chipset debug features. It must be 0
  * for normal operations. In Typhoon, this register is replaced by the CMONCTL
@@ -1150,26 +1230,26 @@ typedef struct
 typedef u64 AXP_21274_MCTL;
 
 /*
- * HRM 10.2.2.14 TIGbus Timing Register (TTR – RW)
+ * HRM 10.2.2.14 TIGbus Timing Register (TTR - RW)
  *
  * The TIGbus timing register controls the nonaddress-specific timing of the
- * TIGbus.  Table 10–23 describes the TIGbus timing register (TTR). See Section
+ * TIGbus.  Table 10-23 describes the TIGbus timing register (TTR). See Section
  * 6.3 for timing diagrams and information.
  *
- *	Table 10–23 TIGbus Timing Register (TTR – RW)
+ *	Table 10-23 TIGbus Timing Register (TTR - RW)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
  *	RES			<63:15>		MBZ,RAZ	0		Reserved.
- *	ID			<14:12>		RW		7		Interrupt starting device – If
+ *	ID			<14:12>		RW		7		Interrupt starting device - If
  *											there are fewer than eight
  *											interrupt buffers present on the
  *											module, this field determines the
  *											lowest-order byte number that gets
- *											read in – Devices <7:ID> all
+ *											read in - Devices <7:ID> all
  *											present is a requirement.
  *	RES			<11:10>		MBZ,RAZ	0		Reserved.
- *	IRT			<9:8>		RW		3		Interrupt read time – The number of
+ *	IRT			<9:8>		RW		3		Interrupt read time - The number of
  *											cycles that the interrupt driver is
  *											enabled on the TIGbus before the
  *											interrupt data is latched in the
@@ -1183,7 +1263,7 @@ typedef u64 AXP_21274_MCTL;
  *											3		4 cycles
  *											-----------------------------------
  *	RES			<7:6>		MBZ,RAZ	0		Reserved.
- *	IS			<5:4>		RW		3		Interrupt setup time – The number
+ *	IS			<5:4>		RW		3		Interrupt setup time - The number
  *											of cycles that the Cchip drives the
  *											IRQ data on the TIGbus before
  *											asserting b_tis to strobe the data
@@ -1228,6 +1308,15 @@ typedef struct
 } AXP_21274_TTR;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_TTR_RMASK	0x0000000000007333
+#define AXP_21274_TTR_WMASK	0x0000000000007333
+
+/*
  * Definitions for the values in various fields in the TTR.
  */
 #define AXP_IRT_1_CYCLE			0
@@ -1244,7 +1333,7 @@ typedef struct
 #define AXP_AS_2_CYCLE			1
 
 /*
- * HRM 10.2.2.15 TIGbus Device Timing Register (TDR – RW)
+ * HRM 10.2.2.15 TIGbus Device Timing Register (TDR - RW)
  *
  * One 16-bit field of this register is selected by TIG address bits <23:22> to\
  * allow up to four different timing domains on the TIGbus. All values in the
@@ -1252,9 +1341,9 @@ typedef struct
  * cycle longer than the number in the register (that is, a value of 0 means
  * one cycle). See Section 6.3 for timing diagrams describing these fields.
  *
- * Table 10–24 describes the TIGbus device timing register (TDR).
+ * Table 10-24 describes the TIGbus device timing register (TDR).
  *
- *	Table 10–24 TIGbus Device Timing Register (TDR)
+ *	Table 10-24 TIGbus Device Timing Register (TDR)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -1279,23 +1368,23 @@ typedef struct
  *	RES			<23>		MBZ,RAZ	0		Reserved
  *	RD1			<22:20>		RW		0		See bit RD0
  *	RA1			<19:16>		RW		0		See bit RA0
- *	WH0			<15>		RW		0		Write hold time – The number of
+ *	WH0			<15>		RW		0		Write hold time - The number of
  *											cycles that cs_l, the address, and
  *											the data are held once we_l is
  *											deasserted
- *	WP0			<14:12>		RW		0		Write pulse width – The number of
+ *	WP0			<14:12>		RW		0		Write pulse width - The number of
  *											cycles that we_l is held asserted
  *	RES			<11:10>		MBZ,RAZ	0		Reserved
- *	WS0			<9:8>		RW		0		Write setup time – The number of
+ *	WS0			<9:8>		RW		0		Write setup time - The number of
  *											cycles that the address and data
  *											are held stable to the device
  *											before we_l is asserted
  *	RES			<7>			MBZ,RAZ	0		Reserved
- *	RD0			<6:4>		RW		0		Read output disable time – The
+ *	RD0			<6:4>		RW		0		Read output disable time - The
  *											number of cycles that the device
  *											takes to turn off its output
  *											drivers once oe_l is deasserted
- *	RA0			<3:0>		RW		0		Read access time – The number of
+ *	RA0			<3:0>		RW		0		Read access time - The number of
  *											cycles that cs_l and oe_l are
  *											asserted to the device before the
  *											data is latched in from the TIGbus
@@ -1334,7 +1423,16 @@ typedef struct
 } AXP_21274_TDR;
 
 /*
- * HRM 10.2.2.16 Power Management Control (PWR – RW)
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_TDR_RMASK	0xF37FF37FF37FF37F
+#define AXP_21274_TDR_WMASK	0xF37FF37FF37FF37F
+
+/*
+ * HRM 10.2.2.16 Power Management Control (PWR - RW)
  *
  * This register controls chipset management features. To date, only SDRAM
  * self-refresh mode is implemented.
@@ -1342,9 +1440,9 @@ typedef struct
  * Warning:	Software must ensure that there are no DRAM accesses active in the
  *			21272 when self-refresh mode is active.
  *
- * Table 10–25 describes the power management control register (PWR).
+ * Table 10-25 describes the power management control register (PWR).
  *
- *	Table 10–25 Power Management Control Register (PWR – RW)
+ *	Table 10-25 Power Management Control Register (PWR - RW)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -1365,6 +1463,15 @@ typedef struct
 } AXP_21274_PWR;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_PWR_RMASK	0x0000000000000001
+#define AXP_21274_PWR_WMASK	0x0000000000000001
+
+/*
  * Definitions for the values in various fields in the PWR.
  */
 #define AXP_SR_NORMAL			0
@@ -1378,20 +1485,20 @@ typedef struct
  * mask and match/entry fields provide wide flexibility in the selection of
  * events to count.
  *
- * Table 10–26 describes the Cchip monitor control register CMONCTLA and Table
- * 10–27 describes register CMONCTLB.
+ * Table 10-26 describes the Cchip monitor control register CMONCTLA and Table
+ * 10-27 describes register CMONCTLB.
  *
- *	Table 10–26 Cchip Monitor Control Register (CMONCTLA)
+ *	Table 10-26 Cchip Monitor Control Register (CMONCTLA)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
  *	RES			<63:62>		MBZ,RAZ	0		Reserved.
- *	MSK23		<61:52>		RW		0		Mask field – For ECNT2 and ECNT3,
+ *	MSK23		<61:52>		RW		0		Mask field - For ECNT2 and ECNT3,
  *											the match/entry fields can be used
  *											to qualify the value in the <SLCTn>
  *											field.
  *	RES			<51:50>		MBZ,RAZ	0		Reserved.
- *	MSK01		<49:40>		RW		0		Mask field – For ECNT0 and ECNT1.
+ *	MSK01		<49:40>		RW		0		Mask field - For ECNT0 and ECNT1.
  *	STKDIS3		<39>		RW		0		ECNT3 stick disable.
  *											-----------------------------------
  *											Value	Description
@@ -1447,6 +1554,15 @@ typedef struct
 } AXP_21274_CMONCTLA;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_CMONA_RMASK	0x3FF3FFF3FFFFFFFF
+#define AXP_21274_CMONA_WMASK	0x3FF3FFF3FFFFFFFF
+
+/*
  * Definitions for the values in various fields in the CMONCTLA.
  */
 #define AXP_STKDIS_ALL_ONES			0
@@ -1457,23 +1573,23 @@ typedef struct
 #define AXP_SLCTMBL_MGROUP3			3
 
 /*
- * HRM Table 10–27 Cchip Monitor Control Register (CMONCTLB)
+ * HRM Table 10-27 Cchip Monitor Control Register (CMONCTLB)
  *
- *	Table 10–27 Cchip Monitor Control Register (CMONCTLB)
+ *	Table 10-27 Cchip Monitor Control Register (CMONCTLB)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
  *	RES			<63:62>		MBZ,RAZ	0		Reserved
- *	MTE3		<61:52>		RW		0		Match/entry field – for ECNT3
+ *	MTE3		<61:52>		RW		0		Match/entry field - for ECNT3
  *											The match/entry and mask fields can
  *											be used to qualify the value in the
  *											<SLCTn> field.
  *	RES			<51:50>		MBZ,RAZ	0		Reserved
- *	MTE2		<49:40>		RW		0		Match/entry field – for ECNT2
+ *	MTE2		<49:40>		RW		0		Match/entry field - for ECNT2
  *	RES			<39:38>		MBZ,RAZ	0		Reserved
- *	MTE1		<37:28>		RW		0		Match/entry field – for ECNT1
+ *	MTE1		<37:28>		RW		0		Match/entry field - for ECNT1
  *	RES			<27:26>		MBZ,RAZ	0		Reserved
- *	MTE0		<25:16>		RW		0		Match/entry field – for ECNT0
+ *	MTE0		<25:16>		RW		0		Match/entry field - for ECNT0
  *	RES			<15:1>		MBZ,RAZ	0		Reserved
  *	DIS			<0>			RW		0		Disable monitor output signals:
  *											-----------------------------------
@@ -1500,13 +1616,22 @@ typedef struct
 } AXP_21274_CMONCTLB;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_CMONB_RMASK	0x3FF3FF3FF3FF0001
+#define AXP_21274_CMONB_WMASK	0x3FF3FF3FF3FF0001
+
+/*
  * Definitions for the values in various fields in the CMONCTLB.
  */
 #define AXP_DIS_IN_USE				0
 #define AXP_DIS_STATIC				1
 
 /*
- * HRM 10.2.3.1 Cchip Monitor Counters (CMONCNT01, CMONCNT23 – R0)
+ * HRM 10.2.3.1 Cchip Monitor Counters (CMONCNT01, CMONCNT23 - R0)
  *
  * The 21272 has four 23-bit event counters. The event counted by counter n
  * (ECNTn) is selected by the CMONCTL<SLCTn> field. One of the possible events
@@ -1523,10 +1648,10 @@ typedef struct
  * The <SLCTn> field may specify the use of the CMONCTL fields <MTEx> and
  * <MSKy> to further qualify the selection. In this case, a fixed
  * correspondence occurs between the ECNT field to be updated and the
- * combination MTE/MSK qualifier field used. Table 10–28 shows this
+ * combination MTE/MSK qualifier field used. Table 10-28 shows this
  * correspondence.
  *
- *	Table 10–28 Correspondence Between ECNT and MTE/MSK
+ *	Table 10-28 Correspondence Between ECNT and MTE/MSK
  *	---------------------------------------------------------------------------
  *	Field to Increment		MTE Field Used		MSK Field Used
  *	---------------------------------------------------------------------------
@@ -1536,7 +1661,7 @@ typedef struct
  *	ECNT0					MTE0				MSK01
  *	---------------------------------------------------------------------------
  *
- * CMONCNT01 Registers – Typhoon Only
+ * CMONCNT01 Registers - Typhoon Only
  *
  * All fields in the CMONCNT01 registers are Read/Write; however, the write
  * feature is only for diagnostic purposes. Writing a value of all ones to any
@@ -1545,15 +1670,15 @@ typedef struct
  *
  * All fields of CMONCNT are cleared by reset and when CMONCTLA or CMONCTLB is
  * written. The expected usage is to write CMONCTL, wait for a while, read
- * CMONCNT, and repeat. Table 10–29 shows the CMONCNT01 registers.
+ * CMONCNT, and repeat. Table 10-29 shows the CMONCNT01 registers.
  *
- *	Table 10–29 CMONCNT01 Registers
+ *	Table 10-29 CMONCNT01 Registers
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Values	Description
  *	---------------------------------------------------------------------------
- *	ECNT1		<63:32>		RW		0		—		Increments when Event 1 is
+ *	ECNT1		<63:32>		RW		0		-		Increments when Event 1 is
  *													true
- *	ECNT0		<31:0>		RW		0		—		Increments when Event 0 is
+ *	ECNT0		<31:0>		RW		0		-		Increments when Event 0 is
  *													true
  *	---------------------------------------------------------------------------
  */
@@ -1564,18 +1689,18 @@ typedef struct
 } AXP_21274_CMONCNT01;
 
 /*
- * CMONCNT23 Registers – Typhoon Only
+ * CMONCNT23 Registers - Typhoon Only
  *
- * The operation of CMONCNT23 is the same as that for CMONCNT01. Table 10–30
+ * The operation of CMONCNT23 is the same as that for CMONCNT01. Table 10-30
  * shows the CMONCNT23 registers.
  *
- *	Table 10–30 CMONCNT23 Registers
+ *	Table 10-30 CMONCNT23 Registers
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Values	Description
  *	---------------------------------------------------------------------------
- *	ECNT3		<63:32>		RW		0		—		Increments when Event 3 is
+ *	ECNT3		<63:32>		RW		0		-		Increments when Event 3 is
  *													true
- *	ECNT2		<31:0>		RW		0		—		Increments when Event 2 is
+ *	ECNT2		<31:0>		RW		0		-		Increments when Event 2 is
  *													true
  *	---------------------------------------------------------------------------
  */
@@ -1590,25 +1715,25 @@ typedef struct
  ****************************************************************************/
 
 /*
- * HRM 10.2.4.1 Dchip System Configuration Register (DSC – RO)
+ * HRM 10.2.4.1 Dchip System Configuration Register (DSC - RO)
  *
- *	Table 10–31 Dchip System Configuration Register (DSC)
+ *	Table 10-31 Dchip System Configuration Register (DSC)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
- *	RES			<63:8>		Special	0		—
+ *	RES			<63:8>		Special	0		-
  *							(1)
  *	RES			<7>			RAZ 	0 		Reserved
- *	P1P			<6>			RO 		—(2)	Pchip 1 present
- *	C3CFP		<5>			RO 		—(2)	CPU3 clock forward preset (see
+ *	P1P			<6>			RO 		-(2)	Pchip 1 present
+ *	C3CFP		<5>			RO 		-(2)	CPU3 clock forward preset (see
  *											Chapter 11)
- *	C2CFP		<4>			RO 		—(2)	CPU2 clock forward preset (see
+ *	C2CFP		<4>			RO 		-(2)	CPU2 clock forward preset (see
  *											Chapter 11)
- *	C1CFP		<3>			RO 		—(2)	CPU1 clock forward preset (see
+ *	C1CFP		<3>			RO 		-(2)	CPU1 clock forward preset (see
  *											Chapter 11)
- *	C0CFP		<2>			RO 		—(2)	CPU0 clock forward preset (see
+ *	C0CFP		<2>			RO 		-(2)	CPU0 clock forward preset (see
  *											Chapter 11)
- *	BC			<1:0>		RO 		—(2)	Base configuration
+ *	BC			<1:0>		RO 		-(2)	Base configuration
  *											-----------------------------------
  *											Value	Configuration
  *											-----------------------------------
@@ -1650,20 +1775,25 @@ typedef struct
 } AXP_21274_DSC;
 
 /*
- * HRM 10.2.4.2 Dchip System Configuration Register 2 (DSC2 – R0)
+ * The following macros mask in or out bits that are Reserved, Read-Only.
+ */
+#define AXP_21274_DSC_RMASK	0x000000000000007F
+
+/*
+ * HRM 10.2.4.2 Dchip System Configuration Register 2 (DSC2 - R0)
  *
  * These registers are for future use, for a Dchip that implements wide PADbus
- * support.  Table 10–32 describes the Dchip system configuration register 2.
+ * support.  Table 10-32 describes the Dchip system configuration register 2.
  *
- *	Table 10–32 Dchip System Configuration Register 2 (DSC2)
+ *	Table 10-32 Dchip System Configuration Register 2 (DSC2)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
  *	RES			<63:5>		RO		0		Reserved
- *	RES			<4:2>		RO		—(1)	Reserved
- *	P1W			<1>			RO		—(1)	Reserved
+ *	RES			<4:2>		RO		-(1)	Reserved
+ *	P1W			<1>			RO		-(1)	Reserved
  *											0 = Wide PADbus1 (Typhoon only)
- *	P0W			<0>			RO		—(1)	Reserved
+ *	P0W			<0>			RO		-(1)	Reserved
  *											0 = Wide PADbus0 (Typhoon only)
  *	---------------------------------------------------------------------------
  *	(1)	This register powers up to the value present on bits <4:0> of the
@@ -1678,7 +1808,12 @@ typedef struct
 } AXP_21274_DSC2;
 
 /*
- * HRM 10.2.4.3 System Timing Register (STR – RW)
+ * The following macros mask in or out bits that are Reserved, Read-Only.
+ */
+#define AXP_21274_DSC2_RMASK	0x0000000000000003
+
+/*
+ * HRM 10.2.4.3 System Timing Register (STR - RW)
  *
  * When the system timing register is written, all Dchips, as well as the
  * corresponding fields in the CSC register, are updated at the same time. The
@@ -1698,9 +1833,9 @@ typedef struct
  * - b is the burst length (2 for 32-byte memories and 4 for 16-byte memories).
  * - p is the number of pipeline stages on the control signals between the
  * 	 Cchip and the SDRAMs (0, 1, or 2).
- * 	 IDDR = RCD + CAT + p + b – 1
- * 	 IDDW = MAX (RCD + p – 1, SED + 1, IDDR – 2b + 1)
- * 	 IRD = IDDW – RCD – p + 1
+ * 	 IDDR = RCD + CAT + p + b - 1
+ * 	 IDDW = MAX (RCD + p - 1, SED + 1, IDDR - 2b + 1)
+ * 	 IRD = IDDW - RCD - p + 1
  *
  * If software wishes to set IDDW to a value other than the power-up default,
  * and knows that memory will not yet be accessed, then the restriction is
@@ -1708,18 +1843,18 @@ typedef struct
  *
  * 		IDDW > SED
  *
- * Table 10–33 describes the system timing register (STR).
+ * Table 10-33 describes the system timing register (STR).
  *
- *	Table 10–33 System Timing Register (STR)
+ *	Table 10-33 System Timing Register (STR)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
- *	RES			<63:8>		Special	0 		—(1)
+ *	RES			<63:8>		Special	0 		-(1)
  *							(1)
  *	RES			<7:6>		MBZ,RAZ	0		Reserved
  *	IDDW		<5:4>		RW		2		Issue to data delay for all
  *											transactions except memory reads
- *											(see Table 7–5)
+ *											(see Table 7-5)
  *											-----------------------------------
  *											Value	Cycles
  *											-----------------------------------
@@ -1729,7 +1864,7 @@ typedef struct
  *											3		6 cycles
  *											-----------------------------------
  *	IDDR		<3:1>		RW		4		Issue to data delay for memory
- *											reads (see Table 7–5)
+ *											reads (see Table 7-5)
  *											-----------------------------------
  *											Value	Cycles
  *											-----------------------------------
@@ -1778,9 +1913,18 @@ typedef struct
 } AXP_21274_STR;
 
 /*
- * HRM 10.2.4.4 Dchip Revision Register (DREV – RO)
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_STR_RMASK	0x000000000000003F
+#define AXP_21274_STR_WMASK	0x000000000000003F
+
+/*
+ * HRM 10.2.4.4 Dchip Revision Register (DREV - RO)
  *
- *	Table 10–34 Dchip Revision Register (DREV)
+ *	Table 10-34 Dchip Revision Register (DREV)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -1838,12 +1982,17 @@ typedef struct
 	u64 res_60	: 4;	/* Reserved at bits 7:4 */
 } AXP_21274_DREV;
 
+/*
+ * The following macros mask in or out bits that are Reserved, Read-Only.
+ */
+#define AXP_21274_DREV_RMASK	0x0000000000000003
+
 /****************************************************************************
  *							HRM 10.2.5 Pchip CSRs							*
  ****************************************************************************/
 
 /*
- * HRM 10.2.5.1 Window Space Base Address Register (WSBAn – RW)
+ * HRM 10.2.5.1 Window Space Base Address Register (WSBAn - RW)
  *
  * Because the information in the WSBAn registers and WSMn registers (Section
  * 10.2.5.2) is used to compare against the PCI address, a clock-domain
@@ -1859,11 +2008,11 @@ typedef struct
  * The contents of the window may be read back to confirm that the update has
  * taken place. Then PCI activity through that window can be resumed.
  *
- * Table 10–35 describes the window space base address registers WSBA0, 1, and
+ * Table 10-35 describes the window space base address registers WSBA0, 1, and
  * 2.
- * Table 10–36 describes WSBA3.
+ * Table 10-36 describes WSBA3.
  *
- *	Table 10–35 Window Space Base Address Register (WSBA0, 1, 2)
+ *	Table 10-35 Window Space Base Address Register (WSBA0, 1, 2)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -1884,6 +2033,15 @@ typedef struct
 } AXP_21274_WSBAn;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_WSBAn_RMASK	0x00000000FFF00003
+#define AXP_21274_WSBAn_WMASK	0x00000000FFF00003
+
+/*
  * Definitions for the values in various fields in the WSBAn and WSBA3.
  */
 #define AXP_ENA_DISABLE				0
@@ -1891,7 +2049,7 @@ typedef struct
 #define AXP_SG_DISABLE				0
 #define AXP_SG_ENABLE				1
 
-/*	Table 10–36 Window Space Base Address Register (WSBA3)
+/*	Table 10-36 Window Space Base Address Register (WSBA3)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -1917,19 +2075,28 @@ typedef struct
 } AXP_21274_WSBA3;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_WSBA3_RMASK	0x00000080FFF00003
+#define AXP_21274_WSBA3_WMASK	0x00000080FFF00001
+
+/*
  * Definitions for the values in various fields in the WSBA3.
  */
 #define AXP_DAC_DISABLE				0
 #define AXP_DAC_ENABLE				1
 
 /*
- * HRM 10.2.5.2 Window Space Mask Register (WSM0, WSM1, WSM2, WSM3 – RW)
+ * HRM 10.2.5.2 Window Space Mask Register (WSM0, WSM1, WSM2, WSM3 - RW)
  *
- * Table 10–37 describes the window space mask registers. Refer to the WSBAn
+ * Table 10-37 describes the window space mask registers. Refer to the WSBAn
  * register description (Section 10.2.5.1) for a brief description of the
  * window space mask register.
  *
- *	Table 10–37 Window Space Mask Register (WSMn)
+ *	Table 10-37 Window Space Mask Register (WSMn)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -1946,12 +2113,21 @@ typedef struct
 } AXP_21274_WSMn;
 
 /*
- * HRM 10.2.5.3 Translated Base Address Register (TBAn – RW)
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_WSMn_RMASK	0x00000000FFF00000
+#define AXP_21274_WSMn_WMASK	0x00000000FFF00000
+
+/*
+ * HRM 10.2.5.3 Translated Base Address Register (TBAn - RW)
  *
- * Table 10–38 describes the translated base address registers TBA0, 1, and 2.
- * Table 10–39 describes TBA3.
+ * Table 10-38 describes the translated base address registers TBA0, 1, and 2.
+ * Table 10-39 describes TBA3.
  *
- *	Table 10–38 Translated Base Address Registers (TBA0, 1, and 2)
+ *	Table 10-38 Translated Base Address Registers (TBA0, 1, and 2)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -1960,7 +2136,7 @@ typedef struct
  *	RES			<9:0>		MBZ,RAZ	0		Reserved
  *	---------------------------------------------------------------------------
  *
- * 	Table 10–39 Translated Base Address Registers (TBA3)
+ * 	Table 10-39 Translated Base Address Registers (TBA3)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -1982,30 +2158,39 @@ typedef struct
 } AXP_21274_TBAn;
 
 /*
- * HRM 10.2.5.4 Pchip Control Register (PCTL – RW)
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_TBAn_RMASK	0x00000007FFFFFC00
+#define AXP_21274_TBAn_WMASK	0x00000007FFFFFC00
+
+/*
+ * HRM 10.2.5.4 Pchip Control Register (PCTL - RW)
  *
- *	Table 10–40 Pchip Control Register (PCTL)
+ *	Table 10-40 Pchip Control Register (PCTL)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
  *	RES			<63:48>		MBZ,RAZ	0		Reserved.
- *	PID			<47:46>		RO 		—(1)	Pchip ID.
- *	RPP			<45>		RO 		—(2)	Remote Pchip present.
- *	PTEVRFY		<44>		RW 		—		PTE verify for DMA read.
+ *	PID			<47:46>		RO 		-(1)	Pchip ID.
+ *	RPP			<45>		RO 		-(2)	Remote Pchip present.
+ *	PTEVRFY		<44>		RW 		-		PTE verify for DMA read.
  *											-----------------------------------
  *											Value	Description
  *											-----------------------------------
  *											0		If TLB miss, then make DMA
  *													read request as soon as
  *													possible and discard data
- *													if PTE was not valid –
+ *													if PTE was not valid -
  *													could cause Cchip
  *													nonexistent memory error.
  *											1		If TLB miss, then delay
  *													read request until PTE is
- *													verified as valid – no
+ *													verified as valid - no
  *													request if not valid.
- *	FDWDIS		<43>		RW		—		Fast DMA read cache block wrap
+ *	FDWDIS		<43>		RW		-		Fast DMA read cache block wrap
  *											request disable.
  *											-----------------------------------
  *											Value	Description
@@ -2013,7 +2198,7 @@ typedef struct
  *											0		Normal operation
  *											1		Reserved for testing
  *													purposes only
- *	FDSDIS		<42>		RW		—		Fast DMA start and SGTE request
+ *	FDSDIS		<42>		RW		-		Fast DMA start and SGTE request
  *											disable.
  *											-----------------------------------
  *											Value	Description
@@ -2021,7 +2206,7 @@ typedef struct
  *											0		Normal operation
  *											1		Reserved for testing
  *													purposes only
- *	PCLKX		<41:40>		RO		—(3)	PCI clock frequency multiplier
+ *	PCLKX		<41:40>		RO		-(3)	PCI clock frequency multiplier
  *											-----------------------------------
  *											Value	Multiplier
  *											-----------------------------------
@@ -2047,7 +2232,7 @@ typedef struct
  *											from both Pchips until Ack, modulo
  *											16 (use 4 for Dchip). Must be same
  *											as Cchip CSR CSC<FPQPMAX>.
- *	PADM		<19>		RW		—(4)	PADbus mode.
+ *	PADM		<19>		RW		-(4)	PADbus mode.
  *											-----------------------------------
  *											Value	Mode
  *											-----------------------------------
@@ -2056,7 +2241,7 @@ typedef struct
  *	ECCEN		<18>		RW		0		ECC enable for DMA and SGTE
  *											accesses.
  *	RES			<17:16>		MBZ,RAZ	0		Reserved.
- *	PPRI		<15>		—		0		Arbiter priority group for the
+ *	PPRI		<15>		-		0		Arbiter priority group for the
  *											Pchip.
  *	PRIGRP		<14:8>		RW		0		Arbiter priority group; one bit per
  *											PCI slot with bits <14:8>
@@ -2134,6 +2319,15 @@ typedef struct
 } AXP_21274_PCTL;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_PCTL_RMASK	0x0000FFFFFFFCFFFF
+#define AXP_21274_PCTL_WMASK	0x00001CFF00FCFFFF
+
+/*
  * Definitions for the values in various fields in the PCTL.
  */
 #define AXP_RPP_NOT_PRESENT			0
@@ -2179,11 +2373,11 @@ typedef struct
 #define AXP_FDSC_ENABLE				1
 
 /*
- * HRM 10.2.5.5 Pchip Master Latency Register (PLAT – RW)
+ * HRM 10.2.5.5 Pchip Master Latency Register (PLAT - RW)
  *
- * Table 10–41 describes the Pchip master latency register (PLAT).
+ * Table 10-41 describes the Pchip master latency register (PLAT).
  *
- *	Table 10–41 Pchip Master Latency Register (PLAT)
+ *	Table 10-41 Pchip Master Latency Register (PLAT)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -2201,7 +2395,16 @@ typedef struct
 } AXP_21274_PLAT;
 
 /*
- * HRM 10.2.5.6 Pchip Error Register (PERROR – RW)
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_PLAT_RMASK	0x000000000000FF00
+#define AXP_21274_PLAT_WMASK	0x000000000000FF00
+
+/*
+ * HRM 10.2.5.6 Pchip Error Register (PERROR - RW)
  *
  * If any of bits <11:0> are set, then this entire register is frozen and the
  * Pchip output signal b_error is asserted. Only bit <0> can be set after that.
@@ -2215,14 +2418,14 @@ typedef struct
  * because the Pchip cannot correctly capture the SYN, CMD, or ADDR field.
  *
  * Furthermore, if software reads PERROR in a polling loop, or reads PERROR
- * before the Pchip’s error signal is reflected in the Cchip’s DRIR CSR, the
+ * before the Pchip-s error signal is reflected in the Cchip-s DRIR CSR, the
  * INV bit may also be set.  To avoid the latter condition, read PERROR only
  * after receiving an IRQ0 interrupt, then read the Cchip DIR CSR to determine
  * that this Pchip has detected an error.
  *
- * Table 10–42 describes the Pchip error register (PERROR).
+ * Table 10-42 describes the Pchip error register (PERROR).
  *
- *	Table 10–42 Pchip Error Register (PERROR)
+ *	Table 10-42 Pchip Error Register (PERROR)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -2240,7 +2443,7 @@ typedef struct
  *											0011	SGTE read
  *											Others	Reserved
  *											-----------------------------------
- *	INV			<51>		RO Rev1	0		Info Not Valid – only meaningful
+ *	INV			<51>		RO Rev1	0		Info Not Valid - only meaningful
  *							RAZ Rev0		when one of bits <11:0> is set.
  *						   					Indicates validity of <SYN>, <CMD>,
  *											and <ADDR> fields.
@@ -2307,6 +2510,15 @@ typedef struct
 } AXP_21274_PERROR;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_PERROR_RMASK	0xFFFFFFFFFFFF0DFF
+#define AXP_21274_PERROR_WMASK	0x0000000000000DFF
+
+/*
  * Definitions for the values in various fields in the PERROR.
  */
 #define AXP_CMD_DMA_READ			0	/* 0000 */
@@ -2318,7 +2530,7 @@ typedef struct
 #define AXP_LOST_LOST				1
 
 /*
- * HRM 10.2.5.7 Pchip Error Mask Register (PERRMASK – RW)
+ * HRM 10.2.5.7 Pchip Error Mask Register (PERRMASK - RW)
  *
  * If any of the MASK bits have the value 0, they prevent the setting of the
  * corresponding bit in the PERROR register, regardless of the detection of
@@ -2330,9 +2542,9 @@ typedef struct
  * 	- If PERROR<PERR> = 0, the Pchip ignores write data parity as the PCI target.
  * 	- If PERROR<APE> = 0, the Pchip ignores address parity.
  *
- * Table 10–43 describes the Pchip error mask register (PERRMASK).
+ * Table 10-43 describes the Pchip error mask register (PERRMASK).
  *
- *	Table 10–43 Pchip Error Mask Register (PERRMASK)
+ *	Table 10-43 Pchip Error Mask Register (PERRMASK)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -2349,7 +2561,16 @@ typedef struct
 } AXP_21274_PERRMASK;
 
 /*
- * HRM 10.2.5.8 Pchip Error Set Register (PERRSET – WO)
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_PERRMASK_RMASK	0x0000000000000FFF
+#define AXP_21274_PERRMASK_WMASK	0x0000000000000FFF
+
+/*
+ * HRM 10.2.5.8 Pchip Error Set Register (PERRSET - WO)
  *
  * If any of the SET bits = 1, and the corresponding MASK bits in PERRMASK also
  * = 1, they cause the setting of the corresponding bits in the PERROR
@@ -2359,9 +2580,9 @@ typedef struct
  * PERROR register is already frozen when PERRSET is written, only the LOST bit
  * will be additionally set in PERROR.
  *
- * Table 10–44 describes the Pchip error set register (PERRSET).
+ * Table 10-44 describes the Pchip error set register (PERRSET).
  *
- *	Table 10–44 Pchip Error Set Register (PERRSET)
+ *	Table 10-44 Pchip Error Set Register (PERRSET)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -2381,7 +2602,12 @@ typedef struct
 } AXP_21274_PERRSET;
 
 /*
- * HRM 10.2.5.9 Translation Buffer Invalidate Virtual Register (TLBIV – WO)
+ * The following macros mask in or out bits that are Reserved, Read-Only.
+ */
+#define AXP_21274_PERRSET_WMASK	0xFFFFFFFFFFFF0FFF
+
+/*
+ * HRM 10.2.5.9 Translation Buffer Invalidate Virtual Register (TLBIV - WO)
  *
  * A write to this register invalidates all scatter-gather TLB entries that
  * correspond to PCI addresses whose bits <31:16> and bit 39 match the value
@@ -2389,13 +2615,13 @@ typedef struct
  * PTEs at a time, which are the number that can be defined in one 21264 cache
  * block (64 bytes). Because a single TLB PCI tag covers four entries, at most
  * two tags are actually invalidated. PTE bits <22:4> correspond to system
- * address bits <34:16> – where PCI<34:32> must be zeros for scatter-gather
- * window hits – in generating the resulting system address, providing 8-page
+ * address bits <34:16> - where PCI<34:32> must be zeros for scatter-gather
+ * window hits - in generating the resulting system address, providing 8-page
  * (8KB) granularity.
  *
- * Table 10–45 describes the translation buffer invalidate virtual register (TLBIV).
+ * Table 10-45 describes the translation buffer invalidate virtual register (TLBIV).
  *
- *	Table 10–45 Translation Buffer Invalidate Virtual Register (TLBIV)
+ *	Table 10-45 Translation Buffer Invalidate Virtual Register (TLBIV)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -2418,9 +2644,14 @@ typedef struct
 } AXP_21274_TLBIV;
 
 /*
- * HRM 10.2.5.11 Pchip Monitor Control Register (PMONCTL – RW)
+ * The following macros mask in or out bits that are Reserved, Read-Only.
+ */
+#define AXP_21274_TLBIV_WMASK	0x00000000080FFFF0
+
+/*
+ * HRM 10.2.5.11 Pchip Monitor Control Register (PMONCTL - RW)
  *
- * This register has two fields — one each for selecting among a set of
+ * This register has two fields - one each for selecting among a set of
  * internal signals. The set of selectable signals is identical for each field.
  * SLCT0 selects the signal that is brought to the chip output b_monitor<0>.
  * SLCT1 selects the signal that is brought to the chip output b_monitor<1>.
@@ -2441,12 +2672,12 @@ typedef struct
  * In normal operation, the two counters in PMONCNT stick at the value of all
  * 1s (so that overflow can be detected). The two STKDIS control bits can
  * disable this behavior for either counter, so that the associated counter
- * wraps back to all 0s and continues counting. This is useful if one counter’s
+ * wraps back to all 0s and continues counting. This is useful if one counter-s
  * carry-out is used as the input to the other counter.
  *
- * Table 10–47 describes the Pchip monitor control register (PMONCTL).
+ * Table 10-47 describes the Pchip monitor control register (PMONCTL).
  *
- *	Table 10–47 Pchip Monitor Control (PMONCTL)
+ *	Table 10-47 Pchip Monitor Control (PMONCTL)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
@@ -2491,13 +2722,22 @@ typedef struct
 } AXP_21274_PMONCTL;
 
 /*
+ * The following macros mask in or out bits that are Reserved, Read-Only,
+ * Write-Only, and Read-Write.  Reserved is masked out for both reads and
+ * writes.  Read-Only are masked out for writes.  Write-only are masked out for
+ * Reads.  Read-Write are masked in for both reads and writes.
+ */
+#define AXP_21274_PMONC_RMASK	0x000000000003FFFF
+#define AXP_21274_PMONC_WMASK	0x000000000003FFFF
+
+/*
  * Definitions for the values in various fields in the PMONCTL.
  */
 #define AXP_STKDIS_STICKS_1S	0
 #define AXP_STKDIS_WRAPS_1S		1
 
 /*
- * HRM 10.2.5.12 Pchip Monitor Counters (PMONCNT – RO)
+ * HRM 10.2.5.12 Pchip Monitor Counters (PMONCNT - RO)
  *
  * The two fields CNT0 and CNT1 count the system clock cycles during which the
  * b_monitor<0> and b_monitor<1> signals respectively (selected by
@@ -2512,9 +2752,9 @@ typedef struct
  * PMONCNT is performed. A slight inaccuracy can result if the events being
  * counted continue to occur at the time of the reading.
  *
- * Table 10–48 describes the Pchip monitor counters (PMONCNT).
+ * Table 10-48 describes the Pchip monitor counters (PMONCNT).
  *
- *	Table 10–48 Pchip Monitor Counters (PMONCNT)
+ *	Table 10-48 Pchip Monitor Counters (PMONCNT)
  *	---------------------------------------------------------------------------
  *	Field		Bits		Type	Init	Description
  *	---------------------------------------------------------------------------
