@@ -37,6 +37,16 @@
  *
  *	V01.000		18-Mar-2018	Jonathan D. Belanger
  *	Initially written.
+ *
+ *	V01.001		02-May-2018	Jonathan D. Belanger
+ *	Implemented masks to assist in reading and writing CSRs without having to
+ *	look at each bit or set ot bits.  Also, started to work on the interaction
+ *	between CSRs.  Finally, the way the interrupt bits, irq are passed to the
+ *	CPUs is going to change.  The code currently send a message to the CPUs to
+ *	set their internal bits, which are separate from the irq bits.  We are now
+ *	going to have a global, mutexed, variable that is part of the System and
+ *	shared with each CPU.  The CPU will just read these flags and the System
+ *	update them. 
  */
 #include "AXP_21274_System.h"
 #include "AXP_21274_Cchip.h"
@@ -81,71 +91,73 @@ u64 AXP_21274_ReadCSR(AXP_21274_SYSTEM *sys, u64 pa)
 			switch (csrAddr.csr)
 			{
 				case 0x00:			/* P0-WSBA0 */
-					retVal = *((u64 *) &sys->p0Wsba0);
+					retVal = *((u64 *) &sys->p0Wsba0) & AXP_21274_WSBAn_RMASK;
 					break;
 
 				case 0x01:			/* P0-WSBA1 */
-					retVal = *((u64 *) &sys->p0Wsba1);
+					retVal = *((u64 *) &sys->p0Wsba1) & AXP_21274_WSBAn_RMASK;
 					break;
 
 				case 0x02:			/* P0-WSBA2 */
-					retVal = *((u64 *) &sys->p0Wsba2);
+					retVal = *((u64 *) &sys->p0Wsba2 & AXP_21274_WSBAn_RMASK);
 					break;
 
 				case 0x03:			/* P0-WSBA3 */
-					retVal = *((u64 *) &sys->p0Wsba3);
+					retVal = *((u64 *) &sys->p0Wsba3) & AXP_21274_WSBA3_RMASK;
 					break;
 
 				case 0x04:			/* P0-WSM0 */
-					retVal = *((u64 *) &sys->p0Wsm0);
+					retVal = *((u64 *) &sys->p0Wsm0) & AXP_21274_WSMn_RMASK;
 					break;
 
 				case 0x05:			/* P0-WSM1 */
-					retVal = *((u64 *) &sys->p0Wsm1);
+					retVal = *((u64 *) &sys->p0Wsm1) & AXP_21274_WSMn_RMASK;
 					break;
 
 				case 0x06:			/* P0-WSM2 */
-					retVal = *((u64 *) &sys->p0Wsm2);
+					retVal = *((u64 *) &sys->p0Wsm2) & AXP_21274_WSMn_RMASK;
 					break;
 
 				case 0x07:			/* P0-WSM3 */
-					retVal = *((u64 *) &sys->p0Wsm3);
+					retVal = *((u64 *) &sys->p0Wsm3) & AXP_21274_WSMn_RMASK;
 					break;
 
 				case 0x08:			/* P0-TBA0 */
-					retVal = *((u64 *) &sys->p0Tba0);
+					retVal = *((u64 *) &sys->p0Tba0) & AXP_21274_TBAn_RMASK;
 					break;
 
 				case 0x09:			/* P0-TBA1 */
-					retVal = *((u64 *) &sys->p0Tba1);
+					retVal = *((u64 *) &sys->p0Tba1) & AXP_21274_TBAn_RMASK;
 					break;
 
 				case 0x0a:			/* P0-TBA2 */
-					retVal = *((u64 *) &sys->p0Tba2);
+					retVal = *((u64 *) &sys->p0Tba2) & AXP_21274_TBAn_RMASK;
 					break;
 
 				case 0x0b:			/* P0-TBA3 */
-					retVal = *((u64 *) &sys->p0Tba3);
+					retVal = *((u64 *) &sys->p0Tba3) & AXP_21274_TBAn_RMASK;
 					break;
 
 				case 0x0c:			/* P0-PCTL */
-					retVal = *((u64 *) &sys->p0Pctl);
+					retVal = *((u64 *) &sys->p0Pctl) & AXP_21274_PCTL_RMASK;
 					break;
 
 				case 0x0d:			/* P0-PLAT */
-					retVal = *((u64 *) &sys->p0Plat);
+					retVal = *((u64 *) &sys->p0Plat) & AXP_21274_PLAT_RMASK;
 					break;
 
 				case 0x0f:			/* P0-PERROR */
-					retVal = *((u64 *) &sys->p0Perror);
+					retVal = *((u64 *) &sys->p0Perror) &
+								AXP_21274_PERROR_RMASK;
 					break;
 
 				case 0x10:			/* P0-PERRMASK */
-					retVal = *((u64 *) &sys->p0PerrMask);
+					retVal = *((u64 *) &sys->p0PerrMask) &
+								AXP_21274_PERRMASK_RMASK;
 					break;
 
 				case 0x14:			/* P0-PMONCTL */
-					retVal = *((u64 *) &sys->p0MonCtl);
+					retVal = *((u64 *) &sys->p0MonCtl) & AXP_21274_PMONC_RMASK;
 					break;
 
 				case 0x15:			/* P0-PMONCNT */
@@ -161,71 +173,73 @@ u64 AXP_21274_ReadCSR(AXP_21274_SYSTEM *sys, u64 pa)
 			switch (csrAddr.csr)
 			{
 				case 0x00:			/* P1-WSBA0 */
-					retVal = *((u64 *) &sys->p1Wsba0);
+					retVal = *((u64 *) &sys->p1Wsba0) & AXP_21274_WSBAn_RMASK;
 					break;
 
 				case 0x01:			/* P1-WSBA1 */
-					retVal = *((u64 *) &sys->p1Wsba1);
+					retVal = *((u64 *) &sys->p1Wsba1) & AXP_21274_WSBAn_RMASK;
 					break;
 
 				case 0x02:			/* P1-WSBA2 */
-					retVal = *((u64 *) &sys->p1Wsba2);
+					retVal = *((u64 *) &sys->p1Wsba2 & AXP_21274_WSBAn_RMASK);
 					break;
 
 				case 0x03:			/* P1-WSBA3 */
-					retVal = *((u64 *) &sys->p1Wsba3);
+					retVal = *((u64 *) &sys->p1Wsba3) & AXP_21274_WSBA3_RMASK;
 					break;
 
 				case 0x04:			/* P1-WSM0 */
-					retVal = *((u64 *) &sys->p1Wsm0);
+					retVal = *((u64 *) &sys->p1Wsm0) & AXP_21274_WSMn_RMASK;
 					break;
 
 				case 0x05:			/* P1-WSM1 */
-					retVal = *((u64 *) &sys->p1Wsm1);
+					retVal = *((u64 *) &sys->p1Wsm1) & AXP_21274_WSMn_RMASK;
 					break;
 
 				case 0x06:			/* P1-WSM2 */
-					retVal = *((u64 *) &sys->p1Wsm2);
+					retVal = *((u64 *) &sys->p1Wsm2) & AXP_21274_WSMn_RMASK;
 					break;
 
 				case 0x07:			/* P1-WSM3 */
-					retVal = *((u64 *) &sys->p1Wsm3);
+					retVal = *((u64 *) &sys->p1Wsm3) & AXP_21274_WSMn_RMASK;
 					break;
 
 				case 0x08:			/* P1-TBA0 */
-					retVal = *((u64 *) &sys->p1Tba0);
+					retVal = *((u64 *) &sys->p1Tba0) & AXP_21274_TBAn_RMASK;
 					break;
 
 				case 0x09:			/* P1-TBA1 */
-					retVal = *((u64 *) &sys->p1Tba1);
+					retVal = *((u64 *) &sys->p1Tba1) & AXP_21274_TBAn_RMASK;
 					break;
 
 				case 0x0a:			/* P1-TBA2 */
-					retVal = *((u64 *) &sys->p1Tba2);
+					retVal = *((u64 *) &sys->p1Tba2) & AXP_21274_TBAn_RMASK;
 					break;
 
 				case 0x0b:			/* P1-TBA3 */
-					retVal = *((u64 *) &sys->p1Tba3);
+					retVal = *((u64 *) &sys->p1Tba3) & AXP_21274_TBAn_RMASK;
 					break;
 
 				case 0x0c:			/* P1-PCTL */
-					retVal = *((u64 *) &sys->p1Pctl);
+					retVal = *((u64 *) &sys->p1Pctl) & AXP_21274_PCTL_RMASK;
 					break;
 
 				case 0x0d:			/* P1-PLAT */
-					retVal = *((u64 *) &sys->p1Plat);
+					retVal = *((u64 *) &sys->p1Plat) & AXP_21274_PLAT_RMASK;
 					break;
 
 				case 0x0f:			/* P1-PERROR */
-					retVal = *((u64 *) &sys->p1Perror);
+					retVal = *((u64 *) &sys->p1Perror) &
+								AXP_21274_PERROR_RMASK;
 					break;
 
 				case 0x10:			/* P1-PERRMASK */
-					retVal = *((u64 *) &sys->p1PerrMask);
+					retVal = *((u64 *) &sys->p1PerrMask) &
+								AXP_21274_PERRMASK_RMASK;
 					break;
 
 				case 0x14:			/* P1-PMONCTL */
-					retVal = *((u64 *) &sys->p1MonCtl);
+					retVal = *((u64 *) &sys->p1MonCtl) & AXP_21274_PMONC_RMASK;
 					break;
 
 				case 0x15:			/* P1-PMONCNT */
@@ -241,35 +255,35 @@ u64 AXP_21274_ReadCSR(AXP_21274_SYSTEM *sys, u64 pa)
 			switch (csrAddr.csr)
 			{
 				case 0x00:			/* CSC */
-					retVal = *((u64 *) &sys->csc);
+					retVal = *((u64 *) &sys->csc) & AXP_21274_CSC_RMASK;
 					break;
 
 				case 0x01:			/* MTR */
-					retVal = *((u64 *) &sys->mtr);
+					retVal = *((u64 *) &sys->mtr) & AXP_21274_MTR_RMASK;
 					break;
 
 				case 0x02:			/* MISC */
-					retVal = *((u64 *) &sys->misc);
+					retVal = *((u64 *) &sys->misc) & AXP_21274_MISC_RMASK;
 					break;
 
 				case 0x03:			/* MPD */
-					retVal = *((u64 *) &sys->mpd);
+					retVal = *((u64 *) &sys->mpd) & AXP_21274_MPD_RMASK;
 					break;
 
 				case 0x04:			/* AAR0 */
-					retVal = *((u64 *) &sys->aar0);
+					retVal = *((u64 *) &sys->aar0) & AXP_21274_ARRx_RMASK;
 					break;
 
 				case 0x05:			/* AAR1 */
-					retVal = *((u64 *) &sys->aar1);
+					retVal = *((u64 *) &sys->aar1) & AXP_21274_ARRx_RMASK;
 					break;
 
 				case 0x06:			/* AAR2 */
-					retVal = *((u64 *) &sys->aar2);
+					retVal = *((u64 *) &sys->aar2) & AXP_21274_ARRx_RMASK;
 					break;
 
 				case 0x07:			/* AAR3 */
-					retVal = *((u64 *) &sys->aar3);
+					retVal = *((u64 *) &sys->aar3) & AXP_21274_ARRx_RMASK;
 					break;
 
 				case 0x08:			/* DIM0 */
@@ -281,11 +295,11 @@ u64 AXP_21274_ReadCSR(AXP_21274_SYSTEM *sys, u64 pa)
 					break;
 
 				case 0x0a:			/* DIR0 */
-					retVal = *((u64 *) &sys->dir0);
+					retVal = *((u64 *) &sys->dir0) & AXP_21274_DIRn_RMASK;
 					break;
 
 				case 0x0b:			/* DIR1 */
-					retVal = *((u64 *) &sys->dir1);
+					retVal = *((u64 *) &sys->dir1) & AXP_21274_DIRn_RMASK;
 					break;
 
 				case 0x0c:			/* DRIR */
@@ -314,19 +328,19 @@ u64 AXP_21274_ReadCSR(AXP_21274_SYSTEM *sys, u64 pa)
 					break;
 
 				case 0x0e:			/* IIC0 */
-					retVal = *((u64 *) &sys->iic0);
+					retVal = *((u64 *) &sys->iic0) & AXP_21274_IICn_RMASK;
 					break;
 
 				case 0x0f:			/* IIC1 */
-					retVal = *((u64 *) &sys->iic1);
+					retVal = *((u64 *) &sys->iic1) & AXP_21274_IICn_RMASK;
 					break;
 
 				case 0x16:			/* TTR */
-					retVal = *((u64 *) &sys->ttr);
+					retVal = *((u64 *) &sys->ttr) & AXP_21274_TTR_RMASK;
 					break;
 
 				case 0x17:			/* TDR */
-					retVal = *((u64 *) &sys->tdr);
+					retVal = *((u64 *) &sys->tdr) & AXP_21274_TDR_RMASK;
 					break;
 
 				case 0x18:			/* DIM2 */
@@ -338,31 +352,31 @@ u64 AXP_21274_ReadCSR(AXP_21274_SYSTEM *sys, u64 pa)
 					break;
 
 				case 0x1a:			/* DIR2 */
-					retVal = *((u64 *) &sys->dir2);
+					retVal = *((u64 *) &sys->dir2) & AXP_21274_DIRn_RMASK;
 					break;
 
 				case 0x1b:			/* DIR3 */
-					retVal = *((u64 *) &sys->dir3);
+					retVal = *((u64 *) &sys->dir3) & AXP_21274_DIRn_RMASK;
 					break;
 
 				case 0x1c:			/* IIC2 */
-					retVal = *((u64 *) &sys->iic2);
+					retVal = *((u64 *) &sys->iic2) & AXP_21274_IICn_RMASK;
 					break;
 
 				case 0x1d:			/* IIC3 */
-					retVal = *((u64 *) &sys->iic3);
+					retVal = *((u64 *) &sys->iic3) & AXP_21274_IICn_RMASK;
 					break;
 
 				case 0x1e:			/* PWR */
-					retVal = *((u64 *) &sys->pwr);
+					retVal = *((u64 *) &sys->pwr) & AXP_21274_PWR_RMASK;
 					break;
 
 				case 0x30:			/* CMONCTLA */
-					retVal = *((u64 *) &sys->cmonctla);
+					retVal = *((u64 *) &sys->cmonctla) & AXP_21274_CMONA_RMASK;
 					break;
 
 				case 0x31:			/* CMONCTLB */
-					retVal = *((u64 *) &sys->cmonctlb);
+					retVal = *((u64 *) &sys->cmonctlb) & AXP_21274_CMONB_RMASK;
 					break;
 
 				case 0x32:			/* CMONCNT01 */
@@ -383,19 +397,19 @@ u64 AXP_21274_ReadCSR(AXP_21274_SYSTEM *sys, u64 pa)
 			switch (csrAddr.csr)
 			{
 				case 0x20:			/* DSC */
-					retVal = *((u64 *) &sys->dsc);
+					retVal = *((u64 *) &sys->dsc) & AXP_21274_DSC_RMASK;
 					break;
 
 				case 0x21:			/* STR */
-					retVal = *((u64 *) &sys->str);
+					retVal = *((u64 *) &sys->str) & AXP_21274_STR_RMASK;
 					break;
 
 				case 0x22:			/* DREV */
-					retVal = *((u64 *) &sys->dRev);
+					retVal = *((u64 *) &sys->dRev) & AXP_21274_DREV_RMASK;
 					break;
 
 				case 0x23:			/* DSC2 */
-					retVal = *((u64 *) &sys->dsc2);
+					retVal = *((u64 *) &sys->dsc2) & AXP_21274_DSC2_RMASK;
 					break;
 			}
 			break;
@@ -470,7 +484,7 @@ typedef union
 void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 {
 	AXP_21274_CSR_ADDR	csrAddr = {.addr = pa};
-	CSR_MAP				csrValue = {.value = value};
+	CSR_MAP				csrValue;
 	int					chip = csrAddr.chip + (csrAddr.cpuAddr = 0x200e ? 1 : 0);
 
 	/*
@@ -482,84 +496,73 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 			switch (csrAddr.csr)
 			{
 				case 0x00:			/* P0-WSBA0 */
-					sys->p0Wsba0.addr = csrValue.Wsban.addr;
-					sys->p0Wsba0.sg = csrValue.Wsban.sg;
-					sys->p0Wsba0.ena = csrValue.Wsban.ena;
+					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					sys->p0Wsba0 = csrValue;
 					break;
 
 				case 0x01:			/* P0-WSBA1 */
-					sys->p0Wsba1.addr = csrValue.Wsban.addr;
-					sys->p0Wsba1.sg = csrValue.Wsban.sg;
-					sys->p0Wsba1.ena = csrValue.Wsban.ena;
+					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					sys->p0Wsba1 = csrValue.Wsban;
 					break;
 
 				case 0x02:			/* P0-WSBA2 */
-					sys->p0Wsba2.addr = csrValue.Wsban.addr;
-					sys->p0Wsba2.sg = csrValue.Wsban.sg;
-					sys->p0Wsba2.ena = csrValue.Wsban.ena;
+					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					sys->p0Wsba2 = csrValue.Wsban;
 					break;
 
 				case 0x03:			/* P0-WSBA3 */
-					sys->p0Wsba3.addr = csrValue.Wsban.addr;
-					sys->p0Wsba3.dac = csrValue.Wsba3.dac;
-					sys->p0Wsba3.sg = csrValue.Wsban.sg;
-					sys->p0Wsba3.ena = csrValue.Wsban.ena;
+					carValue.value = value & AXP_21274_WSBA3_WMASK;
+					sys->p0Wsba3 = csrValue.Wsba3;
 					break;
 
 				case 0x04:			/* P0-WSM0 */
-					sys->p0Wsm0.am = csrValue.Wsmn.am;
+					carValue.value = value & AXP_21274_WSMn_WMASK;
+					sys->p0Wsm0 = csrValue.Wsmn;
 					break;
 
 				case 0x05:			/* P0-WSM1 */
-					sys->p0Wsm1.am = csrValue.Wsmn.am;
+					carValue.value = value & AXP_21274_WSMn_WMASK;
+					sys->p0Wsm1 = csrValue.Wsmn;
 					break;
 
 				case 0x06:			/* P0-WSM2 */
-					sys->p0Wsm2.am = csrValue.Wsmn.am;
+					carValue.value = value & AXP_21274_WSMn_WMASK;
+					sys->p0Wsm2 = csrValue.Wsmn;
 					break;
 
 				case 0x07:			/* P0-WSM3 */
-					sys->p0Wsm3.am = csrValue.Wsmn.am;
+					carValue.value = value & AXP_21274_WSMn_WMASK;
+					sys->p0Wsm3 = csrValue.Wsmn;
 					break;
 
 				case 0x08:			/* P0-TBA0 */
-					sys->p0Tba0.addr = csrValue.Tban.addr;
+					carValue.value = value & AXP_21274_TBAn_WMASK
+					sys->p0Tba0 = csrValue.Tban;
 					break;
 
 				case 0x09:			/* P0-TBA1 */
-					sys->p0Tba1.addr = csrValue.Tban.addr;
+					carValue.value = value & AXP_21274_TBAn_WMASK
+					sys->p0Tba1 = csrValue.Tban;
 					break;
 
 				case 0x0a:			/* P0-TBA2 */
-					sys->p0Tba2.addr = csrValue.Tban.addr;
+					carValue.value = value & AXP_21274_TBAn_WMASK
+					sys->p0Tba2 = csrValue.Tban;
 					break;
 
 				case 0x0b:			/* P0-TBA3 */
-					sys->p0Tba3.addr = csrValue.Tban.addr;
+					carValue.value = value & AXP_21274_TBAn_WMASK
+					sys->p0Tba3 = csrValue.Tban;
 					break;
 
 				case 0x0c:			/* P0-PCTL */
-					sys->p0Pctl.ptevrfy = csrValue.Pctl.ptevrfy;
-					sys->p0Pctl.fdwdis = csrValue.Pctl.fdwdis;
-					sys->p0Pctl.fdsdis = csrValue.Pctl.fdsdis;
-					sys->p0Pctl.ptpmax = csrValue.Pctl.ptpmax;
-					sys->p0Pctl.crqmax = csrValue.Pctl.crqmax;
-					sys->p0Pctl.cdqmax = csrValue.Pctl.cdqmax;
-					sys->p0Pctl.padm = csrValue.Pctl.padm;
-					sys->p0Pctl.eccen = csrValue.Pctl.eccen;
-					sys->p0Pctl.prigrp = csrValue.Pctl.prigrp;
-					sys->p0Pctl.arbena = csrValue.Pctl.arbena;
-					sys->p0Pctl.mwin = csrValue.Pctl.mwin;
-					sys->p0Pctl.hole = csrValue.Pctl.hole;
-					sys->p0Pctl.tgtlat = csrValue.Pctl.tgtlat;
-					sys->p0Pctl.chaindis = csrValue.Pctl.chaindis;
-					sys->p0Pctl.thdis = csrValue.Pctl.thdis;
-					sys->p0Pctl.fbtb = csrValue.Pctl.fbtb;
-					sys->p0Pctl.fdsc = csrValue.Pctl.fdsc;
+					carValue.value = value & AXP_21274_PCTL_WMASK;
+					sys->p0Pctl = csrValue.Pctl;
 					break;
 
 				case 0x0d:			/* P0-PLAT */
-					sys->p0Plat.lat = csrValue.Plat.lat;
+					carValue.value = value & AXP_21274_PLAT_WMASK;
+					sys->p0Plat = csrValue.Plat;
 					break;
 
 				case 0x0f:			/* P0-PERROR */
@@ -567,17 +570,18 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x10:			/* P0-PERRMASK */
-					sys->p0PerrMask.mask = csrValue.PerrMask.mask;
+					carValue.value = value & AXP_21274_PERRMASK_WMASK;
+					sys->p0PerrMask = csrValue.PerrMask;
 					break;
 
 				case 0x11:			/* P0-PERRSET */
-					sys->p0PerrSet.info = csrValue.PerrSet.info;
-					sys->p0PerrSet.set = csrValue.PerrSet.set;
+					carValue.value = value & AXP_21274_PERRSET_WMASK;
+					sys->p0PerrSet = csrValue.PerrSet;
 					break;
 
 				case 0x12:			/* P0-TLBIV */
-					sys->p0Tlbiv.dac = csrValue.Tlbiv.dac;
-					sys->p0Tlbiv.addr = csrValue.Tlbiv.addr;
+					carValue.value = value & AXP_21274_TLBIV_WMASK;
+					sys->p0Tlbiv = csrValue.Tlbiv;
 					break;
 
 				case 0x13:			/* P0-TLBIA */
@@ -585,10 +589,8 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x14:			/* P0-PMONCTL */
-					sys->p0MonCtl.stkdis1 = csrValue.MonCtl.stkdis1;
-					sys->p0MonCtl.stkdis0 = csrValue.MonCtl.stkdis0;
-					sys->p0MonCtl.slct1 = csrValue.MonCtl.slct1;
-					sys->p0MonCtl.slct0 = csrValue.MonCtl.slct0;
+					carValue.value = value & AXP_21274_PMONC_WMASK;
+					sys->p0MonCtl = csrValue.MonCtl;
 					break;
 
 				case 0x20:			/* P0-SPRST */
@@ -604,84 +606,73 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 			switch (csrAddr.csr)
 			{
 				case 0x00:			/* P1-WSBA0 */
-					sys->p1Wsba0.addr = csrValue.Wsban.addr;
-					sys->p1Wsba0.sg = csrValue.Wsban.sg;
-					sys->p1Wsba0.ena = csrValue.Wsban.ena;
+					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					sys->p1Wsba0 = csrValue;
 					break;
 
 				case 0x01:			/* P1-WSBA1 */
-					sys->p1Wsba1.addr = csrValue.Wsban.addr;
-					sys->p1Wsba1.sg = csrValue.Wsban.sg;
-					sys->p1Wsba1.ena = csrValue.Wsban.ena;
+					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					sys->p1Wsba1 = csrValue.Wsban;
 					break;
 
 				case 0x02:			/* P1-WSBA2 */
-					sys->p1Wsba2.addr = csrValue.Wsban.addr;
-					sys->p1Wsba2.sg = csrValue.Wsban.sg;
-					sys->p1Wsba2.ena = csrValue.Wsban.ena;
+					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					sys->p1Wsba2 = csrValue.Wsban;
 					break;
 
 				case 0x03:			/* P1-WSBA3 */
-					sys->p1Wsba3.addr = csrValue.Wsban.addr;
-					sys->p1Wsba3.dac = csrValue.Wsba3.dac;
-					sys->p1Wsba3.sg = csrValue.Wsban.sg;
-					sys->p1Wsba3.ena = csrValue.Wsban.ena;
+					carValue.value = value & AXP_21274_WSBA3_WMASK;
+					sys->p1Wsba3 = csrValue.Wsba3;
 					break;
 
 				case 0x04:			/* P1-WSM0 */
-					sys->p1Wsm0.am = csrValue.Wsmn.am;
+					carValue.value = value & AXP_21274_WSMn_WMASK;
+					sys->p1Wsm0 = csrValue.Wsmn;
 					break;
 
 				case 0x05:			/* P1-WSM1 */
-					sys->p1Wsm1.am = csrValue.Wsmn.am;
+					carValue.value = value & AXP_21274_WSMn_WMASK;
+					sys->p1Wsm1 = csrValue.Wsmn;
 					break;
 
 				case 0x06:			/* P1-WSM2 */
-					sys->p1Wsm2.am = csrValue.Wsmn.am;
+					carValue.value = value & AXP_21274_WSMn_WMASK;
+					sys->p1Wsm2 = csrValue.Wsmn;
 					break;
 
 				case 0x07:			/* P1-WSM3 */
-					sys->p1Wsm3.am = csrValue.Wsmn.am;
+					carValue.value = value & AXP_21274_WSMn_WMASK;
+					sys->p1Wsm3 = csrValue.Wsmn;
 					break;
 
 				case 0x08:			/* P1-TBA0 */
-					sys->p1Tba0.addr = csrValue.Tban.addr;
+					carValue.value = value & AXP_21274_TBAn_WMASK
+					sys->p1Tba0 = csrValue.Tban;
 					break;
 
 				case 0x09:			/* P1-TBA1 */
-					sys->p1Tba1.addr = csrValue.Tban.addr;
+					carValue.value = value & AXP_21274_TBAn_WMASK
+					sys->p1Tba1 = csrValue.Tban;
 					break;
 
 				case 0x0a:			/* P1-TBA2 */
-					sys->p1Tba2.addr = csrValue.Tban.addr;
+					carValue.value = value & AXP_21274_TBAn_WMASK
+					sys->p1Tba2 = csrValue.Tban;
 					break;
 
 				case 0x0b:			/* P1-TBA3 */
-					sys->p1Tba3.addr = csrValue.Tban.addr;
+					carValue.value = value & AXP_21274_TBAn_WMASK
+					sys->p1Tba3 = csrValue.Tban;
 					break;
 
 				case 0x0c:			/* P1-PCTL */
-					sys->p1Pctl.ptevrfy = csrValue.Pctl.ptevrfy;
-					sys->p1Pctl.fdwdis = csrValue.Pctl.fdwdis;
-					sys->p1Pctl.fdsdis = csrValue.Pctl.fdsdis;
-					sys->p1Pctl.ptpmax = csrValue.Pctl.ptpmax;
-					sys->p1Pctl.crqmax = csrValue.Pctl.crqmax;
-					sys->p1Pctl.cdqmax = csrValue.Pctl.cdqmax;
-					sys->p1Pctl.padm = csrValue.Pctl.padm;
-					sys->p1Pctl.eccen = csrValue.Pctl.eccen;
-					sys->p1Pctl.prigrp = csrValue.Pctl.prigrp;
-					sys->p1Pctl.arbena = csrValue.Pctl.arbena;
-					sys->p1Pctl.mwin = csrValue.Pctl.mwin;
-					sys->p1Pctl.hole = csrValue.Pctl.hole;
-					sys->p1Pctl.tgtlat = csrValue.Pctl.tgtlat;
-					sys->p1Pctl.chaindis = csrValue.Pctl.chaindis;
-					sys->p1Pctl.thdis = csrValue.Pctl.thdis;
-					sys->p1Pctl.fbtb = csrValue.Pctl.fbtb;
-					sys->p1Pctl.fdsc = csrValue.Pctl.fdsc;
+					carValue.value = value & AXP_21274_PCTL_WMASK;
+					sys->p1Pctl = csrValue.Pctl;
 					break;
 
 				case 0x0d:			/* P1-PLAT */
-					sys->p1Plat.lat = csrValue.Plat.lat;
+					carValue.value = value & AXP_21274_PLAT_WMASK;
+					sys->p1Plat = csrValue.Plat;
 					break;
 
 				case 0x0f:			/* P1-PERROR */
@@ -689,17 +680,18 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x10:			/* P1-PERRMASK */
-					sys->p1PerrMask.mask = csrValue.PerrMask.mask;
+					carValue.value = value & AXP_21274_PERRMASK_WMASK;
+					sys->p1PerrMask = csrValue.PerrMask;
 					break;
 
 				case 0x11:			/* P1-PERRSET */
-					sys->p1PerrSet.info = csrValue.PerrSet.info;
-					sys->p1PerrSet.set = csrValue.PerrSet.set;
+					carValue.value = value & AXP_21274_PERRSET_WMASK;
+					sys->p1PerrSet = csrValue.PerrSet;
 					break;
 
 				case 0x12:			/* P1-TLBIV */
-					sys->p1Tlbiv.dac = csrValue.Tlbiv.dac;
-					sys->p1Tlbiv.addr = csrValue.Tlbiv.addr;
+					carValue.value = value & AXP_21274_TLBIV_WMASK;
+					sys->p1Tlbiv = csrValue.Tlbiv;
 					break;
 
 				case 0x13:			/* P1-TLBIA */
@@ -707,10 +699,8 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x14:			/* P1-PMONCTL */
-					sys->p1MonCtl.stkdis1 = csrValue.MonCtl.stkdis1;
-					sys->p1MonCtl.stkdis0 = csrValue.MonCtl.stkdis0;
-					sys->p1MonCtl.slct1 = csrValue.MonCtl.slct1;
-					sys->p1MonCtl.slct0 = csrValue.MonCtl.slct0;
+					carValue.value = value & AXP_21274_PMONC_WMASK;
+					sys->p1MonCtl = csrValue.MonCtl;
 					break;
 
 				case 0x20:			/* P1-SPRST */
@@ -726,100 +716,129 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 			switch (csrAddr.csr)
 			{
 				case 0x00:			/* CSC */
-					sys->csc.pbqmax = csrValue.csc.pbqmax;
-					sys->csc.prqmax = csrValue.csc.prqmax;
-					sys->csc.pdtmax = csrValue.csc.pdtmax;
-					sys->csc.fpqpmax = csrValue.csc.fpqpmax;
-					sys->csc.fpqcmax = csrValue.csc.fpqcmax;
-					sys->csc.tpqmmax = csrValue.csc.tpqmmax;
-					sys->csc.b3d = csrValue.csc.b3d;
-					sys->csc.b2d = csrValue.csc.b2d;
-					sys->csc.b1d = csrValue.csc.b1d;
-					sys->csc.fti = csrValue.csc.fti;
-					sys->csc.eft = csrValue.csc.eft;
-					sys->csc.qdi = csrValue.csc.qdi;
-					sys->csc.fet = csrValue.csc.fet;
-					sys->csc.qpm = csrValue.csc.qpm;
-					sys->csc.pme = csrValue.csc.pme;
-					sys->csc.drtp = csrValue.csc.drtp;
-					sys->csc.dwfp = csrValue.csc.dwfp;
-					sys->csc.dwtp = csrValue.csc.dwtp;
+					carValue.value = value & AXP_21274_CSC_WMASK;
+					sys->csc = csrValue.csc;
 					break;
 
 				case 0x01:			/* MTR */
-					sys->mtr.mph = csrValue.mtr.mph;
-					sys->mtr.phcw = csrValue.mtr.phcw;
-					sys->mtr.phcr = csrValue.mtr.phcr;
-					sys->mtr.ri = csrValue.mtr.ri;
-					sys->mtr.mpd = csrValue.mtr.mpd;
-					sys->mtr.rpt = csrValue.mtr.rpt;
-					sys->mtr.rpw = csrValue.mtr.rpw;
-					sys->mtr.ird = csrValue.mtr.ird;
-					sys->mtr.cat = csrValue.mtr.cat;
-					sys->mtr.rcd = csrValue.mtr.rcd;
+					carValue.value = value & AXP_21274_MTR_WMASK;
+					sys->mtr = csrValue.mtr;
 					break;
 
 				case 0x02:			/* MISC */
-					sys->misc.devSup = csrValue.misc.devSup;
-					sys->misc.nxm = csrValue.misc.nxm;
-					/* TODO: set DRIR[63] */
-					sys->misc.acl = csrValue.misc.acl;
-					sys->misc.abt = csrValue.misc.abt;
-					if (sys->misc.abw == 0)
-						sys->misc.abw = csrValue.misc.abw;
-					if (sys->misc.acl == 1)
+
+					/*
+					 * This register is different than the others in that
+					 * writing a zero to any bit field in this register does
+					 * not change the contents of the field.  Some bits are
+					 * indicated a W1C or W1S, which indicates that writing a
+					 * one to a bit will clear it or set it, respectively.
+					 */
+					csrValue.value = value;
+
+					/*
+					 * This is the Device Interrupt Suppression field.  There
+					 * is one bit per CPU.  Because other bits may have been
+					 * set and not yet cleared, the new value is OR'd with the
+					 * current value.  The CPU specific bit will be cleared
+					 * when the IRQ1 bit is set/not from the next scan of the
+					 * DRIR register.
+					 */
+					if (csrValue.misc.devSup != 0)
+						sys->misc.devSup |= csrValue.misc.devSup;
+
+					/*
+					 * The Non-eXistent Memory field is used to indicate that
+					 * a reference to non-existent memory has been attempted.
+					 * When this happens, the NXS (Source) field will be set
+					 * as well as this bit, which locks the NXS field and sets
+					 * the DRIR field at the same time.  Writing a 1 to this
+					 * field clears the bit indicating the the NXM condition
+					 * has been processed.
+					 */
+					if (csrValue.misc.nxm != 0)
+						sys->misc.nxm = 0;
+
+					/*
+					 * The Arbitration Clear field is used to clear the other
+					 * Arbitration bits (Try and Won).  This bit is not
+					 * actually set or cleared, it just clears the other
+					 * fields.
+					 */
+					if (csrValue.misc.acl != 0)
 					{
+						sys->misc.acl = 0;
 						sys->misc.abt = 0;
 						sys->misc.abw = 0;
 					}
-					sys->misc.ipreq = csrValue.misc.ipreq;
-					sys->misc.ipintr |= csrValue.misc.ipreq;	/* TODO */
-					sys->misc.itintr = csrValue.misc.itintr;
+
+					/*
+					 * OK, the Arbitration Clear field was not to be set, so it
+					 * is possible that we have an attempt at Arbitration.  If
+					 * the Arbitration Try field is set, set the appropriate
+					 * bit based on the CPU doing the attempt, but take note of
+					 * any bits that are already set.  Also, if the Arbitration
+					 * Won field does not already have a bit set, and the field
+					 * value to be set is not zero, then set the bit for the
+					 * CPU that won arbitration.
+					 */
+					else
+					{
+						u8	cpuBit = 1 << cpuID;
+
+						if ((csrValue.misc.abt & cpuBit) == cpuBit)
+							sys->misc.abt |= cpuBit;
+						if ((sys->misc.abw == 0) &&
+							((csrValue.misc.abw & cpuBit) == cpuBit))
+							sys->misc.abw = cpuBit;
+					}
+
+					/*
+					 * A CPU can request to interrupt one or more of the other
+					 * CPUs, including itself.  Set the bits accordingly,
+					 * taking into consideration that some bits may already be
+					 * set.  These bits are clearned when the IRQ3 bit is set
+					 * to the appropriate CPU.
+					 */
+					if (csrValue.misc.ipreq != 0)
+					{
+						sys->misc.ipreq |= csrValue.misc.ipreq;
+						sys->misc.ipintr |= csrValue.misc.ipreq;
+					}
+
+					/*
+					 * When I timer interrupt occurs, it can be on one or more
+					 * of the CPUs.  Setting this bit will cause the IRQ2 bit
+					 * to be set.  When the IRQ2 bit has been set, the
+					 * corresponding bit here will be cleared.
+					 */
+					if (csrValue.misc.itintr != 0)
+						sys->misc.itintr |= csrValue.misc.itintr;
 					break;
 
 				case 0x03:			/* MPD */
-					sys->mpd.ds = csrValue.mpd.ds;
-					sys->mpd.cks = csrValue.mpd.cks;
+					carValue.value = value & AXP_21274_MPD_WMASK;
+					sys->mpd = csrValue.mpd;
 					break;
 
 				case 0x04:			/* AAR0 */
-					sys->aar0.addr = csrValue.aarx.addr;
-					sys->aar0.dbg = csrValue.aarx.dbg;
-					sys->aar0.asiz = csrValue.aarx.asiz;
-					sys->aar0.tsa = csrValue.aarx.tsa;
-					sys->aar0.sa = csrValue.aarx.sa;
-					sys->aar0.rows = csrValue.aarx.rows;
-					sys->aar0.bnks = csrValue.aarx.bnks;
+					carValue.value = value & AXP_21274_ARRx_WMASK;
+					sys->aar0 = csrValue.aarx;
 					break;
 
 				case 0x05:			/* AAR1 */
-					sys->aar1.addr = csrValue.aarx.addr;
-					sys->aar1.dbg = csrValue.aarx.dbg;
-					sys->aar1.asiz = csrValue.aarx.asiz;
-					sys->aar1.tsa = csrValue.aarx.tsa;
-					sys->aar1.sa = csrValue.aarx.sa;
-					sys->aar1.rows = csrValue.aarx.rows;
-					sys->aar1.bnks = csrValue.aarx.bnks;
+					carValue.value = value & AXP_21274_ARRx_WMASK;
+					sys->aar1 = csrValue.aarx;
 					break;
 
 				case 0x06:			/* AAR2 */
-					sys->aar2.addr = csrValue.aarx.addr;
-					sys->aar2.dbg = csrValue.aarx.dbg;
-					sys->aar2.asiz = csrValue.aarx.asiz;
-					sys->aar2.tsa = csrValue.aarx.tsa;
-					sys->aar2.sa = csrValue.aarx.sa;
-					sys->aar2.rows = csrValue.aarx.rows;
-					sys->aar2.bnks = csrValue.aarx.bnks;
+					carValue.value = value & AXP_21274_ARRx_WMASK;
+					sys->aar2 = csrValue.aarx;
 					break;
 
 				case 0x07:			/* AAR3 */
-					sys->aar3.addr = csrValue.aarx.addr;
-					sys->aar3.dbg = csrValue.aarx.dbg;
-					sys->aar3.asiz = csrValue.aarx.asiz;
-					sys->aar3.tsa = csrValue.aarx.tsa;
-					sys->aar3.sa = csrValue.aarx.sa;
-					sys->aar3.rows = csrValue.aarx.rows;
-					sys->aar3.bnks = csrValue.aarx.bnks;
+					carValue.value = value & AXP_21274_ARRx_WMASK;
+					sys->aar3 = csrValue.aarx;
 					break;
 
 				case 0x08:			/* DIM0 */
@@ -852,13 +871,13 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x0e:			/* IIC0 */
-					sys->iic0.of = csrValue.iicn.of;
-					sys->iic0.iCnt = csrValue.iicn.iCnt;
+					carValue.value = value & AXP_21274_IICn_WMASK;
+					sys->iic0 = csrValue.iicn;
 					break;
 
 				case 0x0f:			/* IIC1 */
-					sys->iic1.of = csrValue.iicn.of;
-					sys->iic1.iCnt = csrValue.iicn.iCnt;
+					carValue.value = value & AXP_21274_IICn_WMASK;
+					sys->iic1 = csrValue.iicn;
 					break;
 
 				case 0x10:			/* MPR0 */
@@ -878,34 +897,13 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x16:			/* TTR */
-					sys->ttr.id = csrValue.ttr.id;
-					sys->ttr.irt = csrValue.ttr.irt;
-					sys->ttr.is = csrValue.ttr.is;
-					sys->ttr.ah = csrValue.ttr.ah;
-					sys->ttr.as = csrValue.ttr.as;
+					carValue.value = value & AXP_21274_TTR_WMASK;
+					sys->ttr = csrValue.ttr;
 					break;
 
 				case 0x17:			/* TDR */
-					sys->tdr.wh3 = csrValue.tdr.wh3;
-					sys->tdr.wp3 = csrValue.tdr.wp3;
-					sys->tdr.ws3 = csrValue.tdr.ws3;
-					sys->tdr.rd3 = csrValue.tdr.rd3;
-					sys->tdr.ra3 = csrValue.tdr.ra3;
-					sys->tdr.wh2 = csrValue.tdr.wh2;
-					sys->tdr.wp2 = csrValue.tdr.wp2;
-					sys->tdr.ws2 = csrValue.tdr.ws2;
-					sys->tdr.rd2 = csrValue.tdr.rd2;
-					sys->tdr.ra2 = csrValue.tdr.ra2;
-					sys->tdr.wh1 = csrValue.tdr.wh1;
-					sys->tdr.wp1 = csrValue.tdr.wp1;
-					sys->tdr.ws1 = csrValue.tdr.ws1;
-					sys->tdr.rd1 = csrValue.tdr.rd1;
-					sys->tdr.ra1 = csrValue.tdr.ra1;
-					sys->tdr.wh0 = csrValue.tdr.wh0;
-					sys->tdr.wp0 = csrValue.tdr.wp0;
-					sys->tdr.ws0 = csrValue.tdr.ws0;
-					sys->tdr.rd0 = csrValue.tdr.rd0;
-					sys->tdr.ra0 = csrValue.tdr.ra0;
+					carValue.value = value & AXP_21274_TDR_WMASK;
+					sys->tdr = csrValue.tdr;
 					break;
 
 				case 0x18:			/* DIM2 */
@@ -917,13 +915,13 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x1c:			/* IIC2 */
-					sys->iic2.of = csrValue.iicn.of;
-					sys->iic2.iCnt = csrValue.iicn.iCnt;
+					carValue.value = value & AXP_21274_IICn_WMASK;
+					sys->iic2 = csrValue.iicn;
 					break;
 
 				case 0x1d:			/* IIC3 */
-					sys->iic3.of = csrValue.iicn.of;
-					sys->iic3.iCnt = csrValue.iicn.iCnt;
+					carValue.value = value & AXP_21274_IICn_WMASK;
+					sys->iic3 = csrValue.iicn;
 					break;
 
 				case 0x1e:			/* PWR */
@@ -931,25 +929,13 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x30:			/* CMONCTLA */
-					sys->cmonctla.msk23 = csrValue.cmonctla.msk23;
-					sys->cmonctla.msk01 = csrValue.cmonctla.msk01;
-					sys->cmonctla.stkdis3 = csrValue.cmonctla.stkdis3;
-					sys->cmonctla.stkdis2 = csrValue.cmonctla.stkdis2;
-					sys->cmonctla.stkdis1 = csrValue.cmonctla.stkdis1;
-					sys->cmonctla.stkdis0 = csrValue.cmonctla.stkdis0;
-					sys->cmonctla.slctmbl = csrValue.cmonctla.slctmbl;
-					sys->cmonctla.slct3 = csrValue.cmonctla.slct3;
-					sys->cmonctla.slct2 = csrValue.cmonctla.slct2;
-					sys->cmonctla.slct1 = csrValue.cmonctla.slct1;
-					sys->cmonctla.slct0 = csrValue.cmonctla.slct0;
+					carValue.value = value & AXP_21274_CMONA_WMASK;
+					sys->cmonctla = csrValue.cmonctla;
 					break;
 
 				case 0x31:			/* CMONCTLB */
-					sys->cmonctlb.mte3 = csrValue.cmonctlb.mte3;
-					sys->cmonctlb.mte2 = csrValue.cmonctlb.mte2;
-					sys->cmonctlb.mte1 = csrValue.cmonctlb.mte1;
-					sys->cmonctlb.mte0 = csrValue.cmonctlb.mte0;
-					sys->cmonctlb.dis = csrValue.cmonctlb.dis;
+					carValue.value = value & AXP_21274_CMONB_WMASK;
+					sys->cmonctlb = csrValue.cmonctlb;
 					break;
 
 				default:
@@ -961,13 +947,12 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 		case AXP_21274_DCHIP:
 			if (csrAddr.csr == 0x21)			/* STR */
 			{
-					sys->str.iddw = csrValue.str.iddw;
-					sys->str.iddr = csrValue.str.iddr;
-					sys->str.aw = csrValue.str.aw;
-					sys->str.dchip7 = sys->str.dchip6 =
-							sys->str.dchip5 = sys->str.dchip4 =
-							sys->str.dchip3 = sys->str.dchip2 =
-							sys->str.dchip1 = sys->str.dchip0;
+				carValue.value = value & AXP_21274_STR_WMASK;
+				sys->str = csrValue.str;
+				sys->str.dchip7 = sys->str.dchip6 =
+						sys->str.dchip5 = sys->str.dchip4 =
+						sys->str.dchip3 = sys->str.dchip2 =
+						sys->str.dchip1 = sys->str.dchip0;
 			}
 			break;
 
@@ -983,8 +968,8 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 
 /*
  * AXP_21274_ReadPIO
- *	This function is called on a read command (ReadBytes, ReadLWs, ReadQWs),
- *	which are always to PIO space.
+ *	This function is called on an I/O read command (ReadBytes, ReadLWs, and
+ *	ReadQWs), which are always to PIO space.
  *
  * Input Parameters:
  *	sys:
@@ -1032,8 +1017,8 @@ void AXP_21264_ReadPIO(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
 
 /*
  * AXP_21274_WritePIO
- *	This function is called on a write command (WrBytes, WrLWs, WrQWs), which
- *	are always to PIO space.
+ *	This function is called on an I/O write command (WrBytes, WrLWs, and
+ *	WrQWs), which are always to PIO space.
  *
  * Input Parameters:
  *	sys:
@@ -1070,6 +1055,61 @@ void AXP_21264_WritePIO(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
 	else
 		;	/* TODO: Non-existent memory? */
 
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21274_ReadMem
+ *	This function is called on a read block command (ReadBlk, ReadBlkMod,
+ *	ReadBlkI, FetchBlk, ReadBlkSpec, ReadBlkModSpec, ReadBlkSpecI,
+ *	FetchBlkSpec, ReadBlkVic, ReadBlkModVic, and ReadBlkVicI) which are always
+ *	to Physical Memory space.
+ *
+ * Input Parameters:
+ *	sys:
+ *		A pointer to the system data structure from which the emulation
+ *		information is maintained.
+ *	rq:
+ *		A pointer to the request to be processed.
+ *
+ * Output Parameters:
+ *	TODO:
+ *
+ * Return Value:
+ *	TODO:
+ */
+void AXP_21264_ReadMem(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
+{
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21274_WriteMem
+ *	This function is called on an I/O write command (WrVictimBlk and
+ *	CleanVictimBlk), which are always to Physical Memory space.
+ *
+ * Input Parameters:
+ *	sys:
+ *		A pointer to the system data structure from which the emulation
+ *		information is maintained.
+ *	rq:
+ *		A pointer to the request to be processed.
+ *
+ * Output Parameters:
+ *	TODO:
+ *
+ * Return Value:
+ *	TODO:
+ */
+void AXP_21264_WriteMem(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
+{
 
 	/*
 	 * Return back to the caller.
@@ -1588,7 +1628,7 @@ void *AXP_21274_CchipMain(void *voidPtr)
 				 * TODO:	Need to be able to deal with NXM and writing a
 				 * 			block to memory.
 				 */
-				AXP_21274_MemWrite(sys, rq);
+				AXP_21274_WriteMem(sys, rq);
 				break;
 
 			/*
@@ -1608,13 +1648,13 @@ void *AXP_21274_CchipMain(void *voidPtr)
 			case ReadBytes:
 			case ReadLWs:
 			case ReadQWs:
-				AXP_21274_PIORead(sys, rq);
+				AXP_21274_ReadPIO(sys, rq);
 				break;
 
 			case WrBytes:
 			case WrLWs:
 			case WrQWs:
-				AXP_21274_PIOWrite(sys, rq);
+				AXP_21274_WritePIO(sys, rq);
 				break;
 
 			/*
@@ -1638,7 +1678,7 @@ void *AXP_21274_CchipMain(void *voidPtr)
 				 * 			block from memory and returning it to the
 				 * 			requesting CPU.
 				 */
-				AXP_21274_MemRead(sys, rq);
+				AXP_21274_ReadMem(sys, rq);
 				break;
 
 			/*
