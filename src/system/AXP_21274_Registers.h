@@ -617,7 +617,7 @@ typedef struct
  *											to a 1 in this field.
  *											(<11:10> are used in Typhoon only)
  *	ITINTR		<7:4>		R,W1C	0		Interval timer interrupt pending -
- *											one bit per CPU. Pin irq<2> is
+ *											one bit per CPU. Pin IRQ2 is
  *											asserted to the CPU corresponding
  *											to a 1 in this field.
  *											(<7:6> are used in Typhoon only)
@@ -859,7 +859,7 @@ typedef struct
  *
  * Register n applies to CPUn. (Typhoon only: n=2,3.)
  *
- * These two mask registers control which interrupts are allowed to go through
+ * These four mask registers control which interrupts are allowed to go through
  * to the CPUs. No interrupt in DRIR will get through to the masked interrupt
  * registers (and on to interrupt the CPUs) unless the corresponding mask bit
  * is set in DIMn. All bits are initialized to 0 at reset. Table 10-16
@@ -1777,7 +1777,7 @@ typedef struct
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only.
  */
-#define AXP_21274_DSC_RMASK	0x000000000000007F
+#define AXP_21274_DSC_RMASK	0x7F7F7F7F7F7F7F7F
 
 /*
  * HRM 10.2.4.2 Dchip System Configuration Register 2 (DSC2 - R0)
@@ -1918,7 +1918,7 @@ typedef struct
  * writes.  Read-Only are masked out for writes.  Write-only are masked out for
  * Reads.  Read-Write are masked in for both reads and writes.
  */
-#define AXP_21274_STR_RMASK	0x000000000000003F
+#define AXP_21274_STR_RMASK	0x3F3F3F3F3F3F3F3F
 #define AXP_21274_STR_WMASK	0x000000000000003F
 
 /*
@@ -1985,7 +1985,7 @@ typedef struct
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only.
  */
-#define AXP_21274_DREV_RMASK	0x0000000000000003
+#define AXP_21274_DREV_RMASK	0x0303030303030303
 
 /****************************************************************************
  *							HRM 10.2.5 Pchip CSRs							*
