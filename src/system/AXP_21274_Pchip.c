@@ -355,13 +355,13 @@ void AXP_21274_PchipInit(AXP_21274_SYSTEM *sys)
 	sys->p0MonCtl.stkdis1 = AXP_STKDIS_STICKS_1S;
 	sys->p0MonCtl.stkdis0 = AXP_STKDIS_STICKS_1S;
 	sys->p0MonCtl.slct1 = 0;
-	sys->p0MonCtl.slct1 = 1;
+	sys->p0MonCtl.slct0 = 1;
 
 	sys->p1MonCtl.res_18 = 0;
 	sys->p1MonCtl.stkdis1 = AXP_STKDIS_STICKS_1S;
 	sys->p1MonCtl.stkdis0 = AXP_STKDIS_STICKS_1S;
 	sys->p1MonCtl.slct1 = 0;
-	sys->p1MonCtl.slct1 = 1;
+	sys->p1MonCtl.slct0 = 1;
 
 	/*
 	 * Initialization for PMONCNT (HRM Table 10-48), for both Pchip0 an Pchip1.

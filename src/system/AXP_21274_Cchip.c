@@ -40,7 +40,7 @@
  *
  *	V01.001		02-May-2018	Jonathan D. Belanger
  *	Implemented masks to assist in reading and writing CSRs without having to
- *	look at each bit or set ot bits.  Also, started to work on the interaction
+ *	look at each bit or set of bits.  Also, started to work on the interaction
  *	between CSRs.  Finally, the way the interrupt bits, irq are passed to the
  *	CPUs is going to change.  The code currently send a message to the CPUs to
  *	set their internal bits, which are separate from the irq bits.  We are now
@@ -77,13 +77,11 @@
 u64 AXP_21274_ReadCSR(AXP_21274_SYSTEM *sys, u64 pa)
 {
 	AXP_21274_CSR_ADDR	csrAddr = {.addr = pa};
-	int					chip = csrAddr.chip + (csrAddr.cpuAddr = 0x200e ? 1 : 0);
+	int					chip = csrAddr.chip + (csrAddr.cpuAddr == 0x200e ? 1 : 0);
 	u64					retVal = 0;
 
 	/*
 	 * We now know the chip and the CSR.  Let's go do what we came here to do.
-	 *
-	 * TODO:	Deal with write-only locations.
 	 */
 	switch (chip)
 	{
@@ -485,7 +483,7 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 {
 	AXP_21274_CSR_ADDR	csrAddr = {.addr = pa};
 	CSR_MAP				csrValue;
-	int					chip = csrAddr.chip + (csrAddr.cpuAddr = 0x200e ? 1 : 0);
+	int					chip = csrAddr.chip + (csrAddr.cpuAddr == 0x200e ? 1 : 0);
 
 	/*
 	 * We now know the chip and the CSR.  Let's go do what we came here to do.
@@ -496,72 +494,72 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 			switch (csrAddr.csr)
 			{
 				case 0x00:			/* P0-WSBA0 */
-					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					csrValue.value = value & AXP_21274_WSBAn_WMASK;
 					sys->p0Wsba0 = csrValue;
 					break;
 
 				case 0x01:			/* P0-WSBA1 */
-					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					csrValue.value = value & AXP_21274_WSBAn_WMASK;
 					sys->p0Wsba1 = csrValue.Wsban;
 					break;
 
 				case 0x02:			/* P0-WSBA2 */
-					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					csrValue.value = value & AXP_21274_WSBAn_WMASK;
 					sys->p0Wsba2 = csrValue.Wsban;
 					break;
 
 				case 0x03:			/* P0-WSBA3 */
-					carValue.value = value & AXP_21274_WSBA3_WMASK;
+					csrValue.value = value & AXP_21274_WSBA3_WMASK;
 					sys->p0Wsba3 = csrValue.Wsba3;
 					break;
 
 				case 0x04:			/* P0-WSM0 */
-					carValue.value = value & AXP_21274_WSMn_WMASK;
+					csrValue.value = value & AXP_21274_WSMn_WMASK;
 					sys->p0Wsm0 = csrValue.Wsmn;
 					break;
 
 				case 0x05:			/* P0-WSM1 */
-					carValue.value = value & AXP_21274_WSMn_WMASK;
+					csrValue.value = value & AXP_21274_WSMn_WMASK;
 					sys->p0Wsm1 = csrValue.Wsmn;
 					break;
 
 				case 0x06:			/* P0-WSM2 */
-					carValue.value = value & AXP_21274_WSMn_WMASK;
+					csrValue.value = value & AXP_21274_WSMn_WMASK;
 					sys->p0Wsm2 = csrValue.Wsmn;
 					break;
 
 				case 0x07:			/* P0-WSM3 */
-					carValue.value = value & AXP_21274_WSMn_WMASK;
+					csrValue.value = value & AXP_21274_WSMn_WMASK;
 					sys->p0Wsm3 = csrValue.Wsmn;
 					break;
 
 				case 0x08:			/* P0-TBA0 */
-					carValue.value = value & AXP_21274_TBAn_WMASK
+					csrValue.value = value & AXP_21274_TBAn_WMASK;
 					sys->p0Tba0 = csrValue.Tban;
 					break;
 
 				case 0x09:			/* P0-TBA1 */
-					carValue.value = value & AXP_21274_TBAn_WMASK
+					csrValue.value = value & AXP_21274_TBAn_WMASK;
 					sys->p0Tba1 = csrValue.Tban;
 					break;
 
 				case 0x0a:			/* P0-TBA2 */
-					carValue.value = value & AXP_21274_TBAn_WMASK
+					csrValue.value = value & AXP_21274_TBAn_WMASK;
 					sys->p0Tba2 = csrValue.Tban;
 					break;
 
 				case 0x0b:			/* P0-TBA3 */
-					carValue.value = value & AXP_21274_TBAn_WMASK
+					csrValue.value = value & AXP_21274_TBAn_WMASK;
 					sys->p0Tba3 = csrValue.Tban;
 					break;
 
 				case 0x0c:			/* P0-PCTL */
-					carValue.value = value & AXP_21274_PCTL_WMASK;
+					csrValue.value = value & AXP_21274_PCTL_WMASK;
 					sys->p0Pctl = csrValue.Pctl;
 					break;
 
 				case 0x0d:			/* P0-PLAT */
-					carValue.value = value & AXP_21274_PLAT_WMASK;
+					csrValue.value = value & AXP_21274_PLAT_WMASK;
 					sys->p0Plat = csrValue.Plat;
 					break;
 
@@ -570,17 +568,17 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x10:			/* P0-PERRMASK */
-					carValue.value = value & AXP_21274_PERRMASK_WMASK;
+					csrValue.value = value & AXP_21274_PERRMASK_WMASK;
 					sys->p0PerrMask = csrValue.PerrMask;
 					break;
 
 				case 0x11:			/* P0-PERRSET */
-					carValue.value = value & AXP_21274_PERRSET_WMASK;
+					csrValue.value = value & AXP_21274_PERRSET_WMASK;
 					sys->p0PerrSet = csrValue.PerrSet;
 					break;
 
 				case 0x12:			/* P0-TLBIV */
-					carValue.value = value & AXP_21274_TLBIV_WMASK;
+					csrValue.value = value & AXP_21274_TLBIV_WMASK;
 					sys->p0Tlbiv = csrValue.Tlbiv;
 					break;
 
@@ -589,7 +587,7 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x14:			/* P0-PMONCTL */
-					carValue.value = value & AXP_21274_PMONC_WMASK;
+					csrValue.value = value & AXP_21274_PMONC_WMASK;
 					sys->p0MonCtl = csrValue.MonCtl;
 					break;
 
@@ -606,72 +604,72 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 			switch (csrAddr.csr)
 			{
 				case 0x00:			/* P1-WSBA0 */
-					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					csrValue.value = value & AXP_21274_WSBAn_WMASK;
 					sys->p1Wsba0 = csrValue;
 					break;
 
 				case 0x01:			/* P1-WSBA1 */
-					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					csrValue.value = value & AXP_21274_WSBAn_WMASK;
 					sys->p1Wsba1 = csrValue.Wsban;
 					break;
 
 				case 0x02:			/* P1-WSBA2 */
-					carValue.value = value & AXP_21274_WSBAn_WMASK;
+					csrValue.value = value & AXP_21274_WSBAn_WMASK;
 					sys->p1Wsba2 = csrValue.Wsban;
 					break;
 
 				case 0x03:			/* P1-WSBA3 */
-					carValue.value = value & AXP_21274_WSBA3_WMASK;
+					csrValue.value = value & AXP_21274_WSBA3_WMASK;
 					sys->p1Wsba3 = csrValue.Wsba3;
 					break;
 
 				case 0x04:			/* P1-WSM0 */
-					carValue.value = value & AXP_21274_WSMn_WMASK;
+					csrValue.value = value & AXP_21274_WSMn_WMASK;
 					sys->p1Wsm0 = csrValue.Wsmn;
 					break;
 
 				case 0x05:			/* P1-WSM1 */
-					carValue.value = value & AXP_21274_WSMn_WMASK;
+					csrValue.value = value & AXP_21274_WSMn_WMASK;
 					sys->p1Wsm1 = csrValue.Wsmn;
 					break;
 
 				case 0x06:			/* P1-WSM2 */
-					carValue.value = value & AXP_21274_WSMn_WMASK;
+					csrValue.value = value & AXP_21274_WSMn_WMASK;
 					sys->p1Wsm2 = csrValue.Wsmn;
 					break;
 
 				case 0x07:			/* P1-WSM3 */
-					carValue.value = value & AXP_21274_WSMn_WMASK;
+					csrValue.value = value & AXP_21274_WSMn_WMASK;
 					sys->p1Wsm3 = csrValue.Wsmn;
 					break;
 
 				case 0x08:			/* P1-TBA0 */
-					carValue.value = value & AXP_21274_TBAn_WMASK
+					csrValue.value = value & AXP_21274_TBAn_WMASK;
 					sys->p1Tba0 = csrValue.Tban;
 					break;
 
 				case 0x09:			/* P1-TBA1 */
-					carValue.value = value & AXP_21274_TBAn_WMASK
+					csrValue.value = value & AXP_21274_TBAn_WMASK;
 					sys->p1Tba1 = csrValue.Tban;
 					break;
 
 				case 0x0a:			/* P1-TBA2 */
-					carValue.value = value & AXP_21274_TBAn_WMASK
+					csrValue.value = value & AXP_21274_TBAn_WMASK;
 					sys->p1Tba2 = csrValue.Tban;
 					break;
 
 				case 0x0b:			/* P1-TBA3 */
-					carValue.value = value & AXP_21274_TBAn_WMASK
+					csrValue.value = value & AXP_21274_TBAn_WMASK;
 					sys->p1Tba3 = csrValue.Tban;
 					break;
 
 				case 0x0c:			/* P1-PCTL */
-					carValue.value = value & AXP_21274_PCTL_WMASK;
+					csrValue.value = value & AXP_21274_PCTL_WMASK;
 					sys->p1Pctl = csrValue.Pctl;
 					break;
 
 				case 0x0d:			/* P1-PLAT */
-					carValue.value = value & AXP_21274_PLAT_WMASK;
+					csrValue.value = value & AXP_21274_PLAT_WMASK;
 					sys->p1Plat = csrValue.Plat;
 					break;
 
@@ -680,17 +678,17 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x10:			/* P1-PERRMASK */
-					carValue.value = value & AXP_21274_PERRMASK_WMASK;
+					csrValue.value = value & AXP_21274_PERRMASK_WMASK;
 					sys->p1PerrMask = csrValue.PerrMask;
 					break;
 
 				case 0x11:			/* P1-PERRSET */
-					carValue.value = value & AXP_21274_PERRSET_WMASK;
+					csrValue.value = value & AXP_21274_PERRSET_WMASK;
 					sys->p1PerrSet = csrValue.PerrSet;
 					break;
 
 				case 0x12:			/* P1-TLBIV */
-					carValue.value = value & AXP_21274_TLBIV_WMASK;
+					csrValue.value = value & AXP_21274_TLBIV_WMASK;
 					sys->p1Tlbiv = csrValue.Tlbiv;
 					break;
 
@@ -699,7 +697,7 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x14:			/* P1-PMONCTL */
-					carValue.value = value & AXP_21274_PMONC_WMASK;
+					csrValue.value = value & AXP_21274_PMONC_WMASK;
 					sys->p1MonCtl = csrValue.MonCtl;
 					break;
 
@@ -716,12 +714,12 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 			switch (csrAddr.csr)
 			{
 				case 0x00:			/* CSC */
-					carValue.value = value & AXP_21274_CSC_WMASK;
+					csrValue.value = value & AXP_21274_CSC_WMASK;
 					sys->csc = csrValue.csc;
 					break;
 
 				case 0x01:			/* MTR */
-					carValue.value = value & AXP_21274_MTR_WMASK;
+					csrValue.value = value & AXP_21274_MTR_WMASK;
 					sys->mtr = csrValue.mtr;
 					break;
 
@@ -817,27 +815,27 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x03:			/* MPD */
-					carValue.value = value & AXP_21274_MPD_WMASK;
+					csrValue.value = value & AXP_21274_MPD_WMASK;
 					sys->mpd = csrValue.mpd;
 					break;
 
 				case 0x04:			/* AAR0 */
-					carValue.value = value & AXP_21274_ARRx_WMASK;
+					csrValue.value = value & AXP_21274_ARRx_WMASK;
 					sys->aar0 = csrValue.aarx;
 					break;
 
 				case 0x05:			/* AAR1 */
-					carValue.value = value & AXP_21274_ARRx_WMASK;
+					csrValue.value = value & AXP_21274_ARRx_WMASK;
 					sys->aar1 = csrValue.aarx;
 					break;
 
 				case 0x06:			/* AAR2 */
-					carValue.value = value & AXP_21274_ARRx_WMASK;
+					csrValue.value = value & AXP_21274_ARRx_WMASK;
 					sys->aar2 = csrValue.aarx;
 					break;
 
 				case 0x07:			/* AAR3 */
-					carValue.value = value & AXP_21274_ARRx_WMASK;
+					csrValue.value = value & AXP_21274_ARRx_WMASK;
 					sys->aar3 = csrValue.aarx;
 					break;
 
@@ -871,12 +869,12 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x0e:			/* IIC0 */
-					carValue.value = value & AXP_21274_IICn_WMASK;
+					csrValue.value = value & AXP_21274_IICn_WMASK;
 					sys->iic0 = csrValue.iicn;
 					break;
 
 				case 0x0f:			/* IIC1 */
-					carValue.value = value & AXP_21274_IICn_WMASK;
+					csrValue.value = value & AXP_21274_IICn_WMASK;
 					sys->iic1 = csrValue.iicn;
 					break;
 
@@ -897,12 +895,12 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x16:			/* TTR */
-					carValue.value = value & AXP_21274_TTR_WMASK;
+					csrValue.value = value & AXP_21274_TTR_WMASK;
 					sys->ttr = csrValue.ttr;
 					break;
 
 				case 0x17:			/* TDR */
-					carValue.value = value & AXP_21274_TDR_WMASK;
+					csrValue.value = value & AXP_21274_TDR_WMASK;
 					sys->tdr = csrValue.tdr;
 					break;
 
@@ -915,12 +913,12 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x1c:			/* IIC2 */
-					carValue.value = value & AXP_21274_IICn_WMASK;
+					csrValue.value = value & AXP_21274_IICn_WMASK;
 					sys->iic2 = csrValue.iicn;
 					break;
 
 				case 0x1d:			/* IIC3 */
-					carValue.value = value & AXP_21274_IICn_WMASK;
+					csrValue.value = value & AXP_21274_IICn_WMASK;
 					sys->iic3 = csrValue.iicn;
 					break;
 
@@ -929,7 +927,7 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 					break;
 
 				case 0x30:			/* CMONCTLA */
-					carValue.value = value & AXP_21274_CMONA_WMASK;
+					csrValue.value = value & AXP_21274_CMONA_WMASK;
 					sys->cmonctla = csrValue.cmonctla;
 					break;
 
@@ -947,7 +945,7 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
 		case AXP_21274_DCHIP:
 			if (csrAddr.csr == 0x21)			/* STR */
 			{
-				carValue.value = value & AXP_21274_STR_WMASK;
+				csrValue.value = value & AXP_21274_STR_WMASK;
 				sys->str = csrValue.str;
 				sys->str.dchip7 = sys->str.dchip6 =
 						sys->str.dchip5 = sys->str.dchip4 =
@@ -984,9 +982,11 @@ void AXP_21274_WriteCSR(AXP_21274_SYSTEM *sys, u64 pa, u32 cpuID, u64 value)
  * Return Value:
  *	TODO:
  */
-void AXP_21264_ReadPIO(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
+void AXP_21264_ReadPIO(
+				AXP_21274_SYSTEM *sys,
+				AXP_21274_RQ_ENTRY *rq,
+				AXP_21274_SYSBUS_CPU *rsp)
 {
-	u64	csrValue;
 
 	/*
 	 * First, let's see what we are dealing with (the physical address supplied
@@ -994,9 +994,12 @@ void AXP_21264_ReadPIO(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
 	 *
 	 * Is this one of the CSRs.
 	 */
-	sys->misc.cpuID = rq->cpuID & 0x3;
 	if (AXP_21264_CSR_ADDR(rq->pa))
-		csrValue = AXP_21274_ReadCSR(sys, rq->pa);
+	{
+		rsp->sysData[0] = AXP_21274_ReadCSR(sys, rq->pa);
+		rsp->sysDc = ReadData;
+		rsp->id = rq->entry;
+	}
 	else if (AXP_21274_LINEAR_MEMORY(rq->pa) ||
 			 AXP_21274_LINEAR_IO(rq->pa) ||
 			 AXP_21274_LINEAR_CFG(rq->pa) ||
@@ -1033,9 +1036,11 @@ void AXP_21264_ReadPIO(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
  * Return Value:
  *	TODO:
  */
-void AXP_21264_WritePIO(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
+void AXP_21264_WritePIO(
+				AXP_21274_SYSTEM *sys,
+				AXP_21274_RQ_ENTRY *rq,
+				AXP_21274_SYSBUS_CPU *rsp)
 {
-	u64	csrValue;
 
 	/*
 	 * First, let's see what we are dealing with (the physical address supplied
@@ -1044,7 +1049,11 @@ void AXP_21264_WritePIO(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
 	 * Is this one of the CSRs.
 	 */
 	if (AXP_21264_CSR_ADDR(rq->pa))
-		csrValue = AXP_21274_WriteCSR(sys, rq->pa, rq->cpuID, rq->sysData[0]);
+	{
+		rsp->sysData[0] = AXP_21274_WriteCSR(sys, rq->pa, rq->cpuID, rq->sysData[0]);
+		rsp->sysDc = WriteData;
+		rsp->id = rq->entry;
+	}
 	else if (AXP_21274_LINEAR_MEMORY(rq->pa) ||
 			 AXP_21274_LINEAR_IO(rq->pa) ||
 			 AXP_21274_LINEAR_CFG(rq->pa) ||
@@ -1081,8 +1090,42 @@ void AXP_21264_WritePIO(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
  * Return Value:
  *	TODO:
  */
-void AXP_21264_ReadMem(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
+void AXP_21264_ReadMem(
+				AXP_21274_SYSTEM *sys,
+				AXP_21274_RQ_ENTRY *rq,
+				AXP_21274_SYSBUS_CPU *rsp)
 {
+	AXP_21274_SYSTEM_MEMADDR memAddr = {.addr = rq->pa};
+
+	if (memAddr.quadAddr.index < sys->memSize)
+	{
+		memcpy(
+			&rsp->sysData,
+			sys->memory[memAddr.quadAddr.index],
+			(sizeof(u64) * AXP_21274_DATA_SIZE));
+		switch(rq->cmd)
+		{
+			case ReadBlk:
+			case ReadBlkI:
+			case FetchBlk:
+			case ReadBlkSpec:
+			case ReadBlkSpecI:
+			case FetchBlkSpec:
+			case ReadBlkVic:
+			case ReadBlkVicI:
+				rsp->sysDc = ReadData;
+				break;
+
+			case ReadBlkMod:
+			case ReadBlkModSpec:
+			case ReadBlkModVic:
+				rsp->sysDc = ReadDataDirty;
+				break;
+		}
+	}
+	else
+		rsp->sysDc = ReadDataError;
+	rsp->id = rq->entry;
 
 	/*
 	 * Return back to the caller.
@@ -1108,8 +1151,23 @@ void AXP_21264_ReadMem(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
  * Return Value:
  *	TODO:
  */
-void AXP_21264_WriteMem(AXP_21274_SYSTEM *sys, AXP_21274_RQ_ENTRY *rq)
+void AXP_21264_WriteMem(
+				AXP_21274_SYSTEM *sys,
+				AXP_21274_RQ_ENTRY *rq,
+				AXP_21274_SYSBUS_CPU *rsp)
 {
+
+	if (memAddr.quadAddr.index < sys->memSize)
+	{
+		memcpy(
+			&sys->memory[memAddr.quadAddr.index],
+			rq->sysData,
+			(sizeof(u64) * AXP_21274_DATA_SIZE));
+	}
+	else
+		;	/* TODO: NXM error */
+	rsp->id = rq->entry;
+	rsp->sysDc = WriteData;
 
 	/*
 	 * Return back to the caller.
@@ -1481,28 +1539,29 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
 	/*
 	 * Initialize the request queue.
 	 */
+	AXP_INIT_QUE(sys->skidBufferQ);
+	sys->skidLastUsed = 0;
 	for (hh = 0; hh < AXP_21274_MAX_CPUS; hh++)
 	{
 		for (ii = 0; ii < AXP_21274_CCHIP_RQ_LEN; ii++)
 		{
 			for (jj = 0; jj < AXP_21274_DATA_SIZE; jj++)
 			{
-				sys->skidBuffer[ii].sysData[jj] = 0;
+				sys->skidBuffers[ii].sysData[jj] = 0;
 			}
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].mask;
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].pa;
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].cmd = Sysbus_NOP;
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].status = HitClean;
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].phase = phase0;
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].entry = 0;
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].cpuID = 0;
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].sysDataLen = 0;
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].waitVector = 0;
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].miss2 = false;
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].rqValid = false;
-			sys->skidBuffer[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].cacheHit = false;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].mask;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].pa;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].cmd = Sysbus_NOP;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].status = HitClean;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].phase = phase0;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].entry = 0;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].cpuID = 0;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].sysDataLen = 0;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].waitVector = 0;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].miss2 = false;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].rqValid = false;
+			sys->skidBuffers[(hh * AXP_21274_CCHIP_RQ_LEN) + ii].cacheHit = false;
 		}
-		sys->skidStart = sys->skidEnd = 0;
 	}
 
 	/*
@@ -1530,8 +1589,10 @@ void AXP_21274_CchipInit(AXP_21274_SYSTEM *sys)
  */
 void *AXP_21274_CchipMain(void *voidPtr)
 {
-	AXP_21274_SYSTEM	*sys = (AXP_21274_SYSTEM *) voidPtr;
-	AXP_21274_RQ_ENTRY	*rq;
+	AXP_21274_SYSTEM		*sys = (AXP_21274_SYSTEM *) voidPtr;
+	AXP_21274_RQ_ENTRY		*rq;
+	AXP_21274_SYSBUS_CPU	rsp;
+	int						ii;
 
 	/*
 	 * Log that we are starting.
@@ -1623,12 +1684,7 @@ void *AXP_21274_CchipMain(void *voidPtr)
 			 */
 			case WrVictimBlk:
 			case CleanVictimBlk:
-
-				/*
-				 * TODO:	Need to be able to deal with NXM and writing a
-				 * 			block to memory.
-				 */
-				AXP_21274_WriteMem(sys, rq);
+				AXP_21274_WriteMem(sys, rq, &rsp);
 				break;
 
 			/*
@@ -1648,13 +1704,15 @@ void *AXP_21274_CchipMain(void *voidPtr)
 			case ReadBytes:
 			case ReadLWs:
 			case ReadQWs:
-				AXP_21274_ReadPIO(sys, rq);
+				sys->misc.cpuID = rq->cpuID & 0x3;	/* CPU performing read */
+				AXP_21274_ReadPIO(sys, rq, &rsp);
+				sys->misc.cpuID = 0;
 				break;
 
 			case WrBytes:
 			case WrLWs:
 			case WrQWs:
-				AXP_21274_WritePIO(sys, rq);
+				AXP_21274_WritePIO(sys, rq, &rsp);
 				break;
 
 			/*
@@ -1672,13 +1730,9 @@ void *AXP_21274_CchipMain(void *voidPtr)
 			case ReadBlkVic:
 			case ReadBlkModVic:
 			case ReadBlkVicI:
-
-				/*
-				 * TODO:	Need to be able to deal with NXM and getting a
-				 * 			block from memory and returning it to the
-				 * 			requesting CPU.
-				 */
-				AXP_21274_ReadMem(sys, rq);
+				sys->misc.cpuID = rq->cpuID & 0x3;	/* CPU performing read */
+				AXP_21274_ReadMem(sys, rq, &rsp);
+				sys->misc.cpuID = 0;
 				break;
 
 			/*
@@ -1693,12 +1747,128 @@ void *AXP_21274_CchipMain(void *voidPtr)
 		}
 
 		/*
+		 * Before we go back to see if there is anything to process, let's make
+		 * sure the IRQ bits are set accordingly.  If they change, then the
+		 * appropriate CPU should be signaled.
+		 */
+		for(ii = 0; ii < sys->cpuCount; ii++)
+		{
+			u8	curIrqH;
+			u8	cpuBit = 1 << ii;
+
+			/*
+			 * Don't let the CPU try and read or modify the IRQ_H bits until we
+			 * are done setting them.
+			 */
+			pthread_mutex_lock(sys->cpu[ii].mutex);
+
+			/*
+			 * Save the current value of the IRQ_H bits.
+			 */
+			curIrqH = *sys->cpu[ii].irq_H;
+
+			/*
+			 * If NXM is set or TIG interrupt bits 62 or 61 (Pchip0 and Pchip1,
+			 * respectively) are set, then IRQ<0> is set.
+			 */
+			if (sys->misc.nxm == 1)
+				*sys->cpu[ii].irq_H |= 1;
+			else
+				*sys->cpu[ii].irq_H &= 0xfe;
+
+			/*
+			 * DRIR is ANDed with the CPU specific MASK bits DIRn and if the
+			 * result is non-zero, then IRQ<1> is set.  If DEVSUP is set for
+			 * this CPU, then setting of this bit is suppressed for this cycle.
+			 */
+			if ((sys->misc.devSup & cpuBit) == 0)
+			{
+				bool	setBit = false;
+
+				/*
+				 * Determine which mask to use and determine if the IRQ<1> bit
+				 * for this CPU should be set.
+				 */
+				switch (ii)
+				{
+					case 0:
+						setBit = (sys->drir & sys->dir0) != 0;
+						break;
+
+					case 1:
+						setBit = (sys->drir & sys->dir1) != 0;
+						break;
+
+					case 2:
+						setBit = (sys->drir & sys->dir2) != 0;
+						break;
+
+					case 3:
+						setBit = (sys->drir & sys->dir3) != 0;
+						break;
+
+				}
+
+				/*
+				 * If the bit should be set, then do so now.
+				 */
+				if (setBit)
+					*sys->cpu[ii].irq_H |= 2;
+				else
+					*sys->cpu[ii].irq_H &= 0xfd;
+			}
+			else
+
+				/*
+				 * Clear the IRQ<1> bit for this CPU.
+				 */
+				*sys->cpu[ii].irq_H &= 0xfd;
+
+			/*
+			 * If ITINTR is set for this CPU, then IRQ<2> is set.
+			 */
+			if ((sys->misc.itintr & cpuBit) == cpuBit)
+				*sys->cpu[ii].irq_H |= 4;
+			else
+				*sys->cpu[ii].irq_H &= 0xfb;
+
+			/*
+			 * If IPINTR is set for this CPU, then IRQ<3> is set.
+			 */
+			if ((sys->misc.ipintr & cpuBit) == cpuBit)
+				*sys->cpu[ii].irq_H |= 8;
+			else
+				*sys->cpu[ii].irq_H &= 0xf7;
+
+			/*
+			 * Finally, if the IRQ_H bit changed, then we need to signal the
+			 * CPU to process them.
+			 */
+			if (curIrqH != *sys->cpu[ii].irq_H)
+				pthread_cond_signal(sys->cpu[ii].cond);
+
+			/*
+			 * OK, we are done with this CPU, unlock its mutex and move onto
+			 * the next.
+			 */
+			pthread_mutex_unlock(sys->cpu[ii].mutex);
+		}
+
+		/*
+		 * Clear the bits that indicated an interrupt needed to be sent or
+		 * suppressed to the CPUs.
+		 */
+		sys->misc.devSup = 0;
+		sys->misc.itintr = 0;
+		sys->misc.ipreq = 0;
+
+		/*
 		 * At this point, we have to relock the Cchip mutex so that other
 		 * threads don't interrupt the Cchip while it is using memory that is
 		 * accessed and potentially updated by other threads.
 		 */
-		pthread_mutex_lock(&sys->cChipMutex);
 		rq->inUse = false;
+		pthread_mutex_lock(&sys->cChipMutex);
 	}
 
 	/*

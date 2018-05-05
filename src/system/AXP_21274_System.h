@@ -127,6 +127,7 @@ typedef struct
 	AXP_QUEUE_HDR		skidBufferQ;
 	AXP_21274_RQ_ENTRY	skidBuffers[AXP_21274_CCHIP_RQ_LEN * AXP_21274_MAX_CPUS];
 	u32					skidLastUsed;
+	u32					cpuCount;
 	AXP_21274_CPU		cpu[AXP_21274_MAX_CPUS];
 
 	/*
@@ -175,6 +176,14 @@ typedef struct
 	u32					arrayCount;
 	u64					*array[AXP_21274_MAX_ARRAYS];
 	u64					arraySizes;
+
+	/*
+	 * System Memory
+	 *
+	 * System member is byte addressed, but read as one or more quadwords.
+	 */
+	u32					memSize;
+	u64					*memory;
 
 	/*
 	 * Dchip Registers

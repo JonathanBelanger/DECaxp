@@ -84,6 +84,29 @@
  */
 
 /*
+ * System Memory: 0x00000000xxxxxxxx
+ *
+ * System Memory is byte addressable, but accessed in multiples of 64-bits.
+ * These definitions assist in converting an address into its various formats.
+ */
+typedef union
+{
+	u64		addr;
+	struct
+	{
+		u32		offset : 6;
+		u32		index : 26;
+		u32		mbz;
+	} quadAddr;
+	struct
+	{
+		u32		offset : 13;
+		u32		index : 19;
+		u32		mbz;
+	} pageAddr;
+} AXP_21274_SYSTEM_MEMADDR;
+
+/*
  * PCI Memory: 0x00000800xxxxxxxx
  */
 typedef union
