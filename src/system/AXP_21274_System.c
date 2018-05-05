@@ -34,7 +34,6 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 	void			*cpu[AXP_21274_MAX_CPUS];
 	int				pthreadRet;
 	int				ii;
-	u32				cpuCount;
 	bool			qRet = true;
 
 	sys = AXP_Allocate_Block(AXP_21274_SYS_BLK);
@@ -61,14 +60,14 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 		 */
 		if (pthreadRet == 0)
 		{
-			cpuCount = AXP_ConfigGet_CPUCount();
+			sys->cpuCount = AXP_ConfigGet_CPUCount();
 			for (ii = 0; ii < AXP_21274_MAX_CPUS; ii++)
 			{
 
 				/*
 				 * Go and allocate a CPU.
 				 */
-				if (ii < cpuCount)
+				if (ii < sys->cpuCount)
 				{
 					cpu[ii] = AXP_21264_AllocateCPU(ii);
 					if (cpu[ii] != NULL)
