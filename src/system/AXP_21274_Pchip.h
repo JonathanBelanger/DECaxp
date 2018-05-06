@@ -38,5 +38,13 @@
  * Pchip Function Prototypes
  */
 void AXP_21274_PchipInit(AXP_21274_SYSTEM *);
+void AXP_21264_ReadPCI(
+					AXP_21274_SYSTEM *,
+					AXP_21274_RQ_ENTRY *,
+					AXP_21274_SYSBUS_CPU *);
+void AXP_21264_WritePCI(
+					AXP_21274_SYSTEM *,
+					AXP_21274_RQ_ENTRY *,
+					AXP_21274_SYSBUS_CPU *);
 
 #endif /* _AXP_21274_PCHIP_H_ */

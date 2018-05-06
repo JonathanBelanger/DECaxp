@@ -39,6 +39,70 @@
 #include "AXP_21274_Pchip.h"
 
 /*
+ * AXP_21274_ReadPCI
+ *	This function is called on an I/O read command (ReadBytes, ReadLWs, and
+ *	ReadQWs), from a PCI device.
+ *
+ * Input Parameters:
+ *	sys:
+ *		A pointer to the system data structure from which the emulation
+ *		information is maintained.
+ *	rq:
+ *		A pointer to the request to be processed.
+ *
+ * Output Parameters:
+ *	rsp:
+ *		A pointer to the structure to contain the response to send back to the
+ *		CPU that send the request.
+ *
+ * Return Value:
+ *	None.
+ */
+void AXP_21264_ReadPCI(
+					AXP_21274_SYSTEM *sys,
+					AXP_21274_RQ_ENTRY *rq,
+					AXP_21274_SYSBUS_CPU *rsp)
+{
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
+ * AXP_21274_WritePCI
+ *	This function is called on an I/O write command (WrBytes, WrLWs, and
+ *	WrQWs), from a PCI device.
+ *
+ * Input Parameters:
+ *	sys:
+ *		A pointer to the system data structure from which the emulation
+ *		information is maintained.
+ *	rq:
+ *		A pointer to the request to be processed.
+ *
+ * Output Parameters:
+ *	rsp:
+ *		A pointer to the structure to contain the response to send back to the
+ *		CPU that send the request.
+ *
+ * Return Value:
+ *	None.
+ */
+void AXP_21264_WritePCI(
+					AXP_21274_SYSTEM *sys,
+					AXP_21274_RQ_ENTRY *rq,
+					AXP_21274_SYSBUS_CPU *rsp)
+{
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
  * AXP_21274_PchipInit
  *	This function is called to initialize the Pchip CSRs as documented in HRM
  *	10.2 Chipset Registers.
