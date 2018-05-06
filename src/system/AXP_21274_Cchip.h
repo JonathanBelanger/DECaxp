@@ -241,5 +241,6 @@ typedef struct
  * Cchip Function Prototypes
  */
 void AXP_21274_CchipInit(AXP_21274_SYSTEM *);
+void *AXP_21274_CchipMain(void *);
 
 #endif /* _AXP_21274_CCHIP_H_ */

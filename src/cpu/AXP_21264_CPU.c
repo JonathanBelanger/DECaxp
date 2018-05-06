@@ -381,9 +381,9 @@ void AXP_21264_Save_SystemInterfaces(
 	*cpuMutex = &cpu->cBoxInterfaceMutex;
 	*cpuCond = &cpu->cBoxInterfaceCond;
 	*pq = (void *) cpu->pq;
-	*pqTop = &cpu->pqTop;
-	*pqBottom = &cpu->pqBottom;
-	*irq_H = &cpu->irqH;
+	pqTop = &cpu->pqTop;
+	pqBottom = &cpu->pqBottom;
+	irq_H = &cpu->irqH;
 
 	/*
 	 * Return back to the caller.
