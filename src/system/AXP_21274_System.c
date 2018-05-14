@@ -27,6 +27,9 @@
 #include "AXP_Utility.h"
 #include "AXP_Blocks.h"
 #include "AXP_21274_System.h"
+#include "AXP_21274_Cchip.h"
+#include "AXP_21274_Dchip.h"
+#include "AXP_21274_Pchip.h"
 
 AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 {
@@ -41,19 +44,17 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 	{
 		pthreadRet = pthread_mutex_init(&sys->cChipMutex, NULL);
 		if (pthreadRet == 0)
-			pthreadRet = pthread_mutex_init(&sys->dChipMutex, NULL);
+			pthreadRet = pthread_mutex_init(&sys->memMutex, NULL);
 		if (pthreadRet == 0)
-			pthreadRet = pthread_mutex_init(&sys->p0Mutex, NULL);
+			pthreadRet = pthread_mutex_init(&sys->p0.mutex, NULL);
 		if (pthreadRet == 0)
-			pthreadRet = pthread_mutex_init(&sys->p1Mutex, NULL);
+			pthreadRet = pthread_mutex_init(&sys->p1.mutex, NULL);
 		if (pthreadRet == 0)
 			pthreadRet = pthread_mutex_init(&sys->cChipCond, NULL);
 		if (pthreadRet == 0)
-			pthreadRet = pthread_mutex_init(&sys->dChipCond, NULL);
+			pthreadRet = pthread_mutex_init(&sys->p0.cond, NULL);
 		if (pthreadRet == 0)
-			pthreadRet = pthread_mutex_init(&sys->p0Cond, NULL);
-		if (pthreadRet == 0)
-			pthreadRet = pthread_mutex_init(&sys->p1Cond, NULL);
+			pthreadRet = pthread_mutex_init(&sys->p1.cond, NULL);
 
 		/*
 		 * Let's go allocate all the CPUs configured to this emulation
@@ -88,9 +89,7 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 												&sys->cpu[ii].irq_H,
 												&sys->cChipMutex,
 												&sys->cChipCond,
-												sys->skidBuffer,
-												&sys->skidStart,
-												&sys->skidEnd);
+												&sys->skidBufferQ);
 
 					}
 					else
@@ -134,32 +133,25 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 			 */
 			AXP_21274_CchipInit(sys);
 			AXP_21274_DchipInit(sys);
-			AXP_21274_PchipInit(sys);
-#if 0
+			AXP_21274_PchipInit(&sys->p0, 0);
+			AXP_21274_PchipInit(&sys->p1, 1);
 			pthreadRet = pthread_create(
 							&sys->cChipThreadID,
 							NULL,
-							AXP_21274_cChipMain,
+							AXP_21274_CchipMain,
 							sys);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
-								&sys->dChipThreadID,
+								&sys->p0.threadID,
 								NULL,
-								AXP_21274_dChipMain,
+								AXP_21274_PchipMain,
 								sys);
 			if (pthreadRet == 0)
 				pthreadRet = pthread_create(
-								&sys->p0ThreadID,
+								&sys->p1.threadID,
 								NULL,
-								AXP_21274_pChipMain,
+								AXP_21274_PchipMain,
 								sys);
-			if (pthreadRet == 0)
-				pthreadRet = pthread_create(
-								&sys->p1ThreadID,
-								NULL,
-								AXP_21274_pChipMain,
-								sys);
-#endif
 		}
 	}
 
@@ -169,7 +161,7 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 	if ((sys != NULL) &&
 		((pthreadRet != 0) ||
 		 (qRet != true) ||
-		 (cpuCount == 0) ||
+		 (sys->cpuCount == 0) ||
 		 (sys->arrayCount == 0)))
 	{
 		for (ii = 0; ii < AXP_21274_MAX_CPUS; ii++)

@@ -193,7 +193,7 @@ typedef struct queueHeader
 		(AXP_QUEUE_HDR *) ((AXP_QUEUE_HDR *) (entry)->blink)->flink =		\
 			(AXP_QUEUE_HDR *) (entry)->flink;								\
 		(AXP_QUEUE_HDR *) ((AXP_QUEUE_HDR *) (entry)->flink)->blink =		\
-			(AXP_QUEUE_HDR *) (entry)-blink;								\
+			(AXP_QUEUE_HDR *) (entry)->blink;								\
 	}
 #define AXP_INSQUE(queue, entry)											\
 	{																		\
@@ -201,7 +201,7 @@ typedef struct queueHeader
 		(AXP_QUEUE_HDR *) (entry)->flink = (AXP_QUEUE_HDR *) (queue)->flink;\
 		(AXP_QUEUE_HDR *) ((AXP_QUEUE_HDR *) (queue)->flink)->blink =		\
 			(AXP_QUEUE_HDR *) (entry);										\
-		(AXP_QUEUE_HDR *) (queue)->flink = (AXP_QUEUE_HDR *) (entry;		\
+		(AXP_QUEUE_HDR *) (queue)->flink = (AXP_QUEUE_HDR *) (entry);		\
 	}
 
 /*
