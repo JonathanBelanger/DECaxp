@@ -123,7 +123,7 @@ typedef enum
 	PIO_MemoryWritePTP,	/* b'0101' - C2P */
 	PIO_MemoryRead,		/* b'0110' - C2P */
 	PTPMemoryRead,		/* b'0110' - P2C and P2P */
-	PIO_MemoryWriteCPU,	/* b'0111' - C2P : from CPU, not to*/
+	PIO_MemoryWriteCPU,	/* b'0111' - C2P : from CPU, not to */
 	PTPMemoryWrite,		/* b'0111' - P2C and P2P */
 	CSR_Read,			/* b'1000' - C2P */
 	DMARdModyWrQW,		/* b'1000' - P2C and P2P */
@@ -158,6 +158,7 @@ typedef enum
  */
 typedef enum
 {
+	CAPbus_NoMask,
 	CAPbus_Byte,
 	CAPbus_Lowngword,
 	CAPbus_Quadword
@@ -174,6 +175,7 @@ typedef enum
  */
 typedef enum
 {
+	NoCSR,
 	PchipCSR,
 	CchipCSR
 } AXP_CAPbusCbit;
@@ -191,6 +193,7 @@ typedef enum
  */
 typedef enum
 {
+	NoLDP,
 	LoadP_DMARead,
 	LoadP_DMARMW,
 	LoadP_PTP,
@@ -216,7 +219,7 @@ typedef enum
  *			+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
  *	Phase 1	|  Command  |						Address<31:12>						|
  *			+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
- *	Phase 2	| T| X|				Mask			|		  Address<34:32><11:3>		|
+ *	Phase 2	| T| X|				Mask			|		    Address<34::3>			|
  *			+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
  *
  *	Figure 6�4 Format of 2-Cycle Commands
@@ -229,12 +232,15 @@ typedef enum
  */
 typedef struct
 {
+	AXP_QUEUE_HDR		header;
 	AXP_CAPbus_Command	cmd;		/* Cchip2Pchip or Pchip2Cchip */
 	AXP_MaskType		maskType;	/* Cchipe2Pchip */
 	AXP_CAPbusLDP		ldp;		/* Pchip2Cchip */
-	u64					addr;		/* Cchipe2Pchip */
+	u64					data[AXP_21274_DATA_SIZE];	/* Dchip2Pchip or Pchip2Dchip */
+	u32					addr;		/* Cchipe2Pchip */
 	u16					csr;		/* Pchip2Cchip */
 	u8					mask;		/* Cchipe2Pchip */
+	u8					res;		/* reserved */
 } AXP_CAPbusMsg;
 
 /*
