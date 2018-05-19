@@ -40,45 +40,7 @@
 
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
-
-typedef enum
-{
-	NOP_NOP,
-	NOP_Clean,
-	NOP_CleanShared,
-	NOP_Transition3,
-	NOP_Transition1 = 0x06,
-	ReadHit_NOP = 0x08,
-	ReadHit_Clean,
-	ReadHit_CleanShared,
-	ReadHit_Transition3,
-	ReadHit_Transition1 = 0x0e,
-	ReadDirty_NOP = 0x10,
-	ReadDirty_Clean,
-	ReadDirty_CleanShared,
-	ReadDirty_Transition3,
-	ReadDirty_Transition1 = 0x16,
-	ReadAny_NOP = 0x18,
-	ReadAny_Clean,
-	ReadAny_CleanShared,
-	ReadAny_Transition3,
-	ReadAny_Transition1 = 0x1e
-} AXP_21264_PROBE_RQ;
-
-typedef enum
-{
-	SysDC_Nop,
-	ReadDataError,
-	ChangeToDirtySuccess = 0x04,
-	ChangeToDirtyFail,
-	MBDone,
-	ReleaseBuffer,
-	WriteData = 0x08,
-	ReadData = 0x10,
-	ReadDataDirty = 0x14,
-	ReadDataShared = 0x18,
-	ReadDataSharedDirty = 0x1c
-} AXP_21264_SYSDC;
+#include "AXP_CPU_System.h"
 
 /*
  * sysData size in quadwords
@@ -94,8 +56,8 @@ typedef struct
 {
 	u64					sysData[AXP_21264_DATA_SIZE];	/* Data Movement */
 	u64					pa;		/* Physical Address */
-	AXP_21264_PROBE_RQ	cmd;	/* System to CPU Probe Request Command */
-	AXP_21264_SYSDC		sysDc;	/* Response to Command from CPU */
+	AXP_PROBE_RQ		cmd;	/* System to CPU Probe Request Command */
+	AXP_SYSDC			sysDc;	/* Response to Command from CPU */
 	bool				probe;	/* Does the message contain a Probe Request */
 	bool				rvb;	/* Clear Victim or IOWB buffer if valid */
 	bool				rpb;	/* Clear Probe Valid bit */
@@ -106,47 +68,6 @@ typedef struct
 } AXP_21264_SYSBUS_CPU;
 
 
-typedef enum
-{
-	Sysbus_NOP,
-	ProbeResponse,
-	NZNOP,
-	VDBFlushRequest,
-	WrVictimBlk,
-	CleanVictimBlk,
-	Evict,
-	Sysbus_MB,
-	ReadBytes,
-	ReadLWs,
-	ReadQWs,
-	WrBytes = 0x0c,
-	WrLWs,
-	WrQWs,
-	ReadBlk = 0x10,
-	ReadBlkMod,
-	ReadBlkI,
-	FetchBlk,
-	ReadBlkSpec,
-	ReadBlkModSpec,
-	ReadBlkSpecI,
-	FetchBlkSpec,
-	ReadBlkVic,
-	ReadBlkModVic,
-	ReadBlkVicI,
-	InvalToDirtyVic,
-	CleanToDirty,
-	SharedToDirty,
-	STCChangeToDirty,
-	InvalToDirty
-} AXP_21264_Commands;
-
-typedef enum
-{
-	HitClean,
-	HitShared,
-	HitDirty,
-	HitSharedDirty
-} AXP_21264_ProbeStatus;
 
 /*
  * The following data structure will be used to send Requests and Probe
@@ -158,7 +79,7 @@ typedef struct
 {
 	u64					sysData[AXP_21264_DATA_SIZE];	/* Data Movement */
 	u64					pa;		/* Physical Address */
-	AXP_21264_Commands	cmd;	/* CPU to System Command */
+	AXP_System_Commands	cmd;	/* CPU to System Command */
 	bool				probe;	/* Is the message a Probe Response */
 	bool				m1;		/* Oldest Probe Miss */
 	bool				m2;		/* Oldest Probe Miss or hit with no data movement */
@@ -176,34 +97,26 @@ typedef struct
  */
 typedef struct
 {
-	u64							pa;
-	AXP_21264_SYSDC				sysDc;
-	AXP_21264_ProbeStatus		probeStatus;
-	int							probe;
-	bool						rvb;
-	bool						rpb;
-	bool						a;
-	bool						c;
-	bool						processed;
-	bool						valid;
-	bool						pendingRsp;
-	bool						dm;
-	bool						vs;
-	bool						ms;
-	u8							ID;
-	u8							sysData[AXP_21264_DATA_SIZE];
-	u8							vdb;
-	u8							maf;
-	u8							wrap;
+	u64					pa;
+	u64					sysData[AXP_21264_DATA_SIZE];
+	AXP_SYSDC			sysDc;
+	AXP_ProbeStatus		probeStatus;
+	int					probe;
+	bool				rvb;
+	bool				rpb;
+	bool				a;
+	bool				c;
+	bool				processed;
+	bool				valid;
+	bool				pendingRsp;
+	bool				dm;
+	bool				vs;
+	bool				ms;
+	u8					ID;
+	u8					vdb;
+	u8					maf;
+	u8					wrap;
 } AXP_21264_CBOX_PQ;
-
-typedef enum
-{
-	phase0,
-	phase1,
-	phase2,
-	phase3
-} AXP_21264_PHASES;
 
 /*
  * HRM 6.1.1 Memory Access Request Queues, Skid Buffers, and Dispatch Register
@@ -238,21 +151,21 @@ typedef enum
  */
 typedef struct
 {
-	u64						sysData[AXP_21264_DATA_SIZE];
-	u64						mask;
-	u64						pa;
-	AXP_21264_Commands		cmd;
-	AXP_21264_ProbeStatus	status;
-	AXP_21264_PHASES		phase;
-	int						entry;
-	int						sysDataLen;
-	u32						cpuID;
-	u16						waitVector;
-	bool					miss1;
-	bool					miss2;
-	bool					rqValid;
-	bool					cacheHit;
-	bool					valid;
+	u64					sysData[AXP_21264_DATA_SIZE];
+	u64					mask;
+	u64					pa;
+	AXP_System_Commands	cmd;
+	AXP_ProbeStatus		status;
+	AXP_PHASES			phase;
+	int					entry;
+	int					sysDataLen;
+	u32					cpuID;
+	u16					waitVector;
+	bool				miss1;
+	bool				miss2;
+	bool				rqValid;
+	bool				cacheHit;
+	bool				valid;
 } AXP_21264_RQ_ENTRY;
 
 #define AXP_21264_CCHIP_RQ_LEN	6	/* Per CPU */

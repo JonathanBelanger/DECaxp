@@ -170,9 +170,6 @@ typedef struct
 	/*************************************************************************
 	 * Dchip Data and Information											 *
 	 *************************************************************************/
-	pthread_t			dChipThreadID;
-	pthread_mutex_t		dChipMutex;
-	pthread_cond_t		dChipCond;
 	u32					arrayCount;
 	u64					*array[AXP_21274_MAX_ARRAYS];
 	u64					arraySizes;
@@ -182,6 +179,7 @@ typedef struct
 	 *
 	 * System member is byte addressed, but read as one or more quadwords.
 	 */
+	pthread_mutex_t		memMutex;
 	u32					memSize;
 	u64					*memory;
 
@@ -196,60 +194,8 @@ typedef struct
 	/*************************************************************************
 	 * Pchip Data and Information											 *
 	 *************************************************************************/
-	pthread_t			p0ThreadID;
-	pthread_mutex_t		p0Mutex;
-	pthread_cond_t		p0Cond;
-	pthread_t			p1ThreadID;
-	pthread_mutex_t		p1Mutex;
-	pthread_cond_t		p1Cond;
-
-	/*
-	 * Pchip Registers
-	 */
-	AXP_21274_WSBAn		p0Wsba0;	/* Address: 801.8000.0000 */
-	AXP_21274_WSBAn		p0Wsba1;	/* Address: 801.8000.0040 */
-	AXP_21274_WSBAn		p0Wsba2;	/* Address: 801.8000.0080 */
-	AXP_21274_WSBA3		p0Wsba3;	/* Address: 801.8000.00c0 */
-	AXP_21274_WSMn		p0Wsm0;		/* Address: 801.8000.0100 */
-	AXP_21274_WSMn		p0Wsm1;		/* Address: 801.8000.0140 */
-	AXP_21274_WSMn		p0Wsm2;		/* Address: 801.8000.0180 */
-	AXP_21274_WSMn		p0Wsm3;		/* Address: 801.8000.01c0 */
-	AXP_21274_TBAn		p0Tba0;		/* Address: 801.8000.0200 */
-	AXP_21274_TBAn		p0Tba1;		/* Address: 801.8000.0240 */
-	AXP_21274_TBAn		p0Tba2;		/* Address: 801.8000.0280 */
-	AXP_21274_TBAn		p0Tba3;		/* Address: 801.8000.02c0 */
-	AXP_21274_PCTL		p0Pctl;		/* Address: 801.8000.0300 */
-	AXP_21274_PLAT		p0Plat;		/* Address: 801.8000.0340 */
-	/* AXP_21274_RES	p0Res;		 * Address: 801.8000.0380 */
-	AXP_21274_PERROR	p0Perror;	/* Address: 801.8000.03c0 */
-	AXP_21274_PERRMASK	p0PerrMask;	/* Address: 801.8000.0400 */
-	AXP_21274_PERRSET	p0PerrSet;	/* Address: 801.8000.0440 */
-	AXP_21274_TLBIV		p0Tlbiv;	/* Address: 801.8000.0480 */
-	AXP_21274_PMONCTL	p0MonCtl;	/* Address: 801.8000.0500 */
-	AXP_21274_PMONCNT	p0MonCnt;	/* Address: 801.8000.0540 */
-	AXP_21274_SPRST		p0SprSt;	/* Address: 801.8000.0800 */
-	AXP_21274_WSBAn		p1Wsba0;	/* Address: 803.8000.0000 */
-	AXP_21274_WSBAn		p1Wsba1;	/* Address: 803.8000.0040 */
-	AXP_21274_WSBAn		p1Wsba2;	/* Address: 803.8000.0080 */
-	AXP_21274_WSBA3		p1Wsba3;	/* Address: 803.8000.00c0 */
-	AXP_21274_WSMn		p1Wsm0;		/* Address: 803.8000.0100 */
-	AXP_21274_WSMn		p1Wsm1;		/* Address: 803.8000.0140 */
-	AXP_21274_WSMn		p1Wsm2;		/* Address: 803.8000.0180 */
-	AXP_21274_WSMn		p1Wsm3;		/* Address: 803.8000.01c0 */
-	AXP_21274_TBAn		p1Tba0;		/* Address: 803.8000.0200 */
-	AXP_21274_TBAn		p1Tba1;		/* Address: 803.8000.0240 */
-	AXP_21274_TBAn		p1Tba2;		/* Address: 803.8000.0280 */
-	AXP_21274_TBAn		p1Tba3;		/* Address: 803.8000.02c0 */
-	AXP_21274_PCTL		p1Pctl;		/* Address: 803.8000.0300 */
-	AXP_21274_PLAT		p1Plat;		/* Address: 803.8000.0340 */
-	/* AXP_21274_RES	p1Res;		 * Address: 803.8000.0380 */
-	AXP_21274_PERROR	p1Perror;	/* Address: 803.8000.03c0 */
-	AXP_21274_PERRMASK	p1PerrMask;	/* Address: 803.8000.0400 */
-	AXP_21274_PERRSET	p1PerrSet;	/* Address: 803.8000.0440 */
-	AXP_21274_TLBIV		p1Tlbiv;	/* Address: 803.8000.0480 */
-	AXP_21274_PMONCTL	p1MonCtl;	/* Address: 803.8000.0500 */
-	AXP_21274_PMONCNT	p1MonCnt;	/* Address: 803.8000.0540 */
-	AXP_21274_SPRST		p1SprSt;	/* Address: 803.8000.0800 */
+	AXP_21274_PCHIP		p0;
+	AXP_21274_PCHIP		p1;
 } AXP_21274_SYSTEM;
 
 #endif	/* _AXP_SYSTEM_DEFS_ */

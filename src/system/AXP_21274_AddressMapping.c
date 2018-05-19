@@ -109,7 +109,7 @@ static LINEAR_TABLE linearTable[] =
  */
 void AXP_21274_cvtLinearAddr(
 					u64 addr,
-					AXP_21274_Commands cmd,
+					AXP_System_Commands cmd,
 					u8 mask,
 					bool bits32,
 					u32 *pciAddr,
