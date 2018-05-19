@@ -30,91 +30,91 @@
 
 typedef enum
 {
-	NOP_NOP,
-	NOP_Clean,
-	NOP_CleanShared,
-	NOP_Transition3,
-	NOP_Transition1 = 0x06,
-	ReadHit_NOP = 0x08,
-	ReadHit_Clean,
-	ReadHit_CleanShared,
-	ReadHit_Transition3,
-	ReadHit_Transition1 = 0x0e,
-	ReadDirty_NOP = 0x10,
-	ReadDirty_Clean,
-	ReadDirty_CleanShared,
-	ReadDirty_Transition3,
-	ReadDirty_Transition1 = 0x16,
-	ReadAny_NOP = 0x18,
-	ReadAny_Clean,
-	ReadAny_CleanShared,
-	ReadAny_Transition3,
-	ReadAny_Transition1 = 0x1e
+    NOP_NOP,
+    NOP_Clean,
+    NOP_CleanShared,
+    NOP_Transition3,
+    NOP_Transition1 = 0x06,
+    ReadHit_NOP = 0x08,
+    ReadHit_Clean,
+    ReadHit_CleanShared,
+    ReadHit_Transition3,
+    ReadHit_Transition1 = 0x0e,
+    ReadDirty_NOP = 0x10,
+    ReadDirty_Clean,
+    ReadDirty_CleanShared,
+    ReadDirty_Transition3,
+    ReadDirty_Transition1 = 0x16,
+    ReadAny_NOP = 0x18,
+    ReadAny_Clean,
+    ReadAny_CleanShared,
+    ReadAny_Transition3,
+    ReadAny_Transition1 = 0x1e
 } AXP_PROBE_RQ;
 
 typedef enum
 {
-	SysDC_Nop,
-	ReadDataError,
-	ChangeToDirtySuccess = 0x04,
-	ChangeToDirtyFail,
-	MBDone,
-	ReleaseBuffer,
-	WriteData = 0x08,
-	ReadData = 0x10,
-	ReadDataDirty = 0x14,
-	ReadDataShared = 0x18,
-	ReadDataSharedDirty = 0x1c
+    SysDC_Nop,
+    ReadDataError,
+    ChangeToDirtySuccess = 0x04,
+    ChangeToDirtyFail,
+    MBDone,
+    ReleaseBuffer,
+    WriteData = 0x08,
+    ReadData = 0x10,
+    ReadDataDirty = 0x14,
+    ReadDataShared = 0x18,
+    ReadDataSharedDirty = 0x1c
 } AXP_SYSDC;
 
 typedef enum
 {
-	Sysbus_NOP,
-	ProbeResponse,
-	NZNOP,
-	VDBFlushRequest,
-	WrVictimBlk,
-	CleanVictimBlk,
-	Evict,
-	Sysbus_MB,
-	ReadBytes,
-	ReadLWs,
-	ReadQWs,
-	WrBytes = 0x0c,
-	WrLWs,
-	WrQWs,
-	ReadBlk = 0x10,
-	ReadBlkMod,
-	ReadBlkI,
-	FetchBlk,
-	ReadBlkSpec,
-	ReadBlkModSpec,
-	ReadBlkSpecI,
-	FetchBlkSpec,
-	ReadBlkVic,
-	ReadBlkModVic,
-	ReadBlkVicI,
-	InvalToDirtyVic,
-	CleanToDirty,
-	SharedToDirty,
-	STCChangeToDirty,
-	InvalToDirty
+    Sysbus_NOP,
+    ProbeResponse,
+    NZNOP,
+    VDBFlushRequest,
+    WrVictimBlk,
+    CleanVictimBlk,
+    Evict,
+    Sysbus_MB,
+    ReadBytes,
+    ReadLWs,
+    ReadQWs,
+    WrBytes = 0x0c,
+    WrLWs,
+    WrQWs,
+    ReadBlk = 0x10,
+    ReadBlkMod,
+    ReadBlkI,
+    FetchBlk,
+    ReadBlkSpec,
+    ReadBlkModSpec,
+    ReadBlkSpecI,
+    FetchBlkSpec,
+    ReadBlkVic,
+    ReadBlkModVic,
+    ReadBlkVicI,
+    InvalToDirtyVic,
+    CleanToDirty,
+    SharedToDirty,
+    STCChangeToDirty,
+    InvalToDirty
 } AXP_System_Commands;
 
 typedef enum
 {
-	HitClean,
-	HitShared,
-	HitDirty,
-	HitSharedDirty
+    HitClean,
+    HitShared,
+    HitDirty,
+    HitSharedDirty
 } AXP_ProbeStatus;
 
 typedef enum
 {
-	phase0,
-	phase1,
-	phase2,
-	phase3
+    phase0,
+    phase1,
+    phase2,
+    phase3
 } AXP_PHASES;
 
 #endif /* AXP_CPU_SYSTEM_H_ */

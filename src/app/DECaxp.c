@@ -54,34 +54,34 @@
  */
 void reconstituteFilename(int argc, char **argv, char *configFilename)
 {
-	int ii;
+    int ii;
 
-	/*
-	 * If a configuration filename parameter was supplied on the call, then
-	 * loop through each of the arguments append them to the filename string.
-	 */
-	if (configFilename != NULL)
+    /*
+     * If a configuration filename parameter was supplied on the call, then
+     * loop through each of the arguments append them to the filename string.
+     */
+    if (configFilename != NULL)
+    {
+	configFilename[0] = '\0';
+	for (ii = 1; ii < argc; ii++)
 	{
-		configFilename[0] = '\0';
-		for (ii = 1; ii < argc; ii++)
-		{
-			if (argv[ii][strlen(argv[ii])-1] == '\\')
-				argv[ii][strlen(argv[ii])-1] = '\0';
-			sprintf(&configFilename[strlen(configFilename)], "%s ", argv[ii]);
-		}
-
-		/*
-		 * The filename string has an extra space on the end.  Remove it.
-		 */
-		ii = strlen(configFilename);
-		if (ii > 0)
-			configFilename[ii-1] = '\0';
+	    if (argv[ii][strlen(argv[ii]) - 1] == '\\')
+		argv[ii][strlen(argv[ii]) - 1] = '\0';
+	    sprintf(&configFilename[strlen(configFilename)], "%s ", argv[ii]);
 	}
 
 	/*
-	 * Return back to the caller.
+	 * The filename string has an extra space on the end.  Remove it.
 	 */
-	return;
+	ii = strlen(configFilename);
+	if (ii > 0)
+	    configFilename[ii - 1] = '\0';
+    }
+
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -109,56 +109,51 @@ void reconstituteFilename(int argc, char **argv, char *configFilename)
  */
 int main(int argc, char **argv)
 {
-	AXP_21264_CPU	*cpu = NULL;
-	char			filename[167];
-	int				retVal = 0;
+    AXP_21264_CPU *cpu = NULL;
+    char filename[167];
+    int retVal = 0;
 
-	printf("\n%%DECAXP-I-START, The Digital Alpha AXP 21264 CPU Emulator is starting.\n");
+    printf(
+	    "\n%%DECAXP-I-START, The Digital Alpha AXP 21264 CPU Emulator is starting.\n");
 
-	/*
-	 * There are 2 arguments on the image activation.  The first is this image
-	 * and can be ignore.  The next is the configuration file to be opened.
-	 * Because filenames can have spaces and these spaces will utilize
-	 * successive argv locations.  Let's call a function and reconstitute them
-	 * into a single file specification.
-	 */
-	if (argc > 1)
+    /*
+     * There are 2 arguments on the image activation.  The first is this image
+     * and can be ignore.  The next is the configuration file to be opened.
+     * Because filenames can have spaces and these spaces will utilize
+     * successive argv locations.  Let's call a function and reconstitute them
+     * into a single file specification.
+     */
+    if (argc > 1)
+    {
+	reconstituteFilename(argc, argv, filename);
+	if ((AXP_LoadConfig_File(filename) == AXP_S_NORMAL)
+	        && (AXP_TraceInit() == true))
+	    cpu = AXP_21264_AllocateCPU();
+	if (cpu != NULL)
 	{
-		reconstituteFilename(argc, argv, filename);
-		if ((AXP_LoadConfig_File(filename) == AXP_S_NORMAL) &&
-			(AXP_TraceInit() == true))
-			cpu = AXP_21264_AllocateCPU();
-		if (cpu != NULL)
-		{
-			pthread_join(cpu->cBoxThreadID, NULL);
+	    pthread_join(&cpu->cBoxThreadID, NULL);
 
-			/*
-			 * The following calls are just to keep the linker happy.
-			 */
-			if (cpu == NULL)
-			{
-				AXP_21264_Set_IRQ(cpu, 0);
-				AXP_21264_Add_PQ(
-							cpu,
-							AXP_21264_SET_PROBE(AXP_21264_DM_NOP, AXP_21264_NS_NOP),
-							NOPsysdc,
-							0x0000000000000000ll,
-							0,
-							NULL,
-							false,
-							false,
-							false,
-							false);
-			}
-			AXP_TraceEnd();
-		}
-		else
-			printf("\n%%DECAXP-F-RUNNING, The Digital Alpha AXP 21264 CPU Emulator failed to successfully start.\n");
+	    /*
+	     * The following calls are just to keep the linker happy.
+	     */
+	    if (cpu == NULL)
+	    {
+		AXP_21264_Set_IRQ(cpu, 0);
+		AXP_21264_Add_PQ(cpu,
+		        AXP_21264_SET_PROBE(AXP_21264_DM_NOP, AXP_21264_NS_NOP),
+		        NOPsysdc, 0x0000000000000000ll, 0, NULL, false, false,
+		        false, false);
+	    }
+	    AXP_TraceEnd();
 	}
 	else
-	{
-		printf("usage: DECaxp <config-file>\n");
-	}
-	return(retVal);
+	    printf(
+		    "\n%%DECAXP-F-RUNNING, The Digital Alpha AXP 21264 CPU Emulator failed to successfully start.\n");
+    }
+    else
+    {
+	printf("usage: DECaxp <config-file>\n");
+    }
+    return (retVal);
 }
 

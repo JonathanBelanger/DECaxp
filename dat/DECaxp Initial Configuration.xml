@@ -23,16 +23,12 @@
 			<Model>ES40</Model>
 		</Model>
 
-		<!-- 
-				This defines where various information is stored
-				The InitFile is the file containing the code that initializes
-					the CPUs, prior to loading the Console
-				This PALImage is the file contains the executable image that is
-					used to burn in the PALcode
-				The ROMImage is the file that is burnt in from the PALImage
-				The NVRamFile is the file that contains the last saved
-					Non-Volitile RAM information
-		-->
+		<!-- This defines where various information is stored The InitFile is the 
+			file containing the code that initializes the CPUs, prior to loading the 
+			Console This PALImage is the file contains the executable image that is used 
+			to burn in the PALcode The ROMImage is the file that is burnt in from the 
+			PALImage The NVRamFile is the file that contains the last saved Non-Volitile 
+			RAM information -->
 		<SROM>
 			<InitFile>
 				/cygdrive/g/git/DECaxp/dat/CPU Initialization Load File.dat
@@ -47,35 +43,25 @@
 			</CboxCSRFile>
 		</SROM>
 
-		<!-- 
-				This defines the actual CPUs.
-				The number of CPUs that can be defined is determined by the
-					System/Model information
-				The Generation contains what version of the Digitial Alpha AXP
-					CPU we are emulating
-				The Pass contains the manufacturing pass for the generation of
-					the CPU
-		-->
+		<!-- This defines the actual CPUs. The number of CPUs that can be defined 
+			is determined by the System/Model information The Generation contains what 
+			version of the Digitial Alpha AXP CPU we are emulating The Pass contains 
+			the manufacturing pass for the generation of the CPU -->
 		<CPUs>
 			<Count>1</Count>
 			<Generation>EV68CB</Generation>
 			<Pass>5</Pass>
 		</CPUs>
 
-		<!--
-			This defines the individual memory modules and their size.  In
-			reality the sizes are summed for total memory size.  The individual
-			DIMMs are simulated.
-		-->
+		<!-- This defines the individual memory modules and their size. In reality 
+			the sizes are summed for total memory size. The individual DIMMs are simulated. -->
 		<DIMMs>
 			<Count>4</Count>
 			<Size>4.0GB</Size>
 		</DIMMs>
 
-		<!--
-			This is where this the disk files are defined.  The type determines
-			whether the device is read-only or read-write.
-		-->
+		<!-- This is where this the disk files are defined. The type determines 
+			whether the device is read-only or read-write. -->
 		<Disks>
 			<Disk number="1">
 				<Type>Disk</Type>
@@ -91,18 +77,14 @@
 			</Disk>
 		</Disks>
 
-		<!--
-			The console definition contains the information required to be able
-			to have a telnet terminal connect to the emulator as the console.
-		-->
+		<!-- The console definition contains the information required to be able 
+			to have a telnet terminal connect to the emulator as the console. -->
 		<Console>
 			<Port>780</Port>
 		</Console>
 
-		<!--
-			The network definition contains the adapter name and the MAC
-			address to be assigned to it.
-		-->
+		<!-- The network definition contains the adapter name and the MAC address 
+			to be assigned to it. -->
 		<Networks>
 			<Network number="1">
 				<Name>es04</Name>
@@ -110,16 +92,12 @@
 			</Network>
 		</Networks>
 
-		<!--
-			This is a place holder for Printer definitions.
-		-->
+		<!-- This is a place holder for Printer definitions. -->
 		<Printers>
 			<Printer number="1" />
 		</Printers>
 
-		<!--
-			This is a place holder for Tape definitions.
-		-->
+		<!-- This is a place holder for Tape definitions. -->
 		<Tapes>
 			<Tape number="1" />
 		</Tapes>

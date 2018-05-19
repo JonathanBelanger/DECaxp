@@ -114,27 +114,27 @@
  */
 typedef enum
 {
-	PIO_IACK,			/* b'0000' - C2P */
-	DMAReadNQW,			/* b'0000' - P2C and P2P */
-	PIO_SpecialCycle,	/* b'0001' - C2P */
-	SGTEReadNQW,		/* b'0001' - P2C and P2P */
-	PIO_Read,			/* b'0010' - C2P */
-	PIO_Write,			/* b'0011' - C2P */
-	PIO_MemoryWritePTP,	/* b'0101' - C2P */
-	PIO_MemoryRead,		/* b'0110' - C2P */
-	PTPMemoryRead,		/* b'0110' - P2C and P2P */
-	PIO_MemoryWriteCPU,	/* b'0111' - C2P : from CPU, not to */
-	PTPMemoryWrite,		/* b'0111' - P2C and P2P */
-	CSR_Read,			/* b'1000' - C2P */
-	DMARdModyWrQW,		/* b'1000' - P2C and P2P */
-	CSR_Write,			/* b'1001' - C2P */
-	DMAWriteNQW,		/* b'1001' - P2C and P2P */
-	PCI_ConfigRead,		/* b'1010' - C2P */
-	PCI_ConfigWrite,	/* b'1011' - C2P */
-	LoadPADbusDataDown,	/* b'1100' - P2C and P2P Reserved */
-	LoadPADbusDataUp,	/* b'1101' - C2P Reserved */
-	PTPWrByteMaskByp,	/* b'1110' - P2C and P2P */
-	CAPbus_NoOp			/* b'1111' - C2P, P2C, and P2P */
+    PIO_IACK, /* b'0000' - C2P */
+    DMAReadNQW, /* b'0000' - P2C and P2P */
+    PIO_SpecialCycle, /* b'0001' - C2P */
+    SGTEReadNQW, /* b'0001' - P2C and P2P */
+    PIO_Read, /* b'0010' - C2P */
+    PIO_Write, /* b'0011' - C2P */
+    PIO_MemoryWritePTP, /* b'0101' - C2P */
+    PIO_MemoryRead, /* b'0110' - C2P */
+    PTPMemoryRead, /* b'0110' - P2C and P2P */
+    PIO_MemoryWriteCPU, /* b'0111' - C2P : from CPU, not to */
+    PTPMemoryWrite, /* b'0111' - P2C and P2P */
+    CSR_Read, /* b'1000' - C2P */
+    DMARdModyWrQW, /* b'1000' - P2C and P2P */
+    CSR_Write, /* b'1001' - C2P */
+    DMAWriteNQW, /* b'1001' - P2C and P2P */
+    PCI_ConfigRead, /* b'1010' - C2P */
+    PCI_ConfigWrite, /* b'1011' - C2P */
+    LoadPADbusDataDown, /* b'1100' - P2C and P2P Reserved */
+    LoadPADbusDataUp, /* b'1101' - C2P Reserved */
+    PTPWrByteMaskByp, /* b'1110' - P2C and P2P */
+    CAPbus_NoOp /* b'1111' - C2P, P2C, and P2P */
 } AXP_CAPbus_Command;
 
 /*
@@ -158,10 +158,10 @@ typedef enum
  */
 typedef enum
 {
-	CAPbus_NoMask,
-	CAPbus_Byte,
-	CAPbus_Lowngword,
-	CAPbus_Quadword
+    CAPbus_NoMask,
+    CAPbus_Byte,
+    CAPbus_Lowngword,
+    CAPbus_Quadword
 } AXP_MaskType;
 
 /*
@@ -175,9 +175,9 @@ typedef enum
  */
 typedef enum
 {
-	NoCSR,
-	PchipCSR,
-	CchipCSR
+    NoCSR,
+    PchipCSR,
+    CchipCSR
 } AXP_CAPbusCbit;
 
 /*
@@ -193,11 +193,11 @@ typedef enum
  */
 typedef enum
 {
-	NoLDP,
-	LoadP_DMARead,
-	LoadP_DMARMW,
-	LoadP_PTP,
-	LoadP_SGTERead
+    NoLDP,
+    LoadP_DMARead,
+    LoadP_DMARMW,
+    LoadP_PTP,
+    LoadP_SGTERead
 } AXP_CAPbusLDP;
 
 /*
@@ -232,15 +232,15 @@ typedef enum
  */
 typedef struct
 {
-	AXP_QUEUE_HDR		header;
-	AXP_CAPbus_Command	cmd;		/* Cchip2Pchip or Pchip2Cchip */
-	AXP_MaskType		maskType;	/* Cchipe2Pchip */
-	AXP_CAPbusLDP		ldp;		/* Pchip2Cchip */
-	u64					data[AXP_21274_DATA_SIZE];	/* Dchip2Pchip or Pchip2Dchip */
-	u32					addr;		/* Cchipe2Pchip */
-	u16					csr;		/* Pchip2Cchip */
-	u8					mask;		/* Cchipe2Pchip */
-	u8					res;		/* reserved */
+    AXP_QUEUE_HDR header;
+    AXP_CAPbus_Command cmd; /* Cchip2Pchip or Pchip2Cchip */
+    AXP_MaskType maskType; /* Cchipe2Pchip */
+    AXP_CAPbusLDP ldp; /* Pchip2Cchip */
+    u64 data[AXP_21274_DATA_SIZE]; /* Dchip2Pchip or Pchip2Dchip */
+    u32 addr; /* Cchipe2Pchip */
+    u16 csr; /* Pchip2Cchip */
+    u8 mask; /* Cchipe2Pchip */
+    u8 res; /* reserved */
 } AXP_CAPbusMsg;
 
 /*
