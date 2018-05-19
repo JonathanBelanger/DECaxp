@@ -46,54 +46,54 @@
 typedef struct
 {
 
-	/*
-	 * There is one thread/mutex/condition variable per Pchip.
-	 */
-	pthread_t				threadID;
-	pthread_mutex_t			mutex;
-	pthread_cond_t			cond;
+    /*
+     * There is one thread/mutex/condition variable per Pchip.
+     */
+    pthread_t threadID;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
 
-	/*
-	 * Pchip ID
-	 */
-	u32						pChipID;
+    /*
+     * Pchip ID
+     */
+    u32 pChipID;
 
-	/*
-	 * Interface queues.
-	 */
-	AXP_QUEUE_HDR			tpr;		/* To Pchip Requests CSC<PRQMAX> */
-	AXP_QUEUE_HDR			fpr;		/* From Pchip Requests PCTL<CRQMAX> */
-	u32						tprCnt;		/* Up to CSC<PRQMAX> */
-	u32						fprCnt;		/* Up to PCTL<CRQMAX> */
-	AXP_CAPbusMsg			rq[AXP_21274_CAPBUS_MQ_SIZE];
-	u32						rqIdx;
+    /*
+     * Interface queues.
+     */
+    AXP_QUEUE_HDR tpr; /* To Pchip Requests CSC<PRQMAX> */
+    AXP_QUEUE_HDR fpr; /* From Pchip Requests PCTL<CRQMAX> */
+    u32 tprCnt; /* Up to CSC<PRQMAX> */
+    u32 fprCnt; /* Up to PCTL<CRQMAX> */
+    AXP_CAPbusMsg rq[AXP_21274_CAPBUS_MQ_SIZE];
+    u32 rqIdx;
 
-	/*
-	 * The following are the Pchip CSRs.  The addresses for these Pchip CSRs
-	 * have n=1 for p0 and n=3 for p1.
-	 */
-	AXP_21274_WSBAn			wsba0;		/* Address: 80n.8000.0000 */
-	AXP_21274_WSBAn			wsba1;		/* Address: 80n.8000.0040 */
-	AXP_21274_WSBAn			wsba2;		/* Address: 80n.8000.0080 */
-	AXP_21274_WSBA3			wsba3;		/* Address: 80n.8000.00c0 */
-	AXP_21274_WSMn			wsm0;		/* Address: 80n.8000.0100 */
-	AXP_21274_WSMn			wsm1;		/* Address: 80n.8000.0140 */
-	AXP_21274_WSMn			wsm2;		/* Address: 80n.8000.0180 */
-	AXP_21274_WSMn			wsm3;		/* Address: 80n.8000.01c0 */
-	AXP_21274_TBAn			tba0;		/* Address: 80n.8000.0200 */
-	AXP_21274_TBAn			tba1;		/* Address: 80n.8000.0240 */
-	AXP_21274_TBAn			tba2;		/* Address: 80n.8000.0280 */
-	AXP_21274_TBAn			tba3;		/* Address: 80n.8000.02c0 */
-	AXP_21274_PCTL			pctl;		/* Address: 80n.8000.0300 */
-	AXP_21274_PLAT			plat;		/* Address: 80n.8000.0340 */
-	/* AXP_21274_RES		res;		 * Address: 80n.8000.0380 */
-	AXP_21274_PERROR		perror;		/* Address: 80n.8000.03c0 */
-	AXP_21274_PERRMASK		perrMask;	/* Address: 80n.8000.0400 */
-	AXP_21274_PERRSET		perrSet;	/* Address: 80n.8000.0440 */
-	AXP_21274_TLBIV			tlbiv;		/* Address: 80n.8000.0480 */
-	AXP_21274_PMONCTL		pMonCtl;	/* Address: 80n.8000.0500 */
-	AXP_21274_PMONCNT		pMonCnt;	/* Address: 80n.8000.0540 */
-	AXP_21274_SPRST			sprSt;		/* Address: 80n.8000.0800 */
+    /*
+     * The following are the Pchip CSRs.  The addresses for these Pchip CSRs
+     * have n=1 for p0 and n=3 for p1.
+     */
+    AXP_21274_WSBAn wsba0; /* Address: 80n.8000.0000 */
+    AXP_21274_WSBAn wsba1; /* Address: 80n.8000.0040 */
+    AXP_21274_WSBAn wsba2; /* Address: 80n.8000.0080 */
+    AXP_21274_WSBA3 wsba3; /* Address: 80n.8000.00c0 */
+    AXP_21274_WSMn wsm0; /* Address: 80n.8000.0100 */
+    AXP_21274_WSMn wsm1; /* Address: 80n.8000.0140 */
+    AXP_21274_WSMn wsm2; /* Address: 80n.8000.0180 */
+    AXP_21274_WSMn wsm3; /* Address: 80n.8000.01c0 */
+    AXP_21274_TBAn tba0; /* Address: 80n.8000.0200 */
+    AXP_21274_TBAn tba1; /* Address: 80n.8000.0240 */
+    AXP_21274_TBAn tba2; /* Address: 80n.8000.0280 */
+    AXP_21274_TBAn tba3; /* Address: 80n.8000.02c0 */
+    AXP_21274_PCTL pctl; /* Address: 80n.8000.0300 */
+    AXP_21274_PLAT plat; /* Address: 80n.8000.0340 */
+    /* AXP_21274_RES		res;		 * Address: 80n.8000.0380 */
+    AXP_21274_PERROR perror; /* Address: 80n.8000.03c0 */
+    AXP_21274_PERRMASK perrMask; /* Address: 80n.8000.0400 */
+    AXP_21274_PERRSET perrSet; /* Address: 80n.8000.0440 */
+    AXP_21274_TLBIV tlbiv; /* Address: 80n.8000.0480 */
+    AXP_21274_PMONCTL pMonCtl; /* Address: 80n.8000.0500 */
+    AXP_21274_PMONCNT pMonCnt; /* Address: 80n.8000.0540 */
+    AXP_21274_SPRST sprSt; /* Address: 80n.8000.0800 */
 } AXP_21274_PCHIP;
 
 #define AXP_21274_WHICH_PCHIP(addr) (((addr) & 0x0000000200000000) >> 33)

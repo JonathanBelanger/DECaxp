@@ -91,16 +91,16 @@
 /*
  * Define some standard data types.
  */
-typedef unsigned char		u8;		/* 1 byte (8 bits) in length */
-typedef unsigned short		u16;	/* 2 bytes (16 bits) in length */
-typedef unsigned int		u32;	/* 4 bytes (32 bits) in length */
-typedef unsigned long long	u64;	/* 8 bytes (64 bits) in length */
-typedef unsigned __int128	u128;	/* 16 bytes (128 bits) in length */
-typedef char				i8;		/* 1 byte (8 bits) in length */
-typedef short				i16;	/* 2 bytes (16 bits) in length */
-typedef int					i32;	/* 4 bytes (32 bits) in length */
-typedef long long			i64;	/* 8 bytes (64 bits) in length */
-typedef __int128			i128;	/* 16 bytes (128 bits) in length */
+typedef unsigned char u8; /* 1 byte (8 bits) in length */
+typedef unsigned short u16; /* 2 bytes (16 bits) in length */
+typedef unsigned int u32; /* 4 bytes (32 bits) in length */
+typedef unsigned long long u64; /* 8 bytes (64 bits) in length */
+typedef unsigned __int128 u128; /* 16 bytes (128 bits) in length */
+typedef char i8; /* 1 byte (8 bits) in length */
+typedef short i16; /* 2 bytes (16 bits) in length */
+typedef int i32; /* 4 bytes (32 bits) in length */
+typedef long long i64; /* 8 bytes (64 bits) in length */
+typedef __int128 i128; /* 16 bytes (128 bits) in length */
 
 /*
  * Define some standard data type lengths (only the unique ones).
@@ -127,27 +127,27 @@ typedef __int128			i128;	/* 16 bytes (128 bits) in length */
 #define AXP_FILENAME_MAX	131
 typedef struct
 {
-	char					fileName[AXP_FILENAME_MAX+1];
-	u32						*writeBuf;
-	FILE					*fp;
-	u32						validPat;			/* must be 0x5a5ac3c3 */
-	u32						inverseVP;			/* must be 0xa5a53c3c */
-	u32						hdrSize;
-	u32						imgChecksum;
-	u32						imgSize;			/* memory footprint */
-	u32						decompFlag;
-	u64						destAddr;
-	u8						hdrRev;
-	u8						fwID;				/* Firmware ID */
-	u8						hdrRevExt;
-	u8						res;
-	u32						romImgSize;
-	u64						optFwID;			/* Optional Firmware ID */
-	u32						romOffset;
-	u32						hdrChecksum;
-	u32						verImgChecksum;
-	bool					romOffsetValid;
-	bool					openForWrite;
+    char fileName[AXP_FILENAME_MAX + 1];
+    u32 *writeBuf;
+    FILE *fp;
+    u32 validPat; /* must be 0x5a5ac3c3 */
+    u32 inverseVP; /* must be 0xa5a53c3c */
+    u32 hdrSize;
+    u32 imgChecksum;
+    u32 imgSize; /* memory footprint */
+    u32 decompFlag;
+    u64 destAddr;
+    u8 hdrRev;
+    u8 fwID; /* Firmware ID */
+    u8 hdrRevExt;
+    u8 res;
+    u32 romImgSize;
+    u64 optFwID; /* Optional Firmware ID */
+    u32 romOffset;
+    u32 hdrChecksum;
+    u32 verImgChecksum;
+    bool romOffsetValid;
+    bool openForWrite;
 } AXP_SROM_HANDLE;
 
 #define AXP_ROM_HDR_LEN		(14*4)
@@ -177,8 +177,8 @@ typedef struct
  */
 typedef struct queueHeader
 {
-	struct queueHeader	*flink;
-	struct queueHeader	*blink;
+    struct queueHeader *flink;
+    struct queueHeader *blink;
 } AXP_QUEUE_HDR;
 
 /*
@@ -210,19 +210,19 @@ typedef struct queueHeader
  */
 typedef struct countedQueueEntry
 {
-	struct countedQueueEntry	*flink;
-	struct countedQueueEntry	*blink;
-	struct countedQueueRoot		*parent;
-	int							index;
+    struct countedQueueEntry *flink;
+    struct countedQueueEntry *blink;
+    struct countedQueueRoot *parent;
+    int index;
 } AXP_CQUE_ENTRY;
 
 typedef struct countedQueueRoot
 {
-	struct countedQueueEntry	*flink;
-	struct countedQueueEntry	*blink;
-	u32							count;
-	u32							max;
-	pthread_mutex_t				mutex;
+    struct countedQueueEntry *flink;
+    struct countedQueueEntry *blink;
+    u32 count;
+    u32 max;
+    pthread_mutex_t mutex;
 } AXP_COUNTED_QUEUE;
 
 #define AXP_INIT_CQENTRY(queue, prent)	\
@@ -238,45 +238,45 @@ typedef struct countedQueueRoot
  */
 typedef enum
 {
-	AXPCondQueue,
-	AXPCountedCondQueue
+    AXPCondQueue,
+    AXPCountedCondQueue
 } AXP_COND_Q_TYPE;
 
 typedef struct condQueueHeader
 {
-	struct condQueueHeader		*flink;
-	struct condQueueHeader		*blink;
-	struct condQueueRoot		*parent;
-	AXP_COND_Q_TYPE 			type;
+    struct condQueueHeader *flink;
+    struct condQueueHeader *blink;
+    struct condQueueRoot *parent;
+    AXP_COND_Q_TYPE type;
 } AXP_COND_Q_HDR;
 
 typedef struct condQueueLeaf
 {
-	struct condQueueLeaf		*flink;
-	struct condQueueLeaf		*blink;
-	struct condQueueRoot		*parent;
+    struct condQueueLeaf *flink;
+    struct condQueueLeaf *blink;
+    struct condQueueRoot *parent;
 } AXP_COND_Q_LEAF;
 
 typedef struct condQueueRoot
 {
-	AXP_COND_Q_LEAF				*flink;
-	AXP_COND_Q_LEAF				*blink;
-	struct condQueueRoot		*parent;
-	AXP_COND_Q_TYPE 			type;
-	pthread_mutex_t				qMutex;
-	pthread_cond_t				qCond;
+    AXP_COND_Q_LEAF *flink;
+    AXP_COND_Q_LEAF *blink;
+    struct condQueueRoot *parent;
+    AXP_COND_Q_TYPE type;
+    pthread_mutex_t qMutex;
+    pthread_cond_t qCond;
 } AXP_COND_Q_ROOT;
 
 typedef struct condQueueCountRoot
 {
-	struct condQueueLeaf		*flink;
-	struct condQueueLeaf		*blink;
-	struct condQueueCountRoot	*parent;
-	AXP_COND_Q_TYPE 			type;
-	pthread_mutex_t				qMutex;
-	pthread_cond_t				qCond;
-	u32							count;
-	u32							max;
+    struct condQueueLeaf *flink;
+    struct condQueueLeaf *blink;
+    struct condQueueCountRoot *parent;
+    AXP_COND_Q_TYPE type;
+    pthread_mutex_t qMutex;
+    pthread_cond_t qCond;
+    u32 count;
+    u32 max;
 } AXP_COND_Q_ROOT_CNT;
 
 /*

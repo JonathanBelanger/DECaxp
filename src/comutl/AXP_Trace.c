@@ -28,13 +28,13 @@
 #include "AXP_Utility.h"
 #include "AXP_Trace.h"
 
-static char				*AXPTRCLOG = "AXP_LOGMASK";
-static char				*AXPTRCFIL = "AXP_LOGFILE";
-AXP_TRCLOG				_axp_trc_log_ = 0;
-static char				_axp_trc_out_[81];
-static pthread_once_t	_axp_trc_log_once_ = PTHREAD_ONCE_INIT;
-static FILE				*_axp_trc_fp_;
-bool					_axp_trc_active_ = false;
+static char *AXPTRCLOG = "AXP_LOGMASK";
+static char *AXPTRCFIL = "AXP_LOGFILE";
+AXP_TRCLOG _axp_trc_log_ = 0;
+static char _axp_trc_out_[81];
+static pthread_once_t _axp_trc_log_once_ = PTHREAD_ONCE_INIT;
+static FILE *_axp_trc_fp_;
+bool _axp_trc_active_ = false;
 
 /*
  * AXP_TraceInit_Once
@@ -52,43 +52,41 @@ bool					_axp_trc_active_ = false;
  */
 void AXP_TraceInit_Once(void)
 {
-	char *getEnvStr;
+    char *getEnvStr;
 
-	/*
-	 * Translate the environment variable to indicate that tracing should
-	 * occur or not.  Also, where the tracing should go, a file or stdout.
-	 */
-	getEnvStr = getenv(AXPTRCLOG);
-	if (getEnvStr != NULL)
-		sscanf(getEnvStr, "0x%08x", &_axp_trc_log_);
-	if (_axp_trc_log_ != 0)
+    /*
+     * Translate the environment variable to indicate that tracing should
+     * occur or not.  Also, where the tracing should go, a file or stdout.
+     */
+    getEnvStr = getenv(AXPTRCLOG);
+    if (getEnvStr != NULL)
+	sscanf(getEnvStr, "0x%08x", &_axp_trc_log_);
+    if (_axp_trc_log_ != 0)
+    {
+	getEnvStr = getenv(AXPTRCFIL);
+	if (getEnvStr == NULL)
 	{
-		getEnvStr = getenv(AXPTRCFIL);
-		if (getEnvStr == NULL)
-		{
-			strcpy(_axp_trc_out_, "Standard Output");
-			_axp_trc_fp_ = stdout;
-		}
-		else
-		{
-			sscanf(getEnvStr, "%80s", _axp_trc_out_);
-			_axp_trc_fp_ = fopen(_axp_trc_out_, "w");
-		}
-		_axp_trc_active_ = true;
-		AXP_TraceWrite("Digital Alpha AXP 21264 CPU Emulator Trace Utility.");
-		AXP_TraceWrite(
-				"AXP_TRCLOG = 0x%08x : AXP_TRCFIL = %s",
-				_axp_trc_log_,
-				_axp_trc_out_);
-		AXP_TraceWrite("Copyright 2018, Jonathan D. Belanger.");
-		AXP_TraceWrite("");
-		AXP_TraceConfig();
+	    strcpy(_axp_trc_out_, "Standard Output");
+	    _axp_trc_fp_ = stdout;
 	}
+	else
+	{
+	    sscanf(getEnvStr, "%80s", _axp_trc_out_);
+	    _axp_trc_fp_ = fopen(_axp_trc_out_, "w");
+	}
+	_axp_trc_active_ = true;
+	AXP_TraceWrite("Digital Alpha AXP 21264 CPU Emulator Trace Utility.");
+	AXP_TraceWrite("AXP_TRCLOG = 0x%08x : AXP_TRCFIL = %s", _axp_trc_log_,
+	        _axp_trc_out_);
+	AXP_TraceWrite("Copyright 2018, Jonathan D. Belanger.");
+	AXP_TraceWrite("");
+	AXP_TraceConfig();
+    }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -108,14 +106,14 @@ void AXP_TraceInit_Once(void)
  */
 bool AXP_TraceInit(void)
 {
-	bool	retVal;
+    bool retVal;
 
-	retVal = pthread_once(&_axp_trc_log_once_, AXP_TraceInit_Once) == 0;
+    retVal = pthread_once(&_axp_trc_log_once_, AXP_TraceInit_Once) == 0;
 
-	/*
-	 * Return back to the caller.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -134,15 +132,15 @@ bool AXP_TraceInit(void)
 void AXP_TraceEnd(void)
 {
 
-	/*
-	 * Turn off the tracing.
-	 */
-	_axp_trc_active_ = false;
+    /*
+     * Turn off the tracing.
+     */
+    _axp_trc_active_ = false;
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -164,38 +162,35 @@ void AXP_TraceEnd(void)
  */
 void AXP_TraceWrite(char *fmt, ...)
 {
-	char			outBuf[41];
-	va_list			ap;
-	struct timeval	now;
-	struct tm		timeNow;
+    char outBuf[41];
+    va_list ap;
+    struct timeval now;
+    struct tm timeNow;
 
-	/*
-	 * Write out a time-stamp followed by a colon and a space character
-	 */
-	gettimeofday(&now, NULL);
-	strftime(
-		outBuf,
-		sizeof(outBuf),
-		"%H:%M:%S",
-		localtime_r(&now.tv_sec, &timeNow));
-	fprintf(_axp_trc_fp_, "%s.%03ld: ", outBuf, (now.tv_usec / 1000));
+    /*
+     * Write out a time-stamp followed by a colon and a space character
+     */
+    gettimeofday(&now, NULL);
+    strftime(outBuf, sizeof(outBuf), "%H:%M:%S",
+	    localtime_r(&now.tv_sec, &timeNow));
+    fprintf(_axp_trc_fp_, "%s.%03ld: ", outBuf, (now.tv_usec / 1000));
 
-	/*
-	 * Now generate the rest of the requested text.
-	 */
-	va_start(ap, fmt);
-	vfprintf(_axp_trc_fp_, fmt, ap);
-	va_end(ap);
+    /*
+     * Now generate the rest of the requested text.
+     */
+    va_start(ap, fmt);
+    vfprintf(_axp_trc_fp_, fmt, ap);
+    va_end(ap);
 
-	/*
-	 * End it with a new-line.
-	 */
-	fprintf(_axp_trc_fp_, "\n");
+    /*
+     * End it with a new-line.
+     */
+    fprintf(_axp_trc_fp_, "\n");
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -216,15 +211,15 @@ void AXP_TraceWrite(char *fmt, ...)
 void AXP_TraceLock(void)
 {
 
-	/*
-	 * Lock the file stream.
-	 */
-	flockfile(_axp_trc_fp_);
+    /*
+     * Lock the file stream.
+     */
+    flockfile(_axp_trc_fp_);
 
-	/*
-	 * Return back to the caller,
-	 */
-	return;
+    /*
+     * Return back to the caller,
+     */
+    return;
 }
 
 /*
@@ -245,13 +240,13 @@ void AXP_TraceLock(void)
 void AXP_TraceUnlock(void)
 {
 
-	/*
-	 * Unlock the file stream.
-	 */
-	funlockfile(_axp_trc_fp_);
+    /*
+     * Unlock the file stream.
+     */
+    funlockfile(_axp_trc_fp_);
 
-	/*
-	 * Return back to the caller,
-	 */
-	return;
+    /*
+     * Return back to the caller,
+     */
+    return;
 }

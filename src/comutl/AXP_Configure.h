@@ -93,119 +93,119 @@
  */
 typedef enum
 {
-	NoNodes,
-	DECaxp,
-	Owner,
-	SystemConf
+    NoNodes,
+    DECaxp,
+    Owner,
+    SystemConf
 } AXP_21264_CONFIG_NODES;
 
 typedef enum
 {
-	NoOwner,
-	Name,
-	CreationDate,
-	ModifyDate
+    NoOwner,
+    Name,
+    CreationDate,
+    ModifyDate
 } AXP_21264_CONFIG_OWNER;
 
 typedef enum
 {
-	NoName,
-	FirstName,
-	MI,
-	LastName,
-	NameSuffix
+    NoName,
+    FirstName,
+    MI,
+    LastName,
+    NameSuffix
 } AXP_21264_CONFIG_NAME;
 
 typedef enum
 {
-	NoSystem,
-	Model,
-	SROM,
-	CPUS,
-	DARRAYS,
-	Disks,
-	Console,
-	Networks,
-	Printers,
-	Tapes
+    NoSystem,
+    Model,
+    SROM,
+    CPUS,
+    DARRAYS,
+    Disks,
+    Console,
+    Networks,
+    Printers,
+    Tapes
 } AXP_21264_CONFIG_SYSTEM;
 
 typedef enum
 {
-	NoModel,
-	ModelName,
-	ModelModel
+    NoModel,
+    ModelName,
+    ModelModel
 } AXP_21264_CONFIG_MODEL;
 
 typedef enum
 {
-	NoSROM,
-	InitFile,
-	PALImage,
-	ROMImage,
-	NVRamFile,
-	CboxCSRs
+    NoSROM,
+    InitFile,
+    PALImage,
+    ROMImage,
+    NVRamFile,
+    CboxCSRs
 } AXP_21264_CONFIG_SROM;
 
 typedef enum
 {
-	NoCPUs,
-	CPUCount,
-	Generation,
-	MfgPass
+    NoCPUs,
+    CPUCount,
+    Generation,
+    MfgPass
 } AXP_21264_CONFIG_CPUS;
 
 typedef enum
 {
-	NoDARRAYs,
-	DARRAYSize,
-	DARRAYCount
+    NoDARRAYs,
+    DARRAYSize,
+    DARRAYCount
 } AXP_21264_CONFIG_DARRAYS;
 
 typedef enum
 {
-	NoDisks,
-	DECDisk
+    NoDisks,
+    DECDisk
 } AXP_21264_CONFIG_DISKS;
 
 typedef enum
 {
-	NoDisk,
-	DiskType,
-	DiskName,
-	DiskSize,
-	DiskFile
+    NoDisk,
+    DiskType,
+    DiskName,
+    DiskSize,
+    DiskFile
 } AXP_21264_CONFIG_DISK;
 
 typedef enum
 {
-	NoConsole,
-	Port
+    NoConsole,
+    Port
 } AXP_21264_CONFIG_CONSOLE;
 
 typedef enum
 {
-	NoNetworks,
-	TopNetworks
+    NoNetworks,
+    TopNetworks
 } AXP_21264_CONFIG_NETWORKS;
 
 typedef enum
 {
-	NoNetwork,
-	NetworkName,
-	NetworkMAC
+    NoNetwork,
+    NetworkName,
+    NetworkMAC
 } AXP_21264_CONFIG_NETWORK;
 
 typedef enum
 {
-	NoPrinters,
-	TopPrinters
+    NoPrinters,
+    TopPrinters
 } AXP_21264_CONFIG_PRINTERS;
 
 typedef enum
 {
-	NoTapes,
-	TopTapes
+    NoTapes,
+    TopTapes
 } AXP_21264_CONFIG_TAPES;
 
 /*
@@ -223,12 +223,12 @@ typedef enum
  */
 typedef struct
 {
-	char					*first;
-	char					*mi;
-	char					*last;
-	char					*suffix;
-	struct tm				create;
-	struct tm				modify;
+    char *first;
+    char *mi;
+    char *last;
+    char *suffix;
+    struct tm create;
+    struct tm modify;
 } AXP_21264_OWNER_INFO;
 
 /*
@@ -242,8 +242,8 @@ typedef struct
  */
 typedef struct
 {
-	char					*name;
-	char					*model;
+    char *name;
+    char *model;
 } AXP_21264_MODEL_INFO;
 
 /*
@@ -263,11 +263,11 @@ typedef struct
  */
 typedef struct
 {
-	char					*initFile;
-	char					*PALImage;
-	char					*ROMImage;
-	char					*NVRamFile;
-	char					*CboxCSRFile;
+    char *initFile;
+    char *PALImage;
+    char *ROMImage;
+    char *NVRamFile;
+    char *CboxCSRFile;
 } AXP_21264_SROM_INFO;
 
 /*
@@ -338,32 +338,32 @@ typedef struct
 
 typedef struct
 {
-	char				*name;
-	char				*genStr;
-	u32					majorType;
-	u32					year;
-	u64					dCacheSize;
-	u64					iCacheSize;
-	u64					sCacheSize;
-	u64					bCacheSizeLow;
-	u64					bCacheSizeHigh;
-	struct
-	{
-		u32				ieeeRndInf : 1;	/* h/w support for rounding to +/-Inf */
-		u32				bwx : 1;		/* Byte/Word Extensions */
-		u32				mvi : 1;		/* Multimedia Extensions */
-		u32				fix : 1;		/* Integer to/from FP move and SQRT */
-		u32				cix : 1;		/* Counting and Finding Bits extension */
-		u32				pfmi : 1;		/* Prefetch with modify intent support */
-		u32				res : 26;
-	} isa;
+    char *name;
+    char *genStr;
+    u32 majorType;
+    u32 year;
+    u64 dCacheSize;
+    u64 iCacheSize;
+    u64 sCacheSize;
+    u64 bCacheSizeLow;
+    u64 bCacheSizeHigh;
+    struct
+    {
+	u32 ieeeRndInf :1; /* h/w support for rounding to +/-Inf */
+	u32 bwx :1; /* Byte/Word Extensions */
+	u32 mvi :1; /* Multimedia Extensions */
+	u32 fix :1; /* Integer to/from FP move and SQRT */
+	u32 cix :1; /* Counting and Finding Bits extension */
+	u32 pfmi :1; /* Prefetch with modify intent support */
+	u32 res :26;
+    } isa;
 } AXP_CPU_CONFIG;
 
 typedef struct
 {
-	AXP_CPU_CONFIG		*config;
-	u32					minorType;
-	u32					count;
+    AXP_CPU_CONFIG *config;
+    u32 minorType;
+    u32 count;
 } AXP_21264_CPU_INFO;
 
 /*
@@ -378,8 +378,8 @@ typedef struct
  */
 typedef struct
 {
-	u64						size;
-	u32						count;
+    u64 size;
+    u32 count;
 } AXP_21264_DARRAY_INFO;
 
 /*
@@ -401,18 +401,18 @@ typedef struct
  */
 typedef enum
 {
-	Diskless,
-	Disk,
-	CD_ROM,
-	RW_CDROM
+    Diskless,
+    Disk,
+    CD_ROM,
+    RW_CDROM
 } AXP_21264_DISK_TYPES;
 typedef struct
 {
-	char					*name;
-	char					*fileSpec;
-	u32						unit;
-	u64						size;
-	AXP_21264_DISK_TYPES	type;
+    char *name;
+    char *fileSpec;
+    u32 unit;
+    u64 size;
+    AXP_21264_DISK_TYPES type;
 } AXP_21264_DISK_INFO;
 
 /*
@@ -429,7 +429,7 @@ typedef struct
  */
 typedef struct
 {
-	u32						port;
+    u32 port;
 } AXP_21264_CONSOLE_INFO;
 
 /*
@@ -446,9 +446,9 @@ typedef struct
  */
 typedef struct
 {
-	char					*name;
-	char					*mac;	/* TODO: This should probably be defined differently */
-	u32						unit;
+    char *name;
+    char *mac; /* TODO: This should probably be defined differently */
+    u32 unit;
 } AXP_21264_NETWORK_INFO;
 
 /*
@@ -466,12 +466,12 @@ typedef struct
  */
 typedef struct
 {
-	u32						unit;
+    u32 unit;
 } AXP_21264_PRINTER_INFO;
 
 typedef struct
 {
-	u32						unit;
+    u32 unit;
 } AXP_21264_TAPE_INFO;
 
 /*
@@ -480,25 +480,25 @@ typedef struct
  */
 typedef struct
 {
-	AXP_21264_OWNER_INFO		owner;
-	struct
-	{
-		AXP_21264_DISK_INFO		*disks;
-		AXP_21264_NETWORK_INFO 	*networks;
-		AXP_21264_MODEL_INFO	model;
-		AXP_21264_SROM_INFO		srom;
-		AXP_21264_CPU_INFO		cpus;
-		AXP_21264_DARRAY_INFO	darrays;
-		AXP_21264_CONSOLE_INFO	console;
-		u32						diskCount;
-		u32						networkCount;
-	} system;
+    AXP_21264_OWNER_INFO owner;
+    struct
+    {
+	AXP_21264_DISK_INFO *disks;
+	AXP_21264_NETWORK_INFO *networks;
+	AXP_21264_MODEL_INFO model;
+	AXP_21264_SROM_INFO srom;
+	AXP_21264_CPU_INFO cpus;
+	AXP_21264_DARRAY_INFO darrays;
+	AXP_21264_CONSOLE_INFO console;
+	u32 diskCount;
+	u32 networkCount;
+    } system;
 } AXP_21264_CONFIG;
 
 /*
  * Exported Global Variables
  */
-extern AXP_21264_CONFIG	AXP_21264_Config;
+extern AXP_21264_CONFIG AXP_21264_Config;
 extern AXP_CPU_CONFIG AXP_CPU_Configurations[];
 
 /*
@@ -506,7 +506,7 @@ extern AXP_CPU_CONFIG AXP_CPU_Configurations[];
  */
 int AXP_LoadConfig_File(char *);
 bool AXP_ConfigGet_CPUType(u32 *, u32 *);
-u32	AXP_ConfigGet_CPUCount(void);
+u32 AXP_ConfigGet_CPUCount(void);
 bool AXP_ConfigGet_InitFile(char *);
 bool AXP_ConfigGet_PALFile(char *);
 bool AXP_ConfigGet_ROMFile(char *);

@@ -40,12 +40,12 @@
  */
 typedef struct
 {
-	pthread_mutex_t		*mutex;
-	pthread_cond_t		*cond;
-	AXP_21274_CBOX_PQ	*pq;
-	u8					*pqTop;
-	u8					*pqBottom;
-	u8					*irq_H;
+    pthread_mutex_t *mutex;
+    pthread_cond_t *cond;
+    AXP_21274_CBOX_PQ *pq;
+    u8 *pqTop;
+    u8 *pqBottom;
+    u8 *irq_H;
 } AXP_21274_CPU;
 
 #define AXP_21274_MAX_CPUS		4
@@ -112,90 +112,90 @@ typedef struct
 typedef struct
 {
 
-	/*
-	 * This field needs to be at the top of all data blocks/structures
-	 * that need to be specifically allocated by the Blocks module.
-	 */
-	AXP_BLOCK_DSC 			header;
+    /*
+     * This field needs to be at the top of all data blocks/structures
+     * that need to be specifically allocated by the Blocks module.
+     */
+    AXP_BLOCK_DSC header;
 
-	/*************************************************************************
-	 * Cchip Data and Information											 *
-	 *************************************************************************/
-	pthread_t			cChipThreadID;
-	pthread_mutex_t		cChipMutex;
-	pthread_cond_t		cChipCond;
-	AXP_QUEUE_HDR		skidBufferQ;
-	AXP_21274_RQ_ENTRY	skidBuffers[AXP_21274_CCHIP_RQ_LEN * AXP_21274_MAX_CPUS];
-	u32					skidLastUsed;
-	u32					cpuCount;
-	AXP_21274_CPU		cpu[AXP_21274_MAX_CPUS];
+    /*************************************************************************
+     * Cchip Data and Information											 *
+     *************************************************************************/
+    pthread_t cChipThreadID;
+    pthread_mutex_t cChipMutex;
+    pthread_cond_t cChipCond;
+    AXP_QUEUE_HDR skidBufferQ;
+    AXP_21274_RQ_ENTRY skidBuffers[AXP_21274_CCHIP_RQ_LEN * AXP_21274_MAX_CPUS];
+    u32 skidLastUsed;
+    u32 cpuCount;
+    AXP_21274_CPU cpu[AXP_21274_MAX_CPUS];
 
-	/*
-	 * Cchip Registers
-	 */
-	AXP_21274_CSC		csc;		/* Address: 801.a000.0000 */
-	AXP_21274_MTR		mtr;		/* Address: 801.a000.0040 */
-	AXP_21274_MISC		misc;		/* Address: 801.a000.0080 */
-	AXP_21274_MPD		mpd;		/* Address: 801.a000.00c0 */
-	AXP_21274_AARx		aar0;		/* Address: 801.a000.0100 */
-	AXP_21274_AARx		aar1;		/* Address: 801.a000.0140 */
-	AXP_21274_AARx		aar2;		/* Address: 801.a000.0180 */
-	AXP_21274_AARx		aar3;		/* Address: 801.a000.01c0 */
-	AXP_21274_DIMn		dim0;		/* Address: 801.a000.0200 */
-	AXP_21274_DIMn		dim1;		/* Address: 801.a000.0240 */
-	AXP_21274_DIRn		dir0;		/* Address: 801.a000.0280 */
-	AXP_21274_DIRn		dir1;		/* Address: 801.a000.02c0 */
-	AXP_21274_DRIR		drir;		/* Address: 801.a000.0300 */
-	AXP_21274_PRBEN		prbEn;		/* Address: 801.a000.0340 */
-	AXP_21274_IICn		iic0;		/* Address: 801.a000.0380 */
-	AXP_21274_IICn		iic1;		/* Address: 801.a000.03c0 */
-	AXP_21274_MPRn		mpr0;		/* Address: 801.a000.0400 */
-	AXP_21274_MPRn		mpr1;		/* Address: 801.a000.0440 */
-	AXP_21274_MPRn		mpr2;		/* Address: 801.a000.0480 */
-	AXP_21274_MPRn		mpr3;		/* Address: 801.a000.04c0 */
-	AXP_21274_TTR		ttr;		/* Address: 801.a000.0580 */
-	AXP_21274_TDR		tdr;		/* Address: 801.a000.05c0 */
-	AXP_21274_DIMn		dim2;		/* Address: 801.a000.0600 */
-	AXP_21274_DIMn		dim3;		/* Address: 801.a000.0640 */
-	AXP_21274_DIRn		dir2;		/* Address: 801.a000.0680 */
-	AXP_21274_DIRn		dir3;		/* Address: 801.a000.06c0 */
-	AXP_21274_IICn		iic2;		/* Address: 801.a000.0700 */
-	AXP_21274_IICn		iic3;		/* Address: 801.a000.0740 */
-	AXP_21274_PWR		pwr;		/* Address: 801.a000.0780 */
-	AXP_21274_CMONCTLA	cmonctla;	/* Address" 801.a000.0c00 */
-	AXP_21274_CMONCTLB	cmonctlb;	/* Address" 801.a000.0c40 */
-	AXP_21274_CMONCNT01	cmoncnt01;	/* Address" 801.a000.0c80 */
-	AXP_21274_CMONCNT23	cmoncnt23;	/* Address" 801.a000.0cc0 */
+    /*
+     * Cchip Registers
+     */
+    AXP_21274_CSC csc; /* Address: 801.a000.0000 */
+    AXP_21274_MTR mtr; /* Address: 801.a000.0040 */
+    AXP_21274_MISC misc; /* Address: 801.a000.0080 */
+    AXP_21274_MPD mpd; /* Address: 801.a000.00c0 */
+    AXP_21274_AARx aar0; /* Address: 801.a000.0100 */
+    AXP_21274_AARx aar1; /* Address: 801.a000.0140 */
+    AXP_21274_AARx aar2; /* Address: 801.a000.0180 */
+    AXP_21274_AARx aar3; /* Address: 801.a000.01c0 */
+    AXP_21274_DIMn dim0; /* Address: 801.a000.0200 */
+    AXP_21274_DIMn dim1; /* Address: 801.a000.0240 */
+    AXP_21274_DIRn dir0; /* Address: 801.a000.0280 */
+    AXP_21274_DIRn dir1; /* Address: 801.a000.02c0 */
+    AXP_21274_DRIR drir; /* Address: 801.a000.0300 */
+    AXP_21274_PRBEN prbEn; /* Address: 801.a000.0340 */
+    AXP_21274_IICn iic0; /* Address: 801.a000.0380 */
+    AXP_21274_IICn iic1; /* Address: 801.a000.03c0 */
+    AXP_21274_MPRn mpr0; /* Address: 801.a000.0400 */
+    AXP_21274_MPRn mpr1; /* Address: 801.a000.0440 */
+    AXP_21274_MPRn mpr2; /* Address: 801.a000.0480 */
+    AXP_21274_MPRn mpr3; /* Address: 801.a000.04c0 */
+    AXP_21274_TTR ttr; /* Address: 801.a000.0580 */
+    AXP_21274_TDR tdr; /* Address: 801.a000.05c0 */
+    AXP_21274_DIMn dim2; /* Address: 801.a000.0600 */
+    AXP_21274_DIMn dim3; /* Address: 801.a000.0640 */
+    AXP_21274_DIRn dir2; /* Address: 801.a000.0680 */
+    AXP_21274_DIRn dir3; /* Address: 801.a000.06c0 */
+    AXP_21274_IICn iic2; /* Address: 801.a000.0700 */
+    AXP_21274_IICn iic3; /* Address: 801.a000.0740 */
+    AXP_21274_PWR pwr; /* Address: 801.a000.0780 */
+    AXP_21274_CMONCTLA cmonctla; /* Address" 801.a000.0c00 */
+    AXP_21274_CMONCTLB cmonctlb; /* Address" 801.a000.0c40 */
+    AXP_21274_CMONCNT01 cmoncnt01; /* Address" 801.a000.0c80 */
+    AXP_21274_CMONCNT23 cmoncnt23; /* Address" 801.a000.0cc0 */
 
-	/*************************************************************************
-	 * Dchip Data and Information											 *
-	 *************************************************************************/
-	u32					arrayCount;
-	u64					*array[AXP_21274_MAX_ARRAYS];
-	u64					arraySizes;
+    /*************************************************************************
+     * Dchip Data and Information											 *
+     *************************************************************************/
+    u32 arrayCount;
+    u64 *array[AXP_21274_MAX_ARRAYS];
+    u64 arraySizes;
 
-	/*
-	 * System Memory
-	 *
-	 * System member is byte addressed, but read as one or more quadwords.
-	 */
-	pthread_mutex_t		memMutex;
-	u32					memSize;
-	u64					*memory;
+    /*
+     * System Memory
+     *
+     * System member is byte addressed, but read as one or more quadwords.
+     */
+    pthread_mutex_t memMutex;
+    u32 memSize;
+    u64 *memory;
 
-	/*
-	 * Dchip Registers
-	 */
-	AXP_21274_DSC		dsc;		/* Address: 801.b000.0800 */
-	AXP_21274_STR		str;		/* Address: 801.b000.0840 */
-	AXP_21274_DREV		dRev;		/* Address: 801.b000.0880 */
-	AXP_21274_DSC2		dsc2;		/* Address: 801.b000.08c0 */
+    /*
+     * Dchip Registers
+     */
+    AXP_21274_DSC dsc; /* Address: 801.b000.0800 */
+    AXP_21274_STR str; /* Address: 801.b000.0840 */
+    AXP_21274_DREV dRev; /* Address: 801.b000.0880 */
+    AXP_21274_DSC2 dsc2; /* Address: 801.b000.08c0 */
 
-	/*************************************************************************
-	 * Pchip Data and Information											 *
-	 *************************************************************************/
-	AXP_21274_PCHIP		p0;
-	AXP_21274_PCHIP		p1;
+    /*************************************************************************
+     * Pchip Data and Information											 *
+     *************************************************************************/
+    AXP_21274_PCHIP p0;
+    AXP_21274_PCHIP p1;
 } AXP_21274_SYSTEM;
 
 #endif	/* _AXP_SYSTEM_DEFS_ */

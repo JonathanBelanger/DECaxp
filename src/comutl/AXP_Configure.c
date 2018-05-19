@@ -85,27 +85,27 @@
 /*
  * Global variable used throughout the emulator.
  */
-static AXP_21264_CONFIG	_axp_21264_config_=
+static AXP_21264_CONFIG _axp_21264_config_ =
 {
-	.owner.first = NULL,
-	.owner.mi = NULL,
-	.owner.last = NULL,
-	.system.disks = NULL,
-	.system.diskCount = 0,
-	.system.networks = NULL,
-	.system.networkCount = 0,
-	.system.model.name = NULL,
-	.system.model.model = NULL,
-	.system.srom.initFile = NULL,
-	.system.srom.PALImage = NULL,
-	.system.srom.ROMImage = NULL,
-	.system.srom.NVRamFile = NULL,
-	.system.srom.CboxCSRFile = NULL,
-	.system.cpus.config = NULL,
-	.system.cpus.count = 0,
-	.system.cpus.minorType = 0,
-	.system.darrays.size = 0,
-	.system.darrays.count = 0
+    .owner.first = NULL,
+    .owner.mi = NULL,
+    .owner.last = NULL,
+    .system.disks = NULL,
+    .system.diskCount = 0,
+    .system.networks = NULL,
+    .system.networkCount = 0,
+    .system.model.name = NULL,
+    .system.model.model = NULL,
+    .system.srom.initFile = NULL,
+    .system.srom.PALImage = NULL,
+    .system.srom.ROMImage = NULL,
+    .system.srom.NVRamFile = NULL,
+    .system.srom.CboxCSRFile = NULL,
+    .system.cpus.config = NULL,
+    .system.cpus.count = 0,
+    .system.cpus.minorType = 0,
+    .system.darrays.size = 0,
+    .system.darrays.count = 0
 };
 
 /*
@@ -120,743 +120,743 @@ static pthread_mutex_t _axp_config_mutex_;
  */
 struct AXP_TopLevel
 {
-	char					*token;
-	AXP_21264_CONFIG_NODES	node;
+    char *token;
+    AXP_21264_CONFIG_NODES node;
 };
 struct AXP_Owner
 {
-	char					*token;
-	AXP_21264_CONFIG_OWNER	node;
+    char *token;
+    AXP_21264_CONFIG_OWNER node;
 };
 struct AXP_Name
 {
-	char					*token;
-	AXP_21264_CONFIG_NAME	node;
+    char *token;
+    AXP_21264_CONFIG_NAME node;
 };
 struct AXP_System
 {
-	char					*token;
-	AXP_21264_CONFIG_SYSTEM	node;
+    char *token;
+    AXP_21264_CONFIG_SYSTEM node;
 };
 struct AXP_Model
 {
-	char					*token;
-	AXP_21264_CONFIG_MODEL	node;
+    char *token;
+    AXP_21264_CONFIG_MODEL node;
 };
 struct AXP_SROM
 {
-	char					*token;
-	AXP_21264_CONFIG_SROM	node;
+    char *token;
+    AXP_21264_CONFIG_SROM node;
 };
 struct AXP_CPUS
 {
-	char					*token;
-	AXP_21264_CONFIG_CPUS	node;
+    char *token;
+    AXP_21264_CONFIG_CPUS node;
 };
 struct AXP_DARRAYS
 {
-	char					*token;
-	AXP_21264_CONFIG_DARRAYS node;
+    char *token;
+    AXP_21264_CONFIG_DARRAYS node;
 };
 struct AXP_Disks
 {
-	char					*token;
-	AXP_21264_CONFIG_DISKS	node;
+    char *token;
+    AXP_21264_CONFIG_DISKS node;
 };
 struct AXP_Disk
 {
-	char					*token;
-	AXP_21264_CONFIG_DISK	node;
+    char *token;
+    AXP_21264_CONFIG_DISK node;
 };
 struct AXP_Console
 {
-	char					*token;
-	AXP_21264_CONFIG_CONSOLE	node;
+    char *token;
+    AXP_21264_CONFIG_CONSOLE node;
 };
 struct AXP_Networks
 {
-	char					*token;
-	AXP_21264_CONFIG_NETWORKS node;
+    char *token;
+    AXP_21264_CONFIG_NETWORKS node;
 };
 struct AXP_Network
 {
-	char					*token;
-	AXP_21264_CONFIG_NETWORK node;
+    char *token;
+    AXP_21264_CONFIG_NETWORK node;
 };
 struct AXP_Printers
 {
-	char					*token;
-	AXP_21264_CONFIG_PRINTERS node;
+    char *token;
+    AXP_21264_CONFIG_PRINTERS node;
 };
 struct AXP_Tapes
 {
-	char					*token;
-	AXP_21264_CONFIG_TAPES	node;
+    char *token;
+    AXP_21264_CONFIG_TAPES node;
 };
 
 static struct AXP_TopLevel _top_level_nodes[] =
 {
-	{"DECaxp", DECaxp},
-	{"Owner", Owner},
-	{"System", SystemConf},
-	{NULL, NoNodes}
+    {"DECaxp", DECaxp},
+    {"Owner", Owner},
+    {"System", SystemConf},
+    {NULL, NoNodes}
 };
 static struct AXP_Owner _owner_level_nodes[] =
 {
-	{"Name", Name},
-	{"CreationDate", CreationDate},
-	{"ModifyDate", ModifyDate},
-	{NULL, NoOwner}
+    {"Name", Name},
+    {"CreationDate", CreationDate},
+    {"ModifyDate", ModifyDate},
+    {NULL, NoOwner}
 };
 static struct AXP_Name _name_level_nodes[] =
 {
-	{"First", FirstName},
-	{"MI", MI},
-	{"Last", LastName},
-	{"Suffix", NameSuffix},
-	{NULL, NoName}
+    {"First", FirstName},
+    {"MI", MI},
+    {"Last", LastName},
+    {"Suffix", NameSuffix},
+    {NULL, NoName}
 };
 static struct AXP_System _system_level_nodes[] =
 {
-	{"Model", Model},
-	{"SROM", SROM},
-	{"CPUs", CPUS},
-	{"DARRAYs", DARRAYS},
-	{"Disks", Disks},
-	{"Console", Console},
-	{"Networks", Networks},
-	{"Printers", Printers},
-	{"Tapes", Tapes},
-	{NULL, NoSystem}
+    {"Model", Model},
+    {"SROM", SROM},
+    {"CPUs", CPUS},
+    {"DARRAYs", DARRAYS},
+    {"Disks", Disks},
+    {"Console", Console},
+    {"Networks", Networks},
+    {"Printers", Printers},
+    {"Tapes", Tapes},
+    {NULL, NoSystem}
 };
 static struct AXP_Model _model_level_nodes[] =
 {
-	{"Name", ModelName},
-	{"Model", ModelModel},
-	{NULL, NoModel}
+    {"Name", ModelName},
+    {"Model", ModelModel},
+    {NULL, NoModel}
 };
 static struct AXP_SROM _srom_level_nodes[] =
 {
-	{"InitFile", InitFile},
-	{"PALImage", PALImage},
-	{"ROMImage", ROMImage},
-	{"NVRamFile", NVRamFile},
-	{"CboxCSRFile", CboxCSRs},
-	{NULL, NoSROM}
+    {"InitFile", InitFile},
+    {"PALImage", PALImage},
+    {"ROMImage", ROMImage},
+    {"NVRamFile", NVRamFile},
+    {"CboxCSRFile", CboxCSRs},
+    {NULL, NoSROM}
 };
 static struct AXP_CPUS _cpu_level_nodes[] =
 {
-	{"Count", CPUCount},
-	{"Generation", Generation},
-	{"Pass", MfgPass},
-	{NULL, NoCPUs}
+    {"Count", CPUCount},
+    {"Generation", Generation},
+    {"Pass", MfgPass},
+    {NULL, NoCPUs}
 };
 static struct AXP_DARRAYS _darray_level_nodes[] =
 {
-	{"Count", DARRAYCount},
-	{"Size", DARRAYSize},
-	{NULL, NoDARRAYs}
+    {"Count", DARRAYCount},
+    {"Size", DARRAYSize},
+    {NULL, NoDARRAYs}
 };
 static struct AXP_Disks _disks_level_nodes[] =
 {
-	{"Disk", DECDisk},
-	{NULL, NoDisk}
+    {"Disk", DECDisk},
+    {NULL, NoDisks}
 };
 static struct AXP_Disk _disk_level_nodes[] =
 {
-	{"Type", DiskType},
-	{"Name", DiskName},
-	{"Size", DiskSize},
-	{"File", DiskFile},
-	{NULL, NoDisk}
+    {"Type", DiskType},
+    {"Name", DiskName},
+    {"Size", DiskSize},
+    {"File", DiskFile},
+    {NULL, NoDisk}
 };
 static struct AXP_Console _console_level_nodes[] =
 {
-	{"Port", Port},
-	{NULL, NoConsole}
+    {"Port", Port},
+    {NULL, NoConsole}
 };
 static struct AXP_Networks _networks_level_nodes[] =
 {
-	{"Network", TopNetworks},
-	{NULL, NoNetworks}
+    {"Network", TopNetworks},
+    {NULL, NoNetworks}
 };
 static struct AXP_Network _network_level_nodes[] =
 {
-	{"Name", NetworkName},
-	{"MAC", NetworkMAC},
-	{NULL, NoNetwork}
+    {"Name", NetworkName},
+    {"MAC", NetworkMAC},
+    {NULL, NoNetwork}
 };
 static struct AXP_Printers _printers_level_nodes[] =
 {
-	{"Printers", TopPrinters},
-	{NULL, NoPrinters}
+    {"Printers", TopPrinters},
+    {NULL, NoPrinters}
 };
 static struct AXP_Tapes _tapes_level_nodes[] =
 {
-	{"Tapes", TopTapes},
-	{NULL, NoTapes}
+    {"Tapes", TopTapes},
+    {NULL, NoTapes}
 };
 
 static char *months[] =
 {
-	"",
-	"JAN",
-	"FEB",
-	"MAR",
-	"APR",
-	"MAY",
-	"JUN",
-	"JUL",
-	"AUG",
-	"SEP",
-	"OCT",
-	"NOV",
-	"DEC",
-	NULL
+    "",
+    "JAN",
+    "FEB",
+    "MAR",
+    "APR",
+    "MAY",
+    "JUN",
+    "JUL",
+    "AUG",
+    "SEP",
+    "OCT",
+    "NOV",
+    "DEC",
+    NULL
 };
 
 AXP_CPU_CONFIG AXP_CPU_Configurations[] =
 {
-	{
-		.genStr = "Simulation",
-		.name = "Simulation",
-		.majorType = 3,
-		.year = 1990,
-		.dCacheSize = 8*ONE_K,
-		.iCacheSize = 8*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 128*ONE_K,
-		.bCacheSizeHigh = 16*ONE_M,
-		.isa.ieeeRndInf = 0,
-		.isa.bwx = 0,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV3",
-		.name = "Prism",
-		.majorType = 1,
-		.year = 1991,
-		.dCacheSize = 8*ONE_K,
-		.iCacheSize = 8*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 128*ONE_K,
-		.bCacheSizeHigh = 16*ONE_M,
-		.isa.ieeeRndInf = 0,
-		.isa.bwx = 0,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV4",
-		.name = "21064",
-		.majorType = 2,
-		.year = 1992,
-		.dCacheSize = 8*ONE_K,
-		.iCacheSize = 8*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 128*ONE_K,
-		.bCacheSizeHigh = 16*ONE_M,
-		.isa.ieeeRndInf = 0,
-		.isa.bwx = 0,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "LCA4A",
-		.name = "21066",
-		.majorType = 4,
-		.year = 1993,
-		.dCacheSize = 8*ONE_K,
-		.iCacheSize = 8*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 0,
-		.isa.ieeeRndInf = 0,
-		.isa.bwx = 0,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV4S",
-		.name = "21064",
-		.majorType = 2,
-		.year = 1993,
-		.dCacheSize = 8*ONE_K,
-		.iCacheSize = 8*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 128*ONE_K,
-		.bCacheSizeHigh = 16*ONE_M,
-		.isa.ieeeRndInf = 0,
-		.isa.bwx = 0,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "LCA45A",
-		.name = "21066A",
-		.majorType = 4,
-		.year = 1994,
-		.dCacheSize = 8*ONE_K,
-		.iCacheSize = 8*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 0,
-		.isa.ieeeRndInf = 0,
-		.isa.bwx = 0,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "LCA45B",
-		.name = "21068A",
-		.majorType = 4,
-		.year = 1994,
-		.dCacheSize = 8*ONE_K,
-		.iCacheSize = 8*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 0,
-		.isa.ieeeRndInf = 0,
-		.isa.bwx = 0,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "LCA4B",
-		.name = "21068",
-		.majorType = 4,
-		.year = 1994,
-		.dCacheSize = 8*ONE_K,
-		.iCacheSize = 8*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 0,
-		.isa.ieeeRndInf = 0,
-		.isa.bwx = 0,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV45",
-		.name = "21064A",
-		.majorType = 6,
-		.year = 1994,
-		.dCacheSize = 16*ONE_K,
-		.iCacheSize = 16*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 256*ONE_K,
-		.bCacheSizeHigh = 16&ONE_M,
-		.isa.ieeeRndInf = 0,
-		.isa.bwx = 0,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV5",
-		.name = "21164",
-		.majorType = 5,
-		.year = 1995,
-		.dCacheSize = 8*ONE_K,
-		.iCacheSize = 8*ONE_K,
-		.sCacheSize = 96*ONE_K,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 64*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 0,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV56",
-		.name = "21164A",
-		.majorType = 7,
-		.year = 1996,
-		.dCacheSize = 8*ONE_K,
-		.iCacheSize = 8*ONE_K,
-		.sCacheSize = 96,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 64*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "PCA56",
-		.name = "21164PC",
-		.majorType = 9,
-		.year = 1997,
-		.dCacheSize = 8*ONE_K,
-		.iCacheSize = 16*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 512*ONE_K,
-		.bCacheSizeHigh = 4*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "PCA57",
-		.name = "21164PC",
-		.majorType = 10,
-		.year = 1998,
-		.dCacheSize = 16*ONE_K,
-		.iCacheSize = 32*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 512*ONE_K,
-		.bCacheSizeHigh=4*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV6",
-		.name = "21264",
-		.majorType = 8,
-		.year = 1998,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 2*ONE_M,
-		.bCacheSizeHigh = 8*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV67",
-		.name = "21264A",
-		.majorType = 11,
-		.year = 1999,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 2*ONE_M,
-		.bCacheSizeHigh = 8*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV68A",
-		.name = "21264B - Samsung",
-		.majorType = 12,
-		.year = 2001,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 2*ONE_M,
-		.bCacheSizeHigh = 8*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV68C",
-		.name = "21264B - IBM",
-		.majorType = 12,
-		.year = 2001,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 2*ONE_M,
-		.bCacheSizeHigh = 8*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV68CB",
-		.name = "21264C",
-		.majorType = 12,
-		.year = 2001,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 2*ONE_M,
-		.bCacheSizeHigh = 8*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV68DC",
-		.name = "21264C",
-		.majorType = 12,
-		.year = 2001,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 2*ONE_M,
-		.bCacheSizeHigh = 8*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV68CD",
-		.name = "21264",
-		.majorType = 12,
-		.year = 2001,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 2*ONE_M,
-		.bCacheSizeHigh = 8*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV68AL",
-		.name = "21264B",
-		.majorType = 13,
-		.year = 2001,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 2*ONE_M,
-		.bCacheSizeHigh = 8*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV68CX",
-		.name = "21264D",
-		.majorType = 14,
-		.year = 2002,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 2*ONE_M,
-		.bCacheSizeHigh = 8*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV68E",
-		.name = "21264E",
-		.majorType = 14,
-		.year = 2002,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 2*ONE_M,
-		.bCacheSizeHigh = 8*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV69A",
-		.name = "21264",
-		.majorType = 17,
-		.year = 2002,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 2*ONE_M,
-		.bCacheSizeHigh = 8*ONE_M,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV7",
-		.name = "21364",
-		.majorType = 15,
-		.year = 2003,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 1.75*ONE_M,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 0,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV7z",
-		.name = "21364",
-		.majorType = 15,
-		.year = 2004,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 1.75*ONE_M,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 0,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV78",
-		.name = "21364A",
-		.majorType = 15,
-		.year = 2004,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 1.75*ONE_M,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 0,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV79",
-		.name = "21364A",
-		.majorType = 16,
-		.year = 2004,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 1.75*ONE_M,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 0,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = "EV8",
-		.name = "21464",
-		.majorType = 0,
-		.year = 2003,
-		.dCacheSize = 64*ONE_K,
-		.iCacheSize = 64*ONE_K,
-		.sCacheSize = 3*ONE_M,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 0,
-		.isa.ieeeRndInf = 1,
-		.isa.bwx = 1,
-		.isa.mvi = 1,
-		.isa.fix = 1,
-		.isa.cix = 1,
-		.isa.pfmi = 1,
-		.isa.res = 0
-	},
-	{
-		.genStr = NULL,
-		.name = NULL,
-		.majorType = 0,
-		.year = 0,
-		.dCacheSize = 0,
-		.iCacheSize = 0,
-		.sCacheSize = 0,
-		.bCacheSizeLow = 0,
-		.bCacheSizeHigh = 0,
-		.isa.ieeeRndInf = 0,
-		.isa.bwx = 0,
-		.isa.mvi = 0,
-		.isa.fix = 0,
-		.isa.cix = 0,
-		.isa.pfmi = 0,
-		.isa.res = 0
-	}
+    {
+	.genStr = "Simulation",
+	.name = "Simulation",
+	.majorType = 3,
+	.year = 1990,
+	.dCacheSize = 8 * ONE_K,
+	.iCacheSize = 8 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 128 * ONE_K,
+	.bCacheSizeHigh = 16 * ONE_M,
+	.isa.ieeeRndInf = 0,
+	.isa.bwx = 0,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV3",
+	.name = "Prism",
+	.majorType = 1,
+	.year = 1991,
+	.dCacheSize = 8 * ONE_K,
+	.iCacheSize = 8 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 128 * ONE_K,
+	.bCacheSizeHigh = 16 * ONE_M,
+	.isa.ieeeRndInf = 0,
+	.isa.bwx = 0,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV4",
+	.name = "21064",
+	.majorType = 2,
+	.year = 1992,
+	.dCacheSize = 8 * ONE_K,
+	.iCacheSize = 8 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 128 * ONE_K,
+	.bCacheSizeHigh = 16 * ONE_M,
+	.isa.ieeeRndInf = 0,
+	.isa.bwx = 0,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "LCA4A",
+	.name = "21066",
+	.majorType = 4,
+	.year = 1993,
+	.dCacheSize = 8 * ONE_K,
+	.iCacheSize = 8 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 0,
+	.isa.ieeeRndInf = 0,
+	.isa.bwx = 0,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV4S",
+	.name = "21064",
+	.majorType = 2,
+	.year = 1993,
+	.dCacheSize = 8 * ONE_K,
+	.iCacheSize = 8 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 128 * ONE_K,
+	.bCacheSizeHigh = 16 * ONE_M,
+	.isa.ieeeRndInf = 0,
+	.isa.bwx = 0,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "LCA45A",
+	.name = "21066A",
+	.majorType = 4,
+	.year = 1994,
+	.dCacheSize = 8 * ONE_K,
+	.iCacheSize = 8 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 0,
+	.isa.ieeeRndInf = 0,
+	.isa.bwx = 0,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "LCA45B",
+	.name = "21068A",
+	.majorType = 4,
+	.year = 1994,
+	.dCacheSize = 8 * ONE_K,
+	.iCacheSize = 8 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 0,
+	.isa.ieeeRndInf = 0,
+	.isa.bwx = 0,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "LCA4B",
+	.name = "21068",
+	.majorType = 4,
+	.year = 1994,
+	.dCacheSize = 8 * ONE_K,
+	.iCacheSize = 8 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 0,
+	.isa.ieeeRndInf = 0,
+	.isa.bwx = 0,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV45",
+	.name = "21064A",
+	.majorType = 6,
+	.year = 1994,
+	.dCacheSize = 16 * ONE_K,
+	.iCacheSize = 16 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 256 * ONE_K,
+	.bCacheSizeHigh = 16 & ONE_M,
+	.isa.ieeeRndInf = 0,
+	.isa.bwx = 0,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV5",
+	.name = "21164",
+	.majorType = 5,
+	.year = 1995,
+	.dCacheSize = 8 * ONE_K,
+	.iCacheSize = 8 * ONE_K,
+	.sCacheSize = 96 * ONE_K,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 64 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 0,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV56",
+	.name = "21164A",
+	.majorType = 7,
+	.year = 1996,
+	.dCacheSize = 8 * ONE_K,
+	.iCacheSize = 8 * ONE_K,
+	.sCacheSize = 96,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 64 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "PCA56",
+	.name = "21164PC",
+	.majorType = 9,
+	.year = 1997,
+	.dCacheSize = 8 * ONE_K,
+	.iCacheSize = 16 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 512 * ONE_K,
+	.bCacheSizeHigh = 4 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "PCA57",
+	.name = "21164PC",
+	.majorType = 10,
+	.year = 1998,
+	.dCacheSize = 16 * ONE_K,
+	.iCacheSize = 32 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 512 * ONE_K,
+	.bCacheSizeHigh = 4 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV6",
+	.name = "21264",
+	.majorType = 8,
+	.year = 1998,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 2 * ONE_M,
+	.bCacheSizeHigh = 8 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV67",
+	.name = "21264A",
+	.majorType = 11,
+	.year = 1999,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 2 * ONE_M,
+	.bCacheSizeHigh = 8 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV68A",
+	.name = "21264B - Samsung",
+	.majorType = 12,
+	.year = 2001,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 2 * ONE_M,
+	.bCacheSizeHigh = 8 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV68C",
+	.name = "21264B - IBM",
+	.majorType = 12,
+	.year = 2001,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 2 * ONE_M,
+	.bCacheSizeHigh = 8 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV68CB",
+	.name = "21264C",
+	.majorType = 12,
+	.year = 2001,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 2 * ONE_M,
+	.bCacheSizeHigh = 8 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV68DC",
+	.name = "21264C",
+	.majorType = 12,
+	.year = 2001,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 2 * ONE_M,
+	.bCacheSizeHigh = 8 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV68CD",
+	.name = "21264",
+	.majorType = 12,
+	.year = 2001,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 2 * ONE_M,
+	.bCacheSizeHigh = 8 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV68AL",
+	.name = "21264B",
+	.majorType = 13,
+	.year = 2001,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 2 * ONE_M,
+	.bCacheSizeHigh = 8 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV68CX",
+	.name = "21264D",
+	.majorType = 14,
+	.year = 2002,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 2 * ONE_M,
+	.bCacheSizeHigh = 8 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV68E",
+	.name = "21264E",
+	.majorType = 14,
+	.year = 2002,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 2 * ONE_M,
+	.bCacheSizeHigh = 8 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV69A",
+	.name = "21264",
+	.majorType = 17,
+	.year = 2002,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 2 * ONE_M,
+	.bCacheSizeHigh = 8 * ONE_M,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV7",
+	.name = "21364",
+	.majorType = 15,
+	.year = 2003,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 1.75 * ONE_M,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 0,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV7z",
+	.name = "21364",
+	.majorType = 15,
+	.year = 2004,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 1.75 * ONE_M,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 0,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV78",
+	.name = "21364A",
+	.majorType = 15,
+	.year = 2004,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 1.75 * ONE_M,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 0,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV79",
+	.name = "21364A",
+	.majorType = 16,
+	.year = 2004,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 1.75 * ONE_M,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 0,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = "EV8",
+	.name = "21464",
+	.majorType = 0,
+	.year = 2003,
+	.dCacheSize = 64 * ONE_K,
+	.iCacheSize = 64 * ONE_K,
+	.sCacheSize = 3 * ONE_M,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 0,
+	.isa.ieeeRndInf = 1,
+	.isa.bwx = 1,
+	.isa.mvi = 1,
+	.isa.fix = 1,
+	.isa.cix = 1,
+	.isa.pfmi = 1,
+	.isa.res = 0
+    },
+    {
+	.genStr = NULL,
+	.name = NULL,
+	.majorType = 0,
+	.year = 0,
+	.dCacheSize = 0,
+	.iCacheSize = 0,
+	.sCacheSize = 0,
+	.bCacheSizeLow = 0,
+	.bCacheSizeHigh = 0,
+	.isa.ieeeRndInf = 0,
+	.isa.bwx = 0,
+	.isa.mvi = 0,
+	.isa.fix = 0,
+	.isa.cix = 0,
+	.isa.pfmi = 0,
+	.isa.res = 0
+    }
 };
 
 /*
@@ -880,77 +880,77 @@ AXP_CPU_CONFIG AXP_CPU_Configurations[] =
  */
 static void AXP_stripXmlString(xmlChar *value)
 {
-	xmlChar *start, *begin, *end;
-	bool	done = false;
-	int		len;
+    xmlChar *start, *begin, *end;
+    bool done = false;
+    int len;
 
-	/*
-	 * First get set up some local variables to assist in stripping the xmlChar
-	 * string to one containing just printable characters.
-	 */
-	len = xmlStrlen(value) - 1;
-	begin = start = value;
-	end = value + len;
+    /*
+     * First get set up some local variables to assist in stripping the xmlChar
+     * string to one containing just printable characters.
+     */
+    len = xmlStrlen(value) - 1;
+    begin = start = value;
+    end = value + len;
 
-	/*
-	 * Set the start pointer to the first character, up until the last
-	 * character, that is printable.  If none is found, then the start pointer
-	 * equals the end pointer.
-	 */
-	while ((start <= end) && (done == false))
+    /*
+     * Set the start pointer to the first character, up until the last
+     * character, that is printable.  If none is found, then the start pointer
+     * equals the end pointer.
+     */
+    while ((start <= end) && (done == false))
+    {
+	if (isspace(*start))
+	    start++;
+	else
+	    done = true;
+    }
+
+    /*
+     * Set the end pointer to the last character, up until the current address
+     * of the first printable character, that is also a printable character.
+     */
+    done = false;
+    while ((end >= start) && (done == false))
+    {
+	if (isspace(*end))
+	    end--;
+	else
+	    done = true;
+    }
+
+    /*
+     * If the there are characters at the beginning or end of the original
+     * xmlChar string, and the address of the first printable character is less
+     * than or equal to the last printable character, then we have something to
+     * strip out of the string.
+     */
+    if (((start != begin) || (end != (value + len))) && (start <= end))
+    {
+	while (start <= end)
 	{
-		if (isspace(*start))
-			start++;
-		else
-			done = true;
+	    *begin = *start;
+	    begin++;
+	    start++;
 	}
-
-	/*
-	 * Set the end pointer to the last character, up until the current address
-	 * of the first printable character, that is also a printable character.
-	 */
-	done = false;
-	while ((end >= start) && (done == false))
+	while (begin <= end)
 	{
-		if (isspace(*end))
-			end--;
-		else
-			done = true;
+	    *begin = '\0';
+	    begin++;
 	}
+    }
 
-	/*
-	 * If the there are characters at the beginning or end of the original
-	 * xmlChar string, and the address of the first printable character is less
-	 * than or equal to the last printable character, then we have something to
-	 * strip out of the string.
-	 */
-	if (((start != begin) || (end != (value + len))) && (start <= end))
-	{
-		while (start <= end)
-		{
-			*begin = *start;
-			begin++;
-			start++;
-		}
-		while (begin <= end)
-		{
-			*begin = '\0';
-			begin++;
-		}
-	}
+    /*
+     * If the start address is greater than the end address, then we have a
+     * zero length string.  Otherwise, there is nothing that needs to be
+     * stripped.
+     */
+    else if (start > end)
+	*value = '\0';
 
-	/*
-	 * If the start address is greater than the end address, then we have a
-	 * zero length string.  Otherwise, there is nothing that needs to be
-	 * stripped.
-	 */
-	else if (start > end)
-		*value = '\0';
-
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -983,69 +983,69 @@ static void AXP_stripXmlString(xmlChar *value)
  * Return Value:
  *	An unsigned 32-bit value for the string to be converted.
  */
-u64	AXP_cvtSizeStr(char *value)
+u64 AXP_cvtSizeStr(char *value)
 {
-	double	cvtValue;
-	double	multiplier = 1.0;
-	int		len;
-	u64		retVal = 0;
+    double cvtValue;
+    double multiplier = 1.0;
+    int len;
+    u64 retVal = 0;
+
+    /*
+     * If a pointer to the string was supplied on the call and there is
+     * something in the string to potentially covert,, then we have something
+     * to do.  Otherwise, we'll just return a value of zero back to the caller.
+     */
+    if ((value != NULL) && ((len = strlen(value)) > 0))
+    {
 
 	/*
-	 * If a pointer to the string was supplied on the call and there is
-	 * something in the string to potentially covert,, then we have something
-	 * to do.  Otherwise, we'll just return a value of zero back to the caller.
+	 * If there is more than one character and the last character is the
+	 * letter 'B', then we could have [K|M|G]B or just B.  If the length of
+	 * the string is 1, then we either have just a number of just the
+	 * letter 'B'.  Convert the former, and ignore the latter.
 	 */
-	if ((value != NULL) && ((len = strlen(value)) > 0))
+	if ((len > 1) && (value[len - 1] == 'B'))
 	{
+	    switch (value[len - 2])
+	    {
+		case 'K':
+		    multiplier = 1024.0;
+		    value[len - 2] = '\0';
+		    break;
 
-		/*
-		 * If there is more than one character and the last character is the
-		 * letter 'B', then we could have [K|M|G]B or just B.  If the length of
-		 * the string is 1, then we either have just a number of just the
-		 * letter 'B'.  Convert the former, and ignore the latter.
-		 */
-		if ((len > 1) && (value[len - 1] == 'B'))
-		{
-			switch (value[len - 2])
-			{
-				case 'K':
-					multiplier = 1024.0;
-					value[len - 2] = '\0';
-					break;
+		case 'M':
+		    multiplier = 1024.0 * 1024.0;
+		    value[len - 2] = '\0';
+		    break;
 
-				case 'M':
-					multiplier = 1024.0 * 1024.0;
-					value[len - 2] = '\0';
-					break;
+		case 'G':
+		    multiplier = 1024.0 * 1024.0 * 1024.0;
+		    value[len - 2] = '\0';
+		    break;
 
-				case 'G':
-					multiplier = 1024.0 * 1024.0 * 1024.0;
-					value[len - 2] = '\0';
-					break;
-
-				default:
-					value[len - 1] = '\0';
-					break;
-			}
-		}
-
-		/*
-		 * Convert the number part of the string to a floating point value and
-		 * multiply in the multiplier for the real value.
-		 */
-		cvtValue = atof(value) * multiplier;
-
-		/*
-		 * Finally, convert the floating point value to an unsigned 32-bit
-		 * value.
-		 */
-		retVal = cvtValue;
+		default:
+		    value[len - 1] = '\0';
+		    break;
+	    }
 	}
 
 	/*
-	 * Return the result of the conversion back to the caller.
+	 * Convert the number part of the string to a floating point value and
+	 * multiply in the multiplier for the real value.
 	 */
-	return(retVal);
+	cvtValue = atof(value) * multiplier;
+
+	/*
+	 * Finally, convert the floating point value to an unsigned 32-bit
+	 * value.
+	 */
+	retVal = cvtValue;
+    }
+
+    /*
+     * Return the result of the conversion back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -1080,113 +1080,107 @@ u64	AXP_cvtSizeStr(char *value)
  * Return Values:
  *	None.
  */
-static void parse_tapes_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_TAPES parent,
-					char *value,
-					u32 *unit)
+static void parse_tapes_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_TAPES parent, char *value, u32 *unit)
 {
-	xmlNode	*cur_node = NULL;
-	char	*ptr;
-	char	nodeValue[80];
-	u32		nodeUnit;
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char *ptr;
+    char nodeValue[80];
+    u32 nodeUnit;
+    int ii;
+    bool found;
+
+    /*
+     * If we are called with an address to value or unit of NULL, then we are
+     * called for the first time by the parent parser.  When this happened,
+     * make sure that the local string is zero length and the local unit is 0.
+     */
+    if (value == NULL)
+	nodeValue[0] = '\0';
+    if (unit == NULL)
+	nodeUnit = 0;
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
+	xmlAttr *attr = cur_node->properties;
 
 	/*
-	 * If we are called with an address to value or unit of NULL, then we are
-	 * called for the first time by the parent parser.  When this happened,
-	 * make sure that the local string is zero length and the local unit is 0.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	if (value == NULL)
-		nodeValue[0] = '\0';
-	if (unit == NULL)
-		nodeUnit = 0;
-
-	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
-	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
 	{
-		xmlAttr *attr = cur_node->properties;
-
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
+	    found = false;
+	    for (ii = 0;
+		    ((_tapes_level_nodes[ii].token != NULL) && (found == false));
+		    ii++)
+	    {
+		if (strcmp((char *) cur_node->name,
+			_tapes_level_nodes[ii].token) == 0)
 		{
-			found = false;
-			for (ii = 0;
-				 ((_tapes_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _tapes_level_nodes[ii].token) == 0)
-				{
-					parent = _tapes_level_nodes[ii].node;
-					found = true;
-				}
-			}
-
-			/*
-			 * This element has a unit number as part of its definition.  Get
-			 * it and convert it.
-			 */
-			while (attr != NULL)
-			{
-				if (strcmp((char *) attr->name, "number") == 0)
-				{
-					xmlChar *attrVal = xmlNodeListGetString(doc, attr->children, 1);
-
-					AXP_stripXmlString(attrVal);
-					if (xmlStrlen(attrVal) > 0)
-					{
-						nodeUnit = strtoul((char *) attrVal, &ptr, 10);
-						if (unit != NULL)
-							*unit = nodeUnit;
-					}
-					xmlFree(attrVal);
-				}
-				attr = attr->next;
-			}
+		    parent = _tapes_level_nodes[ii].node;
+		    found = true;
 		}
+	    }
 
-		/*
-		 * We have a text node.  This is a value that is to be associated with
-		 * an Element node.
-		 */
-		else if (XML_TEXT_NODE == cur_node->type)
+	    /*
+	     * This element has a unit number as part of its definition.  Get
+	     * it and convert it.
+	     */
+	    while (attr != NULL)
+	    {
+		if (strcmp((char *) attr->name, "number") == 0)
 		{
-			xmlChar	*key;
+		    xmlChar *attrVal = xmlNodeListGetString(doc, attr->children,
+			    1);
 
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if (value != NULL)
-				strcpy(value, (char *) key);
-			parent = NoTapes;
-			xmlFree(key);
+		    AXP_stripXmlString(attrVal);
+		    if (xmlStrlen(attrVal) > 0)
+		    {
+			nodeUnit = strtoul((char *) attrVal, &ptr, 10);
+			if (unit != NULL)
+			    *unit = nodeUnit;
+		    }
+		    xmlFree(attrVal);
 		}
-		if (parent != NoTapes)
-		{
-			parse_tapes_names(
-						doc,
-						cur_node->children,
-						parent,
-						nodeValue,
-						&nodeUnit);
-			parent = NoTapes;
-		}
+		attr = attr->next;
+	    }
+	}
+
+	/*
+	 * We have a text node.  This is a value that is to be associated with
+	 * an Element node.
+	 */
+	else if (XML_TEXT_NODE == cur_node->type)
+	{
+	    xmlChar *key;
+
+	    key = xmlNodeListGetString(doc, cur_node, 1);
+	    AXP_stripXmlString(key);
+	    if (value != NULL)
+		strcpy(value, (char *) key);
+	    parent = NoTapes;
+	    xmlFree(key);
+	}
+	if (parent != NoTapes)
+	{
+	    parse_tapes_names(doc, cur_node->children, parent, nodeValue,
+		    &nodeUnit);
+	    parent = NoTapes;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -1221,113 +1215,107 @@ static void parse_tapes_names(
  * Return Values:
  *	None.
  */
-static void parse_printers_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_PRINTERS parent,
-					char *value,
-					u32 *unit)
+static void parse_printers_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_PRINTERS parent, char *value, u32 *unit)
 {
-	xmlNode	*cur_node = NULL;
-	char	*ptr;
-	char	nodeValue[80];
-	u32		nodeUnit;
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char *ptr;
+    char nodeValue[80];
+    u32 nodeUnit;
+    int ii;
+    bool found;
+
+    /*
+     * If we are called with an address to value or unit of NULL, then we are
+     * called for the first time by the parent parser.  When this happened,
+     * make sure that the local string is zero length and the local unit is 0.
+     */
+    if (value == NULL)
+	nodeValue[0] = '\0';
+    if (unit == NULL)
+	nodeUnit = 0;
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
+	xmlAttr *attr = cur_node->properties;
 
 	/*
-	 * If we are called with an address to value or unit of NULL, then we are
-	 * called for the first time by the parent parser.  When this happened,
-	 * make sure that the local string is zero length and the local unit is 0.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	if (value == NULL)
-		nodeValue[0] = '\0';
-	if (unit == NULL)
-		nodeUnit = 0;
-
-	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
-	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
 	{
-		xmlAttr *attr = cur_node->properties;
-
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
+	    found = false;
+	    for (ii = 0;
+		    ((_printers_level_nodes[ii].token != NULL)
+			    && (found == false)); ii++)
+	    {
+		if (strcmp((char *) cur_node->name,
+			_printers_level_nodes[ii].token) == 0)
 		{
-			found = false;
-			for (ii = 0;
-				 ((_printers_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _printers_level_nodes[ii].token) == 0)
-				{
-					parent = _printers_level_nodes[ii].node;
-					found = true;
-				}
-			}
-
-			/*
-			 * This element has a unit number as part of its definition.  Get
-			 * it and convert it.
-			 */
-			while (attr != NULL)
-			{
-				if (strcmp((char *) attr->name, "number") == 0)
-				{
-					xmlChar *attrVal = xmlNodeListGetString(doc, attr->children, 1);
-
-					AXP_stripXmlString(attrVal);
-					if (xmlStrlen(attrVal) > 0)
-					{
-						nodeUnit = strtoul((char *) attrVal, &ptr, 10);
-						if (unit != NULL)
-							*unit = nodeUnit;
-					}
-					xmlFree(attrVal);
-				}
-				attr = attr->next;
-			}
+		    parent = _printers_level_nodes[ii].node;
+		    found = true;
 		}
+	    }
 
-		/*
-		 * We have a text node.  This is a value that is to be associated with
-		 * an Element node.
-		 */
-		else if (XML_TEXT_NODE == cur_node->type)
+	    /*
+	     * This element has a unit number as part of its definition.  Get
+	     * it and convert it.
+	     */
+	    while (attr != NULL)
+	    {
+		if (strcmp((char *) attr->name, "number") == 0)
 		{
-			xmlChar	*key;
+		    xmlChar *attrVal = xmlNodeListGetString(doc, attr->children,
+			    1);
 
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if (value != NULL)
-				strcpy(value, (char *) key);
-			parent = NoTapes;
-			xmlFree(key);
+		    AXP_stripXmlString(attrVal);
+		    if (xmlStrlen(attrVal) > 0)
+		    {
+			nodeUnit = strtoul((char *) attrVal, &ptr, 10);
+			if (unit != NULL)
+			    *unit = nodeUnit;
+		    }
+		    xmlFree(attrVal);
 		}
-		if (parent != NoPrinters)
-		{
-			parse_printers_names(
-						doc,
-						cur_node->children,
-						parent,
-						nodeValue,
-						&nodeUnit);
-			parent = NoPrinters;
-		}
+		attr = attr->next;
+	    }
+	}
+
+	/*
+	 * We have a text node.  This is a value that is to be associated with
+	 * an Element node.
+	 */
+	else if (XML_TEXT_NODE == cur_node->type)
+	{
+	    xmlChar *key;
+
+	    key = xmlNodeListGetString(doc, cur_node, 1);
+	    AXP_stripXmlString(key);
+	    if (value != NULL)
+		strcpy(value, (char *) key);
+	    parent = NoTapes;
+	    xmlFree(key);
+	}
+	if (parent != NoPrinters)
+	{
+	    parse_printers_names(doc, cur_node->children, parent, nodeValue,
+		    &nodeUnit);
+	    parent = NoPrinters;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -1361,129 +1349,124 @@ static void parse_printers_names(
  * Return Values:
  *	None.
  */
-static void parse_network_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_NETWORK parent,
-					u32 unit,
-					char *value)
+static void parse_network_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_NETWORK parent, u32 unit, char *value)
 {
-	xmlNode	*cur_node = NULL;
-	xmlChar	*key = NULL;
-	char	nodeValue[80];
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    xmlChar *key = NULL;
+    char nodeValue[80];
+    int ii;
+    bool found;
+
+    /*
+     * If we are called with an address to value of NULL, then we are
+     * called for the first time by the parent parser.  When this happened,
+     * make sure that the local string is zero length.
+     */
+    if (value == NULL)
+	nodeValue[0] = '\0';
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * If we are called with an address to value of NULL, then we are
-	 * called for the first time by the parent parser.  When this happened,
-	 * make sure that the local string is zero length.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	if (value == NULL)
-		nodeValue[0] = '\0';
+	if (cur_node->type == XML_ELEMENT_NODE)
+	{
+	    found = false;
+	    for (ii = 0;
+		    ((_network_level_nodes[ii].token != NULL)
+			    && (found == false)); ii++)
+	    {
+		if (strcmp((char *) cur_node->name,
+			_network_level_nodes[ii].token) == 0)
+		{
+		    parent = _network_level_nodes[ii].node;
+		    found = true;
+		}
+	    }
+	}
 
 	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
+	 * We have a text node.  This is a value that is to be associated with
+	 * an Element node.
 	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	else if (XML_TEXT_NODE == cur_node->type)
+	{
+	    key = xmlNodeListGetString(doc, cur_node, 1);
+	    AXP_stripXmlString(key);
+	    if ((xmlStrlen(key) > 0) && (value != NULL))
+		strcpy(value, (char *) key);
+	    xmlFree(key);
+	}
+
+	/*
+	 * If the parent is NoNetwork, then we have yet to find anything to
+	 * parse out, or we just parsed an element and need to move onto the
+	 * next element.
+	 */
+	if (parent != NoNetwork)
 	{
 
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
-		{
-			found = false;
-			for (ii = 0;
-				 ((_network_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _network_level_nodes[ii].token) == 0)
-				{
-					parent = _network_level_nodes[ii].node;
-					found = true;
-				}
-			}
-		}
+	    /*
+	     * Utilizing the unit value supplied on the call, find out where we
+	     * are to store the information for this network device.
+	     */
+	    ii = 0;
+	    while ((ii < _axp_21264_config_.system.networkCount)
+		    && (_axp_21264_config_.system.networks[ii].unit != unit))
+		ii++;
 
-		/*
-		 * We have a text node.  This is a value that is to be associated with
-		 * an Element node.
-		 */
-		else if (XML_TEXT_NODE == cur_node->type)
-		{
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if ((xmlStrlen(key) > 0) && (value != NULL))
-				strcpy(value, (char *) key);
-			xmlFree(key);
-		}
+	    /*
+	     * All ourselves to parse out the text node for the value of the
+	     * configuration item we are parsing.
+	     */
+	    parse_network_names(doc, cur_node->children, parent, unit,
+		    nodeValue);
 
-		/*
-		 * If the parent is NoNetwork, then we have yet to find anything to
-		 * parse out, or we just parsed an element and need to move onto the
-		 * next element.
-		 */
-		if (parent != NoNetwork)
-		{
+	    /*
+	     * Depending upon the element being parsed, initialize the
+	     * configuration with the information just parsed out.
+	     */
+	    switch (parent)
+	    {
+		case NetworkName:
+		    _axp_21264_config_.system.networks[ii].name = realloc(
+			    _axp_21264_config_.system.networks[ii].name,
+			    (strlen(nodeValue) + 1));
+		    strcpy(_axp_21264_config_.system.networks[ii].name,
+			    nodeValue);
+		    break;
 
-			/*
-			 * Utilizing the unit value supplied on the call, find out where we
-			 * are to store the information for this network device.
-			 */
-			ii = 0;
-			while ((ii < _axp_21264_config_.system.networkCount) &&
-				   (_axp_21264_config_.system.networks[ii].unit != unit))
-				ii++;
+		case NetworkMAC:
+		    _axp_21264_config_.system.networks[ii].mac = realloc(
+			    _axp_21264_config_.system.networks[ii].mac,
+			    (strlen(nodeValue) + 1));
+		    strcpy(_axp_21264_config_.system.networks[ii].mac,
+			    nodeValue);
+		    break;
 
-			/*
-			 * All ourselves to parse out the text node for the value of the
-			 * configuration item we are parsing.
-			 */
-			parse_network_names(
-					doc,
-					cur_node->children,
-					parent,
-					unit,
-					nodeValue);
-
-			/*
-			 * Depending upon the element being parsed, initialize the
-			 * configuration with the information just parsed out.
-			 */
-			switch (parent)
-			{
-				case NetworkName:
-					_axp_21264_config_.system.networks[ii].name = realloc(
-									_axp_21264_config_.system.networks[ii].name,
-									(strlen(nodeValue) + 1));
-					strcpy(_axp_21264_config_.system.networks[ii].name, nodeValue);
-					break;
-
-				case NetworkMAC:
-					_axp_21264_config_.system.networks[ii].mac = realloc(
-									_axp_21264_config_.system.networks[ii].mac,
-									(strlen(nodeValue) + 1));
-					strcpy(_axp_21264_config_.system.networks[ii].mac, nodeValue);
-					break;
-
-				case NoNetwork:
-				default:
-					break;
-			}
-			parent = NoNetwork;
-		}
+		case NoNetwork:
+		default:
+		    break;
+	    }
+	    parent = NoNetwork;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -1510,113 +1493,114 @@ static void parse_network_names(
  * Return Values:
  *	None.
  */
-static void parse_networks_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_NETWORKS parent)
+static void parse_networks_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_NETWORKS parent)
 {
-	xmlNode	*cur_node = NULL;
-	char	*ptr;
-	u32		nodeUnit = 0;
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char *ptr;
+    u32 nodeUnit = 0;
+    int ii;
+    bool found;
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
+	{
+	    xmlAttr *attr = cur_node->properties;
+
+	    found = false;
+	    for (ii = 0;
+		    ((_networks_level_nodes[ii].token != NULL)
+			    && (found == false)); ii++)
+	    {
+		if (strcmp((char *) cur_node->name,
+			_networks_level_nodes[ii].token) == 0)
+		{
+		    parent = _networks_level_nodes[ii].node;
+		    found = true;
+		}
+	    }
+
+	    /*
+	     * The Network element has a single attribute called number.  Parse
+	     * this out and convert it to a 32-bit integer.  We'll store it in
+	     * the allocated configuration item and supply it on the code that
+	     * parses out the child configuration data,
+	     */
+	    while (attr != NULL)
+	    {
+		if (strcmp((char *) attr->name, "number") == 0)
+		{
+		    xmlChar *attrVal = xmlNodeListGetString(doc, attr->children,
+			    1);
+
+		    AXP_stripXmlString(attrVal);
+		    if (xmlStrlen(attrVal) > 0)
+			nodeUnit = strtoul((char *) attrVal, &ptr, 10);
+		    xmlFree(attrVal);
+		}
+		attr = attr->next;
+	    }
+	}
+
+	/*
+	 * If we are parsing a Network element, increment the number of
+	 * networks being configured, allocate a new entry in the array of
+	 * networks, set the unit number for this new entry and call the
+	 * parsing code to initialize the remaining fields.
+	 */
+	if (parent == TopNetworks)
 	{
 
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
-		{
-			xmlAttr *attr = cur_node->properties;
+	    /*
+	     * We have a new network device to be configured.  Increment the
+	     * counter of these items.
+	     */
+	    _axp_21264_config_.system.networkCount++;
 
-			found = false;
-			for (ii = 0;
-				 ((_networks_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _networks_level_nodes[ii].token) == 0)
-				{
-					parent = _networks_level_nodes[ii].node;
-					found = true;
-				}
-			}
+	    /*
+	     * Allocate an array large enough to handle an additional entry.
+	     */
+	    _axp_21264_config_.system.networks = realloc(
+		    _axp_21264_config_.system.networks,
+		    (_axp_21264_config_.system.networkCount
+			    * sizeof(AXP_21264_NETWORK_INFO)));
 
-			/*
-			 * The Network element has a single attribute called number.  Parse
-			 * this out and convert it to a 32-bit integer.  We'll store it in
-			 * the allocated configuration item and supply it on the code that
-			 * parses out the child configuration data,
-			 */
-			while (attr != NULL)
-			{
-				if (strcmp((char *) attr->name, "number") == 0)
-				{
-					xmlChar *attrVal = xmlNodeListGetString(doc, attr->children, 1);
+	    /*
+	     * Set the unit number for this new entry (which should always be
+	     * the last one.  Also initialize the other fields so we don't get
+	     * a segmentation fault in the function are are about to call;
+	     */
+	    ii = _axp_21264_config_.system.networkCount - 1;
+	    _axp_21264_config_.system.networks[ii].unit = nodeUnit;
+	    _axp_21264_config_.system.networks[ii].mac = NULL;
+	    _axp_21264_config_.system.networks[ii].name = NULL;
 
-					AXP_stripXmlString(attrVal);
-					if (xmlStrlen(attrVal) > 0)
-						nodeUnit = strtoul((char *) attrVal, &ptr, 10);
-					xmlFree(attrVal);
-				}
-				attr = attr->next;
-			}
-		}
-
-		/*
-		 * If we are parsing a Network element, increment the number of
-		 * networks being configured, allocate a new entry in the array of
-		 * networks, set the unit number for this new entry and call the
-		 * parsing code to initialize the remaining fields.
-		 */
-		if (parent == TopNetworks)
-		{
-
-			/*
-			 * We have a new network device to be configured.  Increment the
-			 * counter of these items.
-			 */
-			_axp_21264_config_.system.networkCount++;
-
-			/*
-			 * Allocate an array large enough to handle an additional entry.
-			 */
-			_axp_21264_config_.system.networks = realloc(
-						_axp_21264_config_.system.networks,
-						(_axp_21264_config_.system.networkCount *
-							sizeof(AXP_21264_NETWORK_INFO)));
-
-			/*
-			 * Set the unit number for this new entry (which should always be
-			 * the last one.  Also initialize the other fields so we don't get
-			 * a segmentation fault in the function are are about to call;
-			 */
-			ii = _axp_21264_config_.system.networkCount - 1;
-			_axp_21264_config_.system.networks[ii].unit = nodeUnit;
-			_axp_21264_config_.system.networks[ii].mac = NULL;
-			_axp_21264_config_.system.networks[ii].name = NULL;
-
-			/*
-			 * Parse out the other elements for the new network entry.
-			 */
-			parse_network_names(doc, cur_node->children, NoNetwork, nodeUnit, NULL);
-			parent = NoNetworks;
-		}
+	    /*
+	     * Parse out the other elements for the new network entry.
+	     */
+	    parse_network_names(doc, cur_node->children, NoNetwork, nodeUnit,
+		    NULL);
+	    parent = NoNetworks;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -1643,87 +1627,86 @@ static void parse_networks_names(
  * Return Values:
  *	None.
  */
-static void parse_console_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_CONSOLE parent,
-					char *value)
+static void parse_console_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_CONSOLE parent, char *value)
 {
-	xmlNode	*cur_node = NULL;
-	char	*ptr;
-	char	nodeValue[80];
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char *ptr;
+    char nodeValue[80];
+    int ii;
+    bool found;
+
+    /*
+     * If we are called with an address to value of NULL, then we are
+     * called for the first time by the parent parser.  When this happened,
+     * make sure that the local string is zero length.
+     */
+    if (value == NULL)
+	nodeValue[0] = '\0';
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * If we are called with an address to value of NULL, then we are
-	 * called for the first time by the parent parser.  When this happened,
-	 * make sure that the local string is zero length.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	if (value == NULL)
-		nodeValue[0] = '\0';
-
-	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
-	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
 	{
-
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
+	    found = false;
+	    for (ii = 0;
+		    ((_console_level_nodes[ii].token != NULL)
+			    && (found == false)); ii++)
+	    {
+		if (strcmp((char *) cur_node->name,
+			_console_level_nodes[ii].token) == 0)
 		{
-			found = false;
-			for (ii = 0;
-				 ((_console_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _console_level_nodes[ii].token) == 0)
-				{
-					parent = _console_level_nodes[ii].node;
-					found = true;
-				}
-			}
+		    parent = _console_level_nodes[ii].node;
+		    found = true;
 		}
+	    }
+	}
 
-		/*
-		 * We have a text node.  This is a value that is to be associated with
-		 * an Element node.
-		 */
-		else if (XML_TEXT_NODE == cur_node->type)
-		{
-			xmlChar	*key;
+	/*
+	 * We have a text node.  This is a value that is to be associated with
+	 * an Element node.
+	 */
+	else if (XML_TEXT_NODE == cur_node->type)
+	{
+	    xmlChar *key;
 
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if (xmlStrlen(key) > 0)
-				strcpy(value, (char *) key);
-			xmlFree(key);
-		}
+	    key = xmlNodeListGetString(doc, cur_node, 1);
+	    AXP_stripXmlString(key);
+	    if (xmlStrlen(key) > 0)
+		strcpy(value, (char *) key);
+	    xmlFree(key);
+	}
 
-		/*
-		 * If we are parsing a Port element, then call ourselves back to get
-		 * the text associated with this port and convert it to a 32-bit
-		 * unsigned integer.
-		 */
-		if (parent == Port)
-		{
-			parse_console_names(doc, cur_node->children, parent, nodeValue);
-			_axp_21264_config_.system.console.port = strtoul(nodeValue, &ptr, 10);
-			parent = NoConsole;
-		}
+	/*
+	 * If we are parsing a Port element, then call ourselves back to get
+	 * the text associated with this port and convert it to a 32-bit
+	 * unsigned integer.
+	 */
+	if (parent == Port)
+	{
+	    parse_console_names(doc, cur_node->children, parent, nodeValue);
+	    _axp_21264_config_.system.console.port = strtoul(nodeValue, &ptr,
+		    10);
+	    parent = NoConsole;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -1759,129 +1742,127 @@ static void parse_console_names(
  * Return Values:
  *	None.
  */
-static void parse_disk_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_DISK parent,
-					u32 unit,
-					char *value)
+static void parse_disk_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_DISK parent, u32 unit, char *value)
 {
-	xmlNode	*cur_node = NULL;
-	char	nodeValue[80];
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char nodeValue[80];
+    int ii;
+    bool found;
+
+    /*
+     * If we are called with an address to value of NULL, then we are
+     * called for the first time by the parent parser.  When this happened,
+     * make sure that the local string is zero length.
+     */
+    if (value == NULL)
+	nodeValue[0] = '\0';
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * If we are called with an address to value of NULL, then we are
-	 * called for the first time by the parent parser.  When this happened,
-	 * make sure that the local string is zero length.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	if (value == NULL)
-		nodeValue[0] = '\0';
+	if (cur_node->type == XML_ELEMENT_NODE)
+	{
+	    found = false;
+	    for (ii = 0;
+		    ((_disk_level_nodes[ii].token != NULL) && (found == false));
+		    ii++)
+	    {
+		if (strcmp((char *) cur_node->name, _disk_level_nodes[ii].token)
+			== 0)
+		{
+		    parent = _disk_level_nodes[ii].node;
+		    found = true;
+		}
+	    }
+	}
 
 	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
+	 * We have a text node.  This is a value that is to be associated with
+	 * an Element node.
 	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	else if (XML_TEXT_NODE == cur_node->type)
+	{
+	    xmlChar *key;
+
+	    key = xmlNodeListGetString(doc, cur_node, 1);
+	    AXP_stripXmlString(key);
+	    if (xmlStrlen(key) > 0)
+		strcpy(value, (char *) key);
+	    xmlFree(key);
+	}
+
+	/*
+	 * Depending upon what we have, go parse out the information from the
+	 * configuration file.
+	 */
+	if (parent != NoDisk)
 	{
 
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
-		{
-			found = false;
-			for (ii = 0;
-				 ((_disk_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _disk_level_nodes[ii].token) == 0)
-				{
-					parent = _disk_level_nodes[ii].node;
-					found = true;
-				}
-			}
-		}
+	    /*
+	     * Utilizing the unit value supplied on the call, find out where we
+	     * are to store the information for this network device.
+	     */
+	    ii = 0;
+	    while ((ii < _axp_21264_config_.system.diskCount)
+		    && (_axp_21264_config_.system.disks[ii].unit != unit))
+		ii++;
 
-		/*
-		 * We have a text node.  This is a value that is to be associated with
-		 * an Element node.
-		 */
-		else if (XML_TEXT_NODE == cur_node->type)
-		{
-			xmlChar	*key;
+	    parse_disk_names(doc, cur_node->children, parent, unit, nodeValue);
+	    switch (parent)
+	    {
+		case DiskType:
+		    if (strcmp(nodeValue, "CDROM") == 0)
+			_axp_21264_config_.system.disks[ii].type = CD_ROM;
+		    else if (strcmp(nodeValue, "RWCDROM") == 0)
+			_axp_21264_config_.system.disks[ii].type = RW_CDROM;
+		    else
+			_axp_21264_config_.system.disks[ii].type = Disk;
+		    break;
 
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if (xmlStrlen(key) > 0)
-				strcpy(value, (char *) key);
-			xmlFree(key);
-		}
+		case DiskName:
+		    _axp_21264_config_.system.disks[ii].name = realloc(
+			    _axp_21264_config_.system.disks[ii].name,
+			    (strlen(nodeValue) + 1));
+		    strcpy(_axp_21264_config_.system.disks[ii].name, nodeValue);
+		    break;
 
-		/*
-		 * Depending upon what we have, go parse out the information from the
-		 * configuration file.
-		 */
-		if (parent != NoDisk)
-		{
+		case DiskSize:
+		    _axp_21264_config_.system.disks[ii].size = AXP_cvtSizeStr(
+			    nodeValue);
+		    break;
 
-			/*
-			 * Utilizing the unit value supplied on the call, find out where we
-			 * are to store the information for this network device.
-			 */
-			ii = 0;
-			while ((ii < _axp_21264_config_.system.diskCount) &&
-				   (_axp_21264_config_.system.disks[ii].unit != unit))
-				ii++;
+		case DiskFile:
+		    _axp_21264_config_.system.disks[ii].fileSpec = realloc(
+			    _axp_21264_config_.system.disks[ii].fileSpec,
+			    (strlen(nodeValue) + 1));
+		    strcpy(_axp_21264_config_.system.disks[ii].fileSpec,
+			    nodeValue);
+		    break;
 
-			parse_disk_names(doc, cur_node->children, parent, unit, nodeValue);
-			switch (parent)
-			{
-				case DiskType:
-					if (strcmp(nodeValue, "CDROM") == 0)
-						_axp_21264_config_.system.disks[ii].type = CD_ROM;
-					else if (strcmp(nodeValue, "RWCDROM") == 0)
-						_axp_21264_config_.system.disks[ii].type = RW_CDROM;
-					else
-						_axp_21264_config_.system.disks[ii].type = Disk;
-					break;
-
-				case DiskName:
-					_axp_21264_config_.system.disks[ii].name = realloc(
-							_axp_21264_config_.system.disks[ii].name,
-							(strlen(nodeValue) + 1));
-					strcpy(_axp_21264_config_.system.disks[ii].name, nodeValue);
-					break;
-
-				case DiskSize:
-					_axp_21264_config_.system.disks[ii].size =
-							AXP_cvtSizeStr(nodeValue);
-					break;
-
-				case DiskFile:
-					_axp_21264_config_.system.disks[ii].fileSpec = realloc(
-							_axp_21264_config_.system.disks[ii].fileSpec,
-							(strlen(nodeValue) + 1));
-					strcpy(_axp_21264_config_.system.disks[ii].fileSpec, nodeValue);
-					break;
-
-				case NoDisk:
-				default:
-					break;
-			}
-			parent = NoDisk;
-		}
+		case NoDisk:
+		default:
+		    break;
+	    }
+	    parent = NoDisk;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -1914,112 +1895,112 @@ static void parse_disk_names(
  * Return Values:
  *	None.
  */
-static void parse_disks_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_DISKS parent)
+static void parse_disks_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_DISKS parent)
 {
-	xmlNode	*cur_node = NULL;
-	char	*ptr;
-	int		ii;
-	u32		nodeUnit;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char *ptr;
+    int ii;
+    u32 nodeUnit;
+    bool found;
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
+	{
+	    xmlAttr *attr = cur_node->properties;
+
+	    found = false;
+	    for (ii = 0;
+		    ((_disks_level_nodes[ii].token != NULL) && (found == false));
+		    ii++)
+	    {
+		if (strcmp((char *) cur_node->name,
+			_disks_level_nodes[ii].token) == 0)
+		{
+		    parent = _disks_level_nodes[ii].node;
+		    found = true;
+		}
+	    }
+
+	    /*
+	     * The Disk element has a single attribute called number.  Parse
+	     * this out and convert it to a 32-bit integer.  We'll store it in
+	     * the allocated configuration item and supply it on the code that
+	     * parses out the child configuration data,
+	     */
+	    while (attr != NULL)
+	    {
+		if (strcmp((char *) attr->name, "number") == 0)
+		{
+		    xmlChar *attrVal = xmlNodeListGetString(doc, attr->children,
+			    1);
+
+		    AXP_stripXmlString(attrVal);
+		    if (xmlStrlen(attrVal) > 0)
+			nodeUnit = strtoul((char *) attrVal, &ptr, 10);
+		    xmlFree(attrVal);
+		}
+		attr = attr->next;
+	    }
+	}
+
+	/*
+	 * Go get and parse out the information from the configuration.
+	 */
+	if (parent == DECDisk)
 	{
 
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
-		{
-			xmlAttr *attr = cur_node->properties;
+	    /*
+	     * We have a new disk drive to be configured.  Increment the
+	     * counter of these items.
+	     */
+	    _axp_21264_config_.system.diskCount++;
 
-			found = false;
-			for (ii = 0;
-				 ((_disks_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _disks_level_nodes[ii].token) == 0)
-				{
-					parent = _disks_level_nodes[ii].node;
-					found = true;
-				}
-			}
+	    /*
+	     * Allocate an array large enough to handle an additional entry.
+	     */
+	    _axp_21264_config_.system.disks = realloc(
+		    _axp_21264_config_.system.disks,
+		    (_axp_21264_config_.system.diskCount
+			    * sizeof(AXP_21264_DISK_INFO)));
 
-			/*
-			 * The Disk element has a single attribute called number.  Parse
-			 * this out and convert it to a 32-bit integer.  We'll store it in
-			 * the allocated configuration item and supply it on the code that
-			 * parses out the child configuration data,
-			 */
-			while (attr != NULL)
-			{
-				if (strcmp((char *) attr->name, "number") == 0)
-				{
-					xmlChar *attrVal = xmlNodeListGetString(doc, attr->children, 1);
+	    /*
+	     * Set the unit number for this new entry (which should always be
+	     * the last one.  Also initialize the other fields so we don't get
+	     * a segmentation fault in the function are are about to call;
+	     */
+	    ii = _axp_21264_config_.system.diskCount - 1;
+	    _axp_21264_config_.system.disks[ii].unit = nodeUnit;
+	    _axp_21264_config_.system.disks[ii].size = 0;
+	    _axp_21264_config_.system.disks[ii].type = Diskless;
+	    _axp_21264_config_.system.disks[ii].name = NULL;
+	    _axp_21264_config_.system.disks[ii].fileSpec = NULL;
 
-					AXP_stripXmlString(attrVal);
-					if (xmlStrlen(attrVal) > 0)
-						nodeUnit = strtoul((char *) attrVal, &ptr, 10);
-					xmlFree(attrVal);
-				}
-				attr = attr->next;
-			}
-		}
-
-		/*
-		 * Go get and parse out the information from the configuration.
-		 */
-		if (parent == DECDisk)
-		{
-
-			/*
-			 * We have a new disk drive to be configured.  Increment the
-			 * counter of these items.
-			 */
-			_axp_21264_config_.system.diskCount++;
-
-			/*
-			 * Allocate an array large enough to handle an additional entry.
-			 */
-			_axp_21264_config_.system.disks = realloc(
-						_axp_21264_config_.system.disks,
-						(_axp_21264_config_.system.diskCount *
-							sizeof(AXP_21264_DISK_INFO)));
-
-			/*
-			 * Set the unit number for this new entry (which should always be
-			 * the last one.  Also initialize the other fields so we don't get
-			 * a segmentation fault in the function are are about to call;
-			 */
-			ii = _axp_21264_config_.system.diskCount - 1;
-			_axp_21264_config_.system.disks[ii].unit = nodeUnit;
-			_axp_21264_config_.system.disks[ii].size = 0;
-			_axp_21264_config_.system.disks[ii].type = Diskless;
-			_axp_21264_config_.system.disks[ii].name = NULL;
-			_axp_21264_config_.system.disks[ii].fileSpec = NULL;
-
-			/*
-			 * Parse out the other elements for the new disk entry.
-			 */
-			parse_disk_names(doc, cur_node->children, NoDisk, nodeUnit, NULL);
-			parent = NoDisks;
-		}
+	    /*
+	     * Parse out the other elements for the new disk entry.
+	     */
+	    parse_disk_names(doc, cur_node->children, NoDisk, nodeUnit, NULL);
+	    parent = NoDisks;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -2050,101 +2031,99 @@ static void parse_disks_names(
  * Return Values:
  *	None.
  */
-static void parse_darray_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_DARRAYS parent,
-					char *value)
+static void parse_darray_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_DARRAYS parent, char *value)
 {
-	xmlNode	*cur_node = NULL;
-	char	*ptr;
-	char	nodeValue[80];
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char *ptr;
+    char nodeValue[80];
+    int ii;
+    bool found;
+
+    /*
+     * If we are called with an address to value of NULL, then we are
+     * called for the first time by the parent parser.  When this happened,
+     * make sure that the local string is zero length.
+     */
+    if (value == NULL)
+	nodeValue[0] = '\0';
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * If we are called with an address to value of NULL, then we are
-	 * called for the first time by the parent parser.  When this happened,
-	 * make sure that the local string is zero length.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	if (value == NULL)
-		nodeValue[0] = '\0';
-
-	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
-	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
 	{
-
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
+	    found = false;
+	    for (ii = 0;
+		    ((_darray_level_nodes[ii].token != NULL) && (found == false));
+		    ii++)
+	    {
+		if (strcmp((char *) cur_node->name,
+			_darray_level_nodes[ii].token) == 0)
 		{
-			found = false;
-			for (ii = 0;
-				 ((_darray_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _darray_level_nodes[ii].token) == 0)
-				{
-					parent = _darray_level_nodes[ii].node;
-					found = true;
-				}
-			}
+		    parent = _darray_level_nodes[ii].node;
+		    found = true;
 		}
+	    }
+	}
 
-		/*
-		 * We have a text node.  This is a value that is to be associated with
-		 * an Element node.
-		 */
-		else if (XML_TEXT_NODE == cur_node->type)
-		{
-			xmlChar	*key;
+	/*
+	 * We have a text node.  This is a value that is to be associated with
+	 * an Element node.
+	 */
+	else if (XML_TEXT_NODE == cur_node->type)
+	{
+	    xmlChar *key;
 
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if (xmlStrlen(key) > 0)
-				strcpy(value, (char *) key);
-			xmlFree(key);
-		}
+	    key = xmlNodeListGetString(doc, cur_node, 1);
+	    AXP_stripXmlString(key);
+	    if (xmlStrlen(key) > 0)
+		strcpy(value, (char *) key);
+	    xmlFree(key);
+	}
 
-		/*
-		 * Parse out the relevant configuration information from the read in
-		 * configuration file.
-		 */
-		if (parent != NoDARRAYs)
-		{
-			parse_darrays_names(doc, cur_node->children, parent, nodeValue);
-			switch (parent)
-			{
-				case DARRAYCount:
-					_axp_21264_config_.system.darrays.count =
-							strtoul(nodeValue, &ptr, 10);
-					break;
+	/*
+	 * Parse out the relevant configuration information from the read in
+	 * configuration file.
+	 */
+	if (parent != NoDARRAYs)
+	{
+	    parse_darrays_names(doc, cur_node->children, parent, nodeValue);
+	    switch (parent)
+	    {
+		case DARRAYCount:
+		    _axp_21264_config_.system.darrays.count = strtoul(nodeValue,
+			    &ptr, 10);
+		    break;
 
-				case DARRAYSize:
-					_axp_21264_config_.system.darrays.size =
-							AXP_cvtSizeStr(nodeValue);
-					break;
+		case DARRAYSize:
+		    _axp_21264_config_.system.darrays.size = AXP_cvtSizeStr(
+			    nodeValue);
+		    break;
 
-				case NoDARRAYs:
-				default:
-					break;
-			}
-			parent = NoDARRAYs;
-		}
+		case NoDARRAYs:
+		default:
+		    break;
+	    }
+	    parent = NoDARRAYs;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -2176,117 +2155,114 @@ static void parse_darray_names(
  * Return Values:
  *	None.
  */
-static void parse_cpus_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_CPUS parent,
-					char *value)
+static void parse_cpus_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_CPUS parent, char *value)
 {
-	xmlNode	*cur_node = NULL;
-	char	*ptr;
-	char	nodeValue[80];
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char *ptr;
+    char nodeValue[80];
+    int ii;
+    bool found;
+
+    /*
+     * If we are called with an address to value of NULL, then we are
+     * called for the first time by the parent parser.  When this happened,
+     * make sure that the local string is zero length.
+     */
+    if (value == NULL)
+	nodeValue[0] = '\0';
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * If we are called with an address to value of NULL, then we are
-	 * called for the first time by the parent parser.  When this happened,
-	 * make sure that the local string is zero length.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	if (value == NULL)
-		nodeValue[0] = '\0';
-
-	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
-	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
 	{
-
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
+	    found = false;
+	    for (ii = 0;
+		    ((_cpu_level_nodes[ii].token != NULL) && (found == false));
+		    ii++)
+	    {
+		if (strcmp((char *) cur_node->name, _cpu_level_nodes[ii].token)
+			== 0)
 		{
-			found = false;
-			for (ii = 0;
-				 ((_cpu_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
+		    parent = _cpu_level_nodes[ii].node;
+		    found = true;
+		}
+	    }
+	}
+
+	/*
+	 * We have a text node.  This is a value that is to be associated with
+	 * an Element node.
+	 */
+	else if (XML_TEXT_NODE == cur_node->type)
+	{
+	    xmlChar *key;
+
+	    key = xmlNodeListGetString(doc, cur_node, 1);
+	    AXP_stripXmlString(key);
+	    if (xmlStrlen(key) > 0)
+		strcpy(value, (char *) key);
+	    xmlFree(key);
+	}
+
+	/*
+	 * Parse out the relevant configuration information from the read in
+	 * configuration file.
+	 */
+	if (parent != NoCPUs)
+	{
+	    parse_cpus_names(doc, cur_node->children, parent, nodeValue);
+	    switch (parent)
+	    {
+		case CPUCount:
+		    _axp_21264_config_.system.cpus.count = strtoul(nodeValue,
+			    &ptr, 10);
+		    break;
+
+		case Generation:
+		    ii = 0;
+		    while ((AXP_CPU_Configurations[ii].genStr != NULL)
+			    && (_axp_21264_config_.system.cpus.config == NULL))
+		    {
+			if (strcmp(nodeValue, AXP_CPU_Configurations[ii].genStr)
+				== 0)
 			{
-				if (strcmp((char *) cur_node->name, _cpu_level_nodes[ii].token) == 0)
-				{
-					parent = _cpu_level_nodes[ii].node;
-					found = true;
-				}
+			    _axp_21264_config_.system.cpus.config =
+				    &AXP_CPU_Configurations[ii];
 			}
-		}
+			ii++;
+		    }
+		    break;
 
-		/*
-		 * We have a text node.  This is a value that is to be associated with
-		 * an Element node.
-		 */
-		else if (XML_TEXT_NODE == cur_node->type)
-		{
-			xmlChar	*key;
+		case MfgPass:
+		    _axp_21264_config_.system.cpus.minorType = strtoul(
+			    nodeValue, &ptr, 10);
+		    break;
 
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if (xmlStrlen(key) > 0)
-				strcpy(value, (char *) key);
-			xmlFree(key);
-		}
-
-		/*
-		 * Parse out the relevant configuration information from the read in
-		 * configuration file.
-		 */
-		if (parent != NoCPUs)
-		{
-			parse_cpus_names(doc, cur_node->children, parent, nodeValue);
-			switch (parent)
-			{
-				case CPUCount:
-					_axp_21264_config_.system.cpus.count =
-							strtoul(nodeValue, &ptr, 10);
-					break;
-
-				case Generation:
-					ii = 0;
-					while ((AXP_CPU_Configurations[ii].genStr != NULL) &&
-						   (_axp_21264_config_.system.cpus.config == NULL))
-					{
-						if (strcmp(
-								nodeValue,
-								AXP_CPU_Configurations[ii].genStr) == 0)
-						{
-							_axp_21264_config_.system.cpus.config =
-								&AXP_CPU_Configurations[ii];
-						}
-						ii++;
-					}
-					break;
-
-				case MfgPass:
-					_axp_21264_config_.system.cpus.minorType =
-							strtoul(nodeValue, &ptr, 10);
-					break;
-
-				case NoCPUs:
-				default:
-					break;
-			}
-			parent = NoCPUs;
-		}
+		case NoCPUs:
+		default:
+		    break;
+	    }
+	    parent = NoCPUs;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -2319,125 +2295,124 @@ static void parse_cpus_names(
  * Return Values:
  *	None.
  */
-static void parse_srom_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_SROM parent,
-					char *value)
+static void parse_srom_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_SROM parent, char *value)
 {
-	xmlNode	*cur_node = NULL;
-	char	nodeValue[80];
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char nodeValue[80];
+    int ii;
+    bool found;
+
+    /*
+     * If we are called with an address to value of NULL, then we are
+     * called for the first time by the parent parser.  When this happened,
+     * make sure that the local string is zero length.
+     */
+    if (value == NULL)
+	nodeValue[0] = '\0';
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * If we are called with an address to value of NULL, then we are
-	 * called for the first time by the parent parser.  When this happened,
-	 * make sure that the local string is zero length.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	if (value == NULL)
-		nodeValue[0] = '\0';
-
-	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
-	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
 	{
-
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
+	    found = false;
+	    for (ii = 0;
+		    ((_srom_level_nodes[ii].token != NULL) && (found == false));
+		    ii++)
+	    {
+		if (strcmp((char *) cur_node->name, _srom_level_nodes[ii].token)
+			== 0)
 		{
-			found = false;
-			for (ii = 0;
-				 ((_srom_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _srom_level_nodes[ii].token) == 0)
-				{
-					parent = _srom_level_nodes[ii].node;
-					found = true;
-				}
-			}
+		    parent = _srom_level_nodes[ii].node;
+		    found = true;
 		}
+	    }
+	}
 
-		/*
-		 * We have a text node.  This is a value that is to be associated with
-		 * an Element node.
-		 */
-		else if (XML_TEXT_NODE == cur_node->type)
-		{
-			xmlChar	*key;
+	/*
+	 * We have a text node.  This is a value that is to be associated with
+	 * an Element node.
+	 */
+	else if (XML_TEXT_NODE == cur_node->type)
+	{
+	    xmlChar *key;
 
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if (xmlStrlen(key) > 0)
-				strcpy(value, (char *)key);
-			xmlFree(key);
-		}
+	    key = xmlNodeListGetString(doc, cur_node, 1);
+	    AXP_stripXmlString(key);
+	    if (xmlStrlen(key) > 0)
+		strcpy(value, (char *) key);
+	    xmlFree(key);
+	}
 
-		/*
-		 * Parse out the relevant configuration information from the read in
-		 * configuration file.
-		 */
-		if (parent != NoSROM)
-		{
-			parse_srom_names(doc, cur_node->children, parent, nodeValue);
-			switch (parent)
-			{
-				case InitFile:
-					_axp_21264_config_.system.srom.initFile = realloc(
-							_axp_21264_config_.system.srom.initFile,
-							(strlen(nodeValue) + 1));
-					strcpy(_axp_21264_config_.system.srom.initFile, nodeValue);
-					break;
+	/*
+	 * Parse out the relevant configuration information from the read in
+	 * configuration file.
+	 */
+	if (parent != NoSROM)
+	{
+	    parse_srom_names(doc, cur_node->children, parent, nodeValue);
+	    switch (parent)
+	    {
+		case InitFile:
+		    _axp_21264_config_.system.srom.initFile = realloc(
+			    _axp_21264_config_.system.srom.initFile,
+			    (strlen(nodeValue) + 1));
+		    strcpy(_axp_21264_config_.system.srom.initFile, nodeValue);
+		    break;
 
-				case PALImage:
-					_axp_21264_config_.system.srom.PALImage = realloc(
-							_axp_21264_config_.system.srom.PALImage,
-							(strlen(nodeValue) + 1));
-					strcpy(_axp_21264_config_.system.srom.PALImage, nodeValue);
-					break;
+		case PALImage:
+		    _axp_21264_config_.system.srom.PALImage = realloc(
+			    _axp_21264_config_.system.srom.PALImage,
+			    (strlen(nodeValue) + 1));
+		    strcpy(_axp_21264_config_.system.srom.PALImage, nodeValue);
+		    break;
 
-				case ROMImage:
-					_axp_21264_config_.system.srom.ROMImage = realloc(
-							_axp_21264_config_.system.srom.ROMImage,
-							(strlen(nodeValue) + 1));
-					strcpy(_axp_21264_config_.system.srom.ROMImage, nodeValue);
-					break;
+		case ROMImage:
+		    _axp_21264_config_.system.srom.ROMImage = realloc(
+			    _axp_21264_config_.system.srom.ROMImage,
+			    (strlen(nodeValue) + 1));
+		    strcpy(_axp_21264_config_.system.srom.ROMImage, nodeValue);
+		    break;
 
-				case NVRamFile:
-					_axp_21264_config_.system.srom.NVRamFile = realloc(
-							_axp_21264_config_.system.srom.NVRamFile,
-							(strlen(nodeValue) + 1));
-					strcpy(_axp_21264_config_.system.srom.NVRamFile, nodeValue);
-					break;
+		case NVRamFile:
+		    _axp_21264_config_.system.srom.NVRamFile = realloc(
+			    _axp_21264_config_.system.srom.NVRamFile,
+			    (strlen(nodeValue) + 1));
+		    strcpy(_axp_21264_config_.system.srom.NVRamFile, nodeValue);
+		    break;
 
-				case CboxCSRs:
-					_axp_21264_config_.system.srom.CboxCSRFile = realloc(
-							_axp_21264_config_.system.srom.CboxCSRFile,
-							(strlen(nodeValue) + 1));
-					strcpy(_axp_21264_config_.system.srom.CboxCSRFile, nodeValue);
-					break;
+		case CboxCSRs:
+		    _axp_21264_config_.system.srom.CboxCSRFile = realloc(
+			    _axp_21264_config_.system.srom.CboxCSRFile,
+			    (strlen(nodeValue) + 1));
+		    strcpy(_axp_21264_config_.system.srom.CboxCSRFile,
+			    nodeValue);
+		    break;
 
-				case NoSROM:
-				default:
-					break;
-			}
-			parent = NoSROM;
-		}
+		case NoSROM:
+		default:
+		    break;
+	    }
+	    parent = NoSROM;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -2468,104 +2443,102 @@ static void parse_srom_names(
  * Return Values:
  *	None.
  */
-static void parse_model_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_MODEL parent,
-					char *value)
+static void parse_model_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_MODEL parent, char *value)
 {
-	xmlNode	*cur_node = NULL;
-	char	nodeValue[80];
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char nodeValue[80];
+    int ii;
+    bool found;
+
+    /*
+     * If we are called with an address to value of NULL, then we are
+     * called for the first time by the parent parser.  When this happened,
+     * make sure that the local string is zero length.
+     */
+    if (value == NULL)
+	nodeValue[0] = '\0';
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * If we are called with an address to value of NULL, then we are
-	 * called for the first time by the parent parser.  When this happened,
-	 * make sure that the local string is zero length.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	if (value == NULL)
-		nodeValue[0] = '\0';
-
-	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
-	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
 	{
-
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
+	    found = false;
+	    for (ii = 0;
+		    ((_model_level_nodes[ii].token != NULL) && (found == false));
+		    ii++)
+	    {
+		if (strcmp((char *) cur_node->name,
+			_model_level_nodes[ii].token) == 0)
 		{
-			found = false;
-			for (ii = 0;
-				 ((_model_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _model_level_nodes[ii].token) == 0)
-				{
-					parent = _model_level_nodes[ii].node;
-					found = true;
-				}
-			}
+		    parent = _model_level_nodes[ii].node;
+		    found = true;
 		}
+	    }
+	}
 
-		/*
-		 * We have a text node.  This is a value that is to be associated with
-		 * an Element node.
-		 */
-		else if (XML_TEXT_NODE == cur_node->type)
-		{
-			xmlChar	*key;
+	/*
+	 * We have a text node.  This is a value that is to be associated with
+	 * an Element node.
+	 */
+	else if (XML_TEXT_NODE == cur_node->type)
+	{
+	    xmlChar *key;
 
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if (xmlStrlen(key) > 0)
-				strcpy(value, (char *) key);
-			xmlFree(key);
-		}
+	    key = xmlNodeListGetString(doc, cur_node, 1);
+	    AXP_stripXmlString(key);
+	    if (xmlStrlen(key) > 0)
+		strcpy(value, (char *) key);
+	    xmlFree(key);
+	}
 
-		/*
-		 * Parse out the relevant configuration information from the read in
-		 * configuration file.
-		 */
-		if (parent != NoModel)
-		{
-			parse_model_names(doc, cur_node->children, parent, nodeValue);
-			switch (parent)
-			{
-				case ModelName:
-					_axp_21264_config_.system.model.name = realloc(
-							_axp_21264_config_.system.model.name,
-							(strlen(nodeValue) + 1));
-					strcpy(_axp_21264_config_.system.model.name, nodeValue);
-					break;
+	/*
+	 * Parse out the relevant configuration information from the read in
+	 * configuration file.
+	 */
+	if (parent != NoModel)
+	{
+	    parse_model_names(doc, cur_node->children, parent, nodeValue);
+	    switch (parent)
+	    {
+		case ModelName:
+		    _axp_21264_config_.system.model.name = realloc(
+			    _axp_21264_config_.system.model.name,
+			    (strlen(nodeValue) + 1));
+		    strcpy(_axp_21264_config_.system.model.name, nodeValue);
+		    break;
 
-				case ModelModel:
-					_axp_21264_config_.system.model.model = realloc(
-							_axp_21264_config_.system.model.model,
-							(strlen(nodeValue) + 1));
-					strcpy(_axp_21264_config_.system.model.model, nodeValue);
-					break;
+		case ModelModel:
+		    _axp_21264_config_.system.model.model = realloc(
+			    _axp_21264_config_.system.model.model,
+			    (strlen(nodeValue) + 1));
+		    strcpy(_axp_21264_config_.system.model.model, nodeValue);
+		    break;
 
-				case NoModel:
-				default:
-					break;
-			}
-			parent = NoModel;
-		}
+		case NoModel:
+		default:
+		    break;
+	    }
+	    parent = NoModel;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -2600,110 +2573,105 @@ static void parse_model_names(
  * Return Values:
  *	None.
  */
-static void parse_system_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_SYSTEM parent)
+static void parse_system_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_SYSTEM parent)
 {
-	xmlNode	*cur_node = NULL;
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    int ii;
+    bool found;
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
 	{
-
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
+	    found = false;
+	    for (ii = 0;
+		    ((_system_level_nodes[ii].token != NULL) && (found == false));
+		    ii++)
+	    {
+		if (strcmp((char *) cur_node->name,
+			_system_level_nodes[ii].token) == 0)
 		{
-			found = false;
-			for (ii = 0;
-				 ((_system_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _system_level_nodes[ii].token) == 0)
-				{
-					parent = _system_level_nodes[ii].node;
-					found = true;
-				}
-			}
+		    parent = _system_level_nodes[ii].node;
+		    found = true;
 		}
+	    }
+	}
 
-		/*
-		 * Determine which node we are parsing and call the parsing function
-		 * for that particular node.
-		 */
-		switch (parent)
-		{
-			case Model:
-				parse_model_names(doc, cur_node->children, NoModel, NULL);
-				parent = NoSystem;
-				break;
+	/*
+	 * Determine which node we are parsing and call the parsing function
+	 * for that particular node.
+	 */
+	switch (parent)
+	{
+	    case Model:
+		parse_model_names(doc, cur_node->children, NoModel, NULL);
+		parent = NoSystem;
+		break;
 
-			case SROM:
-				parse_srom_names(doc, cur_node->children, NoSROM, NULL);
-				parent = NoSystem;
-				break;
+	    case SROM:
+		parse_srom_names(doc, cur_node->children, NoSROM, NULL);
+		parent = NoSystem;
+		break;
 
-			case CPUS:
-				parse_cpus_names(doc, cur_node->children, NoCPUs, NULL);
-				parent = NoSystem;
-				break;
+	    case CPUS:
+		parse_cpus_names(doc, cur_node->children, NoCPUs, NULL);
+		parent = NoSystem;
+		break;
 
-			case DARRAYS:
-				parse_darrays_names(doc, cur_node->children, NoDARRAYs, NULL);
-				parent = NoSystem;
-				break;
+	    case DARRAYS:
+		parse_darrays_names(doc, cur_node->children, NoDARRAYs, NULL);
+		parent = NoSystem;
+		break;
 
-			case Disks:
-				parse_disks_names(doc, cur_node->children, NoDisks);
-				parent = NoSystem;
-				break;
+	    case Disks:
+		parse_disks_names(doc, cur_node->children, NoDisks);
+		parent = NoSystem;
+		break;
 
-			case Console:
-				parse_console_names(doc, cur_node->children, NoConsole, NULL);
-				parent = NoSystem;
-				break;
+	    case Console:
+		parse_console_names(doc, cur_node->children, NoConsole, NULL);
+		parent = NoSystem;
+		break;
 
-			case Networks:
-				parse_networks_names(doc, cur_node->children, NoNetworks);
-				parent = NoSystem;
-				break;
+	    case Networks:
+		parse_networks_names(doc, cur_node->children, NoNetworks);
+		parent = NoSystem;
+		break;
 
-			case Printers:
-				parse_printers_names(
-							doc,
-							cur_node->children,
-							NoPrinters,
-							NULL,
-							NULL);
-				parent = NoSystem;
-				break;
+	    case Printers:
+		parse_printers_names(doc, cur_node->children, NoPrinters, NULL,
+			NULL);
+		parent = NoSystem;
+		break;
 
-			case Tapes:
-				parse_tapes_names(doc, cur_node->children, NoTapes, NULL, NULL);
-				parent = NoSystem;
-				break;
+	    case Tapes:
+		parse_tapes_names(doc, cur_node->children, NoTapes, NULL, NULL);
+		parent = NoSystem;
+		break;
 
-			case NoSystem:
-			default:
-				break;
-		}
+	    case NoSystem:
+	    default:
+		break;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -2736,130 +2704,124 @@ static void parse_system_names(
  * Return Values:
  *	None.
  */
-static void parse_name_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_NAME parent,
-					char *value)
+static void parse_name_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_NAME parent, char *value)
 {
-	xmlNode	*cur_node = NULL;
-	char	nodeValue[80];
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char nodeValue[80];
+    int ii;
+    bool found;
+
+    /*
+     * If we are called with an address to value of NULL, then we are called
+     * for the first time by the parent parser.  When this happened, make sure
+     * that the local string is zero length.
+     */
+    if (value == NULL)
+	nodeValue[0] = '\0';
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * If we are called with an address to value of NULL, then we are called
-	 * for the first time by the parent parser.  When this happened, make sure
-	 * that the local string is zero length.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	if (value == NULL)
-		nodeValue[0] = '\0';
-
-	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
-	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
 	{
-
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
+	    found = false;
+	    for (ii = 0;
+		    ((_name_level_nodes[ii].token != NULL) && (found == false));
+		    ii++)
+	    {
+		if (strcmp((char *) cur_node->name, _name_level_nodes[ii].token)
+			== 0)
 		{
-			found = false;
-			for (ii = 0;
-				 ((_name_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _name_level_nodes[ii].token) == 0)
-				{
-					parent = _name_level_nodes[ii].node;
-					found = true;
-				}
-			}
+		    parent = _name_level_nodes[ii].node;
+		    found = true;
 		}
+	    }
+	}
 
-		/*
-		 * We have a text node.  This is a value that is to be associated with
-		 * an Element node.
-		 */
-		else if (XML_TEXT_NODE == cur_node->type)
-		{
-			xmlChar	*key;
+	/*
+	 * We have a text node.  This is a value that is to be associated with
+	 * an Element node.
+	 */
+	else if (XML_TEXT_NODE == cur_node->type)
+	{
+	    xmlChar *key;
 
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if (value != NULL)
-				strcpy(value, (char *) key);
-			parent = NoName;
-			xmlFree(key);
-		}
+	    key = xmlNodeListGetString(doc, cur_node, 1);
+	    AXP_stripXmlString(key);
+	    if (value != NULL)
+		strcpy(value, (char *) key);
+	    parent = NoName;
+	    xmlFree(key);
+	}
 
-		/*
-		 * We either have an element we are parsing, or need to continue
-		 * parsing the nodes at the current level.
-		 */
-		switch (parent)
-		{
-			case FirstName:
-				parse_name_names(doc, cur_node->children, parent, nodeValue);
-				parent = NoName;
-				_axp_21264_config_.owner.first = realloc(
-												_axp_21264_config_.owner.first,
-												strlen(nodeValue)+1);
-				if (_axp_21264_config_.owner.first != NULL)
-					strcpy(_axp_21264_config_.owner.first, nodeValue);
-				nodeValue[0] = '\0';
-				break;
+	/*
+	 * We either have an element we are parsing, or need to continue
+	 * parsing the nodes at the current level.
+	 */
+	switch (parent)
+	{
+	    case FirstName:
+		parse_name_names(doc, cur_node->children, parent, nodeValue);
+		parent = NoName;
+		_axp_21264_config_.owner.first = realloc(
+			_axp_21264_config_.owner.first, strlen(nodeValue) + 1);
+		if (_axp_21264_config_.owner.first != NULL)
+		    strcpy(_axp_21264_config_.owner.first, nodeValue);
+		nodeValue[0] = '\0';
+		break;
 
-			case MI:
-				parse_name_names(doc, cur_node->children, parent, nodeValue);
-				parent = NoName;
-				_axp_21264_config_.owner.mi = realloc(
-												_axp_21264_config_.owner.mi,
-												strlen(nodeValue)+1);
-				if (_axp_21264_config_.owner.mi != NULL)
-					strcpy(_axp_21264_config_.owner.mi, nodeValue);
-				nodeValue[0] = '\0';
-				break;
+	    case MI:
+		parse_name_names(doc, cur_node->children, parent, nodeValue);
+		parent = NoName;
+		_axp_21264_config_.owner.mi = realloc(
+			_axp_21264_config_.owner.mi, strlen(nodeValue) + 1);
+		if (_axp_21264_config_.owner.mi != NULL)
+		    strcpy(_axp_21264_config_.owner.mi, nodeValue);
+		nodeValue[0] = '\0';
+		break;
 
-			case LastName:
-				parse_name_names(doc, cur_node->children, parent, nodeValue);
-				parent = NoName;
-				_axp_21264_config_.owner.last = realloc(
-												_axp_21264_config_.owner.last,
-												strlen(nodeValue)+1);
-				if (_axp_21264_config_.owner.last != NULL)
-					strcpy(_axp_21264_config_.owner.last, nodeValue);
-				nodeValue[0] = '\0';
-				break;
+	    case LastName:
+		parse_name_names(doc, cur_node->children, parent, nodeValue);
+		parent = NoName;
+		_axp_21264_config_.owner.last = realloc(
+			_axp_21264_config_.owner.last, strlen(nodeValue) + 1);
+		if (_axp_21264_config_.owner.last != NULL)
+		    strcpy(_axp_21264_config_.owner.last, nodeValue);
+		nodeValue[0] = '\0';
+		break;
 
-			case NameSuffix:
-				parse_name_names(doc, cur_node->children, parent, nodeValue);
-				parent = NoName;
-				_axp_21264_config_.owner.suffix = realloc(
-												_axp_21264_config_.owner.suffix,
-												strlen(nodeValue)+1);
-				if (_axp_21264_config_.owner.suffix != NULL)
-					strcpy(_axp_21264_config_.owner.suffix, nodeValue);
-				nodeValue[0] = '\0';
-				break;
+	    case NameSuffix:
+		parse_name_names(doc, cur_node->children, parent, nodeValue);
+		parent = NoName;
+		_axp_21264_config_.owner.suffix = realloc(
+			_axp_21264_config_.owner.suffix, strlen(nodeValue) + 1);
+		if (_axp_21264_config_.owner.suffix != NULL)
+		    strcpy(_axp_21264_config_.owner.suffix, nodeValue);
+		nodeValue[0] = '\0';
+		break;
 
-			case NoName:
-			default:
-				break;
-		}
+	    case NoName:
+	    default:
+		break;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -2880,54 +2842,54 @@ static void parse_name_names(
  */
 static void cvt_date_to_rm(char *date, struct tm *time)
 {
-	char	*month = NULL, *year = NULL;
-	char	*ptr;
-	int		ii;
+    char *month = NULL, *year = NULL;
+    char *ptr;
+    int ii;
 
-	/*
-	 * Go through each character of the time and upcase and alpha, then locate
-	 * the start of the month and year portions.
-	 */
-	for (ii = 0; ii < strlen(date); ii++)
+    /*
+     * Go through each character of the time and upcase and alpha, then locate
+     * the start of the month and year portions.
+     */
+    for (ii = 0; ii < strlen(date); ii++)
+    {
+	date[ii] = toupper(date[ii]);
+	if (date[ii] == '-')
 	{
-		date[ii] = toupper(date[ii]);
-		if (date[ii] == '-')
-		{
-			if (month != NULL)
-				year = &date[ii+1];
-			else
-				month = &date[ii+1];
-		}
+	    if (month != NULL)
+		year = &date[ii + 1];
+	    else
+		month = &date[ii + 1];
 	}
+    }
 
-	/*
-	 * Null terminate the day and month portions so that the later code is
-	 * simpler.
-	 */
-	*(month-1) = '\0';
-	*(year-1) = '\0';
-	ii = 1;
-	while (strcmp(month, months[ii]) != 0)
-		ii++;
+    /*
+     * Null terminate the day and month portions so that the later code is
+     * simpler.
+     */
+    *(month - 1) = '\0';
+    *(year - 1) = '\0';
+    ii = 1;
+    while (strcmp(month, months[ii]) != 0)
+	ii++;
 
-	/*
-	 * Initialize the output parameter with the information from the input
-	 * parameter.
-	 */
-	time->tm_hour = 0;
-	time->tm_isdst = 0;
-	time->tm_mday = strtol(date, &ptr, 10);
-	time->tm_min = 0;
-	time->tm_mon = ii;
-	time->tm_sec = 0;
-	time->tm_wday = 0;
-	time->tm_yday = 0;
-	time->tm_year = strtol(year, &ptr, 10) - 1900;
+    /*
+     * Initialize the output parameter with the information from the input
+     * parameter.
+     */
+    time->tm_hour = 0;
+    time->tm_isdst = 0;
+    time->tm_mday = strtol(date, &ptr, 10);
+    time->tm_min = 0;
+    time->tm_mon = ii;
+    time->tm_sec = 0;
+    time->tm_wday = 0;
+    time->tm_yday = 0;
+    time->tm_year = strtol(year, &ptr, 10) - 1900;
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -2959,105 +2921,103 @@ static void cvt_date_to_rm(char *date, struct tm *time)
  * Return Values:
  *	None.
  */
-static void parse_owner_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_OWNER parent,
-					char *value)
+static void parse_owner_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_OWNER parent, char *value)
 {
-	xmlNode	*cur_node = NULL;
-	char	nodeValue[80];
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    char nodeValue[80];
+    int ii;
+    bool found;
+
+    /*
+     * If we are called with an address to value of NULL, then we are called
+     * for the first time by the parent parser.  When this happend, make sure
+     * that the local string is zero length.
+     */
+    if (value == NULL)
+	nodeValue[0] = '\0';
+
+    /*
+     * We recursively look through the node from the current one and look for
+     * either an Element Node or a Text Node.  If an Element node, there is
+     * something more to parse (handled below).  If it is a text node, then we
+     * are returning a value associated with an Element node.
+     */
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
 
 	/*
-	 * If we are called with an address to value of NULL, then we are called
-	 * for the first time by the parent parser.  When this happend, make sure
-	 * that the local string is zero length.
+	 * We have an element node.  See that is one that we care about and
+	 * we'll parse it further.  Extra nodes will be ignored and duplicates
+	 * will overwrite the previous value.
 	 */
-	if (value == NULL)
-		nodeValue[0] = '\0';
-
-	/*
-	 * We recursively look through the node from the current one and look for
-	 * either an Element Node or a Text Node.  If an Element node, there is
-	 * something more to parse (handled below).  If it is a text node, then we
-	 * are returning a value associated with an Element node.
-	 */
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+	if (cur_node->type == XML_ELEMENT_NODE)
 	{
-
-		/*
-		 * We have an element node.  See that is one that we care about and
-		 * we'll parse it further.  Extra nodes will be ignored and duplicates
-		 * will overwrite the previous value.
-		 */
-		if (cur_node->type == XML_ELEMENT_NODE)
+	    found = false;
+	    for (ii = 0;
+		    ((_owner_level_nodes[ii].token != NULL) && (found == false));
+		    ii++)
+	    {
+		if (strcmp((char *) cur_node->name,
+			_owner_level_nodes[ii].token) == 0)
 		{
-			found = false;
-			for (ii = 0;
-				 ((_owner_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _owner_level_nodes[ii].token) == 0)
-				{
-					parent = _owner_level_nodes[ii].node;
-					found = true;
-				}
-			}
+		    parent = _owner_level_nodes[ii].node;
+		    found = true;
 		}
+	    }
+	}
 
-		/*
-		 * We have a text node.  This is a value that is to be associated with
-		 * an Element node.
-		 */
-		else if (XML_TEXT_NODE == cur_node->type)
-		{
-			xmlChar	*key;
+	/*
+	 * We have a text node.  This is a value that is to be associated with
+	 * an Element node.
+	 */
+	else if (XML_TEXT_NODE == cur_node->type)
+	{
+	    xmlChar *key;
 
-			key = xmlNodeListGetString(doc, cur_node, 1);
-			AXP_stripXmlString(key);
-			if (value != NULL)
-				strcpy(value, (char *) key);
-			parent = NoName;
-			xmlFree(key);
-		}
+	    key = xmlNodeListGetString(doc, cur_node, 1);
+	    AXP_stripXmlString(key);
+	    if (value != NULL)
+		strcpy(value, (char *) key);
+	    parent = NoName;
+	    xmlFree(key);
+	}
 
-		/*
-		 * We either have an element we are parsing, or need to continue
-		 * parsing the nodes at the current level.
-		 */
-		switch (parent)
-		{
-			case Name:
-				parse_name_names(doc, cur_node->children, NoName, NULL);
-				parent = NoOwner;
-				break;
+	/*
+	 * We either have an element we are parsing, or need to continue
+	 * parsing the nodes at the current level.
+	 */
+	switch (parent)
+	{
+	    case Name:
+		parse_name_names(doc, cur_node->children, NoName, NULL);
+		parent = NoOwner;
+		break;
 
-			case CreationDate:
-				parse_owner_names(doc, cur_node->children, parent, nodeValue);
-				cvt_date_to_rm(nodeValue, &_axp_21264_config_.owner.create);
-				parent = NoOwner;
-				nodeValue[0] = '\0';
-				break;
+	    case CreationDate:
+		parse_owner_names(doc, cur_node->children, parent, nodeValue);
+		cvt_date_to_rm(nodeValue, &_axp_21264_config_.owner.create);
+		parent = NoOwner;
+		nodeValue[0] = '\0';
+		break;
 
-			case ModifyDate:
-				parse_owner_names(doc, cur_node->children, parent, nodeValue);
-				cvt_date_to_rm(nodeValue, &_axp_21264_config_.owner.modify);
-				parent = NoOwner;
-				nodeValue[0] = '\0';
-				break;
+	    case ModifyDate:
+		parse_owner_names(doc, cur_node->children, parent, nodeValue);
+		cvt_date_to_rm(nodeValue, &_axp_21264_config_.owner.modify);
+		parent = NoOwner;
+		nodeValue[0] = '\0';
+		break;
 
-			case NoName:
-			default:
-				break;
-		}
+	    case NoName:
+	    default:
+		break;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -3085,58 +3045,57 @@ static void parse_owner_names(
  * Return Values:
  *	None.
  */
-static void parse_parent_names(
-					xmlDocPtr doc,
-					xmlNode *a_node,
-					AXP_21264_CONFIG_NODES parent)
+static void parse_parent_names(xmlDocPtr doc, xmlNode *a_node,
+	AXP_21264_CONFIG_NODES parent)
 {
-	xmlNode	*cur_node = NULL;
-	int		ii;
-	bool	found;
+    xmlNode *cur_node = NULL;
+    int ii;
+    bool found;
 
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next)
+    {
+	if (cur_node->type == XML_ELEMENT_NODE)
 	{
-		if (cur_node->type == XML_ELEMENT_NODE)
+	    found = false;
+	    for (ii = 0;
+		    ((_top_level_nodes[ii].token != NULL) && (found == false));
+		    ii++)
+	    {
+		if (strcmp((char *) cur_node->name, _top_level_nodes[ii].token)
+			== 0)
 		{
-			found = false;
-			for (ii = 0;
-				 ((_top_level_nodes[ii].token != NULL) && (found == false));
-				 ii++)
-			{
-				if (strcmp((char *) cur_node->name, _top_level_nodes[ii].token) == 0)
-				{
-					parent = _top_level_nodes[ii].node;
-					found = true;
-				}
-			}
+		    parent = _top_level_nodes[ii].node;
+		    found = true;
 		}
+	    }
+	}
 
-		switch (parent)
-		{
-			case DECaxp:
-				parse_parent_names(doc, cur_node->children, parent);
-				break;
+	switch (parent)
+	{
+	    case DECaxp:
+		parse_parent_names(doc, cur_node->children, parent);
+		break;
 
-			case Owner:
-				parse_owner_names(doc, cur_node->children, NoOwner, NULL);
-				parent = NoNodes;
-				break;
+	    case Owner:
+		parse_owner_names(doc, cur_node->children, NoOwner, NULL);
+		parent = NoNodes;
+		break;
 
-			case SystemConf:
-				parse_system_names(doc, cur_node->children, NoSystem);
-				parent = NoNodes;
-				break;
+	    case SystemConf:
+		parse_system_names(doc, cur_node->children, NoSystem);
+		parent = NoNodes;
+		break;
 
-			case NoNodes:
-			default:
-				break;
-		}
+	    case NoNodes:
+	    default:
+		break;
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -3162,55 +3121,55 @@ static void parse_parent_names(
  */
 int AXP_LoadConfig_File(char *fileName)
 {
-	xmlDoc	*axpCfgDoc;
-	xmlNode	*axpCfgElement = NULL;
-	int		retVal = AXP_S_NORMAL;
+    xmlDoc *axpCfgDoc;
+    xmlNode *axpCfgElement = NULL;
+    int retVal = AXP_S_NORMAL;
 
-	/*
-	 * Since this needs to be called prior to allocating any CPUs, we need to
-	 * initialize the CPU-ID counter and associated mutex.
-	 */
-	pthread_mutex_init(&_axp_config_mutex_, NULL);
-	_axp_cpu_id_counter_ = 0;
+    /*
+     * Since this needs to be called prior to allocating any CPUs, we need to
+     * initialize the CPU-ID counter and associated mutex.
+     */
+    pthread_mutex_init(&_axp_config_mutex_, NULL);
+    _axp_cpu_id_counter_ = 0;
 
-	/*
-	 * First check the version of the API we compiled against matches the
-	 * version of the API in the library.
-	 */
-	LIBXML_TEST_VERSION
+    /*
+     * First check the version of the API we compiled against matches the
+     * version of the API in the library.
+     */
+    LIBXML_TEST_VERSION
 
-	/*
-	 * Parse the file and get the Document Object Module (DOM).
-	 */
-	axpCfgDoc = xmlReadFile(fileName, NULL, 0);
-	if (axpCfgDoc != NULL)
+    /*
+     * Parse the file and get the Document Object Module (DOM).
+     */
+    axpCfgDoc = xmlReadFile(fileName, NULL, 0);
+    if (axpCfgDoc != NULL)
+    {
+	axpCfgElement = xmlDocGetRootElement(axpCfgDoc);
+	if (axpCfgElement == NULL)
 	{
-		axpCfgElement = xmlDocGetRootElement(axpCfgDoc);
-		if (axpCfgElement == NULL)
-		{
-			xmlFreeDoc(axpCfgDoc);
-			xmlCleanupParser();
-			retVal = AXP_E_BADCFGFILE;
-		}
-		else
-		{
-
-			/*
-			 * For now we are just going to dump out the XML element tree
-			 * (recursively).
-			 */
-			parse_parent_names(axpCfgDoc, axpCfgElement, NoNodes);
-			xmlFreeDoc(axpCfgDoc);
-			xmlCleanupParser();
-		}
+	    xmlFreeDoc(axpCfgDoc);
+	    xmlCleanupParser();
+	    retVal = AXP_E_BADCFGFILE;
 	}
 	else
-		retVal = AXP_E_READERR;
+	{
 
-	/*
-	 * Return back to the caller the final status of this call.
-	 */
-	return(retVal);
+	    /*
+	     * For now we are just going to dump out the XML element tree
+	     * (recursively).
+	     */
+	    parse_parent_names(axpCfgDoc, axpCfgElement, NoNodes);
+	    xmlFreeDoc(axpCfgDoc);
+	    xmlCleanupParser();
+	}
+    }
+    else
+	retVal = AXP_E_READERR;
+
+    /*
+     * Return back to the caller the final status of this call.
+     */
+    return (retVal);
 }
 
 /*
@@ -3233,35 +3192,35 @@ int AXP_LoadConfig_File(char *fileName)
  */
 bool AXP_ConfigGet_CPUType(u32 *major, u32 *minor)
 {
-	bool retVal = false;
+    bool retVal = false;
+
+    /*
+     * If one or the other returned parameters is not specified, then we return
+     * nothing.
+     */
+    if ((major != NULL) && (minor != NULL))
+    {
 
 	/*
-	 * If one or the other returned parameters is not specified, then we return
-	 * nothing.
+	 * Lock the interface mutex, get the major and minor CPU type values,
+	 * then unlock the mutex.
 	 */
-	if ((major != NULL) && (minor != NULL))
-	{
-
-		/*
-		 * Lock the interface mutex, get the major and minor CPU type values,
-		 * then unlock the mutex.
-		 */
-		pthread_mutex_lock(&_axp_config_mutex_);
-		*major = _axp_21264_config_.system.cpus.config->majorType;
-		*minor = _axp_21264_config_.system.cpus.minorType;
-		pthread_mutex_unlock(&_axp_config_mutex_);
-
-		/*
-		 * Indicate that we are returning a value for the two requested peices
-		 * of information.
-		 */
-		retVal = true;
-	}
+	pthread_mutex_lock(&_axp_config_mutex_);
+	*major = _axp_21264_config_.system.cpus.config->majorType;
+	*minor = _axp_21264_config_.system.cpus.minorType;
+	pthread_mutex_unlock(&_axp_config_mutex_);
 
 	/*
-	 * Return the result of this call.
+	 * Indicate that we are returning a value for the two requested peices
+	 * of information.
 	 */
-	return(retVal);
+	retVal = true;
+    }
+
+    /*
+     * Return the result of this call.
+     */
+    return (retVal);
 }
 
 /*
@@ -3269,22 +3228,22 @@ bool AXP_ConfigGet_CPUType(u32 *major, u32 *minor)
  *	This function is called to return the number of CPUs defined in the
  *	configuration file.
  */
-u32	AXP_ConfigGet_CPUCount(void)
+u32 AXP_ConfigGet_CPUCount(void)
 {
-	u32		retVal = 0;
+    u32 retVal = 0;
 
-	/*
-	 * Lock the interface mutex, get the major and minor CPU type values,
-	 * then unlock the mutex.
-	 */
-	pthread_mutex_lock(&_axp_config_mutex_);
-	retVal = _axp_21264_config_.system.cpus.count;
-	pthread_mutex_unlock(&_axp_config_mutex_);
+    /*
+     * Lock the interface mutex, get the major and minor CPU type values,
+     * then unlock the mutex.
+     */
+    pthread_mutex_lock(&_axp_config_mutex_);
+    retVal = _axp_21264_config_.system.cpus.count;
+    pthread_mutex_unlock(&_axp_config_mutex_);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -3305,33 +3264,33 @@ u32	AXP_ConfigGet_CPUCount(void)
  */
 bool AXP_ConfigGet_InitFile(char *initFile)
 {
-	bool	retVal = false;
+    bool retVal = false;
+
+    /*
+     * If we have a place to copy the value, then do so now.
+     */
+    if (initFile != NULL)
+    {
 
 	/*
-	 * If we have a place to copy the value, then do so now.
+	 * Lock the interface mutex, copy the value into the return variable,
+	 * then unlock the mutex.
 	 */
-	if (initFile != NULL)
-	{
-
-		/*
-		 * Lock the interface mutex, copy the value into the return variable,
-		 * then unlock the mutex.
-		 */
-		pthread_mutex_lock(&_axp_config_mutex_);
-		strcpy(initFile, _axp_21264_config_.system.srom.initFile);
-		pthread_mutex_unlock(&_axp_config_mutex_);
-
-		/*
-		 * Set the return value to true, indicating that something is being
-		 * returned to the caller.
-		 */
-		retVal = true;
-	}
+	pthread_mutex_lock(&_axp_config_mutex_);
+	strcpy(initFile, _axp_21264_config_.system.srom.initFile);
+	pthread_mutex_unlock(&_axp_config_mutex_);
 
 	/*
-	 * Return the outcome back to the caller.
+	 * Set the return value to true, indicating that something is being
+	 * returned to the caller.
 	 */
-	return(retVal);
+	retVal = true;
+    }
+
+    /*
+     * Return the outcome back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -3353,33 +3312,33 @@ bool AXP_ConfigGet_InitFile(char *initFile)
  */
 bool AXP_ConfigGet_PALFile(char *PALfile)
 {
-	bool	retVal = false;
+    bool retVal = false;
+
+    /*
+     * If we have a place to copy the value, then do so now.
+     */
+    if (PALfile != NULL)
+    {
 
 	/*
-	 * If we have a place to copy the value, then do so now.
+	 * Lock the interface mutex, copy the value into the return variable,
+	 * then unlock the mutex.
 	 */
-	if (PALfile != NULL)
-	{
-
-		/*
-		 * Lock the interface mutex, copy the value into the return variable,
-		 * then unlock the mutex.
-		 */
-		pthread_mutex_lock(&_axp_config_mutex_);
-		strcpy(PALfile, _axp_21264_config_.system.srom.PALImage);
-		pthread_mutex_unlock(&_axp_config_mutex_);
-
-		/*
-		 * Set the return value to true, indicating that something is being
-		 * returned to the caller.
-		 */
-		retVal = true;
-	}
+	pthread_mutex_lock(&_axp_config_mutex_);
+	strcpy(PALfile, _axp_21264_config_.system.srom.PALImage);
+	pthread_mutex_unlock(&_axp_config_mutex_);
 
 	/*
-	 * Return the outcome back to the caller.
+	 * Set the return value to true, indicating that something is being
+	 * returned to the caller.
 	 */
-	return(retVal);
+	retVal = true;
+    }
+
+    /*
+     * Return the outcome back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -3401,33 +3360,33 @@ bool AXP_ConfigGet_PALFile(char *PALfile)
  */
 bool AXP_ConfigGet_ROMFile(char *ROMfile)
 {
-	bool	retVal = false;
+    bool retVal = false;
+
+    /*
+     * If we have a place to copy the value, then do so now.
+     */
+    if (ROMfile != NULL)
+    {
 
 	/*
-	 * If we have a place to copy the value, then do so now.
+	 * Lock the interface mutex, copy the value into the return variable,
+	 * then unlock the mutex.
 	 */
-	if (ROMfile != NULL)
-	{
-
-		/*
-		 * Lock the interface mutex, copy the value into the return variable,
-		 * then unlock the mutex.
-		 */
-		pthread_mutex_lock(&_axp_config_mutex_);
-		strcpy(ROMfile, _axp_21264_config_.system.srom.ROMImage);
-		pthread_mutex_unlock(&_axp_config_mutex_);
-
-		/*
-		 * Set the return value to true, indicating that something is being
-		 * returned to the caller.
-		 */
-		retVal = true;
-	}
+	pthread_mutex_lock(&_axp_config_mutex_);
+	strcpy(ROMfile, _axp_21264_config_.system.srom.ROMImage);
+	pthread_mutex_unlock(&_axp_config_mutex_);
 
 	/*
-	 * Return the outcome back to the caller.
+	 * Set the return value to true, indicating that something is being
+	 * returned to the caller.
 	 */
-	return(retVal);
+	retVal = true;
+    }
+
+    /*
+     * Return the outcome back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -3449,33 +3408,33 @@ bool AXP_ConfigGet_ROMFile(char *ROMfile)
  */
 bool AXP_ConfigGet_NVRAMFile(char *NVRAMfile)
 {
-	bool	retVal = false;
+    bool retVal = false;
+
+    /*
+     * If we have a place to copy the value, then do so now.
+     */
+    if (NVRAMfile != NULL)
+    {
 
 	/*
-	 * If we have a place to copy the value, then do so now.
+	 * Lock the interface mutex, copy the value into the return variable,
+	 * then unlock the mutex.
 	 */
-	if (NVRAMfile != NULL)
-	{
-
-		/*
-		 * Lock the interface mutex, copy the value into the return variable,
-		 * then unlock the mutex.
-		 */
-		pthread_mutex_lock(&_axp_config_mutex_);
-		strcpy(NVRAMfile, _axp_21264_config_.system.srom.NVRamFile);
-		pthread_mutex_unlock(&_axp_config_mutex_);
-
-		/*
-		 * Set the return value to true, indicating that something is being
-		 * returned to the caller.
-		 */
-		retVal = true;
-	}
+	pthread_mutex_lock(&_axp_config_mutex_);
+	strcpy(NVRAMfile, _axp_21264_config_.system.srom.NVRamFile);
+	pthread_mutex_unlock(&_axp_config_mutex_);
 
 	/*
-	 * Return the outcome back to the caller.
+	 * Set the return value to true, indicating that something is being
+	 * returned to the caller.
 	 */
-	return(retVal);
+	retVal = true;
+    }
+
+    /*
+     * Return the outcome back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -3497,33 +3456,33 @@ bool AXP_ConfigGet_NVRAMFile(char *NVRAMfile)
  */
 bool AXP_ConfigGet_CboxCSRFile(char *CSRfile)
 {
-	bool	retVal = false;
+    bool retVal = false;
+
+    /*
+     * If we have a place to copy the value, then do so now.
+     */
+    if (CSRfile != NULL)
+    {
 
 	/*
-	 * If we have a place to copy the value, then do so now.
+	 * Lock the interface mutex, copy the value into the return variable,
+	 * then unlock the mutex.
 	 */
-	if (CSRfile != NULL)
-	{
-
-		/*
-		 * Lock the interface mutex, copy the value into the return variable,
-		 * then unlock the mutex.
-		 */
-		pthread_mutex_lock(&_axp_config_mutex_);
-		strcpy(CSRfile, _axp_21264_config_.system.srom.CboxCSRFile);
-		pthread_mutex_unlock(&_axp_config_mutex_);
-
-		/*
-		 * Set the return value to true, indicating that something is being
-		 * returned to the caller.
-		 */
-		retVal = true;
-	}
+	pthread_mutex_lock(&_axp_config_mutex_);
+	strcpy(CSRfile, _axp_21264_config_.system.srom.CboxCSRFile);
+	pthread_mutex_unlock(&_axp_config_mutex_);
 
 	/*
-	 * Return the outcome back to the caller.
+	 * Set the return value to true, indicating that something is being
+	 * returned to the caller.
 	 */
-	return(retVal);
+	retVal = true;
+    }
+
+    /*
+     * Return the outcome back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -3549,26 +3508,26 @@ bool AXP_ConfigGet_CboxCSRFile(char *CSRfile)
 void AXP_ConfigGet_DarrayInfo(u32 *memArrayCnt, u64 *memArraySize)
 {
 
-	/*
-	 * If we have places to copy the values, then do so now.
-	 */
-	if ((memArrayCnt != NULL) && (memArraySize != NULL))
-	{
-
-		/*
-		 * Lock the interface mutex, copy the values into the return variables,
-		 * then unlock the mutex.
-		 */
-		pthread_mutex_lock(&_axp_config_mutex_);
-		*memArrayCnt = _axp_21264_config_.system.darrays.count;
-		*memArraySize = _axp_21264_config_.system.darrays.size;
-		pthread_mutex_unlock(&_axp_config_mutex_);
-	}
+    /*
+     * If we have places to copy the values, then do so now.
+     */
+    if ((memArrayCnt != NULL) && (memArraySize != NULL))
+    {
 
 	/*
-	 * Return back to the caller.
+	 * Lock the interface mutex, copy the values into the return variables,
+	 * then unlock the mutex.
 	 */
-	return;
+	pthread_mutex_lock(&_axp_config_mutex_);
+	*memArrayCnt = _axp_21264_config_.system.darrays.count;
+	*memArraySize = _axp_21264_config_.system.darrays.size;
+	pthread_mutex_unlock(&_axp_config_mutex_);
+    }
+
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -3587,190 +3546,206 @@ void AXP_ConfigGet_DarrayInfo(u32 *memArrayCnt, u64 *memArraySize)
  */
 void AXP_TraceConfig(void)
 {
-	char	buffer[133];
-	char	*bytes[] = {"B", "KB", "MB", "GB"};
-	u64		cacheSize;
-	int		idx = 0;
-	int		ii;
-	bool	configComplete = false;
+    char buffer[133];
+    char *bytes[] =
+    {
+    "B", "KB", "MB", "GB"
+    };
+    u64 cacheSize;
+    int idx = 0;
+    int ii;
+    bool configComplete = false;
 
-	configComplete = ((_axp_21264_config_.owner.first != NULL) &&
-					  (_axp_21264_config_.owner.last != NULL) &&
-					  (_axp_21264_config_.system.model.name != NULL) &&
-					  (_axp_21264_config_.system.model.model != NULL) &&
-					  (_axp_21264_config_.system.cpus.count > 0) &&
-					  (_axp_21264_config_.system.cpus.config != NULL) &&
-					  (_axp_21264_config_.system.darrays.count > 0) &&
-					  (_axp_21264_config_.system.srom.initFile != NULL) &&
-					  (_axp_21264_config_.system.srom.PALImage != NULL) &&
-					  (_axp_21264_config_.system.srom.NVRamFile != NULL) &&
-					  (_axp_21264_config_.system.diskCount > 0) &&
-					  (_axp_21264_config_.system.disks != NULL) &&
-					  (_axp_21264_config_.system.networkCount > 0) &&
-					  (_axp_21264_config_.system.networks != NULL));
+    configComplete = ((_axp_21264_config_.owner.first != NULL)
+	    && (_axp_21264_config_.owner.last != NULL)
+	    && (_axp_21264_config_.system.model.name != NULL)
+	    && (_axp_21264_config_.system.model.model != NULL)
+	    && (_axp_21264_config_.system.cpus.count > 0)
+	    && (_axp_21264_config_.system.cpus.config != NULL)
+	    && (_axp_21264_config_.system.darrays.count > 0)
+	    && (_axp_21264_config_.system.srom.initFile != NULL)
+	    && (_axp_21264_config_.system.srom.PALImage != NULL)
+	    && (_axp_21264_config_.system.srom.NVRamFile != NULL)
+	    && (_axp_21264_config_.system.diskCount > 0)
+	    && (_axp_21264_config_.system.disks != NULL)
+	    && (_axp_21264_config_.system.networkCount > 0)
+	    && (_axp_21264_config_.system.networks != NULL));
 
-	if (AXP_UTL_OPT1)
+    if (AXP_UTL_OPT1)
+    {
+	AXP_TraceWrite("System Configuration:");
+	if (configComplete == true)
 	{
-		AXP_TraceWrite("System Configuration:");
-		if (configComplete == true)
+	    AXP_TraceWrite("\tOwner:");
+	    AXP_TraceWrite("\t\tName:");
+	    AXP_TraceWrite("\t\t\tFirst:\t\t\t\'%s\'",
+		    _axp_21264_config_.owner.first);
+	    if ((_axp_21264_config_.owner.mi != NULL)
+		    && (strlen(_axp_21264_config_.owner.mi) > 0))
+		AXP_TraceWrite("\t\t\tMiddle Initial:\t\t\'%s\'",
+			_axp_21264_config_.owner.mi);
+	    AXP_TraceWrite("\t\t\tLast:\t\t\t\'%s\'",
+		    _axp_21264_config_.owner.last);
+	    if ((_axp_21264_config_.owner.suffix != NULL)
+		    && (strlen(_axp_21264_config_.owner.suffix) > 0))
+		AXP_TraceWrite("\t\t\tSuffix:\t\t\t\'%s\'",
+			_axp_21264_config_.owner.suffix);
+	    AXP_TraceWrite("\t\tCreate Date:\t\t\t%02u-%s-%04u",
+		    _axp_21264_config_.owner.create.tm_mday,
+		    months[_axp_21264_config_.owner.create.tm_mon],
+		    (_axp_21264_config_.owner.create.tm_year + 1900));
+	    AXP_TraceWrite("\t\tModify Date:\t\t\t%02u-%s-%04u",
+		    _axp_21264_config_.owner.modify.tm_mday,
+		    months[_axp_21264_config_.owner.modify.tm_mon],
+		    (_axp_21264_config_.owner.modify.tm_year + 1900));
+	    AXP_TraceWrite("\tSystem:");
+	    AXP_TraceWrite("\t\tModel:");
+	    AXP_TraceWrite("\t\t\tModel:\t\t\t%s",
+		    _axp_21264_config_.system.model.model);
+	    AXP_TraceWrite("\t\t\tName:\t\t\t%s",
+		    _axp_21264_config_.system.model.name);
+	    AXP_TraceWrite("\t\tConsole:");
+	    AXP_TraceWrite("\t\t\tPort:\t\t\t%u",
+		    _axp_21264_config_.system.console.port);
+	    AXP_TraceWrite("\t\tSROM:");
+	    AXP_TraceWrite("\t\t\tInitialization File:\t%s",
+		    _axp_21264_config_.system.srom.initFile);
+	    AXP_TraceWrite("\t\t\tPAL Image File:\t\t%s",
+		    _axp_21264_config_.system.srom.PALImage);
+	    AXP_TraceWrite("\t\t\tNon-volatile RAM File:\t%s",
+		    _axp_21264_config_.system.srom.NVRamFile);
+	    AXP_TraceWrite("\t\t\tROM Image File:\t\t%s",
+		    _axp_21264_config_.system.srom.ROMImage);
+	    AXP_TraceWrite("\t\tCPUs:");
+	    AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
+		    _axp_21264_config_.system.cpus.count);
+	    AXP_TraceWrite("\t\t\tGeneration:\t\t%s",
+		    _axp_21264_config_.system.cpus.config->genStr);
+	    AXP_TraceWrite("\t\t\tName:\t\t\t%s",
+		    _axp_21264_config_.system.cpus.config->name);
+	    AXP_TraceWrite("\t\t\tIntroduction Year:\t%u",
+		    _axp_21264_config_.system.cpus.config->year);
+	    AXP_TraceWrite("\t\t\tMajor Type:\t\t%d",
+		    _axp_21264_config_.system.cpus.config->majorType);
+	    AXP_TraceWrite("\t\t\tMinor Type:\t\t%d",
+		    _axp_21264_config_.system.cpus.minorType);
+	    cacheSize = _axp_21264_config_.system.cpus.config->iCacheSize;
+	    while (cacheSize > ONE_K)
+	    {
+		cacheSize /= ONE_K;
+		idx++;
+	    }
+	    AXP_TraceWrite("\t\t\tI-Cache Size:\t\t%llu%s", cacheSize,
+		    bytes[idx]);
+	    cacheSize = _axp_21264_config_.system.cpus.config->dCacheSize;
+	    idx = 0;
+	    while (cacheSize > ONE_K)
+	    {
+		cacheSize /= ONE_K;
+		idx++;
+	    }
+	    AXP_TraceWrite("\t\t\tD-Cache Size:\t\t%llu%s", cacheSize,
+		    bytes[idx]);
+	    cacheSize = _axp_21264_config_.system.cpus.config->sCacheSize;
+	    idx = 0;
+	    while (cacheSize > ONE_K)
+	    {
+		cacheSize /= ONE_K;
+		idx++;
+	    }
+	    AXP_TraceWrite("\t\t\tS-Cache Size:\t\t%llu%s", cacheSize,
+		    bytes[idx]);
+	    cacheSize = _axp_21264_config_.system.cpus.config->bCacheSizeLow;
+	    idx = 0;
+	    while (cacheSize > ONE_K)
+	    {
+		cacheSize /= ONE_K;
+		idx++;
+	    }
+	    sprintf(buffer, "\t\t\tB-Cache Size:\t\tbetween %llu%s", cacheSize,
+		    bytes[idx]);
+	    cacheSize = _axp_21264_config_.system.cpus.config->bCacheSizeHigh;
+	    idx = 0;
+	    while (cacheSize > ONE_K)
+	    {
+		cacheSize /= ONE_K;
+		idx++;
+	    }
+	    AXP_TraceWrite("%s and %llu%s", buffer, cacheSize, bytes[idx]);
+	    AXP_TraceWrite("\t\tDARRAYs:");
+	    AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
+		    _axp_21264_config_.system.darrays.count);
+	    cacheSize = _axp_21264_config_.system.darrays.size;
+	    idx = 0;
+	    while (cacheSize > ONE_K)
+	    {
+		cacheSize /= ONE_K;
+		idx++;
+	    }
+	    AXP_TraceWrite("\t\t\tSize:\t\t\t%llu%s", cacheSize, bytes[idx]);
+	    AXP_TraceWrite("\t\tNetworks:");
+	    AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
+		    _axp_21264_config_.system.networkCount);
+	    for (ii = 0; ii < _axp_21264_config_.system.networkCount; ii++)
+	    {
+		AXP_TraceWrite("\t\t\t\t[%d] Unit:\t%d", ii,
+			_axp_21264_config_.system.networks[ii].unit);
+		AXP_TraceWrite("\t\t\t\t    Name:\t%s",
+			_axp_21264_config_.system.networks[ii].name);
+		AXP_TraceWrite("\t\t\t\t    MAC Addr:\t%s",
+			_axp_21264_config_.system.networks[ii].mac);
+	    }
+	    AXP_TraceWrite("\t\tDisk Drives:");
+	    AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
+		    _axp_21264_config_.system.diskCount);
+	    for (ii = 0; ii < _axp_21264_config_.system.diskCount; ii++)
+	    {
+		AXP_TraceWrite("\t\t\t\t[%d] Unit:\t%u", ii,
+			_axp_21264_config_.system.disks[ii].unit);
+		AXP_TraceWrite("\t\t\t\t   Name:\t%s",
+			_axp_21264_config_.system.disks[ii].name);
+		AXP_TraceWrite("\t\t\t\t   File:\t%s",
+			_axp_21264_config_.system.disks[ii].fileSpec);
+		switch (_axp_21264_config_.system.disks[ii].type)
 		{
-			AXP_TraceWrite("\tOwner:");
-			AXP_TraceWrite("\t\tName:");
-			AXP_TraceWrite("\t\t\tFirst:\t\t\t\'%s\'", _axp_21264_config_.owner.first);
-			if ((_axp_21264_config_.owner.mi != NULL) && (strlen(_axp_21264_config_.owner.mi) > 0))
-				AXP_TraceWrite("\t\t\tMiddle Initial:\t\t\'%s\'", _axp_21264_config_.owner.mi);
-			AXP_TraceWrite("\t\t\tLast:\t\t\t\'%s\'", _axp_21264_config_.owner.last);
-			if ((_axp_21264_config_.owner.suffix != NULL) && (strlen(_axp_21264_config_.owner.suffix) > 0))
-				AXP_TraceWrite("\t\t\tSuffix:\t\t\t\'%s\'", _axp_21264_config_.owner.suffix);
-			AXP_TraceWrite(
-					"\t\tCreate Date:\t\t\t%02u-%s-%04u",
-					_axp_21264_config_.owner.create.tm_mday,
-					months[_axp_21264_config_.owner.create.tm_mon],
-					(_axp_21264_config_.owner.create.tm_year+1900));
-			AXP_TraceWrite(
-					"\t\tModify Date:\t\t\t%02u-%s-%04u",
-					_axp_21264_config_.owner.modify.tm_mday,
-					months[_axp_21264_config_.owner.modify.tm_mon],
-					(_axp_21264_config_.owner.modify.tm_year+1900));
-			AXP_TraceWrite("\tSystem:");
-			AXP_TraceWrite("\t\tModel:");
-			AXP_TraceWrite("\t\t\tModel:\t\t\t%s", _axp_21264_config_.system.model.model);
-			AXP_TraceWrite("\t\t\tName:\t\t\t%s", _axp_21264_config_.system.model.name);
-			AXP_TraceWrite("\t\tConsole:");
-			AXP_TraceWrite("\t\t\tPort:\t\t\t%u", _axp_21264_config_.system.console.port);
-			AXP_TraceWrite("\t\tSROM:");
-			AXP_TraceWrite("\t\t\tInitialization File:\t%s",
-					_axp_21264_config_.system.srom.initFile);
-			AXP_TraceWrite("\t\t\tPAL Image File:\t\t%s",
-					_axp_21264_config_.system.srom.PALImage);
-			AXP_TraceWrite("\t\t\tNon-volatile RAM File:\t%s",
-					_axp_21264_config_.system.srom.NVRamFile);
-			AXP_TraceWrite("\t\t\tROM Image File:\t\t%s",
-					_axp_21264_config_.system.srom.ROMImage);
-			AXP_TraceWrite("\t\tCPUs:");
-			AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
-					_axp_21264_config_.system.cpus.count);
-			AXP_TraceWrite("\t\t\tGeneration:\t\t%s",
-					_axp_21264_config_.system.cpus.config->genStr);
-			AXP_TraceWrite("\t\t\tName:\t\t\t%s",
-					_axp_21264_config_.system.cpus.config->name);
-			AXP_TraceWrite("\t\t\tIntroduction Year:\t%u",
-					_axp_21264_config_.system.cpus.config->year);
-			AXP_TraceWrite("\t\t\tMajor Type:\t\t%d",
-					_axp_21264_config_.system.cpus.config->majorType);
-			AXP_TraceWrite("\t\t\tMinor Type:\t\t%d",
-					_axp_21264_config_.system.cpus.minorType);
-			cacheSize = _axp_21264_config_.system.cpus.config->iCacheSize;
-			while (cacheSize > ONE_K)
-			{
-				cacheSize /= ONE_K;
-				idx++;
-			}
-			AXP_TraceWrite("\t\t\tI-Cache Size:\t\t%llu%s", cacheSize, bytes[idx]);
-			cacheSize = _axp_21264_config_.system.cpus.config->dCacheSize;
-			idx = 0;
-			while (cacheSize > ONE_K)
-			{
-				cacheSize /= ONE_K;
-				idx++;
-			}
-			AXP_TraceWrite("\t\t\tD-Cache Size:\t\t%llu%s", cacheSize, bytes[idx]);
-			cacheSize = _axp_21264_config_.system.cpus.config->sCacheSize;
-			idx = 0;
-			while (cacheSize > ONE_K)
-			{
-				cacheSize /= ONE_K;
-				idx++;
-			}
-			AXP_TraceWrite("\t\t\tS-Cache Size:\t\t%llu%s", cacheSize, bytes[idx]);
-			cacheSize = _axp_21264_config_.system.cpus.config->bCacheSizeLow;
-			idx = 0;
-			while (cacheSize > ONE_K)
-			{
-				cacheSize /= ONE_K;
-				idx++;
-			}
-			sprintf(buffer, "\t\t\tB-Cache Size:\t\tbetween %llu%s", cacheSize, bytes[idx]);
-			cacheSize = _axp_21264_config_.system.cpus.config->bCacheSizeHigh;
-			idx = 0;
-			while (cacheSize > ONE_K)
-			{
-				cacheSize /= ONE_K;
-				idx++;
-			}
-			AXP_TraceWrite("%s and %llu%s", buffer, cacheSize, bytes[idx]);
-			AXP_TraceWrite("\t\tDARRAYs:");
-			AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
-					_axp_21264_config_.system.darrays.count);
-			cacheSize = _axp_21264_config_.system.darrays.size;
-			idx = 0;
-			while (cacheSize > ONE_K)
-			{
-				cacheSize /= ONE_K;
-				idx++;
-			}
-			AXP_TraceWrite("\t\t\tSize:\t\t\t%llu%s", cacheSize, bytes[idx]);
-			AXP_TraceWrite("\t\tNetworks:");
-			AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
-					_axp_21264_config_.system.networkCount);
-			for (ii = 0; ii < _axp_21264_config_.system.networkCount; ii++)
-			{
-				AXP_TraceWrite("\t\t\t\t[%d] Unit:\t%d", ii,
-						_axp_21264_config_.system.networks[ii].unit);
-				AXP_TraceWrite("\t\t\t\t    Name:\t%s",
-						_axp_21264_config_.system.networks[ii].name);
-				AXP_TraceWrite("\t\t\t\t    MAC Addr:\t%s",
-						_axp_21264_config_.system.networks[ii].mac);
-			}
-			AXP_TraceWrite("\t\tDisk Drives:");
-			AXP_TraceWrite("\t\t\tNumber:\t\t\t%u",
-					_axp_21264_config_.system.diskCount);
-			for (ii = 0; ii < _axp_21264_config_.system.diskCount; ii++)
-			{
-				AXP_TraceWrite("\t\t\t\t[%d] Unit:\t%u", ii,
-						_axp_21264_config_.system.disks[ii].unit);
-				AXP_TraceWrite("\t\t\t\t   Name:\t%s",
-							_axp_21264_config_.system.disks[ii].name);
-				AXP_TraceWrite("\t\t\t\t   File:\t%s",
-							_axp_21264_config_.system.disks[ii].fileSpec);
-				switch(_axp_21264_config_.system.disks[ii].type)
-				{
-					case Disk:
-						strcpy(buffer, "Hard Disk");
-						break;
+		    case Disk:
+			strcpy(buffer, "Hard Disk");
+			break;
 
-					case CD_ROM:
-						strcpy(buffer, "CD-ROM");
-						break;
+		    case CD_ROM:
+			strcpy(buffer, "CD-ROM");
+			break;
 
-					case RW_CDROM:
-						strcpy(buffer, "R/W CD-ROM");
-						break;
+		    case RW_CDROM:
+			strcpy(buffer, "R/W CD-ROM");
+			break;
 
-					case Diskless:
-					default:
-						strcpy(buffer, "No Disk Defined");
-						break;
-				}
-				AXP_TraceWrite("\t\t\t\t   Type:\t%s", buffer);
-				cacheSize = _axp_21264_config_.system.disks[ii].size;
-				idx = 0;
-				while (cacheSize > ONE_K)
-				{
-					cacheSize /= ONE_K;
-					idx++;
-				}
-				AXP_TraceWrite("\t\t\t\t   Size:\t%llu%s", cacheSize, bytes[idx]);
-			}
+		    case Diskless:
+		    default:
+			strcpy(buffer, "No Disk Defined");
+			break;
 		}
-		else
+		AXP_TraceWrite("\t\t\t\t   Type:\t%s", buffer);
+		cacheSize = _axp_21264_config_.system.disks[ii].size;
+		idx = 0;
+		while (cacheSize > ONE_K)
 		{
-			AXP_TraceWrite("\n\t**************** System Configuration Not Initialized ****************\n");
+		    cacheSize /= ONE_K;
+		    idx++;
 		}
+		AXP_TraceWrite("\t\t\t\t   Size:\t%llu%s", cacheSize,
+			bytes[idx]);
+	    }
 	}
+	else
+	{
+	    AXP_TraceWrite(
+		    "\n\t**************** System Configuration Not Initialized ****************\n");
+	}
+    }
 
-	/*
-	 * Return back to the caller:
-	 */
-	return;
+    /*
+     * Return back to the caller:
+     */
+    return;
 }

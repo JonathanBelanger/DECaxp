@@ -44,18 +44,18 @@
  */
 FILE *AXP_Open_NVP_File(char *filename)
 {
-	FILE	*retVal;
+    FILE *retVal;
 
-	retVal = fopen(filename, "r");
+    retVal = fopen(filename, "r");
 
-	/*
-	 * NOTE: We may want to receive a parse table to convert a string name from
-	 * the name portion of the NVP to a numeric value.
-	 *
-	 * For now, just return back to the caller.
-	 */
+    /*
+     * NOTE: We may want to receive a parse table to convert a string name from
+     * the name portion of the NVP to a numeric value.
+     *
+     * For now, just return back to the caller.
+     */
 
-	return(retVal);
+    return (retVal);
 }
 
 /*
@@ -76,12 +76,12 @@ FILE *AXP_Open_NVP_File(char *filename)
  */
 void AXP_Close_NVP_File(FILE *filePointer)
 {
-	fclose(filePointer);
+    fclose(filePointer);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -111,123 +111,125 @@ void AXP_Close_NVP_File(FILE *filePointer)
  */
 bool AXP_Read_NVP_File(FILE *filePointer, char *name, u32 *value)
 {
-	char	readLine[81];
-	bool	retVal = true;
-	int		done = 0;	/* -1 = EOF, 0 = not done, 1 = name/value present */
-	char	*savePtr;
-	char	*token;
+    char readLine[81];
+    bool retVal = true;
+    int done = 0; /* -1 = EOF, 0 = not done, 1 = name/value present */
+    char *savePtr;
+    char *token;
 
-	/*
-	 * Until we get either a name/value pair to return, and end-of-file, or an
-	 * error, keep looping through the file.
-	 */
-	while (done == 0)
+    /*
+     * Until we get either a name/value pair to return, and end-of-file, or an
+     * error, keep looping through the file.
+     */
+    while (done == 0)
+    {
+	if (fgets(readLine, sizeof(readLine), filePointer) != NULL)
 	{
-		if (fgets(readLine, sizeof(readLine), filePointer) != NULL)
+	    char *comment;
+	    int ii, jj;
+
+	    /*
+	     * First, starting at the ; converting it and all remaining
+	     * characters to the null-character.
+	     */
+	    jj = -1;
+	    for (ii = 0; ii < sizeof(readLine); ii++)
+		if ((readLine[ii] == ';') || (jj > 0))
 		{
-			char	*comment;
-			int		ii, jj;
+		    readLine[ii] = '\0';
+		    jj = 1;
+		}
+
+	    /*
+	     * Next collapse the line (remove all space and tab characters.
+	     */
+	    for (ii = 1; ii < strlen(readLine); ii++)
+	    {
+		if ((readLine[ii - 1] == ' ') || (readLine[ii - 1] == '\t'))
+		{
+		    for (jj = ii - 1; jj < strlen(readLine) - 1; jj++)
+			readLine[jj] = readLine[jj + 1];
+		    jj = strlen(readLine);
+		    readLine[jj - 1] = '\0';
+		}
+	    }
+
+	    /*
+	     * Remove all text after the comment string and the comment string
+	     * itself.
+	     */
+	    comment = strstr(readLine, "//");
+	    if (comment != NULL)
+	    {
+		for (ii = (comment - readLine); ii < sizeof(readLine); ii++)
+		    readLine[ii] = '\0';
+	    }
+
+	    /*
+	     * If we have anything left of the string, then go and parse it.
+	     * Otherwise, we need to read the next line.
+	     */
+	    if (strlen(readLine) > 0)
+	    {
+		const char delim[2] = "=";
+
+		/*
+		 * At this point we should have something that looks like
+		 * "name=value", with nothing before it or after.  First, let's
+		 * pull out the name.  If we don't find one it is an error.
+		 */
+		savePtr = NULL;
+		token = strtok_r(readLine, delim, &savePtr);
+		if (token != NULL)
+		{
+		    char *valueStr;
+
+		    strcpy(name, token);
+
+		    /*
+		     * Now pull out the value string.  If we don't find one,
+		     * then return an error.
+		     */
+		    valueStr = strtok_r(NULL, delim, &savePtr);
+		    if (valueStr != NULL)
+		    {
 
 			/*
-			 * First, starting at the ; converting it and all remaining
-			 * characters to the null-character.
+			 * Convert the value string to an U32 value and mark
+			 * that we are done and returning a name/value pair.
 			 */
-			jj = -1;
-			for (ii = 0; ii < sizeof(readLine); ii++)
-				if ((readLine[ii] == ';') || (jj > 0))
-				{
-					readLine[ii] = '\0';
-					jj = 1;
-				}
-
-			/*
-			 * Next collapse the line (remove all space and tab characters.
-			 */
-			for (ii = 1; ii < strlen(readLine); ii++)
-			{
-				if ((readLine[ii - 1] == ' ') || (readLine[ii - 1] == '\t'))
-				{
-					for (jj = ii - 1; jj < strlen(readLine) - 1; jj++)
-						readLine[jj] = readLine[jj + 1];
-					jj = strlen(readLine);
-					readLine[jj - 1] = '\0';
-				}
-			}
-
-			/*
-			 * Remove all text after the comment string and the comment string
-			 * itself.
-			 */
-			comment = strstr(readLine, "//");
-			if (comment != NULL)
-			{
-				for (ii = (comment - readLine); ii < sizeof(readLine); ii++)
-					readLine[ii] = '\0';
-			}
-
-			/*
-			 * If we have anything left of the string, then go and parse it.
-			 * Otherwise, we need to read the next line.
-			 */
-			if (strlen(readLine) > 0)
-			{
-				const char delim[2] = "=";
-
-				/*
-				 * At this point we should have something that looks like
-				 * "name=value", with nothing before it or after.  First, let's
-				 * pull out the name.  If we don't find one it is an error.
-				 */
-				savePtr = NULL;
-				token = strtok_r(readLine, delim, &savePtr);
-				if (token != NULL)
-				{
-					char *valueStr;
-
-					strcpy(name, token);
-
-					/*
-					 * Now pull out the value string.  If we don't find one,
-					 * then return an error.
-					 */
-					valueStr = strtok_r(NULL, delim, &savePtr);
-					if (valueStr != NULL)
-					{
-
-						/*
-						 * Convert the value string to an U32 value and mark
-						 * that we are done and returning a name/value pair.
-						 */
-						*value = (u32) strtol(valueStr, NULL, 0);
-						done = 1;
-					}
-					else
-					{
-						printf("Parsing error: 'value' not present error at %s, line %d.\n",
-							__FILE__, __LINE__);
-						done = -1;
-					}
-				}
-				else
-				{
-					printf("Parsing error: 'name' not present error at %s, line %d.\n",
-						__FILE__, __LINE__);
-					done = -1;
-				}
-			}
+			*value = (u32) strtol(valueStr, NULL, 0);
+			done = 1;
+		    }
+		    else
+		    {
+			printf(
+			        "Parsing error: 'value' not present error at %s, line %d.\n",
+			        __FILE__, __LINE__);
+			done = -1;
+		    }
 		}
 		else
-			done = -1;		/* End-Of-File detected. */
+		{
+		    printf(
+			    "Parsing error: 'name' not present error at %s, line %d.\n",
+			    __FILE__, __LINE__);
+		    done = -1;
+		}
+	    }
 	}
+	else
+	    done = -1; /* End-Of-File detected. */
+    }
 
-	/*
-	 * If we reached end-of file, then return a value of false
-	 */
-	if (done == -1)
-		retVal = false;
+    /*
+     * If we reached end-of file, then return a value of false
+     */
+    if (done == -1)
+	retVal = false;
 
-	/*
-	 * Return back to the caller.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller.
+     */
+    return (retVal);
 }
