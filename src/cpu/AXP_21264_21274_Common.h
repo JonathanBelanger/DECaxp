@@ -54,20 +54,18 @@
  */
 typedef struct
 {
-	u64					sysData[AXP_21264_DATA_SIZE];	/* Data Movement */
-	u64					pa;		/* Physical Address */
-	AXP_PROBE_RQ		cmd;	/* System to CPU Probe Request Command */
-	AXP_SYSDC			sysDc;	/* Response to Command from CPU */
-	bool				probe;	/* Does the message contain a Probe Request */
-	bool				rvb;	/* Clear Victim or IOWB buffer if valid */
-	bool				rpb;	/* Clear Probe Valid bit */
-	bool				a;		/* Command acknowledge */
-	bool				c;		/* Decrements uncommitted event counter */
-	u8					id;		/* ID for VDB or IOWB */
-	u8					wrap;	/* Read and Write wrap data */
+    u64 sysData[AXP_21264_DATA_SIZE]; /* Data Movement */
+    u64 pa; /* Physical Address */
+    AXP_PROBE_RQ cmd; /* System to CPU Probe Request Command */
+    AXP_SYSDC sysDc; /* Response to Command from CPU */
+    bool probe; /* Does the message contain a Probe Request */
+    bool rvb; /* Clear Victim or IOWB buffer if valid */
+    bool rpb; /* Clear Probe Valid bit */
+    bool a; /* Command acknowledge */
+    bool c; /* Decrements uncommitted event counter */
+    u8 id; /* ID for VDB or IOWB */
+    u8 wrap; /* Read and Write wrap data */
 } AXP_21264_SYSBUS_CPU;
-
-
 
 /*
  * The following data structure will be used to send Requests and Probe
@@ -77,17 +75,17 @@ typedef struct
  */
 typedef struct
 {
-	u64					sysData[AXP_21264_DATA_SIZE];	/* Data Movement */
-	u64					pa;		/* Physical Address */
-	AXP_System_Commands	cmd;	/* CPU to System Command */
-	bool				probe;	/* Is the message a Probe Response */
-	bool				m1;		/* Oldest Probe Miss */
-	bool				m2;		/* Oldest Probe Miss or hit with no data movement */
-	bool				ch;		/* Cache hit, along with m2, with no data movement */
-	bool				rv;		/* validates command */
-	u8					mask;	/* sysData in-use for I/O, Byte, LW, or QW */
-	u8					id;		/* MAF or VDB or IOWB identifier for command */
-	u8					wrap;	/* Read and Write wrap data */
+    u64 sysData[AXP_21264_DATA_SIZE]; /* Data Movement */
+    u64 pa; /* Physical Address */
+    AXP_System_Commands cmd; /* CPU to System Command */
+    bool probe; /* Is the message a Probe Response */
+    bool m1; /* Oldest Probe Miss */
+    bool m2; /* Oldest Probe Miss or hit with no data movement */
+    bool ch; /* Cache hit, along with m2, with no data movement */
+    bool rv; /* validates command */
+    u8 mask; /* sysData in-use for I/O, Byte, LW, or QW */
+    u8 id; /* MAF or VDB or IOWB identifier for command */
+    u8 wrap; /* Read and Write wrap data */
 } AXP_21264_SYSBUS_System;
 
 /*
@@ -97,25 +95,25 @@ typedef struct
  */
 typedef struct
 {
-	u64					pa;
-	u64					sysData[AXP_21264_DATA_SIZE];
-	AXP_SYSDC			sysDc;
-	AXP_ProbeStatus		probeStatus;
-	int					probe;
-	bool				rvb;
-	bool				rpb;
-	bool				a;
-	bool				c;
-	bool				processed;
-	bool				valid;
-	bool				pendingRsp;
-	bool				dm;
-	bool				vs;
-	bool				ms;
-	u8					ID;
-	u8					vdb;
-	u8					maf;
-	u8					wrap;
+    u64 pa;
+    u64 sysData[AXP_21264_DATA_SIZE];
+    AXP_SYSDC sysDc;
+    AXP_ProbeStatus probeStatus;
+    int probe;
+    bool rvb;
+    bool rpb;
+    bool a;
+    bool c;
+    bool processed;
+    bool valid;
+    bool pendingRsp;
+    bool dm;
+    bool vs;
+    bool ms;
+    u8 ID;
+    u8 vdb;
+    u8 maf;
+    u8 wrap;
 } AXP_21264_CBOX_PQ;
 
 /*
@@ -151,21 +149,21 @@ typedef struct
  */
 typedef struct
 {
-	u64					sysData[AXP_21264_DATA_SIZE];
-	u64					mask;
-	u64					pa;
-	AXP_System_Commands	cmd;
-	AXP_ProbeStatus		status;
-	AXP_PHASES			phase;
-	int					entry;
-	int					sysDataLen;
-	u32					cpuID;
-	u16					waitVector;
-	bool				miss1;
-	bool				miss2;
-	bool				rqValid;
-	bool				cacheHit;
-	bool				valid;
+    u64 sysData[AXP_21264_DATA_SIZE];
+    u64 mask;
+    u64 pa;
+    AXP_System_Commands cmd;
+    AXP_ProbeStatus status;
+    AXP_PHASES phase;
+    int entry;
+    int sysDataLen;
+    u32 cpuID;
+    u16 waitVector;
+    bool miss1;
+    bool miss2;
+    bool rqValid;
+    bool cacheHit;
+    bool valid;
 } AXP_21264_RQ_ENTRY;
 
 #define AXP_21264_CCHIP_RQ_LEN	6	/* Per CPU */

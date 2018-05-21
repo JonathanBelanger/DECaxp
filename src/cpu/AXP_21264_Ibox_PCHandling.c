@@ -38,62 +38,62 @@
  */
 struct palBaseBits21264
 {
-	u64	res : 15;
-	u64	highPC : 49;
+    u64 res :15;
+    u64 highPC :49;
 };
 struct palBaseBits21164
 {
-	u64	res : 14;
-	u64	highPC : 50;
+    u64 res :14;
+    u64 highPC :50;
 };
 
 typedef union
 {
-	 struct palBaseBits21164	bits21164;
-	 struct palBaseBits21264	bits21264;
-	 u64						palBaseAddr;
+    struct palBaseBits21164 bits21164;
+    struct palBaseBits21264 bits21264;
+    u64 palBaseAddr;
 
-}AXP_IBOX_PALBASE_BITS;
+} AXP_IBOX_PALBASE_BITS;
 
 struct palPCBits21264
 {
-	u64	palMode : 1;
-	u64 mbz_1 : 5;
-	u64 func_5_0 : 6;
-	u64 func_7 : 1;
-	u64 mbo : 1;
-	u64 mbz_2 : 1;
-	u64 highPC : 49;
+    u64 palMode :1;
+    u64 mbz_1 :5;
+    u64 func_5_0 :6;
+    u64 func_7 :1;
+    u64 mbo :1;
+    u64 mbz_2 :1;
+    u64 highPC :49;
 };
 struct palPCBits21164
 {
-	u64	palMode : 1;
-	u64 mbz : 5;
-	u64 func_5_0 : 6;
-	u64 func_7 : 1;
-	u64 mbo : 1;
-	u64 highPC : 50;
+    u64 palMode :1;
+    u64 mbz :5;
+    u64 func_5_0 :6;
+    u64 func_7 :1;
+    u64 mbo :1;
+    u64 highPC :50;
 };
 
 typedef union
 {
-	struct palPCBits21164	bits21164;
-	struct palPCBits21264	bits21264;
-	AXP_PC					vpc;
+    struct palPCBits21164 bits21164;
+    struct palPCBits21264 bits21264;
+    AXP_PC vpc;
 } AXP_IBOX_PAL_PC;
 
 struct palFuncBits
 {
-	u32 func_5_0 : 6;
-	u32 res_1 : 1;
-	u32 func_7 : 1;
-	u32 res_2 : 24;
+    u32 func_5_0 :6;
+    u32 res_1 :1;
+    u32 func_7 :1;
+    u32 res_2 :24;
 };
 
 typedef union
 {
-	struct palFuncBits	bits;
-	u32					func;
+    struct palFuncBits bits;
+    u32 func;
 } AXP_IBOX_PAL_FUNC_BITS;
 
 /*
@@ -120,21 +120,25 @@ typedef union
  */
 void AXP_21264_AddVPC(AXP_21264_CPU *cpu, AXP_PC vpc)
 {
-	if (AXP_IBOX_OPT2)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Adding vPC[%d] 0x%016llx", cpu->vpcEnd, *((u64 *) &vpc));
-		AXP_TRACE_END();
-	}
-	cpu->vpc[cpu->vpcEnd] = vpc;
-	cpu->vpcEnd = (cpu->vpcEnd + 1) % AXP_INFLIGHT_MAX;
-	if (cpu->vpcEnd == cpu->vpcStart)
-		cpu->vpcStart = (cpu->vpcStart + 1) % AXP_INFLIGHT_MAX;
+    if (AXP_IBOX_OPT2)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite(
+	    "Adding vPC[%d] 0x%016llx",
+	    cpu->vpcEnd,
+	    *((u64 *) &vpc));
+	AXP_TRACE_END()
+	;
+    }
+    cpu->vpc[cpu->vpcEnd] = vpc;
+    cpu->vpcEnd = (cpu->vpcEnd + 1) % AXP_INFLIGHT_MAX;
+    if (cpu->vpcEnd == cpu->vpcStart)
+	cpu->vpcStart = (cpu->vpcStart + 1) % AXP_INFLIGHT_MAX;
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -158,56 +162,57 @@ void AXP_21264_AddVPC(AXP_21264_CPU *cpu, AXP_PC vpc)
  */
 AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 {
-	AXP_IBOX_PAL_PC pc;
-	AXP_IBOX_PALBASE_BITS palBase;
-	AXP_IBOX_PAL_FUNC_BITS palFunc;
+    AXP_IBOX_PAL_PC pc;
+    AXP_IBOX_PALBASE_BITS palBase;
+    AXP_IBOX_PAL_FUNC_BITS palFunc;
 
-	palBase.palBaseAddr = cpu->palBase.pal_base_pc;
-	palFunc.func = func;
+    palBase.palBaseAddr = cpu->palBase.pal_base_pc;
+    palFunc.func = func;
 
-	/*
-	 * We assume that the function supplied follows any of the following
-	 * criteria:
-	 *
-	 *		Is in the range of 0x40 and 0x7f, inclusive
-	 *		Is greater than 0xbf
-	 *		Is between 0x00 and 0x3f, inclusive, and IER_CM[CM] is not equal to
-	 *			the kernel mode value (0).
-	 *
-	 * Now, let's compose the PC for the PALcode function we are being
-	 * requested to call.
-	 */
-	if (cpu->majorType >= EV6)
-	{
-		pc.bits21264.highPC = palBase.bits21264.highPC;
-		pc.bits21264.mbz_2 = 0;
-		pc.bits21264.mbo = 1;
-		pc.bits21264.func_7 = palFunc.bits.func_7;
-		pc.bits21264.func_5_0 = palFunc.bits.func_5_0;
-		pc.bits21264.mbz_1 = 0;
-		pc.bits21264.palMode = AXP_PAL_MODE;
-	}
-	else
-	{
-		pc.bits21164.highPC = palBase.bits21164.highPC;
-		pc.bits21164.mbo = 1;
-		pc.bits21164.func_7 = palFunc.bits.func_7;
-		pc.bits21164.func_5_0 = palFunc.bits.func_5_0;
-		pc.bits21164.mbz = 0;
-		pc.bits21164.palMode = AXP_PAL_MODE;
-	}
+    /*
+     * We assume that the function supplied follows any of the following
+     * criteria:
+     *
+     *		Is in the range of 0x40 and 0x7f, inclusive
+     *		Is greater than 0xbf
+     *		Is between 0x00 and 0x3f, inclusive, and IER_CM[CM] is not equal to
+     *			the kernel mode value (0).
+     *
+     * Now, let's compose the PC for the PALcode function we are being
+     * requested to call.
+     */
+    if (cpu->majorType >= EV6)
+    {
+	pc.bits21264.highPC = palBase.bits21264.highPC;
+	pc.bits21264.mbz_2 = 0;
+	pc.bits21264.mbo = 1;
+	pc.bits21264.func_7 = palFunc.bits.func_7;
+	pc.bits21264.func_5_0 = palFunc.bits.func_5_0;
+	pc.bits21264.mbz_1 = 0;
+	pc.bits21264.palMode = AXP_PAL_MODE;
+    }
+    else
+    {
+	pc.bits21164.highPC = palBase.bits21164.highPC;
+	pc.bits21164.mbo = 1;
+	pc.bits21164.func_7 = palFunc.bits.func_7;
+	pc.bits21164.func_5_0 = palFunc.bits.func_5_0;
+	pc.bits21164.mbz = 0;
+	pc.bits21164.palMode = AXP_PAL_MODE;
+    }
 
-	if (AXP_IBOX_OPT2)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Generated PAL vPC 0x%016llx", *((u64 *) &pc));
-		AXP_TRACE_END();
-	}
+    if (AXP_IBOX_OPT2)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Generated PAL vPC 0x%016llx", *((u64 *) &pc));
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Return the composed VPC it back to the caller.
-	 */
-	return(pc.vpc);
+    /*
+     * Return the composed VPC it back to the caller.
+     */
+    return (pc.vpc);
 }
 
 /*
@@ -232,27 +237,28 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
  */
 AXP_PC AXP_21264_MakeVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 {
-	union
-	{
-		u64		pc;
-		AXP_PC	vpc;
-	} vpc;
+    union
+    {
+	u64 pc;
+	AXP_PC vpc;
+    } vpc;
 
-	vpc.pc = pc;
-	vpc.vpc.res = 0;
-	vpc.vpc.pal = pal & AXP_PAL_MODE;
+    vpc.pc = pc;
+    vpc.vpc.res = 0;
+    vpc.vpc.pal = pal & AXP_PAL_MODE;
 
-	if (AXP_IBOX_OPT2)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Getting vPC 0x%016llx", *((u64 *) &vpc));
-		AXP_TRACE_END();
-	}
+    if (AXP_IBOX_OPT2)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Getting vPC 0x%016llx", *((u64 *) &vpc));
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return(vpc.vpc);
+    /*
+     * Return back to the caller.
+     */
+    return (vpc.vpc);
 }
 
 /*
@@ -273,27 +279,31 @@ AXP_PC AXP_21264_MakeVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
  */
 AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
 {
-	AXP_PC retVal;
-	u32	prevVPC;
+    AXP_PC retVal;
+    u32 prevVPC;
 
-	/*
-	 * The End, points to the next location to be filled.  Therefore, the
-	 * previous location is the next VPC to be executed.
-	 */
-	prevVPC = ((cpu->vpcEnd != 0) ? cpu->vpcEnd : AXP_INFLIGHT_MAX) - 1;
-	retVal = cpu->vpc[prevVPC];
+    /*
+     * The End, points to the next location to be filled.  Therefore, the
+     * previous location is the next VPC to be executed.
+     */
+    prevVPC = ((cpu->vpcEnd != 0) ? cpu->vpcEnd : AXP_INFLIGHT_MAX) - 1;
+    retVal = cpu->vpc[prevVPC];
 
-	if (AXP_IBOX_OPT2)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Getting Next vPC[%d] 0x%016llx", prevVPC, *((u64 *) &retVal));
-		AXP_TRACE_END();
-	}
+    if (AXP_IBOX_OPT2)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite(
+	    "Getting Next vPC[%d] 0x%016llx",
+	    prevVPC,
+	    *((u64 *) &retVal));
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Return what we found back to the caller.
-	 */
-	return(retVal);
+    /*
+     * Return what we found back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -313,29 +323,30 @@ AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
  */
 AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *cpu)
 {
-	AXP_PC vpc;
+    AXP_PC vpc;
 
-	/*
-	 * Get the PC for the instruction just executed.
-	 */
-	vpc = AXP_21264_GetNextVPC(cpu);
+    /*
+     * Get the PC for the instruction just executed.
+     */
+    vpc = AXP_21264_GetNextVPC(cpu);
 
-	/*
-	 * Increment it.
-	 */
-	vpc.pc++;
+    /*
+     * Increment it.
+     */
+    vpc.pc++;
 
-	if (AXP_IBOX_OPT2)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Incremented vPC 0x%016llx", *((u64 *) &vpc));
-		AXP_TRACE_END();
-	}
+    if (AXP_IBOX_OPT2)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Incremented vPC 0x%016llx", *((u64 *) &vpc));
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Store it on the VPC List and return to the caller.
-	 */
-	return(vpc);
+    /*
+     * Store it on the VPC List and return to the caller.
+     */
+    return (vpc);
 }
 
 /*
@@ -357,25 +368,26 @@ AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *cpu)
  */
 AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, AXP_PC pc, i64 displacement)
 {
-	AXP_PC vpc = pc;
+    AXP_PC vpc = pc;
 
-	/*
-	 * Increment and then add the displacement.
-	 */
-	vpc.pc = vpc.pc + displacement;
+    /*
+     * Increment and then add the displacement.
+     */
+    vpc.pc = vpc.pc + displacement;
 
-	if (AXP_IBOX_OPT2)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite(
-				"Displacement vPC 0x%016llx (0x%016llx)",
-				*((u64 *) &vpc),
-				displacement);
-		AXP_TRACE_END();
-	}
+    if (AXP_IBOX_OPT2)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite(
+	    "Displacement vPC 0x%016llx (0x%016llx)",
+	    *((u64 *) &vpc),
+	    displacement);
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return(vpc);
+    /*
+     * Return back to the caller.
+     */
+    return (vpc);
 }

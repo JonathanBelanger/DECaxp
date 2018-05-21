@@ -71,65 +71,65 @@
 void AXP_21264_Ebox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * If no exception occurred, then we have the data we need and just need to
-	 * store the value that is going to be put into the destination register
-	 * when the instruction is retired.  There is nothing specific that needs
-	 * to happen to store instructions.
-	 *
-	 * NOTE: Any exception will be handled in the retirement code.
-	 */
-	if (instr->excRegMask == NoException)
+    /*
+     * If no exception occurred, then we have the data we need and just need to
+     * store the value that is going to be put into the destination register
+     * when the instruction is retired.  There is nothing specific that needs
+     * to happen to store instructions.
+     *
+     * NOTE: Any exception will be handled in the retirement code.
+     */
+    if (instr->excRegMask == NoException)
+    {
+	switch (instr->opcode)
 	{
-		switch (instr->opcode)
-		{
-			case LDBU:
-				instr->destv.r.uq = AXP_ZEXT_BYTE(instr->destv.r.uq);
-				break;
+	    case LDBU:
+		instr->destv.r.uq = AXP_ZEXT_BYTE(instr->destv.r.uq);
+		break;
 
-			case LDW_U:
-				instr->destv.r.uq = AXP_ZEXT_WORD(instr->destv.r.uq);
-				break;
+	    case LDW_U:
+		instr->destv.r.uq = AXP_ZEXT_WORD(instr->destv.r.uq);
+		break;
 
-			case LDL:
-			case LDL_L:
-				instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
-				break;
+	    case LDL:
+	    case LDL_L:
+		instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
+		break;
 
-			case HW_LD:
-				if (instr->quadword == false)
-					instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
-				break;
+	    case HW_LD:
+		if (instr->quadword == false)
+		    instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
+		break;
 
-			case STL_C:
-			case STQ_C:
-				instr->destv.r.uq = 1;
-				break;
+	    case STL_C:
+	    case STQ_C:
+		instr->destv.r.uq = 1;
+		break;
 
-			default:
-				break;
-		}
+	    default:
+		break;
 	}
+    }
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * We want the Ebox threads to handle their own completion.  The Mbox has
-	 * done what is was supposed to and now we need to tell the Ebox that there
-	 * is something to retire.
-	 */
-	pthread_mutex_lock(&cpu->eBoxMutex);
-	cpu->eBoxWaitingRetirement = true;
-	pthread_cond_signal(&cpu->eBoxCondition);
-	pthread_mutex_unlock(&cpu->eBoxMutex);
+    /*
+     * We want the Ebox threads to handle their own completion.  The Mbox has
+     * done what is was supposed to and now we need to tell the Ebox that there
+     * is something to retire.
+     */
+    pthread_mutex_lock(&cpu->eBoxMutex);
+    cpu->eBoxWaitingRetirement = true;
+    pthread_cond_signal(&cpu->eBoxCondition);
+    pthread_mutex_unlock(&cpu->eBoxMutex);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -151,49 +151,51 @@ void AXP_21264_Ebox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 {
-	bool	retVal = false;
+    bool retVal = false;
 
-	if (AXP_EBOX_OPT1)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Ebox is initializing");
-		AXP_TRACE_END();
-	}
+    if (AXP_EBOX_OPT1)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Ebox is initializing");
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * This bit us used when emulating the RC and BC VAX Compatibility
-	 * instructions used by VAX-to-Alpha translator software.  ARM 4.12
-	 */
-	cpu->VAXintrFlag = false;
+    /*
+     * This bit us used when emulating the RC and BC VAX Compatibility
+     * instructions used by VAX-to-Alpha translator software.  ARM 4.12
+     */
+    cpu->VAXintrFlag = false;
 
-	/*
-	 * Initialize the Ebox IPRs.
-	 * NOTE: These will get real values from the PALcode.
-	 */
-	cpu->cc.counter = 0;
-	cpu->cc.offset = 0;
-	cpu->ccCtl.res_1 = 0;
-	cpu->ccCtl.counter = 0;
-	cpu->ccCtl.cc_ena = 0;
-	cpu->ccCtl.res_2 = 0;
-	cpu->va = 0;
-	cpu->vaCtl.b_endian = 0;
-	cpu->vaCtl.va_48 = 0;
-	cpu->vaCtl.va_form_32 = 0;
-	cpu->vaCtl.res = 0;
-	cpu->vaCtl.vptb = 0;
-	cpu->vaForm.form00.res = 0;
-	cpu->vaForm.form00.va = 0;
-	cpu->vaForm.form00.vptb = 0;
+    /*
+     * Initialize the Ebox IPRs.
+     * NOTE: These will get real values from the PALcode.
+     */
+    cpu->cc.counter = 0;
+    cpu->cc.offset = 0;
+    cpu->ccCtl.res_1 = 0;
+    cpu->ccCtl.counter = 0;
+    cpu->ccCtl.cc_ena = 0;
+    cpu->ccCtl.res_2 = 0;
+    cpu->va = 0;
+    cpu->vaCtl.b_endian = 0;
+    cpu->vaCtl.va_48 = 0;
+    cpu->vaCtl.va_form_32 = 0;
+    cpu->vaCtl.res = 0;
+    cpu->vaCtl.vptb = 0;
+    cpu->vaForm.form00.res = 0;
+    cpu->vaForm.form00.va = 0;
+    cpu->vaForm.form00.vptb = 0;
 
-	if (AXP_EBOX_OPT1)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Ebox has initialized");
-		AXP_TRACE_END();
-	}
+    if (AXP_EBOX_OPT1)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Ebox has initialized");
+	AXP_TRACE_END()
+	;
+    }
 
-	return(retVal);
+    return (retVal);
 }
 
 /*
@@ -216,31 +218,32 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
  */
 void *AXP_21264_EboxU0Main(void *voidPtr)
 {
-	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+    AXP_21264_CPU *cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_EBOX_CALL)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Ebox U0 is starting");
-		AXP_TRACE_END();
-	}
+    if (AXP_EBOX_CALL)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Ebox U0 is starting");
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Call the actual main function with the information it needs to be able
-	 * to execute instructions for a specific Integer Pipeline.
-	 */
-	AXP_Execution_Box(
-				cpu,
-				EboxU0,
-				&cpu->iq,
-				&cpu->eBoxCondition,
-				&cpu->eBoxMutex,
-				&AXP_ReturnIQEntry);
+    /*
+     * Call the actual main function with the information it needs to be able
+     * to execute instructions for a specific Integer Pipeline.
+     */
+    AXP_Execution_Box(
+	cpu,
+	EboxU0,
+	&cpu->iq,
+	&cpu->eBoxCondition,
+	&cpu->eBoxMutex,
+	&AXP_ReturnIQEntry);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return(NULL);
+    /*
+     * Return back to the caller.
+     */
+    return (NULL);
 }
 
 /*
@@ -263,31 +266,32 @@ void *AXP_21264_EboxU0Main(void *voidPtr)
  */
 void *AXP_21264_EboxU1Main(void *voidPtr)
 {
-	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+    AXP_21264_CPU *cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_EBOX_CALL)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Ebox U1 is starting");
-		AXP_TRACE_END();
-	}
+    if (AXP_EBOX_CALL)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Ebox U1 is starting");
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Call the actual main function with the information it needs to be able
-	 * to execute instructions for a specific Integer Pipeline.
-	 */
-	AXP_Execution_Box(
-				cpu,
-				EboxU1,
-				&cpu->iq,
-				&cpu->eBoxCondition,
-				&cpu->eBoxMutex,
-				&AXP_ReturnIQEntry);
+    /*
+     * Call the actual main function with the information it needs to be able
+     * to execute instructions for a specific Integer Pipeline.
+     */
+    AXP_Execution_Box(
+	cpu,
+	EboxU1,
+	&cpu->iq,
+	&cpu->eBoxCondition,
+	&cpu->eBoxMutex,
+	&AXP_ReturnIQEntry);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return(NULL);
+    /*
+     * Return back to the caller.
+     */
+    return (NULL);
 }
 
 /*
@@ -310,31 +314,32 @@ void *AXP_21264_EboxU1Main(void *voidPtr)
  */
 void *AXP_21264_EboxL0Main(void *voidPtr)
 {
-	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+    AXP_21264_CPU *cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_EBOX_CALL)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Ebox L0 is starting");
-		AXP_TRACE_END();
-	}
+    if (AXP_EBOX_CALL)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Ebox L0 is starting");
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Call the actual main function with the information it needs to be able
-	 * to execute instructions for a specific Integer Pipeline.
-	 */
-	AXP_Execution_Box(
-				cpu,
-				EboxL0,
-				&cpu->iq,
-				&cpu->eBoxCondition,
-				&cpu->eBoxMutex,
-				&AXP_ReturnIQEntry);
+    /*
+     * Call the actual main function with the information it needs to be able
+     * to execute instructions for a specific Integer Pipeline.
+     */
+    AXP_Execution_Box(
+	cpu,
+	EboxL0,
+	&cpu->iq,
+	&cpu->eBoxCondition,
+	&cpu->eBoxMutex,
+	&AXP_ReturnIQEntry);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return(NULL);
+    /*
+     * Return back to the caller.
+     */
+    return (NULL);
 }
 
 /*
@@ -357,29 +362,30 @@ void *AXP_21264_EboxL0Main(void *voidPtr)
  */
 void *AXP_21264_EboxL1Main(void *voidPtr)
 {
-	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+    AXP_21264_CPU *cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_EBOX_CALL)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Ebox L1 is starting");
-		AXP_TRACE_END();
-	}
+    if (AXP_EBOX_CALL)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Ebox L1 is starting");
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Call the actual main function with the information it needs to be able
-	 * to execute instructions for a specific Integer Pipeline.
-	 */
-	AXP_Execution_Box(
-				cpu,
-				EboxL1,
-				&cpu->iq,
-				&cpu->eBoxCondition,
-				&cpu->eBoxMutex,
-				&AXP_ReturnIQEntry);
+    /*
+     * Call the actual main function with the information it needs to be able
+     * to execute instructions for a specific Integer Pipeline.
+     */
+    AXP_Execution_Box(
+	cpu,
+	EboxL1,
+	&cpu->iq,
+	&cpu->eBoxCondition,
+	&cpu->eBoxMutex,
+	&AXP_ReturnIQEntry);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return(NULL);
+    /*
+     * Return back to the caller.
+     */
+    return (NULL);
 }

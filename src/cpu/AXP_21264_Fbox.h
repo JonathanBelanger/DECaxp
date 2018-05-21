@@ -193,11 +193,11 @@ AXP_EXCEPTIONS AXP_SUBT(AXP_21264_CPU *, AXP_INSTRUCTION *);
  */
 typedef struct
 {
-	 u32	fnc : 4;
-	 u32	src : 2;
-	 u32	rnd : 2;
-	 u32	trp : 3;
-	 u32	res : 21;
+    u32 fnc :4;
+    u32 src :2;
+    u32 rnd :2;
+    u32 trp :3;
+    u32 res :21;
 } AXP_FP_FUNC;
 
 #define AXP_FP_ADD		0x0
@@ -341,11 +341,12 @@ typedef struct
  */
 typedef struct
 {
-	u8		type;
-	bool	sign;
-	i32		exponent;
-	u128	fraction;
-} AXP_FP_FLOAT_COMPONENTS;;
+    u8 type;
+    bool sign;
+    i32 exponent;
+    u128 fraction;
+} AXP_FP_FLOAT_COMPONENTS;
+;
 
 /*
  * VAX G/F and IEEE S/T returned values, returned on VAX and IEEE Floating
@@ -365,13 +366,13 @@ typedef struct
  */
 typedef enum
 {
-	Reserved,
-	Zero,
-	Finite,
-	Denormal,
-	Infinity,
-	NotANumber,
-	DirtyZero
+    Reserved,
+    Zero,
+    Finite,
+    Denormal,
+    Infinity,
+    NotANumber,
+    DirtyZero
 } AXP_FP_ENCODING;
 
 #define AXP_FP_ENCODE(ur, ieeeFP)											\

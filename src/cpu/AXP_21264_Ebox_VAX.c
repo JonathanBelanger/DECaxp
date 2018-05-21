@@ -19,7 +19,7 @@
  *	This source file contains the functions needed to implement the
  *	VAX compatibility instructions of the 21264 Alpha AXP CPU.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		19-Jul-2017	Jonathan D. Belanger
  *	Initially written.
@@ -50,17 +50,17 @@
 AXP_EXCEPTIONS AXP_RC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Read the flag and store it into the destination register (Ra) and then
-	 * clear it.
-	 */
-	instr->destv.r.uq = cpu->VAXintrFlag;
-	cpu->VAXintrFlag = false;
+    /*
+     * Read the flag and store it into the destination register (Ra) and then
+     * clear it.
+     */
+    instr->destv.r.uq = cpu->VAXintrFlag;
+    cpu->VAXintrFlag = false;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -86,15 +86,15 @@ AXP_EXCEPTIONS AXP_RC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_RS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Read the flag and store it into the destination register (Ra) and then
-	 * set it.
-	 */
-	instr->destv.r.uq = cpu->VAXintrFlag;
-	cpu->VAXintrFlag = true;
+    /*
+     * Read the flag and store it into the destination register (Ra) and then
+     * set it.
+     */
+    instr->destv.r.uq = cpu->VAXintrFlag;
+    cpu->VAXintrFlag = true;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }

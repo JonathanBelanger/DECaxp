@@ -53,9 +53,9 @@
  */
 typedef enum
 {
-	Free,
-	PendingUpdate,
-	Valid
+    Free,
+    PendingUpdate,
+    Valid
 } AXP_21264_REG_STATE;
 
 /*
@@ -111,23 +111,23 @@ typedef enum
 
 struct regDecode
 {
-	u16					src2 : 4;
-	u16					src1 : 4;
-	u16					dest : 4;
-	u16					opcodeRegDecode	: 4;
+    u16 src2 :4;
+    u16 src1 :4;
+    u16 dest :4;
+    u16 opcodeRegDecode :4;
 };
 
 typedef union
 {
-	u16					raw;
-	struct regDecode	bits;
+    u16 raw;
+    struct regDecode bits;
 } AXP_REG_DECODE;
 
 typedef struct
 {
-	u64					value;
-	AXP_21264_REG_STATE	state;
-	u16					refCount;
+    u64 value;
+    AXP_21264_REG_STATE state;
+    u16 refCount;
 } AXP_REGISTERS;
 
 #endif /* _AXP_REGISTER_RENAMING_DEFS_ */

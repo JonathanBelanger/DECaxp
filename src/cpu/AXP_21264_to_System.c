@@ -42,71 +42,71 @@
  */
 void AXP_21264_SendToSystem(AXP_21264_CPU *cpu, AXP_21264_SYSBUS_System *msg)
 {
-	AXP_21264_RQ_ENTRY	*rq;
+    AXP_21264_RQ_ENTRY *rq;
 
-	/*
-	 * Lock the mutex so that no one else tries to manipulate the queue or the
-	 * index into it.
-	 */
-	pthread_mutex_lock(cpu->system.mutex);
+    /*
+     * Lock the mutex so that no one else tries to manipulate the queue or the
+     * index into it.
+     */
+    pthread_mutex_lock(cpu->system.mutex);
 
-	/*
-	 * Queue up the next PQ entry for the CPU to process.
-	 */
-	if (cpu->system.rq[*cpu->system.rqEnd].valid == true)
-		*cpu->system.rqEnd = (*cpu->system.rqEnd + 1) % AXP_21264_CCHIP_RQ_LEN;
-	rq = &cpu->system.rq[*cpu->system.rqEnd];
+    /*
+     * Queue up the next PQ entry for the CPU to process.
+     */
+    if (cpu->system.rq[*cpu->system.rqEnd].valid == true)
+	*cpu->system.rqEnd = (*cpu->system.rqEnd + 1) % AXP_21264_CCHIP_RQ_LEN;
+    rq = &cpu->system.rq[*cpu->system.rqEnd];
 
-	/*
-	 * Copy the data from the System structure and into the CPU structure.
-	 *
-	 * TODO:	We need to do something about data movement, mask, deal with a
-	 *			probeResponse, and wrapping data.
-	 */
-	rq->pa = msg->pa;
-	rq->miss1 = msg->m1;
-	rq->miss2 = msg->m2;
-	rq->status = msg->cmd;
-	rq->cacheHit = msg->ch;
-	rq->rqValid = msg->rv;
-	rq->valid = true;
-	rq->waitVector = msg->id;	/* TODO: Probably not correct */
-	rq->mask = msg->mask;
-	switch(msg->sysDc)
-	{
-		case ReadDataError:
-			memset(pq->sysData, 0xff, AXP_21274_DATA_SIZE);
-			pq->dm = true;
-			break;
+    /*
+     * Copy the data from the System structure and into the CPU structure.
+     *
+     * TODO:	We need to do something about data movement, mask, deal with a
+     *			probeResponse, and wrapping data.
+     */
+    rq->pa = msg->pa;
+    rq->miss1 = msg->m1;
+    rq->miss2 = msg->m2;
+    rq->status = msg->cmd;
+    rq->cacheHit = msg->ch;
+    rq->rqValid = msg->rv;
+    rq->valid = true;
+    rq->waitVector = msg->id; /* TODO: Probably not correct */
+    rq->mask = msg->mask;
+    switch (msg->sysDc)
+    {
+	case ReadDataError:
+	    memset(pq->sysData, 0xff, AXP_21274_DATA_SIZE);
+	    pq->dm = true;
+	    break;
 
-		case ReadData:
-		case ReadDataDirty:
-		case ReadDataShared:
-		case ReadDataSharedDirty:
-			memcpy(pq->sysData, msg->sysData, AXP_21274_DATA_SIZE);
-			pq->dm = true;
-			pq->wrap = msg->wrap;
-			break;
+	case ReadData:
+	case ReadDataDirty:
+	case ReadDataShared:
+	case ReadDataSharedDirty:
+	    memcpy(pq->sysData, msg->sysData, AXP_21274_DATA_SIZE);
+	    pq->dm = true;
+	    pq->wrap = msg->wrap;
+	    break;
 
-		default:
-			pq->dm = false;
-			break;
-	}
+	default:
+	    pq->dm = false;
+	    break;
+    }
 
-	/*
-	 * OK, we are done here.  Signal the CPU that it has something to process.
-	 */
-	pthread_cond_signal(cpu->system.cond);
+    /*
+     * OK, we are done here.  Signal the CPU that it has something to process.
+     */
+    pthread_cond_signal(cpu->system.cond);
 
-	/*
-	 * Unlock the CPU's interface Mutex, so that the CPU can process the data
-	 * we just queued up to it.
-	 */
-	pthread_mutex_unlock(cpu->system.mutex);
+    /*
+     * Unlock the CPU's interface Mutex, so that the CPU can process the data
+     * we just queued up to it.
+     */
+    pthread_mutex_unlock(cpu->system.mutex);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
