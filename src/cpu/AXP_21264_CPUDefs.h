@@ -19,7 +19,7 @@
  *	This header file contains the definitions needed by the AXP_21264_CPU.C
  *	source file.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		17-Nov-2017	Jonathan D. Belanger
  *	Initially written.
@@ -27,6 +27,7 @@
 #ifndef _AXP_21264_CPU_DEFS_DEFS_
 #define _AXP_21264_CPU_DEFS_DEFS_	1
 
+#include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_21264_CPU.h"
 #include "AXP_21264_Ibox.h"

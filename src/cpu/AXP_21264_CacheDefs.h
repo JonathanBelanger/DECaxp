@@ -35,9 +35,9 @@
  * TLB initialization to determine the bits to keep for the physical address,
  * and the match and keep masks.  The GH_KEEP formula only works for 8KB pages.
  */
-#define GH_KEEP(gh)		((AXP_21264_PAGE_SIZE * (0x1ll << (3 * (gh)))) - 1)
+#define GH_KEEP(gh)	((AXP_21264_PAGE_SIZE * (0x1ll << (3 * (gh)))) - 1)
 #define GH_MATCH(gh)	(((0x1ll << (AXP_21264_MEM_BITS - 1)) - 1) & ~(GH_KEEP(gh)))
-#define GH_PHYS(gh)		(((0x1ll << AXP_21264_MEM_BITS) - 1) & ~(GH_KEEP(gh)))
+#define GH_PHYS(gh)	(((0x1ll << AXP_21264_MEM_BITS) - 1) & ~(GH_KEEP(gh)))
 
 /*
  * Define the Translation Look-aside Buffer (TLB) for both the Instruction and
@@ -45,25 +45,25 @@
  */
 typedef struct
 {
-	u64		virtAddr;
-	u64		physAddr;
-	u64		matchMask;
-	u64		keepMask;
-	u32		kre : 1;
-	u32		ere : 1;
-	u32		sre : 1;
-	u32		ure : 1;
-	u32		kwe : 1;
-	u32		ewe : 1;
-	u32		swe : 1;
-	u32		uwe : 1;
-	u32		faultOnRead : 1;
-	u32		faultOnWrite : 1;
-	u32		faultOnExecute : 1;
-	u32		res_1 : 21;
-	u8		asn;
-	bool	_asm;
-	bool	valid;
+    u64 virtAddr;
+    u64 physAddr;
+    u64 matchMask;
+    u64 keepMask;
+    u32 kre :1;
+    u32 ere :1;
+    u32 sre :1;
+    u32 ure :1;
+    u32 kwe :1;
+    u32 ewe :1;
+    u32 swe :1;
+    u32 uwe :1;
+    u32 faultOnRead :1;
+    u32 faultOnWrite :1;
+    u32 faultOnExecute :1;
+    u32 res_1 :21;
+    u8 asn;
+    bool _asm;
+    bool valid;
 } AXP_21264_TLB;
 
 #define AXP_CM_KERNEL		0
@@ -91,9 +91,9 @@ typedef struct
  */
 typedef struct
 {
-	u64			res_1 : 46;
-	u64			spe2 : 2;
-	u64			res_2 : 16;
+    u64 res_1 :46;
+    u64 spe2 :2;
+    u64 res_2 :16;
 } AXP_VA_SPE2;
 
 /*
@@ -101,9 +101,9 @@ typedef struct
  */
 typedef struct
 {
-	u64			res_1 : 41;
-	u64			spe1 : 7;
-	u64			res_2 : 16;
+    u64 res_1 :41;
+    u64 spe1 :7;
+    u64 res_2 :16;
 } AXP_VA_SPE1;
 
 /*
@@ -111,9 +111,9 @@ typedef struct
  */
 typedef struct
 {
-	u64			res_1 : 30;
-	u64			spe0 : 18;
-	u64			res_2 : 16;
+    u64 res_1 :30;
+    u64 spe0 :18;
+    u64 res_2 :16;
 } AXP_VA_SPE0;
 
 /*
@@ -122,10 +122,10 @@ typedef struct
  */
 typedef union
 {
-	u64			va;
-	AXP_VA_SPE2	spe2;
-	AXP_VA_SPE1	spe1;
-	AXP_VA_SPE0	spe0;
+    u64 va;
+    AXP_VA_SPE2 spe2;
+    AXP_VA_SPE1 spe1;
+    AXP_VA_SPE0 spe0;
 } AXP_VA_SPE;
 
 /*
@@ -134,20 +134,20 @@ typedef union
  */
 typedef enum
 {
-	None,		/* No access */
-	Read,		/* Read */
-	Write,		/* Write */
-	Execute,	/* Read */
-	Modify		/* Read & Write */
+    None, /* No access */
+    Read, /* Read */
+    Write, /* Write */
+    Execute, /* Read */
+    Modify /* Read & Write */
 } AXP_21264_ACCESS;
 
 #define AXP_DCACHE_DATA_LEN	64
 
 typedef enum
 {
-	Invalid,				/* Initial State */
-	Pending,				/* Waiting to be filled */
-	Ready					/* Block is ready */
+    Invalid, /* Initial State */
+    Pending, /* Waiting to be filled */
+    Ready /* Block is ready */
 } AXP_21264_CACHE_ST;
 
 /*
@@ -158,7 +158,7 @@ typedef enum
  */
 typedef struct
 {
-	u8					data[AXP_DCACHE_DATA_LEN];
+    u8 data[AXP_DCACHE_DATA_LEN];
 } AXP_DCACHE_BLK;
 
 /*
@@ -304,17 +304,17 @@ typedef struct
  */
 typedef struct
 {
-	u64					physTag;
-	u32					ctagIndex;
-	u32					ctagSet;
-	u32					lockers;
-	AXP_21264_CACHE_ST	state;
-	bool				valid;
-	bool				dirty;
-	bool				shared;
-	bool				modified;
-	bool				set_0_1;
-	bool				evict;
+    u64 physTag;
+    u32 ctagIndex;
+    u32 ctagSet;
+    u32 lockers;
+    AXP_21264_CACHE_ST state;
+    bool valid;
+    bool dirty;
+    bool shared;
+    bool modified;
+    bool set_0_1;
+    bool evict;
 } AXP_DTAG_BLK;
 
 #define AXP_ICACHE_LINE_INS		16
@@ -341,18 +341,18 @@ typedef struct
  */
 typedef struct
 {
-	u64 				kre : 1;			/* Kernel read/execute */
-	u64 				ere : 1;			/* Executive read/execute */
-	u64 				sre : 1;			/* Supervisor read/execute */
-	u64					ure : 1;			/* User read/execute */
-	u64					_asm : 1;			/* Address Space Match */
-	u64					asn : 8;			/* Address Space Number */
-	u64					pal : 1;			/* PALcode */
-	u64					vb : 1;				/* Valid Bit */
-	u64					tag : 33;			/* Tag */
-	u64					set_0_1 : 1;		/* When set 0 was last used */
-	u64					res_1 : 15;			/* align to the 64-bit boundary */
-	AXP_INS_FMT			instructions[AXP_ICACHE_LINE_INS];
+    u64 kre :1; /* Kernel read/execute */
+    u64 ere :1; /* Executive read/execute */
+    u64 sre :1; /* Supervisor read/execute */
+    u64 ure :1; /* User read/execute */
+    u64 _asm :1; /* Address Space Match */
+    u64 asn :8; /* Address Space Number */
+    u64 pal :1; /* PALcode */
+    u64 vb :1; /* Valid Bit */
+    u64 tag :33; /* Tag */
+    u64 set_0_1 :1; /* When set 0 was last used */
+    u64 res_1 :15; /* align to the 64-bit boundary */
+    AXP_INS_FMT instructions[AXP_ICACHE_LINE_INS];
 } AXP_ICACHE_BLK;
 
 /*
@@ -388,9 +388,9 @@ typedef struct
  */
 typedef struct
 {
-	u64			offset : 6;			/* offset within 64 bytes */
-	u64			index : 9;			/* Cache index */
-	u64			res : 49;
+    u64 offset :6; /* offset within 64 bytes */
+    u64 index :9; /* Cache index */
+    u64 res :49;
 } AXP_CACHE_IDX;
 
 /*
@@ -401,34 +401,33 @@ typedef struct
  */
 typedef struct
 {
-	u8			set;		/* set 0 or 1 */
-	u8			offset;		/* offset within 64 bytes */
-	u16			index;		/* index into Dcache array */
+    u8 set; /* set 0 or 1 */
+    u8 offset; /* offset within 64 bytes */
+    u16 index; /* index into Dcache array */
 } AXP_DCACHE_LOC;
-
 
 /*
  * The following data structures are used to parse out the VPN.
  */
 typedef struct
 {
-	u64			offset : 13;		/* Offset within page */
-	u64			vpn : 51;			/* Virtual Page Number */
+    u64 offset :13; /* Offset within page */
+    u64 vpn :51; /* Virtual Page Number */
 } AXP_VA_FIELDS;
 
 typedef struct
 {
-	u64			offset : 6;			/* Offset within 64 bytes */
-	u64			index : 9;			/* Index from 0-511 */
-	u64			tag : 49;
+    u64 offset :6; /* Offset within 64 bytes */
+    u64 index :9; /* Index from 0-511 */
+    u64 tag :49;
 } AXP_IDX_FIELDS;
 
 typedef union
 {
-	u64				va;
-	AXP_CACHE_IDX	vaIdx;
-	AXP_VA_FIELDS	vaInfo;
-	AXP_IDX_FIELDS	vaIdxInfo;
+    u64 va;
+    AXP_CACHE_IDX vaIdx;
+    AXP_VA_FIELDS vaInfo;
+    AXP_IDX_FIELDS vaIdxInfo;
 } AXP_VA;
 
 #define AXP_VA2PA(paTag, paIdx)					\
@@ -450,18 +449,18 @@ typedef union
  */
 typedef struct
 {
-	u64				res_1 : 2;	/* PALmode and reserved bits */
-	u64				offset : 4;
-	u64				index : 9;
-	u64				tag : 33;
-	u64				res_2 : 16;
+    u64 res_1 :2; /* PALmode and reserved bits */
+    u64 offset :4;
+    u64 index :9;
+    u64 tag :33;
+    u64 res_2 :16;
 } AXP_VPC_FIELDS;
 
 typedef union
 {
-	u64				address;
-	AXP_PC			pc;
-	AXP_VPC_FIELDS	vpcFields;
+    u64 address;
+    AXP_PC pc;
+    AXP_VPC_FIELDS vpcFields;
 } AXP_VPC;
 
 #endif /* _AXP_21264_CACHE_DEFS_DEFS_ */

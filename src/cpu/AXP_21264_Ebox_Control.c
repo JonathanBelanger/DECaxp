@@ -19,7 +19,7 @@
  *	This source file contains the functions needed to implement the
  *	Integer Control functionality of the Ebox.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		22-Jun-2017	Jonathan D. Belanger
  *	Initially written.
@@ -64,34 +64,34 @@
  */
 AXP_EXCEPTIONS AXP_BEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	pc;
+    AXP_PC pc;
 
-	/*
-	 * Implement the instruction.
-	 *
-	 * First we need the PC for the instruction immediately after the PC for
-	 * this branch instruction.
-	 */
-	pc = instr->pc;
-	pc.pc++;
+    /*
+     * Implement the instruction.
+     *
+     * First we need the PC for the instruction immediately after the PC for
+     * this branch instruction.
+     */
+    pc = instr->pc;
+    pc.pc++;
 
-	/*
-	 * If the conditions have been met, the value of src1 is equal to zero,
-	 * then adjust the PC by the displacement.
-	 */
-	if (instr->src1v.r.sq == 0)
-		instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
-	else
-	{
-		instr->branchPC.pal = 0;
-		instr->branchPC.res = 0;
-		instr->branchPC.pc = 0;
-	}
+    /*
+     * If the conditions have been met, the value of src1 is equal to zero,
+     * then adjust the PC by the displacement.
+     */
+    if (instr->src1v.r.sq == 0)
+	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+    else
+    {
+	instr->branchPC.pal = 0;
+	instr->branchPC.res = 0;
+	instr->branchPC.pc = 0;
+    }
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -116,34 +116,34 @@ AXP_EXCEPTIONS AXP_BEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_BGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	pc;
+    AXP_PC pc;
 
-	/*
-	 * Implement the instruction.
-	 *
-	 * First we need the PC for the instruction immediately after the PC for
-	 * this branch instruction.
-	 */
-	pc = instr->pc;
-	pc.pc++;
+    /*
+     * Implement the instruction.
+     *
+     * First we need the PC for the instruction immediately after the PC for
+     * this branch instruction.
+     */
+    pc = instr->pc;
+    pc.pc++;
 
-	/*
-	 * If the conditions have been met, the value of src1 is greater than or
-	 * equal to zero, then adjust the PC by the displacement.
-	 */
-	if (instr->src1v.r.sq >= 0)
-		instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
-	else
-	{
-		instr->branchPC.pal = 0;
-		instr->branchPC.res = 0;
-		instr->branchPC.pc = 0;
-	}
+    /*
+     * If the conditions have been met, the value of src1 is greater than or
+     * equal to zero, then adjust the PC by the displacement.
+     */
+    if (instr->src1v.r.sq >= 0)
+	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+    else
+    {
+	instr->branchPC.pal = 0;
+	instr->branchPC.res = 0;
+	instr->branchPC.pc = 0;
+    }
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -168,34 +168,34 @@ AXP_EXCEPTIONS AXP_BGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_BGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	pc;
+    AXP_PC pc;
 
-	/*
-	 * Implement the instruction.
-	 *
-	 * First we need the PC for the instruction immediately after the PC for
-	 * this branch instruction.
-	 */
-	pc = instr->pc;
-	pc.pc++;
+    /*
+     * Implement the instruction.
+     *
+     * First we need the PC for the instruction immediately after the PC for
+     * this branch instruction.
+     */
+    pc = instr->pc;
+    pc.pc++;
 
-	/*
-	 * If the conditions have been met, the value of src1 is greater than zero,
-	 * then adjust the PC by the displacement.
-	 */
-	if (instr->src1v.r.sq > 0)
-		instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
-	else
-	{
-		instr->branchPC.pal = 0;
-		instr->branchPC.res = 0;
-		instr->branchPC.pc = 0;
-	}
+    /*
+     * If the conditions have been met, the value of src1 is greater than zero,
+     * then adjust the PC by the displacement.
+     */
+    if (instr->src1v.r.sq > 0)
+	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+    else
+    {
+	instr->branchPC.pal = 0;
+	instr->branchPC.res = 0;
+	instr->branchPC.pc = 0;
+    }
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -220,34 +220,34 @@ AXP_EXCEPTIONS AXP_BGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_BLBC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	pc;
+    AXP_PC pc;
 
-	/*
-	 * Implement the instruction.
-	 *
-	 * First we need the PC for the instruction immediately after the PC for
-	 * this branch instruction.
-	 */
-	pc = instr->pc;
-	pc.pc++;
+    /*
+     * Implement the instruction.
+     *
+     * First we need the PC for the instruction immediately after the PC for
+     * this branch instruction.
+     */
+    pc = instr->pc;
+    pc.pc++;
 
-	/*
-	 * If the conditions have been met, the value of src1 has its low-order
-	 * bit clear, then adjust the PC by the displacement.
-	 */
-	if ((instr->src1v.r.uq & 0x01) == 0x00)
-		instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
-	else
-	{
-		instr->branchPC.pal = 0;
-		instr->branchPC.res = 0;
-		instr->branchPC.pc = 0;
-	}
+    /*
+     * If the conditions have been met, the value of src1 has its low-order
+     * bit clear, then adjust the PC by the displacement.
+     */
+    if ((instr->src1v.r.uq & 0x01) == 0x00)
+	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+    else
+    {
+	instr->branchPC.pal = 0;
+	instr->branchPC.res = 0;
+	instr->branchPC.pc = 0;
+    }
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -272,34 +272,34 @@ AXP_EXCEPTIONS AXP_BLBC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_BLBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	pc;
+    AXP_PC pc;
 
-	/*
-	 * Implement the instruction.
-	 *
-	 * First we need the PC for the instruction immediately after the PC for
-	 * this branch instruction.
-	 */
-	pc = instr->pc;
-	pc.pc++;
+    /*
+     * Implement the instruction.
+     *
+     * First we need the PC for the instruction immediately after the PC for
+     * this branch instruction.
+     */
+    pc = instr->pc;
+    pc.pc++;
 
-	/*
-	 * If the conditions have been met, the value of src1 has its low-order
-	 * bit set, then adjust the PC by the displacement.
-	 */
-	if ((instr->src1v.r.uq & 0x01) == 0x01)
-		instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
-	else
-	{
-		instr->branchPC.pal = 0;
-		instr->branchPC.res = 0;
-		instr->branchPC.pc = 0;
-	}
+    /*
+     * If the conditions have been met, the value of src1 has its low-order
+     * bit set, then adjust the PC by the displacement.
+     */
+    if ((instr->src1v.r.uq & 0x01) == 0x01)
+	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+    else
+    {
+	instr->branchPC.pal = 0;
+	instr->branchPC.res = 0;
+	instr->branchPC.pc = 0;
+    }
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -324,34 +324,34 @@ AXP_EXCEPTIONS AXP_BLBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_BLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	pc;
+    AXP_PC pc;
 
-	/*
-	 * Implement the instruction.
-	 *
-	 * First we need the PC for the instruction immediately after the PC for
-	 * this branch instruction.
-	 */
-	pc = instr->pc;
-	pc.pc++;
+    /*
+     * Implement the instruction.
+     *
+     * First we need the PC for the instruction immediately after the PC for
+     * this branch instruction.
+     */
+    pc = instr->pc;
+    pc.pc++;
 
-	/*
-	 * If the conditions have been met, the value of src1 is less than or
-	 * equal to zero, then adjust the PC by the displacement.
-	 */
-	if (instr->src1v.r.sq <= 0)
-		instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
-	else
-	{
-		instr->branchPC.pal = 0;
-		instr->branchPC.res = 0;
-		instr->branchPC.pc = 0;
-	}
+    /*
+     * If the conditions have been met, the value of src1 is less than or
+     * equal to zero, then adjust the PC by the displacement.
+     */
+    if (instr->src1v.r.sq <= 0)
+	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+    else
+    {
+	instr->branchPC.pal = 0;
+	instr->branchPC.res = 0;
+	instr->branchPC.pc = 0;
+    }
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -376,34 +376,34 @@ AXP_EXCEPTIONS AXP_BLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_BLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	pc;
+    AXP_PC pc;
 
-	/*
-	 * Implement the instruction.
-	 *
-	 * First we need the PC for the instruction immediately after the PC for
-	 * this branch instruction.
-	 */
-	pc = instr->pc;
-	pc.pc++;
+    /*
+     * Implement the instruction.
+     *
+     * First we need the PC for the instruction immediately after the PC for
+     * this branch instruction.
+     */
+    pc = instr->pc;
+    pc.pc++;
 
-	/*
-	 * If the conditions have been met, the value of src1 is less than zero,
-	 * then adjust the PC by the displacement.
-	 */
-	if (instr->src1v.r.sq < 0)
-		instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
-	else
-	{
-		instr->branchPC.pal = 0;
-		instr->branchPC.res = 0;
-		instr->branchPC.pc = 0;
-	}
+    /*
+     * If the conditions have been met, the value of src1 is less than zero,
+     * then adjust the PC by the displacement.
+     */
+    if (instr->src1v.r.sq < 0)
+	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+    else
+    {
+	instr->branchPC.pal = 0;
+	instr->branchPC.res = 0;
+	instr->branchPC.pc = 0;
+    }
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -428,34 +428,34 @@ AXP_EXCEPTIONS AXP_BLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_BNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	pc;
+    AXP_PC pc;
 
-	/*
-	 * Implement the instruction.
-	 *
-	 * First we need the PC for the instruction immediately after the PC for
-	 * this branch instruction.
-	 */
-	pc = instr->pc;
-	pc.pc++;
+    /*
+     * Implement the instruction.
+     *
+     * First we need the PC for the instruction immediately after the PC for
+     * this branch instruction.
+     */
+    pc = instr->pc;
+    pc.pc++;
 
-	/*
-	 * If the conditions have been met, the value of src1 is not equal to zero,
-	 * then adjust the PC by the displacement.
-	 */
-	if (instr->src1v.r.uq != 0)
-		instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
-	else
-	{
-		instr->branchPC.pal = 0;
-		instr->branchPC.res = 0;
-		instr->branchPC.pc = 0;
-	}
+    /*
+     * If the conditions have been met, the value of src1 is not equal to zero,
+     * then adjust the PC by the displacement.
+     */
+    if (instr->src1v.r.uq != 0)
+	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+    else
+    {
+	instr->branchPC.pal = 0;
+	instr->branchPC.res = 0;
+	instr->branchPC.pc = 0;
+    }
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -480,31 +480,31 @@ AXP_EXCEPTIONS AXP_BNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_BR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	pc;
+    AXP_PC pc;
 
-	/*
-	 * Implement the instruction.
-	 *
-	 * First we need the PC for the instruction immediately after the PC for
-	 * this branch instruction.
-	 */
-	pc = instr->pc;
-	pc.pc++;
+    /*
+     * Implement the instruction.
+     *
+     * First we need the PC for the instruction immediately after the PC for
+     * this branch instruction.
+     */
+    pc = instr->pc;
+    pc.pc++;
 
-	/*
-	 * We store the PC calculated above into the destination register value.
-	 */
-	instr->destv.r.uq = *((u64 *) &pc);
+    /*
+     * We store the PC calculated above into the destination register value.
+     */
+    instr->destv.r.uq = *((u64 *) &pc);
 
-	/*
-	 * Now we add a displacement to the PC calculated above.
-	 */
-	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+    /*
+     * Now we add a displacement to the PC calculated above.
+     */
+    instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -529,32 +529,32 @@ AXP_EXCEPTIONS AXP_BR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_BSR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	pc;
+    AXP_PC pc;
 
-	/*
-	 * Implement the instruction.
-	 *
-	 * First we need the PC for the instruction immediately after the PC for
-	 * this branch instruction.
-	 */
-	pc = instr->pc;
-	pc.pc++;
-	AXP_PUSH(pc);
+    /*
+     * Implement the instruction.
+     *
+     * First we need the PC for the instruction immediately after the PC for
+     * this branch instruction.
+     */
+    pc = instr->pc;
+    pc.pc++;
+    AXP_PUSH(pc);
 
-	/*
-	 * We store the PC calculated above into the destination register value.
-	 */
-	instr->destv.r.uq = *((u64 *) &pc);
+    /*
+     * We store the PC calculated above into the destination register value.
+     */
+    instr->destv.r.uq = *((u64 *) &pc);
 
-	/*
-	 * Now we add a displacement to the PC calculated above.
-	 */
-	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+    /*
+     * Now we add a displacement to the PC calculated above.
+     */
+    instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -599,66 +599,66 @@ AXP_EXCEPTIONS AXP_BSR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_JMP(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	pc;
+    AXP_PC pc;
 
-	/*
-	 * Implement the instruction.
-	 *
-	 * First we need the PC for the instruction immediately after the PC for
-	 * this branch instruction.
-	 */
-	pc = instr->pc;
-	pc.pc++;
+    /*
+     * Implement the instruction.
+     *
+     * First we need the PC for the instruction immediately after the PC for
+     * this branch instruction.
+     */
+    pc = instr->pc;
+    pc.pc++;
 
-	/*
-	 * We store the PC calculated above into the destination register value.
-	 */
-	instr->destv.r.uq = *((u64 *) &pc);
+    /*
+     * We store the PC calculated above into the destination register value.
+     */
+    instr->destv.r.uq = *((u64 *) &pc);
 
-	/*
-	 * Use the hint bits to determine what we are being asked to do.
-	 */
-	switch (AXP_JMP_TYPE(instr->displacement))
-	{
-		case AXP_HW_JMP:
-			instr->branchPC = AXP_21264_DisplaceVPC(
-										cpu,
-										pc,
-										instr->displacement);
-			break;
+    /*
+     * Use the hint bits to determine what we are being asked to do.
+     */
+    switch (AXP_JMP_TYPE(instr->displacement))
+    {
+	case AXP_HW_JMP:
+	    instr->branchPC = AXP_21264_DisplaceVPC(
+		cpu,
+		pc,
+		instr->displacement);
+	    break;
 
-		case AXP_HW_JSR:
-			AXP_PUSH(pc);
-			instr->branchPC = AXP_21264_DisplaceVPC(
-										cpu,
-										pc,
-										instr->displacement);
-			break;
+	case AXP_HW_JSR:
+	    AXP_PUSH(pc);
+	    instr->branchPC = AXP_21264_DisplaceVPC(
+		cpu,
+		pc,
+		instr->displacement);
+	    break;
 
-		case AXP_HW_RET:
-			AXP_POP(pc);
-			instr->branchPC = AXP_21264_MakeVPC(
-										cpu,
-										*((u64 *) &pc),
-										AXP_NORMAL_MODE);
-			break;
+	case AXP_HW_RET:
+	    AXP_POP(pc);
+	    instr->branchPC = AXP_21264_MakeVPC(cpu, *((u64 *) &pc),
+	    AXP_NORMAL_MODE);
+	    break;
 
-		case AXP_HW_COROUTINE:
-			AXP_SWAP(pc);
-			instr->branchPC = AXP_21264_MakeVPC(
-										cpu,
-										*((u64 *) &pc),
-										AXP_NORMAL_MODE);
-			break;
-	}
+	case AXP_HW_COROUTINE:
+	    AXP_SWAP(pc)
+	    ;
+	    instr->branchPC = AXP_21264_MakeVPC(cpu, *((u64 *) &pc),
+	    AXP_NORMAL_MODE);
+	    break;
+    }
 
-	/*
-	 * Now we use the PC indicated in src1 as the new PC.
-	 */
-	instr->branchPC = AXP_21264_MakeVPC(cpu, instr->src1v.r.uq, AXP_NORMAL_MODE);
+    /*
+     * Now we use the PC indicated in src1 as the new PC.
+     */
+    instr->branchPC = AXP_21264_MakeVPC(
+	cpu,
+	instr->src1v.r.uq,
+	AXP_NORMAL_MODE);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }

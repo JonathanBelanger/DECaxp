@@ -20,7 +20,7 @@
  *	the CPU structure and create each of the threads that implement all the
  *	functionality of a Digital Alpha AXP 21264 CPU.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		17-Nov-2017	Jonathan D. Belanger
  *	Initially written.
@@ -191,32 +191,59 @@ void *AXP_21264_AllocateCPU(u64 cpuID)
 	 */
 	if ((pthreadRet == 0) || (qRet == true))
 	{
-	    pthreadRet = pthread_create(&cpu->iBoxThreadID, NULL,
-		    AXP_21264_IboxMain, cpu);
+	    pthreadRet = pthread_create(
+		&cpu->iBoxThreadID,
+		NULL,
+		AXP_21264_IboxMain,
+		cpu);
 	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(&cpu->eBoxU0ThreadID, NULL,
-		        AXP_21264_EboxU0Main, cpu);
+		pthreadRet = pthread_create(
+		    &cpu->eBoxU0ThreadID,
+		    NULL,
+		    AXP_21264_EboxU0Main,
+		    cpu);
 	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(&cpu->eBoxU1ThreadID, NULL,
-		        AXP_21264_EboxU1Main, cpu);
+		pthreadRet = pthread_create(
+		    &cpu->eBoxU1ThreadID,
+		    NULL,
+		    AXP_21264_EboxU1Main,
+		    cpu);
 	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(&cpu->eBoxL0ThreadID, NULL,
-		        AXP_21264_EboxL0Main, cpu);
+		pthreadRet = pthread_create(
+		    &cpu->eBoxL0ThreadID,
+		    NULL,
+		    AXP_21264_EboxL0Main,
+		    cpu);
 	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(&cpu->eBoxL1ThreadID, NULL,
-		        AXP_21264_EboxL1Main, cpu);
+		pthreadRet = pthread_create(
+		    &cpu->eBoxL1ThreadID,
+		    NULL,
+		    AXP_21264_EboxL1Main,
+		    cpu);
 	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(&cpu->fBoxMulThreadID, NULL,
-		        AXP_21264_FboxMulMain, cpu);
+		pthreadRet = pthread_create(
+		    &cpu->fBoxMulThreadID,
+		    NULL,
+		    AXP_21264_FboxMulMain,
+		    cpu);
 	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(&cpu->fBoxOthThreadID, NULL,
-		        AXP_21264_FboxOthMain, cpu);
+		pthreadRet = pthread_create(
+		    &cpu->fBoxOthThreadID,
+		    NULL,
+		    AXP_21264_FboxOthMain,
+		    cpu);
 	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(&cpu->mBoxThreadID, NULL,
-		        AXP_21264_MboxMain, cpu);
+		pthreadRet = pthread_create(
+		    &cpu->mBoxThreadID,
+		    NULL,
+		    AXP_21264_MboxMain,
+		    cpu);
 	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(&cpu->cBoxThreadID, NULL,
-		        AXP_21264_CboxMain, cpu);
+		pthreadRet = pthread_create(
+		    &cpu->cBoxThreadID,
+		    NULL,
+		    AXP_21264_CboxMain,
+		    cpu);
 	}
 
 	/*
@@ -321,10 +348,19 @@ void AXP_21264_Save_WHAMI(void *cpuPtr, u64 *cpuID)
  * Return Values:
  *	None.
  */
-void AXP_21264_Save_SystemInterfaces(void *cpuPtr, pthread_mutex_t **cpuMutex,
-        pthread_cond_t **cpuCond, void **pq, u8 **pqTop, u8 **pqBottom, u8 **irq_H,
-        pthread_mutex_t *sysMutex, pthread_cond_t *sysCond, void *rq,
-        u32 *rqStart, u32 *rqEnd)
+void AXP_21264_Save_SystemInterfaces(
+    void *cpuPtr,
+    pthread_mutex_t **cpuMutex,
+    pthread_cond_t **cpuCond,
+    void **pq,
+    u8 **pqTop,
+    u8 **pqBottom,
+    u8 **irq_H,
+    pthread_mutex_t *sysMutex,
+    pthread_cond_t *sysCond,
+    void *rq,
+    u32 *rqStart,
+    u32 *rqEnd)
 {
     AXP_21264_CPU *cpu = (AXP_21264_CPU *) cpuPtr;
 

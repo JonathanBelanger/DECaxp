@@ -41,34 +41,34 @@ void AXP_tbia(AXP_21264_CPU *, bool);
 void AXP_tbiap(AXP_21264_CPU *, bool);
 void AXP_tbis(AXP_21264_CPU *, u64, bool);
 AXP_EXCEPTIONS AXP_21264_checkMemoryAccess(
-						AXP_21264_CPU *,
-						AXP_21264_TLB *,
-						AXP_21264_ACCESS);
+    AXP_21264_CPU *,
+    AXP_21264_TLB *,
+    AXP_21264_ACCESS);
 u64 AXP_va2pa(
-		AXP_21264_CPU *,
-		u64,
-		AXP_PC,
-		bool,
-		AXP_21264_ACCESS,
-		bool *,
-		u32 *,
-		AXP_EXCEPTIONS *);
+    AXP_21264_CPU *,
+    u64,
+    AXP_PC,
+    bool,
+    AXP_21264_ACCESS,
+    bool *,
+    u32 *,
+    AXP_EXCEPTIONS *);
 AXP_EXCEPTIONS AXP_Dcache_Status(
-						AXP_21264_CPU *,
-						u64,
-						u64,
-						u32,
-						bool,
-						u32 *,
-						AXP_DCACHE_LOC *,
-						bool);
+    AXP_21264_CPU *,
+    u64,
+    u64,
+    u32,
+    bool,
+    u32 *,
+    AXP_DCACHE_LOC *,
+    bool);
 bool AXP_DcacheWrite(AXP_21264_CPU *, AXP_DCACHE_LOC *, u32, void *, u8);
 void AXP_CopyBcacheToDcache(AXP_21264_CPU *, AXP_DCACHE_LOC *, u64);
 void AXP_DcacheFlush(AXP_21264_CPU *);
 void AXP_DcacheEvict(AXP_21264_CPU *, u64, AXP_PC);
 bool AXP_DcacheRead(AXP_21264_CPU *, u64, u64, u32, void *, AXP_DCACHE_LOC *);
 void AXP_Dcache_Lock(AXP_21264_CPU *, u64, u64);
-void AXP_IcacheAdd(AXP_21264_CPU *, AXP_PC , u32 *, AXP_21264_TLB *);
+void AXP_IcacheAdd(AXP_21264_CPU *, AXP_PC, u32 *, AXP_21264_TLB *);
 void AXP_IcacheFlush(AXP_21264_CPU *, bool);
 bool AXP_IcacheFetch(AXP_21264_CPU *, AXP_PC, AXP_INS_LINE *);
 bool AXP_IcacheValid(AXP_21264_CPU *, AXP_PC);

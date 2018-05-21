@@ -20,7 +20,7 @@
  *	implement the branch prediction as part of the emulation for the Alpha
  *	21264 (EV68) processor.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		05-May-2017	Jonathan D. Belanger
  *	Initially written.
@@ -43,15 +43,15 @@
  */
 typedef struct
 {
-	u64	res_1 : 2;
-	u64	index : 10;
-	u64 res_2 : 52;
+    u64 res_1 :2;
+    u64 index :10;
+    u64 res_2 :52;
 } LCLindex;
 
 typedef union
 {
-	AXP_PC vpc;
-	LCLindex index;
+    AXP_PC vpc;
+    LCLindex index;
 } LPTIndex;
 
 /*
@@ -91,7 +91,7 @@ typedef union
  */
 typedef struct
 {
-	u8	gbl_pred[FOUR_K];
+    u8 gbl_pred[FOUR_K];
 } GPT;
 
 /*
@@ -100,11 +100,11 @@ typedef struct
  */
 typedef struct
 {
-	u16	lcl_history[ONE_K];
+    u16 lcl_history[ONE_K];
 } LHT;
 typedef struct
 {
-	u8	lcl_pred[ONE_K];
+    u8 lcl_pred[ONE_K];
 } LPT;
 
 /*
@@ -118,7 +118,7 @@ typedef struct
  */
 typedef struct
 {
-	u8	choice_pred[FOUR_K];
+    u8 choice_pred[FOUR_K];
 } CPT;
 
 /*
