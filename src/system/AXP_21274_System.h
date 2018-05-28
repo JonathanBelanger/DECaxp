@@ -18,7 +18,7 @@
  *
  *	This header file contains the function prototypes for the System interface.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		31-Dec-2017	Jonathan D. Belanger
  *	Initially written.

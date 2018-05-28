@@ -69,6 +69,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <signal.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>

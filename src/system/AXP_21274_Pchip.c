@@ -629,15 +629,15 @@ void *AXP_21274_PchipMain(void *voidPtr)
 	    case PIO_MemoryRead:
 	    case PTPMemoryRead:
 	    case PIO_MemoryWriteCPU:
-	    break;
+		break;
 
 	    case CSR_Read:
-	    AXP_21274_ReadPCSR(p, msg);
-	    break;
+		AXP_21274_ReadPCSR(p, msg);
+		break;
 
 	    case CSR_Write:
-	    AXP_21274_WritePCSR(p, msg);
-	    break;
+		AXP_21274_WritePCSR(p, msg);
+		break;
 
 	    case PCI_ConfigRead:
 	    case PCI_ConfigWrite:
@@ -652,7 +652,7 @@ void *AXP_21274_PchipMain(void *voidPtr)
 	    case DMAWriteNQW:
 	    case PTPMemoryWrite:
 	    case PTPWrByteMaskByp:
-	    break;
+		break;
 	}
 
 	/*
@@ -661,5 +661,6 @@ void *AXP_21274_PchipMain(void *voidPtr)
 	 * created and then freeing up the memory and exiting the image.
 	 */
 	pthread_exit(NULL);
-	return(NULL);
+	return (NULL);
     }
+}
