@@ -68,6 +68,11 @@
  *	the fields are greater than their maximum.  To this end, we will
  *	blindly add the number back in and then normalize the time information.
  *	Also, we need to take into consideration leap year.
+ *
+ *	V01.002		01-Jun-2018	Jonathan D. Belanger
+ *	Added the ability to provide a mutex, condition variable, interrupt field,
+ *	and interrupt mask, so that when an interrupt is triggered, the thread that
+ *	needs to be notified, has been informed.
  */
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
@@ -135,6 +140,15 @@ static timer_t	alarmTimer;
 static timer_t	updateTimer;
 
 /*
+ * Locations to store a mutex, condition variable, IRQ bit field and IRQ bit
+ * mask, to be used when the IRQH bit has been set/cleared.
+ */
+static pthread_cond_t	*irqCond = NULL;
+static pthread_mutex_t	*irqMutex = NULL;
+static u64				*irqField = NULL;
+static u64				irqMask = 0;
+
+/*
  * Local Prototypes
  */
 static void AXP_DS12887A_Normalize(struct tm *, bool);
@@ -142,6 +156,8 @@ void AXP_DS12887A_Notify(sigval_t);
 static void AXP_DS12887A_StartTimers(bool);
 static void AXP_DS12887A_StopTimers(void);
 static void AXP_DS12887A_Initialize(void);
+static void	AXP_DS12887A_CheckIRQF(void);
+
 
 /*
  * AXP_DS12887A_Normalize
@@ -220,6 +236,57 @@ static void AXP_DS12887A_Normalize(struct tm *timeSpec, bool justTime)
      * Return back to the caller.
      */
     return;
+}
+
+/*
+ * AXP_DS12887A_CheckIRQF
+ *	This function is called to either clear or set the IRQF bit.  If so, the
+ *	irqMask will also be set/cleared.  If set, then irqCond will also be
+ *	signalled.
+ *
+ * Input Parameters:
+ *	None.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+static void AXP_DS12887A_CheckIRQF(void)
+{
+	bool	irqHSet = ctrlC->irqf == 1;
+
+    /*
+     * If any of the flags are set and the interrupt enabled, then set the IRQF
+     * bit in Control Register C.
+     */
+    if (((ctrlB->pie == 1) && (ctrlC->pf == 1)) ||
+	((ctrlB->aie == 1) && (ctrlC->af == 1)) ||
+	((ctrlB->uie == 1) && (ctrlC->uf == 1)))
+	ctrlC->irqf = 1;
+	else
+	ctrlC->irqf = 0;
+
+	/*
+	 * If we have some one to notify, then do so now.
+	 */
+	if ((irqMutex != NULL) && (irqField != NULL))
+	{
+		pthread_mutex_lock(irqMutex);
+		if (ctrlC->irqf == 0)
+			*irqField &= ~irqMask;
+		else
+			*irqField |= irqMask;
+		if ((ctrlC->irqf == 1) && (irqHSet == false) && (irqCond != NULL))
+			pthread_cond_signal(irqCond);
+		pthread_mutex_unlock(irqMutex);
+	}
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
 }
 
 /*
@@ -309,10 +376,7 @@ void AXP_DS12887A_Notify(sigval_t sv)
      * If any of the flags are set and the interrupt enabled, then set the IRQF
      * bit in Control Register C.
      */
-    if (((ctrlB->pie == 1) && (ctrlC->pf == 1)) ||
-	((ctrlB->aie == 1) && (ctrlC->af == 1)) ||
-	((ctrlB->uie == 1) && (ctrlC->uf == 1)))
-	ctrlC->irqf = 1;
+	AXP_DS12887A_CheckIRQF();
 
     if (AXP_SYS_OPT2)
     {
@@ -411,17 +475,17 @@ static void AXP_DS12887A_StartTimers(bool all)
      * The three alarm bytes can be used in two ways. First, when the alarm
      * time is written in the appropriate hours, minutes, and seconds alarm
      * locations, the alarm interrupt is initiated at the specified time each
-     * day, if the alarm-enable bit is high. In this mode, the “0” bits in the
+     * day, if the alarm-enable bit is high. In this mode, the ?0? bits in the
      * alarm registers and the corresponding time registers must always be
      * written to 0 (Table 2A and 2B). Writing the 0 bits in the alarm and/or
      * time registers to 1 can result in undefined operation.  The second use
-     * condition is to insert a “don’t care” state in one or more of the three
-     * alarm bytes. The don’t care code is any hexadecimal value from C0 to FF.
-     * The two most significant bits of each byte set the don’t-care condition
-     * when at logic 1. An alarm is generated each hour when the don’t-care
+     * condition is to insert a ?don?t care? state in one or more of the three
+     * alarm bytes. The don?t care code is any hexadecimal value from C0 to FF.
+     * The two most significant bits of each byte set the don?t-care condition
+     * when at logic 1. An alarm is generated each hour when the don?t-care
      * bits are set in the hours byte.  Similarly, an alarm is generated every
-     * minute with don’t-care codes in the hours and minute alarm bytes.  The
-     * don’t-care codes in all three alarm bytes create an interrupt every
+     * minute with don?t-care codes in the hours and minute alarm bytes.  The
+     * don?t-care codes in all three alarm bytes create an interrupt every
      * second.
      *
      * For this implementation a don't care value is a value greater than the
@@ -723,6 +787,62 @@ static void AXP_DS12887A_Initialize(void)
 }
 
 /*
+ * AXP_DS12887A_Config
+ *	This function is called to configure this code to be able to update another
+ *	thread when the IRQF bit has been set/cleared.
+ *
+ * Input Parameters:
+ *	cond:
+ *		A pointer to a condition variable to be triggered when the IRQH bit has
+ *		been set.
+ *	mutex:
+ *		A pointer to a mutex to be used to control the setting of the IRQ bit
+ *		in the next parameter.
+ *	irq_field:
+ *		A pointer to an unsigned 64-bit value to have a bit set or cleared when
+ *		the IRQF bit has been set/cleared.
+ *	irq_mask:
+ *		A value indicating the bit with in the field to be set/cleared when the
+ *		IRQF bit has been set/cleared.
+ *
+ * Output Parameters:
+ *	None.
+ *
+ * Return Values:
+ *	None.
+ */
+void AXP_DS12887A_Config(
+				pthread_cond_t *cond,
+				pthread_mutext_t *mutex,
+				u64 *irq_field,
+				u64 irq_mask)
+{
+    if (AXP_SYS_CALL)
+    {
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("DS12887A Configure has been called.");
+		AXP_TRACE_END();
+    }
+	
+	irqCond = cond;
+	irqMutex = mutex;
+	irqField = irq_field;
+	irqMask = irq_mask;
+
+    if (AXP_SYS_CALL)
+    {
+		AXP_TRACE_BEGIN();
+		AXP_TraceWrite("DS12887A Configure returning.");
+		AXP_TRACE_END();
+    }
+
+	/*
+	 * Return back to the caller.
+	 */
+	return;
+}
+
+/*
  * AXP_DS12887A_Reset
  *  This function is called when a RESET occurs on the Real-Time Clock (RTC).
  *
@@ -757,6 +877,7 @@ void AXP_DS12887A_Reset(void)
     ctrlC->af = 0;
     ctrlC->uf = 0;
     AXP_DS12887A_StopTimers();
+	AXP_DS12887A_CheckIRQF();
     AXP_DS12887A_UNLOCK;
 
     if (AXP_SYS_CALL)
@@ -1032,6 +1153,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	AXP_TRACE_END();
     }
 
+	AXP_DS12887A_CheckIRQF();
     AXP_DS12887A_UNLOCK;
 
     /*
@@ -1339,6 +1461,7 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
 	AXP_TRACE_END();
     }
 
+	AXP_DS12887A_CheckIRQF();
     AXP_DS12887A_UNLOCK;
 
     /*
