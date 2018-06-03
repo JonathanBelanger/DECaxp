@@ -34,20 +34,20 @@
 
 /*
  * AXP_21264_IOWB_Empty
- *	This function is called to determine of there is a record in the I/O
- *	Write Buffer (IOWB) that needs to be processed.
+ *  This function is called to determine of there is a record in the I/O
+ *  Write Buffer (IOWB) that needs to be processed.
  *
  * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
- * 		processor.
+ *  cpu:
+ * 	A pointer to the CPU structure for the emulated Alpha AXP 21264
+ * 	processor.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	-1:		No entries requiring processing.
- *	>=0:	Index of next entry that can be processed.
+ *  -1:		No entries requiring processing.
+ *  >=0:	Index of next entry that can be processed.
  */
 int AXP_21264_IOWB_Empty(AXP_21264_CPU *cpu)
 {
@@ -95,26 +95,26 @@ int AXP_21264_IOWB_Empty(AXP_21264_CPU *cpu)
 
 /*
  * AXP_21264_Process_IOWB
- *	This function is called to check the first unprocessed entry on the queue
- *	containing the IOWB records.
+ *  This function is called to check the first unprocessed entry on the queue
+ *  containing the IOWB records.
  *
  * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
- * 		processor.
- *	entry:
- *		An integer value that is the entry in the IOWB to be processed.
+ *  cpu:
+ *	A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *	processor.
+ *  entry:
+ *	An integer value that is the entry in the IOWB to be processed.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
  */
 void AXP_21264_Process_IOWB(AXP_21264_CPU *cpu, int entry)
 {
     AXP_21264_CBOX_IOWB *iowb = &cpu->iowb[entry];
-    AXP_21264_TO_SYS_CMD cmd;
+    AXP_System_Commands cmd;
     bool m1 = false;
     bool m2 = false;
     bool rv = true;
@@ -149,7 +149,6 @@ void AXP_21264_Process_IOWB(AXP_21264_CPU *cpu, int entry)
 
     /*
      * OK, send what we have to the System.
-     */
     AXP_System_CommandSend(
 	cmd,
 	m2,
@@ -160,6 +159,7 @@ void AXP_21264_Process_IOWB(AXP_21264_CPU *cpu, int entry)
 	iowb->pa,
 	iowb->sysData,
 	iowb->bufLen);
+     */
 
     /*
      * Indicate that the entry is now processed and return back to the caller.
@@ -170,33 +170,33 @@ void AXP_21264_Process_IOWB(AXP_21264_CPU *cpu, int entry)
 
 /*
  * AXP_21264_Merge_IOWB
- *	This function is called to attempt to merge an request for a new I/O Write
- *	Block (IOWB) with an existing entry on to the queue for processing.
+ *  This function is called to attempt to merge an request for a new I/O Write
+ *  Block (IOWB) with an existing entry on to the queue for processing.
  *
- *	NOTE:	The Mbox calls this function. It does so when it has a SQ entry
- *			needs to be written to an I/O device.
+ *  NOTE:	The Mbox calls this function. It does so when it has a SQ entry
+ *		needs to be written to an I/O device.
  *
  * Input Parameters:
- * 	iowb:
- * 		A pointer to the next queued IOWB to see if we can merge the next data
- * 		with it.
- *	pa:
- *		A value indicating the physical address of the device the I/O Buffer is
- *		to be written.
- *	data:
- *		A pointer to the buffer to be written to the device.
- *	dataLen:
- *		A value indicating the length of the 'data' parameter.
- *	maxLen:
- *		A value indicating the longest merged buffer that is allowed (32 or
- *		64).
+ *  iowb:
+ *	A pointer to the next queued IOWB to see if we can merge the next data
+ *	with it.
+ *  pa:
+ *	A value indicating the physical address of the device the I/O Buffer is
+ *	to be written.
+ *  data:
+ *	A pointer to the buffer to be written to the device.
+ *  dataLen:
+ *	A value indicating the length of the 'data' parameter.
+ *  maxLen:
+ *	A value indicating the longest merged buffer that is allowed (32 or
+ *	64).
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	true:	A new IOWB still needs to be allocated.
- *	false:	The data was merged into an existing IOWB.
+ *  true:	A new IOWB still needs to be allocated.
+ *  false:	The data was merged into an existing IOWB.
  */
 bool AXP_21264_Merge_IOWB(
     AXP_21264_CBOX_IOWB *iowb,
@@ -244,29 +244,29 @@ bool AXP_21264_Merge_IOWB(
 
 /*
  * AXP_21264_Add_IOWB
- *	This function is called to add an I/O Write Block (IOWB) entry on to the
- *	queue for processing.
+ *  This function is called to add an I/O Write Block (IOWB) entry on to the
+ *  queue for processing.
  *
- *	NOTE:	The Mbox calls this function. It does so when it has a SQ entry
- *			needs to be written to an I/O device.
+ *  NOTE:	The Mbox calls this function. It does so when it has a SQ entry
+ *		needs to be written to an I/O device.
  *
  * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
- * 		processor.
- *	pa:
- *		A value indicating the physical address of the device the I/O Buffer is
- *		to be written.
- *	data:
- *		A pointer to the buffer to be written to the device.
- *	dataLen:
- *		A value indicating the length of the 'data' parameter.
+ *  cpu:
+ *	A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *	processor.
+ *  pa:
+ *	A value indicating the physical address of the device the I/O Buffer is
+ *	to be written.
+ *  data:
+ *	A pointer to the buffer to be written to the device.
+ *  dataLen:
+ *	A value indicating the length of the 'data' parameter.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
  */
 void AXP_21264_Add_IOWB(
     AXP_21264_CPU *cpu,
@@ -288,13 +288,14 @@ void AXP_21264_Add_IOWB(
     /*
      * HRM Table 2–8 Rules for I/O Address Space Store Instruction Data Merging
      *
+     * -------------------------------------------------------------------------------------
      * Merge Register/		Store
-     * Replayed Instruction	Byte/Word	Store Longword			Store Quadword
-     * --------------------	---------	--------------------	--------------------
-     * Byte/Word 			No merge	No merge				No merge
-     * Longword				No merge	Merge up to 32 bytes	No merge
-     * Quadword				No merge	No merge				Merge up to 64 bytes
-     * --------------------	---------	--------------------	--------------------
+     * Replayed Instruction	Byte/Word	Store Longword		Store Quadword
+     * -------------------------------------------------------------------------------------
+     * Byte/Word 		No merge	No merge		No merge
+     * Longword			No merge	Merge up to 32 bytes	No merge
+     * Quadword			No merge	No merge		Merge up to 64 bytes
+     * -------------------------------------------------------------------------------------
      * Table 2–8 shows some of the following rules:
      * 	- Byte/word store instructions and different size store instructions
      * 	  are not allowed to merge.
@@ -403,22 +404,22 @@ void AXP_21264_Add_IOWB(
 
 /*
  * AXP_21264_Free_IOWB
- * 	This function is called to return a previously allocated IOWB buffer.  It
- * 	does this by setting the valid bit to false and adjusting the iowbTop
- * 	index, as necessary.
+ *  This function is called to return a previously allocated IOWB buffer.  It
+ *  does this by setting the valid bit to false and adjusting the iowbTop
+ *  index, as necessary.
  *
  * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
- * 		processor.
- *	entry:
- *		An integer value that is the entry in the IOWB to be invalidated.
+ *  cpu:
+ *	A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *	processor.
+ *  entry:
+ *	An integer value that is the entry in the IOWB to be invalidated.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
  */
 void AXP_21264_Free_IOWB(AXP_21264_CPU *cpu, u8 entry)
 {

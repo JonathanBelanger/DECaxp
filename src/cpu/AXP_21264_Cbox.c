@@ -886,7 +886,7 @@ bool AXP_21264_Cbox_Init(AXP_21264_CPU *cpu)
     for (ii = 0; ii < AXP_21264_PQ_LEN; ii++)
     {
 	cpu->pq[ii].pa = 0;
-	cpu->pq[ii].sysDc = NOPsysdc;
+	cpu->pq[ii].sysDc = SysDC_Nop;
 	cpu->pq[ii].probeStatus = HitClean;
 	cpu->pq[ii].probe = 0;
 	cpu->pq[ii].rvb = false;

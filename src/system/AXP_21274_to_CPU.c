@@ -27,6 +27,7 @@
 #include "AXP_21274_21264_Common.h"
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
+#include "AXP_21274_System.h"
 
 /*
  * AXP_21274_SendToCPU
@@ -123,7 +124,7 @@ void AXP_21264_SendToCPU(AXP_21274_SYSBUS_CPU *msg, AXP_21274_CPU *cpu)
  * 	cpu:
  * 		A pointer to the CPU to receive the interrupts.
  */
-void AXP_21264_SendToCPU(u8 irq_H, AXP_21274_CPU *cpu)
+void AXP_21264_InterruptToCPU(u8 irq_H, AXP_21274_CPU *cpu)
 {
 
     /*

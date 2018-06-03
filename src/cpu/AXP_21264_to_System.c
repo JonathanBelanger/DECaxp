@@ -30,15 +30,15 @@
 
 /*
  * AXP_21264_SendToSystem
- *	This function is called with a pointer to the SysBus message and a pointer
- *	to the CPU structure, and sends the message to the CPU, locking the correct
- *	mutex and signaling the correct condition variable.
+ *  This function is called with a pointer to the SysBus message and a pointer
+ *  to the CPU structure, and sends the message to the CPU, locking the correct
+ *  mutex and signaling the correct condition variable.
  *
  * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulation.
- * 	msg:
- * 		A pointer to the message to send to the specified CPU.
+ *  cpu:
+ *	A pointer to the CPU structure for the emulation.
+ *  msg:
+ *	A pointer to the message to send to the specified CPU.
  */
 void AXP_21264_SendToSystem(AXP_21264_CPU *cpu, AXP_21264_SYSBUS_System *msg)
 {
@@ -72,24 +72,24 @@ void AXP_21264_SendToSystem(AXP_21264_CPU *cpu, AXP_21264_SYSBUS_System *msg)
     rq->valid = true;
     rq->waitVector = msg->id; /* TODO: Probably not correct */
     rq->mask = msg->mask;
-    switch (msg->sysDc)
+    switch (msg->cmd)
     {
 	case ReadDataError:
-	    memset(pq->sysData, 0xff, AXP_21274_DATA_SIZE);
-	    pq->dm = true;
+	    memset(rq->sysData, 0xff, AXP_21264_DATA_SIZE);
+/*	    rq->dm = true; */
 	    break;
 
 	case ReadData:
 	case ReadDataDirty:
 	case ReadDataShared:
 	case ReadDataSharedDirty:
-	    memcpy(pq->sysData, msg->sysData, AXP_21274_DATA_SIZE);
-	    pq->dm = true;
-	    pq->wrap = msg->wrap;
+	    memcpy(rq->sysData, msg->sysData, AXP_21264_DATA_SIZE);
+/*	    rq->dm = true;
+	    rq->wrap = msg->wrap; */
 	    break;
 
 	default:
-	    pq->dm = false;
+/*	    rq->dm = false; */
 	    break;
     }
 

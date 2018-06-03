@@ -16,13 +16,13 @@
  *
  * Description:
  *
- *	This source file contains the functions needed to implement the
- *	Victim Data Buffer (VDB) functionality of the Cbox.
+ *  This source file contains the functions needed to implement the
+ *  Victim Data Buffer (VDB) functionality of the Cbox.
  *
  * Revision History:
  *
- *	V01.000		29-Dec-2017	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000		29-Dec-2017	Jonathan D. Belanger
+ *  Initially written.
  */
 #include "AXP_21264_Cbox.h"
 #include "AXP_Configure.h"
@@ -34,20 +34,20 @@
 
 /*
  * AXP_21264_VDB_Empty
- *	This function is called to determine of there is a record in the Victim
- *	Data Buffer (VDB) that needs to be processed.
+ *  This function is called to determine of there is a record in the Victim
+ *  Data Buffer (VDB) that needs to be processed.
  *
  * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
- * 		processor.
+ *  cpu:
+ *	A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *	processor.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	-1:		No entries requiring processing.
- *	>=0:	Index of next entry that can be processed.
+ *  -1:		No entries requiring processing.
+ *  >=0:	Index of next entry that can be processed.
  */
 int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
 {
@@ -95,21 +95,21 @@ int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
 
 /*
  * AXP_21264_Process_VDB
- *	This function is called to check the first unprocessed entry on the queue
- *	containing the VDB records.
+ *  This function is called to check the first unprocessed entry on the queue
+ *  containing the VDB records.
  *
  * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
- * 		processor.
- *	entry:
- *		An integer value that is the entry in the VDB to be processed.
+ *  cpu:
+ *	A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *	processor.
+ *  entry:
+ *	An integer value that is the entry in the VDB to be processed.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
  */
 void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 {
@@ -151,7 +151,6 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 
 	    /*
 	     * OK, send what we have to the System.
-	     */
 	    AXP_System_CommandSend(
 		WrVictimBlk,
 		m2,
@@ -162,6 +161,7 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 		vdb->pa,
 		vdb->sysData,
 		AXP_21264_SIZE_QUAD);
+	     */
 	    break;
     }
 
@@ -174,23 +174,23 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 
 /*
  * AXP_21264_Add_VDB
- *	This function is called to add an Victim Data Buffer (VDB) entry on to the
- *	queue for processing.
+ *  This function is called to add an Victim Data Buffer (VDB) entry on to the
+ *  queue for processing.
  *
- *	NOTE:	The Mbox and Cbox call this function.  The Mbox to have a Dcache
- *			block to be written to the Bcache.  The Cbox to have Istream blocks
- *			recently written to the Icache to the Bcache as well
+ *  NOTE:	The Mbox and Cbox call this function.  The Mbox to have a Dcache
+ *		block to be written to the Bcache.  The Cbox to have Istream blocks
+ *		recently written to the Icache to the Bcache as well
  *
  * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
- * 		processor.
+ *  cpu:
+ *	A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *	processor.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	entry used.
+ *  entry used.
  */
 u8 AXP_21264_Add_VDB(
     AXP_21264_CPU *cpu,
@@ -239,24 +239,24 @@ u8 AXP_21264_Add_VDB(
 
 /*
  * AXP_21264_IsSetP_VDB
- *	This function is called to determine if the P bit is set on a VDB with a
- *	matching physical address specified in a PQ entry.  If this is the case,
- *	then sending ProbeResponses is inhibited until this bit is cleared.
+ *  This function is called to determine if the P bit is set on a VDB with a
+ *  matching physical address specified in a PQ entry.  If this is the case,
+ *  then sending ProbeResponses is inhibited until this bit is cleared.
  *
  * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
- * 		processor.
- *	pa:
- *		A 64-bit virtual address to be matched to a VDB entry.
+ *  cpu:
+ *	A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *	processor.
+ *  pa:
+ *	A 64-bit virtual address to be matched to a VDB entry.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	true:	The P-bit is set, so no ProbeResponses will be returned to the
- *			system until this bit is cleared.
- *	false:	The P-bit is not set, so go ahead and send the response.
+ *  true:	The P-bit is set, so no ProbeResponses will be returned to the
+ *		system until this bit is cleared.
+ *  false:	The P-bit is not set, so go ahead and send the response.
  */
 bool AXP_21264_IsSetP_VDB(AXP_21264_CPU *cpu, u64 pa)
 {
@@ -303,21 +303,21 @@ bool AXP_21264_IsSetP_VDB(AXP_21264_CPU *cpu, u64 pa)
 
 /*
  * AXP_21264_ClearP_VDB
- * 	This function is called to clear the P (probe-valid) bit in a VDB.
+ *  This function is called to clear the P (probe-valid) bit in a VDB.
  *
  * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
- * 		processor.
- *	entry:
- *		An integer value that is the entry in the VDB to have it's P bit
- *		cleared.
+ *  cpu:
+ *	A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *	processor.
+ *  entry:
+ *	An integer value that is the entry in the VDB to have it's P bit
+ *	cleared.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
  */
 void AXP_21264_ClearP_VDB(AXP_21264_CPU *cpu, u8 entry)
 {
@@ -341,22 +341,22 @@ void AXP_21264_ClearP_VDB(AXP_21264_CPU *cpu, u8 entry)
 
 /*
  * AXP_21264_Free_VDB
- * 	This function is called to return a previously allocated VDB buffer.  It
- * 	does this by setting the valid bit to false and adjusting the vdbTop
- * 	index, as necessary.
+ *  This function is called to return a previously allocated VDB buffer.  It
+ *  does this by setting the valid bit to false and adjusting the vdbTop
+ *  index, as necessary.
  *
  * Input Parameters:
- * 	cpu:
- * 		A pointer to the CPU structure for the emulated Alpha AXP 21264
- * 		processor.
- *	entry:
- *		An integer value that is the entry in the VDB to be invalidated.
+ *  cpu:
+ *	A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *	processor.
+ *  entry:
+ *	An integer value that is the entry in the VDB to be invalidated.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
  */
 void AXP_21264_Free_VDB(AXP_21264_CPU *cpu, u8 entry)
 {

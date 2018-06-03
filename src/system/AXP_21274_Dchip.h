@@ -33,6 +33,7 @@
 #include "AXP_21274_Registers.h"
 #include "AXP_21274_Cchip.h"
 #include "AXP_21274_Pchip.h"
+#include "AXP_21274_System.h"
 
 /*
  * Table 7–2 PADbus Command Encodings
@@ -96,10 +97,5 @@ typedef struct
     u8 len; /* in quadwords */
     u64 data[8]; /* up to 8 quadwords */
 } AXP_PADbusMsg;
-
-/*
- * Dchip Function Prototypes
- */
-void AXP_21274_DchipInit(AXP_21274_SYSTEM *);
 
 #endif /* _AXP_21274_DCHIP_H_ */

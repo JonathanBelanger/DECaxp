@@ -27,6 +27,7 @@
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_21274_21264_Common.h"
+#include "AXP_21274_AddressMapping.h"
 
 /*
  * The following definitions are used for Linear (Memory and I/O) Address
