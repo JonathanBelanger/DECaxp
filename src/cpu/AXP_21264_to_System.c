@@ -52,16 +52,25 @@ void AXP_21264_SendToSystem(AXP_21264_CPU *cpu, AXP_21264_SYSBUS_System *msg)
 
     /*
      * Queue up the next PQ entry for the CPU to process.
-     */
     if (cpu->system.rq[*cpu->system.rqEnd].valid == true)
 	*cpu->system.rqEnd = (*cpu->system.rqEnd + 1) % AXP_21264_CCHIP_RQ_LEN;
-    rq = &cpu->system.rq[*cpu->system.rqEnd];
+     *
+     * TODO:	The below is bogus.  We need to rationalize the interfaces
+     *		between components.  This is just to keep the compiler happy.
+     */
+    rq = (AXP_21264_RQ_ENTRY *) cpu->system.rq; /*[*cpu->system.rqEnd]; */
 
     /*
      * Copy the data from the System structure and into the CPU structure.
      *
      * TODO:	We need to do something about data movement, mask, deal with a
-     *			probeResponse, and wrapping data.
+     *		probeResponse, and wrapping data.
+     *
+     * TODO:	There is way too much copying of data from one buffer to the
+     * 		next.  We should look at defining a pool of buffers that can
+     * 		be copied once and passed around as needed.  Buffers should
+     * 		only be copied out of the source and copied into the
+     * 		destination.
      */
     rq->pa = msg->pa;
     rq->miss1 = msg->m1;

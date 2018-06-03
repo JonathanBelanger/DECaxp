@@ -31,6 +31,7 @@
 #include "AXP_21264_Ebox.h"
 #include "AXP_21264_Fbox.h"
 #include "AXP_21264_Ibox.h"
+#include "AXP_21264_to_System.h"
 
 /*
  * AXP_21264_VDB_Empty
@@ -114,11 +115,7 @@ int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
 void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 {
     AXP_21264_CBOX_VIC_BUF *vdb = &cpu->vdb[entry];
-    u16 mask = AXP_LOW_QUAD;
-    bool m1 = false;
-    bool m2 = false;
-    bool rv = true;
-    bool ch = false;
+    AXP_21264_SYSBUS_System sys;
 
     /*
      * Process the next VDB entry that needs it.
@@ -131,7 +128,7 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 	 * the Bcache.
 	 */
 	case toBcache:
-	    AXP_21264_Bcache_Write(cpu, vdb->pa, vdb->sysData);
+	    AXP_21264_Bcache_Write(cpu, vdb->pa, (u8 *) vdb->sysData);
 	    break;
 
 	    /*
@@ -147,21 +144,18 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 	     * Go check the Oldest pending PQ and set the flags for it here and
 	     * now.  Only if the oldest PQ entry is a miss.
 	     */
-	    AXP_21264_OldestPQFlags(cpu, &m1, &m2, &ch);
+	    AXP_21264_OldestPQFlags(cpu, &sys.m1, &sys.m2, &sys.ch);
 
 	    /*
 	     * OK, send what we have to the System.
-	    AXP_System_CommandSend(
-		WrVictimBlk,
-		m2,
-		entry,
-		rv,
-		mask,
-		ch,
-		vdb->pa,
-		vdb->sysData,
-		AXP_21264_SIZE_QUAD);
 	     */
+	    sys.cmd = WrVictimBlk;
+	    sys.mask = AXP_LOW_QUAD;
+	    sys.rv = true;
+	    sys.id = entry;
+	    sys.pa = vdb->pa;
+	    memcpy(sys.sysData, vdb->sysData, AXP_21264_SIZE_QUAD);
+	    AXP_21264_SendToSystem(cpu, &sys);
 	    break;
     }
 

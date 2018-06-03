@@ -135,9 +135,10 @@ static pthread_mutex_t rtcMutex = PTHREAD_MUTEX_INITIALIZER;
  *
  * The periodic interrupt will be trigger every certain number of milliseconds.
  */
-static timer_t periodicTimer;
-static timer_t alarmTimer;
-static timer_t updateTimer;
+static timer_t	periodicTimer;
+static timer_t	alarmTimer;
+static timer_t	updateTimer;
+static bool	timersArmed = false;
 
 /*
  * Locations to store a mutex, condition variable, IRQ bit field and IRQ bit
@@ -276,9 +277,11 @@ static void AXP_DS12887A_CheckIRQF(void)
 	if (ctrlC->irqf == 0)
 	    *irqField &= ~irqMask;
 	else
+	{
 	    *irqField |= irqMask;
-	if ((ctrlC->irqf == 1) && (irqHSet == false) && (irqCond != NULL))
-	    pthread_cond_signal(irqCond);
+	    if ((ctrlC->irqf == 1) && (irqHSet == false) && (irqCond != NULL))
+		pthread_cond_signal(irqCond);
+	}
 	pthread_mutex_unlock(irqMutex);
     }
 
@@ -304,86 +307,47 @@ static void AXP_DS12887A_CheckIRQF(void)
  */
 void AXP_DS12887A_Notify(sigval_t sv)
 {
-    AXP_DS12887A_LOCK
-    ;
+    AXP_DS12887A_LOCK;
 
-    if (AXP_SYS_OPT2)
+    if (timersArmed == true)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_DS12887A_Notify has been called.");
-	AXP_TRACE_END()
-    }
+	while (ctrlA->uip == 1)
+	    pthread_cond_wait(&rtcCond, &rtcMutex);
 
-    while (ctrlA->uip == 1)
-	pthread_cond_wait(&rtcCond, &rtcMutex);
+	/*
+	 * Set the appropriate interrupt flag.
+	 */
+	switch (sv.sival_int)
+	{
+	    case AXP_DS12887A_TIMER_PERIOD:
+		ctrlC->pf = 1; /* always assume the period expired */
+		break;
 
-    /*
-     * Set the appropriate interrupt flag.
-     */
-    switch (sv.sival_int)
-    {
-	case AXP_DS12887A_TIMER_PERIOD:
-	    if (AXP_SYS_OPT2)
-	    {
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("AXP_DS12887A_Notify Periodic Timer Triggered.");
-		AXP_TRACE_END()
-	    }
-	    ctrlC->pf = 1; /* always assume the period expired */
-	    break;
+	    case AXP_DS12887A_TIMER_ALARM:
+		ctrlC->af = 1;
+		AXP_DS12887A_StartTimers(false);
+		break;
 
-	case AXP_DS12887A_TIMER_ALARM:
-	    if (AXP_SYS_OPT2)
-	    {
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("AXP_DS12887A_Notify Alarm Timer Triggered.");
-		AXP_TRACE_END()
-	    }
-	    ctrlC->af = 1;
-	    AXP_DS12887A_StartTimers(false);
-	    break;
+	    case AXP_DS12887A_TIMER_UPDATE:
 
-	case AXP_DS12887A_TIMER_UPDATE:
-	    if (AXP_SYS_OPT2)
-	    {
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite(
-		    "AXP_DS12887A_Notify Update Interrupt Triggered.");
-		AXP_TRACE_END()
-	    }
+		/*
+		 * If the Update-In-Progress bit and the SET bit are not set, then
+		 * we can indicate that the interrupt has been triggered.  We don't
+		 * care what the initial value of the flag was, we just set it.
+		 */
+		if ((ctrlA->uip == 0) && (ctrlB->set == 0))
+		    ctrlC->uf = 1;	/* always assume the update occurred */
+		break;
 
-	    /*
-	     * If the Update-In-Progress bit and the SET bit are not set, then
-	     * we can indicate that the interrupt has been triggered.  We don't
-	     * care what the initial value of the flag was, we just set it.
-	     */
-	    if ((ctrlA->uip == 0) && (ctrlB->set == 0))
-	    {
-		ctrlC->uf = 1; /* always assume the update occurred */
-		if (AXP_SYS_OPT2)
-		{
-		    AXP_TRACE_BEGIN();
-		    AXP_TraceWrite("AXP_DS12887A_Notify Update Interrupt set.");
-		    AXP_TRACE_END()
-		}
-	    }
-	    break;
+	    default:
+		break;
+	}
 
-	default:
-	    break;
-    }
-
-    /*
-     * If any of the flags are set and the interrupt enabled, then set the IRQF
-     * bit in Control Register C.
-     */
-    AXP_DS12887A_CheckIRQF();
-
-    if (AXP_SYS_OPT2)
-    {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_DS12887A_Notify returning.");
-	AXP_TRACE_END()
+	/*
+	 * If any of the flags are set and the interrupt enabled, then set the IRQF
+	 * bit in Control Register C.
+	 */
+	AXP_DS12887A_CheckIRQF();
     }
     AXP_DS12887A_UNLOCK;
 
@@ -448,7 +412,7 @@ static void AXP_DS12887A_StartTimers(bool all)
     /*
      * Set the timer specification for the periodic interrupt timer.
      */
-    if (all == true)
+    if ((all == true) && (ctrlA->rs != AXP_PIR_NONE))
     {
 	if (AXP_SYS_OPT2)
 	{
@@ -462,6 +426,7 @@ static void AXP_DS12887A_StartTimers(bool all)
 	ts.it_value.tv_nsec = periods[ctrlA->rs];
 	ts.it_value.tv_sec = 0;
 	timer_settime(periodicTimer, 0, &ts, NULL);
+	timersArmed = true;
     }
 
     /*
@@ -595,12 +560,16 @@ static void AXP_DS12887A_StartTimers(bool all)
 	    AXP_TRACE_END()
 	}
     }
-    timer_settime(alarmTimer, flag, &ts, NULL);
+    if (ts.it_value.tv_sec != 0)
+    {
+	timer_settime(alarmTimer, flag, &ts, NULL);
+	timersArmed = true;
+    }
 
     /*
      * Set the timer specification to 1 second for the update timer.
      */
-    if (all == true)
+    if ((all == true) && (ctrlB->set == 0))
     {
 	if (AXP_SYS_OPT2)
 	{
@@ -612,8 +581,9 @@ static void AXP_DS12887A_StartTimers(bool all)
 	ts.it_interval.tv_nsec = 0;
 	ts.it_interval.tv_sec = 1;
 	ts.it_value.tv_nsec = 0;
-	ts.it_value.tv_sec = 0;
+	ts.it_value.tv_sec = 1;
 	timer_settime(updateTimer, 0, &ts, NULL);
+	timersArmed = true;
     }
 
     if (AXP_SYS_OPT2)
@@ -653,33 +623,37 @@ static void AXP_DS12887A_StopTimers(void)
 {
     struct itimerspec ts;
 
-    if (AXP_SYS_OPT2)
+    if (timersArmed == true)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_DS12887A_StopTimers has been called.");
-	AXP_TRACE_END()
-    }
+	if (AXP_SYS_OPT2)
+	{
+	    AXP_TRACE_BEGIN();
+	    AXP_TraceWrite("AXP_DS12887A_StopTimers has been called.");
+	    AXP_TRACE_END()
+	}
 
-    /*
-     * Set the timer specification to all zeros, which will disarm the timer.
-     */
-    ts.it_interval.tv_nsec = 0;
-    ts.it_interval.tv_sec = 0;
-    ts.it_value.tv_nsec = 0;
-    ts.it_value.tv_sec = 0;
+	/*
+	 * Set the timer specification to all zeros, which will disarm the timer.
+	 */
+	ts.it_interval.tv_nsec = 0;
+	ts.it_interval.tv_sec = 0;
+	ts.it_value.tv_nsec = 0;
+	ts.it_value.tv_sec = 0;
 
-    /*
-     * Disarm all the timers.
-     */
-    timer_settime(periodicTimer, 0, &ts, NULL);
-    timer_settime(alarmTimer, 0, &ts, NULL);
-    timer_settime(updateTimer, 0, &ts, NULL);
+	/*
+	 * Disarm all the timers.
+	 */
+	timer_settime(periodicTimer, 0, &ts, NULL);
+	timer_settime(alarmTimer, 0, &ts, NULL);
+	timer_settime(updateTimer, 0, &ts, NULL);
+	timersArmed = false;
 
-    if (AXP_SYS_OPT2)
-    {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_DS12887A_StopTimers returning.");
-	AXP_TRACE_END()
+	if (AXP_SYS_OPT2)
+	{
+	    AXP_TRACE_BEGIN();
+	    AXP_TraceWrite("AXP_DS12887A_StopTimers returning.");
+	    AXP_TRACE_END()
+	}
     }
 
     /*
@@ -860,8 +834,7 @@ void AXP_DS12887A_Reset(void)
     /*
      * Go reset those things that need to be reset.
      */
-    AXP_DS12887A_LOCK
-    ;
+    AXP_DS12887A_LOCK;
     ctrlB->pie = 0;
     ctrlB->aie = 0;
     ctrlB->uie = 0;
@@ -917,8 +890,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 {
     bool startIRQF = false;
 
-    AXP_DS12887A_LOCK
-    ;
+    AXP_DS12887A_LOCK;
 
     if (AXP_SYS_CALL)
     {
@@ -942,7 +914,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    {
 		AXP_DS12887A_Seconds updSec =
 		{
-		.value = value
+		    .value = value
 		};
 		u8 sec;
 
@@ -959,7 +931,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    {
 		AXP_DS12887A_SecondsAlarm updSec =
 		{
-		.value = value
+		    .value = value
 		};
 		u8 sec;
 
@@ -981,7 +953,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    {
 		AXP_DS12887A_Minutes updMin =
 		{
-		.value = value
+		    .value = value
 		};
 		u8 min;
 
@@ -998,7 +970,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    {
 		AXP_DS12887A_MinutesAlarm updMin =
 		{
-		.value = value
+		    .value = value
 		};
 		u8 min;
 
@@ -1020,7 +992,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    {
 		AXP_DS12887A_Hours updHrs =
 		{
-		.value = value
+		    .value = value
 		};
 		u8 hrs;
 
@@ -1034,7 +1006,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 			hrs += 12;
 		    hrs--;
 		}
-		ram[AXP_ADDR_Seconds] = currentTime.tm_hour - (i8) hrs;
+		ram[AXP_ADDR_Hours] = currentTime.tm_hour - (i8) hrs;
 	    }
 	    break;
 
@@ -1043,7 +1015,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    {
 		AXP_DS12887A_HoursAlarm updHrs =
 		{
-		.value = value
+		    .value = value
 		};
 		u8 hrs;
 
@@ -1071,7 +1043,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    {
 		AXP_DS12887A_Date updDate =
 		{
-		.value = value
+		    .value = value
 		};
 		u8 date;
 
@@ -1088,7 +1060,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    {
 		AXP_DS12887A_Month updMonth =
 		{
-		.value = value
+		    .value = value
 		};
 		u8 month;
 
@@ -1105,7 +1077,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    {
 		AXP_DS12887A_Year updYear =
 		{
-		.value = value
+		    .value = value
 		};
 		u8 year;
 		u8 curYear;
@@ -1129,7 +1101,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    {
 		AXP_DS12887A_ControlB updVal =
 		{
-		.value = value
+		    .value = value
 		};
 		time_t now;
 
@@ -1144,7 +1116,7 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    {
 		AXP_DS12887A_ControlB updVal =
 		{
-		.value = value
+		    .value = value
 		};
 
 		startIRQF = updVal.set == 0;
@@ -1234,8 +1206,7 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
     struct tm binTimeA;
     time_t now;
 
-    AXP_DS12887A_LOCK
-    ;
+    AXP_DS12887A_LOCK;
 
     if (AXP_SYS_CALL)
     {
@@ -1366,8 +1337,6 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
 		binTime.tm_hour -= 11;
 		retHrs->bin.amPm = 1;
 	    }
-	    else
-		binTime.tm_hour++;
 	    if (ctrlB->dm == 1)
 	    {
 		retHrs->bin.hrs = binTime.tm_hour;
@@ -1392,8 +1361,6 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
 		    binTimeA.tm_hour -= 11;
 		    retHrsA->bin.amPm = 1;
 		}
-		else
-		    binTimeA.tm_hour++;
 		if (ctrlB->dm == 1)
 		{
 		    retHrsA->bin.hrs = binTimeA.tm_hour;

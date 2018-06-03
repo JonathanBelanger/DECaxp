@@ -31,6 +31,7 @@
 #include "AXP_21264_Ebox.h"
 #include "AXP_21264_Fbox.h"
 #include "AXP_21264_Ibox.h"
+#include "AXP_21264_to_System.h"
 
 /*
  * AXP_21264_IOWB_Empty
@@ -114,11 +115,7 @@ int AXP_21264_IOWB_Empty(AXP_21264_CPU *cpu)
 void AXP_21264_Process_IOWB(AXP_21264_CPU *cpu, int entry)
 {
     AXP_21264_CBOX_IOWB *iowb = &cpu->iowb[entry];
-    AXP_System_Commands cmd;
-    bool m1 = false;
-    bool m2 = false;
-    bool rv = true;
-    bool ch = false;
+    AXP_21264_SYSBUS_System sys;
 
     /*
      * Process the next IOWB entry that needs it.
@@ -126,40 +123,36 @@ void AXP_21264_Process_IOWB(AXP_21264_CPU *cpu, int entry)
     switch (iowb->storeLen)
     {
 	case BYTE_LEN:
-	    cmd = WrBytes;
+	    sys.cmd = WrBytes;
 	    break;
 
 	case WORD_LEN:
-	    cmd = WrBytes;
+	    sys.cmd = WrBytes;
 	    break;
 
 	case LONG_LEN:
-	    cmd = WrLWs;
+	    sys.cmd = WrLWs;
 	    break;
 
 	case QUAD_LEN:
-	    cmd = WrQWs;
+	    sys.cmd = WrQWs;
 	    break;
     }
 
     /*
      * Go check the Oldest pending PQ and set the flags for it here and now.
      */
-    AXP_21264_OldestPQFlags(cpu, &m1, &m2, &ch);
+    AXP_21264_OldestPQFlags(cpu, &sys.m1, &sys.m2, &sys.ch);
 
     /*
      * OK, send what we have to the System.
-    AXP_System_CommandSend(
-	cmd,
-	m2,
-	entry,
-	rv,
-	iowb->mask,
-	ch,
-	iowb->pa,
-	iowb->sysData,
-	iowb->bufLen);
      */
+    sys.id = entry;
+    sys.rv = true;
+    sys.mask = iowb->mask;
+    sys.pa = iowb->pa;
+    memcpy(sys.sysData, iowb->sysData, iowb->bufLen);
+    AXP_21264_SendToSystem(cpu, &sys);
 
     /*
      * Indicate that the entry is now processed and return back to the caller.

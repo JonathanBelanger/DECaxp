@@ -36,10 +36,14 @@
  *  <Command>:
  *	W = Write - The <Address> is the location to be written and <Value> is
  *	    	    the value to be written to that location.
- *	R = Read -  The <Address> is the location to be read from and <Value> is
+ *	R = Read  - The <Address> is the location to be read from and <Value> is
  *	    	    what is expected to be returned from that address.
  *	S = Reset - The <Address> and <Value> fields are optional/ignored
- *	D = Done -  This is the last command and indicates there are no more
+ *	H = Wait  - The <Address> field is ignored and the <Value> field
+ *		    represents the number of seconds that the code should wait
+ *		    before continuing on.  This can be used to wait while we
+ *		    are hoping to see the interrupt bit getting set.
+ *	D = Done  - This is the last command and indicates there are no more
  *		    tests steps for this test case.
  *  <Address>:
  *	A 2-character hexadecimal value between 00 and 7f
@@ -62,17 +66,52 @@ pthread_t	threadID;
 bool		threadStarted = false;
 pthread_cond_t	irqCond;
 pthread_mutex_t	irqMutex;
-u64 irqH;
+u64		irqH = 0;
+u64		periodicInterrupt = 0;
+u64		updateInterrupt = 0;
+u64		alarmInterrupt = 0;
 #define IRQMask 0x0000001000000000ll
 
 void *irqHMonitoring(void *arg)
 {
+    AXP_DS12887A_ControlC	value;
+
     printf("...IRQ monitoring starting\n");
     pthread_mutex_lock(&irqMutex);
     threadStarted = true;
     pthread_cond_signal(&irqCond);	/* the main waits for this signal */
 
+    while (true)
+    {
+	while (irqH == 0)
+	    pthread_cond_wait(&irqCond, &irqMutex);
+	if (irqH != 0)
+	{
+
+	    /*
+	     * This call will reset/clear the bits in Control Register C.
+	     * Because the Read can set/clear the IRQ bit, and as a result
+	     * lock the mutex for it, we need to unlock the mutex before the
+	     * read.
+	     */
+	    pthread_mutex_unlock(&irqMutex);
+	    AXP_DS12887A_Read(0x0c, &value.value);
+	    pthread_mutex_lock(&irqMutex);
+
+	    /*
+	     * Let's see what interrupt flag had been set.
+	     */
+	    if (value.pf == 1)
+		periodicInterrupt++;
+	    if (value.af == 1)
+		alarmInterrupt++;
+	    if (value.uf == 1)
+		updateInterrupt++;
+	}
+    }
+
     printf("...IRQ monitoring done.\n");
+    pthread_mutex_unlock(&irqMutex);
     return(NULL);
 }
 
@@ -144,15 +183,17 @@ static bool executeTest(int testNum, TestSteps *test)
 	     * hexadecimal value.
 	     */
 	    saveVal <<= 4;
-	    if ((test->steps[ii][3] >= '0') && (test->steps[ii][3] <= '9'))
+	    if ((test->steps[ii][4] >= '0') && (test->steps[ii][4] <= '9'))
 	    {
-		saveVal += (test->steps[ii][3] - '0');
+		saveVal += (test->steps[ii][4] - '0');
 	    }
 	    else
 	    {
-		saveVal += ((test->steps[ii][3] - 'a') + 10);
+		saveVal += ((test->steps[ii][4] - 'a') + 10);
 	    }
 	}
+
+	printf("\tStep %d: Address: 0x%02x; Value: 0x%02x\n", ii, address, saveVal);
 
 	/*
 	 * Based on the command, call the correct interface function.
@@ -190,6 +231,12 @@ static bool executeTest(int testNum, TestSteps *test)
 		 * expected, then this test was successful.
 		 */
 		retVal = readVal == saveVal;
+		if (retVal == false)
+		    printf(
+			"\tAddress: 0x%02x; Expected: 0x%02x; Got: 0x%02x\n",
+			address,
+			saveVal,
+			readVal);
 		break;
 
 	    case 'S':
@@ -199,6 +246,16 @@ static bool executeTest(int testNum, TestSteps *test)
 		 * The way write works, there is no way to know if it did what
 		 * it was told.  So, there is nothing to check for
 		 * success or failure.
+		 */
+		break;
+
+	    case 'H':
+		sleep(saveVal);
+
+		/*
+		 * This is not actually testing the TOY clock interface, but is
+		 * a way to allow the TOY clock to do some of its processing.
+		 * So, there is nothing to check for success or failure.
 		 */
 		break;
 
@@ -295,11 +352,18 @@ int main()
         {
 	    "Write/Read SET bit to 0 in Register B, leave DM/DSE as set above",
 	    {
-		"W0b06",
-		"R0b06",
+		"W0b76",
+		"R0b76",
 		"D0000"
 	    }
         },
+	{
+	    "Waiting for things to happen",
+	    {
+		"H000a",
+		"D0000"
+	    }
+	},
         {
             NULL
         }
@@ -317,8 +381,36 @@ int main()
 	while (threadStarted == false)
 	    pthread_cond_wait(&irqCond, &irqMutex);
 	pthread_mutex_unlock(&irqMutex);
+	AXP_DS12887A_Config(&irqCond, &irqMutex, &irqH, IRQMask);
+
 	for (ii = 0; ((tests[ii].testName != NULL) && (pass == true)); ii++)
 	    pass = executeTest(ii + 1, &tests[ii]);
+
+	/*
+	 * Check that the timer interrupts worked as expected.
+	 */
+	printf(
+	    "Test %d: Interrupt Processing (p: %llu, a: %llu, u: %llu) ",
+	    ii,
+	    periodicInterrupt,
+	    alarmInterrupt,
+	    updateInterrupt);
+	if ((periodicInterrupt > 0) && (updateInterrupt > 0))
+	    printf("Passed.\n");
+	else
+	{
+	    printf("Failed (");
+	    if (periodicInterrupt == 0)
+	    {
+		printf("Periodic");
+		if (updateInterrupt == 0)
+		    printf(", ");
+	    }
+	    if (updateInterrupt == 0)
+		printf("Update");
+	    printf(").\n");
+	}
+
     }
 
     /*

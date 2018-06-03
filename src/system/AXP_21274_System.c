@@ -30,6 +30,7 @@
 #include "AXP_21274_Cchip.h"
 #include "AXP_21274_Dchip.h"
 #include "AXP_21274_Pchip.h"
+#include "AXP_21274_InitRoutines.h"
 
 AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 {
@@ -80,9 +81,9 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 			 * be able to communicate with the CPU.
 			 */
 			AXP_21264_Save_SystemInterfaces(cpu[ii],
-			        &sys->cpu[ii].mutex, &sys->cpu[ii].cond,
-			        &sys->cpu[ii].pq, &sys->cpu[ii].pqTop,
-			        &sys->cpu[ii].pqBottom, &sys->cpu[ii].irq_H,
+			        sys->cpu[ii].mutex, sys->cpu[ii].cond,
+			        sys->cpu[ii].pq, sys->cpu[ii].pqTop,
+			        sys->cpu[ii].pqBottom, sys->cpu[ii].irq_H,
 			        &sys->cChipMutex, &sys->cChipCond,
 			        &sys->skidBufferQ);
 

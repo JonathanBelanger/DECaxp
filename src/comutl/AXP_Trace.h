@@ -41,9 +41,9 @@ extern bool _axp_trc_active_;
  * Let's defined a DEBUG environment variable that will turn on certain
  * tracing options.
  *
- * BTW: The environment variable name and the typedef defined below is a
- *		homage to my Digital SNA Development days (June 16, 1986 to December
- *		31, 1994).
+ * BTW: The environment variable name and the typedef defined below is homage
+ * 	to my Digital Equipment Corporation IBM Interconnect SNA Development
+ * 	days (June 16, 1986 to December 31, 1994).
  */
 typedef u32 AXP_TRCLOG;
 extern AXP_TRCLOG _axp_trc_log_;
