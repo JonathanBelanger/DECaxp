@@ -183,7 +183,7 @@ void *AXP_21264_AllocateCPU(u64 cpuID)
 	 * system has done its initialization and is ready for the CPUs.
 	 */
 	if (qRet == true)
-	    pthreadRet = pthread_mutex_lock(cpu->cpuMutex);
+	    pthreadRet = pthread_mutex_lock(&cpu->cpuMutex);
 
 	/*
 	 * At this point everything should be initialize.  Time to create all
@@ -350,17 +350,15 @@ void AXP_21264_Save_WHAMI(void *cpuPtr, u64 *cpuID)
  */
 void AXP_21264_Save_SystemInterfaces(
     void *cpuPtr,
-    pthread_mutex_t **cpuMutex,
-    pthread_cond_t **cpuCond,
-    void **pq,
-    u8 **pqTop,
-    u8 **pqBottom,
-    u8 **irq_H,
+    pthread_mutex_t *cpuMutex,
+    pthread_cond_t *cpuCond,
+    void *pq,
+    u8 *pqTop,
+    u8 *pqBottom,
+    u8 *irq_H,
     pthread_mutex_t *sysMutex,
     pthread_cond_t *sysCond,
-    void *rq,
-    u32 *rqStart,
-    u32 *rqEnd)
+    AXP_QUEUE_HDR *rq)
 {
     AXP_21264_CPU *cpu = (AXP_21264_CPU *) cpuPtr;
 
@@ -370,20 +368,18 @@ void AXP_21264_Save_SystemInterfaces(
      */
     cpu->system.cond = sysCond;
     cpu->system.mutex = sysMutex;
-    cpu->system.rq = (AXP_21264_RQ_ENTRY *) rq;
-    cpu->system.rqStart = rqStart;
-    cpu->system.rqEnd = rqEnd;
+    cpu->system.rq = rq;
 
     /*
      * Finally, set the data needed for the System to be able to communicate
      * with the CPU into the output parameters.
      */
-    *cpuMutex = &cpu->cBoxInterfaceMutex;
-    *cpuCond = &cpu->cBoxInterfaceCond;
-    *pq = (void *) cpu->pq;
-    *pqTop = &cpu->pqTop;
-    *pqBottom = &cpu->pqBottom;
-    *irq_H = &cpu->irqH;
+    cpuMutex = &cpu->cBoxInterfaceMutex;
+    cpuCond = &cpu->cBoxInterfaceCond;
+    pq = (void *) cpu->pq;
+    pqTop = &cpu->pqTop;
+    pqBottom = &cpu->pqBottom;
+    irq_H = &cpu->irqH;
 
     /*
      * Return back to the caller.
@@ -416,7 +412,7 @@ void AXP_21264_Unlock_CPU(void *cpuPtr)
      * Unlock the CPU mutex.  This will allow all the CPU threads to being
      * there executions.
      */
-    pthread_mutex_unlock(cpu->cpuMutex);
+    pthread_mutex_unlock(&cpu->cpuMutex);
 
     /*
      * Return back to the caller.

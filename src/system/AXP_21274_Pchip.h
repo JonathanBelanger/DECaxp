@@ -101,6 +101,6 @@ typedef struct
 /*
  * Pchip Function Prototypes
  */
-void AXP_21274_PchipInit(AXP_21274_PCHIP *, u32 id);
+void *AXP_21274_PchipMain(void *);
 
 #endif /* _AXP_21274_PCHIP_H_ */

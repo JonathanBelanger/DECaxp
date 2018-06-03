@@ -53,26 +53,26 @@
  *
  * Revision History:
  *
- *	V01.000		25-May-2018	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000		25-May-2018	Jonathan D. Belanger
+ *  Initially written.
  *
- *	V01.001		28-May-2018	Jonathan D. Belanger
- *	The time functions won't work as documented.  First off, the host
- *	current time is one that is affected by daylight savings time.  What
- *	this will cause is that if a time difference were calculated just
- *	before we loose an hour in the Fall and then get the time just after,
- *	the clock will go negative and the calculations will not work.  So, we
- *	are going to get GMT from the host and use that in our calculations.
- *	Secondly, the getting the difference when setting and adding that
- *	difference back in when reading does not take into account where any of
- *	the fields are greater than their maximum.  To this end, we will
- *	blindly add the number back in and then normalize the time information.
- *	Also, we need to take into consideration leap year.
+ *  V01.001		28-May-2018	Jonathan D. Belanger
+ *  The time functions won't work as documented.  First off, the host
+ *  current time is one that is affected by daylight savings time.  What
+ *  this will cause is that if a time difference were calculated just
+ *  before we loose an hour in the Fall and then get the time just after,
+ *  the clock will go negative and the calculations will not work.  So, we
+ *  are going to get GMT from the host and use that in our calculations.
+ *  Secondly, the getting the difference when setting and adding that
+ *  difference back in when reading does not take into account where any of
+ *  the fields are greater than their maximum.  To this end, we will
+ *  blindly add the number back in and then normalize the time information.
+ *  Also, we need to take into consideration leap year.
  *
- *	V01.002		01-Jun-2018	Jonathan D. Belanger
- *	Added the ability to provide a mutex, condition variable, interrupt field,
- *	and interrupt mask, so that when an interrupt is triggered, the thread that
- *	needs to be notified, has been informed.
+ *  V01.002		01-Jun-2018	Jonathan D. Belanger
+ *  Added the ability to provide a mutex, condition variable, interrupt field,
+ *  and interrupt mask, so that when an interrupt is triggered, the thread that
+ *  needs to be notified, has been informed.
  */
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
@@ -88,25 +88,25 @@
  * operating system time and the time being set by or returned to the caller.
  * This will simplify the math later.
  */
-static i8		ram[AXP_DS12887A_RAM_SIZE];
-AXP_DS12887A_ControlA	*ctrlA = (AXP_DS12887A_ControlA *) &ram[AXP_ADDR_ControlA];
-AXP_DS12887A_ControlB	*ctrlB = (AXP_DS12887A_ControlB *) &ram[AXP_ADDR_ControlB];
-AXP_DS12887A_ControlC	*ctrlC = (AXP_DS12887A_ControlC *) &ram[AXP_ADDR_ControlC];
-AXP_DS12887A_ControlD	*ctrlD = (AXP_DS12887A_ControlD *) &ram[AXP_ADDR_ControlD];
+static i8 ram[AXP_DS12887A_RAM_SIZE];
+AXP_DS12887A_ControlA *ctrlA = (AXP_DS12887A_ControlA *) &ram[AXP_ADDR_ControlA];
+AXP_DS12887A_ControlB *ctrlB = (AXP_DS12887A_ControlB *) &ram[AXP_ADDR_ControlB];
+AXP_DS12887A_ControlC *ctrlC = (AXP_DS12887A_ControlC *) &ram[AXP_ADDR_ControlC];
+AXP_DS12887A_ControlD *ctrlD = (AXP_DS12887A_ControlD *) &ram[AXP_ADDR_ControlD];
 
 /*
  * The first call to any of the interface calls will check this flag.  If it is
  * set to false, then the initialization function will be called and the flag
  * set to true.
  */
-static bool		initialized = false;
+static bool initialized = false;
 
 /*
  * This local module variable is set when the SET flag is set (man that sounds
  * odd) in Control Register B.  It is this time that will be used to calculate
  * any differences or return values for the time.
  */
-static struct tm	currentTime;
+static struct tm currentTime;
 
 /*
  * We use a mutex to make sure that more than one thread does not go through
@@ -114,8 +114,8 @@ static struct tm	currentTime;
  * Update In Progress (UIP) being set until it is cleared.  The condition
  * variable will be signaled when the UIP is cleared.
  */
-static pthread_cond_t	rtcCond = PTHREAD_COND_INITIALIZER;
-static pthread_mutex_t	rtcMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t rtcCond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t rtcMutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define AXP_DS12887A_LOCK		\
     pthread_mutex_lock(&rtcMutex);	\
@@ -135,18 +135,18 @@ static pthread_mutex_t	rtcMutex = PTHREAD_MUTEX_INITIALIZER;
  *
  * The periodic interrupt will be trigger every certain number of milliseconds.
  */
-static timer_t	periodicTimer;
-static timer_t	alarmTimer;
-static timer_t	updateTimer;
+static timer_t periodicTimer;
+static timer_t alarmTimer;
+static timer_t updateTimer;
 
 /*
  * Locations to store a mutex, condition variable, IRQ bit field and IRQ bit
  * mask, to be used when the IRQH bit has been set/cleared.
  */
-static pthread_cond_t	*irqCond = NULL;
-static pthread_mutex_t	*irqMutex = NULL;
-static u64				*irqField = NULL;
-static u64				irqMask = 0;
+static pthread_cond_t *irqCond = NULL;
+static pthread_mutex_t *irqMutex = NULL;
+static u64 *irqField = NULL;
+static u64 irqMask = 0;
 
 /*
  * Local Prototypes
@@ -156,8 +156,7 @@ void AXP_DS12887A_Notify(sigval_t);
 static void AXP_DS12887A_StartTimers(bool);
 static void AXP_DS12887A_StopTimers(void);
 static void AXP_DS12887A_Initialize(void);
-static void	AXP_DS12887A_CheckIRQF(void);
-
+static void AXP_DS12887A_CheckIRQF(void);
 
 /*
  * AXP_DS12887A_Normalize
@@ -179,8 +178,8 @@ static void	AXP_DS12887A_CheckIRQF(void);
  */
 static void AXP_DS12887A_Normalize(struct tm *timeSpec, bool justTime)
 {
-    int	mDays[] = {31,28,31,30,31,30,31,31,30,31,30,31};
-    int	tmp;
+    int mDays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int tmp;
 
     /*
      *	Steps for normalization is as follows:
@@ -218,9 +217,9 @@ static void AXP_DS12887A_Normalize(struct tm *timeSpec, bool justTime)
 	timeSpec->tm_year += (timeSpec->tm_mon / 12);
 	timeSpec->tm_mon %= 12;
 	tmp = (timeSpec->tm_year >= 70 ? 1900 : 2000) + timeSpec->tm_year;
-	mDays[1] += (((tmp % 400) == 0) ?
-	    (((tmp % 100) == 0) ? 1 : 0) :
-	    (((tmp % 4) == 0) ? 1 : 0));
+	mDays[1] += (
+	    ((tmp % 400) == 0) ?
+		(((tmp % 100) == 0) ? 1 : 0) : (((tmp % 4) == 0) ? 1 : 0));
 	tmp = timeSpec->tm_mon;
 	timeSpec->tm_mon += (timeSpec->tm_mday / mDays[tmp]);
 	timeSpec->tm_mday %= mDays[tmp];
@@ -242,7 +241,7 @@ static void AXP_DS12887A_Normalize(struct tm *timeSpec, bool justTime)
  * AXP_DS12887A_CheckIRQF
  *	This function is called to either clear or set the IRQF bit.  If so, the
  *	irqMask will also be set/cleared.  If set, then irqCond will also be
- *	signalled.
+ *	signaled.
  *
  * Input Parameters:
  *	None.
@@ -255,7 +254,7 @@ static void AXP_DS12887A_Normalize(struct tm *timeSpec, bool justTime)
  */
 static void AXP_DS12887A_CheckIRQF(void)
 {
-	bool	irqHSet = ctrlC->irqf == 1;
+    bool irqHSet = ctrlC->irqf == 1;
 
     /*
      * If any of the flags are set and the interrupt enabled, then set the IRQF
@@ -265,28 +264,28 @@ static void AXP_DS12887A_CheckIRQF(void)
 	((ctrlB->aie == 1) && (ctrlC->af == 1)) ||
 	((ctrlB->uie == 1) && (ctrlC->uf == 1)))
 	ctrlC->irqf = 1;
-	else
+    else
 	ctrlC->irqf = 0;
 
-	/*
-	 * If we have some one to notify, then do so now.
-	 */
-	if ((irqMutex != NULL) && (irqField != NULL))
-	{
-		pthread_mutex_lock(irqMutex);
-		if (ctrlC->irqf == 0)
-			*irqField &= ~irqMask;
-		else
-			*irqField |= irqMask;
-		if ((ctrlC->irqf == 1) && (irqHSet == false) && (irqCond != NULL))
-			pthread_cond_signal(irqCond);
-		pthread_mutex_unlock(irqMutex);
-	}
+    /*
+     * If we have some one to notify, then do so now.
+     */
+    if ((irqMutex != NULL) && (irqField != NULL))
+    {
+	pthread_mutex_lock(irqMutex);
+	if (ctrlC->irqf == 0)
+	    *irqField &= ~irqMask;
+	else
+	    *irqField |= irqMask;
+	if ((ctrlC->irqf == 1) && (irqHSet == false) && (irqCond != NULL))
+	    pthread_cond_signal(irqCond);
+	pthread_mutex_unlock(irqMutex);
+    }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -305,13 +304,14 @@ static void AXP_DS12887A_CheckIRQF(void)
  */
 void AXP_DS12887A_Notify(sigval_t sv)
 {
-    AXP_DS12887A_LOCK;
+    AXP_DS12887A_LOCK
+    ;
 
     if (AXP_SYS_OPT2)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("AXP_DS12887A_Notify has been called.");
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
 
     while (ctrlA->uip == 1)
@@ -320,16 +320,16 @@ void AXP_DS12887A_Notify(sigval_t sv)
     /*
      * Set the appropriate interrupt flag.
      */
-    switch(sv.sival_int)
+    switch (sv.sival_int)
     {
 	case AXP_DS12887A_TIMER_PERIOD:
 	    if (AXP_SYS_OPT2)
 	    {
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("AXP_DS12887A_Notify Periodic Timer Triggered.");
-		AXP_TRACE_END();
+		AXP_TRACE_END()
 	    }
-	    ctrlC->pf = 1;	/* always assume the period expired */
+	    ctrlC->pf = 1; /* always assume the period expired */
 	    break;
 
 	case AXP_DS12887A_TIMER_ALARM:
@@ -337,7 +337,7 @@ void AXP_DS12887A_Notify(sigval_t sv)
 	    {
 		AXP_TRACE_BEGIN();
 		AXP_TraceWrite("AXP_DS12887A_Notify Alarm Timer Triggered.");
-		AXP_TRACE_END();
+		AXP_TRACE_END()
 	    }
 	    ctrlC->af = 1;
 	    AXP_DS12887A_StartTimers(false);
@@ -347,8 +347,9 @@ void AXP_DS12887A_Notify(sigval_t sv)
 	    if (AXP_SYS_OPT2)
 	    {
 		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("AXP_DS12887A_Notify Update Interrupt Triggered.");
-		AXP_TRACE_END();
+		AXP_TraceWrite(
+		    "AXP_DS12887A_Notify Update Interrupt Triggered.");
+		AXP_TRACE_END()
 	    }
 
 	    /*
@@ -358,12 +359,12 @@ void AXP_DS12887A_Notify(sigval_t sv)
 	     */
 	    if ((ctrlA->uip == 0) && (ctrlB->set == 0))
 	    {
-		ctrlC->uf = 1;	/* always assume the update occurred */
+		ctrlC->uf = 1; /* always assume the update occurred */
 		if (AXP_SYS_OPT2)
 		{
 		    AXP_TRACE_BEGIN();
 		    AXP_TraceWrite("AXP_DS12887A_Notify Update Interrupt set.");
-		    AXP_TRACE_END();
+		    AXP_TRACE_END()
 		}
 	    }
 	    break;
@@ -376,13 +377,13 @@ void AXP_DS12887A_Notify(sigval_t sv)
      * If any of the flags are set and the interrupt enabled, then set the IRQF
      * bit in Control Register C.
      */
-	AXP_DS12887A_CheckIRQF();
+    AXP_DS12887A_CheckIRQF();
 
     if (AXP_SYS_OPT2)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("AXP_DS12887A_Notify returning.");
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
     AXP_DS12887A_UNLOCK;
 
@@ -415,9 +416,9 @@ void AXP_DS12887A_Notify(sigval_t sv)
  */
 static void AXP_DS12887A_StartTimers(bool all)
 {
-    struct itimerspec 	ts;
-    int			flag = 0;
-    u64			periods[] =
+    struct itimerspec ts;
+    int flag = 0;
+    u64 periods[] =
     {
 	0,
 	3906250,
@@ -441,7 +442,7 @@ static void AXP_DS12887A_StartTimers(bool all)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("AXP_DS12887A_StartTimers has been called.");
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
 
     /*
@@ -452,10 +453,9 @@ static void AXP_DS12887A_StartTimers(bool all)
 	if (AXP_SYS_OPT2)
 	{
 	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite(
-		"AXP_DS12887A_StartTimers Periodic Timer Started "
+	    AXP_TraceWrite("AXP_DS12887A_StartTimers Periodic Timer Started "
 		"at %d nanoseconds", periods[ctrlA->rs]);
-	    AXP_TRACE_END();
+	    AXP_TRACE_END()
 	}
 	ts.it_interval.tv_nsec = periods[ctrlA->rs];
 	ts.it_interval.tv_sec = 0;
@@ -498,19 +498,17 @@ static void AXP_DS12887A_StartTimers(bool all)
     ts.it_interval.tv_sec = 0;
     ts.it_value.tv_nsec = 0;
     ts.it_value.tv_sec = 0;
-    if ((ram[AXP_ADDR_SecondsAlarm] > 59) &&
-	(ram[AXP_ADDR_MinutesAlarm] > 59) &&
-	(ram[AXP_ADDR_HoursAlarm] > 23))
+    if ((ram[AXP_ADDR_SecondsAlarm] > 59) && (ram[AXP_ADDR_MinutesAlarm] > 59)
+	&& (ram[AXP_ADDR_HoursAlarm] > 23))
     {
-	ts.it_interval.tv_sec = 1;			/* every 1 second */
-	ts.it_value.tv_sec = 1;				/* in 1 second */
+	ts.it_interval.tv_sec = 1; /* every 1 second */
+	ts.it_value.tv_sec = 1; /* in 1 second */
 	if (AXP_SYS_OPT2)
 	{
 	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite(
-		"AXP_DS12887A_StartTimers Alarm Timer Started "
+	    AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
 		"at 1 second and every 1 second");
-	    AXP_TRACE_END();
+	    AXP_TRACE_END()
 	}
     }
 
@@ -520,15 +518,14 @@ static void AXP_DS12887A_StartTimers(bool all)
      */
     else if (ram[AXP_ADDR_MinutesAlarm] > 59)
     {
-	ts.it_interval.tv_sec = 60;			/* every 1 minute */
-	ts.it_value.tv_sec = 60;			/* in 1 minute */
+	ts.it_interval.tv_sec = 60; /* every 1 minute */
+	ts.it_value.tv_sec = 60; /* in 1 minute */
 	if (AXP_SYS_OPT2)
 	{
 	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite(
-		"AXP_DS12887A_StartTimers Alarm Timer Started "
+	    AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
 		"at 1 minute and every 1 minute");
-	    AXP_TRACE_END();
+	    AXP_TRACE_END()
 	}
     }
 
@@ -538,15 +535,14 @@ static void AXP_DS12887A_StartTimers(bool all)
      */
     else if (ram[AXP_ADDR_HoursAlarm] > 23)
     {
-	ts.it_interval.tv_sec = 3600;			/* every 1 hour */
-	ts.it_value.tv_sec = 3600;			/* in 1 hour */
+	ts.it_interval.tv_sec = 3600; /* every 1 hour */
+	ts.it_value.tv_sec = 3600; /* in 1 hour */
 	if (AXP_SYS_OPT2)
 	{
 	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite(
-		"AXP_DS12887A_StartTimers Alarm Timer Started "
+	    AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
 		"at 1 hour and every 1 hour");
-	    AXP_TRACE_END();
+	    AXP_TRACE_END()
 	}
     }
 
@@ -556,8 +552,8 @@ static void AXP_DS12887A_StartTimers(bool all)
      */
     else if (ram[AXP_ADDR_SecondsAlarm] <= 59)
     {
-	struct tm	gmt, nextA;
-	time_t		now;
+	struct tm gmt, nextA;
+	time_t now;
 
 	now = time(NULL);
 	gmtime_r(&now, &gmt);
@@ -579,12 +575,10 @@ static void AXP_DS12887A_StartTimers(bool all)
 	 */
 	if (gmt.tm_hour > nextA.tm_hour)
 	    nextA.tm_mday++;
-	else if ((gmt.tm_hour == nextA.tm_hour) &&
-		 (gmt.tm_min > nextA.tm_min))
+	else if ((gmt.tm_hour == nextA.tm_hour) && (gmt.tm_min > nextA.tm_min))
 	    nextA.tm_mday++;
-	else if ((gmt.tm_hour == nextA.tm_hour) &&
-		 (gmt.tm_min == nextA.tm_min) &&
-		 (gmt.tm_sec > nextA.tm_sec))
+	else if ((gmt.tm_hour == nextA.tm_hour) && (gmt.tm_min == nextA.tm_min)
+	    && (gmt.tm_sec > nextA.tm_sec))
 	    nextA.tm_mday++;
 
 	/*
@@ -596,10 +590,9 @@ static void AXP_DS12887A_StartTimers(bool all)
 	if (AXP_SYS_OPT2)
 	{
 	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite(
-		"AXP_DS12887A_StartTimers Alarm Timer Started "
+	    AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
 		"at %d seconds", ts.it_value.tv_sec);
-	    AXP_TRACE_END();
+	    AXP_TRACE_END()
 	}
     }
     timer_settime(alarmTimer, flag, &ts, NULL);
@@ -614,7 +607,7 @@ static void AXP_DS12887A_StartTimers(bool all)
 	    AXP_TRACE_BEGIN();
 	    AXP_TraceWrite(
 		"AXP_DS12887A_StartTimers Update Timer Started at 1 seconds.");
-	    AXP_TRACE_END();
+	    AXP_TRACE_END()
 	}
 	ts.it_interval.tv_nsec = 0;
 	ts.it_interval.tv_sec = 1;
@@ -627,7 +620,7 @@ static void AXP_DS12887A_StartTimers(bool all)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("AXP_DS12887A_StartTimers returning.");
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
 
     /*
@@ -658,13 +651,13 @@ static void AXP_DS12887A_StartTimers(bool all)
  */
 static void AXP_DS12887A_StopTimers(void)
 {
-    struct itimerspec	ts;
+    struct itimerspec ts;
 
     if (AXP_SYS_OPT2)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("AXP_DS12887A_StopTimers has been called.");
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
 
     /*
@@ -686,7 +679,7 @@ static void AXP_DS12887A_StopTimers(void)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("AXP_DS12887A_StopTimers returning.");
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
 
     /*
@@ -716,8 +709,8 @@ static void AXP_DS12887A_StopTimers(void)
  */
 static void AXP_DS12887A_Initialize(void)
 {
-    sigevent_t	se;
-    int		ii;
+    sigevent_t se;
+    int ii;
 
     /*
      * If tracing is turned on, then trace this call entry.
@@ -726,7 +719,7 @@ static void AXP_DS12887A_Initialize(void)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("Dallas Semiconductor RTC (DS12887A) is initializing");
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
 
     /*
@@ -740,10 +733,10 @@ static void AXP_DS12887A_Initialize(void)
      */
     ctrlA->dv = AXP_DV_ON_CCE;
     ctrlA->rs = AXP_PIR_9765625;
-    ctrlB->dm = 1;		/* Binary Format */
-    ctrlB->twentyFour = 1;	/* 24 hour clock */
-    ctrlB->dse = 1;		/* Daylight Savings Enabled */
-    ctrlD->vrt = 1;		/* RAM and Time Valid */
+    ctrlB->dm = 1; /* Binary Format */
+    ctrlB->twentyFour = 1; /* 24 hour clock */
+    ctrlB->dse = 1; /* Daylight Savings Enabled */
+    ctrlD->vrt = 1; /* RAM and Time Valid */
 
     /*
      * Let's get all the timers created.
@@ -777,7 +770,7 @@ static void AXP_DS12887A_Initialize(void)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("DS12887A initialization complete.");
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
 
     /*
@@ -812,34 +805,34 @@ static void AXP_DS12887A_Initialize(void)
  *	None.
  */
 void AXP_DS12887A_Config(
-				pthread_cond_t *cond,
-				pthread_mutext_t *mutex,
-				u64 *irq_field,
-				u64 irq_mask)
+    pthread_cond_t *cond,
+    pthread_mutex_t *mutex,
+    u64 *irq_field,
+    u64 irq_mask)
 {
     if (AXP_SYS_CALL)
     {
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("DS12887A Configure has been called.");
-		AXP_TRACE_END();
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("DS12887A Configure has been called.");
+	AXP_TRACE_END()
     }
-	
-	irqCond = cond;
-	irqMutex = mutex;
-	irqField = irq_field;
-	irqMask = irq_mask;
+
+    irqCond = cond;
+    irqMutex = mutex;
+    irqField = irq_field;
+    irqMask = irq_mask;
 
     if (AXP_SYS_CALL)
     {
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("DS12887A Configure returning.");
-		AXP_TRACE_END();
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("DS12887A Configure returning.");
+	AXP_TRACE_END()
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -861,13 +854,14 @@ void AXP_DS12887A_Reset(void)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("DS12887A Reset has been called.");
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
 
     /*
      * Go reset those things that need to be reset.
      */
-    AXP_DS12887A_LOCK;
+    AXP_DS12887A_LOCK
+    ;
     ctrlB->pie = 0;
     ctrlB->aie = 0;
     ctrlB->uie = 0;
@@ -877,14 +871,14 @@ void AXP_DS12887A_Reset(void)
     ctrlC->af = 0;
     ctrlC->uf = 0;
     AXP_DS12887A_StopTimers();
-	AXP_DS12887A_CheckIRQF();
+    AXP_DS12887A_CheckIRQF();
     AXP_DS12887A_UNLOCK;
 
     if (AXP_SYS_CALL)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("DS12887A Reset returning.");
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
 
     /*
@@ -921,9 +915,10 @@ void AXP_DS12887A_Reset(void)
  */
 void AXP_DS12887A_Write(u8 addr, u8 value)
 {
-    bool	startIRQF = false;
+    bool startIRQF = false;
 
-    AXP_DS12887A_LOCK;
+    AXP_DS12887A_LOCK
+    ;
 
     if (AXP_SYS_CALL)
     {
@@ -931,19 +926,25 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	AXP_TraceWrite("AXP_DS12887A_Write has been called.");
 	AXP_TraceWrite(
 	    "\taddr: 0x%02x(%d); value: 0x%02x(%d)",
-	    addr, addr, value, value);
-	AXP_TRACE_END();
+	    addr,
+	    addr,
+	    value,
+	    value);
+	AXP_TRACE_END()
     }
 
     while (ctrlA->uip == 1)
 	pthread_cond_wait(&rtcCond, &rtcMutex);
-    switch(addr)
+    switch (addr)
     {
 	case AXP_ADDR_Seconds:
 	    if (ctrlB->set == 1)
 	    {
-		AXP_DS12887A_Seconds	updSec = {.value = value};
-		u8			sec;
+		AXP_DS12887A_Seconds updSec =
+		{
+		.value = value
+		};
+		u8 sec;
 
 		if (ctrlB->dm == 1)
 		    sec = updSec.bin.sec;
@@ -956,8 +957,11 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	case AXP_ADDR_SecondsAlarm:
 	    if (ctrlB->set == 1)
 	    {
-		AXP_DS12887A_SecondsAlarm updSec = {.value = value};
-		u8			sec;
+		AXP_DS12887A_SecondsAlarm updSec =
+		{
+		.value = value
+		};
+		u8 sec;
 
 		if (AXP_CHECK_DONT_CARE(value))
 		    ram[AXP_ADDR_SecondsAlarm] = 60;
@@ -975,8 +979,11 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	case AXP_ADDR_Minutes:
 	    if (ctrlB->set == 1)
 	    {
-		AXP_DS12887A_Minutes	updMin = {.value = value};
-		u8			min;
+		AXP_DS12887A_Minutes updMin =
+		{
+		.value = value
+		};
+		u8 min;
 
 		if (ctrlB->dm == 1)
 		    min = updMin.bin.min;
@@ -989,8 +996,11 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	case AXP_ADDR_MinutesAlarm:
 	    if (ctrlB->set == 1)
 	    {
-		AXP_DS12887A_MinutesAlarm updMin = {.value = value};
-		u8			min;
+		AXP_DS12887A_MinutesAlarm updMin =
+		{
+		.value = value
+		};
+		u8 min;
 
 		if (AXP_CHECK_DONT_CARE(value))
 		    ram[AXP_ADDR_MinutesAlarm] = 60;
@@ -1008,8 +1018,11 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	case AXP_ADDR_Hours:
 	    if (ctrlB->set == 1)
 	    {
-		AXP_DS12887A_Hours	updHrs = {.value = value};
-		u8			hrs;
+		AXP_DS12887A_Hours updHrs =
+		{
+		.value = value
+		};
+		u8 hrs;
 
 		if (ctrlB->dm == 1)
 		    hrs = updHrs.bin.hrs;
@@ -1028,8 +1041,11 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	case AXP_ADDR_HoursAlarm:
 	    if (ctrlB->set == 1)
 	    {
-		AXP_DS12887A_HoursAlarm	updHrs = {.value = value};
-		u8			hrs;
+		AXP_DS12887A_HoursAlarm updHrs =
+		{
+		.value = value
+		};
+		u8 hrs;
 
 		if (AXP_CHECK_DONT_CARE(value))
 		    ram[AXP_ADDR_HoursAlarm] = 24;
@@ -1053,8 +1069,11 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	case AXP_ADDR_Date:
 	    if (ctrlB->set == 1)
 	    {
-		AXP_DS12887A_Date	updDate = {.value = value};
-		u8			date;
+		AXP_DS12887A_Date updDate =
+		{
+		.value = value
+		};
+		u8 date;
 
 		if (ctrlB->dm == 1)
 		    date = updDate.bin.date;
@@ -1067,8 +1086,11 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	case AXP_ADDR_Month:
 	    if (ctrlB->set == 1)
 	    {
-		AXP_DS12887A_Month	updMonth = {.value = value};
-		u8			month;
+		AXP_DS12887A_Month updMonth =
+		{
+		.value = value
+		};
+		u8 month;
 
 		if (ctrlB->dm == 1)
 		    month = updMonth.bin.month;
@@ -1081,12 +1103,15 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	case AXP_ADDR_Year:
 	    if (ctrlB->set == 1)
 	    {
-		AXP_DS12887A_Year	updYear = {.value = value};
-		u8			year;
-		u8			curYear;
+		AXP_DS12887A_Year updYear =
+		{
+		.value = value
+		};
+		u8 year;
+		u8 curYear;
 
-		curYear = currentTime.tm_year -
-		    (currentTime.tm_year >= 100 ? 100 : 0);
+		curYear = currentTime.tm_year
+		    - (currentTime.tm_year >= 100 ? 100 : 0);
 		if (ctrlB->dm == 1)
 		    year = updYear.bin.year;
 		else
@@ -1102,8 +1127,11 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	case AXP_ADDR_ControlB:
 	    if (ctrlB->set == 0)
 	    {
-		AXP_DS12887A_ControlB	updVal = {.value = value};
-		time_t			now;
+		AXP_DS12887A_ControlB updVal =
+		{
+		.value = value
+		};
+		time_t now;
 
 		if (updVal.set == 1)
 		{
@@ -1114,7 +1142,10 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    }
 	    else
 	    {
-		AXP_DS12887A_ControlB	updVal = {.value = value};
+		AXP_DS12887A_ControlB updVal =
+		{
+		.value = value
+		};
 
 		startIRQF = updVal.set == 0;
 	    }
@@ -1124,23 +1155,23 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 		AXP_DS12887A_StartTimers(true);
 	    break;
 
-	/*
-	 * These 2 locations are read-only, so just ignore any write that is
-	 * attempted.
-	 */
+	    /*
+	     * These 2 locations are read-only, so just ignore any write that is
+	     * attempted.
+	     */
 	case AXP_ADDR_ControlC:
 	case AXP_ADDR_ControlD:
 	    break;
 
-	/*
-	 * This location is calculated when day information is being read.
-	 */
+	    /*
+	     * This location is calculated when day information is being read.
+	     */
 	case AXP_ADDR_Day:
 	    break;
 
-	/*
-	 * It is a RAM location.  Just write the data and be done with it.
-	 */
+	    /*
+	     * It is a RAM location.  Just write the data and be done with it.
+	     */
 	default:
 	    ram[addr] = value;
 	    break;
@@ -1150,10 +1181,10 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("AXP_DS12887A_Write returning.");
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
 
-	AXP_DS12887A_CheckIRQF();
+    AXP_DS12887A_CheckIRQF();
     AXP_DS12887A_UNLOCK;
 
     /*
@@ -1189,30 +1220,29 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
  */
 void AXP_DS12887A_Read(u8 addr, u8 *value)
 {
-    AXP_DS12887A_Seconds	*retSec = (AXP_DS12887A_Seconds *) value;
-    AXP_DS12887A_SecondsAlarm	*retSecA = (AXP_DS12887A_SecondsAlarm *) value;
-    AXP_DS12887A_Minutes	*retMin = (AXP_DS12887A_Minutes *) value;
-    AXP_DS12887A_MinutesAlarm	*retMinA = (AXP_DS12887A_MinutesAlarm *) value;
-    AXP_DS12887A_Hours		*retHrs = (AXP_DS12887A_Hours *) value;
-    AXP_DS12887A_HoursAlarm	*retHrsA = (AXP_DS12887A_HoursAlarm *) value;
-    AXP_DS12887A_Day		*retDay = (AXP_DS12887A_Day *) value;
-    AXP_DS12887A_Date		*retDate = (AXP_DS12887A_Date *) value;
-    AXP_DS12887A_Month		*retMonth = (AXP_DS12887A_Month *) value;
-    AXP_DS12887A_Year		*retYear = (AXP_DS12887A_Year *) value;
-    struct tm			binTime;
-    struct tm			binTimeA;
-    time_t			now;
-    int				mDays[] = {31,28,31,30,31,30,31,31,30,31,30,31};
-    int				tmp;
+    AXP_DS12887A_Seconds *retSec = (AXP_DS12887A_Seconds *) value;
+    AXP_DS12887A_SecondsAlarm *retSecA = (AXP_DS12887A_SecondsAlarm *) value;
+    AXP_DS12887A_Minutes *retMin = (AXP_DS12887A_Minutes *) value;
+    AXP_DS12887A_MinutesAlarm *retMinA = (AXP_DS12887A_MinutesAlarm *) value;
+    AXP_DS12887A_Hours *retHrs = (AXP_DS12887A_Hours *) value;
+    AXP_DS12887A_HoursAlarm *retHrsA = (AXP_DS12887A_HoursAlarm *) value;
+    AXP_DS12887A_Day *retDay = (AXP_DS12887A_Day *) value;
+    AXP_DS12887A_Date *retDate = (AXP_DS12887A_Date *) value;
+    AXP_DS12887A_Month *retMonth = (AXP_DS12887A_Month *) value;
+    AXP_DS12887A_Year *retYear = (AXP_DS12887A_Year *) value;
+    struct tm binTime;
+    struct tm binTimeA;
+    time_t now;
 
-    AXP_DS12887A_LOCK;
+    AXP_DS12887A_LOCK
+    ;
 
     if (AXP_SYS_CALL)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("AXP_DS12887A_Read has been called.");
 	AXP_TraceWrite("\taddr: 0x%02x(%d)", addr, addr);
-	AXP_TRACE_END();
+	AXP_TRACE_END()
     }
 
     while (ctrlA->uip == 1)
@@ -1242,10 +1272,9 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
     binTime.tm_min = currentTime.tm_min - ram[AXP_ADDR_Minutes];
     binTime.tm_hour = currentTime.tm_hour - ram[AXP_ADDR_Hours];
     binTime.tm_mday = currentTime.tm_mday - ram[AXP_ADDR_Date];
-    binTime.tm_mon = currentTime.tm_mon - ran[AXP_ADDR_Month];
-    binTime.tm_year = (currentTime.tm_year -
-	(currentTime.tm_year >= 100 ? 100 : 0)) -
-	    ram[AXP_ADDR_Year];
+    binTime.tm_mon = currentTime.tm_mon - ram[AXP_ADDR_Month];
+    binTime.tm_year = (currentTime.tm_year
+	- (currentTime.tm_year >= 100 ? 100 : 0)) - ram[AXP_ADDR_Year];
 
     /*
      * Step 3:
@@ -1264,7 +1293,7 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
      */
     AXP_DS12887A_Normalize(&binTimeA, true);
 
-    switch(addr)
+    switch (addr)
     {
 	case AXP_ADDR_Seconds:
 	    if (ctrlB->dm == 1)
@@ -1436,16 +1465,16 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
 
 	case AXP_ADDR_ControlC:
 	    *value = ctrlC->value & AXP_MASK_ControlC;
-	    ctrlC->value = 0;	/* This register is cleared upon reading */
+	    ctrlC->value = 0; /* This register is cleared upon reading */
 	    break;
 
 	case AXP_ADDR_ControlD:
 	    *value = ctrlD->value & AXP_MASK_ControlD;
 	    break;
 
-	/*
-	 * It is a RAM location.  Just read the data and be done with it.
-	 */
+	    /*
+	     * It is a RAM location.  Just read the data and be done with it.
+	     */
 	default:
 	    *value = ram[addr];
 	    break;
@@ -1457,11 +1486,14 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
 	AXP_TraceWrite("AXP_DS12887A_Read returning.");
 	AXP_TraceWrite(
 	    "\taddr: 0x%02x(%d); value: 0x%02x(%d)",
-	    addr, addr, *value, *value);
-	AXP_TRACE_END();
+	    addr,
+	    addr,
+	    *value,
+	    *value);
+	AXP_TRACE_END()
     }
 
-	AXP_DS12887A_CheckIRQF();
+    AXP_DS12887A_CheckIRQF();
     AXP_DS12887A_UNLOCK;
 
     /*

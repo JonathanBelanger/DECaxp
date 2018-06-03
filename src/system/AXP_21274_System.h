@@ -27,12 +27,13 @@
 #define _AXP_SYSTEM_DEFS_	1
 
 #include "AXP_Utility.h"
+#include "AXP_Blocks.h"
 #include "AXP_Configure.h"
 #include "AXP_21274_21264_Common.h"
 #include "AXP_21274_Registers.h"
 #include "AXP_21274_Cchip.h"
-#include "AXP_21274_Dchip.h"
 #include "AXP_21274_Pchip.h"
+#include "AXP_21274_Dchip.h"
 
 /*
  * The following structure contains the information needed to be able to
@@ -55,55 +56,55 @@ typedef struct
  * HRM 2.1 System Building Block Variables
  *
  * The parameters that may be varied are as follows:
- *		- Number of CPUs (one or two)
- *		- Number of memory data buses (one or two)
- *		- Number of Dchips (two, four, or eight)
- *		- Number of Pchips (one or two)
- *		- Number of main memory DRAM arrays (one, two, three, or four)
- *		- Width of the memory data buses (16 bytes or 32 bytes each)
- *		- Type of DRAM SIMMs (synchronous 16MB or 64MB, with various timing
- *		  parameters)
+ *	- Number of CPUs (one or two)
+ *	- Number of memory data buses (one or two)
+ *	- Number of Dchips (two, four, or eight)
+ *	- Number of Pchips (one or two)
+ *	- Number of main memory DRAM arrays (one, two, three, or four)
+ *	- Width of the memory data buses (16 bytes or 32 bytes each)
+ *	- Type of DRAM SIMMs (synchronous 16MB or 64MB, with various timing
+ *	  parameters)
  *
  * The combinations for possible system configurations are listed in Table 2?1.
  *
  *	Table 2?1 System Configurations
  *	--------------------------------------------------------------------------------------
  *										Pchip-to-
- *	Number of	Number of	Number of	Dchip Bus	Number		Number of		Memory Bus
- *	Cchips		Dchips		Pchips		Width		of CPUs		Memory Busses	Width
+ *	Number of   Number of	Number of   Dchip Bus	Number	Number of	Memory Bus
+ *	Cchips	    Dchips	Pchips	    Width	of CPUs	Memory Busses	Width
  *	--------------------------------------------------------------------------------------
- *		1			2		  1			4 bytes		  1			  1				16 bytes
- *		1			4		1 or 2		4 bytes		1 or 2		  1(1)			32 bytes
- *		1			4		1 or 2		4 bytes		1 or 2		  2(2)			16 bytes
- *		1			8		1 or 2		4 bytes		1 or 2		1 or 2(3)		32 bytes
- *		1			8		1 or 2		4 bytes		  4			1 or 2(3)		32 bytes
+ *	1	    2		  1	    4 bytes	  1	  1		16 bytes
+ *	1	    4		1 or 2	    4 bytes	1 or 2	  1(1)		32 bytes
+ *	1	    4		1 or 2	    4 bytes	1 or 2	  2(2)		16 bytes
+ *	1	    8		1 or 2	    4 bytes	1 or 2	1 or 2(3)	32 bytes
+ *	1	    8		1 or 2	    4 bytes	  4	1 or 2(3)	32 bytes
  *	--------------------------------------------------------------------------------------
  *	(1) Preferable for uniprocessors.
  *	(2) Preferable for dual processors.
  *	(3) Two memory buses are recommended when using two or four CPUs.
  *
  * The following notes also apply to Table 2?1.
- *		- A 32-byte memory bus can be half-populated, in which case, it
- *		  operates as a 16-byte memory bus. The difference is that the maximum
- *		  number of arrays on the bus is still four.
- *		- Using SDRAMs and a system clock speed of 83 MHz, 16-byte memory buses
- *		  each deliver 1.35-GB/s and 32-byte memory buses each deliver 2.7-GB/s
- *		  effective bandwidth.
- *		- The data path from the CPU to the Dchip is always 8 bytes, and can
- *		  run at 3 ns using clock forwarding for an effective bandwidth of
- *		  2.7-GB/s.
- *		- The PADbus (Pchip-to-Dchip) can run at 83 MHz for a raw bandwidth of
- *		  400-MB/s, ignoring turnaround cycles.
- *		- In a system with eight Dchips, each Dchip transfers 1 check bit, but
- *		  only ? byte per cycle. So the Pchip transfers 8 bytes with check bits
- *		  every two cycles over a 40-wire interface.
- *		- In a system with eight Dchips, the Dchips support up to four CPUs,
- *		  but the Cchip only supports one or two CPUs.
- *		- In a system with two memory buses, memory arrays 0 and 2 must be
- *		  attached to bus 0, while memory arrays 1 and 3 must be attached to
- *		  bus 1. The memory array number is determined by the set of DRAM
- *		  control signals from the Cchip. The memory bus number is determined
- *		  by the set of data signals on the Dchip slices (see Section 7.4).
+ *	- A 32-byte memory bus can be half-populated, in which case, it
+ *	  operates as a 16-byte memory bus. The difference is that the maximum
+ *	  number of arrays on the bus is still four.
+ *	- Using SDRAMs and a system clock speed of 83 MHz, 16-byte memory buses
+ *	  each deliver 1.35-GB/s and 32-byte memory buses each deliver 2.7-GB/s
+ *	  effective bandwidth.
+ *	- The data path from the CPU to the Dchip is always 8 bytes, and can
+ *	  run at 3 ns using clock forwarding for an effective bandwidth of
+ *	  2.7-GB/s.
+ *	- The PADbus (Pchip-to-Dchip) can run at 83 MHz for a raw bandwidth of
+ *	  400-MB/s, ignoring turnaround cycles.
+ *	- In a system with eight Dchips, each Dchip transfers 1 check bit, but
+ *	  only ? byte per cycle. So the Pchip transfers 8 bytes with check bits
+ *	  every two cycles over a 40-wire interface.
+ *	- In a system with eight Dchips, the Dchips support up to four CPUs,
+ *	  but the Cchip only supports one or two CPUs.
+ *	- In a system with two memory buses, memory arrays 0 and 2 must be
+ *	  attached to bus 0, while memory arrays 1 and 3 must be attached to
+ *	  bus 1. The memory array number is determined by the set of DRAM
+ *	  control signals from the Cchip. The memory bus number is determined
+ *	  by the set of data signals on the Dchip slices (see Section 7.4).
  */
 
 /*

@@ -326,9 +326,7 @@ typedef struct
 {
     pthread_mutex_t *mutex;
     pthread_cond_t *cond;
-    AXP_21274_RQ_ENTRY *rq;
-    u32 *rqStart;
-    u32 *rqEnd;
+    AXP_QUEUE_HDR *rq;
 } AXP_21264_SYSTEM;
 
 /*
@@ -353,18 +351,18 @@ typedef struct
     AXP_21264_BIST_STATES BiSTState;
 
     /**************************************************************************
-     *	Ibox Definitions													  *
-     *																		  *
+     *	Ibox Definitions						      *
+     *									      *
      *	The Ibox is responsible for instruction processing.  It maintains the *
      *	VPC Queue, ITB, Branch Prediction, Instruction Predecode, Instruction *
-     *	decode and register renaming, Instruction Cache, Instruction		  *
-     *	Retirement, and the Integer and Floating-Point Instruction Queues.	  *
-     *																		  *
-     *	The Ibox interfaces with with the Cbox, Ebox, and Fbox.  The Cbox	  *
-     *	provides the next set of instructions when an Icache miss occurs.	  *
+     *	decode and register renaming, Instruction Cache, Instruction	      *
+     *	Retirement, and the Integer and Floating-Point Instruction Queues.    *
+     *									      *
+     *	The Ibox interfaces with with the Cbox, Ebox, and Fbox.  The Cbox     *
+     *	provides the next set of instructions when an Icache miss occurs.     *
      *	The set of instructions are provided to the Ibox for predecoding and  *
-     *	entry into the Icache.  The Ebox reads instructions of the Integer	  *
-     *	Issue Queue (IQ) into upto 4 integer processors.  The Fbox reads	  *
+     *	entry into the Icache.  The Ebox reads instructions of the Integer    *
+     *	Issue Queue (IQ) into upto 4 integer processors.  The Fbox reads      *
      *	instructions from the FP Issue Queue (FQ) into upto 2 FP processors.  *
      **************************************************************************/
 
@@ -429,21 +427,21 @@ typedef struct
      * Ibox Internal Processor Registers (IPRs)
      */
     pthread_mutex_t iBoxIPRMutex;
-    AXP_IBOX_ITB_TAG itbTag; /* ITB tag array write				*/
-    AXP_IBOX_ITB_PTE itbPte; /* ITB Page Table Entry				*/
-    AXP_IBOX_ITB_IS itbIs; /* ITB invalidate single			*/
-    AXP_IBOX_EXC_ADDR excAddr; /* Exception address				*/
-    AXP_IBOX_IVA_FORM ivaForm; /* Instruction VA format			*/
-    AXP_IBOX_IER_CM ierCm; /* Interrupt enable and current mode */
-    AXP_IBOX_SIRR sirr; /* Software interrupt request		*/
-    AXP_IBOX_ISUM iSum; /* Interrupt summary				*/
-    AXP_IBOX_HW_INT_CLR hwIntClr; /* Hardware interrupt clear			*/
-    AXP_IBOX_EXC_SUM excSum; /* Exception summary				*/
-    AXP_IBOX_PAL_BASE palBase; /* PAL base address					*/
-    AXP_IBOX_I_CTL iCtl; /* Ibox control						*/
-    AXP_IBOX_I_STAT iStat; /* Ibox status						*/
-    AXP_IBOX_PCTX pCtx; /* Process context register			*/
-    AXP_IBOX_PCTR_CTL pCtrCtl; /* Performance counter control		*/
+    AXP_IBOX_ITB_TAG itbTag;	/* ITB tag array write			*/
+    AXP_IBOX_ITB_PTE itbPte;	/* ITB Page Table Entry			*/
+    AXP_IBOX_ITB_IS itbIs;	/* ITB invalidate single		*/
+    AXP_IBOX_EXC_ADDR excAddr;	/* Exception address			*/
+    AXP_IBOX_IVA_FORM ivaForm;	/* Instruction VA format		*/
+    AXP_IBOX_IER_CM ierCm;	/* Interrupt enable and current mode	*/
+    AXP_IBOX_SIRR sirr;		/* Software interrupt request		*/
+    AXP_IBOX_ISUM iSum;		/* Interrupt summary			*/
+    AXP_IBOX_HW_INT_CLR hwIntClr; /* Hardware interrupt clear		*/
+    AXP_IBOX_EXC_SUM excSum;	/* Exception summary			*/
+    AXP_IBOX_PAL_BASE palBase;	/* PAL base address			*/
+    AXP_IBOX_I_CTL iCtl;	/* Ibox control				*/
+    AXP_IBOX_I_STAT iStat;	/* Ibox status				*/
+    AXP_IBOX_PCTX pCtx;		/* Process context register		*/
+    AXP_IBOX_PCTR_CTL pCtrCtl;	/* Performance counter control		*/
 
     /*
      * This is the Instruction Cache.  It is 64K bytes in size (just counting
@@ -467,17 +465,17 @@ typedef struct
     u32 nextITB;
 
     /**************************************************************************
-     *	Ebox Definitions													  *
-     *																		  *
+     *	Ebox Definitions						      *
+     *									      *
      *	The Ebox is responsible for processing instructions from the IQ.  It  *
-     *	maintains 2 sets of Physical Integer Registers, which are copies of	  *
-     *	one another.  It can handle up to 4 simultaneous instructions.		  *
-     *																		  *
-     *	The Ebox interfaces with the Ibox (see above for more information),	  *
+     *	maintains 2 sets of Physical Integer Registers, which are copies of   *
+     *	one another.  It can handle up to 4 simultaneous instructions.	      *
+     *									      *
+     *	The Ebox interfaces with the Ibox (see above for more information),   *
      *	the Fbox and the Mbox.  The Fbox and Ebox are allowed to move values  *
      *	from a register in one to the other.  This is does for Integer/FP to  *
-     *	FP/Integer conversion and FP branch operations.  The Mbox provides	  *
-     *	data to the Ebox from memory, via that data cache (Dcache).			  *
+     *	FP/Integer conversion and FP branch operations.  The Mbox provides    *
+     *	data to the Ebox from memory, via that data cache (Dcache).	      *
      **************************************************************************/
 
     /*
@@ -538,55 +536,55 @@ typedef struct
      *
      * Design Information:
      *	pr: 		These are the actual physical registers.  For the integer
-     *				pipeline, there are a total of 80 physical registers.
-     *	prFreeList:	This is where physical registers that are available for use
-     *				as a destination register are maintained.  When renaming
-     *				the architectural to physical for a destination register,
-     *				a free register is removed from this list and indicated as
-     *				Pending-Update (when the instruction is retired and the
-     *				value of the instruction is actually stored in the physical
-     *				register.  Physical registers are put back on this list
-     *				when they are no longer being mapped.  This list is
-     *				maintained in a round-robin fashion.  Entries are removed
-     *				from the prFlStart entry and returned at the prFlEnd entry.
-     *				There are a total of 80 (physical) - 32 (architectural) -
-     *				8 (PALshadow) = 40 register entries on the free-list.
+     *			pipeline, there are a total of 80 physical registers.
+     *	prFreeList:	his is where physical registers that are available for use
+     *			as a destination register are maintained.  When renaming
+     *			the architectural to physical for a destination register,
+     *			a free register is removed from this list and indicated as
+     *			Pending-Update (when the instruction is retired and the
+     *			value of the instruction is actually stored in the physical
+     *			register.  Physical registers are put back on this list
+     *			when they are no longer being mapped.  This list is
+     *			maintained in a round-robin fashion.  Entries are removed
+     *			from the prFlStart entry and returned at the prFlEnd entry.
+     *			There are a total of 80 (physical) - 32 (architectural) -
+     *			8 (PALshadow) = 40 register entries on the free-list.
      *	prFlStart:	This is a value from 0 to 39, representing the location
-     *				within the prFreeList where the first available physical
-     *				register number is stored.  When this variable has a value
-     *				of 39 and 1 is added, it returns back to a value of 0.
+     *			within the prFreeList where the first available physical
+     *			register number is stored.  When this variable has a value
+     *			of 39 and 1 is added, it returns back to a value of 0.
      *	prFlEnd:	This is a value from 0 to 39, representing the location
-     *				within the prFreeList where the last+1 available physical
-     *				register number is returned.  When this variable has a
-     *				value of 39 and 1 is added, it returns back to a value of
-     *				0.  When the free-list is completely full or empty, the
-     *				prFlStart and prFlEnd are equal.
+     *			within the prFreeList where the last+1 available physical
+     *			register number is returned.  When this variable has a
+     *			value of 39 and 1 is added, it returns back to a value of
+     *			0.  When the free-list is completely full or empty, the
+     *			prFlStart and prFlEnd are equal.
      *	prMap:		These are the mappings for each of the architectural
-     *				registers to physical registers currently being mapped.
-     *				This array is indexed by the architectural register number.
-     *				R31 is always mapped to entry 31.  Each entry has the
-     *				current and previous mapping to a physical register.  The
-     *				previous mapping is used when aborting a set of
-     *				instructions.  There are 32 (architectural) + 8 (PALshadow)
-     *				= 40 register entries.
+     *			registers to physical registers currently being mapped.
+     *			This array is indexed by the architectural register number.
+     *			R31 is always mapped to entry 31.  Each entry has the
+     *			current and previous mapping to a physical register.  The
+     *			previous mapping is used when aborting a set of
+     *			instructions.  There are 32 (architectural) + 8 (PALshadow)
+     *			= 40 register entries.
      *	prState:	These are the states for each of the physical registers.
-     *				The states for each physical register are:
-     *					- Free:				The register is on the free list
-     *										and available for mapping.
-     *					- Valid:			The register is currently mapped
-     *										and its value is ready to be used
-     *										to execute an instruction.
-     *					- Pending Update:	The register is currently mapped
-     *										but its value is not ready to be
-     *										used.  It is mapped as a
-     *										destination register for an
-     *										instruction that has not been
-     *										retired.  One the instruction is
-     *										retired, the state will be changed
-     *										to Valid.
-     *				There are a total of 80 physical register states (one for
-     *				each physical register) entries.  This array is index by
-     *				the physical register number.
+     *			The states for each physical register are:
+     *				- Free:			The register is on the free list
+     *							and available for mapping.
+     *				- Valid:		The register is currently mapped
+     *							and its value is ready to be used
+     *							to execute an instruction.
+     *				- Pending Update:	The register is currently mapped
+     *							but its value is not ready to be
+     *							used.  It is mapped as a
+     *							destination register for an
+     *							instruction that has not been
+     *							retired.  One the instruction is
+     *							retired, the state will be changed
+     *							to Valid.
+     *			There are a total of 80 physical register states (one for
+     *			each physical register) entries.  This array is index by
+     *			the physical register number.
      */
     AXP_REGISTERS pr[AXP_INT_PHYS_REG];
     u16 prMap[AXP_MAX_INT_REGISTERS];
@@ -605,14 +603,14 @@ typedef struct
     AXP_EBOX_VA_FORM vaForm; /* Virtual address format			*/
 
     /**************************************************************************
-     *	Fbox Definitions													  *
-     *																		  *
+     *	Fbox Definitions						      *
+     *									      *
      *	The Fbox is responsible for processing instructions from the FQ.  It  *
      *	maintains a sets of Physical Integer Registers.  It can handle upto 2 *
-     *	simultaneous instructions.											  *
-     *																		  *
-     *	The Fbox interfaces with the Ibox (see above for more information),	  *
-     *	the Ebox (See above for more information) and the Mbox.  The Mbox	  *
+     *	simultaneous instructions.					      *
+     *									      *
+     *	The Fbox interfaces with the Ibox (see above for more information),   *
+     *	the Ebox (See above for more information) and the Mbox.  The Mbox     *
      *	provides data to the Fbox from memory, via that data cache (Dcache).  *
      **************************************************************************/
 
@@ -652,55 +650,55 @@ typedef struct
      *
      * Design Information:
      *	pf: 		These are the actual physical registers.  For the floating
-     *				point pipeline, there are a total of 72 physical registers.
+     *			point pipeline, there are a total of 72 physical registers.
      *	pfFreeList:	This is where physical registers that are available for use
-     *				as a destination register are maintained.  When renaming
-     *				the architectural to physical for a destination register,
-     *				a free register is removed from this list and indicated as
-     *				Pending-Update (when the instruction is retired and the
-     *				value of the instruction is actually stored in the physical
-     *				register.  Physical registers are put back on this list
-     *				when they are no longer being mapped.  This list is
-     *				maintained in a round-robin fashion.  Entries are removed
-     *				from the pfFlStart entry and returned at the pfFlEnd entry.
-     *				There are a total of 72 (physical) - 32 (architectural) =
-     *				40 register entries on the free-list.
+     *			s a destination register are maintained.  When renaming
+     *			the architectural to physical for a destination register,
+     *			a free register is removed from this list and indicated as
+     *			Pending-Update (when the instruction is retired and the
+     *			value of the instruction is actually stored in the physical
+     *			register.  Physical registers are put back on this list
+     *			when they are no longer being mapped.  This list is
+     *			maintained in a round-robin fashion.  Entries are removed
+     *			from the pfFlStart entry and returned at the pfFlEnd entry.
+     *			There are a total of 72 (physical) - 32 (architectural) =
+     *			40 register entries on the free-list.
      *	pfFlStart:	This is a value from 0 to 39, representing the location
-     *				within the pfFreeList where the first available physical
-     *				register number is stored.  When this variable has a value
-     *				of 39 and 1 is added, it returns back to a value of 0.
+     *			within the pfFreeList where the first available physical
+     *			register number is stored.  When this variable has a value
+     *			of 39 and 1 is added, it returns back to a value of 0.
      *	pfFlEnd:	This is a value from 0 to 39, representing the location
-     *				within the pfFreeList where the last+1 available physical
-     *				register number is returned.  When this variable has a
-     *				value of 39 and 1 is added, it returns back to a value of
-     *				0.  When the free-list is completely full or empty, the
-     *				pfFlStart and pfFlEnd are equal.
+     *			within the pfFreeList where the last+1 available physical
+     *			register number is returned.  When this variable has a
+     *			value of 39 and 1 is added, it returns back to a value of
+     *			0.  When the free-list is completely full or empty, the
+     *			pfFlStart and pfFlEnd are equal.
      *	pfMap:		These are the mappings for each of the architectural
-     *				registers to physical registers currently being mapped.
-     *				This array is indexed by the architectural register number.
-     *				R31 is always mapped to entry 31.  Each entry has the
-     *				current and previous mapping to a physical register.  The
-     *				previous mapping is used when aborting a set of
-     *				instructions.  There are 32 (architectural) register
-     *				entries.
+     *			registers to physical registers currently being mapped.
+     *			This array is indexed by the architectural register number.
+     *			R31 is always mapped to entry 31.  Each entry has the
+     *			current and previous mapping to a physical register.  The
+     *			previous mapping is used when aborting a set of
+     *			instructions.  There are 32 (architectural) register
+     *			entries.
      *	pfState:	These are the states for each of the physical registers.
-     *				The states for each physical register are:
-     *					- Free:				The register is on the free list
-     *										and available for mapping.
-     *					- Valid:			The register is currently mapped
-     *										and its value is ready to be used
-     *										to execute an instruction.
-     *					- Pending Update:	The register is currently mapped
-     *										but its value is not ready to be
-     *										used.  It is mapped as a
-     *										destination register for an
-     *										instruction that has not been
-     *										retired.  One the instruction is
-     *										retired, the state will be changed
-     *										to Valid.
-     *				There are a total of 72 physical register states (one for
-     *				each physical register) entries.  This array is index by
-     *				the physical register number.
+     *			The states for each physical register are:
+     *				- Free:			The register is on the free list
+     *							and available for mapping.
+     *				- Valid:		The register is currently mapped
+     *							and its value is ready to be used
+     *							to execute an instruction.
+     *				- Pending Update:	The register is currently mapped
+     *							but its value is not ready to be
+     *							used.  It is mapped as a
+     *							destination register for an
+     *							instruction that has not been
+     *							retired.  One the instruction is
+     *							retired, the state will be changed
+     *							to Valid.
+     *			There are a total of 72 physical register states (one for
+     *			each physical register) entries.  This array is index by
+     *			the physical register number.
      */
     AXP_REGISTERS pf[AXP_FP_PHYS_REG];
     u16 pfMap[AXP_MAX_FP_REGISTERS];
@@ -714,16 +712,16 @@ typedef struct
     AXP_FBOX_FPCR fpcr;
 
     /**************************************************************************
-     *	Mbox Definitions													  *
-     *																		  *
+     *	Mbox Definitions						      *
+     *									      *
      *	The Mbox is responsible for providing data to the Ebox and Fbox.  The *
-     *	Mbox maintains a Load and Store Queue, as well as a Miss Address	  *
-     *	File.  																  *
-     *																		  *
+     *	Mbox maintains a Load and Store Queue, as well as a Miss Address      *
+     *	File.  								      *
+     *									      *
      *	The Mbox interfaces with with the Cbox, Ebox, and Fbox (see above for *
-     *	more information on the last 2).  The Cbox provides data when a		  *
-     *	Dcache miss occurs.  The Mbox provides data to the Cbox to store in	  *
-     *	memory when a store operation occurs.								  *
+     *	more information on the last 2).  The Cbox provides data when a	      *
+     *	Dcache miss occurs.  The Mbox provides data to the Cbox to store in   *
+     *	memory when a store operation occurs.				      *
      **************************************************************************/
 
     /*
@@ -751,9 +749,9 @@ typedef struct
      * Dcache (and ultimately memory), and need to be completed in order, to
      * ensure correct Alpha memory reference behavior.
      *
-     * NOTE: These queue are not mutex or conditional queues.  We do this
-     * 		 because the index into the queue is reserved in the iBox during
-     * 		 instruction decoding.
+     * NOTE:	These queue are not mutex or conditional queues.  We do this
+     *		because the index into the queue is reserved in the iBox during
+     *		instruction decoding.
      */
     pthread_mutex_t lqMutex;
     AXP_MBOX_QUEUE lq[AXP_MBOX_QUEUE_LEN];
@@ -775,31 +773,31 @@ typedef struct
      * Mbox IPRs
      */
     pthread_mutex_t mBoxIPRMutex;
-    AXP_MBOX_DTB_TAG dtbTag0; /* DTB tag array write 0			*/
-    AXP_MBOX_DTB_TAG dtbTag1; /* DTB tag array write 1			*/
-    AXP_MBOX_DTB_PTE dtbPte0; /* DTB PTE array write 0			*/
-    AXP_MBOX_DTB_PTE dtbPte1; /* DTB PTE array write 1			*/
-    AXP_MBOX_DTB_ALTMODE dtbAltMode; /* DTB alternate processor mode		*/
-    AXP_MBOX_DTB_IS dtbIs0; /* DTB invalidate single 0			*/
-    AXP_MBOX_DTB_IS dtbIs1; /* DTB invalidate single 1			*/
-    AXP_MBOX_DTB_ASN dtbAsn0; /* DTB address space number 0		*/
-    AXP_MBOX_DTB_ASN dtbAsn1; /* DTN address space number 1		*/
-    AXP_MBOX_MM_STAT mmStat; /* Memory management status			*/
-    AXP_MBOX_M_CTL mCtl; /* Mbox control						*/
-    AXP_MBOX_DC_CTL dcCtl; /* Dcache control					*/
-    AXP_MBOX_DC_STAT dcStat; /* Dcache status					*/
+    AXP_MBOX_DTB_TAG dtbTag0;	/* DTB tag array write 0		*/
+    AXP_MBOX_DTB_TAG dtbTag1;	/* DTB tag array write 1		*/
+    AXP_MBOX_DTB_PTE dtbPte0;	/* DTB PTE array write 0		*/
+    AXP_MBOX_DTB_PTE dtbPte1;	/* DTB PTE array write 1		*/
+    AXP_MBOX_DTB_ALTMODE dtbAltMode; /* DTB alternate processor mode	*/
+    AXP_MBOX_DTB_IS dtbIs0;	/* DTB invalidate single 0		*/
+    AXP_MBOX_DTB_IS dtbIs1;	/* DTB invalidate single 1		*/
+    AXP_MBOX_DTB_ASN dtbAsn0;	/* DTB address space number 0		*/
+    AXP_MBOX_DTB_ASN dtbAsn1;	/* DTN address space number 1		*/
+    AXP_MBOX_MM_STAT mmStat;	/* Memory management status		*/
+    AXP_MBOX_M_CTL mCtl;	/* Mbox control				*/
+    AXP_MBOX_DC_CTL dcCtl;	/* Dcache control			*/
+    AXP_MBOX_DC_STAT dcStat;	/* Dcache status			*/
 
     /**************************************************************************
-     *	Cbox Definitions													  *
-     *																		  *
-     *	The Cbox is responsible for interfacing with the system.  It		  *
-     *	maintains a Probe Queue, Duplicate Tag Store, I/O Write Buffer		  *
-     *	(IOWB), Victim Buffer, and Arbiter.  It interfaces with the System	  *
-     *	(memory, disk drives, I/O devices, etc.), Ibox and Mbox (see above	  *
-     *	for more information about the last 2 items).						  *
-     *																		  *
+     *	Cbox Definitions						      *
+     *									      *
+     *	The Cbox is responsible for interfacing with the system.  It	      *
+     *	maintains a Probe Queue, Duplicate Tag Store, I/O Write Buffer	      *
+     *	(IOWB), Victim Buffer, and Arbiter.  It interfaces with the System    *
+     *	(memory, disk drives, I/O devices, etc.), Ibox and Mbox (see above    *
+     *	for more information about the last 2 items).			      *
+     *									      *
      *	The Cbox is responsible for the interfaces between the system and the *
-     *	CPU.																  *
+     *	CPU.								      *
      **************************************************************************/
 
     /*
@@ -818,7 +816,7 @@ typedef struct
     AXP_21264_CBOX_PQ pq[AXP_21264_PQ_LEN];
     bool noProbeResponses;
     AXP_21264_CBOX_MAF maf[AXP_21264_MAF_LEN];
-    u8 irqH :6; /* Six interrupt bits set by system	*/
+    u8 irqH;			/* Interrupt bits (IRQH[0:5] set by system */
     u8 vdbTop, vdbBottom;
     u8 iowbTop, iowbBottom;
     u8 pqTop, pqBottom;
@@ -830,45 +828,45 @@ typedef struct
      */
     pthread_mutex_t cBoxIPRMutex;
     AXP_21264_CBOX_CTAG ctag[AXP_CACHE_ENTRIES][AXP_2_WAY_CACHE];
-    AXP_CBOX_C_DATA cData; /* Cbox data						*/
-    AXP_CBOX_C_SHFT cShft; /* Cbox shift control				*/
-    AXP_21264_CBOX_CSRS csr; /* Control and Status Registers (CSR) */
+    AXP_CBOX_C_DATA cData;	/* Cbox data				*/
+    AXP_CBOX_C_SHFT cShft;	/* Cbox shift control			*/
+    AXP_21264_CBOX_CSRS csr;	/* Control and Status Registers (CSR)	*/
 
     /*
      * Bcache data structures.
      */
     pthread_mutex_t bCacheMutex;
-    AXP_21264_BCACHE_BLK *bCache; /* An array of 64-byte blocks		*/
-    AXP_21264_BCACHE_TAG *bTag; /* An array of tags for the Bcache	*/
+    AXP_21264_BCACHE_BLK *bCache;/* An array of 64-byte blocks		*/
+    AXP_21264_BCACHE_TAG *bTag;	/* An array of tags for the Bcache	*/
 
     /*
      * Alpha AXP Architectural IPRs
      *
      * NOTE:	Some or all of these may be deleted, as they are emulated in
-     *			IPRs specific to the 21264 Alpha AXP CPU.
+     *		IPRs specific to the 21264 Alpha AXP CPU.
      */
-    AXP_BASE_ASN asn; /* Address Space Number				*/
-    AXP_BASE_ASTEN astEn; /* AST Enable						*/
-    AXP_BASE_ASTSR astSr; /* AST Summary Register				*/
-    AXP_BASE_DATFX datFx; /* Data Alignment Trap Fix-up		*/
-    AXP_BASE_ESP esp; /* Executive Stack Pointer			*/
-    AXP_BASE_FEN fen; /* Floating-point Enable			*/
-    AXP_BASE_IPIR ipIr; /* Interprocessor Interrupt Request	*/
-    AXP_BASE_IPL ipl; /* Interrupt Priority Level			*/
-    AXP_BASE_KSP ksp; /* Kernel Stack Pointer				*/
-    AXP_BASE_MCES mces; /* Machine Check Error Summary		*/
-    AXP_BASE_PCBB pcbb; /* Privileged Context Block Base	*/
-    AXP_BASE_PRBR prbr; /* Processor Base Register			*/
-    AXP_BASE_PTBR ptbr; /* Page Table Base Register			*/
-    AXP_BASE_SCBB scbb; /* System Control Block Base		*/
-    AXP_BASE_SISR sisr; /* Software Interrupt Summary Register */
-    AXP_BASE_SSP ssp; /* Supervisor Stack Pointer			*/
-    AXP_BASE_SYSPTBR sysPtbr; /* System Page Table Base			*/
-    AXP_BASE_TBCHK tbChk; /* TB Check							*/
-    AXP_BASE_USP usp; /* User Stack Pointer				*/
-    AXP_BASE_VIRBND virBnd; /* Virtual Address Boundary			*/
-    AXP_BASE_VPTB vptb; /* Virtual Page Table Base			*/
-    AXP_BASE_WHAMI whami; /* Who-Am-I							*/
+    AXP_BASE_ASN asn;		/* Address Space Number			*/
+    AXP_BASE_ASTEN astEn;	/* AST Enable				*/
+    AXP_BASE_ASTSR astSr;	/* AST Summary Register			*/
+    AXP_BASE_DATFX datFx;	/* Data Alignment Trap Fix-up		*/
+    AXP_BASE_ESP esp;		/* Executive Stack Pointer		*/
+    AXP_BASE_FEN fen;		/* Floating-point Enable		*/
+    AXP_BASE_IPIR ipIr;		/* Interprocessor Interrupt Request	*/
+    AXP_BASE_IPL ipl;		/* Interrupt Priority Level		*/
+    AXP_BASE_KSP ksp;		/* Kernel Stack Pointer			*/
+    AXP_BASE_MCES mces;		/* Machine Check Error Summary		*/
+    AXP_BASE_PCBB pcbb;		/* Privileged Context Block Base	*/
+    AXP_BASE_PRBR prbr;		/* Processor Base Register		*/
+    AXP_BASE_PTBR ptbr;		/* Page Table Base Register		*/
+    AXP_BASE_SCBB scbb;		/* System Control Block Base		*/
+    AXP_BASE_SISR sisr;		/* Software Interrupt Summary Register	*/
+    AXP_BASE_SSP ssp;		/* Supervisor Stack Pointer		*/
+    AXP_BASE_SYSPTBR sysPtbr;	/* System Page Table Base		*/
+    AXP_BASE_TBCHK tbChk;	/* TB Check				*/
+    AXP_BASE_USP usp;		/* User Stack Pointer			*/
+    AXP_BASE_VIRBND virBnd;	/* Virtual Address Boundary		*/
+    AXP_BASE_VPTB vptb;		/* Virtual Page Table Base		*/
+    AXP_BASE_WHAMI whami;	/* Who-Am-I				*/
 
     /*
      * Information about the System, to which we send and receive commands and
@@ -879,10 +877,10 @@ typedef struct
     /*
      * Miscellaneous stuff the should probably go someplace else.
      */
-    u32 majorType; /* Processor Major Type				*/
-    u32 minorType; /* Processor Minor Type				*/
-    AXP_BASE_AMASK amask; /* Architectural Extension Support Mask	*/
-    u64 implVer; /* Implementation Version			*/
+    u32 majorType;		/* Processor Major Type			*/
+    u32 minorType;		/* Processor Minor Type			*/
+    AXP_BASE_AMASK amask;	/* Architectural Extension Support Mask	*/
+    u64 implVer;		/* Implementation Version		*/
 } AXP_21264_CPU;
 
 /*

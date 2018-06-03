@@ -59,13 +59,13 @@
  *
  * Revision History:
  *
- *	V01.000		24-May-2018	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000		24-May-2018	Jonathan D. Belanger
+ *  Initially written.
  *
- *	V01.001		01-Jun-2018	Jonathan D. Belanger
- *	Added the ability to provide a mutex, condition variable, interrupt field,
- *	and interrupt mask, so that when an interrupt is triggered, the thread that
- *	needs to be notified, has been informed.
+ *  V01.001		01-Jun-2018	Jonathan D. Belanger
+ *  Added the ability to provide a mutex, condition variable, interrupt field,
+ *  and interrupt mask, so that when an interrupt is triggered, the thread that
+ *  needs to be notified, has been informed.
  */
 #ifndef _AXP_DS12887A_TOYCLOCK_DEFS_
 #define _AXP_DS12887A_TOYCLOCK_DEFS_
@@ -134,9 +134,9 @@ typedef union
     u8 value;
     struct
     {
-	u8 rs :4;		/* Rate Selector */
-	u8 dv :3;		/* Oscillator on/off */
-	u8 uip :1;		/* Update In Progress */
+	u8 rs :4; /* Rate Selector */
+	u8 dv :3; /* Oscillator on/off */
+	u8 uip :1; /* Update In Progress */
     };
 } AXP_DS12887A_ControlA;
 #define AXP_ADDR_ControlA	10
@@ -145,54 +145,54 @@ typedef union
 /*
  * Periodic Interrupt Rate (RS bits)
  */
-#define AXP_PIR_NONE    0x0     /* None */
-#define AXP_PIR_390625  0x1     /* 3.90625ms */
-#define AXP_PIR_78125   0x2     /* 7.8125 ms */
-#define AXP_PIR_122070  0x3     /* 122.070us */
-#define AXP_PIR_244141  0x4     /* 244.141us */
-#define AXP_PIR_488281  0x5     /* 488.281us */
-#define AXP_PIR_9765625 0x6     /* 976.5625us */
-#define AXP_PIR_1953125 0x7     /* 1.953125ms */
-#define AXP_PIR_390625  0x8     /* 3.90625ms */
-#define AXP_PIR_78125   0x9     /* 7.8125ms */
-#define AXP_PIR_15625   0xa     /* 15.625ms */
-#define AXP_PIR_3125    0xb     /* 31.25ms */
-#define AXP_PIR_625     0xc     /* 62.5ms */
-#define AXP_PIR_125     0xd     /* 125ms */
-#define AXP_PIR_250     0xe     /* 250ms */
-#define AXP_PIR_500     0xf     /* 500ms */
+#define AXP_PIR_NONE		0x0     /* None */
+#define AXP_PIR_390625A		0x1     /* 3.90625ms */
+#define AXP_PIR_78125A		0x2     /* 7.8125 ms */
+#define AXP_PIR_122070		0x3     /* 122.070us */
+#define AXP_PIR_244141		0x4     /* 244.141us */
+#define AXP_PIR_488281		0x5     /* 488.281us */
+#define AXP_PIR_9765625		0x6     /* 976.5625us */
+#define AXP_PIR_1953125		0x7     /* 1.953125ms */
+#define AXP_PIR_390625B		0x8     /* 3.90625ms */
+#define AXP_PIR_78125B		0x9     /* 7.8125ms */
+#define AXP_PIR_15625		0xa     /* 15.625ms */
+#define AXP_PIR_3125		0xb     /* 31.25ms */
+#define AXP_PIR_625		0xc     /* 62.5ms */
+#define AXP_PIR_125		0xd     /* 125ms */
+#define AXP_PIR_250		0xe     /* 250ms */
+#define AXP_PIR_500		0xf     /* 500ms */
 
 /*
  * Square-Wave Output Frequency (RS bits)
  */
-#define AXP_SQW_NONE    0x0     /* None */
-#define AXP_SQW_256     0x1     /* 256Hz */
-#define AXP_SQW_128     0x2     /* 128Hz */
-#define AXP_SQW_8192    0x3     /* 8.192kHz */
-#define AXP_SQW_4096    0x4     /* 4.096kHz */
-#define AXP_SQW_2048    0x5     /* 2.048kHz */
-#define AXP_SQW_1024    0x6     /* 1.024kHz */
-#define AXP_SQW_512     0x7     /* 512Hz */
-#define AXP_SQW_256     0x8     /* 256Hz */
-#define AXP_SQW_128     0x9     /* 128Hz */
-#define AXP_SQW_64      0xa     /* 64Hz */
-#define AXP_SQW_32      0xb     /* 32Hz */
-#define AXP_SQW_16      0xc     /* 16Hz */
-#define AXP_SQW_8       0xd     /* 8Hz */
-#define AXP_SQW_4       0xe     /* 4Hz */
-#define AXP_SQW_2       0xf     /* 2Hz */
+#define AXP_SQW_NONE		0x0     /* None */
+#define AXP_SQW_256A		0x1     /* 256Hz */
+#define AXP_SQW_128A		0x2     /* 128Hz */
+#define AXP_SQW_8192		0x3     /* 8.192kHz */
+#define AXP_SQW_4096		0x4     /* 4.096kHz */
+#define AXP_SQW_2048		0x5     /* 2.048kHz */
+#define AXP_SQW_1024		0x6     /* 1.024kHz */
+#define AXP_SQW_512		0x7     /* 512Hz */
+#define AXP_SQW_256B		0x8     /* 256Hz */
+#define AXP_SQW_128B		0x9     /* 128Hz */
+#define AXP_SQW_64		0xa     /* 64Hz */
+#define AXP_SQW_32		0xb     /* 32Hz */
+#define AXP_SQW_16		0xc     /* 16Hz */
+#define AXP_SQW_8		0xd     /* 8Hz */
+#define AXP_SQW_4		0xe     /* 4Hz */
+#define AXP_SQW_2		0xf     /* 2Hz */
 
 /*
  * Oscillator Control
  */
-#define AXP_DV_OFF0	0x0	/* Oscillator off */
-#define AXP_DV_OFF1	0x1	/* Oscillator off */
-#define AXP_DV_ON_CCE	0x2	/* Oscillator on, Countdown Change enabled */
-#define AXP_DV_OFF03	0x3	/* Oscillator off */
-#define AXP_DV_OFF04	0x4	/* Oscillator off */
-#define AXP_DV_OFF05	0x5	/* Oscillator off */
-#define AXP_DV_ON_CCD6	0x6	/* Oscillator on, Countdown Chain disabled */
-#define AXP_DV_ON_CCD7	0x7	/* Oscillator on, Countdown Chain disabled */
+#define AXP_DV_OFF		0x0	/* Oscillator off */
+#define AXP_DV_OFF1		0x1	/* Oscillator off */
+#define AXP_DV_ON_CCE		0x2	/* Oscillator on, Countdown Change enabled */
+#define AXP_DV_OFF03		0x3	/* Oscillator off */
+#define AXP_DV_OFF04		0x4	/* Oscillator off */
+#define AXP_DV_OFF05		0x5	/* Oscillator off */
+#define AXP_DV_ON_CCD6		0x6	/* Oscillator on, Countdown Chain disabled */
+#define AXP_DV_ON_CCD7		0x7	/* Oscillator on, Countdown Chain disabled */
 
 /*
  * Control Register B at address 0x0b
@@ -264,7 +264,7 @@ typedef union
     u8 value;
     struct
     {
-	u8 dse :1; 		/* Daylight Savings Enable */
+	u8 dse :1;		/* Daylight Savings Enable */
 	u8 twentyFour :1;	/* 24-12 Hour Mode */
 	u8 dm :1;		/* Data Mode */
 	u8 sqwe :1;		/* Square-Wave Enable */
@@ -315,7 +315,7 @@ typedef union
     struct
     {
 	u8 res :4;
-	u8 uf :1;		/* Update-Ended Interrupt Flag */
+	u8 uf :1; 		/* Update-Ended Interrupt Flag */
 	u8 af :1;		/* Alarm Interrupt Flag */
 	u8 pf :1;		/* Periodic Interrupt Flag */
 	u8 irqf :1;		/* PF=PIE=1 or AF-AIE=1 or UF=UIE=1 */
@@ -648,6 +648,6 @@ typedef union
 void AXP_DS12887A_Reset(void);
 void AXP_DS12887A_Write(u8, u8);
 void AXP_DS12887A_Read(u8, u8 *);
-void AXP_DS12887A_Config(pthread_cond_t *, pthread_mutext_t *, u64 *, u64);
+void AXP_DS12887A_Config(pthread_cond_t *, pthread_mutex_t *, u64 *, u64);
 
 #endif	/* _AXP_DS12887A_TOYCLOCK_DEFS_ */

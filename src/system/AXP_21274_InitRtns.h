@@ -16,22 +16,32 @@
  *
  * Description:
  *
- *	This module contains the code to test the DS12887A Real Time Clock
- *	code.
+ *	This header file contains the initialization routines for the System
+ *	components.  We do this here to avoid includes that refer to each other
+ *	and cause compile time errors.
  *
  * Revision History:
  *
- *	V01.000		28-May-2018	Jonathan D. Belanger
+ *	V01.000		02-Jun-2018	Jonathan D. Belanger
  *	Initially written.
  */
-#include "AXP_Utility.h";
-#include "AXP_DS12887A_TOYClock.h"
+#ifndef _AXP_21274_INITRTNS_H_
+#define _AXP_21274_INITRTNS_H_
 
-int main()
-{
+/*
+ * Cchip Initialization Function Prototype
+ */
+void AXP_21274_CchipInit(AXP_21274_SYSTEM *);
 
-    /*
-     * Return back to the caller.
-     */
-    return(0);
-}
+/*
+ * Pchip Initialization Function Prototype
+ */
+void AXP_21274_PchipInit(AXP_21274_PCHIP *, u32 id);
+
+/*
+ * Dchip Initialization Function Prototype
+ */
+void AXP_21274_DchipInit(AXP_21274_SYSTEM *);
+
+
+#endif /* _AXP_21274_INITRTNS_H_ */

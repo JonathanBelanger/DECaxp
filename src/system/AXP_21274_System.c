@@ -16,12 +16,12 @@
  *
  * Description:
  *
- *	This source file the System interface functions.
+ *  This source file the System interface functions.
  *
  * Revision History:
  *
- *	V01.000		21-JAN-2018	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000		21-JAN-2018	Jonathan D. Belanger
+ *  Initially written.
  */
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
@@ -50,11 +50,11 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 	if (pthreadRet == 0)
 	    pthreadRet = pthread_mutex_init(&sys->p1.mutex, NULL);
 	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&sys->cChipCond, NULL);
+	    pthreadRet = pthread_cond_init(&sys->cChipCond, NULL);
 	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&sys->p0.cond, NULL);
+	    pthreadRet = pthread_cond_init(&sys->p0.cond, NULL);
 	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&sys->p1.cond, NULL);
+	    pthreadRet = pthread_cond_init(&sys->p1.cond, NULL);
 
 	/*
 	 * Let's go allocate all the CPUs configured to this emulation

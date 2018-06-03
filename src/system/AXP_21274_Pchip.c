@@ -41,12 +41,13 @@
  */
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
+#include "AXP_21274_System.h"
 #include "AXP_21274_Pchip.h"
 
 /*
  * Local Prototypes
  */
-static void AXP_21274_ReadPCSR(AXP_21274_PCHIP *, AXP_CAPbusMsg *);
+static u64 AXP_21274_ReadPCSR(AXP_21274_PCHIP *, AXP_CAPbusMsg *);
 static void AXP_21274_WritePCSR(AXP_21274_PCHIP *, AXP_CAPbusMsg *);
 
 /*
@@ -85,7 +86,7 @@ static u64 AXP_21274_ReadPCSR(AXP_21274_PCHIP *p, AXP_CAPbusMsg *msg)
 	    break;
 
 	case 0x02: /* WSBA2 */
-	    retVal = *((u64 *) &p->wsba2 & AXP_21274_WSBAn_RMASK);
+	    retVal = *((u64 *) &p->wsba2) & AXP_21274_WSBAn_RMASK;
 	    break;
 
 	case 0x03: /* WSBA3 */
@@ -599,8 +600,8 @@ void *AXP_21274_PchipMain(void *voidPtr)
 	 * This first thing we need to do is wait for something to arrive to be
 	 * processed.
 	 */
-	whileAXP_QUE_EMPTY(p->tpr)
-	pthread_cond_wait(&p->cond, &p->mutex);
+	while AXP_QUE_EMPTY(p->tpr)
+	    pthread_cond_wait(&p->cond, &p->mutex);
 
 	/*
 	 * We have something to process.
@@ -627,7 +628,6 @@ void *AXP_21274_PchipMain(void *voidPtr)
 	    case PIO_Write:
 	    case PIO_MemoryWritePTP:
 	    case PIO_MemoryRead:
-	    case PTPMemoryRead:
 	    case PIO_MemoryWriteCPU:
 		break;
 
@@ -650,7 +650,6 @@ void *AXP_21274_PchipMain(void *voidPtr)
 	    case PTPMemoryWrite:
 	    case DMARdModyWrQW:
 	    case DMAWriteNQW:
-	    case PTPMemoryWrite:
 	    case PTPWrByteMaskByp:
 		break;
 	}
