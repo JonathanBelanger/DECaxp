@@ -337,9 +337,9 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *);
  * Buffer masking functions.  Used for not necessarily continuous buffer
  * utilization.
  */
-void AXP_MaskReset(u64 *);
-void AXP_MaskSet(u64 *, u64, u64, int);
+void AXP_MaskReset(u8 *);
+void AXP_MaskSet(u8 *, u64, u64, int);
 void AXP_MaskStartGet(int *);
-int AXP_MaskGet(int *, u64, int);
+int AXP_MaskGet(int *, u8, int);
 
 #endif /* _AXP_UTIL_DEFS_ */

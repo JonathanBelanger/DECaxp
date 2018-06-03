@@ -32,6 +32,7 @@
 #include "AXP_21264_Ebox.h"
 #include "AXP_21264_Fbox.h"
 #include "AXP_21264_Ibox.h"
+#include "AXP_21264_to_System.h"
 
 /*
  * AXP_21264_OldestPQFlags
@@ -311,7 +312,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
     AXP_ProbeStatus probeStatus;
     AXP_VA physAddr =
     {
-    .va = pq->pa
+	.va = pq->pa
     };
     u32 ctagIndex = physAddr.vaIdxInfo.index;
     u32 setToUse;
@@ -333,14 +334,14 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
     if ((pq->valid == true) && (pq->processed == false))
     {
 	pthread_mutex_lock(&cpu->bCacheMutex);
-	if ((cpu->ctag[ctagIndex][0].valid = true)
-	    && (cpu->ctag[ctagIndex][0].physTag == physAddr.vaIdxInfo.tag))
+	if ((cpu->ctag[ctagIndex][0].valid = true) &&
+	    (cpu->ctag[ctagIndex][0].physTag == physAddr.vaIdxInfo.tag))
 	{
 	    setToUse = 0;
 	    dCacheStatus = AXP_21264_CACHE_HIT;
 	}
-	else if ((cpu->ctag[ctagIndex][1].valid = true)
-	    && (cpu->dtag[ctagIndex][1].physTag == physAddr.vaIdxInfo.tag))
+	else if ((cpu->ctag[ctagIndex][1].valid = true) &&
+	    (cpu->dtag[ctagIndex][1].physTag == physAddr.vaIdxInfo.tag))
 	{
 	    setToUse = 1;
 	    dCacheStatus = AXP_21264_CACHE_HIT;
@@ -375,17 +376,17 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 	    }
 	    bCacheStatus = AXP_21264_Bcache_Status(cpu, pq->pa);
 
-	    if ((AXP_CACHE_CLEAN(dCacheStatus) == true)
-		|| (AXP_CACHE_CLEAN(bCacheStatus) == true))
+	    if ((AXP_CACHE_CLEAN(dCacheStatus) == true)  ||
+		(AXP_CACHE_CLEAN(bCacheStatus) == true))
 		probeStatus = HitClean;
-	    else if ((AXP_CACHE_CLEAN_SHARED(dCacheStatus) == true)
-		|| (AXP_CACHE_CLEAN_SHARED(bCacheStatus) == true))
+	    else if ((AXP_CACHE_CLEAN_SHARED(dCacheStatus) == true) ||
+		(AXP_CACHE_CLEAN_SHARED(bCacheStatus) == true))
 		probeStatus = HitShared;
-	    else if ((AXP_CACHE_DIRTY(dCacheStatus) == true)
-		|| (AXP_CACHE_DIRTY(bCacheStatus) == true))
+	    else if ((AXP_CACHE_DIRTY(dCacheStatus) == true) ||
+		(AXP_CACHE_DIRTY(bCacheStatus) == true))
 		probeStatus = HitDirty;
-	    else if ((AXP_CACHE_DIRTY_SHARED(dCacheStatus) == true)
-		|| (AXP_CACHE_DIRTY_SHARED(bCacheStatus) == true))
+	    else if ((AXP_CACHE_DIRTY_SHARED(dCacheStatus) == true) ||
+		(AXP_CACHE_DIRTY_SHARED(bCacheStatus) == true))
 		probeStatus = HitSharedDirty;
 	    else
 		miss = true;
@@ -397,14 +398,14 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 		    break;
 
 		case AXP_21264_DM_RDHIT:
-		    if ((AXP_CACHE_HIT(dCacheStatus) == true)
-			|| (AXP_CACHE_HIT(bCacheStatus) == true))
+		    if ((AXP_CACHE_HIT(dCacheStatus) == true) ||
+			(AXP_CACHE_HIT(bCacheStatus) == true))
 			dm = true;
 		    break;
 
 		case AXP_21264_DM_RDDIRTY:
-		    if ((AXP_CACHE_DIRTY(dCacheStatus) == true)
-			|| (AXP_CACHE_DIRTY(bCacheStatus) == true))
+		    if ((AXP_CACHE_DIRTY(dCacheStatus) == true) ||
+			(AXP_CACHE_DIRTY(bCacheStatus) == true))
 			dm = true;
 		    break;
 
@@ -458,7 +459,25 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 		if (cpu->noProbeResponses == false)
 		    cpu->noProbeResponses = AXP_21264_IsSetP_VDB(cpu, pq->pa);
 		if (cpu->noProbeResponses == false)
-/*		    AXP_System_ProbeResponse(dm, vs, vdb, ms, maf, probeStatus) */;
+		{
+		    AXP_21264_SYSBUS_System sys;
+
+		    /*
+		     * TODO:	This code is completely bogus.  It is only here
+		     *		to keep the compiler happy.  Cache coherence is
+		     *		to be vastly changed.  There will be no need
+		     *		for Probes and Prober Responses through the
+		     *		system.  The Bcaches are going to maintain
+		     *		coherence automatically.
+		     */
+		    sys.cmd = ProbeResponse;
+		    sys.ch = vs;
+		    sys.rv = vs || dm || ms;
+		    sys.id = vdb;
+		    sys.mask = maf;
+		    if (probeStatus == HitSharedDirty)
+			AXP_21264_SendToSystem(cpu, &sys);
+		}
 		else
 		{
 		    pq->dm = dm;
@@ -875,15 +894,15 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 	    case ChangeToDirtySuccess:
 	    case ChangeToDirtyFail:
 	    case MBDone:
-		AXP_21264_Complete_MAF(cpu, pq->ID, pq->sysDc, pq->sysData);
+		AXP_21264_Complete_MAF(cpu, pq->ID, pq->sysDc, (u8 *) pq->sysData);
 		break;
 
 	    case ReadData:
-		AXP_21264_Complete_MAF(cpu, pq->ID, ReadData, pq->sysData);
+		AXP_21264_Complete_MAF(cpu, pq->ID, ReadData, (u8 *) pq->sysData);
 		break;
 
 	    case ReadDataDirty:
-		AXP_21264_Complete_MAF(cpu, pq->ID, ReadDataDirty, pq->sysData);
+		AXP_21264_Complete_MAF(cpu, pq->ID, ReadDataDirty, (u8 *) pq->sysData);
 		break;
 
 	    case ReadDataShared:
@@ -891,7 +910,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 		    cpu,
 		    pq->ID,
 		    ReadDataShared,
-		    pq->sysData);
+		    (u8 *) pq->sysData);
 		break;
 
 	    case ReadDataSharedDirty:
@@ -899,7 +918,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 		    cpu,
 		    pq->ID,
 		    ReadDataSharedDirty,
-		    pq->sysData);
+		    (u8 *) pq->sysData);
 		break;
 	}
 	pthread_mutex_lock(&cpu->bCacheMutex);

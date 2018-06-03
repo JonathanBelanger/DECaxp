@@ -1833,12 +1833,12 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
  *
  * Output Parameters:
  *	mask:
- *		A pointer to a 64-bit unsigned integer to have all its bits cleared.
+ *		A pointer to an 8-bit unsigned integer to have all its bits cleared.
  *
  * Return Value:
  * 	None.
  */
-void AXP_MaskReset(u64 *mask)
+void AXP_MaskReset(u8 *mask)
 {
     *mask = 0;
 
@@ -1871,7 +1871,7 @@ void AXP_MaskReset(u64 *mask)
  * Return Value:
  * 	None.
  */
-void AXP_MaskSet(u64 *mask, u64 basePa, u64 pa, int len)
+void AXP_MaskSet(u8 *mask, u64 basePa, u64 pa, int len)
 {
     switch (len)
     {
@@ -1957,7 +1957,7 @@ void AXP_MaskStartGet(int *curPtr)
  *	>=0:	A value representing the byte offset within a buffer containing
  *			valid data.
  */
-int AXP_MaskGet(int *curPtr, u64 mask, int len)
+int AXP_MaskGet(int *curPtr, u8 mask, int len)
 {
     int retVal = -1;
     int curPtrMax;

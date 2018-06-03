@@ -31,6 +31,7 @@
 #include "AXP_21264_Ebox.h"
 #include "AXP_21264_Fbox.h"
 #include "AXP_21264_Ibox.h"
+#include "AXP_21264_to_System.h"
 
 /*
  * AXP_21264_MAF_Empty
@@ -115,11 +116,7 @@ int AXP_21264_MAF_Empty(AXP_21264_CPU *cpu)
 void AXP_21264_Process_MAF(AXP_21264_CPU *cpu, int entry)
 {
     AXP_21264_CBOX_MAF *maf = &cpu->maf[entry];
-    AXP_System_Commands cmd;
-    bool m1 = false;
-    bool m2 = false;
-    bool rv = true;
-    bool ch = false;
+    AXP_21264_SYSBUS_System sys;
 
     /*
      * Process the next MAF entry that needs it.
@@ -134,56 +131,56 @@ void AXP_21264_Process_MAF(AXP_21264_CPU *cpu, int entry)
 		switch (maf->dataLen)
 		{
 		    case BYTE_LEN:
-			cmd = ReadBytes;
+			sys.cmd = ReadBytes;
 			break;
 
 		    case WORD_LEN:
-			cmd = ReadBytes;
+			sys.cmd = ReadBytes;
 			break;
 
 		    case LONG_LEN:
-			cmd = ReadLWs;
+			sys.cmd = ReadLWs;
 			break;
 
 		    case QUAD_LEN:
-			cmd = ReadQWs;
+			sys.cmd = ReadQWs;
 			break;
 		}
 	    }
 	    else
-		cmd = ReadBlk;
+		sys.cmd = ReadBlk;
 	    break;
 
 	case STx:
 	case STx_C:
-	    cmd = ReadBlkMod;
+	    sys.cmd = ReadBlkMod;
 	    break;
 
 	case STxChangeToDirty:
 	    if (maf->shared == true)
-		cmd = SharedToDirty;
+		sys.cmd = SharedToDirty;
 	    else
-		cmd = CleanToDirty;
+		sys.cmd = CleanToDirty;
 	    break;
 
 	case STxCChangeToDirty:
-	    cmd = STCChangeToDirty;
+	    sys.cmd = STCChangeToDirty;
 	    break;
 
 	case WH64:
-	    cmd = InvalToDirty;
+	    sys.cmd = InvalToDirty;
 	    break;
 
 	case ECB:
-	    cmd = Evict;
+	    sys.cmd = Evict;
 	    break;
 
 	case Istream:
-	    cmd = ReadBlkI;
+	    sys.cmd = ReadBlkI;
 	    break;
 
 	case MemoryBarrier:
-	    cmd = Sysbus_MB;
+	    sys.cmd = Sysbus_MB;
 	    break;
 
 	default:
@@ -193,12 +190,15 @@ void AXP_21264_Process_MAF(AXP_21264_CPU *cpu, int entry)
     /*
      * Go check the Oldest pending PQ and set the flags for it here and now.
      */
-    AXP_21264_OldestPQFlags(cpu, &m1, &m2, &ch);
+    AXP_21264_OldestPQFlags(cpu, &sys.m1, &sys.m2, &sys.ch);
 
     /*
      * OK, send what we have to the System.
-    AXP_System_CommandSend(cmd, m2, entry, rv, maf->mask, ch, maf->pa, NULL, 0);
      */
+    sys.mask = maf->mask;
+    sys.pa = maf->pa;
+    sys.rv = true;
+    AXP_21264_SendToSystem(cpu, &sys);
 
     /*
      * Indicate that the entry is now processed and return back to the caller.
@@ -961,7 +961,7 @@ bool AXP_21264_Add_MAF_Mem(
 	bool done = false;
 
 	maf->bufLen = (pa + dataLen) - maf->pa;
-	AXP_MaskSet(&maf->mask, maf->pa, pa, dataLen);
+	AXP_MaskSet((u8 *) &maf->mask, maf->pa, pa, dataLen);
 	for (ii = 0; ((ii < AXP_21264_MBOX_MAX) && (done == false)); ii++)
 	{
 	    if (cpu->maf[cpu->mafBottom].lqSqEntry[ii] == 0)
@@ -1117,7 +1117,7 @@ bool AXP_21264_Add_MAF_IO(
 	bool done = false;
 
 	maf->bufLen = (pa + dataLen) - maf->pa;
-	AXP_MaskSet(&maf->mask, maf->pa, pa, dataLen);
+	AXP_MaskSet((u8 *) &maf->mask, maf->pa, pa, dataLen);
 	for (ii = 0; ((ii < AXP_21264_MBOX_MAX) && (done == false)); ii++)
 	{
 	    if (maf->lqSqEntry[ii] == 0)
@@ -1236,8 +1236,8 @@ void AXP_21264_Add_MAF(
 	    maf->lqSqEntry[ii] = 0;
 	maf->ioReq = ioRq;
 	maf->dataLen = maf->bufLen = dataLen;
-	AXP_MaskReset(&maf->mask);
-	AXP_MaskSet(&maf->mask, maf->pa, pa, dataLen);
+	AXP_MaskReset((u8 *) &maf->mask);
+	AXP_MaskSet((u8 *) &maf->mask, maf->pa, pa, dataLen);
 	maf->shared = shared;
 	maf->valid = true;
     }
