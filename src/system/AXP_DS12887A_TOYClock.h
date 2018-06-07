@@ -66,6 +66,20 @@
  *  Added the ability to provide a mutex, condition variable, interrupt field,
  *  and interrupt mask, so that when an interrupt is triggered, the thread that
  *  needs to be notified, has been informed.
+ *
+ *	V01.002		05-Jun-2018	Jonathan D. Belanger
+ *	The original code did not take into account Daylight Savings Time (DST).
+ *	It did have the DSE bit in Control Register B, but since we are using GMT
+ *	from the host operating system clock, there was no adjustment for DST.  One
+ *	of the things that had concerned me was that the documentation indicated
+ *	that the MSB for the seconds register was read-only.  I'm not sure why the
+ *	actual chip had this, but I'm going to take advantage and use it to
+ *	indicate when the time information in the registers contains a DST value.
+ *	Using this falg, I'll be able to determine when to spring forward or fall
+ *	backward.  Also, the actual chip did not account for a difference between
+ *	DST for the US prior to and since 2007, or Europe prior to and since 1996.
+ *	To account for this, there is going to be an additional configuration item
+ *	that will set another reserved bit in Control Register D.
  */
 #ifndef _AXP_DS12887A_TOYCLOCK_DEFS_
 #define _AXP_DS12887A_TOYCLOCK_DEFS_
@@ -346,12 +360,14 @@ typedef union
     u8 value;
     struct
     {
-	u8 res :7;
+	u8 eu : 1;		/* DSE must be set and this is for Europe DST */
+	u8 res :6;
 	u8 vrt :1;		/* Valid RAM and Time */
     };
 } AXP_DS12887A_ControlD;
 #define AXP_ADDR_ControlD	13
 #define AXP_MASK_ControlD	0x80
+#define AXP_MASK_EU_DST		0x01
 
 /*
  * Seconds Register at address 0x00.
@@ -366,17 +382,19 @@ typedef union
     {
 	u8 sec :4;
 	u8 tenSec :3;
-	u8 res :1;
+	u8 isDst :1;
     } BCD;
     struct			/* Range: 0x00-0x3b */
     {
 	u8 sec :6;
-	u8 res :2;
+	u8 res :1;
+	u8 isDST :1;
     } bin;
 } AXP_DS12887A_Seconds;
 #define AXP_ADDR_Seconds	0
 #define AXP_BCD_SecondsMask	0x7f
 #define AXP_BIN_SecondsMask	0x3f
+#define AXP_DST_Mask		0x80
 
 /*
  * Seconds Alarm Register at address 0x01.
