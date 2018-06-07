@@ -1,0 +1,65 @@
+< 2007 begin:	 7-(4+5y/4) mod 7	April		1	1st Sunday
+< 2007 end:		31-(1+5y/4) mod 7	October		2	Last Sunday
+> 2006 begin:	14-(1+5y/4) mod 7	March		3	2nd Sunday
+> 2006 end:		 7-(1+5y/4) mod 7	November	4	1st Sunday
+
+> 1995 begin:	31-(4+5y/4) mod 7	March		5	Last Sunday
+> 1995 end:		31-(1+5y/4) mod 7	October		2	Last Sunday
+
+-----------------------------------------
+Where	Year	Start Month		End Month
+-----------------------------------------
+US		2006	April			October
+US		2007	March			November
+Europe	1995	---				---
+Europe	1996	March			October
+-----------------------------------------
+
+Time springs ahead and falls back at 2:00am
+
+Time springs ahead in the US prior to 2007 in April
+Time springs ahead in the US after 2006 in March
+Time springs ahead in Europe after 1995 in March
+
+Time springs ahead in the US prior to 2007 on the 1st Sunday
+Time springs ahead in the US after 2006 on the Last Sunday
+Time springs ahead in Europe after 1995 on the Last Sunday
+
+Time falls back in the US prior to 2007 in October
+Time falls back in the US after 2006 in Novemeber
+Time falls back in Eurpoe after 1995 in October
+
+Time falls back in the US prior to 2007 on the Last Sunday
+Time falls back in the US after 2006 on the 1st Sunday
+Time falls back in Eurpoe after 1995 on the Last Sunday
+
+if (dse)
+then
+	time = y+M+d+h+m+s
+	mid = (5 * y) / 4;
+	if (US)
+	then
+		if (y < 2007)
+			dstStart = y+ 3+( 7-((4+mid) % 7))+2+0+0;
+			dstEnd   = y+ 9+(31-((1+mid) % 7))+2+0+0;
+		else
+			dstStart = y+ 2+(14-((1+mid) % 7))+2+0+0;
+			dstEnd   = y+10+( 7-((1+mid) % 7))+2+0+0;
+		endif
+	else if (y > 1995)
+	then
+		dstStart = y+2+(31-((4+mid) % 7))+2+0+0;
+		dstEnd   = y+9+(31-((1+mid) % 7))+2+0+0;
+	else
+		dse = false;
+	endif
+endif
+if (dse)
+then
+	newIsDst = (time >= dstStart) && (time <= dstEnd);
+	if (newIsDst && !isDst)
+		hour++;
+	else
+		hour--;
+	isDst = newIsDst;
+endif
