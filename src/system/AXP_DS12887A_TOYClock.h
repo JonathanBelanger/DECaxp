@@ -30,7 +30,8 @@
  *	For Writes:
  *	    1)	If the SET - Update Transfer Inhibited bit is not set and we
  *		are not writing to one of the Control Registers or RAM
- *		locations, then swallow the write and just return back to the caller.
+ *		locations, then swallow the write and just return back to the
+ *		caller.
  *	    2)	If the SET is being set, get the current time from the host
  *		operating system and store it into a module variable for use
  *		later (may want to save it in a way that will make future
@@ -59,27 +60,32 @@
  *
  * Revision History:
  *
- *  V01.000		24-May-2018	Jonathan D. Belanger
+ *  V01.000	24-May-2018	Jonathan D. Belanger
  *  Initially written.
  *
- *  V01.001		01-Jun-2018	Jonathan D. Belanger
+ *  V01.001	01-Jun-2018	Jonathan D. Belanger
  *  Added the ability to provide a mutex, condition variable, interrupt field,
  *  and interrupt mask, so that when an interrupt is triggered, the thread that
  *  needs to be notified, has been informed.
  *
- *	V01.002		05-Jun-2018	Jonathan D. Belanger
- *	The original code did not take into account Daylight Savings Time (DST).
- *	It did have the DSE bit in Control Register B, but since we are using GMT
- *	from the host operating system clock, there was no adjustment for DST.  One
- *	of the things that had concerned me was that the documentation indicated
- *	that the MSB for the seconds register was read-only.  I'm not sure why the
- *	actual chip had this, but I'm going to take advantage and use it to
- *	indicate when the time information in the registers contains a DST value.
- *	Using this falg, I'll be able to determine when to spring forward or fall
- *	backward.  Also, the actual chip did not account for a difference between
- *	DST for the US prior to and since 2007, or Europe prior to and since 1996.
- *	To account for this, there is going to be an additional configuration item
- *	that will set another reserved bit in Control Register D.
+ *  V01.002	05-Jun-2018	Jonathan D. Belanger
+ *  The original code did not take into account Daylight Savings Time (DST).
+ *  It did have the DSE bit in Control Register B, but since we are using GMT
+ *  from the host operating system clock, there was no adjustment for DST.  One
+ *  of the things that had concerned me was that the documentation indicated
+ *  that the MSB for the seconds register was read-only.  I'm not sure why the
+ *  actual chip had this, but I'm going to take advantage and use it to
+ *  indicate when the time information in the registers contains a DST value.
+ *  Using this flag, I'll be able to determine when to spring forward or fall
+ *  backward.  Also, the actual chip did not account for a difference between
+ *  DST for the US prior to and since 2007, or Europe prior to and since 1996.
+ *  To account for this, there is going to be an additional configuration item
+ *  that will set another reserved bit in Control Register D.
+ *
+ *  V01.003	09-Jun-2018	Jonathan D. Belanger
+ *  Moved the isDST flag from the Seconds register to Control Register D.
+ *  Having it in the seconds register caused math problems that were easier to
+ *  resolve moving this flag than keeping it where I had originally planned.
  */
 #ifndef _AXP_DS12887A_TOYCLOCK_DEFS_
 #define _AXP_DS12887A_TOYCLOCK_DEFS_
@@ -89,7 +95,7 @@
  * 128 bytes available.  The RTC functionality uses 14 of these locations,
  * leaving a total of 114 bytes of available general purpose RAM.
  *
- *	NOTE:	The century functionality is only available with the DS12C887
+ *  NOTE:	The century functionality is only available with the DS12C887
  *		and DS12C887A of the chips.  This implementation is for the
  *		DS12887A, which does not have this functionality.
  */
@@ -361,13 +367,16 @@ typedef union
     struct
     {
 	u8 eu : 1;		/* DSE must be set and this is for Europe DST */
-	u8 res :6;
+	u8 isDst : 1;		/* The time stored is in DST */
+	u8 fellBack : 1;	/* Time fell back already */
+	u8 res :4;
 	u8 vrt :1;		/* Valid RAM and Time */
     };
 } AXP_DS12887A_ControlD;
 #define AXP_ADDR_ControlD	13
 #define AXP_MASK_ControlD	0x80
 #define AXP_MASK_EU_DST		0x01
+#define AXP_MASK_ISDST		0x02
 
 /*
  * Seconds Register at address 0x00.
@@ -382,19 +391,17 @@ typedef union
     {
 	u8 sec :4;
 	u8 tenSec :3;
-	u8 isDst :1;
+	u8 res :1;
     } BCD;
     struct			/* Range: 0x00-0x3b */
     {
 	u8 sec :6;
-	u8 res :1;
-	u8 isDST :1;
+	u8 res :2;
     } bin;
 } AXP_DS12887A_Seconds;
 #define AXP_ADDR_Seconds	0
 #define AXP_BCD_SecondsMask	0x7f
 #define AXP_BIN_SecondsMask	0x3f
-#define AXP_DST_Mask		0x80
 
 /*
  * Seconds Alarm Register at address 0x01.
@@ -544,6 +551,9 @@ typedef union
 #define AXP_ADDR_Day		6
 #define AXP_BCD_DayMask		0x07
 #define AXP_BIN_DayMask		0x07
+#define AXP_DOW_YEAR(y)		((y >= 70) && (y <= 99)) ? 1900 : 2000
+#define AXP_DOW(y, m, d)				\
+    ((d + 2 * m + 3 * (m + 1) / 5 + y + y / 4 - y / 100 + y / 400 + 1) % 7)
 
 /*
  * Date Register at address 0x07.
@@ -666,6 +676,6 @@ typedef union
 void AXP_DS12887A_Reset(void);
 void AXP_DS12887A_Write(u8, u8);
 void AXP_DS12887A_Read(u8, u8 *);
-void AXP_DS12887A_Config(pthread_cond_t *, pthread_mutex_t *, u64 *, u64);
+void AXP_DS12887A_Config(pthread_cond_t *, pthread_mutex_t *, u64 *, u64, bool);
 
 #endif	/* _AXP_DS12887A_TOYCLOCK_DEFS_ */
