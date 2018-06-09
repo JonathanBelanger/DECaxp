@@ -56,8 +56,14 @@
  */
 typedef struct
 {
+    char cmd;
+    u8 address;
+    u8 saveVal;
+} TestStep;
+typedef struct
+{
     char *testName;
-    char *steps[10];
+    TestStep steps[30];
 } TestSteps;
 
 static bool interruptsEnabled = false;
@@ -71,6 +77,28 @@ u64		periodicInterrupt = 0;
 u64		updateInterrupt = 0;
 u64		alarmInterrupt = 0;
 #define IRQMask 0x0000001000000000ll
+
+static char *regNames[] =
+{
+    "Seconds",
+    "Alarm Seconds",
+    "Minutes",
+    "Alarm Minutes",
+    "Hours",
+    "Alarm Hours",
+    "Day of Week",
+    "Day of Month",
+    "Month",
+    "Year",
+    "Control Register A",
+    "Control Register B",
+    "Control Register C",
+    "Control Register D",
+    "RAM"
+};
+#define AXP_ADDR_RAM		0x0e
+#define AXP_REG_NAME(addr)	\
+    (((addr) < AXP_ADDR_RAM) ? regNames[(addr)] : regNames[AXP_ADDR_RAM])
 
 void *irqHMonitoring(void *arg)
 {
@@ -119,86 +147,36 @@ static bool executeTest(int testNum, TestSteps *test)
 {
     bool retVal = true;
     int ii;
-    u8 address;
-    u8 saveVal;
     u8 readVal;
+
+    printf(
+	"Test %d: %s Starting...\n",
+	testNum,
+	test->testName);
 
     /*
      * Loop until we either exhaust the tests in this set or detect a failure.
      */
-    for (ii = 0; ((test->steps[ii][0] != 'D') && (retVal == true)); ii++)
+    for (ii = 0; ((test->steps[ii].cmd != 'D') && (retVal == true)); ii++)
     {
-
-	/*
-	 * If the command is not reset, then the address and value fields need
-	 * to be converted from characters to a hexadecimal value.
-	 */
-	if (test->steps[ii][0] != 'S')
-	{
-
-	    /*
-	     * Convert the address high nibble from characters to a hexadecimal
-	     * value.
-	     */
-	    if ((test->steps[ii][1] >= '0') && (test->steps[ii][1] <= '9'))
-	    {
-		address = test->steps[ii][1] - '0';
-	    }
-	    else
-	    {
-		address = (test->steps[ii][1] - 'a') + 10;
-	    }
-
-	    /*
-	     * Shift the address high nibble into its proper location, then
-	     * convert the address low nibble from characters to a hexadecimal
-	     * value.
-	     */
-	    address <<= 4;
-	    if ((test->steps[ii][2] >= '0') && (test->steps[ii][2] <= '9'))
-	    {
-		address += (test->steps[ii][2] - '0');
-	    }
-	    else
-	    {
-		address += ((test->steps[ii][2] - 'a') + 10);
-	    }
-
-	    /*
-	     * Convert the Save Value high nibble from characters to a
-	     * hexadecimal value.
-	     */
-	    if ((test->steps[ii][3] >= '0') && (test->steps[ii][3] <= '9'))
-	    {
-		saveVal = test->steps[ii][3] - '0';
-	    }
-	    else
-	    {
-		saveVal = (test->steps[ii][3] - 'a') + 10;
-	    }
-
-	    /*
-	     * Shift the Save Value high nibble into its proper location,
-	     * then convert the Save Value low nibble from characters to a
-	     * hexadecimal value.
-	     */
-	    saveVal <<= 4;
-	    if ((test->steps[ii][4] >= '0') && (test->steps[ii][4] <= '9'))
-	    {
-		saveVal += (test->steps[ii][4] - '0');
-	    }
-	    else
-	    {
-		saveVal += ((test->steps[ii][4] - 'a') + 10);
-	    }
-	}
-
-	printf("\tStep %d: Address: 0x%02x; Value: 0x%02x\n", ii, address, saveVal);
+	printf(
+	    "\tStep %d (%s): Address: 0x%02x (%s); Value: 0x%02x\n",
+	    ii,
+	    (test->steps[ii].cmd == 'W' ?
+		"Write" :
+		(test->steps[ii].cmd == 'R' ?
+		    "Read" :
+		    (test->steps[ii].cmd == 'S' ? "Reset" : "Wait"))),
+	    test->steps[ii].address,
+	    (test->steps[ii].cmd == 'H' ?
+		"N/A" :
+		AXP_REG_NAME(test->steps[ii].address)),
+	    test->steps[ii].saveVal);
 
 	/*
 	 * Based on the command, call the correct interface function.
 	 */
-	switch (test->steps[ii][0])
+	switch (test->steps[ii].cmd)
 	{
 	    case 'W':
 
@@ -207,14 +185,16 @@ static bool executeTest(int testNum, TestSteps *test)
 		 * the SET bit, then we are also enabling or disabling the
 		 * interrupt processing in the DS12887A chip.
 		 */
-		if (address == 0x0b)
+		if (test->steps[ii].address == 0x0b)
 		{
-		    if ((saveVal & 0x80) == 0x80)
+		    if ((test->steps[ii].saveVal & 0x80) == 0x80)
 			interruptsEnabled = false;
 		    else
 			interruptsEnabled = true;
 		}
-		AXP_DS12887A_Write(address, saveVal);
+		AXP_DS12887A_Write(
+			test->steps[ii].address,
+			test->steps[ii].saveVal);
 
 		/*
 		 * The way write works, there is no way to know if it did
@@ -224,18 +204,20 @@ static bool executeTest(int testNum, TestSteps *test)
 		break;
 
 	    case 'R':
-		AXP_DS12887A_Read(address, &readVal);
+		AXP_DS12887A_Read(test->steps[ii].address, &readVal);
 
 		/*
 		 * If the value read from the interface is the same as we
 		 * expected, then this test was successful.
 		 */
-		retVal = readVal == saveVal;
-		if (retVal == false)
+		retVal = (readVal == test->steps[ii].saveVal) ||
+			(test->steps[ii].saveVal == 0xff);
+		if ((retVal == false) || (test->steps[ii].saveVal == 0xff))
 		    printf(
-			"\tAddress: 0x%02x; Expected: 0x%02x; Got: 0x%02x\n",
-			address,
-			saveVal,
+			"\tAddress: 0x%02x (%s); Expected: 0x%02x; Got: 0x%02x\n",
+			test->steps[ii].address,
+			AXP_REG_NAME(test->steps[ii].address),
+			test->steps[ii].saveVal,
 			readVal);
 		break;
 
@@ -250,7 +232,7 @@ static bool executeTest(int testNum, TestSteps *test)
 		break;
 
 	    case 'H':
-		sleep(saveVal);
+		sleep(test->steps[ii].saveVal);
 
 		/*
 		 * This is not actually testing the TOY clock interface, but is
@@ -263,7 +245,7 @@ static bool executeTest(int testNum, TestSteps *test)
     }
 
     printf(
-	"Test %d: %s %s.\n",
+	"Test %d: ...%s %s.\n",
 	testNum,
 	test->testName,
 	(retVal == true ? "Passed" : "Failed"));
@@ -283,85 +265,140 @@ int main()
         {
             "Write/Read SET bit to 1 in Register B",
 	    {
-		"W0b80",
-		"R0b80",
-		"D0000"
+		{'W', AXP_ADDR_ControlB, 0x80},
+		{'R', AXP_ADDR_ControlB, 0x80},
+		{'D', 0x00, 0x00}
 	    }
         },
         {
 	    "Write/Read DM/DSE bits to 010/0110 in Register B",
 	    {
-		"W0b86", /* Leave SET bit to keep interrupt processing off */
-		"R0b86",
-		"D0000"
+		{'W', AXP_ADDR_ControlB, 0x86}, /* Leave SET bit, disabling interrupt processing */
+		{'R', AXP_ADDR_ControlB, 0x86},
+		{'D', 0x00, 0x00}
 	    }
         },
         {
 	    "Write/Read DV/RS bits in Register A",
 	    {
-		"W0a26", /* Period rate: 976.5625 microseconds */
-		"R0a26",
-		"D0000"
+		{'W', AXP_ADDR_ControlA, 0x26},  /* Period rate: 976.5625 microseconds */
+		{'R', AXP_ADDR_ControlA, 0x26},
+		{'D', 0x00, 0x00}
 	    }
         },
         {
 	    "Write/Read Alarm Seconds bits to don't care minutes and hours remain "
 	    "0 to disable alarm interrupt",
 	    {
-		"W01c0",
-		"R01c0",
-		"D0000"
+		{'W', AXP_ADDR_SecondsAlarm, 0xc0},
+		{'R', AXP_ADDR_SecondsAlarm, 0xc0},
+		{'D', 0x00, 0x00}
 	    }
         },
         {
 	    "Write/Read Time to 9:00:00am",
 	    {
-		"W0000",
-		"W0200",
-		"W0409",
-		"R0200",
-		"R0409",
-		"R0000",
-		"D0000"
+		{'W', AXP_ADDR_Seconds, 0x00},
+		{'W', AXP_ADDR_Minutes, 0x00},
+		{'W', AXP_ADDR_Hours, 0x09},
+		{'R', AXP_ADDR_Minutes, 0x00},
+		{'R', AXP_ADDR_Hours, 0x09},
+		{'R', AXP_ADDR_Seconds, 0xff},
+		{'D', 0x00, 0x00}
 	    }
         },
         {
 	    "Write/Read Date to June 16, 1987",
 	    {
-		"W0710",
-		"W0806",
-		"W0957",
-		"R0957",
-		"R0806",
-		"R0710",
-		"D0000"
+		{'W', AXP_ADDR_Date, 0x10},
+		{'W', AXP_ADDR_Month, 0x06},
+		{'W', AXP_ADDR_Year, 0x57},
+		{'R', AXP_ADDR_Year, 0x57},
+		{'R', AXP_ADDR_Month, 0x06},
+		{'R', AXP_ADDR_Date, 0x10},
+		{'D', 0x00, 0x00}
 	    }
         },
         {
 	    "Write/Read to various RAM locations",
 	    {
-		"W50F0",
-		"W7086",
-		"W307f",
-		"R307f",
-		"R7086",
-		"R50f0",
-		"D0000"
+		{'W', 0x50, 0xf0},
+		{'W', 0x70, 0x86},
+		{'W', 0x30, 0x7f},
+		{'R', 0x50, 0xf0},
+		{'R', 0x70, 0x86},
+		{'R', 0x30, 0x7f},
+		{'D', 0x00, 0x00}
 	    }
         },
         {
 	    "Write/Read SET bit to 0 in Register B, leave DM/DSE as set above",
 	    {
-		"W0b76",
-		"R0b76",
-		"D0000"
+		{'W', AXP_ADDR_ControlB, 0x76}, /* Clear SET bit, disabling interrupt processing */
+		{'R', AXP_ADDR_ControlB, 0x76},
+		{'D', 0x00, 0x00}
 	    }
         },
 	{
 	    "Waiting for things to happen",
 	    {
-		"H000a",
-		"D0000"
+		{'H', 0x00, 10},	/* in seconds */
+		{'D', 0x00, 0x00}
+	    }
+	},
+	{
+	    "Let's try something with Daylight Savings Time (Spring)",
+	    {
+		{'W', AXP_ADDR_ControlB, 0x87}, /* Set SET and DSE bits first */
+		/* Set time Sunday, March 11, 2018 01:59:59 */
+		{'W', AXP_ADDR_Month, 3},
+		{'W', AXP_ADDR_Date, 11},
+		{'W', AXP_ADDR_Year, 18},
+		{'W', AXP_ADDR_Hours, 1},
+		{'W', AXP_ADDR_Minutes, 59},
+		{'W', AXP_ADDR_Seconds, 59},
+		{'W', AXP_ADDR_ControlB, 0x07}, /* Clear SET bit */
+		{'H', 0x00, 10},	/* in seconds */
+		/* Time should be returned as March 11, 2018 03:00 */
+		{'R', AXP_ADDR_Day, 1},
+		{'R', AXP_ADDR_Month, 3},
+		{'R', AXP_ADDR_Date, 11},
+		{'R', AXP_ADDR_Year, 18},
+		{'R', AXP_ADDR_Seconds, 0xff},
+		{'R', AXP_ADDR_Minutes, 00},
+		{'R', AXP_ADDR_Hours, 3},
+		{'D', 0x00, 0x00}
+	    }
+	},
+	{
+	    "Let's try something with Daylight Savings Time (Fall)",
+	    {
+		{'W', AXP_ADDR_ControlB, 0x87}, /* Set SET and DSE bits first */
+		/* Set time Sunday, November 4, 2018 01:59:59 */
+		{'W', AXP_ADDR_Month, 11},
+		{'W', AXP_ADDR_Date, 4},
+		{'W', AXP_ADDR_Year, 18},
+		{'W', AXP_ADDR_Hours, 1},
+		{'W', AXP_ADDR_Minutes, 59},
+		{'W', AXP_ADDR_Seconds, 59},
+		{'W', AXP_ADDR_ControlB, 0x07}, /* Clear SET bit */
+		{'H', 0x00, 10},	/* in seconds */
+		/* Time should be returned as November 4, 2018 01:00 */
+		{'R', AXP_ADDR_Day, 1},
+		{'R', AXP_ADDR_Month, 11},
+		{'R', AXP_ADDR_Date, 4},
+		{'R', AXP_ADDR_Year, 18},
+		{'R', AXP_ADDR_Seconds, 0xff},
+		{'R', AXP_ADDR_Minutes, 00},
+		{'R', AXP_ADDR_Hours, 1},
+		{'R', AXP_ADDR_Day, 1},
+		{'R', AXP_ADDR_Month, 11},
+		{'R', AXP_ADDR_Date, 4},
+		{'R', AXP_ADDR_Year, 18},
+		{'R', AXP_ADDR_Seconds, 0xff},
+		{'R', AXP_ADDR_Minutes, 00},
+		{'R', AXP_ADDR_Hours, 1},
+		{'D', 0x00, 0x00}
 	    }
 	},
         {
@@ -381,7 +418,7 @@ int main()
 	while (threadStarted == false)
 	    pthread_cond_wait(&irqCond, &irqMutex);
 	pthread_mutex_unlock(&irqMutex);
-	AXP_DS12887A_Config(&irqCond, &irqMutex, &irqH, IRQMask);
+	AXP_DS12887A_Config(&irqCond, &irqMutex, &irqH, IRQMask, false);
 
 	for (ii = 0; ((tests[ii].testName != NULL) && (pass == true)); ii++)
 	    pass = executeTest(ii + 1, &tests[ii]);

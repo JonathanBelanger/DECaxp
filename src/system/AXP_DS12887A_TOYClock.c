@@ -74,21 +74,26 @@
  *  and interrupt mask, so that when an interrupt is triggered, the thread that
  *  needs to be notified, has been informed.
  *
- *	V01.003		05-Jun-2018	Jonathan D. Belanger
- *	The original code did not take into account Daylight Savings Time (DST).
- *	It did have the DSE bit in Control Register B, but since we are using GMT
- *	from the host operating system clock, there was no adjustment for DST.  One
- *	of the things that had concerned me was that the documentation indicated
- *	that the MSB for the seconds register was read-only.  I'm not sure why the
- *	actual chip had this, but I'm going to take advantage and use it to
- *	indicate when the time information in the registers contains a DST value.
- *	Using this falg, I'll be able to determine when to spring forward or fall
- *	backward.  Also, the actual chip did not account for a difference between
- *	DST for the US prior to and since 2007, or Europe prior to and since 1996.
- *	To account for this, there is going to be an additional configuration item
- *	that will set another reserved bit in Control Register D.  We also need to
- *	add code to determine if DST has occurred and we eithe need to spring
- *	forward of fall back.
+ *  V01.003		05-Jun-2018	Jonathan D. Belanger
+ *  The original code did not take into account Daylight Savings Time (DST).
+ *  It did have the DSE bit in Control Register B, but since we are using GMT
+ *  from the host operating system clock, there was no adjustment for DST.  One
+ *  of the things that had concerned me was that the documentation indicated
+ *  that the MSB for the seconds register was read-only.  I'm not sure why the
+ *  actual chip had this, but I'm going to take advantage and use it to
+ *  indicate when the time information in the registers contains a DST value.
+ *  Using this flag, I'll be able to determine when to spring forward or fall
+ *  backward.  Also, the actual chip did not account for a difference between
+ *  DST for the US prior to and since 2007, or Europe prior to and since 1996.
+ *  To account for this, there is going to be an additional configuration item
+ *  that will set another reserved bit in Control Register D.  We also need to
+ *  add code to determine if DST has occurred and we either need to spring
+ *  forward of fall back.
+ *
+ *  V01.004	09-Jun-2018	Jonathan D. Belanger
+ *  Moved the isDST flag from the Seconds register to Control Register D.
+ *  Having it in the seconds register caused math problems that were easier to
+ *  resolve moving this flag than keeping it where I had originally planned.
  */
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
@@ -210,195 +215,158 @@ static void AXP_DS12887A_CheckIRQF(void);
  */
 static int AXP_DS12887A_DST(u8 y, u8 M, u8 d, u8 h, u8 m, u8 s)
 {
-	int		retVal = 0;
-	u16		year = y + (((y >= 70) && (y <= 99)) ? 1900 + 2000);
-	u16		mid;
-	u8		dteStartDay, dteEndDay;
-	u8		dteStartMonth, dteEndMonth;
-	bool	dse = CtrlB->dse == 1;
+    int		retVal = 0;
+    u16		year = y + ((y >= 70) && (y <= 99) ? 1900 : 2000);
+    u16		mid;
+    u32		date;
+    u32		dstStart, dstEnd;
+
+    date = (M << 22) + (d << 17) + (h << 12) + (m << 6) + s;
+
+    /*
+     * If Daylight Savings Time is enabled, then we need to determine  whether
+     * we transitioned to or from Daylight Savings Time.  The  following rules
+     * are applied to the time values submitted on this call.
+     *
+     *	For European DTS and years >= 1996:
+     *	    DST Starts:	Last Sunday in March
+     *	    DST Ends: Last Sunday in October
+     *	For Non-European (US) DTS and years < 2007:
+     *	    DST Starts:	First Sunday in April
+     *	    DST Ends: Last Sunday in October
+     *	For Non-European (US) DTS and years >= 2007:
+     *	    DST Starts:	Second Sunday in March
+     *	    DST Ends: First Sunday in November
+     *
+     * NOTE: This emulation supports years from 1970 to 2069.
+     */
+    if (ctrlB->dse == 1)
+    {
+	mid = (5 * year) / 4;		/* Middle part of the formula */
 
 	/*
-	 * If Daylight Savings Time is enabled, then we need to determine whether
-	 * we transitioned to or from Daylight Savings Time.  The following rules
-	 * are applied to the time values submitted on this call.
-	 *
-	 *	For European DTS and years >= 1996:
-	 *	    DST Starts:	Last Sunday in March
-	 *	    DST Ends: Last Sunday in October
-	 *	For Non-European (US) DTS and years < 2007:
-	 *	    DST Starts:	First Sunday in April
-	 *	    DST Ends: Last Sunday in October
-	 *	For Non-European (US) DTS and years >= 2007:
-	 *	    DST Starts:	Second Sunday in March
-	 *	    DST Ends: First Sunday in November
-	 *
-	 * NOTE:	This emulation supports years from 1970 to 2069.
+	 * If this is not European DST (US DST), then determine the
+	 * start and end month and day for DST.
 	 */
-	if (dse == true)
+	if (ctrlD->eu == 0)
 	{
-		mid = (5 * year) / 4;	/* This is a common part of the formula */
 
-		/*
-		 * If this is not Eurpoean DST (US DST), then determine the start and
-		 * end month and day for DST.
-		 */
-		if (CtrlD->eu == 0)
-		{
+	    /*
+	     * For years prior to 2007, US DST:
+	     *	Starts: First Sunday in April at 2:00am.
+	     *	Ends: Last Sunday in October at 2:00am.
+	     */
+	    if (year < 2007)
+	    {
+		dstStart =
+		    (4 << 22) +				/* April */
+		    ((7-((4 + mid) % 7)) << 17) +	/* First Sunday */
+		    (2 << 12);				/* 2:00 am */
+		dstEnd =
+		    (10 << 22) +				/* October */
+		    ((31-((1 + mid) % 7)) << 17) +	/* Last Sunday */
+		    (2 << 12);				/* 2:00 am */
+	    }
 
-			/*
-			 * For years prior to 2007, US DST:
-			 *	Starts: First Sunday in April at 2:00am.
-			 *	Ends: Last Sunday in October at 2:00am.
-			 */
-			if (year < 2007)
-			{
-				dstStartDay = 7-((4 + mid) % 7);
-				dstStartMonth = 3;
-				dstEndDay = 31-((1 + mid) % 7);
-				dstEndMonth = 9;
-			}
-
-			/*
-			 * For years starting in 2007, US DST:
-			 *	Starts: Second Sunday in March at 2:00am.
-			 *	Ends: First Sunday in November at 2:00am.
-			 */
-			else
-			{
-				dstStartDay = 14-((1+mid) % 7);
-				dstStartMonth = 2;
-				dstEndDay = 7-((1+mid) % 7);
-				dstEndMonth = 10;
-			}
-
-		/*
-		 * For years starting 1996 US DST:
-		 *	Starts: Last Sunday in March at 2:00am.
-		 *	Ends: First Sunday in November at 2:00am.
-		 */
-		else if (year >= 1996)
-		{
-			dstStartDay = 31-((4+mid) % 7);
-			dstStartMonth = 2;
-			dstEndDay = 31-((1+mid) % 7);
-			dstEndMonth = 9;
-		}
-
-		/*
-		 * For everything else, DST is not supported, so clear the Daylight
-		 * Savings Time flag in the Control Register B, so that we can skip all
-		 * this processing.
-		 */
-		else
-		{
-			dse = false;
-			CtrlB->dse = 0;
-		}
+	    /*
+	     * For years starting in 2007, US DST:
+	     *	Starts: Second Sunday in March at 2:00am.
+	     *	Ends: First Sunday in November at 2:00am.
+	     */
+	    else
+	    {
+		dstStart =
+		    (3 << 22) +				/* March */
+		    ((14-((1 + mid) % 7)) << 17) +	/* Second Sunday */
+		    (2 << 12);				/* 2:00 am */
+		dstEnd =
+		    (11 << 22) +				/* November */
+		    ((7 - ((1 + mid) % 7)) << 17) +	/* First Sunday */
+		    (2 << 12);				/* 2:00 am */
+	    }
 	}
 
 	/*
-	 * So, if we still have Daylight Savings enabled, then we now need to
-	 * determine if the date provided on the call needs to be adjusted +/- one
-	 * hour, to account for DST starting or ending.
+	 * For years starting 1996 US DST:
+	 *	Starts: Last Sunday in March at 2:00am.
+	 *	Ends: Last Sunday in November at 2:00am.
 	 */
-	if (dse == true)
+	else if (year >= 1996)
 	{
-		bool	newIsDst = false;
-
-		/*
-		 * The year is irrelevant at this point, so we don't use it.  If the
-		 * month is between the start and end of DST, then the time provided
-		 * is in DST.
-		 */
-		if ((M > dstStartMonth) && (M < dstEndMonth))
-			newIsDst = true;
-
-		/*
-		 * If the month is equal to the start month, then we need to check the
-		 * days, at a minimum, and possibly the hours, minutes and/or seconds.
-		 */
-		else if (M == dstStartMonth)
-		{
-
-			/*
-			 * If the day is greater than the start day, then the time
-			 * provided is in DST.
-			 */
-			if (d > dstStartDay)
-				newIsDst = true;
-
-			/*
-			 * If the day is equal to the start day, then we need to check the
-			 * hours, at a minimum, and possibly the minutes and/or seconds.
-			 * Otherwise, the time provided is NOT in DST.
-			 */
-			else if (d == dstStartDay)
-			{
-
-				/*
-				 * If we are past 2:00am, then the time provided is in DST.
-				 * Otherwise, the time provided is NOT in DST.
-				 */
-				if (h > 2)
-					newIsDst = true;
-				else if (h == 2)
-					newIsDst = (m != 0) || (s != 0);
-			}
-		}
-
-		/*
-		 * If the month is equal to the end month, then we need to check the
-		 * days, only.  Since the hours and minutes are both 59 and plus one
-		 * makes them zero, so we assume that the hours and minutes don't
-		 * really matter at this point.  Otherwise, the time provided is NOT in
-		 * DST.
-		 */
-		else if (M == dstEndMonth)
-		{
-
-			/*
-			 * If the day is less than the end day, then the time provided is
-			 * in DST.  Otherwise, the time provided is NOT in DST.
-			 */
-			if (d < dstEndDay)
-				newIsDst = true;
-		}
-
-		/*
-		 * Now we are ready to figure out what we should be doing.  If the
-		 * time provided is in DST and the previous time we checked it was NOT
-		 * in DST, then we need to spring forward.
-		 */
-		if ((newIsDst == true) && (isDst == false))
-		{
-			retVal = 1;
-			ram[AXP_ADDR_Seconds] |= AXP_DST_Mask;
-		}
-
-		/*
-		 * The only other three options are:
-		 *	1) The time provided is NOT in DST and the previous time was also
-		 *	   NOT in DST.
-		 *	2) The time provided is NOT in DST and the previous time was in
-		 *	   DST.
-		 *	3) The time provided is in DST and the previous time was also in
-		 *	   DST.
-		 * Of these, only option 2 requires us to do something.  So, if the
-		 * time provided DST and the previous time DST do not match, then we
-		 * need to fall back.
-		 * Otherwise, nothing changed from the last time we checked.
-		 */
-		else if (newIsDst != isDst)
-		{
-			retVal = -1;
-			ram[AXP_ADDR_Seconds] &= ~AXP_DST_Mask;
-		}
+	    dstStart =
+		(3 << 22) +				/* March */
+		((31 - ((4 + mid) % 7)) << 17) +	/* Last Sunday */
+		(2 << 12);				/* 2:00 am */
+	    dstEnd =
+		(11 << 22) +				/* November */
+		((31 - ((1 + mid) % 7)) << 17) +	/* First Sunday */
+		(2 << 12);				/* 2:00 am */
 	}
 
 	/*
-	 * Return the results back to the caller.
+	 * For everything else, DST is not supported, so clear the Daylight
+	 * Savings Time flag in the Control Register B, so that we can skip all
+	 * this processing.
 	 */
-	return(retVal);
+	else
+	    ctrlB->dse = 0;
+    }
+
+    /*
+     * So, if we still have Daylight Savings enabled, then we now need to
+     * determine if the date provided on the call needs to be adjusted +/- one
+     * hour, to account for DST starting or ending.
+     */
+    if (ctrlB->dse == 1)
+    {
+	bool	newIsDst = false;
+	bool	isDst = (ctrlD->isDst == 1);
+
+	/*
+	 * If the date is between the DST start and end dates, and not because
+	 * we shifted
+	 */
+	if ((dstStart < date) && (date < dstEnd) && (ctrlD->fellBack == 0))
+	    newIsDst = true;
+	else if ((dstStart >= date) || (date >= dstEnd))
+	    ctrlD->fellBack = 0;
+
+	/*
+	 * Now we are ready to figure out what we should be doing.  If the time
+	 * provided is in DST and the previous time we checked it was NOT in
+	 * DST, then we need to spring forward.
+	 */
+	if ((newIsDst == true) && (isDst == false))
+	{
+	    retVal = 1;
+	    ctrlD->isDst = 1;
+	}
+
+	/*
+	 * The only three other options are:
+	 *	1) The time provided is NOT in DST and the previous time was
+	 *	   also NOT in DST.
+	 *	2) The time provided is NOT in DST and the previous time was in
+	 *	   DST.
+	 *	3) The time provided is in DST and the previous time was also
+	 *	   in DST.
+	 * Of these, only option 2 requires us to do something.  So, if the
+	 * time provided DST and the previous time DST do not match, then we
+	 * need to fall back.
+	 * Otherwise, nothing changed from the last time we checked.
+	 */
+	else if (newIsDst != isDst)
+	{
+	    retVal = -1;
+	    ctrlD->isDst = 0;
+	    ctrlD->fellBack = 1;
+	}
+    }
+
+    /*
+     * Return the results back to the caller.
+     */
+    return(retVal);
 }
 
 /*
@@ -468,10 +436,6 @@ static void AXP_DS12887A_Normalize(struct tm *timeSpec, bool justTime)
 	timeSpec->tm_mday %= mDays[tmp];
 	timeSpec->tm_year += (timeSpec->tm_mon / 12);
 	timeSpec->tm_mon %= 12;
-
-	timeSpec->tm_year += ((timeSpec->tm_year > 70) ? 100 : 0);
-	mktime(timeSpec);
-	timeSpec->tm_year %= 100;
     }
 
     /*
@@ -789,7 +753,7 @@ static void AXP_DS12887A_StartTimers(bool all)
 	    nextA.tm_mday++;
 
 	/*
-	 * Normalize the time, then get tne absolute time for the next trigger.
+	 * Normalize the time, then get the absolute time for the next trigger.
 	 */
 	AXP_DS12887A_Normalize(&nextA, false);
 	ts.it_value.tv_sec = mktime(&nextA);
@@ -1001,30 +965,35 @@ static void AXP_DS12887A_Initialize(void)
  *	thread when the IRQF bit has been set/cleared.
  *
  * Input Parameters:
- *	cond:
- *		A pointer to a condition variable to be triggered when the IRQH bit has
- *		been set.
- *	mutex:
- *		A pointer to a mutex to be used to control the setting of the IRQ bit
- *		in the next parameter.
- *	irq_field:
- *		A pointer to an unsigned 64-bit value to have a bit set or cleared when
- *		the IRQF bit has been set/cleared.
- *	irq_mask:
- *		A value indicating the bit with in the field to be set/cleared when the
- *		IRQF bit has been set/cleared.
+ *  cond:
+ *	A pointer to a condition variable to be triggered when the IRQH bit has
+ *	been set.
+ *  mutex:
+ *	A pointer to a mutex to be used to control the setting of the IRQ bit
+ *	in the next parameter.
+ *  irq_field:
+ *	A pointer to an unsigned 64-bit value to have a bit set or cleared when
+ *	the IRQF bit has been set/cleared.
+ *  irq_mask:
+ *	A value indicating the bit with in the field to be set/cleared when the
+ *	IRQF bit has been set/cleared.
+ *  dstIsEuropean:
+ *	A boolean value to indicate that Daylight Savings Time (DST)
+ *	calculations will be based on the European calendar.  If the DSE bit is
+ *	not set, this flag has no effect.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
  */
 void AXP_DS12887A_Config(
     pthread_cond_t *cond,
     pthread_mutex_t *mutex,
     u64 *irq_field,
-    u64 irq_mask)
+    u64 irq_mask,
+    bool dstIsEuropean)
 {
     if (AXP_SYS_CALL)
     {
@@ -1037,6 +1006,7 @@ void AXP_DS12887A_Config(
     irqMutex = mutex;
     irqField = irq_field;
     irqMask = irq_mask;
+    ctrlD->eu = dstIsEuropean ? 1 : 0;
 
     if (AXP_SYS_CALL)
     {
@@ -1365,8 +1335,36 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 	    }
 	    ctrlB->value = value;
 
+	    /*
+	     * If we need to start the timers, we also need to make sure the
+	     * DST information is set properly.
+	     */
 	    if (startIRQF == true)
+	    {
+		struct tm	binTime;
+
+		binTime.tm_sec = currentTime.tm_sec - ram[AXP_ADDR_Seconds];
+		binTime.tm_min = currentTime.tm_min - ram[AXP_ADDR_Minutes];
+		binTime.tm_hour = currentTime.tm_hour - ram[AXP_ADDR_Hours];
+		binTime.tm_mday = currentTime.tm_mday - ram[AXP_ADDR_Date];
+		binTime.tm_mon = currentTime.tm_mon - ram[AXP_ADDR_Month] + 1;
+		binTime.tm_year = (currentTime.tm_year -
+		    (currentTime.tm_year >= 100 ? 100 : 0)) - ram[AXP_ADDR_Year];
+		AXP_DS12887A_Normalize(&binTime, false);
+
+		/*
+		 * This call will set the DST bit, we can ignore the rest of
+		 * the information.
+		 */
+		(void) AXP_DS12887A_DST(
+				binTime.tm_year,
+				binTime.tm_mon,
+				binTime.tm_mday,
+				binTime.tm_hour,
+				binTime.tm_min,
+				binTime.tm_sec);
 		AXP_DS12887A_StartTimers(true);
+	    }
 	    break;
 
 	    /*
@@ -1470,6 +1468,7 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
      *	2) Calculate the binary seconds, minutes, hour, date, month and year
      *	   values.  NOTE: Remove the century part of the current year.
      *	3) Normalize the binary values.
+     *	4) Determine if DST has occurred and adjust accordingly.
      *	4) Calculate the alarm binary seconds, minutes, and hours.
      *	5) Normalize the alarm binary values.
      *
@@ -1481,11 +1480,12 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
     /*
      * Step 2:
      */
-    binTime.tm_sec = currentTime.tm_sec - ram[AXP_ADDR_Seconds];
+    binTime.tm_sec =
+	currentTime.tm_sec - (i8) ram[AXP_ADDR_Seconds];
     binTime.tm_min = currentTime.tm_min - ram[AXP_ADDR_Minutes];
     binTime.tm_hour = currentTime.tm_hour - ram[AXP_ADDR_Hours];
     binTime.tm_mday = currentTime.tm_mday - ram[AXP_ADDR_Date];
-    binTime.tm_mon = currentTime.tm_mon - ram[AXP_ADDR_Month];
+    binTime.tm_mon = currentTime.tm_mon - ram[AXP_ADDR_Month] + 1;
     binTime.tm_year = (currentTime.tm_year
 	- (currentTime.tm_year >= 100 ? 100 : 0)) - ram[AXP_ADDR_Year];
 
@@ -1495,16 +1495,39 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
     AXP_DS12887A_Normalize(&binTime, false);
 
     /*
-     * Step 5:
+     * Step 4:
      */
-    binTimeA.tm_sec = currentTime.tm_sec - ram[AXP_ADDR_SecondsAlarm];
-    binTimeA.tm_min = currentTime.tm_min - ram[AXP_ADDR_MinutesAlarm];
-    binTimeA.tm_hour = currentTime.tm_hour - ram[AXP_ADDR_HoursAlarm];
+    if (ctrlB->dse == 1)
+    {
+	int	hourAdjust;
+
+	hourAdjust = AXP_DS12887A_DST(
+			    binTime.tm_year,
+			    binTime.tm_mon,
+			    binTime.tm_mday,
+			    binTime.tm_hour,
+			    binTime.tm_min,
+			    binTime.tm_sec);
+	binTime.tm_hour += hourAdjust;
+	ram[AXP_ADDR_Hours] -= hourAdjust;
+    }
 
     /*
-     * Step 6:
+     * Step 5:
      */
-    AXP_DS12887A_Normalize(&binTimeA, true);
+    if ((ram[AXP_ADDR_SecondsAlarm] < 60) &&
+	(ram[AXP_ADDR_MinutesAlarm] < 60) &&
+	(ram[AXP_ADDR_HoursAlarm] < 24))
+    {
+	binTimeA.tm_sec = currentTime.tm_sec- ram[AXP_ADDR_SecondsAlarm];
+	binTimeA.tm_min = currentTime.tm_min - ram[AXP_ADDR_MinutesAlarm];
+	binTimeA.tm_hour = currentTime.tm_hour - ram[AXP_ADDR_HoursAlarm];
+
+	/*
+	 * Step 6:
+	 */
+	AXP_DS12887A_Normalize(&binTimeA, true);
+    }
 
     switch (addr)
     {
@@ -1618,7 +1641,9 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
 	    break;
 
 	case AXP_ADDR_Day:
-	    retDay->bin.day = binTime.tm_wday + 1;
+	    binTime.tm_year += AXP_DOW_YEAR(binTime.tm_year);
+	    retDay->bin.day =
+		AXP_DOW(binTime.tm_year, binTime.tm_mon, binTime.tm_mday) + 1;
 	    retDay->bin.res = 0;
 	    break;
 
@@ -1637,7 +1662,6 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
 	    break;
 
 	case AXP_ADDR_Month:
-	    binTime.tm_mon++;
 	    if (ctrlB->dm == 1)
 	    {
 		retMonth->bin.month = binTime.tm_mon;
