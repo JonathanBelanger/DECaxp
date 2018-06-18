@@ -38,7 +38,7 @@
 #define TELOPTS			1
 
 /*
- * Define the states for the TELNET connection.
+ * Define the states for the TELNET session.
  */
 typedef enum
 {
@@ -48,7 +48,41 @@ typedef enum
     Inactive,
     Closing,
     Finished
-} AXP_Telnet_States;
+} AXP_Telnet_Session_State;
+
+/*
+ * Telnet option states, based on RFC 1143.
+ */
+typedef enum
+{
+    No,
+    WantNo,
+    WantYes,
+    Yes
+} AXP_Telnet_UsHim_State;
+typedef enum
+{
+    Empty,
+    Opposite
+} AXP_Telnet_UsqHimq_State;
+typedef struct
+{
+    AXP_Telnet_UsHim_State	us;
+    AXP_Telnet_UsqHimq_State	usQ;
+    AXP_Telnet_UsHim_State	him;
+    AXP_Telnet_UsqHimq_State	himQ;
+} AXP_Telnet_Option_State;
+
+/*
+ * This data structure is used to handle a TELNET session.  It contains
+ * state information and negotiated options.
+ */
+typedef struct
+{
+    int				mySocket;
+    AXP_Telnet_Session_State	myState;
+    AXP_Telnet_Option_State	myOptions[NTELOPTS];
+} AXP_Telnet_Session;
 
 /*
  * Function prototypes.
