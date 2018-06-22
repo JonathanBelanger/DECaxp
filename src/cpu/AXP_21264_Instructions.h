@@ -19,7 +19,7 @@
  *	This header file contains the structures and definitions required to
  *	implement the instruction emulation for the Alpha 21264 (EV68) processor.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		04-May-2017	Jonathan D. Belanger
  *	Initially written.
@@ -59,14 +59,14 @@
  */
 typedef struct
 {
-	union
-	{
-		u16	func : 16;				/* Memory function						*/
-		i16 disp : 16;				/* Memory displacement from PC (SEXT)	*/
-	} mem;
-	 u32	rb : 5;					/* Register b (source)					*/
-	 u32	ra : 5;					/* Register a (destination)				*/
-	 u32	opcode : 6;				/* Operation code						*/
+    union
+    {
+	u16 func :16; /* Memory function						*/
+	i16 disp :16; /* Memory displacement from PC (SEXT)	*/
+    } mem;
+    u32 rb :5; /* Register b (source)					*/
+    u32 ra :5; /* Register a (destination)				*/
+    u32 opcode :6; /* Operation code						*/
 } AXP_MEM_INS;
 #define AXP_LDAH_MULT		65536
 
@@ -82,9 +82,9 @@ typedef struct
  */
 typedef struct
 {
-	 i32	branch_disp : 21;		/* Branch displacement*4 from PC (SEXT) */
-	 u32	ra : 5;					/* Register a (destination)				*/
-	 u32	opcode : 6;				/* Operation code						*/
+    i32 branch_disp :21; /* Branch displacement*4 from PC (SEXT) */
+    u32 ra :5; /* Register a (destination)				*/
+    u32 opcode :6; /* Operation code						*/
 } AXP_BR_INS;
 
 /*
@@ -92,13 +92,13 @@ typedef struct
  */
 typedef struct
 {
-	 u32	rc : 5;					/* Register c (source 2)				*/
-	 u32	func : 7;				/* Integer Function						*/
-	 u32	fmt : 1;				/* Format Literal=1 or Rb=0				*/
-	 u32	sbz : 3;				/* Should Be Zero						*/
-	 u32	rb : 5;					/* Register b (source 1)				*/
-	 u32	ra : 5;					/* Register a (destination)				*/
-	 u32	opcode : 6;				/* Operation code						*/
+    u32 rc :5; /* Register c (source 2)				*/
+    u32 func :7; /* Integer Function						*/
+    u32 fmt :1; /* Format Literal=1 or Rb=0				*/
+    u32 sbz :3; /* Should Be Zero						*/
+    u32 rb :5; /* Register b (source 1)				*/
+    u32 ra :5; /* Register a (destination)				*/
+    u32 opcode :6; /* Operation code						*/
 } AXP_OP1_INS;
 
 /*
@@ -106,12 +106,12 @@ typedef struct
  */
 typedef struct
 {
-	 u32	rc : 5;					/* Register c (source)					*/
-	 u32	func : 7;				/* Integer Function						*/
-	 u32	fmt : 1;				/* Format Literal=1 or Rb=0				*/
-	 u32	lit : 8;				/* Literal (ZEXT)						*/
-	 u32	ra : 5;					/* Register a (destination)				*/
-	 u32	opcode : 6;				/* Operation code						*/
+    u32 rc :5; /* Register c (source)					*/
+    u32 func :7; /* Integer Function						*/
+    u32 fmt :1; /* Format Literal=1 or Rb=0				*/
+    u32 lit :8; /* Literal (ZEXT)						*/
+    u32 ra :5; /* Register a (destination)				*/
+    u32 opcode :6; /* Operation code						*/
 } AXP_OP2_INS;
 
 /*
@@ -119,11 +119,11 @@ typedef struct
  */
 typedef struct
 {
-	 u32	fc : 5;					/* Floating Point Register c (source 2)	*/
-	 u32	func : 11;				/* Floating Point Function				*/
-	 u32	fb : 5;					/* Floating Point Register b (source 1)	*/
-	 u32	fa : 5;					/* Floating Point Register a (target)	*/
-	 u32	opcode : 6;				/* Operation Code						*/
+    u32 fc :5; /* Floating Point Register c (source 2)	*/
+    u32 func :11; /* Floating Point Function				*/
+    u32 fb :5; /* Floating Point Register b (source 1)	*/
+    u32 fa :5; /* Floating Point Register a (target)	*/
+    u32 opcode :6; /* Operation Code						*/
 } AXP_FP_INS;
 
 /*
@@ -131,8 +131,8 @@ typedef struct
  */
 typedef struct
 {
-	 u32	palcode_func : 26;		/* PALcode Function						*/
-	 u32	opcode : 6;				/* Operation Code						*/
+    u32 palcode_func :26; /* PALcode Function						*/
+    u32 opcode :6; /* Operation Code						*/
 } AXP_PAL_INS;
 
 /*
@@ -153,12 +153,12 @@ typedef struct
  */
 typedef struct
 {
-	i32		disp : 12;				/* 12-bit Signed Displacement			*/
-	u32		len : 1;				/* Access Length						*/
-	u32		type : 3;				/* Type of Address						*/
-	u32		rb : 5;					/* Base Register for Memory Address		*/
-	u32		ra : 5;					/* Destination Register Number			*/
-	u32		opcode : 6;				/* Operation Code						*/
+    i32 disp :12; /* 12-bit Signed Displacement			*/
+    u32 len :1; /* Access Length						*/
+    u32 type :3; /* Type of Address						*/
+    u32 rb :5; /* Base Register for Memory Address		*/
+    u32 ra :5; /* Destination Register Number			*/
+    u32 opcode :6; /* Operation Code						*/
 } AXP_HW_LD;
 
 #define AXP_HW_LD_PHYS		0x0		/* Physical								*/
@@ -182,12 +182,12 @@ typedef struct
  */
 typedef struct
 {
-	i32		disp : 12;				/* 12-bit Signed Displacement			*/
-	u32		len : 1;				/* Access Length						*/
-	u32		type : 3;				/* Type of Address						*/
-	u32		rb : 5;					/* Base Register for Memory Address		*/
-	u32		ra : 5;					/* Write Data Register Number			*/
-	u32		opcode : 6;				/* Operation Code						*/
+    i32 disp :12; /* 12-bit Signed Displacement			*/
+    u32 len :1; /* Access Length						*/
+    u32 type :3; /* Type of Address						*/
+    u32 rb :5; /* Base Register for Memory Address		*/
+    u32 ra :5; /* Write Data Register Number			*/
+    u32 opcode :6; /* Operation Code						*/
 } AXP_HW_ST;
 
 #define AXP_HW_ST_PHYS		0x0		/* Physical								*/
@@ -209,12 +209,12 @@ typedef struct
  */
 typedef struct
 {
-	i32		disp : 13;				/* 13-bit Signed Displacement			*/
-	u32		stall : 1;				/* Stall Instruction until retire/abort	*/
-	u32		hint : 2;				/* Type of Address						*/
-	u32		rb : 5;					/* Base Register for Memory Address		*/
-	u32		ra : 5;					/* Write Data Register Number			*/
-	u32		opcode : 6;				/* Operation Code						*/
+    i32 disp :13; /* 13-bit Signed Displacement			*/
+    u32 stall :1; /* Stall Instruction until retire/abort	*/
+    u32 hint :2; /* Type of Address						*/
+    u32 rb :5; /* Base Register for Memory Address		*/
+    u32 ra :5; /* Write Data Register Number			*/
+    u32 opcode :6; /* Operation Code						*/
 } AXP_HW_RET1;
 
 #define AXP_HW_JMP			0
@@ -227,11 +227,11 @@ typedef struct
  */
 typedef struct
 {
-	u32		scbd_mask : 8;			/* Scoreboard Mask						*/
-	u32		index : 8;				/* IPR Index							*/
-	u32		rb : 5;					/* Base Register for Memory Address		*/
-	u32		ra : 5;					/* Write Data Register Number			*/
-	u32		opcode : 6;				/* Operation Code						*/
+    u32 scbd_mask :8; /* Scoreboard Mask						*/
+    u32 index :8; /* IPR Index							*/
+    u32 rb :5; /* Base Register for Memory Address		*/
+    u32 ra :5; /* Write Data Register Number			*/
+    u32 opcode :6; /* Operation Code						*/
 } AXP_HW_MXPR;
 
 /*
@@ -239,17 +239,17 @@ typedef struct
  */
 typedef union
 {
-	u32				instr;			/* 32-bit instruction value				*/
-	AXP_MEM_INS		mem;			/* Memory Instruction					*/
-	AXP_BR_INS		br;				/* Branch Instruction					*/
-	AXP_OP1_INS		oper1;			/* Integer Operate Instruction (Rb)		*/
-	AXP_OP2_INS		oper2;			/* Integer Operate Instruction (LIT)	*/
-	AXP_FP_INS		fp;				/* Floating Point Operate Instruction	*/
-	AXP_PAL_INS		pal;			/* PALcode Instruction					*/
-	AXP_HW_LD		hw_ld;			/* PALcode Load Instruction				*/
-	AXP_HW_ST		hw_st;			/* PALcode Store Instruction			*/
-	AXP_HW_RET1		hw_ret;			/* PALcode Return Instruction			*/
-	AXP_HW_MXPR		hw_mxpr;		/* PALcode Move From/To Processor Regis	*/
+    u32 instr; /* 32-bit instruction value				*/
+    AXP_MEM_INS mem; /* Memory Instruction					*/
+    AXP_BR_INS br; /* Branch Instruction					*/
+    AXP_OP1_INS oper1; /* Integer Operate Instruction (Rb)		*/
+    AXP_OP2_INS oper2; /* Integer Operate Instruction (LIT)	*/
+    AXP_FP_INS fp; /* Floating Point Operate Instruction	*/
+    AXP_PAL_INS pal; /* PALcode Instruction					*/
+    AXP_HW_LD hw_ld; /* PALcode Load Instruction				*/
+    AXP_HW_ST hw_st; /* PALcode Store Instruction			*/
+    AXP_HW_RET1 hw_ret; /* PALcode Return Instruction			*/
+    AXP_HW_MXPR hw_mxpr; /* PALcode Move From/To Processor Regis	*/
 } AXP_INS_FMT;
 
 /*
@@ -257,17 +257,17 @@ typedef union
  */
 typedef enum
 {
-	Bra,
-	FP,
-	FPBra,
-	Mem,
-	Mfc,
-	Mbr,
-	Opr,
-	Pcd,
-	PAL,
-	Res,
-	Cond
+    Bra,
+    FP,
+    FPBra,
+    Mem,
+    Mfc,
+    Mbr,
+    Opr,
+    Pcd,
+    PAL,
+    Res,
+    Cond
 } AXP_INS_TYPE;
 
 /*
@@ -275,13 +275,13 @@ typedef enum
  */
 typedef enum
 {
-	Load,
-	Store,
-	Branch,
-	Arith,
-	Logic,
-	Oper,
-	Other
+    Load,
+    Store,
+    Branch,
+    Arith,
+    Logic,
+    Oper,
+    Other
 } AXP_OPER_TYPE;
 
 /*
@@ -1001,16 +1001,16 @@ typedef enum
  */
 typedef enum
 {
-	PipelineNone,	/* R/F31 as a dest	*/
-	EboxU0,			/* U0				*/
-	EboxU1,			/* U1				*/
-	EboxU0U1,		/* U0, U1			*/
-	EboxL0,			/* L0				*/
-	EboxL1,			/* L1				*/
-	EboxL0L1,		/* L0, L1			*/
-	EboxL0L1U0U1,	/* L0, L1, U0, U1	*/
-	FboxMul,		/* FM				*/
-	FboxOther		/* FA, FST0, FST1	*/
+    PipelineNone, /* R/F31 as a dest	*/
+    EboxU0, /* U0				*/
+    EboxU1, /* U1				*/
+    EboxU0U1, /* U0, U1			*/
+    EboxL0, /* L0				*/
+    EboxL1, /* L1				*/
+    EboxL0L1, /* L0, L1			*/
+    EboxL0L1U0U1, /* L0, L1, U0, U1	*/
+    FboxMul, /* FM				*/
+    FboxOther /* FA, FST0, FST1	*/
 } AXP_PIPELINE;
 
 #define AXP_U0_PIPELINE			0
@@ -1021,11 +1021,11 @@ typedef enum
 
 typedef enum
 {
-	Retired,
-	Queued,
-	Executing,
-	WaitingRetirement,
-	Aborted
+    Retired,
+    Queued,
+    Executing,
+    WaitingRetirement,
+    Aborted
 } AXP_INS_STATE;
 
 /*
@@ -1038,41 +1038,41 @@ typedef enum
  */
 typedef struct
 {
-	AXP_REGISTER	src1v;		/* Value from src1 register */
-	AXP_REGISTER	src2v;		/* Value from src2 register */
-	AXP_REGISTER	destv;		/* Value to dest register */
-	AXP_INS_TYPE	format;		/* Instruction format */
-	AXP_OPER_TYPE	type;
-	AXP_REG_DECODE	decodedReg;	/* which registers are used for what */
-	AXP_PC			pc;
-	AXP_PC			branchPC;
-	AXP_INS_STATE	state;
-	AXP_FBOX_FPCR	insFpcr;
-	AXP_IBOX_EXC_SUM excSum;
-	AXP_EXCEPTIONS	excRegMask;	/* Exception Register Mask */
-	AXP_INS_FMT		instr;
-	i64				displacement;/* Displacement from PC + 4 */
-	u64				literal;	/* Literal value */
-	u64				prevDestValue;/* Previous value in destination register */
-	u32				function;	/* Function code for operation */
-	u32				slot;		/* Assigned Load/Store slot */
-	u16				aSrc1;		/* Architectural register R0-R30 or F0-F30 */
-	u16				src1;		/* Physical register PR0-PR79, PF0-PF71 */
-	u16				aSrc2;		/* Architectural register R0-R30 or F0-F30 */
-	u16				src2;		/* Physical register PR0-PR79, PF0-PF71 */
-	u16				aDest;		/* Architectural register R0-R30 or F0-F30 */
-	u16				dest;		/* Physical register PR0-PR79, PF0-PF71 */
-	u16				prevDestMap;/* Previous physical register mapping */
-	u8				uniqueID;	/* A unique id for each instruction */
-	u8				opcode;		/* Operation code */
-	u8				type_hint_index; /* HW_LD/ST type, HW_RET hint, HW_MxPR idx */
-	u8				scbdMask;	/* HW_MxPR scbd_mask */
-	bool			useLiteral;	/* Indicator that the literal value is valid */
-	bool			branchPredict; /* Prediction logic result */
-	bool			localPredict; /* Local branch predict */
-	bool			globalPredict; /* Global branch predict */
-	bool			stall;		/* Stall Ibox until IQ/FQ are empty */
-	bool			quadword;	/* HW_LD/ST len */
+    AXP_REGISTER src1v; /* Value from src1 register */
+    AXP_REGISTER src2v; /* Value from src2 register */
+    AXP_REGISTER destv; /* Value to dest register */
+    AXP_INS_TYPE format; /* Instruction format */
+    AXP_OPER_TYPE type;
+    AXP_REG_DECODE decodedReg; /* which registers are used for what */
+    AXP_PC pc;
+    AXP_PC branchPC;
+    AXP_INS_STATE state;
+    AXP_FBOX_FPCR insFpcr;
+    AXP_IBOX_EXC_SUM excSum;
+    AXP_EXCEPTIONS excRegMask; /* Exception Register Mask */
+    AXP_INS_FMT instr;
+    i64 displacement;/* Displacement from PC + 4 */
+    u64 literal; /* Literal value */
+    u64 prevDestValue;/* Previous value in destination register */
+    u32 function; /* Function code for operation */
+    u32 slot; /* Assigned Load/Store slot */
+    u16 aSrc1; /* Architectural register R0-R30 or F0-F30 */
+    u16 src1; /* Physical register PR0-PR79, PF0-PF71 */
+    u16 aSrc2; /* Architectural register R0-R30 or F0-F30 */
+    u16 src2; /* Physical register PR0-PR79, PF0-PF71 */
+    u16 aDest; /* Architectural register R0-R30 or F0-F30 */
+    u16 dest; /* Physical register PR0-PR79, PF0-PF71 */
+    u16 prevDestMap;/* Previous physical register mapping */
+    u8 uniqueID; /* A unique id for each instruction */
+    u8 opcode; /* Operation code */
+    u8 type_hint_index; /* HW_LD/ST type, HW_RET hint, HW_MxPR idx */
+    u8 scbdMask; /* HW_MxPR scbd_mask */
+    bool useLiteral; /* Indicator that the literal value is valid */
+    bool branchPredict; /* Prediction logic result */
+    bool localPredict; /* Local branch predict */
+    bool globalPredict; /* Global branch predict */
+    bool stall; /* Stall Ibox until IQ/FQ are empty */
+    bool quadword; /* HW_LD/ST len */
 } AXP_INSTRUCTION;
 
 #endif /* _AXP_21264_INS_DEFS_ */

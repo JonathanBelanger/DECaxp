@@ -20,7 +20,7 @@
  *	functionality of the Fbox Floating Point Functions needed for the
  *	Digital Alpha AXP Processor.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		29-June-2017	Jonathan D. Belanger
  *	Initially written.
@@ -41,11 +41,15 @@ void AXP_FP_SetExcSum(AXP_INSTRUCTION *, int, bool);
 bool AXP_FP_CheckForVAXInvalid(AXP_FPR_REGISTER *, AXP_FPR_REGISTER *);
 bool AXP_FP_CheckForIEEEInvalid(AXP_FP_REGISTER *, AXP_FP_REGISTER *);
 void AXP_FP_CvtG2X(
-		AXP_FPR_REGISTER *, AXP_FPR_REGISTER *,
-		long double *, long double *);
+    AXP_FPR_REGISTER *,
+    AXP_FPR_REGISTER *,
+    long double *,
+    long double *);
 int AXP_FP_CvtX2G(
-		long double *, long double *,
-		AXP_FPR_REGISTER *, AXP_FPR_REGISTER *);
+    long double *,
+    long double *,
+    AXP_FPR_REGISTER *,
+    AXP_FPR_REGISTER *);
 void AXP_FP_fpNormalize(AXP_FPR_REGISTER *);
 
 #endif	/* _AXP_21264_FBOX_FPFUNCTIONS_DEFS_ */

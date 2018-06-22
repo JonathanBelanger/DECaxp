@@ -33,6 +33,7 @@
 #include "AXP_21274_Registers.h"
 #include "AXP_21274_Cchip.h"
 #include "AXP_21274_Pchip.h"
+#include "AXP_21274_System.h"
 
 /*
  * Table 7–2 PADbus Command Encodings
@@ -58,12 +59,12 @@
  */
 typedef enum
 {
-	PADbus_NoOp,		/* b'0000'-b'0111' */
-	P_FPQ,				/* b'1000' */
-	TPQM_P,				/* b'1001' */
-	P_WMB,				/* b'1010' */
-	PP_FPQ,				/* b'1011' */
-	TPQP_P				/* b'1101' */
+    PADbus_NoOp, /* b'0000'-b'0111' */
+    P_FPQ, /* b'1000' */
+    TPQM_P, /* b'1001' */
+    P_WMB, /* b'1010' */
+    PP_FPQ, /* b'1011' */
+    TPQP_P /* b'1101' */
 } AXP_PADbusCommand;
 
 /*
@@ -91,15 +92,10 @@ typedef enum
  */
 typedef struct
 {
-	AXP_PADbusCommand	cmd;
-	u8					shift;
-	u8					len;					/* in quadwords */
-	u64					data[8];				/* up to 8 quadwords */
-}AXP_PADbusMsg;
-
-/*
- * Dchip Function Prototypes
- */
-void AXP_21274_DchipInit(AXP_21274_SYSTEM *);
+    AXP_PADbusCommand cmd;
+    u8 shift;
+    u8 len; /* in quadwords */
+    u64 data[8]; /* up to 8 quadwords */
+} AXP_PADbusMsg;
 
 #endif /* _AXP_21274_DCHIP_H_ */

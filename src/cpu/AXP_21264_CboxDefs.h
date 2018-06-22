@@ -64,7 +64,6 @@
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_21264_21274_Common.h"
-#include "AXP_21264_to_System.h"
 
 /*
  * HRM Tables 5-23 and 5-24
@@ -72,90 +71,90 @@
  */
 typedef struct
 {
-	u64						BcBankEnable : 1;
-	u64						BcBurstModeEnable : 1;
-	u64						BcCleanVictim : 1;
-	u64						BcClkfwdEnable : 1;
-	u64						BcClockOut : 1;
-	u64						BcDdmFallEn : 1;
-	u64						BcDdmfEnable : 1;
-	u64						BcDdmrEnable : 1;
-	u64						BcDdmRiseEn : 1;
-	u64						BcEnable : 1;
-	u64						BcFrmClk : 1;
-	u64						BcLateWriteUpper : 1;
-	u64						BcPentiumMode : 1;
-	u64						BcRdRdBubble : 1;
-	u64						BcRdvictim : 1;
-	u64						BcSjBankEnable : 1;
-	u64						BcTagDdmFallEn : 1;
-	u64						BcTagDdmRiseEn : 1;
-	u64						BcWrWrBubble : 1;
-	u64						ThirtyTwoByteIo : 1;
-	u64						DupTagEnable : 1;
-	u64						EnableEvict : 1;
-	u64						EnableProbeCheck : 1;
-	u64						EnableStcCommand : 1;
-	u64						FastModeDisable : 1;
-	u64						InitMode : 1;
-	u64						JitterCmd : 1;
-	u64						MboxBcPrbStall : 1;
-	u64						PrbTagOnly : 1;
-	u64						RdvicAckInhibit : 1;
-	u64						SkewedFillMode : 1;
-	u64						SpecReadEnable : 1;
-	u64						StcEnable : 1;
-	u64						SysbusFormat : 1;
-	u64						SysbusMbEnable : 1;
-	u64						SysClkfwdEnable : 1;
-	u64						SysDdmFallEn : 1;
-	u64						SysDdmfEnable : 1;
-	u64						SysDdmrEnable : 1;
-	u64						SysDdmRdFallEn : 1;
-	u64						SysDdmRdRiseEn : 1;
-	u64						SysDdmRiseEn : 1;
-	u64						BcClkDelay : 2;
-	u64						BcCpuClkDelay : 2;
-	u64						BcCpuLateWriteNum : 2;
-	u64						BcRcvMuxCntPreset : 2;
-	u64						CfrFrmclkDelay : 2;
-	u64						DataValidDly : 2;
-	u64						InvalToDirty : 2;
-	u64						InvalToDirtyEnable : 2;
-	u64						SysBusSize : 2;
-	u64						SysClkDelay : 2;
-	u64						res_1 : 2;				/* Quadword align */
-	u64						SysCpuClkDelay : 2;
-	u64						SysRcvMuxCntPreset : 2;
-	u64						SysRcvMuxPreset : 2;
-	u64						BcLateWriteNum : 3;
-	u64						CfrEv6clkDelay : 3;
-	u64						SetDirtyEnable : 3;
-	u64						SysbusVicLimit : 3;
-	u64						BcBphaseLdVector : 4;
-	u64						BcSize : 4;
-	u64						BcWrRdBubbles : 4;
-	u64						BcWrtSts : 4;
-	u64						CfrGclkDelay : 4;
-	u64						MbCnt : 4;
-	u64						SysBphaseLdVector : 4;
-	u64						SysdcDelay : 4;
-	u64						SysbusAckLimit : 5;
-	u64						SysClkRatio : 5;
-	u64						res_2 : 4;				/* Quadword align */
-	u32						SysFrameLdVector : 5;
-	u32						BcRdWrBubbles : 6;
-	u32						res_3 : 21;				/* Longword Align */
-	u32						BcLatTagPattern : 24;
-	u32						res_4 : 8;				/* Quadword align */
-	u8						BcFdbkEn;
-	u8						DcvicThreshold ;
-	u8						SysFdbkEn;
-	u8						res_5;					/* Longword align */
-	u16						BcClkLdVector;
-	u16						SysClkLdVector;
-	u32						BcLatDataPattern;
-	u32						res_6;					/* Quadword align */
+    u64 BcBankEnable :1;
+    u64 BcBurstModeEnable :1;
+    u64 BcCleanVictim :1;
+    u64 BcClkfwdEnable :1;
+    u64 BcClockOut :1;
+    u64 BcDdmFallEn :1;
+    u64 BcDdmfEnable :1;
+    u64 BcDdmrEnable :1;
+    u64 BcDdmRiseEn :1;
+    u64 BcEnable :1;
+    u64 BcFrmClk :1;
+    u64 BcLateWriteUpper :1;
+    u64 BcPentiumMode :1;
+    u64 BcRdRdBubble :1;
+    u64 BcRdvictim :1;
+    u64 BcSjBankEnable :1;
+    u64 BcTagDdmFallEn :1;
+    u64 BcTagDdmRiseEn :1;
+    u64 BcWrWrBubble :1;
+    u64 ThirtyTwoByteIo :1;
+    u64 DupTagEnable :1;
+    u64 EnableEvict :1;
+    u64 EnableProbeCheck :1;
+    u64 EnableStcCommand :1;
+    u64 FastModeDisable :1;
+    u64 InitMode :1;
+    u64 JitterCmd :1;
+    u64 MboxBcPrbStall :1;
+    u64 PrbTagOnly :1;
+    u64 RdvicAckInhibit :1;
+    u64 SkewedFillMode :1;
+    u64 SpecReadEnable :1;
+    u64 StcEnable :1;
+    u64 SysbusFormat :1;
+    u64 SysbusMbEnable :1;
+    u64 SysClkfwdEnable :1;
+    u64 SysDdmFallEn :1;
+    u64 SysDdmfEnable :1;
+    u64 SysDdmrEnable :1;
+    u64 SysDdmRdFallEn :1;
+    u64 SysDdmRdRiseEn :1;
+    u64 SysDdmRiseEn :1;
+    u64 BcClkDelay :2;
+    u64 BcCpuClkDelay :2;
+    u64 BcCpuLateWriteNum :2;
+    u64 BcRcvMuxCntPreset :2;
+    u64 CfrFrmclkDelay :2;
+    u64 DataValidDly :2;
+    u64 InvalToDirty :2;
+    u64 InvalToDirtyEnable :2;
+    u64 SysBusSize :2;
+    u64 SysClkDelay :2;
+    u64 res_1 :2; /* Quadword align */
+    u64 SysCpuClkDelay :2;
+    u64 SysRcvMuxCntPreset :2;
+    u64 SysRcvMuxPreset :2;
+    u64 BcLateWriteNum :3;
+    u64 CfrEv6clkDelay :3;
+    u64 SetDirtyEnable :3;
+    u64 SysbusVicLimit :3;
+    u64 BcBphaseLdVector :4;
+    u64 BcSize :4;
+    u64 BcWrRdBubbles :4;
+    u64 BcWrtSts :4;
+    u64 CfrGclkDelay :4;
+    u64 MbCnt :4;
+    u64 SysBphaseLdVector :4;
+    u64 SysdcDelay :4;
+    u64 SysbusAckLimit :5;
+    u64 SysClkRatio :5;
+    u64 res_2 :4; /* Quadword align */
+    u32 SysFrameLdVector :5;
+    u32 BcRdWrBubbles :6;
+    u32 res_3 :21; /* Longword Align */
+    u32 BcLatTagPattern :24;
+    u32 res_4 :8; /* Quadword align */
+    u8 BcFdbkEn;
+    u8 DcvicThreshold;
+    u8 SysFdbkEn;
+    u8 res_5; /* Longword align */
+    u16 BcClkLdVector;
+    u16 SysClkLdVector;
+    u32 BcLatDataPattern;
+    u32 res_6; /* Quadword align */
 } AXP_21264_CBOX_CSRS;
 
 #define AXP_21264_CBOX_CSR_CNT 78
@@ -171,91 +170,91 @@ typedef struct
 
 typedef enum
 {
-	BcBankEnable,
-	BcBurstModeEnable,
-	BcCleanVictim,
-	BcClkfwdEnable,
-	BcClockOut,
-	BcDdmFallEn,
-	BcDdmfEnable,
-	BcDdmrEnable,
-	BcDdmRiseEn,
-	BcEnable,
-	BcFrmClk,
-	BcLateWriteUpper,
-	BcPentiumMode,
-	BcRdRdBubble,
-	BcRdvictim,
-	BcSjBankEnable,
-	BcTagDdmFallEn,
-	BcTagDdmRiseEn,
-	BcWrWrBubble,
-	ThirtyTwoByteIo,
-	DupTagEnable,
-	EnableEvict,
-	EnableProbeCheck,
-	EnableStcCommand,
-	FastModeDisable,
-	InitMode,
-	JitterCmd,
-	MboxBcPrbStall,
-	PrbTagOnly,
-	RdvicAckInhibit,
-	SkewedFillMode,
-	SpecReadEnable,
-	StcEnable,
-	SysbusFormat,
-	SysbusMbEnable,
-	SysClkfwdEnable,
-	SysDdmFallEn,
-	SysDdmfEnable,
-	SysDdmrEnable,
-	SysDdmRdFallEn,
-	SysDdmRdRiseEn,
-	SysDdmRiseEn,
-	BcClkDelay,
-	BcCpuClkDelay,
-	BcCpuLateWriteNum,
-	BcRcvMuxCntPreset,
-	CfrFrmclkDelay,
-	DataValidDly,
-	InvalToDirty1,
-	InvalToDirtyEnable,
-	SysBusSize,
-	SysClkDelay,
-	SysCpuClkDelay,
-	SysRcvMuxCntPreset,
-	SysRcvMuxPreset,
-	BcLateWriteNum,
-	CfrEv6clkDelay,
-	SetDirtyEnable,
-	SysbusVicLimit,
-	BcBphaseLdVector,
-	BcSize,
-	BcWrRdBubbles,
-	BcWrtSts,
-	CfrGclkDelay,
-	MbCnt,
-	SysBphaseLdVector,
-	SysdcDelay,
-	SysbusAckLimit,
-	SysClkRatio,
-	SysFrameLdVector,
-	BcRdWrBubbles,
-	BcLatTagPattern,
-	BcFdbkEn,
-	DcvicThreshold,
-	SysFdbkEn,
-	BcClkLdVector,
-	SysClkLdVector,
-	BcLatDataPattern,
-	LastCSR
+    BcBankEnable,
+    BcBurstModeEnable,
+    BcCleanVictim,
+    BcClkfwdEnable,
+    BcClockOut,
+    BcDdmFallEn,
+    BcDdmfEnable,
+    BcDdmrEnable,
+    BcDdmRiseEn,
+    BcEnable,
+    BcFrmClk,
+    BcLateWriteUpper,
+    BcPentiumMode,
+    BcRdRdBubble,
+    BcRdvictim,
+    BcSjBankEnable,
+    BcTagDdmFallEn,
+    BcTagDdmRiseEn,
+    BcWrWrBubble,
+    ThirtyTwoByteIo,
+    DupTagEnable,
+    EnableEvict,
+    EnableProbeCheck,
+    EnableStcCommand,
+    FastModeDisable,
+    InitMode,
+    JitterCmd,
+    MboxBcPrbStall,
+    PrbTagOnly,
+    RdvicAckInhibit,
+    SkewedFillMode,
+    SpecReadEnable,
+    StcEnable,
+    SysbusFormat,
+    SysbusMbEnable,
+    SysClkfwdEnable,
+    SysDdmFallEn,
+    SysDdmfEnable,
+    SysDdmrEnable,
+    SysDdmRdFallEn,
+    SysDdmRdRiseEn,
+    SysDdmRiseEn,
+    BcClkDelay,
+    BcCpuClkDelay,
+    BcCpuLateWriteNum,
+    BcRcvMuxCntPreset,
+    CfrFrmclkDelay,
+    DataValidDly,
+    InvalToDirty1,
+    InvalToDirtyEnable,
+    SysBusSize,
+    SysClkDelay,
+    SysCpuClkDelay,
+    SysRcvMuxCntPreset,
+    SysRcvMuxPreset,
+    BcLateWriteNum,
+    CfrEv6clkDelay,
+    SetDirtyEnable,
+    SysbusVicLimit,
+    BcBphaseLdVector,
+    BcSize,
+    BcWrRdBubbles,
+    BcWrtSts,
+    CfrGclkDelay,
+    MbCnt,
+    SysBphaseLdVector,
+    SysdcDelay,
+    SysbusAckLimit,
+    SysClkRatio,
+    SysFrameLdVector,
+    BcRdWrBubbles,
+    BcLatTagPattern,
+    BcFdbkEn,
+    DcvicThreshold,
+    SysFdbkEn,
+    BcClkLdVector,
+    SysClkLdVector,
+    BcLatDataPattern,
+    LastCSR
 } AXP_21264_CBOX_CSR_VAL;
 
 typedef struct
 {
-	const char 						*name;
-	const AXP_21264_CBOX_CSR_VAL	values;
+    const char *name;
+    const AXP_21264_CBOX_CSR_VAL values;
 } AXP_21264_CBOX_CSR_NAMES;
 /*
  * HRM Table 4-15
@@ -344,7 +343,6 @@ typedef struct
 #define AXP_21264_SIZE_LONG		32
 #define AXP_21264_SIZE_QUAD		64
 
-
 /*
  * sysData size in quadwords
  *
@@ -353,7 +351,6 @@ typedef struct
  *			definition in the cpu/AXP_21264_CboxDefs.h.
  */
 #define AXP_21264_DATA_SIZE	8
-
 
 /*
  * HRM 2.1.4.1
@@ -368,21 +365,21 @@ typedef struct
  */
 typedef enum
 {
-	toBcache,
-	toMemory,
-	probeResponse
+    toBcache,
+    toMemory,
+    probeResponse
 } AXP_21264_VDB_TYPE;
 
 typedef struct
 {
-	u64							sysData[AXP_21264_DATA_SIZE];
-	u64							pa;
-	AXP_21264_VDB_TYPE			type;
-	bool						validVictim;
-	bool						validProbe;
-	bool						processed;
-	bool						valid;
-	bool						marked;
+    u64 sysData[AXP_21264_DATA_SIZE];
+    u64 pa;
+    AXP_21264_VDB_TYPE type;
+    bool validVictim;
+    bool validProbe;
+    bool processed;
+    bool valid;
+    bool marked;
 } AXP_21264_CBOX_VIC_BUF;
 
 /*
@@ -394,31 +391,31 @@ typedef struct
  */
 typedef enum
 {
-	MAFNotInUse,
-	LDx,
-	STx,
-	STx_C,
-	STxChangeToDirty,
-	STxCChangeToDirty,
-	WH64,
-	ECB,
-	Istream,
-	MemoryBarrier
+    MAFNotInUse,
+    LDx,
+    STx,
+    STx_C,
+    STxChangeToDirty,
+    STxCChangeToDirty,
+    WH64,
+    ECB,
+    Istream,
+    MemoryBarrier
 } AXP_CBOX_MAF_TYPE;
 
 #define AXP_21264_MBOX_MAX		8
 typedef struct
 {
-	AXP_CBOX_MAF_TYPE	type;
-	u64					pa;
-	u64					mask;
-	i8					lqSqEntry[AXP_21264_MBOX_MAX];
-	int					dataLen;
-	int					bufLen;
-	bool				valid;
-	bool				complete;	/* cleared by Mbox, set by Cbox */
-	bool				shared;
-	bool				ioReq;
+    AXP_CBOX_MAF_TYPE type;
+    u64 pa;
+    u64 mask;
+    i8 lqSqEntry[AXP_21264_MBOX_MAX];
+    int dataLen;
+    int bufLen;
+    bool valid;
+    bool complete; /* cleared by Mbox, set by Cbox */
+    bool shared;
+    bool ioReq;
 } AXP_21264_CBOX_MAF;
 
 /*
@@ -430,14 +427,14 @@ typedef struct
  */
 typedef struct
 {
-	u64					sysData[AXP_21264_DATA_SIZE];
-	u64					pa;
-	int					bufLen;
-	bool				processed;
-	bool				valid;
-	u8					mask;
-	u8					storeLen;
-	i8					lqSqEntry[AXP_21264_MBOX_MAX];
+    u64 sysData[AXP_21264_DATA_SIZE];
+    u64 pa;
+    int bufLen;
+    bool processed;
+    bool valid;
+    u8 mask;
+    u8 storeLen;
+    i8 lqSqEntry[AXP_21264_MBOX_MAX];
 } AXP_21264_CBOX_IOWB;
 
 #define AXP_IOWB_ID_MASK		0x08
@@ -455,11 +452,11 @@ typedef struct
  */
 typedef struct
 {
-	u64					physTag;
-	u32					dtagIndex;
-	bool				valid;
-	bool				dirty;
-	bool				shared;
+    u64 physTag;
+    u32 dtagIndex;
+    bool valid;
+    bool dirty;
+    bool shared;
 } AXP_21264_CBOX_CTAG;
 
 /*
@@ -469,11 +466,11 @@ typedef struct
 typedef u8 AXP_21264_BCACHE_BLK[AXP_BCACHE_BLOCK_SIZE];
 typedef struct
 {
-	u64					tag;
-	u64					pa;
-	bool				valid;
-	bool				dirty;
-	bool				shared;
+    u64 tag;
+    u64 pa;
+    bool valid;
+    bool dirty;
+    bool shared;
 } AXP_21264_BCACHE_TAG;
 
 #endif /* _AXP_21264_CBOX_DEFS_ */

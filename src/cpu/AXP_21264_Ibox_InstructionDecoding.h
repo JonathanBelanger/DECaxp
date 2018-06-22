@@ -39,11 +39,11 @@
 #define AXP_SIGNAL_FBOX	2
 
 void AXP_Decode_Rename(
-				AXP_21264_CPU *,
-				AXP_INS_LINE *,
-				int,
-				AXP_INSTRUCTION *,
-				AXP_PIPELINE *);
+    AXP_21264_CPU *,
+    AXP_INS_LINE *,
+    int,
+    AXP_INSTRUCTION *,
+    AXP_PIPELINE *);
 u32 AXP_UpdateRegisters(AXP_21264_CPU *, AXP_INSTRUCTION *);
 bool AXP_AbortInstructions(AXP_21264_CPU *, AXP_INSTRUCTION *);
 void AXP_RegisterRename_IntegrityCheck(AXP_21264_CPU *);

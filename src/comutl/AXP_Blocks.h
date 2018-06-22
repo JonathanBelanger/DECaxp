@@ -32,15 +32,15 @@
 
 typedef enum
 {
-	AXP_21264_CPU_BLK,
-	AXP_21274_SYS_BLK,
-	AXP_BLOCK_MAX
+    AXP_21264_CPU_BLK,
+    AXP_21274_SYS_BLK,
+    AXP_BLOCK_MAX
 } AXP_BLOCK_TYPE;
 
 typedef struct
 {
-	AXP_BLOCK_TYPE	type;
-	size_t			size;
+    AXP_BLOCK_TYPE type;
+    size_t size;
 } AXP_BLOCK_DSC;
 
 void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType);

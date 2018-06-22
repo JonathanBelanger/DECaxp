@@ -35,63 +35,63 @@
 
 void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 {
-	void	*retBlock = NULL;
+    void *retBlock = NULL;
 
-	switch (blockType)
+    switch (blockType)
+    {
+	case AXP_21264_CPU_BLK:
 	{
-		case AXP_21264_CPU_BLK:
-			{
-				AXP_21264_CPU *cpu = NULL;
+	    AXP_21264_CPU *cpu = NULL;
 
-				retBlock = calloc(1, sizeof(AXP_21264_CPU));
-				if (retBlock != NULL)
-				{
+	    retBlock = calloc(1, sizeof(AXP_21264_CPU));
+	    if (retBlock != NULL)
+	    {
 
-					/*
-					 * The calloc cleared all the memory.
-					 */
-					cpu = (AXP_21264_CPU *) retBlock;
-					cpu->header.type = blockType;
-					cpu->header.size = sizeof(AXP_21264_CPU);
-					cpu->cpuState = Cold;
-				}
-			}
-			break;
-
-		case AXP_21274_SYS_BLK:
-			{
-				AXP_21274_SYSTEM *sys = NULL;
-
-				retBlock = calloc(1, sizeof(AXP_21274_SYSTEM));
-				if (retBlock != NULL)
-				{
-					sys = (AXP_21274_SYSTEM *) retBlock;
-					sys->header.type = blockType;
-					sys->header.size = sizeof(AXP_21274_SYSTEM);
-				}
-			}
-			break;
-
-		default:
-			break;
+		/*
+		 * The calloc cleared all the memory.
+		 */
+		cpu = (AXP_21264_CPU *) retBlock;
+		cpu->header.type = blockType;
+		cpu->header.size = sizeof(AXP_21264_CPU);
+		cpu->cpuState = Cold;
+	    }
 	}
-	return(retBlock);
+	    break;
+
+	case AXP_21274_SYS_BLK:
+	{
+	    AXP_21274_SYSTEM *sys = NULL;
+
+	    retBlock = calloc(1, sizeof(AXP_21274_SYSTEM));
+	    if (retBlock != NULL)
+	    {
+		sys = (AXP_21274_SYSTEM *) retBlock;
+		sys->header.type = blockType;
+		sys->header.size = sizeof(AXP_21274_SYSTEM);
+	    }
+	}
+	    break;
+
+	default:
+	    break;
+    }
+    return (retBlock);
 }
 
 void AXP_Deallocate_Block(AXP_BLOCK_DSC *block)
 {
-	switch (block->type)
-	{
-		case AXP_21264_CPU_BLK:
-			free(block);
-			break;
+    switch (block->type)
+    {
+	case AXP_21264_CPU_BLK:
+	    free(block);
+	    break;
 
-		default:
-			break;
-	}
+	default:
+	    break;
+    }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }

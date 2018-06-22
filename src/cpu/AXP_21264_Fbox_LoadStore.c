@@ -19,7 +19,7 @@
  *	This source file contains the functions needed to implement the
  *	functionality of the Fbox Load/Store Instructions.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		24-Jun-2017	Jonathan D. Belanger
  *	Initially written.
@@ -75,30 +75,30 @@
  */
 AXP_EXCEPTIONS AXP_LDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_LONG(va);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
-	/*
-	 * Get the value out of memory (it'll be in memory format and is 32-bits)
-	 */
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
+    /*
+     * Get the value out of memory (it'll be in memory format and is 32-bits)
+     */
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -123,23 +123,23 @@ AXP_EXCEPTIONS AXP_LDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_LDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * Get the value out of memory (it'll be in memory format and is 32-bits)
-	 */
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
+    /*
+     * Get the value out of memory (it'll be in memory format and is 32-bits)
+     */
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -173,30 +173,30 @@ AXP_EXCEPTIONS AXP_LDG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_LDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_LONG(va);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
-	/*
-	 * Get the value out of memory (it'll be in memory format and is 32-bits)
-	 */
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
+    /*
+     * Get the value out of memory (it'll be in memory format and is 32-bits)
+     */
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -229,23 +229,23 @@ AXP_EXCEPTIONS AXP_LDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_LDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * Get the value out of memory (it'll be in memory format and is 64-bits)
-	 */
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
+    /*
+     * Get the value out of memory (it'll be in memory format and is 64-bits)
+     */
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -270,46 +270,46 @@ AXP_EXCEPTIONS AXP_LDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_STF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
-	u32 exp;
-	u32 tmp;
-	AXP_F_MEMORY *tmpF = (AXP_F_MEMORY *) &tmp;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
+    u32 exp;
+    u32 tmp;
+    AXP_F_MEMORY *tmpF = (AXP_F_MEMORY *) &tmp;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_LONG(va);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
-	/*
-	 * Extract the exponent, then compress it from 11-bits to 8-bits.
-	 */
-	exp = instr->src1v.fp.fCvt.exponent;
-	if (exp != 0)
-		exp = exp - AXP_G_BIAS + AXP_F_BIAS;
+    /*
+     * Extract the exponent, then compress it from 11-bits to 8-bits.
+     */
+    exp = instr->src1v.fp.fCvt.exponent;
+    if (exp != 0)
+	exp = exp - AXP_G_BIAS + AXP_F_BIAS;
 
-	/*
-	 * Now put everything back together, but this time in memory format and
-	 * 32-bits.
-	 */
-	tmpF->sign = instr->src1v.fp.fCvt.sign;
-	tmpF->exponent = exp;
-	tmpF->fractionHigh = instr->src1v.fp.fCvt.fractionHigh;
-	tmpF->fractionLow = instr->src1v.fp.fCvt.fractionLow;
+    /*
+     * Now put everything back together, but this time in memory format and
+     * 32-bits.
+     */
+    tmpF->sign = instr->src1v.fp.fCvt.sign;
+    tmpF->exponent = exp;
+    tmpF->fractionHigh = instr->src1v.fp.fCvt.fractionHigh;
+    tmpF->fractionLow = instr->src1v.fp.fCvt.fractionLow;
 
-	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp);
+    AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -334,33 +334,33 @@ AXP_EXCEPTIONS AXP_STF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_STG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
-	u64 tmp;
-	AXP_G_MEMORY *tmpG = (AXP_G_MEMORY *) &tmp;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
+    u64 tmp;
+    AXP_G_MEMORY *tmpG = (AXP_G_MEMORY *) &tmp;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * Now put everything back together, but this time in memory format and
-	 * 64-bits.
-	 */
-	tmpG->sign = instr->src1v.fp.gCvt.sign;
-	tmpG->exponent = instr->src1v.fp.gCvt.exponent;
-	tmpG->fractionHigh = instr->src1v.fp.gCvt.fractionHigh;
-	tmpG->fractionMidHigh = instr->src1v.fp.gCvt.fractionMidHigh;
-	tmpG->fractionMidLow = instr->src1v.fp.gCvt.fractionMidLow;
-	tmpG->fractionLow = instr->src1v.fp.gCvt.fractionLow;
+    /*
+     * Now put everything back together, but this time in memory format and
+     * 64-bits.
+     */
+    tmpG->sign = instr->src1v.fp.gCvt.sign;
+    tmpG->exponent = instr->src1v.fp.gCvt.exponent;
+    tmpG->fractionHigh = instr->src1v.fp.gCvt.fractionHigh;
+    tmpG->fractionMidHigh = instr->src1v.fp.gCvt.fractionMidHigh;
+    tmpG->fractionMidLow = instr->src1v.fp.gCvt.fractionMidLow;
+    tmpG->fractionLow = instr->src1v.fp.gCvt.fractionLow;
 
-	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, va, tmp);
+    AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, va, tmp);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -385,47 +385,47 @@ AXP_EXCEPTIONS AXP_STG(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_STS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
-	u32 exp;
-	u32 tmp;
-	AXP_S_MEMORY *tmpS = (AXP_S_MEMORY *) &tmp;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
+    u32 exp;
+    u32 tmp;
+    AXP_S_MEMORY *tmpS = (AXP_S_MEMORY *) &tmp;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_LONG(va);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
-	/*
-	 * Extract the exponent, then compress it from 11-bits to 8-bits.
-	 */
-	exp = instr->src1v.fp.sCvt.exponent;
-	if (exp == AXP_R_NAN)
-		exp = AXP_S_NAN;
-	else if (exp != 0)
-		exp = exp - AXP_T_BIAS + AXP_S_BIAS;
+    /*
+     * Extract the exponent, then compress it from 11-bits to 8-bits.
+     */
+    exp = instr->src1v.fp.sCvt.exponent;
+    if (exp == AXP_R_NAN)
+	exp = AXP_S_NAN;
+    else if (exp != 0)
+	exp = exp - AXP_T_BIAS + AXP_S_BIAS;
 
-	/*
-	 * Now put everything back together, but this time in memory format and
-	 * 32-bits.
-	 */
-	tmpS->sign = instr->src1v.fp.sCvt.sign;
-	tmpS->exponent = exp;
-	tmpS->fraction = instr->src1v.fp.sCvt.fraction;
+    /*
+     * Now put everything back together, but this time in memory format and
+     * 32-bits.
+     */
+    tmpS->sign = instr->src1v.fp.sCvt.sign;
+    tmpS->exponent = exp;
+    tmpS->fraction = instr->src1v.fp.sCvt.fraction;
 
-	AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp);
+    AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, vaPrime, tmp);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -450,25 +450,21 @@ AXP_EXCEPTIONS AXP_STS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_STT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * Put the value into memory (it'll be in memory format and is 64-bits)
-	 */
-	AXP_21264_Mbox_WriteMem(cpu,
-							instr,
-							instr->slot,
-							va,
-							instr->src1v.fp.uq);
+    /*
+     * Put the value into memory (it'll be in memory format and is 64-bits)
+     */
+    AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, va, instr->src1v.fp.uq);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }

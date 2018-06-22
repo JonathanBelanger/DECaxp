@@ -91,19 +91,19 @@
  */
 typedef union
 {
-	u64		addr;
-	struct
-	{
-		u32		offset : 6;
-		u32		index : 26;
-		u32		mbz;
-	} quadAddr;
-	struct
-	{
-		u32		offset : 13;
-		u32		index : 19;
-		u32		mbz;
-	} pageAddr;
+    u64 addr;
+    struct
+    {
+	u32 offset :6;
+	u32 index :26;
+	u32 mbz;
+    } quadAddr;
+    struct
+    {
+	u32 offset :13;
+	u32 index :19;
+	u32 mbz;
+    } pageAddr;
 } AXP_21274_SYSTEM_MEMADDR;
 
 /*
@@ -111,13 +111,13 @@ typedef union
  */
 typedef union
 {
-	u64		addr;
-	struct
-	{
-		u64	idx : 3;
-		u64	linear : 29;
-		u64 cpuAddr : 32;
-	};
+    u64 addr;
+    struct
+    {
+	u64 idx :3;
+	u64 linear :29;
+	u64 cpuAddr :32;
+    };
 } AXP_21274_LINEAR_MEMADDR;
 
 /*
@@ -125,13 +125,13 @@ typedef union
  */
 typedef union
 {
-	u64		addr;
-	struct
-	{
-		u64	idx : 3;
-		u64	linear : 22;
-		u64	cpuAddr : 39;	/* always 0x801f */
-	};
+    u64 addr;
+    struct
+    {
+	u64 idx :3;
+	u64 linear :22;
+	u64 cpuAddr :39; /* always 0x801f */
+    };
 } AXP_21274_LINEAR_IOADDR;
 
 /*
@@ -139,17 +139,17 @@ typedef union
  */
 typedef union
 {
-	u64		addr;
-	struct
-	{
-		u64	idx : 3;
-		u64	reg : 5;
-		u64	func : 3;
-		u64	dev : 5;
-		u64	bus : 8;
-		u64	cpuAddr : 40;
-	};
-}  AXP_21274_LINEAR_CFGADDR;
+    u64 addr;
+    struct
+    {
+	u64 idx :3;
+	u64 reg :5;
+	u64 func :3;
+	u64 dev :5;
+	u64 bus :8;
+	u64 cpuAddr :40;
+    };
+} AXP_21274_LINEAR_CFGADDR;
 
 /*
  * CSR: 0x000008018xxxxxxx, 0x00000801axxxxxxx, 0x00000801bxxxxxxx, and
@@ -157,15 +157,15 @@ typedef union
  */
 typedef union
 {
-	u64		addr;
-	struct
-	{
-		u64	res_1 : 6;
-		u64	csr : 13;
-		u64	res_2 : 9;
-		u64	chip : 2;
-		u64 cpuAddr : 34;
-	};
+    u64 addr;
+    struct
+    {
+	u64 res_1 :6;
+	u64 csr :13;
+	u64 res_2 :9;
+	u64 chip :2;
+	u64 cpuAddr :34;
+    };
 } AXP_21274_CSR_ADDR;
 
 #define AXP_21274_PCHIP0	0
@@ -179,13 +179,13 @@ typedef union
  */
 typedef union
 {
-	u64		addr;
-	struct
-	{
-		u64	res_1 : 6;
-		u64	tigAddr : 24;
-		u64 cpuAddr : 34;
-	};
+    u64 addr;
+    struct
+    {
+	u64 res_1 :6;
+	u64 tigAddr :24;
+	u64 cpuAddr :34;
+    };
 } AXP_21274_TIGBUS_ADDR;
 
 /*
@@ -225,46 +225,46 @@ typedef union
  */
 typedef union
 {
-	u32		addr;
-	struct
-	{
-		u32	idx : 3;
-		u32	pciAddr : 29;
-	};
+    u32 addr;
+    struct
+    {
+	u32 idx :3;
+	u32 pciAddr :29;
+    };
 } AXP_21274_PCI_MEMADDR;
 
 typedef union
 {
-	u32		addr;
-	struct
-	{
-		u32	idx : 3;
-		u32	pciAddr : 22;
-		u32 mbz : 7;
-	};
+    u32 addr;
+    struct
+    {
+	u32 idx :3;
+	u32 pciAddr :22;
+	u32 mbz :7;
+    };
 } AXP_21274_PCI_IOADDR;
 
 typedef union
 {
-	u32		addr;
-	struct
-	{
-		u32	type : 2;	/* Type 0 = b'00' */
-		u32	regLsb : 1;
-		u32	reg : 5;
-		u32	func : 3;
-		u32 idsel : 21;
-	} type0;
-	struct
-	{
-		u32	type : 2;	/* Type 1 = b'01' */
-		u32	regLsb : 1;
-		u32	reg : 5;
-		u32	func : 3;
-		u32	dev : 5;
-		u32 bus : 8;
-		u32 mbz : 8;
-	} type1;
+    u32 addr;
+    struct
+    {
+	u32 type :2; /* Type 0 = b'00' */
+	u32 regLsb :1;
+	u32 reg :5;
+	u32 func :3;
+	u32 idsel :21;
+    } type0;
+    struct
+    {
+	u32 type :2; /* Type 1 = b'01' */
+	u32 regLsb :1;
+	u32 reg :5;
+	u32 func :3;
+	u32 dev :5;
+	u32 bus :8;
+	u32 mbz :8;
+    } type1;
 } AXP_21274_PCI_CFGADDR;
 
 #define AXP_21274_PIO_IDX	0x0000000700000000

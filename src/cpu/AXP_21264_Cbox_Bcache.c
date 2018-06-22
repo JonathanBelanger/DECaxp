@@ -19,7 +19,7 @@
  *	This source file contains the functions needed to implement the
  *	Bcache functionality of the Cbox.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		29-Dec-2017	Jonathan D. Belanger
  *	Initially written.
@@ -51,35 +51,35 @@
  */
 void AXP_21264_Bcache_Evict(AXP_21264_CPU *cpu, u64 pa)
 {
-	int		index = AXP_BCACHE_INDEX(cpu, pa);
-	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+    int index = AXP_BCACHE_INDEX(cpu, pa);
+    bool valid = AXP_21264_Bcache_Valid(cpu, pa);
 
-	/*
-	 * If the block is valid, then if it is dirty, we need to send it to the
-	 * System to store back in memory.
-	 */
-	if (valid == true)
-	{
-		if (cpu->bTag[index].dirty == true)
-			(void) AXP_21264_Add_VDB(
-							cpu,
-							toMemory,
-							pa,
-							cpu->bCache[index],
-							false,
-							true);
-	}
+    /*
+     * If the block is valid, then if it is dirty, we need to send it to the
+     * System to store back in memory.
+     */
+    if (valid == true)
+    {
+	if (cpu->bTag[index].dirty == true)
+	    (void) AXP_21264_Add_VDB(
+		cpu,
+		toMemory,
+		pa,
+		cpu->bCache[index],
+		false,
+		true);
+    }
 
-	/*
-	 * We always clear the valid bit, because we may be involved in a Bcache
-	 * Flush operation.
-	 */
-	cpu->bTag[index].valid = false;
+    /*
+     * We always clear the valid bit, because we may be involved in a Bcache
+     * Flush operation.
+     */
+    cpu->bTag[index].valid = false;
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -98,48 +98,48 @@ void AXP_21264_Bcache_Evict(AXP_21264_CPU *cpu, u64 pa)
  */
 void AXP_21264_Bcache_Flush(AXP_21264_CPU *cpu)
 {
-	int		ii;
-	int		bCacheArraySize;
+    int ii;
+    int bCacheArraySize;
 
-	/*
-	 * First we need to determine the size of the Bcache.
-	 */
-	switch (cpu->csr.BcSize)
-	{
-		case AXP_BCACHE_1MB:
-			bCacheArraySize = AXP_21264_1MB / AXP_BCACHE_BLOCK_SIZE;
-			break;
+    /*
+     * First we need to determine the size of the Bcache.
+     */
+    switch (cpu->csr.BcSize)
+    {
+	case AXP_BCACHE_1MB:
+	    bCacheArraySize = AXP_21264_1MB / AXP_BCACHE_BLOCK_SIZE;
+	    break;
 
-		case AXP_BCACHE_2MB:
-			bCacheArraySize = AXP_21264_2MB / AXP_BCACHE_BLOCK_SIZE;
-			break;
+	case AXP_BCACHE_2MB:
+	    bCacheArraySize = AXP_21264_2MB / AXP_BCACHE_BLOCK_SIZE;
+	    break;
 
-		case AXP_BCACHE_4MB:
-			bCacheArraySize = AXP_21264_4MB / AXP_BCACHE_BLOCK_SIZE;
-			break;
+	case AXP_BCACHE_4MB:
+	    bCacheArraySize = AXP_21264_4MB / AXP_BCACHE_BLOCK_SIZE;
+	    break;
 
-		case AXP_BCACHE_8MB:
-			bCacheArraySize = AXP_21264_8MB / AXP_BCACHE_BLOCK_SIZE;
-			break;
+	case AXP_BCACHE_8MB:
+	    bCacheArraySize = AXP_21264_8MB / AXP_BCACHE_BLOCK_SIZE;
+	    break;
 
-		case AXP_BCACHE_16MB:
-			bCacheArraySize = AXP_21264_16MB / AXP_BCACHE_BLOCK_SIZE;
-			break;
-	}
+	case AXP_BCACHE_16MB:
+	    bCacheArraySize = AXP_21264_16MB / AXP_BCACHE_BLOCK_SIZE;
+	    break;
+    }
 
-	/*
-	 * NOTE: We only have to mark the array entry invalid in the Bcache Tag
-	 * array.  What is in the Bcache Block array is only relevant when the Tag
-	 * array indicates that it is valid.  When the valid flag is set, the data
-	 * was just written to the block array.
-	 */
-	for (ii = 0; ii < bCacheArraySize; ii++)
-		 AXP_21264_Bcache_Evict(cpu, cpu->bTag[ii].pa);
+    /*
+     * NOTE: We only have to mark the array entry invalid in the Bcache Tag
+     * array.  What is in the Bcache Block array is only relevant when the Tag
+     * array indicates that it is valid.  When the valid flag is set, the data
+     * was just written to the block array.
+     */
+    for (ii = 0; ii < bCacheArraySize; ii++)
+	AXP_21264_Bcache_Evict(cpu, cpu->bTag[ii].pa);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -163,15 +163,15 @@ void AXP_21264_Bcache_Flush(AXP_21264_CPU *cpu)
  */
 bool AXP_21264_Bcache_Valid(AXP_21264_CPU *cpu, u64 pa)
 {
-	int		index = AXP_BCACHE_INDEX(cpu, pa);
+    int index = AXP_BCACHE_INDEX(cpu, pa);
 
-	/*
-	 * If the entry at the index, based on the physical address, is valid and
-	 * the tag associated with that entry matches the tag out of the physical
-	 * address, then we have a valid entry.  Otherwise, we do not.
-	 */
-	return((cpu->bTag[index].valid == true) &&
-		   (cpu->bTag[index].tag == AXP_BCACHE_TAG(cpu, pa)));
+    /*
+     * If the entry at the index, based on the physical address, is valid and
+     * the tag associated with that entry matches the tag out of the physical
+     * address, then we have a valid entry.  Otherwise, we do not.
+     */
+    return ((cpu->bTag[index].valid == true)
+	&& (cpu->bTag[index].tag == AXP_BCACHE_TAG(cpu, pa)));
 }
 
 /*
@@ -200,28 +200,28 @@ bool AXP_21264_Bcache_Valid(AXP_21264_CPU *cpu, u64 pa)
  */
 u32 AXP_21264_Bcache_Status(AXP_21264_CPU *cpu, u64 pa)
 {
-	u8		retVal = AXP_21264_CACHE_MISS;
-	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+    u8 retVal = AXP_21264_CACHE_MISS;
+    bool valid = AXP_21264_Bcache_Valid(cpu, pa);
+
+    /*
+     * If there is no valid record, then this is a MISS.  Nothing else we need
+     * to do.
+     */
+    if (valid == true)
+    {
+	u32 index = AXP_BCACHE_INDEX(cpu, pa);
 
 	/*
-	 * If there is no valid record, then this is a MISS.  Nothing else we need
-	 * to do.
+	 * Set the return value based on the fact that we hit in the Bcache and
+	 * the status bits associated with that entry.
 	 */
-	if (valid == true)
-	{
-		u32 index = AXP_BCACHE_INDEX(cpu, pa);
-
-		/*
-		 * Set the return value based on the fact that we hit in the Bcache and
-		 * the status bits associated with that entry.
-		 */
-		retVal = AXP_21264_CACHE_HIT;
-		if (cpu->bTag[index].dirty == true)
-			retVal |= AXP_21264_CACHE_DIRTY;
-		if (cpu->bTag[index].shared == true)
-			retVal |= AXP_21264_CACHE_SHARED;
-	}
-	return(retVal);
+	retVal = AXP_21264_CACHE_HIT;
+	if (cpu->bTag[index].dirty == true)
+	    retVal |= AXP_21264_CACHE_DIRTY;
+	if (cpu->bTag[index].shared == true)
+	    retVal |= AXP_21264_CACHE_SHARED;
+    }
+    return (retVal);
 }
 
 /*
@@ -245,43 +245,41 @@ u32 AXP_21264_Bcache_Status(AXP_21264_CPU *cpu, u64 pa)
  *	true:	The physical address is in the Bcache.
  */
 bool AXP_21264_Bcache_Read(
-				AXP_21264_CPU *cpu,
-				u64 pa,
-				u8 *data,
-				bool *dirty,
-				bool *shared)
+    AXP_21264_CPU *cpu,
+    u64 pa,
+    u8 *data,
+    bool *dirty,
+    bool *shared)
 {
-	bool	retVal = AXP_21264_Bcache_Valid(cpu, pa);
+    bool retVal = AXP_21264_Bcache_Valid(cpu, pa);
+
+    /*
+     * If the physical address is in the Bcache, then we can copy the data to
+     * the caller's buffer.
+     */
+    if (retVal == true)
+    {
+	u32 index = AXP_BCACHE_INDEX(cpu, pa);
 
 	/*
-	 * If the physical address is in the Bcache, then we can copy the data to
-	 * the caller's buffer.
+	 * Copy the data.
 	 */
-	if (retVal == true)
-	{
-		u32 index = AXP_BCACHE_INDEX(cpu, pa);
-
-		/*
-		 * Copy the data.
-		 */
-		memcpy(
-			data,
-			cpu->bCache[index],
-			AXP_BCACHE_BLOCK_SIZE);
-
-		/*
-		 * If requested, return the dirty and shared bits.
-		 */
-		if (dirty != NULL)
-			*dirty = cpu->bTag[index].dirty;
-		if (shared != NULL)
-			*shared = cpu->bTag[index].shared;
-	}
+	memcpy(data, cpu->bCache[index],
+	AXP_BCACHE_BLOCK_SIZE);
 
 	/*
-	 * Return back to the caller.
+	 * If requested, return the dirty and shared bits.
 	 */
-	return(retVal);
+	if (dirty != NULL)
+	    *dirty = cpu->bTag[index].dirty;
+	if (shared != NULL)
+	    *shared = cpu->bTag[index].shared;
+    }
+
+    /*
+     * Return back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -305,41 +303,38 @@ bool AXP_21264_Bcache_Read(
  * Return Values:
  *	None.
  */
-void AXP_21264_Bcache_Write(
-				AXP_21264_CPU *cpu,
-				u64 pa,
-				u8 *data)
+void AXP_21264_Bcache_Write(AXP_21264_CPU *cpu, u64 pa, u8 *data)
 {
-	int		index = AXP_BCACHE_INDEX(cpu, pa);
-	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+    int index = AXP_BCACHE_INDEX(cpu, pa);
+    bool valid = AXP_21264_Bcache_Valid(cpu, pa);
 
-	/*
-	 * Before we go to far, see if we need to evict the current buffer.
-	 */
-	if ((valid == false) && (cpu->bTag[index].valid == true))
-		AXP_21264_Bcache_Evict(cpu, pa);
+    /*
+     * Before we go to far, see if we need to evict the current buffer.
+     */
+    if ((valid == false) && (cpu->bTag[index].valid == true))
+	AXP_21264_Bcache_Evict(cpu, pa);
 
-	/*
-	 * Now copy the buffer into the Bcache, then update the associated tag
-	 * with the tag value and setting the valid bit.
-	 */
-	memcpy(cpu->bCache[index], data, AXP_BCACHE_BLOCK_SIZE);
-	cpu->bTag[index].tag = AXP_BCACHE_TAG(cpu, pa);
-	cpu->bTag[index].pa = pa;
-	cpu->bTag[index].valid = true;
+    /*
+     * Now copy the buffer into the Bcache, then update the associated tag
+     * with the tag value and setting the valid bit.
+     */
+    memcpy(cpu->bCache[index], data, AXP_BCACHE_BLOCK_SIZE);
+    cpu->bTag[index].tag = AXP_BCACHE_TAG(cpu, pa);
+    cpu->bTag[index].pa = pa;
+    cpu->bTag[index].valid = true;
 
-	/*
-	 * If the buffer was already valid, then we need to indicate that this
-	 * Bcache block is dirty.  This way, when it is evicted, it will get
-	 * written out to memory.
-	 */
-	if (valid == true)
-		cpu->bTag[index].dirty = true;
+    /*
+     * If the buffer was already valid, then we need to indicate that this
+     * Bcache block is dirty.  This way, when it is evicted, it will get
+     * written out to memory.
+     */
+    if (valid == true)
+	cpu->bTag[index].dirty = true;
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -358,24 +353,22 @@ void AXP_21264_Bcache_Write(
  * Return Values:
  *	None.
  */
-void AXP_21264_Bcache_SetShared(
-				AXP_21264_CPU *cpu,
-				u64 pa)
+void AXP_21264_Bcache_SetShared(AXP_21264_CPU *cpu, u64 pa)
 {
-	int		index = AXP_BCACHE_INDEX(cpu, pa);
-	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+    int index = AXP_BCACHE_INDEX(cpu, pa);
+    bool valid = AXP_21264_Bcache_Valid(cpu, pa);
 
-	/*
-	 * If the Bcache block is valid, then indicate that it is shared with
-	 * another agent.
-	 */
-	if (valid == true)
-		cpu->bTag[index].shared = true;
+    /*
+     * If the Bcache block is valid, then indicate that it is shared with
+     * another agent.
+     */
+    if (valid == true)
+	cpu->bTag[index].shared = true;
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -394,24 +387,22 @@ void AXP_21264_Bcache_SetShared(
  * Return Values:
  *	None.
  */
-void AXP_21264_Bcache_ClearShared(
-				AXP_21264_CPU *cpu,
-				u64 pa)
+void AXP_21264_Bcache_ClearShared(AXP_21264_CPU *cpu, u64 pa)
 {
-	int		index = AXP_BCACHE_INDEX(cpu, pa);
-	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+    int index = AXP_BCACHE_INDEX(cpu, pa);
+    bool valid = AXP_21264_Bcache_Valid(cpu, pa);
 
-	/*
-	 * If the Bcache block is valid, then indicate that it is shared with
-	 * another agent.
-	 */
-	if (valid == true)
-		cpu->bTag[index].shared = false;
+    /*
+     * If the Bcache block is valid, then indicate that it is shared with
+     * another agent.
+     */
+    if (valid == true)
+	cpu->bTag[index].shared = false;
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -430,24 +421,22 @@ void AXP_21264_Bcache_ClearShared(
  * Return Values:
  *	None.
  */
-void AXP_21264_Bcache_SetDirty(
-				AXP_21264_CPU *cpu,
-				u64 pa)
+void AXP_21264_Bcache_SetDirty(AXP_21264_CPU *cpu, u64 pa)
 {
-	int		index = AXP_BCACHE_INDEX(cpu, pa);
-	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+    int index = AXP_BCACHE_INDEX(cpu, pa);
+    bool valid = AXP_21264_Bcache_Valid(cpu, pa);
 
-	/*
-	 * If the Bcache block is valid, then indicate that it is shared with
-	 * another agent.
-	 */
-	if (valid == true)
-		cpu->bTag[index].dirty = true;
+    /*
+     * If the Bcache block is valid, then indicate that it is shared with
+     * another agent.
+     */
+    if (valid == true)
+	cpu->bTag[index].dirty = true;
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -466,22 +455,20 @@ void AXP_21264_Bcache_SetDirty(
  * Return Values:
  *	None.
  */
-void AXP_21264_Bcache_ClearDirty(
-				AXP_21264_CPU *cpu,
-				u64 pa)
+void AXP_21264_Bcache_ClearDirty(AXP_21264_CPU *cpu, u64 pa)
 {
-	int		index = AXP_BCACHE_INDEX(cpu, pa);
-	bool	valid = AXP_21264_Bcache_Valid(cpu, pa);
+    int index = AXP_BCACHE_INDEX(cpu, pa);
+    bool valid = AXP_21264_Bcache_Valid(cpu, pa);
 
-	/*
-	 * If the Bcache block is valid, then indicate that it is shared with
-	 * another agent.
-	 */
-	if (valid == true)
-		cpu->bTag[index].dirty = false;
+    /*
+     * If the Bcache block is valid, then indicate that it is shared with
+     * another agent.
+     */
+    if (valid == true)
+	cpu->bTag[index].dirty = false;
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
