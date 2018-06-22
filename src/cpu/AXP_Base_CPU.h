@@ -20,7 +20,7 @@
  *	Digital Alpha AXP emulation software that are common to all Alpha AXP
  *	Processors.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		10-May-2017	Jonathan D. Belanger
  *	Initially written.
@@ -48,11 +48,11 @@
  */
 typedef union
 {
-	u8		ub;
-	u16		uw;
-	u32		ul;
-	i64		sq;
-	u64		uq;
+    u8 ub;
+    u16 uw;
+    u32 ul;
+    i64 sq;
+    u64 uq;
 } AXP_INT_REGISTER;
 
 /*
@@ -62,8 +62,8 @@ typedef union
  */
 typedef union
 {
-	i8		sb;
-	u8		ub;
+    i8 sb;
+    u8 ub;
 } AXP_B_MEMORY;
 
 /*
@@ -71,8 +71,8 @@ typedef union
  */
 typedef union
 {
-	i16		sw;
-	u16		uw;
+    i16 sw;
+    u16 uw;
 } AXP_W_MEMORY;
 
 /*
@@ -80,8 +80,8 @@ typedef union
  */
 typedef union
 {
-	i32		sl;
-	u32		ul;
+    i32 sl;
+    u32 ul;
 } AXP_L_MEMORY;
 
 /*
@@ -89,8 +89,8 @@ typedef union
  */
 typedef union
 {
-	i64		sq;
-	u64		uq;
+    i64 sq;
+    u64 uq;
 } AXP_Q_MEMORY;
 
 /*
@@ -100,28 +100,28 @@ typedef union
  */
 typedef struct
 {
-	u64		zero : 29;
-	u64		fractionLow : 16;
-	u64		fractionHigh : 7;
-	u64		exponent : 11;
-	u64		sign : 1;
+    u64 zero :29;
+    u64 fractionLow :16;
+    u64 fractionHigh :7;
+    u64 exponent :11;
+    u64 sign :1;
 } AXP_F_REGISTER_CVT;
 
 typedef struct
 {
-	u64		zero : 29;
-	u64		fraction : 23;
-	u64		exponent : 11;
-	u64		sign : 1;
+    u64 zero :29;
+    u64 fraction :23;
+    u64 exponent :11;
+    u64 sign :1;
 } AXP_FPR32_REGISTER;
 
 typedef struct
 {
-	u64		zero : 29;
-	u64		fraction : 22;
-	u64		quiet : 1;
-	u64		exponent : 11;
-	u64		sign : 1;
+    u64 zero :29;
+    u64 fraction :22;
+    u64 quiet :1;
+    u64 exponent :11;
+    u64 sign :1;
 } AXP_FPR32_QNAN_REGISTER;
 
 /*
@@ -129,27 +129,27 @@ typedef struct
  */
 typedef struct
 {
-	u64		fractionLow : 16;
-	u64		fractionMidLow : 16;
-	u64		fractionMidHigh : 16;
-	u64		fractionHigh : 4;
-	u64		exponent : 11;
-	u64		sign : 1;
+    u64 fractionLow :16;
+    u64 fractionMidLow :16;
+    u64 fractionMidHigh :16;
+    u64 fractionHigh :4;
+    u64 exponent :11;
+    u64 sign :1;
 } AXP_G_REGISTER_CVT;
 
 typedef struct
 {
-	u64		fraction : 52;
-	u64		exponent : 11;
-	u64		sign : 1;
+    u64 fraction :52;
+    u64 exponent :11;
+    u64 sign :1;
 } AXP_FPR_REGISTER;
 
 typedef struct
 {
-	u64		fraction : 51;
-	u64		quiet : 1;
-	u64		exponent : 11;
-	u64		sign : 1;
+    u64 fraction :51;
+    u64 quiet :1;
+    u64 exponent :11;
+    u64 sign :1;
 } AXP_FPR_QNAN_REGISTER;
 
 /*
@@ -157,19 +157,19 @@ typedef struct
  */
 typedef struct
 {
-	u64		fractionLow : 16;
-	u64		fractionMidLow : 16;
-	u64		fractionMidHigh : 16;
-	u64		fractionHigh : 7;
-	u64		exponent : 8;
-	u64		sign : 1;
+    u64 fractionLow :16;
+    u64 fractionMidLow :16;
+    u64 fractionMidHigh :16;
+    u64 fractionHigh :7;
+    u64 exponent :8;
+    u64 sign :1;
 } AXP_D_REGISTER_CVT;
 
 typedef struct
 {
-	u64		fraction : 55;
-	u64		exponent : 8;
-	u64		sign : 1;
+    u64 fraction :55;
+    u64 exponent :8;
+    u64 sign :1;
 } AXP_FDR_REGISTER;
 
 /*
@@ -177,10 +177,10 @@ typedef struct
  */
 typedef struct
 {
-	u64		zero : 29;
-	u64		fraction : 23;
-	u64		exponent : 11;
-	u64		sign : 1;
+    u64 zero :29;
+    u64 fraction :23;
+    u64 exponent :11;
+    u64 sign :1;
 } AXP_S_REGISTER_CVT;
 
 /*
@@ -190,10 +190,10 @@ typedef struct
  */
 typedef struct
 {
-	u64		fractionLow;
-	u64		fractionHigh : 48;
-	u64		exponent : 15;
-	u64		sign : 1;
+    u64 fractionLow;
+    u64 fractionHigh :48;
+    u64 exponent :15;
+    u64 sign :1;
 } AXP_X_REGISTER;
 
 /*
@@ -201,11 +201,11 @@ typedef struct
  */
 typedef struct
 {
-	u64		zero_1 : 29;
-	u64		integerLow : 30;
-	u64		zero_2 : 3;
-	u64		integerHigh : 1;
-	u64		sign : 1;
+    u64 zero_1 :29;
+    u64 integerLow :30;
+    u64 zero_2 :3;
+    u64 integerHigh :1;
+    u64 sign :1;
 } AXP_L_REGISTER;
 
 /*
@@ -213,30 +213,30 @@ typedef struct
  */
 typedef struct
 {
-	u64		integer : 63;
-	u64		sign : 1;
+    u64 integer :63;
+    u64 sign :1;
 } AXP_Q_REGISTER;
 
 typedef struct
 {
-	u64		integerLow : 62;
-	u64		integerHigh : 1;
-	u64		sign : 1;
+    u64 integerLow :62;
+    u64 integerHigh :1;
+    u64 sign :1;
 } AXP_Q_REGISTER_CVT;
 
 typedef struct
 {
-	u64		integerLow : 32;
-	u64		integerHigh : 31;
-	u64		sign : 1;
+    u64 integerLow :32;
+    u64 integerHigh :31;
+    u64 sign :1;
 } AXP_Q_REGISTER_V;
 
 typedef struct
 {
-	u64		integerLowLow : 31;
-	u64		integerLowHigh : 1;
-	u64		integerHigh : 31;
-	u64		sign : 1;
+    u64 integerLowLow :31;
+    u64 integerLowHigh :1;
+    u64 integerHigh :31;
+    u64 sign :1;
 } AXP_Q_REGISTER_V_CVT;
 
 /*
@@ -278,28 +278,28 @@ typedef struct
  */
 typedef union
 {
-	u64						uq;
-	i64						sq;
-	AXP_F_REGISTER_CVT		fCvt;
-	AXP_G_REGISTER_CVT		gCvt;
-	AXP_FPR32_REGISTER		fpr32;
-	AXP_FPR32_QNAN_REGISTER	fprQ32;
-	AXP_FPR_REGISTER		fpr;
-	AXP_FPR_QNAN_REGISTER	fprQ;
-	AXP_D_REGISTER_CVT		dCvt;
-	AXP_FDR_REGISTER		fdr;
-	AXP_S_REGISTER_CVT		sCvt;
-	AXP_L_REGISTER			l;
-	AXP_Q_REGISTER			q;
-	AXP_Q_REGISTER_CVT		qCvt;
-	AXP_Q_REGISTER_V		qV;
-	AXP_Q_REGISTER_V_CVT 	qVCvt;
+    u64 uq;
+    i64 sq;
+    AXP_F_REGISTER_CVT fCvt;
+    AXP_G_REGISTER_CVT gCvt;
+    AXP_FPR32_REGISTER fpr32;
+    AXP_FPR32_QNAN_REGISTER fprQ32;
+    AXP_FPR_REGISTER fpr;
+    AXP_FPR_QNAN_REGISTER fprQ;
+    AXP_D_REGISTER_CVT dCvt;
+    AXP_FDR_REGISTER fdr;
+    AXP_S_REGISTER_CVT sCvt;
+    AXP_L_REGISTER l;
+    AXP_Q_REGISTER q;
+    AXP_Q_REGISTER_CVT qCvt;
+    AXP_Q_REGISTER_V qV;
+    AXP_Q_REGISTER_V_CVT qVCvt;
 } AXP_FP_REGISTER;
 
 typedef union
 {
-	AXP_INT_REGISTER	r;
-	AXP_FP_REGISTER		fp;
+    AXP_INT_REGISTER r;
+    AXP_FP_REGISTER fp;
 } AXP_REGISTER;
 
 /*
@@ -315,10 +315,10 @@ typedef union
  */
 typedef struct
 {
-	u32		fractionHigh : 7;
-	u32		exponent : 8;
-	u32		sign : 1;
-	u32		fractionLow : 16;
+    u32 fractionHigh :7;
+    u32 exponent :8;
+    u32 sign :1;
+    u32 fractionLow :16;
 } AXP_F_MEMORY;
 
 /*
@@ -326,12 +326,12 @@ typedef struct
  */
 typedef struct
 {
-	u64		fractionHigh : 4;
-	u64		exponent : 11;
-	u64		sign : 1;
-	u64		fractionMidHigh : 16;
-	u64		fractionMidLow : 16;
-	u64		fractionLow : 16;
+    u64 fractionHigh :4;
+    u64 exponent :11;
+    u64 sign :1;
+    u64 fractionMidHigh :16;
+    u64 fractionMidLow :16;
+    u64 fractionLow :16;
 } AXP_G_MEMORY;
 
 /*
@@ -339,12 +339,12 @@ typedef struct
  */
 typedef struct
 {
-	u64		fractionHigh : 7;
-	u64		exponent : 8;
-	u64		sign : 1;
-	u64		fractionMidHigh : 16;
-	u64		fractionMidLow : 16;
-	u64		fractionLow : 16;
+    u64 fractionHigh :7;
+    u64 exponent :8;
+    u64 sign :1;
+    u64 fractionMidHigh :16;
+    u64 fractionMidLow :16;
+    u64 fractionLow :16;
 } AXP_D_MEMORY;
 
 /*
@@ -352,9 +352,9 @@ typedef struct
  */
 typedef struct
 {
-	u32		fraction : 23;
-	u32		exponent : 8;
-	u32		sign : 1;
+    u32 fraction :23;
+    u32 exponent :8;
+    u32 sign :1;
 } AXP_S_MEMORY;
 
 /*
@@ -362,9 +362,9 @@ typedef struct
  */
 typedef struct
 {
-	u64		fraction : 52;
-	u64		exponent : 11;
-	u64		sign : 1;
+    u64 fraction :52;
+    u64 exponent :11;
+    u64 sign :1;
 } AXP_T_MEMORY;
 
 /*
@@ -372,10 +372,10 @@ typedef struct
  */
 typedef struct
 {
-	u128	zero : 57;
-	u128	fraction : 55;
-	u128	exponent : 15;
-	u128	sign : 1;
+    u128 zero :57;
+    u128 fraction :55;
+    u128 exponent :15;
+    u128 sign :1;
 } AXP_X_MEMORY;
 
 /*
@@ -383,9 +383,9 @@ typedef struct
  */
 typedef struct
 {
-	u64 pal : 1;
-	u64 res : 1;
-	u64 pc  : 62;
+    u64 pal :1;
+    u64 res :1;
+    u64 pc :62;
 } AXP_PC;
 
 /*
@@ -393,23 +393,23 @@ typedef struct
  */
 typedef struct
 {
-	u64	v : 1;			/* Valid Bit */
-	u64	_for : 1;		/* Fault on Read */
-	u64	fow : 1;		/* Fault on Write */
-	u64	foe : 1;		/* Fault on Execute */
-	u64	_asm : 1;		/* Address Space Match */
-	u64	gh : 2;			/* Granularity Hint */
-	u64	nomb : 1;		/* Translation Buffer Miss Memory Barrier */
-	u64	kre : 1;		/* Kernel Read Enabled */
-	u64	ere_ure : 1;	/* Executive (OpenVMS)/User (UNIX) Read Enabled */
-	u64	sre : 1;		/* Supervisor Read Enabled */
-	u64	ure : 1;		/* User Read Enabled */
-	u64	kwe : 1;		/* Kernel Write Enabled */
-	u64	ewe_uwe : 1;	/* Executive (OpenVMS)/User (UNIX) Write Enabled */
-	u64	swe : 1;		/* Supervisor Write Enabled */
-	u64	uwe : 1;		/* User Write Enabled */
-	u64	res : 16;
-	u64	prf : 32;		/* Page Frame Number */
+    u64 v :1; /* Valid Bit */
+    u64 _for :1; /* Fault on Read */
+    u64 fow :1; /* Fault on Write */
+    u64 foe :1; /* Fault on Execute */
+    u64 _asm :1; /* Address Space Match */
+    u64 gh :2; /* Granularity Hint */
+    u64 nomb :1; /* Translation Buffer Miss Memory Barrier */
+    u64 kre :1; /* Kernel Read Enabled */
+    u64 ere_ure :1; /* Executive (OpenVMS)/User (UNIX) Read Enabled */
+    u64 sre :1; /* Supervisor Read Enabled */
+    u64 ure :1; /* User Read Enabled */
+    u64 kwe :1; /* Kernel Write Enabled */
+    u64 ewe_uwe :1; /* Executive (OpenVMS)/User (UNIX) Write Enabled */
+    u64 swe :1; /* Supervisor Write Enabled */
+    u64 uwe :1; /* User Write Enabled */
+    u64 res :16;
+    u64 prf :32; /* Page Frame Number */
 } AXP_PTE;
 
 /*
@@ -453,148 +453,148 @@ typedef u64 AXP_BASE_ASN;
 
 typedef struct
 {
-	u64	ken : 1;
-	u64	een : 1;
-	u64 sen : 1;
-	u64 uen : 1;
-	u64 res : 60;
+    u64 ken :1;
+    u64 een :1;
+    u64 sen :1;
+    u64 uen :1;
+    u64 res :60;
 } AXP_BASE_ASTEN;
 
 typedef struct
 {
-	u64	kcl : 1;
-	u64	ecl : 1;
-	u64 scl : 1;
-	u64 ucl : 1;
-	u64	kon : 1;
-	u64	eon : 1;
-	u64 son : 1;
-	u64 uon : 1;
-	u64 res : 56;
+    u64 kcl :1;
+    u64 ecl :1;
+    u64 scl :1;
+    u64 ucl :1;
+    u64 kon :1;
+    u64 eon :1;
+    u64 son :1;
+    u64 uon :1;
+    u64 res :56;
 } AXP_BASE_ASTEN_R16;
 
 typedef struct
 {
-	u64	ken : 1;
-	u64	een : 1;
-	u64 sen : 1;
-	u64 uen : 1;
-	u64 res : 60;
+    u64 ken :1;
+    u64 een :1;
+    u64 sen :1;
+    u64 uen :1;
+    u64 res :60;
 } AXP_BASE_ASTSR;
 
 typedef struct
 {
-	u64	kcl : 1;
-	u64	ecl : 1;
-	u64 scl : 1;
-	u64 ucl : 1;
-	u64	kon : 1;
-	u64	eon : 1;
-	u64 son : 1;
-	u64 uon : 1;
-	u64 res : 56;
+    u64 kcl :1;
+    u64 ecl :1;
+    u64 scl :1;
+    u64 ucl :1;
+    u64 kon :1;
+    u64 eon :1;
+    u64 son :1;
+    u64 uon :1;
+    u64 res :56;
 } AXP_BASE_ASTSR_R16;
 
 typedef struct
 {
-	u64	dat : 2;
-	u64 res : 62;
+    u64 dat :2;
+    u64 res :62;
 } AXP_BASE_DATFX;
 
-typedef u64 *AXP_BASE_ESP;	/* HWPCB+8 (OpenVMS) n/a (UNIX) */
+typedef u64 *AXP_BASE_ESP; /* HWPCB+8 (OpenVMS) n/a (UNIX) */
 
 typedef struct
 {
-	u64	fen : 1;
-	u64 res : 63;
+    u64 fen :1;
+    u64 res :63;
 } AXP_BASE_FEN;
 
 typedef u64 AXP_BASE_IPIR;
 
 typedef struct
 {
-	u64	ipl : 4;
-	u64 res : 60;
+    u64 ipl :4;
+    u64 res :60;
 } AXP_BASE_IPL;
 
-typedef u64 *AXP_BASE_KSP;	/* HWPCB+0 (OpenVMS) PCB+0 (UNIX) */
+typedef u64 *AXP_BASE_KSP; /* HWPCB+0 (OpenVMS) PCB+0 (UNIX) */
 
 typedef struct
 {
-	u64	mck : 1;
-	u64	sce : 1;
-	u64	pce : 1;
-	u64 dpc : 1;
-	u64 dsc : 1;
-	u64 res : 27;
-	u64 imp : 32;
+    u64 mck :1;
+    u64 sce :1;
+    u64 pce :1;
+    u64 dpc :1;
+    u64 dsc :1;
+    u64 res :27;
+    u64 imp :32;
 } AXP_BASE_MCES;
 
 typedef struct
 {
-	u64 pa : 48;
-	u64 res : 16;
+    u64 pa :48;
+    u64 res :16;
 } AXP_BASE_PCBB;
 
 typedef u64 AXP_BASE_PRBR;
 
 typedef struct
 {
-	u32 pfn;
-	u32 res;
+    u32 pfn;
+    u32 res;
 } AXP_BASE_PTBR;
 
 typedef struct
 {
-	u32 pfn;
-	u32 res;
+    u32 pfn;
+    u32 res;
 } AXP_BASE_SCBB;
 
 typedef struct
 {
-	u64	lvl : 4;
-	u64 res : 60;
+    u64 lvl :4;
+    u64 res :60;
 } AXP_BASE_SIRR;
 
 typedef struct
 {
-	u64 res_1 : 1;
-	u64 ir1 : 1;
-	u64 ir2 : 1;
-	u64 ir3 : 1;
-	u64 ir4 : 1;
-	u64 ir5 : 1;
-	u64 ir6 : 1;
-	u64 ir7 : 1;
-	u64 ir8 : 1;
-	u64 ir9 : 1;
-	u64 ira : 1;
-	u64 irb : 1;
-	u64 irc : 1;
-	u64 ird : 1;
-	u64 ire : 1;
-	u64 irf : 1;
-	u64 res_2 : 48;
+    u64 res_1 :1;
+    u64 ir1 :1;
+    u64 ir2 :1;
+    u64 ir3 :1;
+    u64 ir4 :1;
+    u64 ir5 :1;
+    u64 ir6 :1;
+    u64 ir7 :1;
+    u64 ir8 :1;
+    u64 ir9 :1;
+    u64 ira :1;
+    u64 irb :1;
+    u64 irc :1;
+    u64 ird :1;
+    u64 ire :1;
+    u64 irf :1;
+    u64 res_2 :48;
 } AXP_BASE_SISR;
 
-typedef u64 *AXP_BASE_SSP;	/* HWPCB+16 (OpenVMS) n/a (UNIX) */
+typedef u64 *AXP_BASE_SSP; /* HWPCB+16 (OpenVMS) n/a (UNIX) */
 
 typedef struct
 {
-	u32 pfn;
-	u32 res;
+    u32 pfn;
+    u32 res;
 } AXP_BASE_SYSPTBR;
 
 typedef struct
 {
-	u64 prs : 1;
-	u64 res_1 : 62;
-	u64 imp : 1;
+    u64 prs :1;
+    u64 res_1 :62;
+    u64 imp :1;
 } AXP_BASE_TBCHK;
 
 typedef u64 AXP_BASE_TBCHK_R16;
 
-typedef u64 *AXP_BASE_USP;	/* HWPCB+24 (OpenVMS) PCB+8 (UNIX) */
+typedef u64 *AXP_BASE_USP; /* HWPCB+24 (OpenVMS) PCB+8 (UNIX) */
 
 typedef u64 AXP_BASE_VIRBND;
 
@@ -608,17 +608,17 @@ typedef u64 AXP_BASE_WHAMI;
  * the specific CPU (being emulated in our case).  This is initialized when
  * when the CPU is first started.
  */
- typedef struct
- {
-	 u64 bwx : 1;			/* Support for byte/word extensions				*/
-	 u64 fix : 1;			/* Support for SQRT and FP convert extensions	*/
-	 u64 cix : 1;			/* Support for count extensions					*/
-	 u64 mvi : 1;			/* Support for multimedia extensions			*/
-	 u64 patr : 1;			/* Support for precise arithmetic trap reporting*/
-	 u64 res_1 : 2;			/* Not available								*/
-	 u64 pwmi : 1;			/* Support for Prefetch with Modify Intent		*/
-	 u64 res_2 : 56;		/* Not used										*/
- } AXP_BASE_AMASK;
+typedef struct
+{
+    u64 bwx :1; /* Support for byte/word extensions				*/
+    u64 fix :1; /* Support for SQRT and FP convert extensions	*/
+    u64 cix :1; /* Support for count extensions					*/
+    u64 mvi :1; /* Support for multimedia extensions			*/
+    u64 patr :1; /* Support for precise arithmetic trap reporting*/
+    u64 res_1 :2; /* Not available								*/
+    u64 pwmi :1; /* Support for Prefetch with Modify Intent		*/
+    u64 res_2 :56; /* Not used										*/
+} AXP_BASE_AMASK;
 
 /*
  * The following definitions are used to convert addresses from to their
@@ -726,42 +726,42 @@ typedef u64 AXP_BASE_WHAMI;
  */
 typedef enum
 {
-	NoException,
-	FloatingDisabledFault,
-	AccessControlViolation,
-	TranslationNotValid,
-	FaultOnRead,
-	FaultOnWrite,
-	FaultOnExecute,
-	ArithmeticTraps,
-	BreakpointTrap,
-	BucgcheckTrap,
-	ChangeModeToKESU,
-	IllegalInstruction,
-	IllegalOperand,
-	DataAlignmentTrap,
-	AST,
-	IntervalClock,
-	InterprocessorInterrupt,
-	SoftwareInterrupts,
-	PerformanceMonitor,
-	PassiveRelease,
-	Powerfail,
-	IODevice,
-	ProcessorCorrectable,
-	SystemCorrectable,
-	System,
-	Processor
+    NoException,
+    FloatingDisabledFault,
+    AccessControlViolation,
+    TranslationNotValid,
+    FaultOnRead,
+    FaultOnWrite,
+    FaultOnExecute,
+    ArithmeticTraps,
+    BreakpointTrap,
+    BucgcheckTrap,
+    ChangeModeToKESU,
+    IllegalInstruction,
+    IllegalOperand,
+    DataAlignmentTrap,
+    AST,
+    IntervalClock,
+    InterprocessorInterrupt,
+    SoftwareInterrupts,
+    PerformanceMonitor,
+    PassiveRelease,
+    Powerfail,
+    IODevice,
+    ProcessorCorrectable,
+    SystemCorrectable,
+    System,
+    Processor
 } AXP_EXCEPTIONS;
 
 typedef struct
 {
-	AXP_EXCEPTIONS	exception;
-	AXP_PC			savedPC;
-	u64				R02;
-	u64				R03;
-	u64				R04;
-	u64				R05;
+    AXP_EXCEPTIONS exception;
+    AXP_PC savedPC;
+    u64 R02;
+    u64 R03;
+    u64 R04;
+    u64 R05;
 } AXP_EXCEPT_INFO;
 
 #endif /* _AXP_BASE_CPU_DEFS_ */

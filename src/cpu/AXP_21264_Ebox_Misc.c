@@ -19,7 +19,7 @@
  *	This source file contains the functions needed to implement the
  *	Miscellaneous instructions of the 21264 Alpha AXP CPU.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		19-Jun-2017	Jonathan D. Belanger
  *	Initially written.
@@ -78,26 +78,26 @@
  */
 AXP_EXCEPTIONS AXP_AMASK(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64	Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
-	u64 *aMask = (u64 *) &cpu->amask;
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 *aMask = (u64 *) &cpu->amask;
 
-	/*
-	 * Return the masked off CPU Features.
-	 */
-	if (cpu->majorType < EV56)
-		instr->destv.r.uq = Rbv;
-	else
-		instr->destv.r.uq = Rbv & ~*aMask;
+    /*
+     * Return the masked off CPU Features.
+     */
+    if (cpu->majorType < EV56)
+	instr->destv.r.uq = Rbv;
+    else
+	instr->destv.r.uq = Rbv & ~*aMask;
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -122,29 +122,29 @@ AXP_EXCEPTIONS AXP_AMASK(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CALL_PAL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_PC	*retPC = (AXP_PC *) &instr->destv.r.uq;
+    AXP_PC *retPC = (AXP_PC *) &instr->destv.r.uq;
 
-	/*
-	 * The destination register was set to the R23 (R39) shadow register or
-	 * R27 (does not have a shadow register).
-	 */
-	*retPC = AXP_21264_GetNextVPC(cpu);
-	AXP_PUSH(*retPC);
+    /*
+     * The destination register was set to the R23 (R39) shadow register or
+     * R27 (does not have a shadow register).
+     */
+    *retPC = AXP_21264_GetNextVPC(cpu);
+    AXP_PUSH(*retPC);
 
-	/*
-	 * CALL_PAL is just like a branch, but it is not predicted.
-	 */
-	instr->branchPC = AXP_21264_GetPALFuncVPC(cpu, instr->function);
+    /*
+     * CALL_PAL is just like a branch, but it is not predicted.
+     */
+    instr->branchPC = AXP_21264_GetPALFuncVPC(cpu, instr->function);
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -170,20 +170,20 @@ AXP_EXCEPTIONS AXP_CALL_PAL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_IMPLVER(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Return the Implementation Version value.
-	 */
-	instr->destv.r.uq = cpu->implVer;
+    /*
+     * Return the Implementation Version value.
+     */
+    instr->destv.r.uq = cpu->implVer;
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -208,17 +208,17 @@ AXP_EXCEPTIONS AXP_IMPLVER(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_ECB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_DcacheEvict(cpu, instr->src1v.r.uq, instr->pc);
+    AXP_DcacheEvict(cpu, instr->src1v.r.uq, instr->pc);
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -244,15 +244,15 @@ AXP_EXCEPTIONS AXP_ECB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_EXCB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * There is nothing we have to do except get retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * There is nothing we have to do except get retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -278,26 +278,26 @@ AXP_EXCEPTIONS AXP_EXCB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_FETCH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * TODO:	We need to implement the prefetch data instruction
-	 *			once the data cache code has been implemented.
-	 *			Not sure if this needs to be handled by the Mbox or
-	 *			Cbox.
-	 * NOTE:	This function fetches an aligned 512-byte block.  Much larger
-	 *			than the usual 64 byte block fetched as the result of the Load
-	 *			and Store instructions.  We need to think this through.  For
-	 *			now, this is implemented as a NO-OP.
-	 */
+    /*
+     * TODO:	We need to implement the prefetch data instruction
+     *			once the data cache code has been implemented.
+     *			Not sure if this needs to be handled by the Mbox or
+     *			Cbox.
+     * NOTE:	This function fetches an aligned 512-byte block.  Much larger
+     *			than the usual 64 byte block fetched as the result of the Load
+     *			and Store instructions.  We need to think this through.  For
+     *			now, this is implemented as a NO-OP.
+     */
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -323,26 +323,26 @@ AXP_EXCEPTIONS AXP_FETCH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_FETCH_M(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * TODO:	We need to implement the prefetch data instruction
-	 *			once the data cache code has been implemented.
-	 *			Not sure if this needs to be handled by the Mbox or
-	 *			Cbox.
-	 * NOTE:	This function fetches an aligned 512-byte block.  Much larger
-	 *			than the usual 64 byte block fetched as the result of the Load
-	 *			and Store instructions.  We need to think this through.  For
-	 *			now, this is implemented as a NO-OP.
-	 */
+    /*
+     * TODO:	We need to implement the prefetch data instruction
+     *			once the data cache code has been implemented.
+     *			Not sure if this needs to be handled by the Mbox or
+     *			Cbox.
+     * NOTE:	This function fetches an aligned 512-byte block.  Much larger
+     *			than the usual 64 byte block fetched as the result of the Load
+     *			and Store instructions.  We need to think this through.  For
+     *			now, this is implemented as a NO-OP.
+     */
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -368,25 +368,25 @@ AXP_EXCEPTIONS AXP_FETCH_M(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_MB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * TODO:	The Cbox needs to be told that an MB is pending.  The Cbox will
-	 *			perform some processing to make sure that instruction execution
-	 *			can begin with the instruction after the MB.  It does this by
-	 *			indicating to the Ibox that the MB instruction can be retired.
-	 *			Since the MB can be executed speculatively, then it is possible
-	 *			to have to abort it, in the case of an exception or
-	 *			mispredicted branch.
-	 */
+    /*
+     * TODO:	The Cbox needs to be told that an MB is pending.  The Cbox will
+     *			perform some processing to make sure that instruction execution
+     *			can begin with the instruction after the MB.  It does this by
+     *			indicating to the Ibox that the MB instruction can be retired.
+     *			Since the MB can be executed speculatively, then it is possible
+     *			to have to abort it, in the case of an exception or
+     *			mispredicted branch.
+     */
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -418,35 +418,35 @@ AXP_EXCEPTIONS AXP_MB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_RPCC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * The definition of this instruction has the following requirement:
-	 *
-	 *	RPCC does not read the Processor Cycle Counter (PCC) any earlier than
-	 *	the generation of a result by the nearest preceding instruction that
-	 *	modifies register Rb. If R31 is used as the Rb operand, the PCC need
-	 *	not wait for any preceding computation.
-	 *
-	 * In this emulator, because we support register renaming, the RPCC
-	 * instruction will not be executed until the instruction modifying the
-	 * register indicated in Rb, then, by definition, the nearest preceding
-	 * instruction that modifies this register has already been retired.  We
-	 * should be good to go.
-	 */
+    /*
+     * The definition of this instruction has the following requirement:
+     *
+     *	RPCC does not read the Processor Cycle Counter (PCC) any earlier than
+     *	the generation of a result by the nearest preceding instruction that
+     *	modifies register Rb. If R31 is used as the Rb operand, the PCC need
+     *	not wait for any preceding computation.
+     *
+     * In this emulator, because we support register renaming, the RPCC
+     * instruction will not be executed until the instruction modifying the
+     * register indicated in Rb, then, by definition, the nearest preceding
+     * instruction that modifies this register has already been retired.  We
+     * should be good to go.
+     */
 
-	/*
-	 * Return the Cycle Counter Counter and Offset values as 1 64-bit value.
-	 */
-	instr->destv.r.uq = *((u64 *) &cpu->cc);
+    /*
+     * Return the Cycle Counter Counter and Offset values as 1 64-bit value.
+     */
+    instr->destv.r.uq = *((u64 *) &cpu->cc);
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -474,17 +474,17 @@ AXP_EXCEPTIONS AXP_RPCC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_TRAPB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * There is nothing we have to do except get retired.
-	 *
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * There is nothing we have to do except get retired.
+     *
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -510,25 +510,25 @@ AXP_EXCEPTIONS AXP_TRAPB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_WH64(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * TODO:	This instruction is used to provide a "hint" that the address
-	 *			specified in Rbv will not be read again, but will be
-	 *			overwritten shortly.  A cache resource/location may be
-	 *			allocated, but the contents of the memory location where this
-	 *			cached address resides, may not be read.  Any error that occurs
-	 *			(access violation, translation not valid, and so forth) will
-	 *			cause this instruction to behave like a NO-OP.
-	 */
+    /*
+     * TODO:	This instruction is used to provide a "hint" that the address
+     *			specified in Rbv will not be read again, but will be
+     *			overwritten shortly.  A cache resource/location may be
+     *			allocated, but the contents of the memory location where this
+     *			cached address resides, may not be read.  Any error that occurs
+     *			(access violation, translation not valid, and so forth) will
+     *			cause this instruction to behave like a NO-OP.
+     */
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -553,50 +553,50 @@ AXP_EXCEPTIONS AXP_WH64(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_WH64EN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
+    AXP_EXCEPTIONS retVal = NoException;
+
+    /*
+     * CPU implementations prior EV6x implement this instruction as a NOOP.
+     * CPU implementations equal to EV6x implement this instruction as a WH64.
+     * CPU implementations after EV6x fully implement this instruction.
+     */
+    if ((cpu->majorType == EV6) || /* 21264 */
+    (cpu->majorType == EV67) || /* 21264 */
+    (cpu->majorType == EV68A) || /* 21264 */
+    (cpu->majorType == EV68CX) || /* 21264 */
+    (cpu->majorType == EV69A)) /* 21264 */
+    {
+	retVal = AXP_WH64(cpu, instr);
+    }
+    else if ((cpu->majorType == EV7) || /* 21364 */
+    (cpu->majorType == EV79)) /* 21364 */
+    {
 
 	/*
-	 * CPU implementations prior EV6x implement this instruction as a NOOP.
-	 * CPU implementations equal to EV6x implement this instruction as a WH64.
-	 * CPU implementations after EV6x fully implement this instruction.
+	 * TODO:	This instruction is used to provide a "hint" that the
+	 * 			address specified in Rbv will not be read again, but will
+	 * 			be overwritten shortly.  A cache resource/location may be
+	 *			allocated, but the contents of the memory location where
+	 *			this cached address resides, may not be read.  Any error
+	 *			that occurs (access violation, translation not valid, and
+	 *			so forth) will cause this instruction to behave like a
+	 *			NOOP.
+	 *
+	 *			The difference between this instruction and WH64 is that
+	 *			this one indicates that eviction policy for the indicated
+	 *			64 byte location is different than the other.
 	 */
-	if ((cpu->majorType == EV6) || 					/* 21264 */
-		(cpu->majorType == EV67) ||					/* 21264 */
-		(cpu->majorType == EV68A) ||				/* 21264 */
-		(cpu->majorType == EV68CX) ||				/* 21264 */
-		(cpu->majorType == EV69A))					/* 21264 */
-	{
-		retVal = AXP_WH64(cpu, instr);
-	}
-	else if ((cpu->majorType == EV7) ||				/* 21364 */
-			 (cpu->majorType == EV79))				/* 21364 */
-	{
-
-		/*
-		 * TODO:	This instruction is used to provide a "hint" that the
-		 * 			address specified in Rbv will not be read again, but will
-		 * 			be overwritten shortly.  A cache resource/location may be
-		 *			allocated, but the contents of the memory location where
-		 *			this cached address resides, may not be read.  Any error
-		 *			that occurs (access violation, translation not valid, and
-		 *			so forth) will cause this instruction to behave like a
-		 *			NOOP.
-		 *
-		 *			The difference between this instruction and WH64 is that
-		 *			this one indicates that eviction policy for the indicated
-		 *			64 byte location is different than the other.
-		 */
-
-		/*
-		 * Indicate that the instruction is ready to be retired.
-		 */
-		instr->state = WaitingRetirement;
-	}
 
 	/*
-	 * Return back to the caller with any exception that may have occurred.
+	 * Indicate that the instruction is ready to be retired.
 	 */
-	return(retVal);
+	instr->state = WaitingRetirement;
+    }
+
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -622,20 +622,20 @@ AXP_EXCEPTIONS AXP_WH64EN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_WMB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * TODO:	Unlike the MB, the WMB needs to be sent to the Mbox.  The Mbox
-	 *			will hold onto the WMB until all prior store instructions
-	 *			become writable.  When this happens, the Mbox will indicate
-	 *			that the WMB can be retired.
-	 */
+    /*
+     * TODO:	Unlike the MB, the WMB needs to be sent to the Mbox.  The Mbox
+     *			will hold onto the WMB until all prior store instructions
+     *			become writable.  When this happens, the Mbox will indicate
+     *			that the WMB can be retired.
+     */
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }

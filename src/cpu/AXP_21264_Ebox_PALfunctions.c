@@ -19,7 +19,7 @@
  *	This source file contains the functions needed to implement the
  *	PAL functionality of the Ebox.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		09-Oct-2017	Jonathan D. Belanger
  *	Initially written.
@@ -54,20 +54,20 @@
  */
 AXP_EXCEPTIONS AXP_HWLD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    va = instr->src1v.r.uq + instr->displacement;
 
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -96,25 +96,20 @@ AXP_EXCEPTIONS AXP_HWLD(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_HWST(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    va = instr->src1v.r.uq + instr->displacement;
 
-	AXP_21264_Mbox_WriteMem(
-		cpu,
-		instr,
-		instr->slot,
-		va,
-		instr->src1v.r.uq);
+    AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, va, instr->src1v.r.uq);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -160,53 +155,54 @@ AXP_EXCEPTIONS AXP_HWST(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_HWRET(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS	retVal = NoException;
-	AXP_PC			pc;
+    AXP_EXCEPTIONS retVal = NoException;
+    AXP_PC pc;
 
-	/*
-	 * Implement the HW_RET instruction.
-	 */
-	switch(instr->type_hint_index)
-	{
-		case AXP_HW_JMP:
-			pc = instr->pc;
-			pc.pc++;
-			instr->branchPC = AXP_21264_DisplaceVPC(
-										cpu,
-										pc,
-										instr->displacement);
-			break;
+    /*
+     * Implement the HW_RET instruction.
+     */
+    switch (instr->type_hint_index)
+    {
+	case AXP_HW_JMP:
+	    pc = instr->pc;
+	    pc.pc++;
+	    instr->branchPC = AXP_21264_DisplaceVPC(
+		cpu,
+		pc,
+		instr->displacement);
+	    break;
 
-		case AXP_HW_JSR:
-			pc = instr->pc;
-			pc.pc++;
-			AXP_PUSH(pc);
-			instr->branchPC = AXP_21264_DisplaceVPC(
-										cpu,
-										pc,
-										instr->displacement);
-			break;
+	case AXP_HW_JSR:
+	    pc = instr->pc;
+	    pc.pc++;
+	    AXP_PUSH(pc);
+	    instr->branchPC = AXP_21264_DisplaceVPC(
+		cpu,
+		pc,
+		instr->displacement);
+	    break;
 
-		case AXP_HW_RET:
-			AXP_POP(pc);
-			instr->branchPC = AXP_21264_MakeVPC(
-										cpu,
-										instr->src2v.r.uq,
-										(instr->src2v.r.uq & AXP_PAL_MODE));
-			break;
+	case AXP_HW_RET:
+	    AXP_POP(pc);
+	    instr->branchPC = AXP_21264_MakeVPC(
+		cpu,
+		instr->src2v.r.uq,
+		(instr->src2v.r.uq & AXP_PAL_MODE));
+	    break;
 
-		case AXP_HW_COROUTINE:
-			pc = instr->pc;
-			pc.pc++;
-			AXP_SWAP(pc);
-			instr->branchPC = AXP_21264_MakeVPC(cpu, *((u64 *) &pc), pc.pal);
-			break;
-	}
+	case AXP_HW_COROUTINE:
+	    pc = instr->pc;
+	    pc.pc++;
+	    AXP_SWAP(pc)
+	    ;
+	    instr->branchPC = AXP_21264_MakeVPC(cpu, *((u64 *) &pc), pc.pal);
+	    break;
+    }
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -234,17 +230,17 @@ AXP_EXCEPTIONS AXP_HWRET(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_HWMFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
+    AXP_EXCEPTIONS retVal = NoException;
 
-	/*
-	 * There is nothing to do here.  Because instructions may be executed out
-	 * of order, the only true view of an IPRs value is at the moment of
-	 * instruction retirement.  This instruction is actually implemented in the
-	 * retirement code in the Ibox.
-	 *
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * There is nothing to do here.  Because instructions may be executed out
+     * of order, the only true view of an IPRs value is at the moment of
+     * instruction retirement.  This instruction is actually implemented in the
+     * retirement code in the Ibox.
+     *
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -272,17 +268,17 @@ AXP_EXCEPTIONS AXP_HWMFPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_HWMTPR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
+    AXP_EXCEPTIONS retVal = NoException;
 
-	/*
-	 * There is nothing to do here.  Because instructions may be executed out
-	 * of order, a value of an IPR should only be stored at the moment of
-	 * instruction retirement.  This instruction is actually implemented in the
-	 * retirement code in the Ibox.
-	 *
-	 * Indicate that the instruction is ready to be retired.
-	 *
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * There is nothing to do here.  Because instructions may be executed out
+     * of order, a value of an IPR should only be stored at the moment of
+     * instruction retirement.  This instruction is actually implemented in the
+     * retirement code in the Ibox.
+     *
+     * Indicate that the instruction is ready to be retired.
+     *
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }

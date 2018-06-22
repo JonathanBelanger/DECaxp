@@ -19,7 +19,7 @@
  *	This source file contains the functions needed to implement the
  *	functionality of the Fbox.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		19-June-2017	Jonathan D. Belanger
  *	Initially written.
@@ -70,116 +70,116 @@
  */
 void AXP_21264_Fbox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 tmp, exp;
-	AXP_F_MEMORY *tmpF = (AXP_F_MEMORY *) &tmp;
-	AXP_G_MEMORY *tmpG = (AXP_G_MEMORY *) &tmp;
-	AXP_S_MEMORY *tmpS = (AXP_S_MEMORY *) &tmp;
+    u64 tmp, exp;
+    AXP_F_MEMORY *tmpF = (AXP_F_MEMORY *) &tmp;
+    AXP_G_MEMORY *tmpG = (AXP_G_MEMORY *) &tmp;
+    AXP_S_MEMORY *tmpS = (AXP_S_MEMORY *) &tmp;
 
-	if (instr->excRegMask == NoException)
+    if (instr->excRegMask == NoException)
+    {
+	switch (instr->opcode)
 	{
-		switch (instr->opcode)
-		{
-			case LDF:
+	    case LDF:
 
-				/*
-				 * The load operation put the value we were supposed to read
-				 * into the destination value location.  Get it out of there so
-				 * that we can convert it from memory format to register
-				 * format.
-				 */
-				tmp = instr->destv.fp.uq;
+		/*
+		 * The load operation put the value we were supposed to read
+		 * into the destination value location.  Get it out of there so
+		 * that we can convert it from memory format to register
+		 * format.
+		 */
+		tmp = instr->destv.fp.uq;
 
-				/*
-				 * Extract the exponent, then expand it from 8-bits to 11-bits.
-				 */
-				exp = tmpF->exponent;
-				if (exp != 0)
-					exp += (AXP_G_BIAS - AXP_F_BIAS);
+		/*
+		 * Extract the exponent, then expand it from 8-bits to 11-bits.
+		 */
+		exp = tmpF->exponent;
+		if (exp != 0)
+		    exp += (AXP_G_BIAS - AXP_F_BIAS);
 
-				/*
-				 * Now put everything back together, but this time in register
-				 * format and 64-bits.
-				 */
-				instr->destv.fp.fCvt.sign = tmpF->sign;
-				instr->destv.fp.fCvt.exponent = exp;
-				instr->destv.fp.fCvt.fractionHigh = tmpF->fractionHigh;
-				instr->destv.fp.fCvt.fractionLow = tmpF->fractionLow;
-				instr->destv.fp.fCvt.zero = 0;
-				break;
+		/*
+		 * Now put everything back together, but this time in register
+		 * format and 64-bits.
+		 */
+		instr->destv.fp.fCvt.sign = tmpF->sign;
+		instr->destv.fp.fCvt.exponent = exp;
+		instr->destv.fp.fCvt.fractionHigh = tmpF->fractionHigh;
+		instr->destv.fp.fCvt.fractionLow = tmpF->fractionLow;
+		instr->destv.fp.fCvt.zero = 0;
+		break;
 
-			case LDG:
+	    case LDG:
 
-				/*
-				 * The load operation put the value we were supposed to read into the
-				 * destination value location.  Get it out of there so that we can convert
-				 * it from memory format to register format.
-				 */
-				tmp = instr->destv.fp.uq;
+		/*
+		 * The load operation put the value we were supposed to read into the
+		 * destination value location.  Get it out of there so that we can convert
+		 * it from memory format to register format.
+		 */
+		tmp = instr->destv.fp.uq;
 
-				/*
-				 * Now put everything back together, but this time in register format and
-				 * 64-bits.
-				 */
-				instr->destv.fp.gCvt.sign = tmpG->sign;
-				instr->destv.fp.gCvt.exponent = tmpG->exponent;
-				instr->destv.fp.gCvt.fractionHigh = tmpG->fractionHigh;
-				instr->destv.fp.gCvt.fractionMidHigh = tmpG->fractionMidHigh;
-				instr->destv.fp.gCvt.fractionMidLow = tmpG->fractionMidLow;
-				instr->destv.fp.gCvt.fractionLow = tmpG->fractionLow;
-				break;
+		/*
+		 * Now put everything back together, but this time in register format and
+		 * 64-bits.
+		 */
+		instr->destv.fp.gCvt.sign = tmpG->sign;
+		instr->destv.fp.gCvt.exponent = tmpG->exponent;
+		instr->destv.fp.gCvt.fractionHigh = tmpG->fractionHigh;
+		instr->destv.fp.gCvt.fractionMidHigh = tmpG->fractionMidHigh;
+		instr->destv.fp.gCvt.fractionMidLow = tmpG->fractionMidLow;
+		instr->destv.fp.gCvt.fractionLow = tmpG->fractionLow;
+		break;
 
-			case LDS:
+	    case LDS:
 
-				/*
-				 * The load operation put the value we were supposed to read into the
-				 * destination value location.  Get it out of there so that we can convert
-				 * it from memory format to register format.
-				 */
-				tmp = instr->destv.fp.uq;
+		/*
+		 * The load operation put the value we were supposed to read into the
+		 * destination value location.  Get it out of there so that we can convert
+		 * it from memory format to register format.
+		 */
+		tmp = instr->destv.fp.uq;
 
-				/*
-				 * Extract the exponent, then expand it from 8-bits to 11-bits.
-				 */
-				exp = tmpS->exponent;
-				if (exp == AXP_S_NAN)
-					exp = AXP_R_NAN;
-				else if (exp != 0)
-					exp += (AXP_T_BIAS - AXP_S_BIAS);
+		/*
+		 * Extract the exponent, then expand it from 8-bits to 11-bits.
+		 */
+		exp = tmpS->exponent;
+		if (exp == AXP_S_NAN)
+		    exp = AXP_R_NAN;
+		else if (exp != 0)
+		    exp += (AXP_T_BIAS - AXP_S_BIAS);
 
-				/*
-				 * Now put everything back together, but this time in register format and
-				 * 64-bits.
-				 */
-				instr->destv.fp.sCvt.sign = tmpS->sign;
-				instr->destv.fp.sCvt.exponent = exp;
-				instr->destv.fp.sCvt.fraction = tmpS->fraction;
-				instr->destv.fp.sCvt.zero = 0;
-				break;
+		/*
+		 * Now put everything back together, but this time in register format and
+		 * 64-bits.
+		 */
+		instr->destv.fp.sCvt.sign = tmpS->sign;
+		instr->destv.fp.sCvt.exponent = exp;
+		instr->destv.fp.sCvt.fraction = tmpS->fraction;
+		instr->destv.fp.sCvt.zero = 0;
+		break;
 
-			default:
-				break;
-		}
+	    default:
+		break;
 	}
+    }
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * We want the Fbox threads to handle their own completion.  The Mbox has
-	 * done what is was supposed to and now we need to tell the Fbox that there
-	 * is something to retire.
-	 */
-	pthread_mutex_lock(&cpu->fBoxMutex);
-	cpu->fBoxWaitingRetirement = true;
-	pthread_cond_signal(&cpu->fBoxCondition);
-	pthread_mutex_unlock(&cpu->fBoxMutex);
+    /*
+     * We want the Fbox threads to handle their own completion.  The Mbox has
+     * done what is was supposed to and now we need to tell the Fbox that there
+     * is something to retire.
+     */
+    pthread_mutex_lock(&cpu->fBoxMutex);
+    cpu->fBoxWaitingRetirement = true;
+    pthread_cond_signal(&cpu->fBoxCondition);
+    pthread_mutex_unlock(&cpu->fBoxMutex);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -201,46 +201,48 @@ void AXP_21264_Fbox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 {
-	bool		retVal = false;
+    bool retVal = false;
 
-	if (AXP_FBOX_OPT1)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Fbox is initializing");
-		AXP_TRACE_END();
-	}
+    if (AXP_FBOX_OPT1)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Fbox is initializing");
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Initialize the one Fbox IPR.
-	 */
-	cpu->fpcr.res = 0;
-	cpu->fpcr.dnz = 0;
-	cpu->fpcr.invd = 0;
-	cpu->fpcr.dzed = 0;
-	cpu->fpcr.ovfd = 0;
-	cpu->fpcr.inv = 0;
-	cpu->fpcr.dze = 0;
-	cpu->fpcr.ovf = 0;
-	cpu->fpcr.unf = 0;
-	cpu->fpcr.ine = 0;
-	cpu->fpcr.iov = 0;
-	cpu->fpcr.dyn = 0;
-	cpu->fpcr.undz = 0;
-	cpu->fpcr.unfd = 0;
-	cpu->fpcr.ined = 0;
-	cpu->fpcr.sum = 0;
+    /*
+     * Initialize the one Fbox IPR.
+     */
+    cpu->fpcr.res = 0;
+    cpu->fpcr.dnz = 0;
+    cpu->fpcr.invd = 0;
+    cpu->fpcr.dzed = 0;
+    cpu->fpcr.ovfd = 0;
+    cpu->fpcr.inv = 0;
+    cpu->fpcr.dze = 0;
+    cpu->fpcr.ovf = 0;
+    cpu->fpcr.unf = 0;
+    cpu->fpcr.ine = 0;
+    cpu->fpcr.iov = 0;
+    cpu->fpcr.dyn = 0;
+    cpu->fpcr.undz = 0;
+    cpu->fpcr.unfd = 0;
+    cpu->fpcr.ined = 0;
+    cpu->fpcr.sum = 0;
 
-	if (AXP_FBOX_OPT1)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Fbox has initialized");
-		AXP_TRACE_END();
-	}
+    if (AXP_FBOX_OPT1)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Fbox has initialized");
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Return a success back to the caller.
-	 */
-	return(retVal);
+    /*
+     * Return a success back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -270,31 +272,32 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
  */
 void *AXP_21264_FboxMulMain(void *voidPtr)
 {
-	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+    AXP_21264_CPU *cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_FBOX_CALL)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Fbox Multiply is starting");
-		AXP_TRACE_END();
-	}
+    if (AXP_FBOX_CALL)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Fbox Multiply is starting");
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Call the actual main function with the information it needs to be able
-	 * to execute instructions for a specific Integer Pipeline.
-	 */
-	AXP_Execution_Box(
-				cpu,
-				FboxMul,
-				&cpu->fq,
-				&cpu->fBoxCondition,
-				&cpu->fBoxMutex,
-				&AXP_ReturnFQEntry);
+    /*
+     * Call the actual main function with the information it needs to be able
+     * to execute instructions for a specific Integer Pipeline.
+     */
+    AXP_Execution_Box(
+	cpu,
+	FboxMul,
+	&cpu->fq,
+	&cpu->fBoxCondition,
+	&cpu->fBoxMutex,
+	&AXP_ReturnFQEntry);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return(NULL);
+    /*
+     * Return back to the caller.
+     */
+    return (NULL);
 }
 
 /*
@@ -324,29 +327,30 @@ void *AXP_21264_FboxMulMain(void *voidPtr)
  */
 void *AXP_21264_FboxOthMain(void *voidPtr)
 {
-	AXP_21264_CPU	*cpu = (AXP_21264_CPU *) voidPtr;
+    AXP_21264_CPU *cpu = (AXP_21264_CPU *) voidPtr;
 
-	if (AXP_FBOX_CALL)
-	{
-		AXP_TRACE_BEGIN();
-		AXP_TraceWrite("Fbox Other is starting");
-		AXP_TRACE_END();
-	}
+    if (AXP_FBOX_CALL)
+    {
+	AXP_TRACE_BEGIN();
+	AXP_TraceWrite("Fbox Other is starting");
+	AXP_TRACE_END()
+	;
+    }
 
-	/*
-	 * Call the actual main function with the information it needs to be able
-	 * to execute instructions for a specific Integer Pipeline.
-	 */
-	AXP_Execution_Box(
-				cpu,
-				FboxOther,
-				&cpu->fq,
-				&cpu->fBoxCondition,
-				&cpu->fBoxMutex,
-				&AXP_ReturnFQEntry);
+    /*
+     * Call the actual main function with the information it needs to be able
+     * to execute instructions for a specific Integer Pipeline.
+     */
+    AXP_Execution_Box(
+	cpu,
+	FboxOther,
+	&cpu->fq,
+	&cpu->fBoxCondition,
+	&cpu->fBoxMutex,
+	&AXP_ReturnFQEntry);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return(NULL);
+    /*
+     * Return back to the caller.
+     */
+    return (NULL);
 }

@@ -19,7 +19,7 @@
  *	This source file contains the functions needed to implement the
  *	Load and Store functionality of the Ebox.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		19-Jun-2017	Jonathan D. Belanger
  *	Initially written.
@@ -80,20 +80,20 @@
 AXP_EXCEPTIONS AXP_LDA(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction.
-	 */
-	instr->destv.r.uq = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    instr->destv.r.uq = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -119,20 +119,21 @@ AXP_EXCEPTIONS AXP_LDA(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_LDAH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction.
-	 */
-	instr->destv.r.uq = instr->src1v.r.uq + (instr->displacement * AXP_LDAH_MULT);
+    /*
+     * Implement the instruction.
+     */
+    instr->destv.r.uq = instr->src1v.r.uq
+	+ (instr->displacement * AXP_LDAH_MULT);
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+    /*
+     * Indicate that the instruction is ready to be retired.
+     */
+    instr->state = WaitingRetirement;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -157,27 +158,27 @@ AXP_EXCEPTIONS AXP_LDAH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_BYTE(va);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_BYTE(va);
 
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -202,26 +203,26 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_WORD(va);
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_WORD(va);
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -252,27 +253,27 @@ AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_LONG(va);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -306,20 +307,20 @@ AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_LDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    va = instr->src1v.r.uq + instr->displacement;
 
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -344,20 +345,20 @@ AXP_EXCEPTIONS AXP_LDQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = (instr->src1v.r.uq + instr->displacement) & ~0x7;
+    /*
+     * Implement the instruction.
+     */
+    va = (instr->src1v.r.uq + instr->displacement) & ~0x7;
 
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -382,27 +383,27 @@ AXP_EXCEPTIONS AXP_LDQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_LONG(va);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -427,20 +428,20 @@ AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_LDQ_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    va = instr->src1v.r.uq + instr->displacement;
 
-	AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
+    AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, va);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -465,32 +466,32 @@ AXP_EXCEPTIONS AXP_LDQ_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_LONG(va);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
-	AXP_21264_Mbox_WriteMem(
-			cpu,
-			instr,
-			instr->slot,
-			vaPrime,
-			instr->src1v.r.ul);
+    AXP_21264_Mbox_WriteMem(
+	cpu,
+	instr,
+	instr->slot,
+	vaPrime,
+	instr->src1v.r.ul);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -515,25 +516,20 @@ AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_STQ_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    va = instr->src1v.r.uq + instr->displacement;
 
-	AXP_21264_Mbox_WriteMem(
-			cpu,
-			instr,
-			instr->slot,
-			va,
-			instr->src1v.r.uq);
+    AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, va, instr->src1v.r.uq);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -558,32 +554,32 @@ AXP_EXCEPTIONS AXP_STQ_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_STB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_BYTE(va);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_BYTE(va);
 
-	AXP_21264_Mbox_WriteMem(
-		cpu,
-		instr,
-		instr->slot,
-		vaPrime,
-		instr->src1v.r.ub);
+    AXP_21264_Mbox_WriteMem(
+	cpu,
+	instr,
+	instr->slot,
+	vaPrime,
+	instr->src1v.r.ub);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -608,35 +604,35 @@ AXP_EXCEPTIONS AXP_STB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_STW(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_WORD(va);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_WORD(va);
 
-	/*
-	 * Queue up the request to store this value into memory (Dcache).
-	 */
-	AXP_21264_Mbox_WriteMem(
-		cpu,
-		instr,
-		instr->slot,
-		vaPrime,
-		instr->src1v.r.uw);
+    /*
+     * Queue up the request to store this value into memory (Dcache).
+     */
+    AXP_21264_Mbox_WriteMem(
+	cpu,
+	instr,
+	instr->slot,
+	vaPrime,
+	instr->src1v.r.uw);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -661,31 +657,31 @@ AXP_EXCEPTIONS AXP_STW(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_STL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va, vaPrime;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va, vaPrime;
 
-	/*
-	 * Implement the instruction.
-	 */
-	vaPrime = va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    vaPrime = va = instr->src1v.r.uq + instr->displacement;
 
-	/*
-	 * If we are executing in big-endian mode, then we need to do some address
-	 * adjustment.
-	 */
-	if (cpu->vaCtl.b_endian == 1)
-		vaPrime = AXP_BIG_ENDIAN_LONG(va);
-	AXP_21264_Mbox_WriteMem(
-		cpu,
-		instr,
-		instr->slot,
-		vaPrime,
-		instr->src1v.r.ul);
+    /*
+     * If we are executing in big-endian mode, then we need to do some address
+     * adjustment.
+     */
+    if (cpu->vaCtl.b_endian == 1)
+	vaPrime = AXP_BIG_ENDIAN_LONG(va);
+    AXP_21264_Mbox_WriteMem(
+	cpu,
+	instr,
+	instr->slot,
+	vaPrime,
+	instr->src1v.r.ul);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -710,25 +706,20 @@ AXP_EXCEPTIONS AXP_STL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_STQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = instr->src1v.r.uq + instr->displacement;
+    /*
+     * Implement the instruction.
+     */
+    va = instr->src1v.r.uq + instr->displacement;
 
-	AXP_21264_Mbox_WriteMem(
-		cpu,
-		instr,
-		instr->slot,
-		va,
-		instr->src1v.r.uq);
+    AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, va, instr->src1v.r.uq);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -753,23 +744,18 @@ AXP_EXCEPTIONS AXP_STQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_STQ_U(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_EXCEPTIONS retVal = NoException;
-	u64 va;
+    AXP_EXCEPTIONS retVal = NoException;
+    u64 va;
 
-	/*
-	 * Implement the instruction.
-	 */
-	va = (instr->src1v.r.uq + instr->displacement) & ~0x7;
+    /*
+     * Implement the instruction.
+     */
+    va = (instr->src1v.r.uq + instr->displacement) & ~0x7;
 
-	AXP_21264_Mbox_WriteMem(
-		cpu,
-		instr,
-		instr->slot,
-		va,
-		instr->src1v.r.uq);
+    AXP_21264_Mbox_WriteMem(cpu, instr, instr->slot, va, instr->src1v.r.uq);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }

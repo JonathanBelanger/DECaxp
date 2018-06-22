@@ -30,12 +30,8 @@
 /*
  * Function prototype
  */
-void AXP_Execution_Box(
-				AXP_21264_CPU *,
-				AXP_PIPELINE,
-				AXP_COUNTED_QUEUE *,
-				pthread_cond_t *,
-				pthread_mutex_t *,
-				void (*)(AXP_21264_CPU *, AXP_QUEUE_ENTRY *));
+void AXP_Execution_Box(AXP_21264_CPU *, AXP_PIPELINE, AXP_COUNTED_QUEUE *,
+        pthread_cond_t *, pthread_mutex_t *,
+        void (*)(AXP_21264_CPU *, AXP_QUEUE_ENTRY *));
 
 #endif	/* _AXP_EXECUTE_INS_BOX_ */

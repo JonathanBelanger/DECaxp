@@ -20,7 +20,7 @@
  *	functionality of the Fbox Floating Point Operations of the Digital Alpha
  *	AXP Processor.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		29-June-2017	Jonathan D. Belanger
  *	Initially written.
@@ -54,22 +54,21 @@
  */
 float AXP_FP_CvtFPRToFloat(AXP_FP_REGISTER fpr)
 {
-	float			retVal = 0.0;
-	AXP_S_MEMORY	*sFloat = (AXP_S_MEMORY *) &retVal;
+    float retVal = 0.0;
+    AXP_S_MEMORY *sFloat = (AXP_S_MEMORY *) &retVal;
 
-	/*
-	 * Convert away.
-	 */
-	sFloat->sign = fpr.fpr.sign;
-	sFloat->exponent =
-		((fpr.fpr.exponent & 0x400) >> 3) |
-		((fpr.fpr.exponent & 0x07f));
-	sFloat->fraction = fpr.fpr32.fraction;
+    /*
+     * Convert away.
+     */
+    sFloat->sign = fpr.fpr.sign;
+    sFloat->exponent = ((fpr.fpr.exponent & 0x400) >> 3)
+	| ((fpr.fpr.exponent & 0x07f));
+    sFloat->fraction = fpr.fpr32.fraction;
 
-	/*
-	 * Return the converted value back to the caller.
-	 */
-	return(retVal);
+    /*
+     * Return the converted value back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -99,26 +98,26 @@ float AXP_FP_CvtFPRToFloat(AXP_FP_REGISTER fpr)
  */
 AXP_FP_REGISTER AXP_FP_CvtFloatToFPR(float real32)
 {
-	AXP_FP_REGISTER		retVal;
-	AXP_S_MEMORY	*sFloat = (AXP_S_MEMORY *) &real32;
+    AXP_FP_REGISTER retVal;
+    AXP_S_MEMORY *sFloat = (AXP_S_MEMORY *) &real32;
 
-	/*
-	 * Convert away.
-	 */
-	retVal.fpr32.sign = sFloat->sign;
-	if (sFloat->exponent == AXP_S_NAN)
-		retVal.fpr32.exponent = AXP_T_NAN;
-	else if (sFloat->exponent == 0)
-		retVal.fpr32.exponent = 0;
-	else
-		retVal.fpr32.exponent = sFloat->exponent + AXP_T_BIAS - AXP_S_BIAS;
-	retVal.fpr32.fraction = sFloat->fraction;
-	retVal.fpr32.zero = 0;
+    /*
+     * Convert away.
+     */
+    retVal.fpr32.sign = sFloat->sign;
+    if (sFloat->exponent == AXP_S_NAN)
+	retVal.fpr32.exponent = AXP_T_NAN;
+    else if (sFloat->exponent == 0)
+	retVal.fpr32.exponent = 0;
+    else
+	retVal.fpr32.exponent = sFloat->exponent + AXP_T_BIAS - AXP_S_BIAS;
+    retVal.fpr32.fraction = sFloat->fraction;
+    retVal.fpr32.zero = 0;
 
-	/*
-	 * Return the converted value back to the caller.
-	 */
-	return(retVal);
+    /*
+     * Return the converted value back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -143,96 +142,97 @@ AXP_FP_REGISTER AXP_FP_CvtFloatToFPR(float real32)
  * 	None.
  */
 void AXP_FP_CvtG2X(
-		AXP_FPR_REGISTER *src1,
-		AXP_FPR_REGISTER *src2,
-		long double *xSrc1,
-		long double *xSrc2)
+    AXP_FPR_REGISTER *src1,
+    AXP_FPR_REGISTER *src2,
+    long double *xSrc1,
+    long double *xSrc2)
 {
-	AXP_X_MEMORY	*xSrc1Ptr = (AXP_X_MEMORY *) xSrc1;
-	AXP_X_MEMORY	*xSrc2Ptr = (AXP_X_MEMORY *) xSrc2;
-	bool			sign = (src1->sign == 1);
-	u32				exponent= src1->exponent;
-	u128			fraction = src1->fraction;
+    AXP_X_MEMORY *xSrc1Ptr = (AXP_X_MEMORY *) xSrc1;
+    AXP_X_MEMORY *xSrc2Ptr = (AXP_X_MEMORY *) xSrc2;
+    bool sign = (src1->sign == 1);
+    u32 exponent = src1->exponent;
+    u128 fraction = src1->fraction;
+
+    /*
+     * Convert the first float.
+     */
+    if (exponent == 0)
+    {
+	*xSrc1 = 0.0;
+    }
+    else
+    {
+	xSrc1Ptr->sign = (sign ? 1 : 0);
+	exponent -= (1 + AXP_G_BIAS - AXP_X_BIAS);
 
 	/*
-	 * Convert the first float.
+	 * If the value being converted will still be normalized, then just
+	 * move the rest of the floating point value into the destination.
 	 */
+	if (exponent > 0)
+	{
+	    xSrc1Ptr->exponent = exponent & AXP_X_EXP_MASK;
+	    xSrc1Ptr->fraction = fraction;
+	}
+
+	/*
+	 * Otherwise, we have a denormalized value.  Insert the hidden bit and
+	 * shift the result to compensate.
+	 */
+	else
+	{
+	    xSrc1Ptr->exponent = 0;
+	    xSrc1Ptr->fraction = (fraction | AXP_G_HIDDEN_BIT)
+		>> (1 - exponent);
+	}
+	xSrc1Ptr->zero = 0;
+    }
+
+    /*
+     * If the second float was specified, then convert it as well.
+     */
+    if (src2 != NULL)
+    {
+	sign = (src2->sign == 1);
+	exponent = src2->exponent;
+	fraction = src2->fraction;
 	if (exponent == 0)
 	{
-		*xSrc1 = 0.0;
+	    *xSrc2 = 0.0;
 	}
 	else
 	{
-		xSrc1Ptr->sign = (sign ? 1 : 0);
-		exponent -= (1 + AXP_G_BIAS - AXP_X_BIAS);
+	    xSrc2Ptr->sign = (sign ? 1 : 0);
+	    exponent -= (1 + AXP_G_BIAS - AXP_X_BIAS);
 
-		/*
-		 * If the value being converted will still be normalized, then just
-		 * move the rest of the floating point value into the destination.
-		 */
-		if (exponent > 0)
-		{
-			xSrc1Ptr->exponent = exponent & AXP_X_EXP_MASK;
-			xSrc1Ptr->fraction = fraction;
-		}
+	    /*
+	     * If the value being converted will still be normalized, then just
+	     * move the rest of the floating point value into the destination.
+	     */
+	    if (exponent > 0)
+	    {
+		xSrc2Ptr->exponent = exponent;
+		xSrc2Ptr->fraction = fraction;
+	    }
 
-		/*
-		 * Otherwise, we have a denormalized value.  Insert the hidden bit and
-		 * shift the result to compensate.
-		 */
-		else
-		{
-			xSrc1Ptr->exponent = 0;
-			xSrc1Ptr->fraction = (fraction | AXP_G_HIDDEN_BIT) >> (1 - exponent);
-		}
-		xSrc1Ptr->zero = 0;
+	    /*
+	     * Otherwise, we have a denormalized value.  Insert the hidden bit and
+	     * shift the result to compensate.
+	     */
+	    else
+	    {
+		xSrc2Ptr->exponent = 0;
+		xSrc2Ptr->fraction = (fraction | AXP_G_HIDDEN_BIT)
+		    >> (1 - exponent);
+	    }
+	    xSrc2Ptr->zero = 0;
 	}
+    }
 
-	/*
-	 * If the second float was specified, then convert it as well.
-	 */
-	if (src2 != NULL)
-	{
-		sign = (src2->sign == 1);
-		exponent= src2->exponent;
-		fraction = src2->fraction;
-		if (exponent == 0)
-		{
-			*xSrc2 = 0.0;
-		}
-		else
-		{
-			xSrc2Ptr->sign = (sign ? 1 : 0);
-			exponent -= (1 + AXP_G_BIAS - AXP_X_BIAS);
-
-			/*
-			 * If the value being converted will still be normalized, then just
-			 * move the rest of the floating point value into the destination.
-			 */
-			if (exponent > 0)
-			{
-				xSrc2Ptr->exponent = exponent;
-				xSrc2Ptr->fraction = fraction;
-			}
-
-			/*
-			 * Otherwise, we have a denormalized value.  Insert the hidden bit and
-			 * shift the result to compensate.
-			 */
-			else
-			{
-				xSrc2Ptr->exponent = 0;
-				xSrc2Ptr->fraction = (fraction | AXP_G_HIDDEN_BIT) >>
-					(1 - exponent);
-			}
-			xSrc2Ptr->zero = 0;
-		}
-	}
-
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -260,118 +260,118 @@ void AXP_FP_CvtG2X(
  * 	FE_INVALID:		The number to be converted is Not-A-Number.
  */
 int AXP_FP_CvtX2G(
-		long double *src1,
-		long double *src2,
-		AXP_FPR_REGISTER *gSrc1,
-		AXP_FPR_REGISTER *gSrc2)
+    long double *src1,
+    long double *src2,
+    AXP_FPR_REGISTER *gSrc1,
+    AXP_FPR_REGISTER *gSrc2)
 {
-	int				retVal = 0;
-	AXP_X_MEMORY	*xSrc1Ptr = (AXP_X_MEMORY *) src1;
-	AXP_X_MEMORY	*xSrc2Ptr = (AXP_X_MEMORY *) src2;
-	bool			sign = (xSrc1Ptr->sign == 1);
-	i32				exponent = xSrc1Ptr->exponent;
-	u128			fraction = xSrc1Ptr->fraction;
+    int retVal = 0;
+    AXP_X_MEMORY *xSrc1Ptr = (AXP_X_MEMORY *) src1;
+    AXP_X_MEMORY *xSrc2Ptr = (AXP_X_MEMORY *) src2;
+    bool sign = (xSrc1Ptr->sign == 1);
+    i32 exponent = xSrc1Ptr->exponent;
+    u128 fraction = xSrc1Ptr->fraction;
+
+    /*
+     * Convert the first float.
+     */
+    if ((exponent == 0) && (fraction == 0))
+    {
+	gSrc1->sign = gSrc1->exponent = gSrc1->fraction = 0;
+    }
+    else if (exponent == AXP_X_EXP_MAX) /* Both Infinity and NaN */
+    {
+	retVal = FE_OVERFLOW;
+	if (fraction == 0)
+	    retVal = (sign ? FE_UNDERFLOW : FE_OVERFLOW);
+	else
+	    retVal = FE_INVALID;
+    }
+    else
+    {
 
 	/*
-	 * Convert the first float.
+	 * If this is a denormalized value, we need to do some shifting to try
+	 * and normalize it for a VAX G Float.  We start with
 	 */
+	if (exponent == 0)
+	{
+	    fraction <<= 1;
+	    while ((fraction & AXP_G_HIDDEN_BIT) == 0)
+	    {
+		fraction <<= 1;
+		exponent--;
+	    }
+	    fraction &= (AXP_G_HIDDEN_BIT - 1); /* remove the hidden bit. */
+	}
+	exponent += (1 + AXP_G_BIAS + AXP_X_BIAS);
+	if (exponent < 0)
+	    retVal = FE_UNDERFLOW;
+	else if (exponent >= AXP_G_EXP_MAX)
+	    retVal = FE_OVERFLOW;
+	else
+	{
+	    gSrc1->sign = (sign) ? 1 : 0;
+	    gSrc1->exponent = exponent & AXP_G_EXP_MASK;
+	    gSrc1->fraction = fraction & AXP_R_FRAC;
+	}
+    }
+
+    /*
+     * If the second float was specified, then convert it as well.
+     */
+    if (src2 != NULL)
+    {
+	sign = (xSrc2Ptr->sign == 1);
+	exponent = xSrc2Ptr->exponent;
+	fraction = xSrc2Ptr->fraction;
 	if ((exponent == 0) && (fraction == 0))
 	{
-		gSrc1->sign = gSrc1->exponent = gSrc1->fraction = 0;
+	    gSrc2->sign = gSrc2->exponent = gSrc2->fraction = 0;
 	}
-	else if (exponent == AXP_X_EXP_MAX)	/* Both Infinity and NaN */
+	else if (exponent == AXP_X_EXP_MAX) /* Both Infinity and NaN */
 	{
-		retVal = FE_OVERFLOW;
-		if (fraction == 0)
-			retVal = (sign ? FE_UNDERFLOW : FE_OVERFLOW);
-		else
-			retVal = FE_INVALID;
+	    retVal = FE_OVERFLOW;
+	    if (fraction == 0)
+		retVal = (sign ? FE_UNDERFLOW : FE_OVERFLOW);
+	    else
+		retVal = FE_INVALID;
 	}
 	else
 	{
 
-		/*
-		 * If this is a denormalized value, we need to do some shifting to try
-		 * and normalize it for a VAX G Float.  We start with
-		 */
-		if (exponent == 0)
+	    /*
+	     * If this is a denormalized value, we need to do some shifting to try
+	     * and normalize it for a VAX G Float.  We start with
+	     */
+	    if (exponent == 0)
+	    {
+		fraction <<= 1;
+		while ((fraction & AXP_G_HIDDEN_BIT) == 0)
 		{
-			fraction <<= 1;
-			while ((fraction & AXP_G_HIDDEN_BIT) == 0)
-			{
-				fraction <<= 1;
-				exponent--;
-			}
-			fraction &= (AXP_G_HIDDEN_BIT - 1);		/* remove the hidden bit. */
+		    fraction <<= 1;
+		    exponent--;
 		}
-		exponent += (1 + AXP_G_BIAS + AXP_X_BIAS);
-		if (exponent < 0)
-			retVal = FE_UNDERFLOW;
-		else if (exponent >= AXP_G_EXP_MAX)
-			retVal = FE_OVERFLOW;
-		else
-		{
-			gSrc1->sign = (sign) ? 1 : 0;
-			gSrc1->exponent = exponent & AXP_G_EXP_MASK;
-			gSrc1->fraction = fraction & AXP_R_FRAC;
-		}
+		fraction &= (AXP_G_HIDDEN_BIT - 1); /* remove the hidden bit. */
+	    }
+	    exponent += (1 + AXP_G_BIAS + AXP_X_BIAS);
+	    if (exponent < 0)
+		retVal = FE_UNDERFLOW;
+	    else if (exponent >= AXP_G_EXP_MAX)
+		retVal = FE_OVERFLOW;
+	    else
+	    {
+		gSrc2->sign = (sign) ? 1 : 0;
+		gSrc2->exponent = exponent & AXP_G_EXP_MASK;
+		gSrc2->fraction = fraction & AXP_R_FRAC;
+	    }
 	}
+    }
 
-	/*
-	 * If the second float was specified, then convert it as well.
-	 */
-	if (src2 != NULL)
-	{
-		sign = (xSrc2Ptr->sign == 1);
-		exponent= xSrc2Ptr->exponent;
-		fraction = xSrc2Ptr->fraction;
-		if ((exponent == 0) && (fraction == 0))
-		{
-			gSrc2->sign = gSrc2->exponent = gSrc2->fraction = 0;
-		}
-		else if (exponent == AXP_X_EXP_MAX)	/* Both Infinity and NaN */
-		{
-			retVal = FE_OVERFLOW;
-			if (fraction == 0)
-				retVal = (sign ? FE_UNDERFLOW : FE_OVERFLOW);
-			else
-				retVal = FE_INVALID;
-		}
-		else
-		{
-
-			/*
-			 * If this is a denormalized value, we need to do some shifting to try
-			 * and normalize it for a VAX G Float.  We start with
-			 */
-			if (exponent == 0)
-			{
-				fraction <<= 1;
-				while ((fraction & AXP_G_HIDDEN_BIT) == 0)
-				{
-					fraction <<= 1;
-					exponent--;
-				}
-				fraction &= (AXP_G_HIDDEN_BIT - 1);		/* remove the hidden bit. */
-			}
-			exponent += (1 + AXP_G_BIAS + AXP_X_BIAS);
-			if (exponent < 0)
-				retVal = FE_UNDERFLOW;
-			else if (exponent >= AXP_G_EXP_MAX)
-				retVal = FE_OVERFLOW;
-			else
-			{
-				gSrc2->sign = (sign) ? 1 : 0;
-				gSrc2->exponent = exponent & AXP_G_EXP_MASK;
-				gSrc2->fraction = fraction & AXP_R_FRAC;
-			}
-		}
-	}
-
-	/*
-	 * Return back to the caller.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -399,75 +399,79 @@ int AXP_FP_CvtX2G(
  * 	A value representing the previous value for the rounding mode.
  */
 int AXP_FP_SetRoundingMode(
-	AXP_21264_CPU *cpu,
-	AXP_FP_FUNC *func,
-	int resetRoundingMode)
+    AXP_21264_CPU *cpu,
+    AXP_FP_FUNC *func,
+    int resetRoundingMode)
 {
-	int		savedRoundingMode = fegetround();
-	int		newRoundingMode;
+    int savedRoundingMode = fegetround();
+    int newRoundingMode;
 
-	/*
-	 * perform the math,
-	 * and then convert the result back into 64-bit register format
-	 */
-	if (cpu != NULL)
+    /*
+     * perform the math,
+     * and then convert the result back into 64-bit register format
+     */
+    if (cpu != NULL)
+    {
+	switch (func->rnd)
 	{
-		switch (func->rnd)
+	    case AXP_FP_CHOPPED:
+		newRoundingMode = FE_TOWARDZERO;
+		break;
+
+	    case AXP_FP_MINUS_INF:
+		newRoundingMode = FE_DOWNWARD;
+		break;
+
+	    case AXP_FP_NORMAL:
+		newRoundingMode = FE_TONEAREST;
+		break;
+
+	    case AXP_FP_DYNAMIC:
+		switch (cpu->fpcr.dyn)
 		{
-			case  AXP_FP_CHOPPED:
-				newRoundingMode = FE_TOWARDZERO;
-				break;
+		    case AXP_FP_CHOPPED:
+			newRoundingMode = FE_TOWARDZERO;
+			break;
 
-			case  AXP_FP_MINUS_INF:
-				newRoundingMode = FE_DOWNWARD;
-				break;
+		    case AXP_FP_MINUS_INF:
+			newRoundingMode = FE_DOWNWARD;
+			break;
 
-			case  AXP_FP_NORMAL:
-				newRoundingMode = FE_TONEAREST;
-				break;
+		    case AXP_FP_NORMAL:
+			newRoundingMode = FE_TONEAREST;
+			break;
 
-			case  AXP_FP_DYNAMIC:
-				switch (cpu->fpcr.dyn)
-				{
-					case  AXP_FP_CHOPPED:
-						newRoundingMode = FE_TOWARDZERO;
-						break;
-
-					case  AXP_FP_MINUS_INF:
-						newRoundingMode = FE_DOWNWARD;
-						break;
-
-					case  AXP_FP_NORMAL:
-						newRoundingMode = FE_TONEAREST;
-						break;
-
-					case  AXP_FP_PLUS_INF:
-						newRoundingMode = FE_UPWARD;
-						break;
-				}
-				break;
+		    case AXP_FP_PLUS_INF:
+			newRoundingMode = FE_UPWARD;
+			break;
 		}
+		break;
 	}
-	else
-		newRoundingMode = resetRoundingMode;
+    }
+    else
+	newRoundingMode = resetRoundingMode;
 
-	/*
-	 * Set the rounding mode.
-	 */
-	if (fesetround(newRoundingMode) != 0)
-	{
-		fprintf(stderr, "Internal error: "
-				"unexpected return value when setting "
-				"rounding mode to %d at %s, line %d.\n",
-				newRoundingMode, __FILE__, __LINE__);
-	}
+    /*
+     * Set the rounding mode.
+     */
+    if (fesetround(newRoundingMode) != 0)
+    {
+	fprintf(
+	    stderr,
+	    "Internal error: "
+		"unexpected return value when setting "
+		"rounding mode to %d at %s, line %d.\n",
+	    newRoundingMode,
+	    __FILE__,
+	    __LINE__);
+    }
 
-	/*
-	 * Returned the previous rounding mode back to the caller.  They'll call
-	 * back to reset the rounding mode with this value and a NULL cpu
-	 * parameter.
-	 */
-	return(savedRoundingMode);
+    /*
+     * Returned the previous rounding mode back to the caller.  They'll call
+     * back to reset the rounding mode with this value and a NULL cpu
+     * parameter.
+     */
+    return (savedRoundingMode);
 }
 
 /*
@@ -493,29 +497,29 @@ int AXP_FP_SetRoundingMode(
  */
 int AXP_FP_SetExceptionMode(AXP_21264_CPU *cpu, int resetExceptionMode)
 {
-	int retVal = fegetexcept();
-	int exceptionBits = 0;
+    int retVal = fegetexcept();
+    int exceptionBits = 0;
 
-	if (cpu != NULL)
-	{
-		if (cpu->fpcr.dzed == 1)
-			exceptionBits |= FE_DIVBYZERO;
-		if (cpu->fpcr.ined == 1)
-			exceptionBits |= FE_INEXACT;
-		if (cpu->fpcr.invd == 1)
-			exceptionBits |= FE_INVALID;
-		if (cpu->fpcr.ovfd == 1)
-			exceptionBits |= FE_OVERFLOW;
-		if (cpu->fpcr.unfd == 1)
-			exceptionBits |= FE_UNDERFLOW;
-		if (exceptionBits != 0)
-			fedisableexcept(exceptionBits);
-		else
-			retVal = 0;
-	}
-	else if (resetExceptionMode != 0)
-		feenableexcept(resetExceptionMode);
-	return(retVal);
+    if (cpu != NULL)
+    {
+	if (cpu->fpcr.dzed == 1)
+	    exceptionBits |= FE_DIVBYZERO;
+	if (cpu->fpcr.ined == 1)
+	    exceptionBits |= FE_INEXACT;
+	if (cpu->fpcr.invd == 1)
+	    exceptionBits |= FE_INVALID;
+	if (cpu->fpcr.ovfd == 1)
+	    exceptionBits |= FE_OVERFLOW;
+	if (cpu->fpcr.unfd == 1)
+	    exceptionBits |= FE_UNDERFLOW;
+	if (exceptionBits != 0)
+	    fedisableexcept(exceptionBits);
+	else
+	    retVal = 0;
+    }
+    else if (resetExceptionMode != 0)
+	feenableexcept(resetExceptionMode);
+    return (retVal);
 }
 
 /*
@@ -546,59 +550,64 @@ int AXP_FP_SetExceptionMode(AXP_21264_CPU *cpu, int resetExceptionMode)
  * Return Value:
  * 	None.
  */
-void AXP_FP_SetFPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr, int raised, bool integerOverflow)
+void AXP_FP_SetFPCR(
+    AXP_21264_CPU *cpu,
+    AXP_INSTRUCTION *instr,
+    int raised,
+    bool integerOverflow)
 {
-	AXP_FP_FUNC *func = (AXP_FP_FUNC *) &instr->function;
-	bool		excSet = false;
+    AXP_FP_FUNC *func = (AXP_FP_FUNC *) &instr->function;
+    bool excSet = false;
 
-	/*
-	 * We always set the FPCR
-	 */
-	if (raised & FE_DIVBYZERO)
-	{
-		instr->insFpcr.dze = 1;;
-		excSet = true;
-	}
-	if (raised & FE_INVALID)
-	{
-		instr->insFpcr.inv = 1;
-		excSet = true;
-	}
-	if (raised & FE_OVERFLOW)
-	{
-		if (integerOverflow)
-			instr->insFpcr.iov = 1;
-		else
-			instr->insFpcr.ovf = 1;
-		excSet = true;
-	}
+    /*
+     * We always set the FPCR
+     */
+    if (raised & FE_DIVBYZERO)
+    {
+	instr->insFpcr.dze = 1;
+	;
+	excSet = true;
+    }
+    if (raised & FE_INVALID)
+    {
+	instr->insFpcr.inv = 1;
+	excSet = true;
+    }
+    if (raised & FE_OVERFLOW)
+    {
+	if (integerOverflow)
+	    instr->insFpcr.iov = 1;
+	else
+	    instr->insFpcr.ovf = 1;
+	excSet = true;
+    }
     if ((raised & FE_INEXACT) && ((func->trp & AXP_FP_TRP_I) != 0))
-	{
-    	instr->insFpcr.ine = 1;
-		excSet = true;
-	}
-	if ((raised & FE_UNDERFLOW) && ((func->trp & AXP_FP_TRP_U) != 0))
-	{
-		instr->insFpcr.unf = 1;
-		excSet = true;
-	}
+    {
+	instr->insFpcr.ine = 1;
+	excSet = true;
+    }
+    if ((raised & FE_UNDERFLOW) && ((func->trp & AXP_FP_TRP_U) != 0))
+    {
+	instr->insFpcr.unf = 1;
+	excSet = true;
+    }
 
-	/*
-	 * If we set any IEEE exception bits, which are for the fpcr register, then
-	 * go and set these bits.
-	 */
-	if (excSet)
-		instr->insFpcr.sum = 1;
+    /*
+     * If we set any IEEE exception bits, which are for the fpcr register, then
+     * go and set these bits.
+     */
+    if (excSet)
+	instr->insFpcr.sum = 1;
 
-	/*
-	 * Go set the excSum register bit fields, as well.
-	 */
-	AXP_FP_SetExcSum(instr, raised, integerOverflow);
+    /*
+     * Go set the excSum register bit fields, as well.
+     */
+    AXP_FP_SetExcSum(instr, raised, integerOverflow);
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -627,51 +636,51 @@ void AXP_FP_SetFPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr, int raised, bool
  */
 void AXP_FP_SetExcSum(AXP_INSTRUCTION *instr, int raised, bool integerOverflow)
 {
-	AXP_FP_FUNC *func = (AXP_FP_FUNC *) &instr->function;
-	u32	axpExceptions = 0;
+    AXP_FP_FUNC *func = (AXP_FP_FUNC *) &instr->function;
+    u32 axpExceptions = 0;
+
+    /*
+     * We always set the the following exceptions.
+     */
+    if (raised & FE_DIVBYZERO)
+	axpExceptions |= AXP_EXC_DIV_BY_ZERO;
+    if (raised & FE_INVALID)
+	axpExceptions |= AXP_EXC_INV_OPER;
+    if (raised & FE_OVERFLOW)
+	axpExceptions |= (
+	    integerOverflow ? AXP_EXC_INT_OVERFLOW : AXP_EXC_FP_OVERFLOW);
+
+    /*
+     * If '/I' is present, then set excSum
+     */
+    if ((raised & FE_INEXACT) && ((func->trp & AXP_FP_TRP_I) != 0))
+	axpExceptions |= AXP_EXC_INEXACT_RES;
+
+    /*
+     * If '/U', which is the same as '/V' is present, then set excSum
+     */
+    if ((raised & FE_UNDERFLOW) && ((func->trp & AXP_FP_TRP_U)) != 0)
+	axpExceptions |= AXP_EXC_UNDERFLOW;
+
+    /*
+     * If we set any AXP exception bits, which are for the excSum register,
+     * then go and set these bits.
+     */
+    if (axpExceptions != 0)
+    {
 
 	/*
-	 * We always set the the following exceptions.
+	 * If '/S' is present, then set the software completion bit.
 	 */
-	if (raised & FE_DIVBYZERO)
-		axpExceptions |= AXP_EXC_DIV_BY_ZERO;
-	if (raised & FE_INVALID)
-		axpExceptions |= AXP_EXC_INV_OPER;
-	if (raised & FE_OVERFLOW)
-		axpExceptions |=
-			(integerOverflow ? AXP_EXC_INT_OVERFLOW : AXP_EXC_FP_OVERFLOW);
+	if ((func->trp & AXP_FP_TRP_S) != 0)
+	    axpExceptions |= AXP_EXC_SW_COMPL;
+	AXP_SetException(instr, axpExceptions);
+    }
 
-	/*
-	 * If '/I' is present, then set excSum
-	 */
-	if ((raised & FE_INEXACT) && ((func->trp & AXP_FP_TRP_I) != 0))
-		axpExceptions |= AXP_EXC_INEXACT_RES;
-
-	/*
-	 * If '/U', which is the same as '/V' is present, then set excSum
-	 */
-	if ((raised & FE_UNDERFLOW) && ((func->trp & AXP_FP_TRP_U)) != 0)
-		axpExceptions |= AXP_EXC_UNDERFLOW;
-
-	/*
-	 * If we set any AXP exception bits, which are for the excSum register,
-	 * then go and set these bits.
-	 */
-	if (axpExceptions != 0)
-	{
-
-		/*
-		 * If '/S' is present, then set the software completion bit.
-		 */
-		if ((func->trp & AXP_FP_TRP_S) != 0)
-			axpExceptions |= AXP_EXC_SW_COMPL;
-		AXP_SetException(instr, axpExceptions);
-	}
-
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }
 
 /*
@@ -694,21 +703,21 @@ void AXP_FP_SetExcSum(AXP_INSTRUCTION *instr, int raised, bool integerOverflow)
  */
 bool AXP_FP_CheckForVAXInvalid(AXP_FPR_REGISTER *src1, AXP_FPR_REGISTER *src2)
 {
-	bool			retVal = false;
-	AXP_FP_ENCODING encoding;
+    bool retVal = false;
+    AXP_FP_ENCODING encoding;
 
-	encoding = AXP_FP_ENCODE(src1, false);
+    encoding = AXP_FP_ENCODE(src1, false);
+    retVal = ((encoding == Reserved) || (encoding == DirtyZero));
+    if ((retVal == false) && (src2 != NULL))
+    {
+	encoding = AXP_FP_ENCODE(src2, false);
 	retVal = ((encoding == Reserved) || (encoding == DirtyZero));
-	if ((retVal == false) && (src2 != NULL))
-	{
-		encoding = AXP_FP_ENCODE(src2, false);
-		retVal = ((encoding == Reserved) || (encoding == DirtyZero));
-	}
+    }
 
-	/*
-	 * Return the results of the test back to the caller.
-	 */
-	return(retVal);
+    /*
+     * Return the results of the test back to the caller.
+     */
+    return (retVal);
 }
 
 /*
@@ -731,36 +740,35 @@ bool AXP_FP_CheckForVAXInvalid(AXP_FPR_REGISTER *src1, AXP_FPR_REGISTER *src2)
  */
 bool AXP_FP_CheckForIEEEInvalid(AXP_FP_REGISTER *src1, AXP_FP_REGISTER *src2)
 {
-	bool 			retVal = false;
-	AXP_FP_ENCODING	src1Enc, src2Enc;
+    bool retVal = false;
+    AXP_FP_ENCODING src1Enc, src2Enc;
 
-	src1Enc = AXP_FP_ENCODE(&src1->fpr, true);
+    src1Enc = AXP_FP_ENCODE(&src1->fpr, true);
+    if (src2 != NULL)
+	src2Enc = AXP_FP_ENCODE(&src2->fpr, true);
+    else
+	src2Enc = Finite;
+    if ((src1Enc == Infinity) && (src2Enc == Infinity))
+    {
 	if (src2 != NULL)
-		src2Enc = AXP_FP_ENCODE(&src2->fpr, true);
-	else
-		src2Enc = Finite;
-	if ((src1Enc == Infinity) && (src2Enc == Infinity))
 	{
-		if (src2 != NULL)
-		{
-			if (src1->fpr.sign != src2->fpr.sign)
-				retVal = true;
-		}
-	}
-	else if ((src1Enc == NotANumber) && (src1->fprQ.quiet == 0))
+	    if (src1->fpr.sign != src2->fpr.sign)
 		retVal = true;
-	else if (src2 != NULL)
-	{
-		if ((src2Enc == NotANumber) && (src2->fprQ.quiet == 0))
-			retVal = true;
 	}
+    }
+    else if ((src1Enc == NotANumber) && (src1->fprQ.quiet == 0))
+	retVal = true;
+    else if (src2 != NULL)
+    {
+	if ((src2Enc == NotANumber) && (src2->fprQ.quiet == 0))
+	    retVal = true;
+    }
 
-	/*
-	 * Return the results of the test back to the caller.
-	 */
-	return(retVal);
+    /*
+     * Return the results of the test back to the caller.
+     */
+    return (retVal);
 }
-
 
 /*
  * AXP_FP_fpNormalize
@@ -781,46 +789,48 @@ void AXP_FP_fpNormalize(AXP_FPR_REGISTER *fpv)
 {
 #define AXP_FP_NORM_MASK_LEN	5
 #define AXP_FP_NORM_SHIFT_LEN	6
-	static u64 normalizationMask[AXP_FP_NORM_MASK_LEN] =
-	{
-		0xc000000000000000,
-		0xf000000000000000,
-		0xff00000000000000,
-		0xffff000000000000,
-		0xffffffff00000000
+    static u64 normalizationMask[AXP_FP_NORM_MASK_LEN] =
+    {
+	0xc000000000000000,
+	0xf000000000000000,
+	0xff00000000000000,
+	0xffff000000000000,
+	0xffffffff00000000
     };
-	static u32 normalizationShift[AXP_FP_NORM_SHIFT_LEN] =
-		{1, 2, 4, 8, 16, 32};
-	int ii;
+    static u32 normalizationShift[AXP_FP_NORM_SHIFT_LEN] =
+    {
+    1, 2, 4, 8, 16, 32
+    };
+    int ii;
+
+    /*
+     * If the fraction is zero, the just set everything to zero.  Otherwise, we
+     * need to normalize the floating point value.
+     */
+    if (fpv->fraction == 0)
+	fpv->sign = fpv->exponent = 0;
+    else
+    {
 
 	/*
-	 * If the fraction is zero, the just set everything to zero.  Otherwise, we
-	 * need to normalize the floating point value.
+	 * Keep looping until the floating point number is normalized.
 	 */
-	if (fpv->fraction == 0)
-		fpv->sign = fpv->exponent = 0;
-	else
+	while ((fpv->fraction & AXP_R_NM) == 0)
 	{
+	    for (ii = 0; ii < AXP_FP_NORM_MASK_LEN; ii++)
+		if (fpv->fraction & normalizationMask[ii])
+		    break;
 
-		/*
-		 * Keep looping until the floating point number is normalized.
-		 */
-		while ((fpv->fraction & AXP_R_NM) == 0)
-		{
-			for (ii = 0; ii < AXP_FP_NORM_MASK_LEN; ii++)
-				if (fpv->fraction & normalizationMask[ii])
-					break;
-
-			/*
-			 * Perform the fraction shifts and exponent adjustment.
-			 */
-			fpv->fraction = fpv->fraction << normalizationShift[ii];
-			fpv->exponent = fpv->exponent - normalizationShift[ii];
-		}
+	    /*
+	     * Perform the fraction shifts and exponent adjustment.
+	     */
+	    fpv->fraction = fpv->fraction << normalizationShift[ii];
+	    fpv->exponent = fpv->exponent - normalizationShift[ii];
+	}
     }
 
-	/*
-	 * Return back to the caller.
-	 */
-	return;
+    /*
+     * Return back to the caller.
+     */
+    return;
 }

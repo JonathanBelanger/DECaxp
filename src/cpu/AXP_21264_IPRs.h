@@ -19,7 +19,7 @@
  *	This header file contains the structures and definitions for the Internal
  *	Processor Registers (IPRs) for the 21264 generation of the Alpha AXP CPU.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		08-May-2017	Jonathan D. Belanger
  *	Initially written with the Ebox, Ibox, Mbox and Cbox IPRs.
@@ -58,9 +58,9 @@
  */
 typedef struct
 {
-	u32	counter;	
-	u32	offset;
-} AXP_EBOX_CC;				/* Cycle Counter Register */
+    u32 counter;
+    u32 offset;
+} AXP_EBOX_CC; /* Cycle Counter Register */
 #define AXP_EBOX_READ_CC(dest, cpu)			\
 		*((u64 *) &dest) = *((u64 *) &cpu->cc)
 #define AXP_EBOX_WRITE_CC(src, cpu)	\
@@ -68,40 +68,40 @@ typedef struct
 
 typedef struct
 {
-	u32	res_1 : 4;
-	u32 counter : 28;		/* CC[31:4] in AXP_EBOX_CC */
-	u32	cc_ena : 1;			/* Counter Enable */
-	u32 res_2 : 31;
-} AXP_EBOX_CC_CTL;			/* Cycle Counter Control Register */
+    u32 res_1 :4;
+    u32 counter :28; /* CC[31:4] in AXP_EBOX_CC */
+    u32 cc_ena :1; /* Counter Enable */
+    u32 res_2 :31;
+} AXP_EBOX_CC_CTL; /* Cycle Counter Control Register */
 #define AXP_EBOX_WRITE_CC_CTL(src, cpu)		\
 		*((u64 *) &(cpu->ccCtl)) = *((u64 *) &src) & 0x00000001fffffff0ll
 
-typedef u64 AXP_EBOX_VA;	/* Virtual Address Register */
+typedef u64 AXP_EBOX_VA; /* Virtual Address Register */
 #define AXP_EBOX_READ_VA(dest, cpu)			\
 		*((u64 *) &dest) = cpu->va
 
 typedef struct
 {
-	u64	b_endian : 1;		/* Big Endian Mode */
-	u64	va_48 : 1;			/* 0 = 43 bit, 1 = 48 bit addressing */
-	u64	va_form_32 : 1;		/* Controls interpretation of VA_FORM register */
-	u64 res : 27;
-	u64 vptb : 34;			/* Virtual Page Table Base */
+    u64 b_endian :1; /* Big Endian Mode */
+    u64 va_48 :1; /* 0 = 43 bit, 1 = 48 bit addressing */
+    u64 va_form_32 :1; /* Controls interpretation of VA_FORM register */
+    u64 res :27;
+    u64 vptb :34; /* Virtual Page Table Base */
 } AXP_EBOX_VA_CTL;
 #define AXP_EBOX_WRITE_VA_CTL(src, cpu)		\
 		*((u64 *) &(cpu->vaCtl)) = *((u64 *) &src) & 0xffffffffc0000007ll
 
 typedef struct
 {
-	u64	res : 3;
-	u64 va : 30;			/* Virtual Page Table Entry Address */
-	u64 vptb : 31;			/* Virtual Page Table Base */
+    u64 res :3;
+    u64 va :30; /* Virtual Page Table Entry Address */
+    u64 vptb :31; /* Virtual Page Table Base */
 } AXP_EBOX_VA_FORM_00;
 
 typedef struct
 {
-	u64	res : 3;
-	u64 va_sext_vptb : 61;	/* Combined VA, SEXT, and VPTB */
+    u64 res :3;
+    u64 va_sext_vptb :61; /* Combined VA, SEXT, and VPTB */
 } AXP_EBOX_VA_FORM_10;
 
 /*
@@ -123,18 +123,18 @@ typedef struct
 
 typedef struct
 {
-	u64	res_1 : 3;
-	u64 va : 19;			/* Virtual Page Table Entry Address */
-	u64 res_2 : 8;
-	u64 vptb : 34;			/* Virtual Page Table Base */
+    u64 res_1 :3;
+    u64 va :19; /* Virtual Page Table Entry Address */
+    u64 res_2 :8;
+    u64 vptb :34; /* Virtual Page Table Base */
 } AXP_EBOX_VA_FORM_01;
 
 typedef union
 {
-	AXP_EBOX_VA_FORM_00	form00;		/* VA_48 = 0 and VA_FORM_32 = 0*/
-	AXP_EBOX_VA_FORM_10	form10;		/* VA_48 = 1 and VA_FORM_32 = 0*/
-	AXP_EBOX_VA_FORM_01	form01;		/* VA_48 = 0 and VA_FORM_32 = 1*/
-	u64					form;
+    AXP_EBOX_VA_FORM_00 form00; /* VA_48 = 0 and VA_FORM_32 = 0*/
+    AXP_EBOX_VA_FORM_10 form10; /* VA_48 = 1 and VA_FORM_32 = 0*/
+    AXP_EBOX_VA_FORM_01 form01; /* VA_48 = 0 and VA_FORM_32 = 1*/
+    u64 form;
 } AXP_EBOX_VA_FORM;
 #define AXP_EBOX_READ_VA_FORM(dest, cpu)	\
 		*((u64 *) &dest) = (cpu->vaForm.form & (0xffffffffc03ffff8ll |	\
@@ -150,22 +150,22 @@ typedef union
  */
 typedef struct
 {
-	u64	res : 48;
-	u64 dnz : 1;					/* Denormal operands to zero */
-	u64 invd : 1;					/* Invalid operation disable */
-	u64 dzed : 1;					/* Division by zero disabled */
-	u64 ovfd : 1;					/* Overflow disabled */
-	u64 inv : 1;					/* Invalid operation */
-	u64 dze : 1;					/* Divide by zero */
-	u64 ovf : 1;					/* Overflow */
-	u64 unf : 1;					/* Underflow */
-	u64 ine : 1;					/* Inexact result */
-	u64 iov : 1;					/* Integer overflow */
-	u64 dyn : 2;					/* Dynamic rounding mode */
-	u64 undz : 1;					/* Underflow to zero */
-	u64 unfd : 1;					/* Underflow disabled */
-	u64 ined : 1;					/* Inexact disabled */
-	u64 sum : 1;					/* Summary bit (OR of exception bits) */
+    u64 res :48;
+    u64 dnz :1; /* Denormal operands to zero */
+    u64 invd :1; /* Invalid operation disable */
+    u64 dzed :1; /* Division by zero disabled */
+    u64 ovfd :1; /* Overflow disabled */
+    u64 inv :1; /* Invalid operation */
+    u64 dze :1; /* Divide by zero */
+    u64 ovf :1; /* Overflow */
+    u64 unf :1; /* Underflow */
+    u64 ine :1; /* Inexact result */
+    u64 iov :1; /* Integer overflow */
+    u64 dyn :2; /* Dynamic rounding mode */
+    u64 undz :1; /* Underflow to zero */
+    u64 unfd :1; /* Underflow disabled */
+    u64 ined :1; /* Inexact disabled */
+    u64 sum :1; /* Summary bit (OR of exception bits) */
 } AXP_FBOX_FPCR;
 #define AXP_FBOX_READ_FPCR(dest, cpu)		\
 		*((u64 *) &dest) = (*(u64 *) &(cpu->fpcr)) & 0xffff000000000000ll
@@ -210,58 +210,58 @@ typedef struct
  */
 typedef struct
 {
-	u64	res_1 : 13;
-	u64 tag : 35;					/* Virtual address[47:13] = ITB tag */
-	u64 res_2 : 16;
+    u64 res_1 :13;
+    u64 tag :35; /* Virtual address[47:13] = ITB tag */
+    u64 res_2 :16;
 } AXP_IBOX_ITB_TAG;
 #define AXP_IBOX_WRITE_ITB_TAG(src, cpu)	\
 		*((u64 *) &cpu->itbTag) = *((u64 *) &src) & 0x0000ffffffffe000ll
 
 typedef struct
 {
-	u64 res_1 : 4;
-	u64 _asm : 1;					/* Address space match */
-	u64 gh : 2;						/* Granularity hint */
-	u64 res_2 : 1;
-	u64 kre : 1;					/* Kernel read/execute */
-	u64 ere : 1;					/* Executive read/execute */
-	u64 sre : 1;					/* Supervisor read/execute */
-	u64 ure : 1;					/* User read/execute */
-	u64 res_3 : 1;
-	u64 pfn : 31;					/* Page frame number */
-	u64 res_4 : 20;
+    u64 res_1 :4;
+    u64 _asm :1; /* Address space match */
+    u64 gh :2; /* Granularity hint */
+    u64 res_2 :1;
+    u64 kre :1; /* Kernel read/execute */
+    u64 ere :1; /* Executive read/execute */
+    u64 sre :1; /* Supervisor read/execute */
+    u64 ure :1; /* User read/execute */
+    u64 res_3 :1;
+    u64 pfn :31; /* Page frame number */
+    u64 res_4 :20;
 } AXP_IBOX_ITB_PTE;
 #define AXP_IBOX_WRITE_ITB_PTE(src, cpu)	\
 		*((u64 *) &cpu->itbPte) = *((u64 *) &src) & 0x00000fffffffef70ll
 
 typedef struct
 {
-	u64	res_1 : 13;
-	u64	inval_itb : 35;				/* ITB Virtual address(tag) to invalidate */
-	u64	res_2 : 16;
+    u64 res_1 :13;
+    u64 inval_itb :35; /* ITB Virtual address(tag) to invalidate */
+    u64 res_2 :16;
 } AXP_IBOX_ITB_IS;
 #define AXP_IBOX_WRITE_ITB_IS(src, cpu)		\
 		*((u64 *) &cpu->itbIs) = *((u64 *) &src) & 0x0000ffffffffe000ll
 
 typedef union
 {
-	AXP_PC	exc_pc;
-	u64	exc_addr;
+    AXP_PC exc_pc;
+    u64 exc_addr;
 } AXP_IBOX_EXC_ADDR;
 #define AXP_IBOX_READ_EXC_ADDR(dest, cpu)	\
 		*((u64 *) &dest) = (cpu)->excAddr.exc_addr
 
 typedef struct
 {
-	u64	res : 3;
-	u64	va : 30;
-	u64	vptb : 31;
+    u64 res :3;
+    u64 va :30;
+    u64 vptb :31;
 } AXP_IBOX_IVA_FORM_00;
 
 typedef struct
 {
-	u64	res : 3;
-	u64	va_sext_vptb : 61;
+    u64 res :3;
+    u64 va_sext_vptb :61;
 } AXP_IBOX_IVA_FORM_10;
 
 /*
@@ -277,18 +277,18 @@ typedef struct
 
 typedef struct
 {
-	u64	res_1 : 3;
-	u64	va : 19;
-	u64	res_2 : 8;
-	u64	vptb : 34;
+    u64 res_1 :3;
+    u64 va :19;
+    u64 res_2 :8;
+    u64 vptb :34;
 } AXP_IBOX_IVA_FORM_01;
 
 typedef union
 {
-	AXP_IBOX_IVA_FORM_00	form00;		/* VA_48 = 0 and VA_FORM_32 = 0*/
-	AXP_IBOX_IVA_FORM_10	form10;		/* VA_48 = 1 and VA_FORM_32 = 0*/
-	AXP_IBOX_IVA_FORM_01	form01;		/* VA_48 = 0 and VA_FORM_32 = 1*/
-	u64						form;
+    AXP_IBOX_IVA_FORM_00 form00; /* VA_48 = 0 and VA_FORM_32 = 0*/
+    AXP_IBOX_IVA_FORM_10 form10; /* VA_48 = 1 and VA_FORM_32 = 0*/
+    AXP_IBOX_IVA_FORM_01 form01; /* VA_48 = 0 and VA_FORM_32 = 1*/
+    u64 form;
 } AXP_IBOX_IVA_FORM;
 #define AXP_IBOX_READ_IVA_FORM(dest, cpu)	\
 	*((u64 *) &dest) = (cpu->ivaForm.form & (0xffffffffc03ffff8ll | \
@@ -304,16 +304,16 @@ typedef union
  */
 typedef struct
 {
-	u64	res_1 : 3;
-	u64	cm : 2;						/* Current mode */
-	u64	res_2 : 8;
-	u64	asten : 1;					/* AST interrupt enable */
-	u64	sien : 15;					/* Software interrupt enable */
-	u64	pcen : 2;					/* Performance counter interrupt enable */
-	u64	cren : 1;					/* Correct read error interrupt enable */
-	u64	slen : 1;					/* Serial line interrupt enable */
-	u64	eien : 6;					/* External interrupt enable */
-	u64	res_3 : 25;
+    u64 res_1 :3;
+    u64 cm :2; /* Current mode */
+    u64 res_2 :8;
+    u64 asten :1; /* AST interrupt enable */
+    u64 sien :15; /* Software interrupt enable */
+    u64 pcen :2; /* Performance counter interrupt enable */
+    u64 cren :1; /* Correct read error interrupt enable */
+    u64 slen :1; /* Serial line interrupt enable */
+    u64 eien :6; /* External interrupt enable */
+    u64 res_3 :25;
 } AXP_IBOX_IER_CM;
 #define AXP_IBOX_READ_CM(dest, cpu)			\
 		*((u64 *) &dest) = *((u64 *) &cpu->ierCm) & 0x0000000000000018ll
@@ -334,9 +334,9 @@ typedef struct
 
 typedef struct
 {
-	u64	res_1 : 14;
-	u64	sir : 15;					/* Software interrupt requests */
-	u64	res_2 : 35;
+    u64 res_1 :14;
+    u64 sir :15; /* Software interrupt requests */
+    u64 res_2 :35;
 } AXP_IBOX_SIRR;
 #define AXP_IBOX_READ_SIRR(dest, cpu)		\
 		*((u64 *) &dest) = *((u64 *) &cpu->sirr) & 0x000000001fffc000ll
@@ -352,72 +352,72 @@ typedef struct
  */
 typedef struct
 {
-	u64	res_1 : 3;
-	u64	astk : 1;					/* Kernel AST interrupt */
-	u64	aste : 1;					/* Executive AST interrupt */
-	u64	res_2 : 4;
-	u64	asts : 1;					/* Supervisor AST interrupt */
-	u64	astu : 1;					/* User AST interrupt */
-	u64	res_3 : 3;
-	u64	si : 15;					/* Software interrupt */
-	u64	pc : 2;						/* Performance counter interrupts */
-	u64	cr : 1;						/* Corrected read error interrupt */
-	u64	sl : 1;						/* Serial line interrupt */
-	u64	ei : 6;						/* External interrupts */
-	u64	res_4 : 25;
+    u64 res_1 :3;
+    u64 astk :1; /* Kernel AST interrupt */
+    u64 aste :1; /* Executive AST interrupt */
+    u64 res_2 :4;
+    u64 asts :1; /* Supervisor AST interrupt */
+    u64 astu :1; /* User AST interrupt */
+    u64 res_3 :3;
+    u64 si :15; /* Software interrupt */
+    u64 pc :2; /* Performance counter interrupts */
+    u64 cr :1; /* Corrected read error interrupt */
+    u64 sl :1; /* Serial line interrupt */
+    u64 ei :6; /* External interrupts */
+    u64 res_4 :25;
 } AXP_IBOX_ISUM;
 #define AXP_IBOX_READ_ISUM(dest, cpu)		\
 		*((u64 *) &dest) = *((u64 *) &cpu->iSum) & 0x0000007fffffc618ll
 
 typedef struct
 {
-	u64	res_1 : 26;
-	u64	fbtp : 1;					/* Force bad Icache fill parity */
-	u64	mchk_d : 1;					/* Clear Dstream machine check */
-	u64	res_2 : 1;
-	u64	pc : 2;						/* CLear performance counter */
-	u64	cr : 1;						/* Clear corrected read */
-	u64	sl : 1;						/* Clear serial line */
-	u64	res_3 : 31;
+    u64 res_1 :26;
+    u64 fbtp :1; /* Force bad Icache fill parity */
+    u64 mchk_d :1; /* Clear Dstream machine check */
+    u64 res_2 :1;
+    u64 pc :2; /* CLear performance counter */
+    u64 cr :1; /* Clear corrected read */
+    u64 sl :1; /* Clear serial line */
+    u64 res_3 :31;
 } AXP_IBOX_HW_INT_CLR;
 #define AXP_IBOX_WRITE_HW_INT_CLR(src, cpu)	\
 		*((u64 *) &cpu->hwIntClr) = *((u64 *) &src) & 0x00000001f4000000ll
 
 typedef struct
 {
-	u64	swc : 1;					/* Software completion possible */
-	u64	inv : 1;					/* Invalid operation trap */
-	u64	dze : 1;					/* Divide by zero trap */
-	u64	ovf : 1;					/* Floating point overflow trap */
-	u64	unf : 1;					/* Floating point underflow trap */
-	u64	ine : 1;					/* Floating point inexact error trap */
-	u64	iov : 1;					/* Integer overflow trap */
-	u64	_int : 1;					/* Ebox(1)/Fbox(0) for iov field */
-	u64	reg : 5;					/* Destination/source register for trap */
-	u64	bad_iva : 1;				/* Bad Istream VA */
-	u64	res : 27;
-	u64	pc_ovfl : 1;				/* EXC_ADDR improperly SEXT in 48-bit mode */
-	u64	set_inv : 1;				/* PALcode should set FPCR[INV] */
-	u64	set_dze : 1;				/* PALcode should set FPCR[DZE] */
-	u64	set_ovf : 1;				/* PALcode should set FPCR[OVF] */
-	u64	set_unf : 1;				/* PALcode should set FPCR[UNF] */
-	u64	set_ine : 1;				/* PALcode should set FPCR[INE] */
-	u64	set_iov : 1;				/* PALcode should set FPCR[IOV] */
-	u64	sext_set_iov : 16;			/* Sign-extended (SEXT) of SET_IOV */
+    u64 swc :1; /* Software completion possible */
+    u64 inv :1; /* Invalid operation trap */
+    u64 dze :1; /* Divide by zero trap */
+    u64 ovf :1; /* Floating point overflow trap */
+    u64 unf :1; /* Floating point underflow trap */
+    u64 ine :1; /* Floating point inexact error trap */
+    u64 iov :1; /* Integer overflow trap */
+    u64 _int :1; /* Ebox(1)/Fbox(0) for iov field */
+    u64 reg :5; /* Destination/source register for trap */
+    u64 bad_iva :1; /* Bad Istream VA */
+    u64 res :27;
+    u64 pc_ovfl :1; /* EXC_ADDR improperly SEXT in 48-bit mode */
+    u64 set_inv :1; /* PALcode should set FPCR[INV] */
+    u64 set_dze :1; /* PALcode should set FPCR[DZE] */
+    u64 set_ovf :1; /* PALcode should set FPCR[OVF] */
+    u64 set_unf :1; /* PALcode should set FPCR[UNF] */
+    u64 set_ine :1; /* PALcode should set FPCR[INE] */
+    u64 set_iov :1; /* PALcode should set FPCR[IOV] */
+    u64 sext_set_iov :16; /* Sign-extended (SEXT) of SET_IOV */
 } AXP_IBOX_EXC_SUM;
 #define AXP_IBOX_READ_EXC_SUM(dest, cpu)	\
 		*((u64 *) &dest) = *((u64 *) &cpu->excSum) & 0xfffffc0000003fffll
 
 typedef union
 {
-	struct
-	{
-		u64	res_1 : 15;
-		u64	pal_base : 29;			/* Base physical address for PALcode */
-		u64	res_2 : 20;
-	} fields;
-	AXP_PC	pal_base_addr;
-	u64	pal_base_pc;
+    struct
+    {
+	u64 res_1 :15;
+	u64 pal_base :29; /* Base physical address for PALcode */
+	u64 res_2 :20;
+    } fields;
+    AXP_PC pal_base_addr;
+    u64 pal_base_pc;
 } AXP_IBOX_PAL_BASE;
 #define AXP_IBOX_READ_PAL_BASE(dest, cpu)	\
 		*((u64 *) &dest) = cpu->palBase.pal_base_pc
@@ -432,27 +432,27 @@ typedef union
  */
 typedef struct
 {
-	u64	spce : 1;					/* System performance counter enable */
-	u64	ic_en : 2;					/* Icache set enable */
-	u64	spe : 3;					/* Super page mode enable */
-	u64	sde : 2;					/* PALshadow register enable */
-	u64 sbe : 2;					/* Stream buffer enable */
-	u64 bp_mode : 2;				/* Branch prediction mode selection */
-	u64 hwe : 1;					/* Allow PAL reserved opcodes in Kernel */
-	u64 sl_xmit : 1;				/* Cause SROM to advance to next bit */
-	u64 sl_rcv : 1;
-	u64 va_48 : 1;					/* Enable 48-bit addresses (43 otherwise) */
-	u64 va_form_32 : 1;				/* Address formatting on read of IVA_FORM */
-	u64 single_issue_h : 1;			/* Force instruction issue from bottom of queues */
-	u64 pct0_en : 1;				/* Enable performance counter #0 */
-	u64 pct1_en : 1;				/* Enable performance counter #1 */
-	u64 call_pal_r23 : 1;			/* Use PALshadow register R23, instead of R27 */
-	u64 mchk_en : 1;				/* Machine check enable */
-	u64 tb_mb_en : 1;				/* Insert MB on TB fills (1 = multiprocessors) */
-	u64 bist_fail : 1;				/* Indicates status of BiST 1=pass/0=fail */
-	u64 chip_id : 6;				/* Chip revision ID */
-	u64 vptb : 18;					/* Virtual Page Table Base */
-	u64 sext_vptb : 16;				/* Sign extension of 'vptb' */
+    u64 spce :1; /* System performance counter enable */
+    u64 ic_en :2; /* Icache set enable */
+    u64 spe :3; /* Super page mode enable */
+    u64 sde :2; /* PALshadow register enable */
+    u64 sbe :2; /* Stream buffer enable */
+    u64 bp_mode :2; /* Branch prediction mode selection */
+    u64 hwe :1; /* Allow PAL reserved opcodes in Kernel */
+    u64 sl_xmit :1; /* Cause SROM to advance to next bit */
+    u64 sl_rcv :1;
+    u64 va_48 :1; /* Enable 48-bit addresses (43 otherwise) */
+    u64 va_form_32 :1; /* Address formatting on read of IVA_FORM */
+    u64 single_issue_h :1; /* Force instruction issue from bottom of queues */
+    u64 pct0_en :1; /* Enable performance counter #0 */
+    u64 pct1_en :1; /* Enable performance counter #1 */
+    u64 call_pal_r23 :1; /* Use PALshadow register R23, instead of R27 */
+    u64 mchk_en :1; /* Machine check enable */
+    u64 tb_mb_en :1; /* Insert MB on TB fills (1 = multiprocessors) */
+    u64 bist_fail :1; /* Indicates status of BiST 1=pass/0=fail */
+    u64 chip_id :6; /* Chip revision ID */
+    u64 vptb :18; /* Virtual Page Table Base */
+    u64 sext_vptb :16; /* Sign extension of 'vptb' */
 } AXP_IBOX_I_CTL;
 #define AXP_IBOX_READ_I_CTL(dest, cpu)		\
 		*((u64 *) &dest) = *((u64 *) &cpu->iCtl) & 0xffffffffffffdfffll
@@ -468,10 +468,10 @@ typedef struct
 
 typedef struct
 {
-	u64 res_1 : 29;
-	u64 tpe : 1;					/* Icache tag parity error */
-	u64 dpe : 1;					/* Icache data parity error */
-	u64 res_2 : 33;
+    u64 res_1 :29;
+    u64 tpe :1; /* Icache tag parity error */
+    u64 dpe :1; /* Icache data parity error */
+    u64 res_2 :33;
 } AXP_IBOX_I_STAT;
 #define AXP_IBOX_READ_I_STAT(dest, cpu)		\
 	*((u64 *) &dest) = *((u64 *) &cpu->iStat) & 0x00000000000060000000ll
@@ -488,15 +488,15 @@ typedef struct
  */
 typedef struct
 {
-	u64	res_1 : 1;
-	u64	ppce : 1;					/* Process performance counting enable */
-	u64	fpe : 1;					/* Floating point enable */
-	u64	res_2 : 2;
-	u64 aster : 4;					/* AST enable register */
-	u64 astrr : 4;
-	u64 res_3 : 26;
-	u64 asn : 8;					/* Address space number */
-	u64 res_4 : 17;
+    u64 res_1 :1;
+    u64 ppce :1; /* Process performance counting enable */
+    u64 fpe :1; /* Floating point enable */
+    u64 res_2 :2;
+    u64 aster :4; /* AST enable register */
+    u64 astrr :4;
+    u64 res_3 :26;
+    u64 asn :8; /* Address space number */
+    u64 res_4 :17;
 } AXP_IBOX_PCTX;
 #define AXP_IBOX_READ_PCTX(dest, cpu)		\
 		*((u64 *) &dest) = *((u64 *) &cpu->pCtx) & 0x00007f8000001fe6ll
@@ -519,13 +519,13 @@ typedef struct
  */
 typedef struct
 {
-	u64 sl1 : 4;					/* SL1 input select */
-	u64 sl0 : 1;					/* SL0 input select */
-	u64 res_1 : 1;
-	u64 pctr1 : 20;					/* Performance counter 1 */
-	u64 res_2 : 2;
-	u64 pctr0 : 20;					/* Performance counter 0 */
-	u64 sext_pctr0 : 16;
+    u64 sl1 :4; /* SL1 input select */
+    u64 sl0 :1; /* SL0 input select */
+    u64 res_1 :1;
+    u64 pctr1 :20; /* Performance counter 1 */
+    u64 res_2 :2;
+    u64 pctr0 :20; /* Performance counter 0 */
+    u64 sext_pctr0 :16;
 } AXP_IBOX_PCTR_CTL;
 #define AXP_IBOX_READ_PCTR_CTL(dest, cpu)	\
 		*((u64 *) &dest) = *((u64 *) &cpu->pCtrCtl) & 0xfffffffff7ffffdfll
@@ -559,9 +559,9 @@ typedef struct
  */
 typedef struct
 {
-	u64 res_1 : 13;
-	u64 va : 35;
-	u64 res_2 : 16;
+    u64 res_1 :13;
+    u64 va :35;
+    u64 res_2 :16;
 } AXP_MBOX_DTB_TAG;
 #define AXP_MBOX_WRITE_DTB_TAG0(src, cpu)	\
 		*((u64 *) &cpu->dtbTag0) = *((u64 *) &src) & 0x0000ffffffffe000ll
@@ -570,24 +570,24 @@ typedef struct
 
 typedef struct
 {
-	u64 res_1 : 1;
-	u64 _for : 1;
-	u64 fow : 1;
-	u64 res_2 : 1;
-	u64 _asm : 1;
-	u64 gh : 2;
-	u64 res_3 : 1;
-	u64 kre : 1;
-	u64 ere : 1;
-	u64 sre : 1;
-	u64 ure : 1;
-	u64 kwe : 1;
-	u64 ewe : 1;
-	u64 swe : 1;
-	u64 uwe : 1;
-	u64 res_4 : 16;
-	u64 pa : 31;
-	u64 res_5 : 1;
+    u64 res_1 :1;
+    u64 _for :1;
+    u64 fow :1;
+    u64 res_2 :1;
+    u64 _asm :1;
+    u64 gh :2;
+    u64 res_3 :1;
+    u64 kre :1;
+    u64 ere :1;
+    u64 sre :1;
+    u64 ure :1;
+    u64 kwe :1;
+    u64 ewe :1;
+    u64 swe :1;
+    u64 uwe :1;
+    u64 res_4 :16;
+    u64 pa :31;
+    u64 res_5 :1;
 } AXP_MBOX_DTB_PTE;
 #define AXP_MBOX_WRITE_DTB_PTE0(src, cpu)	\
 		*((u64 *) &cpu->dtbPte0) = *((u64 *) &src) & 0x7fffffff0000ff76ll
@@ -596,8 +596,8 @@ typedef struct
 
 typedef struct
 {
-	u64 alt_mode : 2;
-	u64 res : 62;
+    u64 alt_mode :2;
+    u64 res :62;
 } AXP_MBOX_DTB_ALTMODE;
 #define AXP_MBOX_WRITE_DTB_ALTMODE(src, cpu) \
 		*((u64 *) &cpu->dtbAltMode) = *((u64 *) &src) & 0x0000000000000003ll
@@ -615,9 +615,9 @@ typedef AXP_IBOX_ITB_IS AXP_MBOX_DTB_IS;
 
 typedef struct
 {
-	u64 res_1 : 24;
-	u64 asn : 8;
-	u64 res_2 : 32;
+    u64 res_1 :24;
+    u64 asn :8;
+    u64 res_2 :32;
 } AXP_MBOX_DTB_ASN;
 #define AXP_MBOX_WRITE_DTB_ASN0(src, cpu)	\
 		*((u64 *) &cpu->dtbAsn0) = *((u64 *) &src) & 0x00000000ff000000ll
@@ -626,48 +626,48 @@ typedef struct
 
 typedef struct
 {
-	u64 wr : 1;
-	u64 acv : 1;
-	u64 _for : 1;
-	u64 fow : 1;
-	u64 opcodes : 6;
-	u64 dc_tag_perr : 1;
-	u64 res : 53;
+    u64 wr :1;
+    u64 acv :1;
+    u64 _for :1;
+    u64 fow :1;
+    u64 opcodes :6;
+    u64 dc_tag_perr :1;
+    u64 res :53;
 } AXP_MBOX_MM_STAT;
 #define AXP_MBOX_READ_MM_STAT(dest, cpu)	\
 		*((u64 *) &dest) = *((u64 *) &cpu->mmStat) & 0x00000000000007ffll
 
 typedef struct
 {
-	u64 res_1 : 1;
-	u64 spe : 3;
-	u64 res_2 : 60;
+    u64 res_1 :1;
+    u64 spe :3;
+    u64 res_2 :60;
 } AXP_MBOX_M_CTL;
 #define AXP_MBOX_WRITE_M_CTL(src, cpu)		\
 		*((u64 *) &cpu->mCtl) = *((u64 *) &src) & 0x000000000000000ell
 
 typedef struct
 {
-	u64 set_en : 2;
-	u64 f_hit : 1;
-	u64 res_1 : 1;
-	u64 f_bad_tpar : 1;
-	u64 f_bad_decc : 1;
-	u64 dctag_par_en : 1;
-	u64 dcdat_err_en : 1;
-	u64 res_2 : 56;
+    u64 set_en :2;
+    u64 f_hit :1;
+    u64 res_1 :1;
+    u64 f_bad_tpar :1;
+    u64 f_bad_decc :1;
+    u64 dctag_par_en :1;
+    u64 dcdat_err_en :1;
+    u64 res_2 :56;
 } AXP_MBOX_DC_CTL;
 #define AXP_MBOX_WRITE_DC_CTL(src, cpu)		\
 		*((u64 *) &cpu->dcCtl) = *((u64 *) &src) & 0x00000000000000f7ll
 
 typedef struct
 {
-	u64 tperr_p0 : 1;
-	u64 tperr_p1 : 1;
-	u64 ecc_err_st : 1;
-	u64 ecc_err_ld : 1;
-	u64 seo : 1;
-	u64 res : 59;
+    u64 tperr_p0 :1;
+    u64 tperr_p1 :1;
+    u64 ecc_err_st :1;
+    u64 ecc_err_ld :1;
+    u64 seo :1;
+    u64 res :59;
 } AXP_MBOX_DC_STAT;
 #define AXP_MBOX_READ_DC_STAT(dest, cpu)	\
 		*((u64 *) &dest) = *((u64 *) &cpu->dcStat) & 0x000000000000001fll
@@ -687,8 +687,8 @@ typedef struct
  */
 typedef struct
 {
-	u64 cdata : 6;
-	u64 res : 58;
+    u64 cdata :6;
+    u64 res :58;
 } AXP_CBOX_C_DATA;
 #define AXP_CBOX_READ_C_DATA(dest, cpu)		\
 		*((u64 *) &dest) = *((u64 *) &cpu->cData) & 0x000000000000003fll
@@ -697,8 +697,8 @@ typedef struct
 
 typedef struct
 {
-	u64 c_shift : 1;
-	u64 res : 63;
+    u64 c_shift :1;
+    u64 res :63;
 } AXP_CBOX_C_SHFT;
 #define AXP_CBOX_WRITE_C_SHFT(src, cpu)		\
 		*((u64 *) &cpu->cShft) = *((u64 *) &src) & 0x0000000000000001ll
@@ -745,11 +745,11 @@ typedef struct
  */
 typedef struct
 {
-	u8	c_syndrome_1;
-	u8	c_syndrome_2;
-	u32	c_stat : 5;
-	u32	c_sts : 4;
-	u64	c_addr;
+    u8 c_syndrome_1;
+    u8 c_syndrome_2;
+    u32 c_stat :5;
+    u32 c_sts :4;
+    u64 c_addr;
 } AXP_CBOX_READ_IPR;
 
 /*

@@ -47,17 +47,17 @@
  * Function prototypes
  */
 bool AXP_Branch_Prediction(
-				AXP_21264_CPU *cpu,
-				AXP_PC vpc,
-				bool *localTaken,
-				bool *globalTaken,
-				bool *choice);
+    AXP_21264_CPU *cpu,
+    AXP_PC vpc,
+    bool *localTaken,
+    bool *globalTaken,
+    bool *choice);
 void AXP_Branch_Direction(
-				AXP_21264_CPU *cpu,
-				AXP_PC vpc,
-				bool taken,
-				bool localTaken,
-				bool globalTaken);
+    AXP_21264_CPU *cpu,
+    AXP_PC vpc,
+    bool taken,
+    bool localTaken,
+    bool globalTaken);
 void AXP_ReturnIQEntry(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
 void AXP_ReturnFQEntry(AXP_21264_CPU *, AXP_QUEUE_ENTRY *);
 void AXP_21264_Ibox_Event(AXP_21264_CPU *, u32, AXP_PC, u64, u8, u8, bool, bool);

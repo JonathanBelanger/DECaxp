@@ -19,7 +19,7 @@
  *	This source file contains the functions needed to implement the
  *	functionality of the Fbox Operate Instructions.
  *
- *	Revision History:
+ * Revision History:
  *
  *	V01.000		24-June-2017	Jonathan D. Belanger
  *	Initially written.
@@ -54,16 +54,16 @@
 AXP_EXCEPTIONS AXP_CPYS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction.
-	 */
-	instr->destv.fp.fpr = instr->src2v.fp.fpr;
-	instr->destv.fp.fpr.sign = instr->src1v.fp.fpr.sign;
+    /*
+     * Implement the instruction.
+     */
+    instr->destv.fp.fpr = instr->src2v.fp.fpr;
+    instr->destv.fp.fpr.sign = instr->src1v.fp.fpr.sign;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -89,17 +89,17 @@ AXP_EXCEPTIONS AXP_CPYS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_CPYSE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction.
-	 */
-	instr->destv.fp.fpr.sign = instr->src1v.fp.fpr.sign;
-	instr->destv.fp.fpr.exponent = instr->src1v.fp.fpr.exponent;
-	instr->destv.fp.fpr.fraction = instr->src2v.fp.fpr.fraction;
+    /*
+     * Implement the instruction.
+     */
+    instr->destv.fp.fpr.sign = instr->src1v.fp.fpr.sign;
+    instr->destv.fp.fpr.exponent = instr->src1v.fp.fpr.exponent;
+    instr->destv.fp.fpr.fraction = instr->src2v.fp.fpr.fraction;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -125,16 +125,16 @@ AXP_EXCEPTIONS AXP_CPYSE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_CPYSN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction.
-	 */
-	instr->destv.fp.fpr = instr->src2v.fp.fpr;
-	instr->destv.fp.fpr.sign = ~instr->src1v.fp.fpr.sign;
+    /*
+     * Implement the instruction.
+     */
+    instr->destv.fp.fpr = instr->src2v.fp.fpr;
+    instr->destv.fp.fpr.sign = ~instr->src1v.fp.fpr.sign;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -160,17 +160,17 @@ AXP_EXCEPTIONS AXP_CPYSN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_CVTLQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction.
-	 */
-	instr->destv.fp.qCvt.sign = instr->src1v.fp.l.sign;
-	instr->destv.fp.qCvt.integerHigh = instr->src1v.fp.l.integerHigh;
-	instr->destv.fp.qCvt.integerLow = instr->src1v.fp.l.integerLow;
+    /*
+     * Implement the instruction.
+     */
+    instr->destv.fp.qCvt.sign = instr->src1v.fp.l.sign;
+    instr->destv.fp.qCvt.integerHigh = instr->src1v.fp.l.integerHigh;
+    instr->destv.fp.qCvt.integerLow = instr->src1v.fp.l.integerLow;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -197,33 +197,33 @@ AXP_EXCEPTIONS AXP_CVTLQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CVTQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	AXP_FP_FUNC		*func = (AXP_FP_FUNC *) &instr->function;
-	AXP_EXCEPTIONS	retVal = NoException;
+    AXP_FP_FUNC *func = (AXP_FP_FUNC *) &instr->function;
+    AXP_EXCEPTIONS retVal = NoException;
 
-	/*
-	 * Implement the instruction.
-	 */
-	instr->destv.fp.l.sign = instr->src1v.fp.qVCvt.sign;
-	instr->destv.fp.l.integerHigh = instr->src1v.fp.qVCvt.integerLowHigh;
-	instr->destv.fp.l.zero_2 = 0;
-	instr->destv.fp.l.integerLow = instr->src1v.fp.qVCvt.integerLowLow;
-	instr->destv.fp.l.zero_1 = 0;
+    /*
+     * Implement the instruction.
+     */
+    instr->destv.fp.l.sign = instr->src1v.fp.qVCvt.sign;
+    instr->destv.fp.l.integerHigh = instr->src1v.fp.qVCvt.integerLowHigh;
+    instr->destv.fp.l.zero_2 = 0;
+    instr->destv.fp.l.integerLow = instr->src1v.fp.qVCvt.integerLowLow;
+    instr->destv.fp.l.zero_1 = 0;
 
-	if (func->trp == AXP_FP_TRP_V)
+    if (func->trp == AXP_FP_TRP_V)
+    {
+	if (AXP_R_Q2L_OVERFLOW(instr->src1v.fp.uq))
 	{
-		if (AXP_R_Q2L_OVERFLOW(instr->src1v.fp.uq))
-		{
-			int raised = FE_INEXACT | FE_OVERFLOW;
+	    int raised = FE_INEXACT | FE_OVERFLOW;
 
-			retVal = ArithmeticTraps;
-			AXP_FP_SetFPCR(cpu, instr, raised, true);
-		}
+	    retVal = ArithmeticTraps;
+	    AXP_FP_SetFPCR(cpu, instr, raised, true);
 	}
+    }
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(retVal);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (retVal);
 }
 
 /*
@@ -249,17 +249,17 @@ AXP_EXCEPTIONS AXP_CVTQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_FCMOVEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction
-	 */
-	if ((instr->src1v.fp.fpr.exponent == 0) &&
-		(instr->src1v.fp.fpr.fraction == 0))
-		instr->destv.fp.uq = instr->src2v.fp.uq;
+    /*
+     * Implement the instruction
+     */
+    if ((instr->src1v.fp.fpr.exponent == 0)
+	&& (instr->src1v.fp.fpr.fraction == 0))
+	instr->destv.fp.uq = instr->src2v.fp.uq;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -285,16 +285,16 @@ AXP_EXCEPTIONS AXP_FCMOVEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_FCMOVGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction
-	 */
-	if (instr->src1v.fp.uq <= AXP_R_SIGN)
-		instr->destv.fp.uq = instr->src2v.fp.uq;
+    /*
+     * Implement the instruction
+     */
+    if (instr->src1v.fp.uq <= AXP_R_SIGN)
+	instr->destv.fp.uq = instr->src2v.fp.uq;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -320,16 +320,16 @@ AXP_EXCEPTIONS AXP_FCMOVGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_FCMOVGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction
-	 */
-	if ((instr->src1v.fp.fpr.sign == 0) && (instr->src1v.fp.uq != 0))
-		instr->destv.fp.uq = instr->src2v.fp.uq;
+    /*
+     * Implement the instruction
+     */
+    if ((instr->src1v.fp.fpr.sign == 0) && (instr->src1v.fp.uq != 0))
+	instr->destv.fp.uq = instr->src2v.fp.uq;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -355,16 +355,16 @@ AXP_EXCEPTIONS AXP_FCMOVGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_FCMOVLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction
-	 */
-	if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq == 0))
-		instr->destv.fp.uq = instr->src2v.fp.uq;
+    /*
+     * Implement the instruction
+     */
+    if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq == 0))
+	instr->destv.fp.uq = instr->src2v.fp.uq;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -390,16 +390,16 @@ AXP_EXCEPTIONS AXP_FCMOVLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_FCMOVLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction
-	 */
-	if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq != 0))
-		instr->destv.fp.uq = instr->src2v.fp.uq;
+    /*
+     * Implement the instruction
+     */
+    if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq != 0))
+	instr->destv.fp.uq = instr->src2v.fp.uq;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -425,16 +425,16 @@ AXP_EXCEPTIONS AXP_FCMOVLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_FCMOVNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction
-	 */
-	if ((instr->src1v.fp.uq & ~AXP_R_SIGN) != 0)
-		instr->destv.fp.uq = instr->src2v.fp.uq;
+    /*
+     * Implement the instruction
+     */
+    if ((instr->src1v.fp.uq & ~AXP_R_SIGN) != 0)
+	instr->destv.fp.uq = instr->src2v.fp.uq;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -460,15 +460,15 @@ AXP_EXCEPTIONS AXP_FCMOVNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_MF_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction
-	 */
-	instr->destv.fp.uq = *((u64 *) &cpu->fpcr);
+    /*
+     * Implement the instruction
+     */
+    instr->destv.fp.uq = *((u64 *) &cpu->fpcr);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -494,16 +494,16 @@ AXP_EXCEPTIONS AXP_MF_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 AXP_EXCEPTIONS AXP_MT_FPCR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
 
-	/*
-	 * Implement the instruction
-	 *
-	 * NOTE: The value will actually be moved into the FPCR at the time of
-	 * 		 instruction retirement.
-	 */
-	instr->destv.fp.uq = instr->src1v.fp.uq;
+    /*
+     * Implement the instruction
+     *
+     * NOTE: The value will actually be moved into the FPCR at the time of
+     * 		 instruction retirement.
+     */
+    instr->destv.fp.uq = instr->src1v.fp.uq;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }

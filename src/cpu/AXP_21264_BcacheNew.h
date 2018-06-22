@@ -25,35 +25,35 @@
  */
 typedef enum
 {
-	Invalid,
-	Clean,
-	Dirty,
-	SharedClean,
-	SharedDirty
+    Invalid,
+    Clean,
+    Dirty,
+    SharedClean,
+    SharedDirty
 } AXP_21264_CACHE_ST;
 
 #define AXP_21264_BLK_SIZE	8	/* 8 quadwords = 64 bytes */
 
 typedef struct
 {
-	AXP_21264_CACHE_ST		state;
-	u64						tag;
-	u64						blk[AXP_21264_BLK_SIZE];
+    AXP_21264_CACHE_ST state;
+    u64 tag;
+    u64 blk[AXP_21264_BLK_SIZE];
 } AXP_21264_BCACHE_BLK;
 
-typedef	AXP_21264_BCACHE_BLK *AXP_21264_DCACHE_BLK;
+typedef AXP_21264_BCACHE_BLK *AXP_21264_DCACHE_BLK;
 
 #define AXP_21264_PAGE_SIZE	8196	/* 8K page size */
 typedef struct
 {
-	pthread_mutex_t			pageMutex;
-	pthread_cond_t			pageCond;
+    pthread_mutex_t pageMutex;
+    pthread_cond_t pageCond;
 } AXP_21264_PAGE_BLK;
 
 typedef struct
 {
-	u64		offset : 13;	/* Offset within page */
-	u64		index : 51;		/* Index to page */
+    u64 offset :13; /* Offset within page */
+    u64 index :51; /* Index to page */
 } AXP_21264_PAGE_IDX;
 
 #define AXP_21264_CACHE_BLOCKS(size)	(size) / AXP_21264_BLK_SIZE

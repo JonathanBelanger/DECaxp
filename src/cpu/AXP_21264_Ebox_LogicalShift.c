@@ -49,17 +49,17 @@
  */
 AXP_EXCEPTIONS AXP_AND(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	instr->destv.r.uq = instr->src1v.r.uq & Rbv;
+    /*
+     * Implement the instruction
+     */
+    instr->destv.r.uq = instr->src1v.r.uq & Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -84,17 +84,17 @@ AXP_EXCEPTIONS AXP_AND(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_BIS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	instr->destv.r.uq = instr->src1v.r.uq | Rbv;
+    /*
+     * Implement the instruction
+     */
+    instr->destv.r.uq = instr->src1v.r.uq | Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -119,17 +119,17 @@ AXP_EXCEPTIONS AXP_BIS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_XOR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	instr->destv.r.uq = instr->src1v.r.uq ^ Rbv;
+    /*
+     * Implement the instruction
+     */
+    instr->destv.r.uq = instr->src1v.r.uq ^ Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -154,17 +154,17 @@ AXP_EXCEPTIONS AXP_XOR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_BIC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	instr->destv.r.uq = instr->src1v.r.uq & ~Rbv;
+    /*
+     * Implement the instruction
+     */
+    instr->destv.r.uq = instr->src1v.r.uq & ~Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -189,17 +189,17 @@ AXP_EXCEPTIONS AXP_BIC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_ORNOT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	instr->destv.r.uq = instr->src1v.r.uq | ~Rbv;
+    /*
+     * Implement the instruction
+     */
+    instr->destv.r.uq = instr->src1v.r.uq | ~Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -224,17 +224,17 @@ AXP_EXCEPTIONS AXP_ORNOT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_EQV(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	instr->destv.r.uq = instr->src1v.r.uq ^ ~Rbv;
+    /*
+     * Implement the instruction
+     */
+    instr->destv.r.uq = instr->src1v.r.uq ^ ~Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -259,18 +259,18 @@ AXP_EXCEPTIONS AXP_EQV(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMOVEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	if (instr->src1v.r.sq == 0)
-		instr->destv.r.uq = Rbv;
+    /*
+     * Implement the instruction
+     */
+    if (instr->src1v.r.sq == 0)
+	instr->destv.r.uq = Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -295,18 +295,18 @@ AXP_EXCEPTIONS AXP_CMOVEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMOVGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	if (instr->src1v.r.sq >= 0)
-		instr->destv.r.uq = Rbv;
+    /*
+     * Implement the instruction
+     */
+    if (instr->src1v.r.sq >= 0)
+	instr->destv.r.uq = Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -331,18 +331,18 @@ AXP_EXCEPTIONS AXP_CMOVGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMOVGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	if (instr->src1v.r.sq > 0)
-		instr->destv.r.uq = Rbv;
+    /*
+     * Implement the instruction
+     */
+    if (instr->src1v.r.sq > 0)
+	instr->destv.r.uq = Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -367,18 +367,18 @@ AXP_EXCEPTIONS AXP_CMOVGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMOVLBC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	if ((instr->src1v.r.uq & 0x01) == 0)
-		instr->destv.r.uq = Rbv;
+    /*
+     * Implement the instruction
+     */
+    if ((instr->src1v.r.uq & 0x01) == 0)
+	instr->destv.r.uq = Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -403,18 +403,18 @@ AXP_EXCEPTIONS AXP_CMOVLBC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMOVLBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	if ((instr->src1v.r.uq & 0x01) == 1)
-		instr->destv.r.uq = Rbv;
+    /*
+     * Implement the instruction
+     */
+    if ((instr->src1v.r.uq & 0x01) == 1)
+	instr->destv.r.uq = Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -439,18 +439,18 @@ AXP_EXCEPTIONS AXP_CMOVLBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMOVLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	if (instr->src1v.r.sq <= 0)
-		instr->destv.r.uq = Rbv;
+    /*
+     * Implement the instruction
+     */
+    if (instr->src1v.r.sq <= 0)
+	instr->destv.r.uq = Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -475,18 +475,18 @@ AXP_EXCEPTIONS AXP_CMOVLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMOVLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	if (instr->src1v.r.sq < 0)
-		instr->destv.r.uq = Rbv;
+    /*
+     * Implement the instruction
+     */
+    if (instr->src1v.r.sq < 0)
+	instr->destv.r.uq = Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -511,18 +511,18 @@ AXP_EXCEPTIONS AXP_CMOVLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_CMOVNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	if (instr->src1v.r.sq != 0)
-		instr->destv.r.uq = Rbv;
+    /*
+     * Implement the instruction
+     */
+    if (instr->src1v.r.sq != 0)
+	instr->destv.r.uq = Rbv;
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -547,17 +547,17 @@ AXP_EXCEPTIONS AXP_CMOVNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_SLL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	instr->destv.r.uq = instr->src1v.r.uq << (Rbv & 0x000000000000003fll);
+    /*
+     * Implement the instruction
+     */
+    instr->destv.r.uq = instr->src1v.r.uq << (Rbv & 0x000000000000003fll);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -582,17 +582,17 @@ AXP_EXCEPTIONS AXP_SLL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_SRL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	instr->destv.r.uq = instr->src1v.r.uq >> (Rbv & 0x000000000000003fll);
+    /*
+     * Implement the instruction
+     */
+    instr->destv.r.uq = instr->src1v.r.uq >> (Rbv & 0x000000000000003fll);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }
 
 /*
@@ -617,18 +617,18 @@ AXP_EXCEPTIONS AXP_SRL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
  */
 AXP_EXCEPTIONS AXP_SRA(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
-	u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
+    u64 Rbv = (instr->useLiteral ? instr->literal : instr->src2v.r.uq);
 
-	/*
-	 * Implement the instruction
-	 */
-	Rbv &= 0x000000000000003fll;
-	instr->destv.r.uq = instr->src1v.r.uq >> Rbv;
-	if ((Rbv != 0) && ((instr->src1v.r.uq & 0x8000000000000000ll) != 0))
-		instr->destv.r.uq |= 0xffffffffffffffffll << (64 - Rbv);
+    /*
+     * Implement the instruction
+     */
+    Rbv &= 0x000000000000003fll;
+    instr->destv.r.uq = instr->src1v.r.uq >> Rbv;
+    if ((Rbv != 0) && ((instr->src1v.r.uq & 0x8000000000000000ll) != 0))
+	instr->destv.r.uq |= 0xffffffffffffffffll << (64 - Rbv);
 
-	/*
-	 * Return back to the caller with any exception that may have occurred.
-	 */
-	return(NoException);
+    /*
+     * Return back to the caller with any exception that may have occurred.
+     */
+    return (NoException);
 }

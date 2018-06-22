@@ -83,10 +83,22 @@ void AXP_21264_Free_IOWB(AXP_21264_CPU *, u8);
  */
 int AXP_21264_MAF_Empty(AXP_21264_CPU *);
 void AXP_21264_Process_MAF(AXP_21264_CPU *, int);
-void AXP_21264_Complete_MAF(AXP_21264_CPU *, int, AXP_21264_SYSDC_RSP, u8 *);
+void AXP_21264_Complete_MAF(AXP_21264_CPU *, int, AXP_SYSDC, u8 *);
 bool AXP_21265_Check_MAFAddrSent(AXP_21264_CPU *, u64, u8 *);
-bool AXP_21264_Add_MAF_Mem(AXP_21264_CPU *, AXP_CBOX_MAF_TYPE, u64, i8, int, bool);
-bool AXP_21264_Add_MAF_IO(AXP_21264_CPU *, AXP_CBOX_MAF_TYPE, u64, i8, int, bool);
+bool AXP_21264_Add_MAF_Mem(
+    AXP_21264_CPU *,
+    AXP_CBOX_MAF_TYPE,
+    u64,
+    i8,
+    int,
+    bool);
+bool AXP_21264_Add_MAF_IO(
+    AXP_21264_CPU *,
+    AXP_CBOX_MAF_TYPE,
+    u64,
+    i8,
+    int,
+    bool);
 void AXP_21264_Add_MAF(AXP_21264_CPU *, AXP_CBOX_MAF_TYPE, u64, i8, int, bool);
 void AXP_21264_Free_MAF(AXP_21264_CPU *, u8);
 
@@ -98,8 +110,16 @@ int AXP_21264_PQ_Empty(AXP_21264_CPU *);
 void AXP_21264_Process_PQ(AXP_21264_CPU *, int);
 void AXP_21264_SendRsps_PQ(AXP_21264_CPU *);
 void AXP_21264_Add_PQ(
-				AXP_21264_CPU *, int, AXP_21264_SYSDC_RSP, u64, u8, u8 *,
-				bool, bool, bool, bool);
+    AXP_21264_CPU *,
+    int,
+    AXP_SYSDC,
+    u64,
+    u8,
+    u8 *,
+    bool,
+    bool,
+    bool,
+    bool);
 void AXP_21264_Free_PQ(AXP_21264_CPU *, u8);
 
 /*

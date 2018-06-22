@@ -241,46 +241,46 @@
  */
 typedef struct
 {
-	u64	bc		: 2;	/* Base configuration */
-	u64	c0cfp	: 1;	/* CPU0 clock forward preset (see Chapter 11) */
-	u64	c1cfp	: 1;	/* CPU1 clock forward preset (see Chapter 11) */
-	u64	sed		: 2;	/* SysDC extract delay */
-	u64	sfd		: 1;	/* SysDC fill delay */
-	u64	fw		: 1;	/* Available for firmware */
-	u64	aw		: 1;	/* Array width */
-	u64	iddr	: 3;	/* Issue to data delay for memory reads */
-	u64	iddw	: 2;	/* Issue to data delay for all but memory reads */
-	u64	pip		: 1;	/* Pchip 1 preset */
-	u64	res_15	: 1;	/* Reserved at bit 15 */
-	u64	dwtp	: 2;	/* Minimum delay through Dchip from CPU bus to PADbus */
-	u64	dwfp	: 2;	/* Minimum delay through Dchip from PADbus to CPU bus */
-	u64	drtp	: 2;	/* Minimum delay through Dchip from Memory to PADbus */
-	u64	res_22	: 2;	/* Reserved at bits 23:22 */
-	u64	pme		: 1;	/* Page mode enable */
-	u64	qpm		: 1;	/* Queue priority mode */
-	u64	fet		: 2;	/* Fill to extract turnaround cycles */
-	u64	qdi		: 3;	/* Queue drain interval */
-	u64	eft		: 1;	/* Extract to fill turnaround cycles */
-	u64	fti		: 1;	/* Force throttle issue */
-	u64	b1d		: 1;	/* Bypass 1 issue path disable */
-	u64	b2d		: 1;	/* Bypass 2 issue path disable */
-	u64	b3d		: 1;	/* Bypass 3 issue path disable */
-	u64	tpqmmax	: 3;	/* Maximum entries in TPQM on Dchips, modulo 8 */
-	u64	axd		: 1;	/* Disable memory XOR (Typhoon only) */
-	u64	fpqcmax	: 3;	/* Maximum entries in Dchip FPQ, modulo 8 */
-	u64	res_43	: 1;	/* Reserved at bit 43 */
-	u64	fpqpmax	: 3;	/* Maximum entries in FPQ on Dchips known to Pchips, modulo 8 */
-	u64	res_47	: 1;	/* Reserved at bit 47 */
-	u64	pdtmax	: 3;	/* Maximum data transfers to one Pchip until ACK, modulo 8 */
-	u64	res_51	: 1;	/* Reserved at bit 51 */
-	u64	prqmax	: 3;	/* Maximum requests to one Pchip until ACK, modulo 8 */
-	u64	res_55	: 1;	/* Reserved at bit 55 */
-	u64	pbqmax	: 3;	/* CPU probe queue maximum - 0 indicates 8 entries */
-	u64	res_59	: 1;	/* Reserved at bit 59 */
-	u64	p0w		: 1;	/* Wide PADbus 0 (Typhoon only) */
-	u64	p1w		: 1;	/* Wide PADbus 1 (Typhoon only) */
-	u64	res_62	: 1;	/* Reserved at bit 62 */
-	u64	res_63	: 1;	/* Reserved at bit 63 */
+    u64 bc :2; /* Base configuration */
+    u64 c0cfp :1; /* CPU0 clock forward preset (see Chapter 11) */
+    u64 c1cfp :1; /* CPU1 clock forward preset (see Chapter 11) */
+    u64 sed :2; /* SysDC extract delay */
+    u64 sfd :1; /* SysDC fill delay */
+    u64 fw :1; /* Available for firmware */
+    u64 aw :1; /* Array width */
+    u64 iddr :3; /* Issue to data delay for memory reads */
+    u64 iddw :2; /* Issue to data delay for all but memory reads */
+    u64 pip :1; /* Pchip 1 preset */
+    u64 res_15 :1; /* Reserved at bit 15 */
+    u64 dwtp :2; /* Minimum delay through Dchip from CPU bus to PADbus */
+    u64 dwfp :2; /* Minimum delay through Dchip from PADbus to CPU bus */
+    u64 drtp :2; /* Minimum delay through Dchip from Memory to PADbus */
+    u64 res_22 :2; /* Reserved at bits 23:22 */
+    u64 pme :1; /* Page mode enable */
+    u64 qpm :1; /* Queue priority mode */
+    u64 fet :2; /* Fill to extract turnaround cycles */
+    u64 qdi :3; /* Queue drain interval */
+    u64 eft :1; /* Extract to fill turnaround cycles */
+    u64 fti :1; /* Force throttle issue */
+    u64 b1d :1; /* Bypass 1 issue path disable */
+    u64 b2d :1; /* Bypass 2 issue path disable */
+    u64 b3d :1; /* Bypass 3 issue path disable */
+    u64 tpqmmax :3; /* Maximum entries in TPQM on Dchips, modulo 8 */
+    u64 axd :1; /* Disable memory XOR (Typhoon only) */
+    u64 fpqcmax :3; /* Maximum entries in Dchip FPQ, modulo 8 */
+    u64 res_43 :1; /* Reserved at bit 43 */
+    u64 fpqpmax :3; /* Maximum entries in FPQ on Dchips known to Pchips, modulo 8 */
+    u64 res_47 :1; /* Reserved at bit 47 */
+    u64 pdtmax :3; /* Maximum data transfers to one Pchip until ACK, modulo 8 */
+    u64 res_51 :1; /* Reserved at bit 51 */
+    u64 prqmax :3; /* Maximum requests to one Pchip until ACK, modulo 8 */
+    u64 res_55 :1; /* Reserved at bit 55 */
+    u64 pbqmax :3; /* CPU probe queue maximum - 0 indicates 8 entries */
+    u64 res_59 :1; /* Reserved at bit 59 */
+    u64 p0w :1; /* Wide PADbus 0 (Typhoon only) */
+    u64 p1w :1; /* Wide PADbus 1 (Typhoon only) */
+    u64 res_62 :1; /* Reserved at bit 62 */
+    u64 res_63 :1; /* Reserved at bit 63 */
 } AXP_21274_CSC;
 
 /*
@@ -489,26 +489,26 @@ typedef struct
  */
 typedef struct
 {
-	u64	rcd		: 1;	/* RAS-to-CAS delay */
-	u64	res_1	: 1;	/* Reserved at bit 1 */
-	u64	cat		: 1;	/* CAS access time */
-	u64	res_3	: 1;	/* Reserved at bit 3 */
-	u64	ird		: 3;	/* Issue to RAS delay */
-	u64	res_7	: 1;	/* Reserved at bit 7 */
-	u64	rpw		: 2;	/* Minimum RAS plus width (tRAS) */
-	u64	res_10	: 2;	/* Reserved at bits 11:10 */
-	u64	rpt		: 2;	/* Minimum RAS precharge time */
-	u64	res_14	: 2;	/* Reserved at bits 14:15 */
-	u64	rrd		: 1;	/* Minimum same-array different-bank RAS-to-RAS delay */
-	u64	res_17	: 3;	/* Reserved at bits 19:17 */
-	u64	mpd		: 1;	/* Mask pipeline delay */
-	u64	res_21	: 3;	/* Reserved at bits 23:21 */
-	u64	ri		: 6;	/* Refresh interval */
-	u64	res_30	: 2;	/* Reserved at bits 31:30 */
-	u64	phcr	: 4;	/* Page hit cycles for reads */
-	u64	phcw	: 4;	/* Page hit cycles for writes */
-	u64	mph		: 6;	/* Maximum page hits */
-	u64 res_46	: 18;	/* Reserved at bits 63:46 */
+    u64 rcd :1; /* RAS-to-CAS delay */
+    u64 res_1 :1; /* Reserved at bit 1 */
+    u64 cat :1; /* CAS access time */
+    u64 res_3 :1; /* Reserved at bit 3 */
+    u64 ird :3; /* Issue to RAS delay */
+    u64 res_7 :1; /* Reserved at bit 7 */
+    u64 rpw :2; /* Minimum RAS plus width (tRAS) */
+    u64 res_10 :2; /* Reserved at bits 11:10 */
+    u64 rpt :2; /* Minimum RAS precharge time */
+    u64 res_14 :2; /* Reserved at bits 14:15 */
+    u64 rrd :1; /* Minimum same-array different-bank RAS-to-RAS delay */
+    u64 res_17 :3; /* Reserved at bits 19:17 */
+    u64 mpd :1; /* Mask pipeline delay */
+    u64 res_21 :3; /* Reserved at bits 23:21 */
+    u64 ri :6; /* Refresh interval */
+    u64 res_30 :2; /* Reserved at bits 31:30 */
+    u64 phcr :4; /* Page hit cycles for reads */
+    u64 phcw :4; /* Page hit cycles for writes */
+    u64 mph :6; /* Maximum page hits */
+    u64 res_46 :18; /* Reserved at bits 63:46 */
 } AXP_21274_MTR;
 
 /*
@@ -627,20 +627,20 @@ typedef struct
  */
 typedef struct
 {
-	u64	cpuID	: 2;	/* ID of the CPU performing the read */
-	u64	res_2	: 2;	/* Reserved at bits 3:2 */
-	u64	itintr	: 4;	/* Interval timer interrupt pending - one bit per CPU */
-	u64	ipintr	: 4;	/* Interprocessor interrupt pending - one bit per CPU */
-	u64	ipreq	: 4;	/* Interprocessor interrupt request - one bit per CPU */
-	u64	abw		: 4;	/* Arbitration won - one bit per CPU */
-	u64	abt		: 4;	/* Arbitration try - one bit per CPU */
-	u64	acl		: 1;	/* Arbitration clear */
-	u64	res_25	: 3;	/* Reserved at bits 27:25 */
-	u64	nxm		: 1;	/* Nonexistent memory address detected */
-	u64	nxs		: 3;	/* NXM source */
-	u64	rev		: 8;	/* Latest revision of Cchip */
-	u64	devSup	: 4;	/* Suppress IRQ 1 (device) interrupts to the CPU */
-	u64	res_44	: 20;	/* Reserved at bits 63:44 */
+    u64 cpuID :2; /* ID of the CPU performing the read */
+    u64 res_2 :2; /* Reserved at bits 3:2 */
+    u64 itintr :4; /* Interval timer interrupt pending - one bit per CPU */
+    u64 ipintr :4; /* Interprocessor interrupt pending - one bit per CPU */
+    u64 ipreq :4; /* Interprocessor interrupt request - one bit per CPU */
+    u64 abw :4; /* Arbitration won - one bit per CPU */
+    u64 abt :4; /* Arbitration try - one bit per CPU */
+    u64 acl :1; /* Arbitration clear */
+    u64 res_25 :3; /* Reserved at bits 27:25 */
+    u64 nxm :1; /* Nonexistent memory address detected */
+    u64 nxs :3; /* NXM source */
+    u64 rev :8; /* Latest revision of Cchip */
+    u64 devSup :4; /* Suppress IRQ 1 (device) interrupts to the CPU */
+    u64 res_44 :20; /* Reserved at bits 63:44 */
 } AXP_21274_MISC;
 
 /*
@@ -718,11 +718,11 @@ typedef struct
  */
 typedef struct
 {
-	u64	cks		: 1;	/* Clock send */
-	u64	ds		: 1;	/* Data send - Must be a 1 to receive */
-	u64	ckr		: 1;	/* Clock receive */
-	u64	dr		: 1;	/* Data receive */
-	u64	res_4	: 60;	/* Reserved at bits 63:4 */
+    u64 cks :1; /* Clock send */
+    u64 ds :1; /* Data send - Must be a 1 to receive */
+    u64 ckr :1; /* Clock receive */
+    u64 dr :1; /* Data receive */
+    u64 res_4 :60; /* Reserved at bits 63:4 */
 } AXP_21274_MPD;
 
 /*
@@ -805,17 +805,17 @@ typedef struct
  */
 typedef struct
 {
-	u64	bnks	: 2;	/* Number of bank bits in the SDRAMs */
-	u64	rows	: 2;	/* Number of row bits in the SDRAM */
-	u64	res_4	: 4;	/* Reserved at bits 7:4 */
-	u64	sa		: 1;	/* Split array */
-	u64	tsa		: 1;	/* Twice-split array (Typhoon only).  Reserved (Tsunami) */
-	u64	res_10	: 2;	/* Reserved at bits 11:10 */
-	u64	asiz	: 4;	/* Array size */
-	u64	dbg		: 1;	/* Enables this memory port to be used as a debug interface */
-	u64	res_17	: 7;	/* Reserved at bits 23:17 */
-	u64	addr	: 11;	/* Base address */
-	u64	res_35	: 29;	/* Reserved at bits 63:35 */
+    u64 bnks :2; /* Number of bank bits in the SDRAMs */
+    u64 rows :2; /* Number of row bits in the SDRAM */
+    u64 res_4 :4; /* Reserved at bits 7:4 */
+    u64 sa :1; /* Split array */
+    u64 tsa :1; /* Twice-split array (Typhoon only).  Reserved (Tsunami) */
+    u64 res_10 :2; /* Reserved at bits 11:10 */
+    u64 asiz :4; /* Array size */
+    u64 dbg :1; /* Enables this memory port to be used as a debug interface */
+    u64 res_17 :7; /* Reserved at bits 23:17 */
+    u64 addr :11; /* Base address */
+    u64 res_35 :29; /* Reserved at bits 63:35 */
 } AXP_21274_AARx;
 
 /*
@@ -973,9 +973,9 @@ typedef u64 AXP_21274_DIMn;
  */
 typedef struct
 {
-	u64	dev		: 56;	/* IRQ1 PCI interrupts pending to the CPU */
-	u64	res_56	: 2;	/* Reserved at bits 57:56 */
-	u64	err		: 6;	/* IRQ0 error interrupts */
+    u64 dev :56; /* IRQ1 PCI interrupts pending to the CPU */
+    u64 res_56 :2; /* Reserved at bits 57:56 */
+    u64 err :6; /* IRQ0 error interrupts */
 } AXP_21274_DIRn;
 
 /*
@@ -1102,11 +1102,11 @@ typedef u64 AXP_21274_DRIR;
  */
 typedef struct
 {
-	u64	prben0	: 1;	/* Probe enable bit CPU0 */
-	u64	prben1	: 1;	/* Probe enable bit CPU1 */
-	u64	prben2	: 1;	/* Probe enable bit CPU2 */
-	u64	prben3	: 1;	/* Probe enable bit CPU3 */
-	u64	res_2	: 60;	/* Reserved at bits 63:4 */
+    u64 prben0 :1; /* Probe enable bit CPU0 */
+    u64 prben1 :1; /* Probe enable bit CPU1 */
+    u64 prben2 :1; /* Probe enable bit CPU2 */
+    u64 prben3 :1; /* Probe enable bit CPU3 */
+    u64 res_2 :60; /* Reserved at bits 63:4 */
 } AXP_21274_PRBEN;
 
 /*
@@ -1142,9 +1142,9 @@ typedef struct
  */
 typedef struct
 {
-	u64	iCnt	: 24;	/* Count of remaining interrupts to ignore */
-	u64 of		: 1;	/* Overflow, indicates negative count */
-	u64	res_25	: 39;
+    u64 iCnt :24; /* Count of remaining interrupts to ignore */
+    u64 of :1; /* Overflow, indicates negative count */
+    u64 res_25 :39;
 } AXP_21274_IICn;
 
 /*
@@ -1179,8 +1179,8 @@ typedef struct
  */
 typedef struct
 {
-	u64	wdr		: 25;	/* Wake-up delay (in cycles) */
-	u64	res_25	: 39;	/* Reserved at bits 63:25 */
+    u64 wdr :25; /* Wake-up delay (in cycles) */
+    u64 res_25 :39; /* Reserved at bits 63:25 */
 } AXP_21274_WDR;
 
 /*
@@ -1210,8 +1210,8 @@ typedef struct
  */
 typedef struct
 {
-	u64	mprdat	: 13;	/* Data to be written on address lines <12:0> */
-	u64	res_13	: 51;	/* Reserved at bits 63:13 */
+    u64 mprdat :13; /* Data to be written on address lines <12:0> */
+    u64 res_13 :51; /* Reserved at bits 63:13 */
 } AXP_21274_MPRn;
 
 /*
@@ -1296,15 +1296,15 @@ typedef u64 AXP_21274_MCTL;
  */
 typedef struct
 {
-	u64	as		: 1;	/* Address setup to the address latch before as_1 */
-	u64	ah		: 1;	/* Address hold after as_1 before cs_1 */
-	u64	res_2	: 2;	/* Reserved at bits 3:2 */
-	u64	is		: 2;	/* Interrupt setup time */
-	u64	res_6	: 2;	/* Reserved at bits 7:6 */
-	u64	irt		: 2;	/* Interrupt read time */
-	u64	res_10	: 2;	/* Reserved at bits 11:10 */
-	u64	id		: 3;	/* Interrupt starting device */
-	u64 res_15	: 49;	/* Reserved at bits 63:15 */
+    u64 as :1; /* Address setup to the address latch before as_1 */
+    u64 ah :1; /* Address hold after as_1 before cs_1 */
+    u64 res_2 :2; /* Reserved at bits 3:2 */
+    u64 is :2; /* Interrupt setup time */
+    u64 res_6 :2; /* Reserved at bits 7:6 */
+    u64 irt :2; /* Interrupt read time */
+    u64 res_10 :2; /* Reserved at bits 11:10 */
+    u64 id :3; /* Interrupt starting device */
+    u64 res_15 :49; /* Reserved at bits 63:15 */
 } AXP_21274_TTR;
 
 /*
@@ -1392,34 +1392,34 @@ typedef struct
  */
 typedef struct
 {
-	u64	ra0		: 4;	/* Read access time */
-	u64	rd0		: 3;	/* Read output disable time */
-	u64	res_7	: 1;	/* Reserved at bit 7 */
-	u64	ws0		: 2;	/* Write setup time */
-	u64	res_10	: 2;	/* Reserved at bits 11:10 */
-	u64	wp0		: 3;	/* Write pulse width */
-	u64	wh0		: 1;	/* Write hold time */
-	u64	ra1		: 4;	/* Read access time */
-	u64	rd1		: 3;	/* Read output disable time */
-	u64	res_23	: 1;	/* Reserved at bit 7 */
-	u64	ws1		: 2;	/* Write setup time */
-	u64	res_26	: 2;	/* Reserved at bits 11:10 */
-	u64	wp1		: 3;	/* Write pulse width */
-	u64	wh1		: 1;	/* Write hold time */
-	u64	ra2		: 4;	/* Read access time */
-	u64	rd2		: 3;	/* Read output disable time */
-	u64	res_39	: 1;	/* Reserved at bit 7 */
-	u64	ws2		: 2;	/* Write setup time */
-	u64	res_42	: 2;	/* Reserved at bits 11:10 */
-	u64	wp2		: 3;	/* Write pulse width */
-	u64	wh2		: 1;	/* Write hold time */
-	u64	ra3		: 4;	/* Read access time */
-	u64	rd3		: 3;	/* Read output disable time */
-	u64	res_55	: 1;	/* Reserved at bit 7 */
-	u64	ws3		: 2;	/* Write setup time */
-	u64	res_58	: 2;	/* Reserved at bits 11:10 */
-	u64	wp3		: 3;	/* Write pulse width */
-	u64	wh3		: 1;	/* Write hold time */
+    u64 ra0 :4; /* Read access time */
+    u64 rd0 :3; /* Read output disable time */
+    u64 res_7 :1; /* Reserved at bit 7 */
+    u64 ws0 :2; /* Write setup time */
+    u64 res_10 :2; /* Reserved at bits 11:10 */
+    u64 wp0 :3; /* Write pulse width */
+    u64 wh0 :1; /* Write hold time */
+    u64 ra1 :4; /* Read access time */
+    u64 rd1 :3; /* Read output disable time */
+    u64 res_23 :1; /* Reserved at bit 7 */
+    u64 ws1 :2; /* Write setup time */
+    u64 res_26 :2; /* Reserved at bits 11:10 */
+    u64 wp1 :3; /* Write pulse width */
+    u64 wh1 :1; /* Write hold time */
+    u64 ra2 :4; /* Read access time */
+    u64 rd2 :3; /* Read output disable time */
+    u64 res_39 :1; /* Reserved at bit 7 */
+    u64 ws2 :2; /* Write setup time */
+    u64 res_42 :2; /* Reserved at bits 11:10 */
+    u64 wp2 :3; /* Write pulse width */
+    u64 wh2 :1; /* Write hold time */
+    u64 ra3 :4; /* Read access time */
+    u64 rd3 :3; /* Read output disable time */
+    u64 res_55 :1; /* Reserved at bit 7 */
+    u64 ws3 :2; /* Write setup time */
+    u64 res_58 :2; /* Reserved at bits 11:10 */
+    u64 wp3 :3; /* Write pulse width */
+    u64 wh3 :1; /* Write hold time */
 } AXP_21274_TDR;
 
 /*
@@ -1458,8 +1458,8 @@ typedef struct
  */
 typedef struct
 {
-	u64	sr		: 1;	/* Self Refresh */
-	u64	res_1	: 63;	/* Reserved at bits 63:1 */
+    u64 sr :1; /* Self Refresh */
+    u64 res_1 :63; /* Reserved at bits 63:1 */
 } AXP_21274_PWR;
 
 /*
@@ -1537,20 +1537,20 @@ typedef struct
  */
 typedef struct
 {
-	u64	slct0	: 8;	/* Select B Minitor<0> */
-	u64	slct1	: 8;	/* Select B Minitor<1> */
-	u64	slct2	: 8;	/* Select B Minitor<2> */
-	u64	slct3	: 8;	/* Select B Minitor<3> */
-	u64	slctmbl	: 2;	/* Select memory bus monitor low bits */
-	u64	res_34	: 2;	/* Reserved at bits 35:34 */
-	u64	stkdis0	: 1;	/* ECNT0 stick disable */
-	u64	stkdis1	: 1;	/* ECNT1 stick disable */
-	u64	stkdis2	: 1;	/* ECNT2 stick disable */
-	u64	stkdis3	: 1;	/* ECNT3 stick disable */
-	u64	msk01	: 10;	/* Mask field for ECNT0 and ECNT1 */
-	u64	res_50	: 2;	/* Reserverd at bits 51:50 */
-	u64	msk23	: 10;	/* Mask field for ECNT2 and ECNT3 */
-	u64	res_62	: 2;	/* Reserved at bits 63:52 */
+    u64 slct0 :8; /* Select B Minitor<0> */
+    u64 slct1 :8; /* Select B Minitor<1> */
+    u64 slct2 :8; /* Select B Minitor<2> */
+    u64 slct3 :8; /* Select B Minitor<3> */
+    u64 slctmbl :2; /* Select memory bus monitor low bits */
+    u64 res_34 :2; /* Reserved at bits 35:34 */
+    u64 stkdis0 :1; /* ECNT0 stick disable */
+    u64 stkdis1 :1; /* ECNT1 stick disable */
+    u64 stkdis2 :1; /* ECNT2 stick disable */
+    u64 stkdis3 :1; /* ECNT3 stick disable */
+    u64 msk01 :10; /* Mask field for ECNT0 and ECNT1 */
+    u64 res_50 :2; /* Reserverd at bits 51:50 */
+    u64 msk23 :10; /* Mask field for ECNT2 and ECNT3 */
+    u64 res_62 :2; /* Reserved at bits 63:52 */
 } AXP_21274_CMONCTLA;
 
 /*
@@ -1603,16 +1603,16 @@ typedef struct
  */
 typedef struct
 {
-	u64	dis		: 1;	/* Disable monitor output signals */
-	u64	res_1	: 15;	/* Reserved at bits 15:1 */
-	u64	mte0	: 10;	/* Match/entry field - for ECNT0 */
-	u64	res_26	: 2;	/* Reserved at bits 27:26 */
-	u64	mte1	: 10;	/* Match/entry field - for ECNT1 */
-	u64	res_38	: 2;	/* Reserved at bits 39:38 */
-	u64	mte2	: 10;	/* Match/entry field - for ECNT2 */
-	u64	res_50	: 2;	/* Reserved at bits 51:50 */
-	u64	mte3	: 10;	/* Match/entry field - for ECNT3 */
-	u64	res_62	: 2;	/* Reserved at bits 63:62 */
+    u64 dis :1; /* Disable monitor output signals */
+    u64 res_1 :15; /* Reserved at bits 15:1 */
+    u64 mte0 :10; /* Match/entry field - for ECNT0 */
+    u64 res_26 :2; /* Reserved at bits 27:26 */
+    u64 mte1 :10; /* Match/entry field - for ECNT1 */
+    u64 res_38 :2; /* Reserved at bits 39:38 */
+    u64 mte2 :10; /* Match/entry field - for ECNT2 */
+    u64 res_50 :2; /* Reserved at bits 51:50 */
+    u64 mte3 :10; /* Match/entry field - for ECNT3 */
+    u64 res_62 :2; /* Reserved at bits 63:62 */
 } AXP_21274_CMONCTLB;
 
 /*
@@ -1684,8 +1684,8 @@ typedef struct
  */
 typedef struct
 {
-		u32	ecnt0;			/* Increments when Event 0 is true */
-		u32	ecnt1;			/* Increments when Event 1 is true */
+    u32 ecnt0; /* Increments when Event 0 is true */
+    u32 ecnt1; /* Increments when Event 1 is true */
 } AXP_21274_CMONCNT01;
 
 /*
@@ -1706,8 +1706,8 @@ typedef struct
  */
 typedef struct
 {
-		u32	ecnt2;			/* Increments when Event 0 is true */
-		u32	ecnt3;			/* Increments when Event 1 is true */
+    u32 ecnt2; /* Increments when Event 0 is true */
+    u32 ecnt3; /* Increments when Event 1 is true */
 } AXP_21274_CMONCNT23;
 
 /****************************************************************************
@@ -1751,27 +1751,27 @@ typedef struct
  */
 typedef struct
 {
-	union
+    union
+    {
+	struct
 	{
-		struct
-		{
-			u8	bc		: 2;	/* Base configuration */
-			u8	c0cfp	: 1;	/* CPU0 clock forward preset */
-			u8	c1cfp	: 1;	/* CPU1 clock forward preset */
-			u8	c2cfp	: 1;	/* CPU2 clock forward preset */
-			u8	c3cfp	: 1;	/* CPU3 clock forward preset */
-			u8	p1p		: 1;	/* Pchip 1 present */
-			u8	res_7	: 1;	/* Reserved at bit 7 */
-		};
-		u8	dchip0;
+	    u8 bc :2; /* Base configuration */
+	    u8 c0cfp :1; /* CPU0 clock forward preset */
+	    u8 c1cfp :1; /* CPU1 clock forward preset */
+	    u8 c2cfp :1; /* CPU2 clock forward preset */
+	    u8 c3cfp :1; /* CPU3 clock forward preset */
+	    u8 p1p :1; /* Pchip 1 present */
+	    u8 res_7 :1; /* Reserved at bit 7 */
 	};
-	u8	dchip1;
-	u8	dchip2;
-	u8	dchip3;
-	u8	dchip4;
-	u8	dchip5;
-	u8	dchip6;
-	u8	dchip7;
+	u8 dchip0;
+    };
+    u8 dchip1;
+    u8 dchip2;
+    u8 dchip3;
+    u8 dchip4;
+    u8 dchip5;
+    u8 dchip6;
+    u8 dchip7;
 } AXP_21274_DSC;
 
 /*
@@ -1801,10 +1801,10 @@ typedef struct
  */
 typedef struct
 {
-		u64	p0w		: 1;	/* Reserved */
-		u64	p1w		: 1;	/* Reserved */
-		u64	res_2	: 3;	/* Reserved at bits 4:2 */
-		u64	res_5	: 59;	/* Reserved at bits 63:5 */
+    u64 p0w :1; /* Reserved */
+    u64 p1w :1; /* Reserved */
+    u64 res_2 :3; /* Reserved at bits 4:2 */
+    u64 res_5 :59; /* Reserved at bits 63:5 */
 } AXP_21274_DSC2;
 
 /*
@@ -1892,24 +1892,24 @@ typedef struct
  */
 typedef struct
 {
-	union
+    union
+    {
+	struct
 	{
-		struct
-		{
-			u8	aw		: 1;	/* Array width */
-			u8	iddr	: 3;	/* Issue to data delay for memory reads */
-			u8	iddw	: 2;	/* issue to data delay for non reads */
-			u8	res_7	: 2;	/* Reserved at bit 7 */
-		};
-		u8	dchip0;
+	    u8 aw :1; /* Array width */
+	    u8 iddr :3; /* Issue to data delay for memory reads */
+	    u8 iddw :2; /* issue to data delay for non reads */
+	    u8 res_7 :2; /* Reserved at bit 7 */
 	};
-	u8	dchip1;
-	u8	dchip2;
-	u8	dchip3;
-	u8	dchip4;
-	u8	dchip5;
-	u8	dchip6;
-	u8	dchip7;
+	u8 dchip0;
+    };
+    u8 dchip1;
+    u8 dchip2;
+    u8 dchip3;
+    u8 dchip4;
+    u8 dchip5;
+    u8 dchip6;
+    u8 dchip7;
 } AXP_21274_STR;
 
 /*
@@ -1964,22 +1964,22 @@ typedef struct
  */
 typedef struct
 {
-	u64	rev0	: 4;	/* Dchip 0 revision */
-	u64 res_4	: 4;	/* Reserved at bits 7:4 */
-	u64	rev1	: 4;	/* Dchip 1 revision */
-	u64 res_12	: 4;	/* Reserved at bits 7:4 */
-	u64	rev2	: 4;	/* Dchip 2 revision */
-	u64 res_20	: 4;	/* Reserved at bits 7:4 */
-	u64	rev3	: 4;	/* Dchip 3 revision */
-	u64 res_28	: 4;	/* Reserved at bits 7:4 */
-	u64	rev4	: 4;	/* Dchip 4 revision */
-	u64 res_36	: 4;	/* Reserved at bits 7:4 */
-	u64	rev5	: 4;	/* Dchip 5 revision */
-	u64 res_44	: 4;	/* Reserved at bits 7:4 */
-	u64	rev6	: 4;	/* Dchip 6 revision */
-	u64 res_52	: 4;	/* Reserved at bits 7:4 */
-	u64	rev7	: 4;	/* Dchip 7 revision */
-	u64 res_60	: 4;	/* Reserved at bits 7:4 */
+    u64 rev0 :4; /* Dchip 0 revision */
+    u64 res_4 :4; /* Reserved at bits 7:4 */
+    u64 rev1 :4; /* Dchip 1 revision */
+    u64 res_12 :4; /* Reserved at bits 7:4 */
+    u64 rev2 :4; /* Dchip 2 revision */
+    u64 res_20 :4; /* Reserved at bits 7:4 */
+    u64 rev3 :4; /* Dchip 3 revision */
+    u64 res_28 :4; /* Reserved at bits 7:4 */
+    u64 rev4 :4; /* Dchip 4 revision */
+    u64 res_36 :4; /* Reserved at bits 7:4 */
+    u64 rev5 :4; /* Dchip 5 revision */
+    u64 res_44 :4; /* Reserved at bits 7:4 */
+    u64 rev6 :4; /* Dchip 6 revision */
+    u64 res_52 :4; /* Reserved at bits 7:4 */
+    u64 rev7 :4; /* Dchip 7 revision */
+    u64 res_60 :4; /* Reserved at bits 7:4 */
 } AXP_21274_DREV;
 
 /*
@@ -2025,11 +2025,11 @@ typedef struct
  */
 typedef struct
 {
-	u64	ena		: 1;	/* Enable */
-	u64	sg		: 1;	/* Scatter-gather */
-	u64	res_2	: 18;	/* Reserved at bits 19:2 */
-	u64	addr	: 12;	/* Base address */
-	u64	res_32	: 32;	/* Reserved at bits 63:32 */
+    u64 ena :1; /* Enable */
+    u64 sg :1; /* Scatter-gather */
+    u64 res_2 :18; /* Reserved at bits 19:2 */
+    u64 addr :12; /* Base address */
+    u64 res_32 :32; /* Reserved at bits 63:32 */
 } AXP_21274_WSBAn;
 
 /*
@@ -2065,13 +2065,13 @@ typedef struct
  */
 typedef struct
 {
-	u64	ena		: 1;	/* Enable */
-	u64	sg		: 1;	/* Scatter-gather always enabled */
-	u64	res_2	: 18;	/* Reserved at bits 19:2 */
-	u64	addr	: 12;	/* Base address id DAC enable = 0, not used otherwise */
-	u64	res_32	: 7;	/* Reserved at bits 38:32 */
-	u64	dac		: 1;	/* DAC enable */
-	u64	res_40	: 24;	/* Reserved at bits 63:40 */
+    u64 ena :1; /* Enable */
+    u64 sg :1; /* Scatter-gather always enabled */
+    u64 res_2 :18; /* Reserved at bits 19:2 */
+    u64 addr :12; /* Base address id DAC enable = 0, not used otherwise */
+    u64 res_32 :7; /* Reserved at bits 38:32 */
+    u64 dac :1; /* DAC enable */
+    u64 res_40 :24; /* Reserved at bits 63:40 */
 } AXP_21274_WSBA3;
 
 /*
@@ -2107,9 +2107,9 @@ typedef struct
  */
 typedef struct
 {
-	u64	res_0	: 20;	/* Reserved at bits 19:0 */
-	u64	am		: 12;	/* Address mask */
-	u64 res_32	: 32;	/* Reserved at bits 63-32 */
+    u64 res_0 :20; /* Reserved at bits 19:0 */
+    u64 am :12; /* Address mask */
+    u64 res_32 :32; /* Reserved at bits 63-32 */
 } AXP_21274_WSMn;
 
 /*
@@ -2152,9 +2152,9 @@ typedef struct
  */
 typedef struct
 {
-	u64	res_0	: 10;	/* Reserved at bits 9:0 */
-	u64	addr	: 25;	/* See above TBAn and TBA3 descriptions */
-	u64	res_35	: 29;	/* Reserved at bits 63:35 */
+    u64 res_0 :10; /* Reserved at bits 9:0 */
+    u64 addr :25; /* See above TBAn and TBA3 descriptions */
+    u64 res_35 :29; /* Reserved at bits 63:35 */
 } AXP_21274_TBAn;
 
 /*
@@ -2292,30 +2292,30 @@ typedef struct
  */
 typedef struct
 {
-	u64	fdsc	: 1;	/* Fast discard enable */
-	u64	fbtb	: 1;	/* Fast back-to-back enable */
-	u64	thdis	: 1;	/* Disable antithrash mechanism for TLB */
-	u64	chaindis : 1;	/* Disable chaining */
-	u64 tgtlat	: 1;	/* Target latency timers enable */
-	u64	hole	: 1;	/* 512KB-to-1MB window hole enable */
-	u64	mwin	: 1;	/* Monster window enable */
-	u64	arbena	: 1;	/* Internal arbiter enable */
-	u64	prigrp	: 7;	/* Arbiter priority group */
-	u64	ppri	: 1;	/* Arbiter priority group for the Pchip */
-	u64	res_16	: 2;	/* Reserved at bits 17:16 */
-	u64	eccen	: 1;	/* ECC ebavle for DMA and SGTE accesses */
-	u64	padm	: 1;	/* PADbus mode */
-	u64	cdqmax	: 4;	/* Maximum data transfers to Dchips from both Pchips */
-	u64	rev		: 8;	/* Revision of the Pchip (see Section 8.10) */
-	u64	crqmax	: 4;	/* Maximum requests to Cchip from both Pchips */
-	u64	ptpmax	: 4;	/* Maximum PTP requests to Cchip from both Pchips */
-	u64	pclkx	: 2;	/* PCI clock frequency multiplier */
-	u64	fdsdis	: 1;	/* Fast DMA start and SGTE request disable */
-	u64	fdwdis	: 1;	/* Fast DMA read cache block wrap request disable */
-	u64	ptevrfy	: 1;	/* PTE verify for DMA read */
-	u64	rpp		: 1;	/* Remote Pchip present */
-	u64	pid		: 2;	/* Pchip ID */
-	u64	res_48	: 16;	/* Reserved at bits 63:48 */
+    u64 fdsc :1; /* Fast discard enable */
+    u64 fbtb :1; /* Fast back-to-back enable */
+    u64 thdis :1; /* Disable antithrash mechanism for TLB */
+    u64 chaindis :1; /* Disable chaining */
+    u64 tgtlat :1; /* Target latency timers enable */
+    u64 hole :1; /* 512KB-to-1MB window hole enable */
+    u64 mwin :1; /* Monster window enable */
+    u64 arbena :1; /* Internal arbiter enable */
+    u64 prigrp :7; /* Arbiter priority group */
+    u64 ppri :1; /* Arbiter priority group for the Pchip */
+    u64 res_16 :2; /* Reserved at bits 17:16 */
+    u64 eccen :1; /* ECC ebavle for DMA and SGTE accesses */
+    u64 padm :1; /* PADbus mode */
+    u64 cdqmax :4; /* Maximum data transfers to Dchips from both Pchips */
+    u64 rev :8; /* Revision of the Pchip (see Section 8.10) */
+    u64 crqmax :4; /* Maximum requests to Cchip from both Pchips */
+    u64 ptpmax :4; /* Maximum PTP requests to Cchip from both Pchips */
+    u64 pclkx :2; /* PCI clock frequency multiplier */
+    u64 fdsdis :1; /* Fast DMA start and SGTE request disable */
+    u64 fdwdis :1; /* Fast DMA read cache block wrap request disable */
+    u64 ptevrfy :1; /* PTE verify for DMA read */
+    u64 rpp :1; /* Remote Pchip present */
+    u64 pid :2; /* Pchip ID */
+    u64 res_48 :16; /* Reserved at bits 63:48 */
 } AXP_21274_PCTL;
 
 /*
@@ -2388,10 +2388,10 @@ typedef struct
  */
 typedef struct
 {
-	u8	res_0;			/* Reserved at bits 7:0 */
-	u8	lat;			/* Master latency timer */
-	u16	res_16;			/* Reserved at bits 31-16 */
-	u32	res_32;			/* Reserved at bits 63-32 */
+    u8 res_0; /* Reserved at bits 7:0 */
+    u8 lat; /* Master latency timer */
+    u16 res_16; /* Reserved at bits 31-16 */
+    u32 res_32; /* Reserved at bits 63-32 */
 } AXP_21274_PLAT;
 
 /*
@@ -2490,23 +2490,23 @@ typedef struct
  */
 typedef struct
 {
-	u64	lost	: 1;	/* Lost and error */
-	u64	serr	: 1;	/* b_serr_1 sampled asserted */
-	u64	perr	: 1;	/* b_perr_1 sampled asserted */
-	u64	dcrto	: 1;	/* Delayed completion retry timeout as PCI target */
-	u64	sge		: 1;	/* Scatter-gather had invalid page table entry */
-	u64	ape		: 1;	/* Address parity error detected as potential PCI target */
-	u64	ta		: 1;	/* Target abort as PCI master */
-	u64	rdpe	: 1;	/* PCI read data parity error as PCI master */
-	u64	nds		: 1;	/* No b-devsel_1 as PCI master */
-	u64	res_9	: 1;	/* Reserved at bit 9 */
-	u64	uecc	: 1;	/* Uncorrectable ECC error */
-	u64	cre		: 1;	/* Correctable ECC error */
-	u64	res_12	: 4;	/* Reserved at bits 15:12 */
-	u64	addr	: 35;	/* CRE or UECC address */
-	u64	inv		: 1;	/* Info Not Valid */
-	u64 cmd		: 4;	/* PCI command of transaction when error detected */
-	u64	syn		: 8;	/* ECC syndrome of error if CRE or UECC */
+    u64 lost :1; /* Lost and error */
+    u64 serr :1; /* b_serr_1 sampled asserted */
+    u64 perr :1; /* b_perr_1 sampled asserted */
+    u64 dcrto :1; /* Delayed completion retry timeout as PCI target */
+    u64 sge :1; /* Scatter-gather had invalid page table entry */
+    u64 ape :1; /* Address parity error detected as potential PCI target */
+    u64 ta :1; /* Target abort as PCI master */
+    u64 rdpe :1; /* PCI read data parity error as PCI master */
+    u64 nds :1; /* No b-devsel_1 as PCI master */
+    u64 res_9 :1; /* Reserved at bit 9 */
+    u64 uecc :1; /* Uncorrectable ECC error */
+    u64 cre :1; /* Correctable ECC error */
+    u64 res_12 :4; /* Reserved at bits 15:12 */
+    u64 addr :35; /* CRE or UECC address */
+    u64 inv :1; /* Info Not Valid */
+    u64 cmd :4; /* PCI command of transaction when error detected */
+    u64 syn :8; /* ECC syndrome of error if CRE or UECC */
 } AXP_21274_PERROR;
 
 /*
@@ -2556,8 +2556,8 @@ typedef struct
  */
 typedef struct
 {
-	u64	mask	: 12;	/* PERROR register bit enables */
-	u64	res_12	: 52;	/* Reserved at bits 63:12 */
+    u64 mask :12; /* PERROR register bit enables */
+    u64 res_12 :52; /* Reserved at bits 63:12 */
 } AXP_21274_PERRMASK;
 
 /*
@@ -2596,9 +2596,9 @@ typedef struct
  */
 typedef struct
 {
-	u64	set		: 12;	/* PERROR register bit set */
-	u64	res_12	: 4;	/* Reserved at bits 15:12 */
-	u64	info	: 48;	/* PERROR register information */
+    u64 set :12; /* PERROR register bit set */
+    u64 res_12 :4; /* Reserved at bits 15:12 */
+    u64 info :48; /* PERROR register information */
 } AXP_21274_PERRSET;
 
 /*
@@ -2636,11 +2636,11 @@ typedef struct
  */
 typedef struct
 {
-	u64	res_0	: 4;	/* Reserved at bits 3:0 */
-	u64	addr	: 16;	/* Only invalidate if match against PCI address 31:16 */
-	u64	res_20	: 7;	/* Reserved at bits 26:20 */
-	u64	dac		: 1;	/* Only invalidate if match PCI address bit 39 */
-	u64	res_28	: 36;	/* Reserved at bits 63:28 */
+    u64 res_0 :4; /* Reserved at bits 3:0 */
+    u64 addr :16; /* Only invalidate if match against PCI address 31:16 */
+    u64 res_20 :7; /* Reserved at bits 26:20 */
+    u64 dac :1; /* Only invalidate if match PCI address bit 39 */
+    u64 res_28 :36; /* Reserved at bits 63:28 */
 } AXP_21274_TLBIV;
 
 /*
@@ -2714,11 +2714,11 @@ typedef struct
  */
 typedef struct
 {
-	u64	slct0	: 8;	/* Selects chip output b_monitor<0> on reset */
-	u64	slct1	: 8;	/* Selects chip output b_monitor<1> on reset */
-	u64	stkdis0	: 1;	/* Sticky count0 disable */
-	u64	stkdis1	: 1;	/* Sticky count1 disable */
-	u64	res_18	: 46;	/* Reserved at bits 63:18 */
+    u64 slct0 :8; /* Selects chip output b_monitor<0> on reset */
+    u64 slct1 :8; /* Selects chip output b_monitor<1> on reset */
+    u64 stkdis0 :1; /* Sticky count0 disable */
+    u64 stkdis1 :1; /* Sticky count1 disable */
+    u64 res_18 :46; /* Reserved at bits 63:18 */
 } AXP_21274_PMONCTL;
 
 /*
@@ -2766,8 +2766,8 @@ typedef struct
  */
 typedef struct
 {
-		u32	cnt0;			/* Counts sysclk cycles that monitor<0> is asserted */
-		u32	cnt1;			/* Counts i_sysclk cycles that monitor<0> is asserted */
+    u32 cnt0; /* Counts sysclk cycles that monitor<0> is asserted */
+    u32 cnt1; /* Counts i_sysclk cycles that monitor<0> is asserted */
 } AXP_21274_PMONCNT;
 
 /*
