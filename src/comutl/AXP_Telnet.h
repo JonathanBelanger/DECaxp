@@ -28,6 +28,7 @@
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
+#include "AXP_StateMachine.h"
 
 /*
  * Definitions used in the source file.
@@ -51,27 +52,80 @@ typedef enum
 } AXP_Telnet_Session_State;
 
 /*
- * Telnet option states, based on RFC 1143.
+ * The following definitions are the states for TELNET option processing.  This
+ * state machine will prevent infinite looping of option processing.
  */
-typedef enum
-{
-    No,
-    WantNo,
-    WantYes,
-    Yes
-} AXP_Telnet_UsHim_State;
-typedef enum
-{
-    Empty,
-    Opposite
-} AXP_Telnet_UsqHimq_State;
+#define AXP_OPT_NO			0
+#define AXP_OPT_WANTNO_LOCAL		1
+#define AXP_OPT_WANTNO_REMOTE		2
+#define AXP_OPT_WANTYES_LOCAL		3
+#define AXP_OPT_WANTYES_REMOTE		4
+#define AXP_OPT_YES			5
+#define AXP_OPT_MAX_STATE		5
+
+/*
+ * These definitions are used to determine the action being performed, the
+ * current state of the option, and whether the option is preferred.
+ */
+#define AXP_OPT_ACTION(cmd, opt)	((((cmd)-YES_SRV)*2)+(opt).preferred)
+#define AXP_OPT_STATE(options, opt)	options[(opt)].state;
+#define AXP_OPT_PREFERRED(options, opt)	options[(opt)].preferred;
+
+/*
+ * In addition to the commands, WILL, WONT, DO, and DONT, there are four
+ * additional commands that will be utilized as input to the state machine.
+ * These additional commands are utilized only within the TELNET server and
+ * are never sent or received.
+ */
+#define	YES_SRV				247
+#define NO_SRV				248
+#define	YES_CLI				249
+#define NO_CLI				250
+#define AXP_OPT_MAX_ACTION		(IAC-YES_SRV)*2
+
+/*
+ * The following definitions are the states for TELNET receive processing.
+ * This state machine is used to process receive data.  It handles data
+ * received that could be comprised of data or commands.
+ */
+#define AXP_RCV_DATA			0
+#define AXP_RCV_IAC			1
+#define AXP_RCV_CMD			2
+#define AXP_RCV_CR			3
+#define AXP_RCV_SB			4
+#define AXP_RCV_SE			5
+#define AXP_RCV_MAX_STATE		5
+
+/*
+ * The following are the actions into the Receive State Machine.
+ */
+#define AXP_RCV_NUL			0	/* '\0' */
+#define AXP_RCV_IAC			1	/* IAC command */
+#define AXP_RCV_R			2	/* '\r' */
+#define AXP_RCV_CMD			3	/* WILL, WONT, DO, DONT cmd */
+#define AXP_RCV_SE			4	/* Suboption End command */
+#define AXP_RCV_SB			5	/* Suboption Begin command */
+#define AXP_RCV_CATCHALL		6	/* Everything else */
+#define AXP_RCV_MAX_ACTION		7
+
+/*
+ * This macro determines the action being performed for the TELNET receive
+ * state machine.
+ */
+#define AXP_RCV_ACTION(c)						\
+    (((c) == '\0') ? AXP_RCV_NULL :					\
+	(((c) == IAC) ? AXP_RCV_IAC :					\
+	    (((c) == '\r') ? AXP_RCV_R :				\
+		((((c) >= WILL) || ((c) <= DONT)) ? AXP_RCV_CMD :	\
+		    (((c) == SE) ? AXP_REC_SE :				\
+			(((c) == SB) ? AXP_RCV_SB :			\
+			    AXP_RCV_CATCHALL))))))
+
 typedef struct
 {
-    AXP_Telnet_UsHim_State	us;
-    AXP_Telnet_UsqHimq_State	usQ;
-    AXP_Telnet_UsHim_State	him;
-    AXP_Telnet_UsqHimq_State	himQ;
-} AXP_Telnet_Option_State;
+    u8			state;
+    bool		preferred;
+} AXP_Telnet_OptState;
 
 /*
  * This data structure is used to handle a TELNET session.  It contains
@@ -81,7 +135,8 @@ typedef struct
 {
     int				mySocket;
     AXP_Telnet_Session_State	myState;
-    AXP_Telnet_Option_State	myOptions[NTELOPTS];
+    AXP_Telnet_OptState		myOptions[NTELOPTS];
+    AXP_Telnet_OptState		theirOptions[NTELOPTS];
 } AXP_Telnet_Session;
 
 /*

@@ -15,7 +15,7 @@ typedef struct
 	bool	preferred;
 } Telnet_States;
 
-#define TELNET_OPTS				50
+#define TELNET_OPTS			50
 #define	TELNET_SM_YES_SRV		247
 #define TELNET_SM_NO_SRV		248
 #define	TELNET_SM_YES_CLI		249
@@ -56,9 +56,9 @@ void Telnet_Execute_Option_SM(Telnet_Session *ses, u8 cmd, u8 opt)
 
 	if ((cmd >= WILL) && (cmd <= DONT))
 	{
-		if (Telnet_StateMachine[TELNET_SM_ENTRY(cmt, opt)][curState].actionRtn != NULL)
-			(Telnet_StateMachine[TELNET_SM_ENTRY(cmt, opt)][curState].actionRtn)(ses, '\0');
-		ses->optiond[opt].state = Telnet_StateMachine[TELNET_SM_ENTRY(cmt, opt)][curState].nextState;
+		if (Telnet_StateMachine[TELNET_SM_ENTRY(cmd, opt)][curState].actionRtn != NULL)
+			(Telnet_StateMachine[TELNET_SM_ENTRY(cmd, opt)][curState].actionRtn)(ses, '\0');
+		ses->options[opt].state = Telnet_StateMachine[TELNET_SM_ENTRY(cmt, opt)][curState].nextState;
 	}
 	return;
 }
@@ -72,9 +72,9 @@ void Telnet_Set_Option_SM(Telnet_Session *ses, u8 cmd, u8 opt)
 
 	if ((cmd >= TELNET_SM_YES_SRV) && (cmd <= TELNET_SM_NO_CLI))
 	{
-		if (Telnet_StateMachine[TELNET_SM_ENTRY(cmt, opt)][curState].actionRtn != NULL)
-			(Telnet_StateMachine[TELNET_SM_ENTRY(cmt, opt)][curState].actionRtn)(ses, '\0');
-		ses->optiond[opt].state = Telnet_StateMachine[TELNET_SM_ENTRY(cmt, opt)][curState].nextState;
+		if (Telnet_StateMachine[TELNET_SM_ENTRY(cmd, opt)][curState].actionRtn != NULL)
+			(Telnet_StateMachine[TELNET_SM_ENTRY(cmd, opt)][curState].actionRtn)(ses, '\0');
+		ses->options[opt].state = Telnet_StateMachine[TELNET_SM_ENTRY(cmt, opt)][curState].nextState;
 	}
 	return;
 }
@@ -233,13 +233,13 @@ Telnet_SM	Telnet_StateMachine[16][TELNET_MAX_STATES] =
 	}
 };
 
-#define TELNET_DATA					0
-#define TELNET_IAC					1
-#define TELNET_CMD					2
-#define TELNET_CR					3
-#define TELNET_SB					4
-#define TELNET_SE					5
-#define TELNET_MAX_SES_STATES		6
+#define TELNET_DATA				0
+#define TELNET_IAC				1
+#define TELNET_CMD				2
+#define TELNET_CR				3
+#define TELNET_SB				4
+#define TELNET_SE				5
+#define AXP_RCV_MAX_STATE			6
 
 #define TELNET_NULL_PRESENT			0
 #define TELNET_IAC_PRESENT			1

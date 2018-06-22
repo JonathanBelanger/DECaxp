@@ -40,9 +40,9 @@
 typedef struct
 {
     u8		nextState;
-    void	(*actionRtn)(Telnet_Session *, int argc, ...);
+    void	(*actionRtn)(...);
 } AXP_StateMachine;
 
-u8 AXP_Execute_SM(AXP_StateMachine **, );
+u8 AXP_Execute_SM(AXP_StateMachine **, u8, u8, u8, u8,     ...);
 
 #endif /* _AXP_STATE_MACHINE_ */

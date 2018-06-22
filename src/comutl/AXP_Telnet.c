@@ -27,12 +27,255 @@
  *  V01.000	16-Jun-2018	Jonathan D. Belanger
  *  Initially written.
  */
+#include "AXP_Utility.h"
+#include "AXP_Configure.h"
+#include "AXP_StateMachine.h"
 #include "AXP_Telnet.h"
 #include <arpa/inet.h>
 #include <arpa/telnet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+
+/*
+ * State machine definitions.
+ * TODO: Make these static aftger testing.
+ *
+ * Action Rotuines for the state machines.
+ */
+void Send_DO(...);
+void Send_DONT(...);
+void Send_WILL(...);
+void Send_WONT(...);
+void Echo_Data(...);
+void Process_CMD(...);
+void SubOpt_Clear(...);
+void SubOpt_Accumulate(...);
+void Process_IAC(...);
+void Process_Suboption(...);
+
+/*
+ * This definition below is used for processing the options sent from the
+ * client and ones we want to send to the client.
+ */
+AXP_StateMachine TN_Opt_StateMachine[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE+1] =
+{
+    /* YES_SRV	- PREFERRED */
+    {
+	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_YES,		NULL}
+    },
+    /* YES_SRV	- NOT PREFERRED */
+    {
+	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_YES,		NULL}
+    },
+    /* NO_SRV	- PREFERRED */
+    {
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_WONT}
+    },
+    /* NO_SRV	- NOT PREFERRED */
+    {
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_WONT}
+    },
+    /* YES_CLI	- PREFERRED */
+    {
+	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_YES,		NULL}
+    },
+    /* YES_CLI	- NOT PREFERRED */
+    {
+	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_YES,		NULL}
+    },
+    /* NO_CLI	- PREFERRED */
+    {
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_DONT}
+    },
+    /* NO_CLI	- NOT PREFERRED */
+    {
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_DONT}
+    },
+    /* WILL	- PREFERRED */
+    {
+	{AXP_OPT_YES,		Send_DO},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_DONT},
+	{AXP_OPT_YES,		NULL}
+    },
+    /* WILL	- NOT PREFERRED */
+    {
+	{AXP_OPT_NO,		Send_DONT},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_DONT},
+	{AXP_OPT_YES,		NULL}
+    },
+    /* WONT	- PREFERRED */
+    {
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_NO,		Send_DONT}
+    },
+    /* WONT	- NOT PREFERRED */
+    {
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_NO,		Send_DONT}
+    },
+    /* DO	- PREFERRED */
+    {
+	{AXP_OPT_YES,		Send_WILL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_WONT},
+	{AXP_OPT_YES,		NULL}
+    },
+    /* DO	- NOT PREFERRED */
+    {
+	{AXP_OPT_NO,		Send_WONT},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_WONT},
+	{AXP_OPT_YES,		NULL}
+    },
+    /* DONT	- PREFERRED */
+    {
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_NO,		Send_WONT}
+    },
+    /* DONT	- NOT PREFERRED */
+    {
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_NO,		Send_WONT}
+    }
+};
+
+/*
+ *
+ * This definition below is used for processing data received from the client.
+ */
+AXP_StateMachine TN_Receive_SM[AXP_RCV_MAX_ACTION][AXP_RCV_MAX_STATE+1] =
+{
+    /* '\0' */
+    {
+	{AXP_RCV_DATA,		Echo_Data},
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Process_CMD},
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_SB,		SubOpt_Accumulate},
+	{AXP_RCV_IAC,		Process_IAC}
+    },
+    /* IAC */
+    {
+	{AXP_RCV_IAC,		NULL},
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Process_CMD},
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_SE,		NULL},
+	{AXP_RCV_SB,		SubOpt_Accumulate}
+    },
+    /* '\r' */
+    {
+	{AXP_RCV_CR,		NULL},
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Process_CMD},
+	{AXP_RCV_CR,		NULL},
+	{AXP_RCV_SB,		SubOpt_Accumulate},
+	{AXP_RCV_IAC,		Process_IAC}
+    },
+    /* TELNET-CMD */
+    {
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_CMD,		NULL},
+	{AXP_RCV_DATA,		Process_CMD},
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_SB,		SubOpt_Accumulate},
+	{AXP_RCV_IAC,		Process_IAC}
+    },
+    /* SE */
+    {
+	{AXP_RCV_DATA,		Echo_Data},
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Process_CMD},
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_SB,		SubOpt_Accumulate},
+	{AXP_RCV_DATA,		Process_Suboption}
+    },
+    /* SB */
+    {
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_SB,		SubOpt_Clear},
+	{AXP_RCV_DATA,		Process_CMD},
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_SB,		SubOpt_Accumulate},
+	{AXP_RCV_IAC,		Process_IAC}
+    },
+    /* CATCH-ALL */
+    {
+	{AXP_RCV_DATA,		Echo_Data},
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Process_CMD},
+	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_SB,		SubOpt_Accumulate},
+	{AXP_RCV_IAC,		Process_IAC}
+    }
+};
 
 /*
  * Local Prototypes.
@@ -43,6 +286,236 @@ static bool AXP_Telnet_Receive(int, u8 *, u32 *);
 static bool AXP_Telnet_Reject(int);
 static bool AXP_Telnet_Ignore(int);
 static bool AXP_Telnet_Processor(int, u8 *, u32);
+
+/*
+ * printOption
+ *  This function is called to trace the option being processed.
+ *
+ * Input Parameters:
+ *  data:
+ *	A pointer to a character string?
+ *  direction:
+ *	A pointer to a string, indicatinv the direction of the option (sent or
+ *	received).
+ *  cmd:
+ *	A value indicating the command being traced.
+ *  option:
+ *	A value indicating the option associated with the command.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Values:
+ *  None.
+ */
+static void printOption(
+	char *data,
+	const char *direction,
+	int cmd,
+	int option)
+{
+    const char *fmt;
+    const char *opt;
+
+    if (cmd == IAC)
+    {
+	if (TELCMD_OK(option))
+	    printf("%s IAC %s\n", direction, TELCMD(option));
+	else
+	    printf("%s IAC %d\n", direction, option);
+    }
+    else
+    {
+	fmt = (cmd == WILL) ? "WILL" :
+		(cmd == WONT) ? "WONT" :
+		    (cmd == DO) ? "DO" :
+			(cmd == DONT) ? "DONT" : 0;
+	if (fmt)
+	{
+	    if (TELOPT_OK(option))
+		opt = TELOPT(option);
+	    else if (option == TELOPT_EXOPL)
+		opt = "EXOPL";
+	    else
+		opt = NULL;
+
+	    if(opt)
+		printf("%s %s %s\n", direction, fmt, opt);
+	    else
+		printf("%s %s %d\n", direction, fmt, option);
+	}
+	else
+	    printf("%s %d %d\n", direction, cmd, option);
+	/*
+	 * printOption
+	 *  This function is called to trace the option being processed.
+	 *
+	 * Input Parameters:
+	 *  data:
+	 *	A pointer to a character string?
+	 *  direction:
+	 *	A pointer to a string, indicatinv the direction of the option (sent or
+	 *	received).
+	 *  cmd:
+	 *	A value indicating the command being traced.
+	 *  option:
+	 *	A value indicating the option associated with the command.
+	 *
+	 * Output Parameters:
+	 *  None.
+	 *
+	 * Return Values:
+	 *  None.
+	 */
+
+    }
+    return;
+}
+
+/*
+ * printSub
+ *  This function is called to trace the sub option being processed.
+ *
+ * Input Parameters:
+ *  data:
+ *	A pointer to a character string?
+ *  direction:
+ *	A pointer to a string, indicatinv the direction of the option (sent or
+ *	received).
+ *  pointer:
+ *	A pointer to a string with the suboption data.
+ *  length:
+ *	A value indicating the length of the suboption data.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Values:
+ *  None.
+ */
+static void printSub(
+		char *data,
+		int direction,	/* '<' or '>' */
+		u8 *pointer,	/* where suboption data is */
+		int length)	/* length of suboption data */
+{
+    int ii = 0;
+    int jj;
+
+    if (direction)
+    {
+	printf("%s IAC SB ", (direction == '<')? "RCVD":"SENT");
+	if (length >= 3)
+	{
+
+	    ii = pointer[length-2];
+	    jj = pointer[length-1];
+
+	    if (ii != IAC || jj != SE)
+	    {
+		printf("(terminated by ");
+		if (TELOPT_OK(ii))
+		    printf("%s ", TELOPT(ii));
+		else if (TELCMD_OK(ii))
+		    printf("%s ", TELCMD(ii));
+		else
+		    printf("%d ", ii);
+		if (TELOPT_OK(jj))
+		    printf("%s", TELOPT(jj));
+		else if (TELCMD_OK(jj))
+		    printf("%s", TELCMD(jj));
+		else
+		    printf("%d", jj);
+		printf(", not IAC SE!) ");
+	    }
+	}
+	length -= 2;
+    }
+    if (length < 1)
+    {
+	printf("(Empty suboption?)");
+	return;
+    }
+
+    if (TELOPT_OK(pointer[0]))
+    {
+	switch(pointer[0])
+	{
+	    case TELOPT_TTYPE:
+	    case TELOPT_XDISPLOC:
+	    case TELOPT_NEW_ENVIRON:
+		printf("%s", TELOPT(pointer[0]));
+		break;
+
+	    default:
+		printf("%s (unsupported)", TELOPT(pointer[0]));
+		break;
+	}
+    }
+    else
+	printf("%d (unknown)", pointer[ii]);
+
+    switch(pointer[1])
+    {
+	case TELQUAL_IS:
+	    printf(" IS");
+	    break;
+
+	case TELQUAL_SEND:
+	    printf(" SEND");
+	    break;
+
+	case TELQUAL_INFO:
+	    printf(" INFO/REPLY");
+	    break;
+
+	case TELQUAL_NAME:
+	    printf(" NAME");
+	    break;
+    }
+
+    switch(pointer[0])
+    {
+	case TELOPT_TTYPE:
+	case TELOPT_XDISPLOC:
+	    pointer[length] = 0;
+	    printf(" \"%s\"", &pointer[2]);
+	    break;
+
+	case TELOPT_NEW_ENVIRON:
+	    if(pointer[1] == TELQUAL_IS)
+	    {
+		printf(" ");
+		for(ii = 3; ii < length; ii++)
+		{
+		    switch(pointer[ii])
+		    {
+			case NEW_ENV_VAR:
+			    printf(", ");
+			    break;
+
+			case NEW_ENV_VALUE:
+			    printf(" = ");
+			    break;
+
+			default:
+			    printf("%c", pointer[ii]);
+			    break;
+		    }
+		}
+	    }
+	    break;
+
+	default:
+	    for (ii = 2; ii < length; ii++)
+		printf(" %.2x", pointer[ii]);
+	    break;
+    }
+
+    if (direction)
+	printf("\n");
+    return;
+}
 
 /*
  * AXP_Telnet_Listener
