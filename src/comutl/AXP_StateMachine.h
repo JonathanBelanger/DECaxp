@@ -40,9 +40,9 @@
 typedef struct
 {
     u8		nextState;
-    void	(*actionRtn)(...);
+    void	(*actionRtn)(void *,...);
 } AXP_StateMachine;
 
-u8 AXP_Execute_SM(AXP_StateMachine **, u8, u8, u8, u8,     ...);
+u8 AXP_Execute_SM(u16, u16, AXP_StateMachine [*][*], u8, u8, ...);
 
 #endif /* _AXP_STATE_MACHINE_ */

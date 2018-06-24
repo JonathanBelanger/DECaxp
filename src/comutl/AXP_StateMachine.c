@@ -54,10 +54,11 @@
  *  The value of the next state for the state machine.
  */
 u8 AXP_Execute_SM(
-	    AXP_StateMachine **sm,
+	    u16 maxAction,
+	    u16 maxState,
+	    AXP_StateMachine sm[maxAction][maxState],
 	    u8 action,
 	    u8 curState,
-	    u8 max,
 	    ...)
 {
     u8		retVal = curState;
@@ -66,11 +67,11 @@ u8 AXP_Execute_SM(
     /*
      * If there is an action Routine, go ahead and call it.
      */
-    if (action <= max)
+    if (action <= maxAction)
     {
-	va_start(args, max);
+	va_start(args, curState);
 	if (sm[action][curState].actionRtn != NULL)
-	    (sm[action][curState].actionRtn)(args);
+	    (*sm[action][curState].actionRtn)(args);
 	va_end(args);
 	retVal = sm[action][curState].nextState;
     }
