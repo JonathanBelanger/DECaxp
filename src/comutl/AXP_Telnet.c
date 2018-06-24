@@ -30,45 +30,35 @@
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_StateMachine.h"
+#define TELCMDS 		1
+#define TELOPTS			1
 #include "AXP_Telnet.h"
-#include <arpa/inet.h>
-#include <arpa/telnet.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
 
 /*
  * State machine definitions.
- * TODO: Make these static aftger testing.
+ * TODO: Make these static after testing.
  *
- * Action Rotuines for the state machines.
+ * Action Routines for the state machines.
  */
-void Send_DO(...);
-void Send_DONT(...);
-void Send_WILL(...);
-void Send_WONT(...);
-void Echo_Data(...);
-void Process_CMD(...);
-void SubOpt_Clear(...);
-void SubOpt_Accumulate(...);
-void Process_IAC(...);
-void Process_Suboption(...);
+void Send_DO(void *, ...);
+void Send_DONT(void *, ...);
+void Send_WILL(void *, ...);
+void Send_WONT(void *, ...);
+void Echo_Data(void *, ...);
+void Process_CMD(void *, ...);
+void Cvt_Process_IAC(void *, ...);
+void SubOpt_Clear(void *, ...);
+void SubOpt_Accumulate(void *, ...);
+void SubOpt_TermProcess(void *, ...);
+void Cvt_Proc_CMD(void *, ...);
+void Process_Suboption(void *, ...);
 
 /*
  * This definition below is used for processing the options sent from the
  * client and ones we want to send to the client.
  */
-AXP_StateMachine TN_Opt_StateMachine[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE+1] =
+AXP_StateMachine TN_Option_SM[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
 {
-    /* YES_SRV	- PREFERRED */
-    {
-	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
-	{AXP_OPT_YES,		NULL}
-    },
     /* YES_SRV	- NOT PREFERRED */
     {
 	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
@@ -78,14 +68,14 @@ AXP_StateMachine TN_Opt_StateMachine[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE+1] =
 	{AXP_OPT_WANTYES_LOCAL,	NULL},
 	{AXP_OPT_YES,		NULL}
     },
-    /* NO_SRV	- PREFERRED */
+    /* YES_SRV	- PREFERRED */
     {
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_WONT}
+	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_YES,		NULL}
     },
     /* NO_SRV	- NOT PREFERRED */
     {
@@ -96,14 +86,14 @@ AXP_StateMachine TN_Opt_StateMachine[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE+1] =
 	{AXP_OPT_WANTYES_REMOTE,NULL},
 	{AXP_OPT_WANTNO_LOCAL,	Send_WONT}
     },
-    /* YES_CLI	- PREFERRED */
+    /* NO_SRV	- PREFERRED */
     {
-	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
-	{AXP_OPT_YES,		NULL}
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_WONT}
     },
     /* YES_CLI	- NOT PREFERRED */
     {
@@ -114,14 +104,14 @@ AXP_StateMachine TN_Opt_StateMachine[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE+1] =
 	{AXP_OPT_WANTYES_LOCAL,	NULL},
 	{AXP_OPT_YES,		NULL}
     },
-    /* NO_CLI	- PREFERRED */
+    /* YES_CLI	- PREFERRED */
     {
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_DONT}
+	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTNO_REMOTE,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_YES,		NULL}
     },
     /* NO_CLI	- NOT PREFERRED */
     {
@@ -132,14 +122,14 @@ AXP_StateMachine TN_Opt_StateMachine[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE+1] =
 	{AXP_OPT_WANTYES_REMOTE,NULL},
 	{AXP_OPT_WANTNO_LOCAL,	Send_DONT}
     },
-    /* WILL	- PREFERRED */
+    /* NO_CLI	- PREFERRED */
     {
-	{AXP_OPT_YES,		Send_DO},
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_DONT},
-	{AXP_OPT_YES,		NULL}
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTYES_REMOTE,NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_DONT}
     },
     /* WILL	- NOT PREFERRED */
     {
@@ -150,14 +140,14 @@ AXP_StateMachine TN_Opt_StateMachine[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE+1] =
 	{AXP_OPT_WANTNO_LOCAL,	Send_DONT},
 	{AXP_OPT_YES,		NULL}
     },
-    /* WONT	- PREFERRED */
+    /* WILL	- PREFERRED */
     {
+	{AXP_OPT_YES,		Send_DO},
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_NO,		Send_DONT}
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_DONT},
+	{AXP_OPT_YES,		NULL}
     },
     /* WONT	- NOT PREFERRED */
     {
@@ -165,8 +155,26 @@ AXP_StateMachine TN_Opt_StateMachine[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE+1] =
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
+	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		Send_DONT}
+    },
+    /* WONT	- PREFERRED */
+    {
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_NO,		Send_DONT}
+    },
+    /* DO	- NOT PREFERRED */
+    {
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_YES,		NULL},
+	{AXP_OPT_WANTNO_LOCAL,	Send_WONT},
+	{AXP_OPT_YES,		NULL}
     },
     /* DO	- PREFERRED */
     {
@@ -177,14 +185,14 @@ AXP_StateMachine TN_Opt_StateMachine[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE+1] =
 	{AXP_OPT_WANTNO_LOCAL,	Send_WONT},
 	{AXP_OPT_YES,		NULL}
     },
-    /* DO	- NOT PREFERRED */
+    /* DONT	- NOT PREFERRED */
     {
-	{AXP_OPT_NO,		Send_WONT},
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_WONT},
-	{AXP_OPT_YES,		NULL}
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_NO,		NULL},
+	{AXP_OPT_NO,		Send_WONT}
     },
     /* DONT	- PREFERRED */
     {
@@ -192,16 +200,7 @@ AXP_StateMachine TN_Opt_StateMachine[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE+1] =
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_NO,		Send_WONT}
-    },
-    /* DONT	- NOT PREFERRED */
-    {
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
 	{AXP_OPT_NO,		Send_WONT}
     }
 };
@@ -210,7 +209,7 @@ AXP_StateMachine TN_Opt_StateMachine[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE+1] =
  *
  * This definition below is used for processing data received from the client.
  */
-AXP_StateMachine TN_Receive_SM[AXP_RCV_MAX_ACTION][AXP_RCV_MAX_STATE+1] =
+AXP_StateMachine TN_Receive_SM[AXP_ACT_MAX][AXP_RCV_MAX_STATE] =
 {
     /* '\0' */
     {
@@ -219,84 +218,263 @@ AXP_StateMachine TN_Receive_SM[AXP_RCV_MAX_ACTION][AXP_RCV_MAX_STATE+1] =
 	{AXP_RCV_DATA,		Process_CMD},
 	{AXP_RCV_DATA,		NULL},
 	{AXP_RCV_SB,		SubOpt_Accumulate},
-	{AXP_RCV_IAC,		Process_IAC}
+	{AXP_RCV_IAC,		Cvt_Process_IAC}
     },
     /* IAC */
     {
 	{AXP_RCV_IAC,		NULL},
-	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Echo_Data},
 	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Echo_Data},
 	{AXP_RCV_SE,		NULL},
 	{AXP_RCV_SB,		SubOpt_Accumulate}
     },
     /* '\r' */
     {
-	{AXP_RCV_CR,		NULL},
+	{AXP_RCV_CR,		Echo_Data},
 	{AXP_RCV_DATA,		NULL},
 	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_CR,		NULL},
+	{AXP_RCV_DATA,		NULL},
 	{AXP_RCV_SB,		SubOpt_Accumulate},
-	{AXP_RCV_IAC,		Process_IAC}
+	{AXP_RCV_IAC,		Cvt_Process_IAC}
     },
     /* TELNET-CMD */
     {
-	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Echo_Data},
 	{AXP_RCV_CMD,		NULL},
 	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Echo_Data},
 	{AXP_RCV_SB,		SubOpt_Accumulate},
-	{AXP_RCV_IAC,		Process_IAC}
+	{AXP_RCV_IAC,		Cvt_Process_IAC}
     },
     /* SE */
     {
-	{AXP_RCV_DATA,		Echo_Data},
+	{AXP_RCV_DATA,		Cvt_Process_IAC},
 	{AXP_RCV_DATA,		NULL},
 	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Echo_Data},
 	{AXP_RCV_SB,		SubOpt_Accumulate},
-	{AXP_RCV_DATA,		Process_Suboption}
+	{AXP_RCV_DATA,		SubOpt_TermProcess}
     },
     /* SB */
     {
-	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Echo_Data},
 	{AXP_RCV_SB,		SubOpt_Clear},
 	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		NULL},
-	{AXP_RCV_SB,		SubOpt_Accumulate},
-	{AXP_RCV_IAC,		Process_IAC}
+	{AXP_RCV_DATA,		Echo_Data},
+	{AXP_RCV_SB,		SubOpt_TermProcess},
+	{AXP_RCV_IAC,		Cvt_Process_IAC}
     },
     /* CATCH-ALL */
     {
 	{AXP_RCV_DATA,		Echo_Data},
 	{AXP_RCV_DATA,		NULL},
 	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		NULL},
+	{AXP_RCV_DATA,		Echo_Data},
 	{AXP_RCV_SB,		SubOpt_Accumulate},
-	{AXP_RCV_IAC,		Process_IAC}
+	{AXP_RCV_IAC,		Cvt_Process_IAC}
     }
 };
+
+#define DIRECTION(dir)	(((dir) == '<') ? "RCVD" : "SENT")
 
 /*
  * Local Prototypes.
  */
+static void AXP_Telnet_PrintOption(char, u8, u8);
+static void AXP_Telnet_PrintSub(char, u8 *, int);
 static bool AXP_Telnet_Listener(int *);
-static bool AXP_Telnet_Accept(int, int *);
-static bool AXP_Telnet_Receive(int, u8 *, u32 *);
-static bool AXP_Telnet_Reject(int);
+static bool AXP_Telnet_Accept(int, AXP_Telnet_Session *);
+static bool AXP_Telnet_Receive(AXP_Telnet_Session *, u8 *, u32 *);
+static bool AXP_Telnet_Reject(AXP_Telnet_Session *);
 static bool AXP_Telnet_Ignore(int);
-static bool AXP_Telnet_Processor(int, u8 *, u32);
+static bool AXP_Telnet_Processor(AXP_Telnet_Session *, u8 *, u32);
 
 /*
- * printOption
+ * <State Machine Action Routines>
+ *  The following set of functions are all action routines called by the
+ *  execution of the state machine.  These functions perform the actions that
+ *  are required when an action is applied to a state machine.
+ *
+ * Input Parameters:
+ *  sesPtr:
+ *	A pointer to the TELNET session structure.
+ * ...:
+ *	A variable number of arguments to be used for the action processing.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
+void Send_DO(void *sesPtr, ...)
+{
+    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+    u8		opt;
+    u8		buf[3];
+    va_list	ap;
+
+    va_start(ap, sesPtr);
+    opt = va_arg(ap, int);
+    va_end(ap);
+
+    /*
+     * Send the IAC DO <opt> to the client.
+     */
+    buf[0] = IAC;
+    buf[1] = DO;
+    buf[2] = opt;
+    AXP_Telnet_Send(ses, buf, 3);
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+void Send_DONT(void *sesPtr, ...)
+{
+    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+    u8		opt;
+    u8		buf[3];
+    va_list	ap;
+
+    va_start(ap, sesPtr);
+    opt = va_arg(ap, int);
+    va_end(ap);
+
+    /*
+     * Send the IAC DONT <opt> to the client.
+     */
+    buf[0] = IAC;
+    buf[1] = DONT;
+    buf[2] = opt;
+    AXP_Telnet_Send(ses, buf, 3);
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+void Send_WILL(void *sesPtr, ...)
+{
+    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+    u8		opt;
+    u8		buf[3];
+    va_list	ap;
+
+    va_start(ap, sesPtr);
+    opt = va_arg(ap, int);
+    va_end(ap);
+
+    /*
+     * Send the IAC WILL <opt> to the client.
+     */
+    buf[0] = IAC;
+    buf[1] = WILL;
+    buf[2] = opt;
+    AXP_Telnet_Send(ses, buf, 3);
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+void Send_WONT(void *sesPtr, ...)
+{
+    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+    u8		opt;
+    u8		buf[3];
+    va_list	ap;
+
+    va_start(ap, sesPtr);
+    opt = va_arg(ap, int);
+    va_end(ap);
+
+    /*
+     * Send the IAC WONT <opt> to the client.
+     */
+    buf[0] = IAC;
+    buf[1] = WONT;
+    buf[2] = opt;
+    AXP_Telnet_Send(ses, buf, 3);
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+void Echo_Data(void *sesPtr, ...)
+{
+    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+void Process_CMD(void *sesPtr, ...)
+{
+    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+void Cvt_Process_IAC(void *sesPtr, ...)
+{
+    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+void SubOpt_Clear(void *sesPtr, ...)
+{
+    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+void SubOpt_Accumulate(void *sesPtr, ...)
+{
+    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+void SubOpt_TermProcess(void *sesPtr, ...)
+{
+    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+void Process_Suboption(void *sesPtr, ...)
+{
+    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+
+/*
+ * AXP_Telnet_PrintOption
  *  This function is called to trace the option being processed.
  *
  * Input Parameters:
- *  data:
- *	A pointer to a character string?
- *  direction:
- *	A pointer to a string, indicatinv the direction of the option (sent or
- *	received).
+ *  dir:
+ *	A value indicating the direction of the option (sent or received).
  *  cmd:
  *	A value indicating the command being traced.
  *  option:
@@ -308,28 +486,26 @@ static bool AXP_Telnet_Processor(int, u8 *, u32);
  * Return Values:
  *  None.
  */
-static void printOption(
-	char *data,
-	const char *direction,
-	int cmd,
-	int option)
+static void AXP_Telnet_PrintOption(char dir, u8 cmd, u8 option)
 {
-    const char *fmt;
-    const char *opt;
+    char *fmt;
+    char *opt;
 
+    /*
+     * If the command is the Interpret As Command, then the option contains the
+     * command.  Otherwise, we have a command with an option.
+     */
+    printf("%s ", DIRECTION(dir));
     if (cmd == IAC)
     {
 	if (TELCMD_OK(option))
-	    printf("%s IAC %s\n", direction, TELCMD(option));
+	    printf("IAC %s", TELCMD(option));
 	else
-	    printf("%s IAC %d\n", direction, option);
+	    printf("IAC %d", option);
     }
     else
     {
-	fmt = (cmd == WILL) ? "WILL" :
-		(cmd == WONT) ? "WONT" :
-		    (cmd == DO) ? "DO" :
-			(cmd == DONT) ? "DONT" : 0;
+	fmt = TELCMD(cmd);
 	if (fmt)
 	{
 	    if (TELOPT_OK(option))
@@ -340,48 +516,28 @@ static void printOption(
 		opt = NULL;
 
 	    if(opt)
-		printf("%s %s %s\n", direction, fmt, opt);
+		printf("%s %s", fmt, opt);
 	    else
-		printf("%s %s %d\n", direction, fmt, option);
+		printf("%s %d", fmt, option);
 	}
 	else
-	    printf("%s %d %d\n", direction, cmd, option);
-	/*
-	 * printOption
-	 *  This function is called to trace the option being processed.
-	 *
-	 * Input Parameters:
-	 *  data:
-	 *	A pointer to a character string?
-	 *  direction:
-	 *	A pointer to a string, indicatinv the direction of the option (sent or
-	 *	received).
-	 *  cmd:
-	 *	A value indicating the command being traced.
-	 *  option:
-	 *	A value indicating the option associated with the command.
-	 *
-	 * Output Parameters:
-	 *  None.
-	 *
-	 * Return Values:
-	 *  None.
-	 */
-
+	    printf("%d %d", cmd, option);
     }
+    printf("\n");
+
+    /*
+     * Return back to the caller.
+     */
     return;
 }
 
 /*
- * printSub
+ * AXP_Telnet_PrintSub
  *  This function is called to trace the sub option being processed.
  *
  * Input Parameters:
- *  data:
- *	A pointer to a character string?
- *  direction:
- *	A pointer to a string, indicatinv the direction of the option (sent or
- *	received).
+ *  dir:
+ *	A value indicating the direction of the suboption (sent or received).
  *  pointer:
  *	A pointer to a string with the suboption data.
  *  length:
@@ -393,18 +549,17 @@ static void printOption(
  * Return Values:
  *  None.
  */
-static void printSub(
-		char *data,
-		int direction,	/* '<' or '>' */
-		u8 *pointer,	/* where suboption data is */
-		int length)	/* length of suboption data */
+static void AXP_Telnet_PrintSub(char dir, u8 *pointer, int length)
 {
     int ii = 0;
     int jj;
 
-    if (direction)
+    /*
+     * If we have a direction, then go ahead and write it out.
+     */
+    if (dir != '\0')
     {
-	printf("%s IAC SB ", (direction == '<')? "RCVD":"SENT");
+	printf("%s IAC SB ", DIRECTION(dir));
 	if (length >= 3)
 	{
 
@@ -431,12 +586,19 @@ static void printSub(
 	}
 	length -= 2;
     }
+
+    /*
+     * We do the following whether we have a direction or not.
+     */
     if (length < 1)
     {
 	printf("(Empty suboption?)");
 	return;
     }
 
+    /*
+     * If the option is a valid one, then we go and print it out.
+     */
     if (TELOPT_OK(pointer[0]))
     {
 	switch(pointer[0])
@@ -511,9 +673,11 @@ static void printSub(
 		printf(" %.2x", pointer[ii]);
 	    break;
     }
+    printf("\n");
 
-    if (direction)
-	printf("\n");
+    /*
+     * Return back to the caller.
+     */
     return;
 }
 
@@ -582,14 +746,15 @@ static bool AXP_Telnet_Listener(int *sock)
  *	The value of the socket on which to accept connections.
  *
  * Output Parameters:
- *  sessionSock:
- *	A location to receive the socket on which to send and receive data.
+ *  ses:
+ *	A location to receive the session information on which data is sent and
+ *	received to and from the client.
  *
  * Return Values:
  *  true:	Socket to use to send and receive data.
  *  false:	Failure.
  */
-static bool AXP_Telnet_Accept(int sock, int *sessionSock)
+static bool AXP_Telnet_Accept(int sock, AXP_Telnet_Session *ses)
 {
     struct sockaddr	theirName;
     int			theirNameSize = sizeof(theirName);
@@ -599,8 +764,8 @@ static bool AXP_Telnet_Accept(int sock, int *sessionSock)
      * We loop forever accepting connections.
      */
     printf("Ready to accept a TELNET connection...\n");
-    *sessionSock = accept(sock, &theirName, &theirNameSize);
-    if (*sessionSock < 0)
+    ses->mySocket = accept(sock, &theirName, &theirNameSize);
+    if (ses->mySocket < 0)
 	retVal = false;
     else
 	printf("A TELNET connection has been accepted...\n");
@@ -617,8 +782,8 @@ static bool AXP_Telnet_Accept(int sock, int *sessionSock)
  *  TELNET client and return it back to the caller.
  *
  * Input Parameters:
- *  sock:
- *	The value of the socket on which to send and receive data.
+ *  ses:
+ *	A pointer to the session variable used to maintain the TELNET session.
  *  bufLen:
  *	A pointer to a location indicating the number of bytes in the buf
  *	parameter.
@@ -634,7 +799,7 @@ static bool AXP_Telnet_Accept(int sock, int *sessionSock)
  *  true:	The buf and bufLen parameters contain valid information.
  *  false:	Failure.
  */
-static bool AXP_Telnet_Receive(int sock, u8 *buf, u32 *bufLen)
+static bool AXP_Telnet_Receive(AXP_Telnet_Session *ses, u8 *buf, u32 *bufLen)
 {
     bool	retVal = true;
 
@@ -644,7 +809,7 @@ static bool AXP_Telnet_Receive(int sock, u8 *buf, u32 *bufLen)
      * A buffer's last character should be a null character.
      */
     printf("Ready to receive data...\n");
-    *bufLen = recv(sock, buf, *bufLen, 0);
+    *bufLen = recv(ses->mySocket, buf, *bufLen, 0);
     printf("recv returned %d bytes of data\n", *bufLen);
 
     /*
@@ -666,8 +831,8 @@ static bool AXP_Telnet_Receive(int sock, u8 *buf, u32 *bufLen)
  *  This function is called to send data to the TELNET client.
  *
  * Input Parameters:
- *  sock:
- *	The value of the socket on which to send and receive data.
+ *  ses:
+ *	A pointer to the session variable used to maintain the TELNET session.
  *  buf:
  *	A location containing the data to be sent to the TELNET client.
  *  bufLen:
@@ -680,7 +845,7 @@ static bool AXP_Telnet_Receive(int sock, u8 *buf, u32 *bufLen)
  *  true:	The data in the buf parameter was sent.
  *  false:	Failure.
  */
-bool AXP_Telnet_Send(int sock, u8 *buf, u32 bufLen)
+bool AXP_Telnet_Send(AXP_Telnet_Session *ses, u8 *buf, u32 bufLen)
 {
     bool	retVal = true;
     int		ii;
@@ -721,7 +886,7 @@ bool AXP_Telnet_Send(int sock, u8 *buf, u32 bufLen)
 	    printf("%u", buf[ii]);
 	printf(") ");
     }
-    bufLen = send(sock, buf, bufLen, 0);
+    bufLen = send(ses->mySocket, buf, bufLen, 0);
     printf("\nsend sent %d bytes of data\n", bufLen);
 
     /*
@@ -753,14 +918,16 @@ bool AXP_Telnet_Send(int sock, u8 *buf, u32 bufLen)
  *  true:	The TELNET socket has been closed.
  *  false:	Failure.
  */
-static bool AXP_Telnet_Reject(int sock)
+static bool AXP_Telnet_Reject(AXP_Telnet_Session *ses)
 {
     bool	retVal = true;
 
     /*
      * Close the socket.
      */
-    close(sock);
+    close(ses->mySocket);
+
+    ses->mySocket = 0;
 
     /*
      * Return back to the caller.
@@ -821,7 +988,7 @@ static bool AXP_Telnet_Ignore(int sock)
  *  true:	The data has been processed.
  *  false:	Failure.
  */
-static bool AXP_Telnet_Processor(int sock, u8 *buf, u32 bufLen)
+static bool AXP_Telnet_Processor(AXP_Telnet_Session *ses, u8 *buf, u32 bufLen)
 {
     bool	retVal = true;
     int		ii;
@@ -944,7 +1111,7 @@ static bool AXP_Telnet_Processor(int sock, u8 *buf, u32 bufLen)
 	else
 	{
 	    printf("%u", buf[ii]);
-	    retVal = AXP_Telnet_Send(sock, buf, bufLen);
+	    retVal = AXP_Telnet_Send(ses, buf, bufLen);
 	}
 	printf(") ");
 	ii++;
@@ -975,71 +1142,64 @@ static bool AXP_Telnet_Processor(int sock, u8 *buf, u32 bufLen)
  */
 void AXP_Telnet_Main(void)
 {
-    u8			buffer[AXP_TELNET_MSG_LEN];
-    u32			bufferLen;
-    int			connSock, telnetSock;
-    AXP_Telnet_States	state = Accept;
-    bool		retVal = true;
+    u8				buffer[AXP_TELNET_MSG_LEN];
+    u32				bufferLen;
+    int				connSock;
+    AXP_Telnet_Session		ses = {.myState = Accept};
+    bool			retVal = true;
 
-    while(state != Finished)
+    while(ses.myState != Finished)
     {
-	switch(state)
+	switch(ses.myState)
 	{
 	    case Listen:
 		retVal = AXP_Telnet_Listener(&connSock);
-		state = retVal ? Accept : Closing;
+		ses.myState = retVal ? Accept : Closing;
 		break;
 
 	    case Accept:
-		retVal = AXP_Telnet_Accept(connSock, &telnetSock);
+		retVal = AXP_Telnet_Accept(connSock, &ses);
 		if (retVal == true)
 		{
-		    bufferLen = 0;
-		    buffer[bufferLen++] = IAC;
-		    buffer[bufferLen++] = DO;
-		    buffer[bufferLen++] = TELOPT_ECHO;
-		    buffer[bufferLen++] = IAC;
-		    buffer[bufferLen++] = DO;
-		    buffer[bufferLen++] = TELOPT_NAWS;
-		    buffer[bufferLen++] = IAC;
-		    buffer[bufferLen++] = DO;
-		    buffer[bufferLen++] = TELOPT_LFLOW;
-		    buffer[bufferLen++] = IAC;
-		    buffer[bufferLen++] = WILL;
-		    buffer[bufferLen++] = TELOPT_ECHO;
-		    buffer[bufferLen++] = IAC;
-		    buffer[bufferLen++] = WILL;
-		    buffer[bufferLen++] = TELOPT_SGA;
-		    retVal = AXP_Telnet_Send(telnetSock, buffer, bufferLen);
-		    state = retVal ? Active : Listen;
+
+		    /*
+		     * If the client does not send us any options to be
+		     * negotiated, then it probably is not a TELNET client.
+		     */
+		    bufferLen = AXP_TELNET_MSG_LEN;
+		    retVal = AXP_Telnet_Receive(&ses, buffer, &bufferLen);
+		    ses.myState = retVal ? Negotiating : Listen;
 		}
 		else
-		    state = Listen;
+		    ses.myState = Listen;
+		break;
+
+	    case Negotiating:
 		break;
 
 	    case Active:
-		while (state == Active)
+		while (ses.myState == Active)
 		{
 		    bufferLen = AXP_TELNET_MSG_LEN;
-		    retVal = AXP_Telnet_Receive(telnetSock, buffer, &bufferLen);
+		    retVal = AXP_Telnet_Receive(&ses, buffer, &bufferLen);
 		    if (retVal == true)
 			retVal = AXP_Telnet_Processor(
-						telnetSock,
+						&ses,
 						buffer,
 						bufferLen);
 		    if (retVal == false)
-			state = Inactive;
+			ses.myState = Inactive;
 		}
 		break;
 
 	    case Inactive:
-		retVal = AXP_Telnet_Reject(telnetSock);
-		state = Listen;
+		retVal = AXP_Telnet_Reject(&ses);
+		ses.myState = Listen;
 		break;
 
 	    case Closing:
 		retVal = AXP_Telnet_Ignore(connSock);
-		state = Finished;
+		ses.myState = Finished;
 		break;
 
 	    case Finished:

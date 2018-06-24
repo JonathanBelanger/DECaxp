@@ -31,12 +31,20 @@
 #include "AXP_StateMachine.h"
 
 /*
+ * Include the TELNET header file, but make sure certain optional compiling is
+ * turned on.
+ */
+#include <arpa/inet.h>
+#include <arpa/telnet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+
+/*
  * Definitions used in the source file.
  */
 #define AXP_TELNET_MSG_LEN	1024
 #define AXP_TELNET_DEFAULT_PORT	108
-#define TELCMDS 		1
-#define TELOPTS			1
 
 /*
  * Define the states for the TELNET session.
@@ -45,6 +53,7 @@ typedef enum
 {
     Listen,
     Accept,
+    Negotiating,
     Active,
     Inactive,
     Closing,
@@ -61,7 +70,7 @@ typedef enum
 #define AXP_OPT_WANTYES_LOCAL		3
 #define AXP_OPT_WANTYES_REMOTE		4
 #define AXP_OPT_YES			5
-#define AXP_OPT_MAX_STATE		5
+#define AXP_OPT_MAX_STATE		6
 
 /*
  * These definitions are used to determine the action being performed, the
@@ -70,6 +79,11 @@ typedef enum
 #define AXP_OPT_ACTION(cmd, opt)	((((cmd)-YES_SRV)*2)+(opt).preferred)
 #define AXP_OPT_STATE(options, opt)	options[(opt)].state;
 #define AXP_OPT_PREFERRED(options, opt)	options[(opt)].preferred;
+#define AXP_OPT_SUPPORTED(options, opt)	options[(opt)].supported;
+#define AXP_OPT_SET_PREF(options, opt)	\
+    options[(opt)].supported = options[(opt)].preferred = true
+#define AXP_OPT_SET_SUPP(options, opt)	\
+    options[(opt)].supported = true; options[(opt)].preferred = false
 
 /*
  * In addition to the commands, WILL, WONT, DO, and DONT, there are four
@@ -94,19 +108,19 @@ typedef enum
 #define AXP_RCV_CR			3
 #define AXP_RCV_SB			4
 #define AXP_RCV_SE			5
-#define AXP_RCV_MAX_STATE		5
+#define AXP_RCV_MAX_STATE		6
 
 /*
  * The following are the actions into the Receive State Machine.
  */
-#define AXP_RCV_NUL			0	/* '\0' */
-#define AXP_RCV_IAC			1	/* IAC command */
-#define AXP_RCV_R			2	/* '\r' */
-#define AXP_RCV_CMD			3	/* WILL, WONT, DO, DONT cmd */
-#define AXP_RCV_SE			4	/* Suboption End command */
-#define AXP_RCV_SB			5	/* Suboption Begin command */
-#define AXP_RCV_CATCHALL		6	/* Everything else */
-#define AXP_RCV_MAX_ACTION		7
+#define AXP_ACT_NUL			0	/* '\0' */
+#define AXP_ACT_IAC			1	/* IAC command */
+#define AXP_ACT_R			2	/* '\r' */
+#define AXP_ACT_CMD			3	/* WILL, WONT, DO, DONT cmd */
+#define AXP_ACT_SE			4	/* Suboption End command */
+#define AXP_ACT_SB			5	/* Suboption Begin command */
+#define AXP_ACT_CATCHALL		6	/* Everything else */
+#define AXP_ACT_MAX			7
 
 /*
  * This macro determines the action being performed for the TELNET receive
@@ -125,6 +139,7 @@ typedef struct
 {
     u8			state;
     bool		preferred;
+    bool		supported;
 } AXP_Telnet_OptState;
 
 /*
@@ -142,7 +157,8 @@ typedef struct
 /*
  * Function prototypes.
  */
-bool AXP_Telnet_Send(int, u8 *, u32);
+bool AXP_Telnet_Send(AXP_Telnet_Session *, u8 *, u32);
 void AXP_Telnet_Main(void);
+void get_State_Machines(AXP_StateMachine ***, AXP_StateMachine ***);
 
 #endif /* AXP_TELNET_H_ */

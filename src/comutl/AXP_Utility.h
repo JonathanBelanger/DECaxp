@@ -16,45 +16,45 @@
  *
  * Description:
  *
- *	This header file contains useful definitions to be used throughout the
- *	Digital Alpha AXP emulation software.
+ *  This header file contains useful definitions to be used throughout the
+ *  Digital Alpha AXP emulation software.
  *
- *	Revision History:
+ * Revision History:
  *
- *	V01.000		10-May-2017	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000	10-May-2017	Jonathan D. Belanger
+ *  Initially written.
  *
- *	V01.001		14-May-2017	Jonathan D. Belanger
- *	Added includes for a number of standard header files.
+ *  V01.001	14-May-2017	Jonathan D. Belanger
+ *  Added includes for a number of standard header files.
  *
- *	V01.002		17-Jun-2017	Jonathan D. Belanger
- *	Added counted queues and counted queue entries.
+ *  V01.002	17-Jun-2017	Jonathan D. Belanger
+ *  Added counted queues and counted queue entries.
  *
- *	V01.003		05-Jul-2017	Jonathan D. Belanger
- *	Added definitions for unsigned/signed 128-bit values.
+ *  V01.003	05-Jul-2017	Jonathan D. Belanger
+ *  Added definitions for unsigned/signed 128-bit values.
  *
- *	V01.004		10-Jul-2017	Jonathan D. Belanger
- *	I tried to utilize the MPFR - Multi-Precision Float Rounding utility,
- *	but had problems getting it to link in correctly.  Additionally, this
- *	utility did not support subnormal values directly (there was a way to
- *	emulate it, but was not very efficient), as well as the performance
- *	of this utility has been questioned.  Therefore, I'm reverting to what
- *	I was doing before.
+ *  V01.004	10-Jul-2017	Jonathan D. Belanger
+ *  I tried to utilize the MPFR - Multi-Precision Float Rounding utility,
+ *  but had problems getting it to link in correctly.  Additionally, this
+ *  utility did not support subnormal values directly (there was a way to
+ *  emulate it, but was not very efficient), as well as the performance
+ *  of this utility has been questioned.  Therefore, I'm reverting to what
+ *  I was doing before.
  *
- *	V01.004		18-Nov-2017	Jonathan D. Belanger
- *	Uncommented the pthread.h include.  We are going threading.
+ *  V01.004	18-Nov-2017	Jonathan D. Belanger
+ *  Uncommented the pthread.h include.  We are going threading.
  *
- *	V01.005		29-Dec-2017	Jonathan D. Belanger
- *	When sending data from the CPU to the System, we do so in upto 64-byte
- *	blocks.  Since these blocks are not necessarily consecutive, there may be
- *	gaps between the end of what section of relevant data and the start of the
- *	next.  In the real CPU, this would be broken down into a series of
- *	WrBytes/WrLWs/WrQWs or ReadBytes/ReadLWs/ReadQWs.  We need to mimic this,
- *	but do it in a single step.  We need some macros to set/decode the
- *	appropriate set of mask bits (each bit represent a single byte).
+ *  V01.005	29-Dec-2017	Jonathan D. Belanger
+ *  When sending data from the CPU to the System, we do so in upto 64-byte
+ *  blocks.  Since these blocks are not necessarily consecutive, there may be
+ *  gaps between the end of what section of relevant data and the start of the
+ *  next.  In the real CPU, this would be broken down into a series of
+ *  WrBytes/WrLWs/WrQWs or ReadBytes/ReadLWs/ReadQWs.  We need to mimic this,
+ *  but do it in a single step.  We need some macros to set/decode the
+ *  appropriate set of mask bits (each bit represent a single byte).
  *
- *	V01.006		26-Apr-2018	Jonathan D. Belanger
- *	Added macros to INSQUE and REMQUE entries from a doubly linked list.
+ *  V01.006	26-Apr-2018	Jonathan D. Belanger
+ *  Added macros to INSQUE and REMQUE entries from a doubly linked list.
  */
 #ifndef _AXP_UTIL_DEFS_
 #define _AXP_UTIL_DEFS_
