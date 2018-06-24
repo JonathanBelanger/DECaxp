@@ -34,6 +34,7 @@ typedef enum
 {
     AXP_21264_CPU_BLK,
     AXP_21274_SYS_BLK,
+    AXP_TELNET_SES_BLK,
     AXP_BLOCK_MAX
 } AXP_BLOCK_TYPE;
 

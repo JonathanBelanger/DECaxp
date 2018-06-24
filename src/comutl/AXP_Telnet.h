@@ -65,10 +65,10 @@ typedef enum
  * state machine will prevent infinite looping of option processing.
  */
 #define AXP_OPT_NO			0
-#define AXP_OPT_WANTNO_LOCAL		1
-#define AXP_OPT_WANTNO_REMOTE		2
-#define AXP_OPT_WANTYES_LOCAL		3
-#define AXP_OPT_WANTYES_REMOTE		4
+#define AXP_OPT_WANTNO_SRV		1
+#define AXP_OPT_WANTNO_CLI		2
+#define AXP_OPT_WANTYES_SRV		3
+#define AXP_OPT_WANTYES_CLI		4
 #define AXP_OPT_YES			5
 #define AXP_OPT_MAX_STATE		6
 
@@ -146,18 +146,52 @@ typedef struct
  * This data structure is used to handle a TELNET session.  It contains
  * state information and negotiated options.
  */
+#define AXP_TELNET_SB_LEN	512
+#define AXP_TELNET_TTYPE_LEN	32
 typedef struct
 {
+
+    /*
+     * This field needs to be at the top of all data blocks/structures
+     * that need to be specifically allocated by the Blocks module.
+     */
+    AXP_BLOCK_DSC header;
+
+    /*
+     * This where the rest of the fields are needed to maintain a TELNET
+     * session with a client.
+     */
     int				mySocket;
-    AXP_Telnet_Session_State	myState;
+    u8				rcvState;
+
+    /*
+     * These are the state objects.  They are used with the appropriate
+     * State Machine
+     */
     AXP_Telnet_OptState		myOptions[NTELOPTS];
     AXP_Telnet_OptState		theirOptions[NTELOPTS];
-} AXP_Telnet_Session;
+
+    /*
+     * The following fields are used for processing sub-options.
+     */
+    u8				subOptionTType[AXP_TELNET_TTYPE_LEN];
+    u8				subOptBuf[AXP_TELNET_SB_LEN];
+    u16				subOptBufIdx;
+    u16				subOptBufLen;
+} AXP_TELNET_SESSION;
+
+/*
+ * This macro is used to select the correct options (mine or theirs) being
+ * processed.  This is determined by the Action (command) being processed.
+ */
+#define AXP_TELNET_OPTIONS(ses, action)					\
+    ((((action) >= YES_CLI) && ((action) <= WONT))) ?			\
+	(ses)->theirOptions : (ses)->myOptions)
 
 /*
  * Function prototypes.
  */
-bool AXP_Telnet_Send(AXP_Telnet_Session *, u8 *, u32);
+bool AXP_Telnet_Send(AXP_TELNET_SESSION *, u8 *, u32);
 void AXP_Telnet_Main(void);
 void get_State_Machines(AXP_StateMachine ***, AXP_StateMachine ***);
 
