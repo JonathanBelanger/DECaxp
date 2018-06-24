@@ -51,7 +51,6 @@ void SubOpt_Clear(void *, ...);
 void SubOpt_Accumulate(void *, ...);
 void SubOpt_TermProcess(void *, ...);
 void Cvt_Proc_CMD(void *, ...);
-void Process_Suboption(void *, ...);
 
 /*
  * This definition below is used for processing the options sent from the
@@ -61,75 +60,75 @@ AXP_StateMachine TN_Option_SM[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
 {
     /* YES_SRV	- NOT PREFERRED */
     {
-	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_SRV,	Send_WILL},
+	{AXP_OPT_WANTNO_CLI,	NULL},
+	{AXP_OPT_WANTNO_CLI,	NULL},
+	{AXP_OPT_WANTYES_SRV,	NULL},
+	{AXP_OPT_WANTYES_SRV,	NULL},
 	{AXP_OPT_YES,		NULL}
     },
     /* YES_SRV	- PREFERRED */
     {
-	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_SRV,	Send_WILL},
+	{AXP_OPT_WANTNO_CLI,	NULL},
+	{AXP_OPT_WANTNO_CLI,	NULL},
+	{AXP_OPT_WANTYES_SRV,	NULL},
+	{AXP_OPT_WANTYES_SRV,	NULL},
 	{AXP_OPT_YES,		NULL}
     },
     /* NO_SRV	- NOT PREFERRED */
     {
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_WONT}
+	{AXP_OPT_WANTNO_SRV,	NULL},
+	{AXP_OPT_WANTNO_SRV,	NULL},
+	{AXP_OPT_WANTYES_CLI,	NULL},
+	{AXP_OPT_WANTYES_CLI,	NULL},
+	{AXP_OPT_WANTNO_SRV,	Send_WONT}
     },
     /* NO_SRV	- PREFERRED */
     {
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_WONT}
+	{AXP_OPT_WANTNO_SRV,	NULL},
+	{AXP_OPT_WANTNO_SRV,	NULL},
+	{AXP_OPT_WANTYES_CLI,	NULL},
+	{AXP_OPT_WANTYES_CLI,	NULL},
+	{AXP_OPT_WANTNO_SRV,	Send_WONT}
     },
     /* YES_CLI	- NOT PREFERRED */
     {
-	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_SRV,	Send_DO},
+	{AXP_OPT_WANTNO_CLI,	NULL},
+	{AXP_OPT_WANTNO_CLI,	NULL},
+	{AXP_OPT_WANTYES_SRV,	NULL},
+	{AXP_OPT_WANTYES_SRV,	NULL},
 	{AXP_OPT_YES,		NULL}
     },
     /* YES_CLI	- PREFERRED */
     {
-	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTNO_REMOTE,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_LOCAL,	NULL},
+	{AXP_OPT_WANTYES_SRV,	Send_DO},
+	{AXP_OPT_WANTNO_CLI,	NULL},
+	{AXP_OPT_WANTNO_CLI,	NULL},
+	{AXP_OPT_WANTYES_SRV,	NULL},
+	{AXP_OPT_WANTYES_SRV,	NULL},
 	{AXP_OPT_YES,		NULL}
     },
     /* NO_CLI	- NOT PREFERRED */
     {
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_DONT}
+	{AXP_OPT_WANTNO_SRV,	NULL},
+	{AXP_OPT_WANTNO_SRV,	NULL},
+	{AXP_OPT_WANTYES_CLI,	NULL},
+	{AXP_OPT_WANTYES_CLI,	NULL},
+	{AXP_OPT_WANTNO_SRV,	Send_DONT}
     },
     /* NO_CLI	- PREFERRED */
     {
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTNO_LOCAL,	NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTYES_REMOTE,NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_DONT}
+	{AXP_OPT_WANTNO_SRV,	NULL},
+	{AXP_OPT_WANTNO_SRV,	NULL},
+	{AXP_OPT_WANTYES_CLI,	NULL},
+	{AXP_OPT_WANTYES_CLI,	NULL},
+	{AXP_OPT_WANTNO_SRV,	Send_DONT}
     },
     /* WILL	- NOT PREFERRED */
     {
@@ -137,7 +136,7 @@ AXP_StateMachine TN_Option_SM[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_YES,		NULL},
 	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_DONT},
+	{AXP_OPT_WANTNO_SRV,	Send_DONT},
 	{AXP_OPT_YES,		NULL}
     },
     /* WILL	- PREFERRED */
@@ -146,14 +145,14 @@ AXP_StateMachine TN_Option_SM[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_YES,		NULL},
 	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_DONT},
+	{AXP_OPT_WANTNO_SRV,	Send_DONT},
 	{AXP_OPT_YES,		NULL}
     },
     /* WONT	- NOT PREFERRED */
     {
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
+	{AXP_OPT_WANTYES_SRV,	Send_DO},
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		Send_DONT}
@@ -162,7 +161,7 @@ AXP_StateMachine TN_Option_SM[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
     {
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTYES_LOCAL,	Send_DO},
+	{AXP_OPT_WANTYES_SRV,	Send_DO},
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		Send_DONT}
@@ -173,7 +172,7 @@ AXP_StateMachine TN_Option_SM[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_YES,		NULL},
 	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_WONT},
+	{AXP_OPT_WANTNO_SRV,	Send_WONT},
 	{AXP_OPT_YES,		NULL}
     },
     /* DO	- PREFERRED */
@@ -182,14 +181,14 @@ AXP_StateMachine TN_Option_SM[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_YES,		NULL},
 	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_WANTNO_LOCAL,	Send_WONT},
+	{AXP_OPT_WANTNO_SRV,	Send_WONT},
 	{AXP_OPT_YES,		NULL}
     },
     /* DONT	- NOT PREFERRED */
     {
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
+	{AXP_OPT_WANTYES_SRV,	Send_WILL},
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		Send_WONT}
@@ -198,7 +197,7 @@ AXP_StateMachine TN_Option_SM[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
     {
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTYES_LOCAL,	Send_WILL},
+	{AXP_OPT_WANTYES_SRV,	Send_WILL},
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		NULL},
 	{AXP_OPT_NO,		Send_WONT}
@@ -276,19 +275,295 @@ AXP_StateMachine TN_Receive_SM[AXP_ACT_MAX][AXP_RCV_MAX_STATE] =
     }
 };
 
+/*
+ * This state value is used to maintain the state of being able to listen and
+ * accept connections.  Once a connection has been accepted, then a session
+ * block will be created to hold the TELNET connection information.  At this
+ * point we probably could accept more connections, but we will not allow it,
+ * at least at this time.
+ */
+AXP_Telnet_Session_State srvState;
+
 #define DIRECTION(dir)	(((dir) == '<') ? "RCVD" : "SENT")
 
 /*
  * Local Prototypes.
  */
+static void Process_Suboption(AXP_TELNET_SESSION *);
 static void AXP_Telnet_PrintOption(char, u8, u8);
 static void AXP_Telnet_PrintSub(char, u8 *, int);
 static bool AXP_Telnet_Listener(int *);
-static bool AXP_Telnet_Accept(int, AXP_Telnet_Session *);
-static bool AXP_Telnet_Receive(AXP_Telnet_Session *, u8 *, u32 *);
-static bool AXP_Telnet_Reject(AXP_Telnet_Session *);
+static AXP_TELNET_SESSION *AXP_Telnet_Accept(int);
+static bool AXP_Telnet_Receive(AXP_TELNET_SESSION *, u8 *, u32 *);
+static bool AXP_Telnet_Reject(AXP_TELNET_SESSION *);
 static bool AXP_Telnet_Ignore(int);
-static bool AXP_Telnet_Processor(AXP_Telnet_Session *, u8 *, u32);
+static bool AXP_Telnet_Processor(AXP_TELNET_SESSION *, u8 *, u32);
+
+/*
+ * Send_DO
+ *  This function sends a DO <option> command to the client.  This function is
+ *  called as part of the receive state machine processing.
+ *
+ * Input Parameters:
+ *  sesPtr:
+ *	A pointer to the TELNET session structure.
+ * ...:
+ *	The option to which we are sending the DO command.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
+void Send_DO(void *sesPtr, ...)
+{
+    AXP_TELNET_SESSION	*ses = (AXP_TELNET_SESSION *) sesPtr;
+    bool		retVal = true;
+    u8			opt;
+    u8			buf[3];
+    va_list		ap;
+
+    /*
+     * Get the option for which we are sending the DO command from the variable
+     * list portion of the call arguments.
+     */
+    va_start(ap, sesPtr);
+    opt = va_arg(ap, int);
+    va_end(ap);
+
+    /*
+     * Send the IAC DO <opt> to the client.
+     */
+    buf[0] = IAC;
+    buf[1] = DO;
+    buf[2] = opt;
+    retVal = AXP_Telnet_Send(ses, buf, 3);
+
+    /*
+     * OK, something happened and the session is no longer active.  Set the
+     * server state, so that we can start cleaning up the connection.
+     */
+    if (retVal == false)
+	srvState = Inactive;
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+
+/*
+ * Send_DONT
+ *  This function sends a DONT <option> command to the client.  This function
+ *  is called as part of the receive state machine processing.
+ *
+ * Input Parameters:
+ *  sesPtr:
+ *	A pointer to the TELNET session structure.
+ * ...:
+ *	The option to which we are sending the DONT command.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
+void Send_DONT(void *sesPtr, ...)
+{
+    AXP_TELNET_SESSION	*ses = (AXP_TELNET_SESSION *) sesPtr;
+    bool		retVal = true;
+    u8			opt;
+    u8			buf[3];
+    va_list		ap;
+
+    /*
+     * Get the option for which we are sending the DONT command from the
+     * variable list portion of the call arguments.
+     */
+    va_start(ap, sesPtr);
+    opt = va_arg(ap, int);
+    va_end(ap);
+
+    /*
+     * Send the IAC DONT <opt> to the client.
+     */
+    buf[0] = IAC;
+    buf[1] = DONT;
+    buf[2] = opt;
+    retVal = AXP_Telnet_Send(ses, buf, 3);
+
+    /*
+     * OK, something happened and the session is no longer active.  Set the
+     * server state, so that we can start cleaning up the connection.
+     */
+    if (retVal == false)
+	srvState = Inactive;
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+
+/*
+ * Send_WILL
+ *  This function sends a WILL <option> command to the client.  This function
+ *  is called as part of the receive state machine processing.
+ *
+ * Input Parameters:
+ *  sesPtr:
+ *	A pointer to the TELNET session structure.
+ * ...:
+ *	The option to which we are sending the WILL command.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
+void Send_WILL(void *sesPtr, ...)
+{
+    AXP_TELNET_SESSION	*ses = (AXP_TELNET_SESSION *) sesPtr;
+    bool		retVal = true;
+    u8			opt;
+    u8			buf[3];
+    va_list		ap;
+
+    /*
+     * Get the option for which we are sending the WILL command from the
+     * variable list portion of the call arguments.
+     */
+    va_start(ap, sesPtr);
+    opt = va_arg(ap, int);
+    va_end(ap);
+
+    /*
+     * Send the IAC WILL <opt> to the client.
+     */
+    buf[0] = IAC;
+    buf[1] = WILL;
+    buf[2] = opt;
+    retVal = AXP_Telnet_Send(ses, buf, 3);
+
+    /*
+     * OK, something happened and the session is no longer active.  Set the
+     * server state, so that we can start cleaning up the connection.
+     */
+    if (retVal == false)
+	srvState = Inactive;
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+
+/*
+ * Send_WONT
+ *  This function sends a WONT <option> command to the client.  This function
+ *  is called as part of the receive state machine processing.
+ *
+ * Input Parameters:
+ *  sesPtr:
+ *	A pointer to the TELNET session structure.
+ * ...:
+ *	The option to which we are sending the WONT command.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
+void Send_WONT(void *sesPtr, ...)
+{
+    AXP_TELNET_SESSION	*ses = (AXP_TELNET_SESSION *) sesPtr;
+    bool		retVal = true;
+    u8			opt;
+    u8			buf[3];
+    va_list		ap;
+
+    /*
+     * Get the option for which we are sending the WONT command from the
+     * variable list portion of the call arguments.
+     */
+    va_start(ap, sesPtr);
+    opt = va_arg(ap, int);
+    va_end(ap);
+
+    /*
+     * Send the IAC WONT <opt> to the client.
+     */
+    buf[0] = IAC;
+    buf[1] = WONT;
+    buf[2] = opt;
+    retVal = AXP_Telnet_Send(ses, buf, 3);
+
+    /*
+     * OK, something happened and the session is no longer active.  Set the
+     * server state, so that we can start cleaning up the connection.
+     */
+    if (retVal == false)
+	srvState = Inactive;
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+
+/*
+ * Echo_Data
+ *  This function sends a character back to the client, but only if we are
+ *  supposed to be echoing data back to the client.  This function is called as
+ *  part of the receive state machine processing.
+ *
+ * Input Parameters:
+ *  sesPtr:
+ *	A pointer to the TELNET session structure.
+ * ...:
+ *	The character which we are potentially sending back to the client.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
+void Echo_Data(void *sesPtr, ...)
+{
+    AXP_TELNET_SESSION	*ses = (AXP_TELNET_SESSION *) sesPtr;
+    bool		retVal = true;
+    u8			c;
+    va_list		ap;
+
+    /*
+     * Get the character that needs to be sent back to the client, but only if
+     * echoing is turned on.
+     */
+    if (ses->myOptions[TELOPT_ECHO].state == AXP_OPT_YES)
+    {
+	va_start(ap, sesPtr);
+	c = va_arg(ap, int);
+	va_end(ap);
+	retVal = AXP_Telnet_Send(ses, &c, 1);
+
+	/*
+	 * OK, something happened and the session is no longer active.  Set the
+	 * server state, so that we can start cleaning up the connection.
+	 */
+	if (retVal == false)
+	    srvState = Inactive;
+    }
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
 
 /*
  * <State Machine Action Routines>
@@ -308,159 +583,175 @@ static bool AXP_Telnet_Processor(AXP_Telnet_Session *, u8 *, u32);
  * Return Value:
  *  None.
  */
-void Send_DO(void *sesPtr, ...)
-{
-    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
-    u8		opt;
-    u8		buf[3];
-    va_list	ap;
-
-    va_start(ap, sesPtr);
-    opt = va_arg(ap, int);
-    va_end(ap);
-
-    /*
-     * Send the IAC DO <opt> to the client.
-     */
-    buf[0] = IAC;
-    buf[1] = DO;
-    buf[2] = opt;
-    AXP_Telnet_Send(ses, buf, 3);
-
-    /*
-     * Return back to the caller.
-     */
-    return;
-}
-void Send_DONT(void *sesPtr, ...)
-{
-    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
-    u8		opt;
-    u8		buf[3];
-    va_list	ap;
-
-    va_start(ap, sesPtr);
-    opt = va_arg(ap, int);
-    va_end(ap);
-
-    /*
-     * Send the IAC DONT <opt> to the client.
-     */
-    buf[0] = IAC;
-    buf[1] = DONT;
-    buf[2] = opt;
-    AXP_Telnet_Send(ses, buf, 3);
-
-    /*
-     * Return back to the caller.
-     */
-    return;
-}
-void Send_WILL(void *sesPtr, ...)
-{
-    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
-    u8		opt;
-    u8		buf[3];
-    va_list	ap;
-
-    va_start(ap, sesPtr);
-    opt = va_arg(ap, int);
-    va_end(ap);
-
-    /*
-     * Send the IAC WILL <opt> to the client.
-     */
-    buf[0] = IAC;
-    buf[1] = WILL;
-    buf[2] = opt;
-    AXP_Telnet_Send(ses, buf, 3);
-
-    /*
-     * Return back to the caller.
-     */
-    return;
-}
-void Send_WONT(void *sesPtr, ...)
-{
-    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
-    u8		opt;
-    u8		buf[3];
-    va_list	ap;
-
-    va_start(ap, sesPtr);
-    opt = va_arg(ap, int);
-    va_end(ap);
-
-    /*
-     * Send the IAC WONT <opt> to the client.
-     */
-    buf[0] = IAC;
-    buf[1] = WONT;
-    buf[2] = opt;
-    AXP_Telnet_Send(ses, buf, 3);
-
-    /*
-     * Return back to the caller.
-     */
-    return;
-}
-void Echo_Data(void *sesPtr, ...)
-{
-    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
-
-    /*
-     * Return back to the caller.
-     */
-    return;
-}
 void Process_CMD(void *sesPtr, ...)
 {
-    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+    AXP_TELNET_SESSION	*ses = (AXP_TELNET_SESSION *) sesPtr;
 
     /*
      * Return back to the caller.
      */
     return;
 }
+
+/*
+ * <State Machine Action Routines>
+ *  The following set of functions are all action routines called by the
+ *  execution of the state machine.  These functions perform the actions that
+ *  are required when an action is applied to a state machine.
+ *
+ * Input Parameters:
+ *  sesPtr:
+ *	A pointer to the TELNET session structure.
+ * ...:
+ *	A variable number of arguments to be used for the action processing.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
 void Cvt_Process_IAC(void *sesPtr, ...)
 {
-    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+    AXP_TELNET_SESSION	*ses = (AXP_TELNET_SESSION *) sesPtr;
 
     /*
      * Return back to the caller.
      */
     return;
 }
+
+/*
+ * SubOpt_Clear
+ *  This function clears the suboption processing because we either completing
+ *  processing, or something else happened.  This function is called either as
+ *  part of the receive state machine processing, or directly.
+ *
+ * Input Parameters:
+ *  sesPtr:
+ *	A pointer to the TELNET session structure.
+ * ...:
+ *	The variable arguments section is ignored.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
 void SubOpt_Clear(void *sesPtr, ...)
 {
-    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+    AXP_TELNET_SESSION	*ses = (AXP_TELNET_SESSION *) sesPtr;
+
+    /*
+     * Reset the suboption processing to it's initial state.
+     */
+    ses->subOptBufIdx = ses->subOptBufLen = 0;
 
     /*
      * Return back to the caller.
      */
     return;
 }
+
+/*
+ * SubOpt_Accumulate
+ *  This function adds a character to the suboption buffer.  This function is
+ *  called either as part of the receive state machine processing or directly.
+ *
+ * Input Parameters:
+ *  sesPtr:
+ *	A pointer to the TELNET session structure.
+ * ...:
+ *	The character which we are adding to the suboption buffer.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
 void SubOpt_Accumulate(void *sesPtr, ...)
 {
-    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+    AXP_TELNET_SESSION 	*ses = (AXP_TELNET_SESSION *) sesPtr;
+    u8			c;
+    va_list		ap;
+
+    /*
+     * Get the next character for the suboption from the variable list portion
+     * of the call arguments.
+     */
+    va_start(ap, sesPtr);
+    c = va_arg(ap, int);
+    va_end(ap);
+
+    /*
+     * If there is more buffer to store the next character, then do so now.
+     * Otherwise, ignore it.
+     */
+    if (ses->subOptBufIdx < AXP_TELNET_SB_LEN)
+	ses->subOptBuf[ses->subOptBufIdx++] = c;
 
     /*
      * Return back to the caller.
      */
     return;
 }
+
+/*
+ * SubOpt_TermProcess
+ *  This function terminates the suboption processing and then calls the
+ *  function to process the suboption string.  This function is called either
+ *  as part of the receive state machine processing, or directly.
+ *
+ * Input Parameters:
+ *  sesPtr:
+ *	A pointer to the TELNET session structure.
+ * ...:
+ *	The variable arguments section is ignored.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
 void SubOpt_TermProcess(void *sesPtr, ...)
 {
-    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+    AXP_TELNET_SESSION	*ses = (AXP_TELNET_SESSION *) sesPtr;
+
+    /*
+     * Set the length of the suboption buffer and reset the index back to the
+     * beginning.
+     */
+    ses->subOptBufLen = ses->subOptBufIdx;
+    ses->subOptBufIdx = 0;
+
+    Process_Suboption(ses);
 
     /*
      * Return back to the caller.
      */
     return;
 }
-void Process_Suboption(void *sesPtr, ...)
+
+/*
+ * Process_Suboption
+ *  This function is called to process a completed suboption buffer.
+ *
+ * Input Parameters:
+ *  ses:
+ *	A pointer to the TELNET session structure.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
+void Process_Suboption(AXP_TELNET_SESSION *ses)
 {
-    AXP_Telnet_Session *ses = (AXP_Telnet_Session *) sesPtr;
+    AXP_Telnet_PrintSub('<', ses->subOptBuf, ses->subOptBufLen);
 
     /*
      * Return back to the caller.
@@ -751,29 +1042,51 @@ static bool AXP_Telnet_Listener(int *sock)
  *	received to and from the client.
  *
  * Return Values:
- *  true:	Socket to use to send and receive data.
- *  false:	Failure.
+ *  NULL:	An error occurred and the connection was not accepted.
+ *  <address>:	The address of a TELNET session block used to maintain the
+ *		TELNET connection with the client (we are the server).
  */
-static bool AXP_Telnet_Accept(int sock, AXP_Telnet_Session *ses)
+static AXP_TELNET_SESSION *AXP_Telnet_Accept(int sock)
 {
+    AXP_TELNET_SESSION	*ses = NULL;
     struct sockaddr	theirName;
     int			theirNameSize = sizeof(theirName);
-    bool		retVal = true;
 
     /*
-     * We loop forever accepting connections.
+     * Go allocate a block into which TELNET session information can be
+     * maintained throughout the life of the connection with the client.
+     */
+    ses = (AXP_TELNET_SESSION *) AXP_Allocate_Block(AXP_TELNET_SES_BLK);
+
+    /*
+     * Try to accept a connection.  If it fails, return the block, otherwise
+     * go ahead initialize and return it back to the caller.
      */
     printf("Ready to accept a TELNET connection...\n");
     ses->mySocket = accept(sock, &theirName, &theirNameSize);
     if (ses->mySocket < 0)
-	retVal = false;
+    {
+	AXP_Deallocate_Block((AXP_BLOCK_DSC *) ses);
+	ses = NULL;
+	printf("Accepting a TELNET connection has failed...\n");
+    }
     else
+    {
+	AXP_OPT_SET_PREF(ses->myOptions, TELOPT_ECHO);
+	AXP_OPT_SET_PREF(ses->myOptions, TELOPT_SGA);
+	AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_ECHO);
+	AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_SGA);
+	AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_NAWS);
+	AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_LFLOW);
+	ses->rcvState = AXP_RCV_DATA;
+	SubOpt_Clear((void *) ses);
 	printf("A TELNET connection has been accepted...\n");
+    }
 
     /*
      * Return back to the caller.
      */
-    return(retVal);
+    return(ses);
 }
 
 /*
@@ -799,7 +1112,7 @@ static bool AXP_Telnet_Accept(int sock, AXP_Telnet_Session *ses)
  *  true:	The buf and bufLen parameters contain valid information.
  *  false:	Failure.
  */
-static bool AXP_Telnet_Receive(AXP_Telnet_Session *ses, u8 *buf, u32 *bufLen)
+static bool AXP_Telnet_Receive(AXP_TELNET_SESSION *ses, u8 *buf, u32 *bufLen)
 {
     bool	retVal = true;
 
@@ -845,7 +1158,7 @@ static bool AXP_Telnet_Receive(AXP_Telnet_Session *ses, u8 *buf, u32 *bufLen)
  *  true:	The data in the buf parameter was sent.
  *  false:	Failure.
  */
-bool AXP_Telnet_Send(AXP_Telnet_Session *ses, u8 *buf, u32 bufLen)
+bool AXP_Telnet_Send(AXP_TELNET_SESSION *ses, u8 *buf, u32 bufLen)
 {
     bool	retVal = true;
     int		ii;
@@ -866,10 +1179,7 @@ bool AXP_Telnet_Send(AXP_Telnet_Session *ses, u8 *buf, u32 bufLen)
 	    if (TELCMD_OK(buf[ii]))
 	    {
 		printf("%s", TELCMD(buf[ii]));
-		if ((buf[ii] == WILL) ||
-		    (buf[ii] == WONT) ||
-		    (buf[ii] == DO) ||
-		    (buf[ii] == DONT))
+		if ((buf[ii] >= WILL) && (buf[ii] <= DONT))
 		{
 		    ii++;
 		    printf(") %02x(", buf[ii]);
@@ -918,7 +1228,7 @@ bool AXP_Telnet_Send(AXP_Telnet_Session *ses, u8 *buf, u32 bufLen)
  *  true:	The TELNET socket has been closed.
  *  false:	Failure.
  */
-static bool AXP_Telnet_Reject(AXP_Telnet_Session *ses)
+static bool AXP_Telnet_Reject(AXP_TELNET_SESSION *ses)
 {
     bool	retVal = true;
 
@@ -927,7 +1237,12 @@ static bool AXP_Telnet_Reject(AXP_Telnet_Session *ses)
      */
     close(ses->mySocket);
 
-    ses->mySocket = 0;
+    /*
+     * Return the block of memory back to the system.
+     */
+    AXP_Deallocate_Block((AXP_BLOCK_DSC *) ses);
+    ses = NULL;
+    printf("TELNET session has been closed...\n");
 
     /*
      * Return back to the caller.
@@ -988,7 +1303,7 @@ static bool AXP_Telnet_Ignore(int sock)
  *  true:	The data has been processed.
  *  false:	Failure.
  */
-static bool AXP_Telnet_Processor(AXP_Telnet_Session *ses, u8 *buf, u32 bufLen)
+static bool AXP_Telnet_Processor(AXP_TELNET_SESSION *ses, u8 *buf, u32 bufLen)
 {
     bool	retVal = true;
     int		ii;
@@ -997,123 +1312,27 @@ static bool AXP_Telnet_Processor(AXP_Telnet_Session *ses, u8 *buf, u32 bufLen)
      * At this point we want to perform some action.
      */
     printf("Just received the following...\n\t");
+    if (TELCMD_OK(buf[0]))
+	AXP_Telnet_PrintOption('<', buf[0], buf[1]);
+    else
+    {
+	buf[bufLen] = '\0';
+	printf("%s");
+    }
 
     ii = 0;
-    while (ii < bufLen)
+    while ((ii < bufLen) && (retVal == true))
     {
-	printf("%02x(", buf[ii]);
-	if (TELCMD_OK(buf[ii]))
-	{
-	    printf("%s", TELCMD(buf[ii]));
-	    if (buf[ii] == IAC)
-	    {
-		ii++;
-		switch (buf[ii])
-		{
-		    case DONT:	/* you are not to use option */
-		    case DO:	/* please, you use option */
-		    case WONT:	/* I won't use option */
-		    case WILL:	/* I will use option */
-			printf(") %02x(%s", buf[ii], TELCMD(buf[ii]));
-			ii++;
-			if (TELOPT_OK(buf[ii]))
-			{
-			    printf(") %02x(%s", buf[ii], TELOPT(buf[ii]));
-			    switch(buf[ii])
-			    {
-				case TELOPT_BINARY:	/* 8-bit data path */
-				    break;
-
-				case TELOPT_ECHO:	/* echo */
-				    break;
-
-				case TELOPT_RCP:	/* prepare to reconnect */
-				    break;
-
-				case TELOPT_SGA:	/* suppress go ahead */
-				    break;
-
-				case TELOPT_NAMS:	/* approximate message size */
-				case TELOPT_STATUS:	/* give status */
-				case TELOPT_TM:		/* timing mark */
-				case TELOPT_RCTE:	/* remote controlled transmission and echo */
-				case TELOPT_NAOL:	/* negotiate about output line width */
-				case TELOPT_NAOP:	/* negotiate about output page size */
-				case TELOPT_NAOCRD:	/* negotiate about CR disposition */
-				case TELOPT_NAOHTS:	/* negotiate about horizontal tabstops */
-				case TELOPT_NAOHTD:	/* negotiate about horizontal tab disposition */
-				case TELOPT_NAOFFD:	/* negotiate about formfeed disposition */
-				case TELOPT_NAOVTS:	/* negotiate about vertical tab stops */
-				case TELOPT_NAOVTD:	/* negotiate about vertical tab disposition */
-				case TELOPT_NAOLFD:	/* negotiate about output LF disposition */
-				case TELOPT_XASCII:	/* extended ascic character set */
-				case TELOPT_LOGOUT:	/* force logout */
-				case TELOPT_BM:		/* byte macro */
-				case TELOPT_DET:	/* data entry terminal */
-				case TELOPT_SUPDUP:	/* supdup protocol */
-				case TELOPT_SUPDUPOUTPUT:/* supdup output */
-				case TELOPT_SNDLOC:	/* send location */
-				    break;
-
-				case TELOPT_TTYPE:	/* terminal type */
-				    break;
-
-				case TELOPT_EOR:	/* end or record */
-				case TELOPT_TUID:	/* TACACS user identification */
-				case TELOPT_OUTMRK:	/* output marking */
-				case TELOPT_TTYLOC:	/* terminal location number */
-				case TELOPT_3270REGIME:	/* 3270 regime */
-				case TELOPT_X3PAD:	/* X.3 PAD */
-				    break;
-
-				case TELOPT_NAWS:	/* window size */
-				    break;
-
-				case TELOPT_TSPEED:	/* terminal speed */
-				    break;
-
-				case TELOPT_LFLOW:	/* remote flow control */
-				case TELOPT_LINEMODE:	/* Linemode option */
-				case TELOPT_XDISPLOC:	/* X Display Location */
-				case TELOPT_OLD_ENVIRON:/* Old - Environment variables */
-				case TELOPT_AUTHENTICATION:/* Authenticate */
-				case TELOPT_ENCRYPT:	/* Encryption option */
-				case TELOPT_NEW_ENVIRON:/* New - Environment variables */
-				    break;
-
-				case TELOPT_EXOPL:	/* extended-options-list */
-				    break;
-			    }
-			}
-			else
-			    printf(") %02x(%d", buf[ii], buf[ii]);
-			break;
-
-		    case SB:	/* interpret as subnegotiation */
-		    case GA:	/* you may reverse the line */
-		    case EL:	/* erase the current line */
-		    case EC:	/* erase the current character */
-		    case AYT:	/* are you there */
-		    case AO:	/* abort output--but let prog finish */
-		    case IP:	/* interrupt process--permanently */
-		    case BREAK:	/* break */
-		    case DM:	/* data mark--for connect. cleaning */
-		    case NOP:	/* nop */
-		    case SE:	/* end sub negotiation */
-		    case EOR:	/* end of record (transparent mode) */
-		    case ABORT:	/* Abort process */
-		    case SUSP:	/* Suspend process */
-		    case xEOF:	/* End of file: EOF is already used... */
-			break;
-		}
-	    }
-	}
-	else
-	{
-	    printf("%u", buf[ii]);
-	    retVal = AXP_Telnet_Send(ses, buf, bufLen);
-	}
-	printf(") ");
+	ses->rcvState = AXP_Execute_SM(
+			AXP_ACT_MAX,
+			AXP_RCV_MAX_STATE,
+			TN_Receive_SM,
+			buf[ii],
+			ses->rcvState ,
+			ses,
+			buf[ii]);
+	if ((srvState != Negotiating) || (srvState != Active))
+	    retVal = false;
 	ii++;
     }
     printf("\n");
@@ -1145,21 +1364,22 @@ void AXP_Telnet_Main(void)
     u8				buffer[AXP_TELNET_MSG_LEN];
     u32				bufferLen;
     int				connSock;
-    AXP_Telnet_Session		ses = {.myState = Accept};
+    int				ii;
+    AXP_TELNET_SESSION		*ses = NULL;
     bool			retVal = true;
 
-    while(ses.myState != Finished)
+    while(srvState != Finished)
     {
-	switch(ses.myState)
+	switch(srvState)
 	{
 	    case Listen:
 		retVal = AXP_Telnet_Listener(&connSock);
-		ses.myState = retVal ? Accept : Closing;
+		srvState = retVal ? Accept : Closing;
 		break;
 
 	    case Accept:
-		retVal = AXP_Telnet_Accept(connSock, &ses);
-		if (retVal == true)
+		ses = AXP_Telnet_Accept(connSock);
+		if (ses != NULL)
 		{
 
 		    /*
@@ -1167,39 +1387,69 @@ void AXP_Telnet_Main(void)
 		     * negotiated, then it probably is not a TELNET client.
 		     */
 		    bufferLen = AXP_TELNET_MSG_LEN;
-		    retVal = AXP_Telnet_Receive(&ses, buffer, &bufferLen);
-		    ses.myState = retVal ? Negotiating : Listen;
+		    retVal = AXP_Telnet_Receive(ses, buffer, &bufferLen);
+		    if (retVal == true)
+			retVal = AXP_Telnet_Processor(ses, buffer, bufferLen);
+		    srvState = retVal ? Negotiating : Listen;
 		}
 		else
-		    ses.myState = Listen;
+		    srvState = Listen;
 		break;
 
 	    case Negotiating:
+		for (ii = 0; ii < NTELOPTS; ii++)
+		{
+		    if (ses->myOptions[ii].preferred == true)
+			ses->myOptions[ii].state = AXP_Execute_SM(
+				AXP_OPT_MAX_ACTION,
+				AXP_OPT_MAX_STATE,
+				TN_Option_SM,
+				AXP_OPT_ACTION(YES_SRV, ses->myOptions[ii]),
+				ses->myOptions[ii].state,
+				ses,
+				ii);
+		    if (ses->theirOptions[ii].preferred == true)
+			ses->theirOptions[ii].state = AXP_Execute_SM(
+				AXP_OPT_MAX_ACTION,
+				AXP_OPT_MAX_STATE,
+				TN_Option_SM,
+				AXP_OPT_ACTION(YES_SRV, ses->theirOptions[ii]),
+				ses->theirOptions[ii].state,
+				ses,
+				ii);
+		}
+
+		/*
+		 * One of the things that could have happened is that while
+		 * possibly sending to the client, the connection was reset or
+		 * terminated.  If this is the case, then the server state has
+		 * already been changed.  Otherwise, the next state is Active.
+		 */
+		if (srvState == Negotiating)
+		    srvState = Active;
 		break;
 
 	    case Active:
-		while (ses.myState == Active)
+		while (srvState == Active)
 		{
 		    bufferLen = AXP_TELNET_MSG_LEN;
-		    retVal = AXP_Telnet_Receive(&ses, buffer, &bufferLen);
+		    retVal = AXP_Telnet_Receive(ses, buffer, &bufferLen);
 		    if (retVal == true)
-			retVal = AXP_Telnet_Processor(
-						&ses,
-						buffer,
-						bufferLen);
+			retVal = AXP_Telnet_Processor(ses, buffer, bufferLen);
 		    if (retVal == false)
-			ses.myState = Inactive;
+			srvState = Inactive;
 		}
 		break;
 
 	    case Inactive:
-		retVal = AXP_Telnet_Reject(&ses);
-		ses.myState = Listen;
+		retVal = AXP_Telnet_Reject(ses);
+		ses = NULL;
+		srvState = Listen;
 		break;
 
 	    case Closing:
 		retVal = AXP_Telnet_Ignore(connSock);
-		ses.myState = Finished;
+		srvState = Finished;
 		break;
 
 	    case Finished:

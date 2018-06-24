@@ -32,6 +32,7 @@
 #include "AXP_Blocks.h"
 #include "AXP_21264_CPU.h"
 #include "AXP_21274_System.h"
+#include "AXP_Telnet.h"
 
 void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 {
@@ -40,36 +41,52 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
     switch (blockType)
     {
 	case AXP_21264_CPU_BLK:
-	{
-	    AXP_21264_CPU *cpu = NULL;
-
-	    retBlock = calloc(1, sizeof(AXP_21264_CPU));
-	    if (retBlock != NULL)
 	    {
+		AXP_21264_CPU *cpu = NULL;
 
-		/*
-		 * The calloc cleared all the memory.
-		 */
-		cpu = (AXP_21264_CPU *) retBlock;
-		cpu->header.type = blockType;
-		cpu->header.size = sizeof(AXP_21264_CPU);
-		cpu->cpuState = Cold;
+		retBlock = calloc(1, sizeof(AXP_21264_CPU));
+		if (retBlock != NULL)
+		{
+
+		    /*
+		     * The calloc cleared all the memory.
+		     */
+		    cpu = (AXP_21264_CPU *) retBlock;
+		    cpu->header.type = blockType;
+		    cpu->header.size = sizeof(AXP_21264_CPU);
+		    cpu->cpuState = Cold;
+		}
 	    }
-	}
 	    break;
 
 	case AXP_21274_SYS_BLK:
-	{
-	    AXP_21274_SYSTEM *sys = NULL;
-
-	    retBlock = calloc(1, sizeof(AXP_21274_SYSTEM));
-	    if (retBlock != NULL)
 	    {
-		sys = (AXP_21274_SYSTEM *) retBlock;
-		sys->header.type = blockType;
-		sys->header.size = sizeof(AXP_21274_SYSTEM);
+		AXP_21274_SYSTEM *sys = NULL;
+
+		retBlock = calloc(1, sizeof(AXP_21274_SYSTEM));
+		if (retBlock != NULL)
+		{
+		    sys = (AXP_21274_SYSTEM *) retBlock;
+
+		    sys->header.type = blockType;
+		    sys->header.size = sizeof(AXP_21274_SYSTEM);
+		}
 	    }
-	}
+	    break;
+
+	case AXP_TELNET_SES_BLK:
+	    {
+		AXP_TELNET_SESSION *ses = NULL;
+
+		retBlock = calloc(1, sizeof(AXP_TELNET_SESSION));
+		if (retBlock != NULL)
+		{
+		    ses = (AXP_TELNET_SESSION *) retBlock;
+
+		    ses->header.type = blockType;
+		    ses->header.size = sizeof(AXP_TELNET_SESSION);
+		}
+	    }
 	    break;
 
 	default:
