@@ -16,13 +16,13 @@
  *
  * Description:
  *
- *	This header file defines the prototypes and macros in support of the
- *	tracing functions.
+ *  This header file defines the prototypes and macros in support of the
+ *  tracing functions.
  *
  * Revision History:
  *
- *	V01.000		27-Jam-2018	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000		27-Jam-2018	Jonathan D. Belanger
+ *  Initially written.
  */
 #ifndef AXP_TRACE_H_
 #define AXP_TRACE_H_
@@ -74,11 +74,11 @@ extern AXP_TRCLOG _axp_trc_log_;
  * emulation code to trace different parts.
  */
 #define AXP_COMP_UTL	0x0000000f	/* COMUTL */
-#define AXP_SHIFT_UTL	0			/* bits to right shift */
+#define AXP_SHIFT_UTL	0		/* bits to right shift */
 #define AXP_COMP_CPU	0x0000fff0	/* CPU */
-#define AXP_SHIFT_CPU	4			/* bits to right shift */
+#define AXP_SHIFT_CPU	4		/* bits to right shift */
 #define AXP_COMP_SYS	0x0fff0000	/* System */
-#define AXP_SHIFT_SYS	16			/* bits to right shift */
+#define AXP_SHIFT_SYS	16		/* bits to right shift */
 
 #define AXP_TRCLOG_INIT	((_axp_trc_active_ == false) ? AXP_TraceInit() : true)
 #define AXP_TRCLOG_WRITE(format, ...)	\
@@ -87,132 +87,132 @@ extern AXP_TRCLOG _axp_trc_log_;
 /*
  * These macros return true when a type of tracing is to be performed.
  */
-#define AXP_UTL_CALL	(AXP_TRCLOG_INIT &										\
+#define AXP_UTL_CALL	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
 			    AXP_TRC_CALL) == AXP_TRC_CALL))
-#define AXP_UTL_BUFF	(AXP_TRCLOG_INIT &										\
+#define AXP_UTL_BUFF	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
 			   AXP_TRC_BUFF) == AXP_TRC_BUFF))
-#define AXP_UTL_OPT1	(AXP_TRCLOG_INIT &										\
+#define AXP_UTL_OPT1	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
 			   AXP_TRC_OPT1) == AXP_TRC_OPT1))
-#define AXP_UTL_OPT2	(AXP_TRCLOG_INIT &										\
+#define AXP_UTL_OPT2	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_UTL) >> AXP_SHIFT_UTL) &	\
 			   AXP_TRC_OPT2) == AXP_TRC_OPT2))
-#define AXP_IBOX_CALL	(AXP_TRCLOG_INIT &										\
+#define AXP_IBOX_CALL	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_IBOX | AXP_TRC_CALL)) ==					\
+			   (AXP_TRC_IBOX | AXP_TRC_CALL)) ==			\
 				(AXP_TRC_IBOX | AXP_TRC_CALL)))
-#define AXP_IBOX_BUFF	(AXP_TRCLOG_INIT &										\
+#define AXP_IBOX_BUFF	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_IBOX | AXP_TRC_BUFF)) ==					\
+			   (AXP_TRC_IBOX | AXP_TRC_BUFF)) ==			\
 				(AXP_TRC_IBOX | AXP_TRC_BUFF)))
-#define AXP_IBOX_OPT1	(AXP_TRCLOG_INIT &										\
+#define AXP_IBOX_OPT1	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_IBOX | AXP_TRC_OPT1)) ==					\
+			   (AXP_TRC_IBOX | AXP_TRC_OPT1)) ==			\
 				(AXP_TRC_IBOX | AXP_TRC_OPT1)))
-#define AXP_IBOX_OPT2	(AXP_TRCLOG_INIT &										\
+#define AXP_IBOX_OPT2	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_IBOX | AXP_TRC_OPT2)) ==					\
+			   (AXP_TRC_IBOX | AXP_TRC_OPT2)) ==			\
 				(AXP_TRC_IBOX | AXP_TRC_OPT2)))
-#define AXP_IBOX_INST	(AXP_TRCLOG_INIT &										\
+#define AXP_IBOX_INST	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_IBOX | AXP_TRC_INST)) ==					\
+			   (AXP_TRC_IBOX | AXP_TRC_INST)) ==			\
 				(AXP_TRC_IBOX | AXP_TRC_INST)))
-#define AXP_EBOX_CALL	(AXP_TRCLOG_INIT &										\
+#define AXP_EBOX_CALL	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_EBOX | AXP_TRC_CALL)) ==					\
+			   (AXP_TRC_EBOX | AXP_TRC_CALL)) ==			\
 				(AXP_TRC_EBOX | AXP_TRC_CALL)))
-#define AXP_EBOX_BUFF	(AXP_TRCLOG_INIT &										\
+#define AXP_EBOX_BUFF	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_EBOX | AXP_TRC_BUFF)) ==					\
+			   (AXP_TRC_EBOX | AXP_TRC_BUFF)) ==			\
 				(AXP_TRC_EBOX | AXP_TRC_BUFF)))
-#define AXP_EBOX_OPT1	(AXP_TRCLOG_INIT &										\
+#define AXP_EBOX_OPT1	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_EBOX | AXP_TRC_OPT1)) ==					\
+			   (AXP_TRC_EBOX | AXP_TRC_OPT1)) ==			\
 				(AXP_TRC_EBOX | AXP_TRC_OPT1)))
-#define AXP_EBOX_OPT2	(AXP_TRCLOG_INIT &										\
+#define AXP_EBOX_OPT2	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_EBOX | AXP_TRC_OPT2)) ==					\
+			   (AXP_TRC_EBOX | AXP_TRC_OPT2)) ==			\
 				(AXP_TRC_EBOX | AXP_TRC_OPT2)))
-#define AXP_FBOX_CALL	(AXP_TRCLOG_INIT &										\
+#define AXP_FBOX_CALL	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_FBOX | AXP_TRC_CALL)) ==					\
+			   (AXP_TRC_FBOX | AXP_TRC_CALL)) ==			\
 				(AXP_TRC_FBOX | AXP_TRC_CALL)))
-#define AXP_FBOX_BUFF	(AXP_TRCLOG_INIT &										\
+#define AXP_FBOX_BUFF	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_FBOX | AXP_TRC_BUFF)) ==					\
+			   (AXP_TRC_FBOX | AXP_TRC_BUFF)) ==			\
 				(AXP_TRC_FBOX | AXP_TRC_BUFF)))
-#define AXP_FBOX_OPT1	(AXP_TRCLOG_INIT &										\
+#define AXP_FBOX_OPT1	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_FBOX | AXP_TRC_OPT1)) ==					\
+			   (AXP_TRC_FBOX | AXP_TRC_OPT1)) ==			\
 				(AXP_TRC_FBOX | AXP_TRC_OPT1)))
-#define AXP_FBOX_OPT2	(AXP_TRCLOG_INIT &										\
+#define AXP_FBOX_OPT2	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_FBOX | AXP_TRC_OPT2)) ==					\
+			   (AXP_TRC_FBOX | AXP_TRC_OPT2)) ==			\
 				(AXP_TRC_FBOX | AXP_TRC_OPT2)))
-#define AXP_MBOX_CALL	(AXP_TRCLOG_INIT &										\
+#define AXP_MBOX_CALL	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_MBOX | AXP_TRC_CALL)) ==					\
+			   (AXP_TRC_MBOX | AXP_TRC_CALL)) ==			\
 				(AXP_TRC_MBOX | AXP_TRC_CALL)))
-#define AXP_MBOX_BUFF	(AXP_TRCLOG_INIT &										\
+#define AXP_MBOX_BUFF	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_MBOX | AXP_TRC_BUFF)) ==					\
+			   (AXP_TRC_MBOX | AXP_TRC_BUFF)) ==			\
 				(AXP_TRC_MBOX | AXP_TRC_BUFF)))
-#define AXP_MBOX_OPT1	(AXP_TRCLOG_INIT &										\
+#define AXP_MBOX_OPT1	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_MBOX | AXP_TRC_OPT1)) ==					\
+			   (AXP_TRC_MBOX | AXP_TRC_OPT1)) ==			\
 				(AXP_TRC_MBOX | AXP_TRC_OPT1)))
-#define AXP_MBOX_OPT2	(AXP_TRCLOG_INIT &										\
+#define AXP_MBOX_OPT2	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_MBOX | AXP_TRC_OPT2)) ==					\
+			   (AXP_TRC_MBOX | AXP_TRC_OPT2)) ==			\
 				(AXP_TRC_MBOX | AXP_TRC_OPT2)))
-#define AXP_CBOX_CALL	(AXP_TRCLOG_INIT &										\
+#define AXP_CBOX_CALL	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_CBOX | AXP_TRC_CALL)) ==					\
+			   (AXP_TRC_CBOX | AXP_TRC_CALL)) ==			\
 				(AXP_TRC_CBOX | AXP_TRC_CALL)))
-#define AXP_CBOX_BUFF	(AXP_TRCLOG_INIT &										\
+#define AXP_CBOX_BUFF	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_CBOX | AXP_TRC_BUFF)) ==					\
+			   (AXP_TRC_CBOX | AXP_TRC_BUFF)) ==			\
 				(AXP_TRC_CBOX | AXP_TRC_BUFF)))
-#define AXP_CBOX_OPT1	(AXP_TRCLOG_INIT &										\
+#define AXP_CBOX_OPT1	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_CBOX | AXP_TRC_OPT1)) ==					\
+			   (AXP_TRC_CBOX | AXP_TRC_OPT1)) ==			\
 				(AXP_TRC_CBOX | AXP_TRC_OPT1)))
-#define AXP_CBOX_OPT2	(AXP_TRCLOG_INIT &										\
+#define AXP_CBOX_OPT2	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_CBOX | AXP_TRC_OPT2)) ==					\
+			   (AXP_TRC_CBOX | AXP_TRC_OPT2)) ==			\
 				(AXP_TRC_CBOX | AXP_TRC_OPT2)))
-#define AXP_CBOX_INST	(AXP_TRCLOG_INIT &										\
+#define AXP_CBOX_INST	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_CBOX | AXP_TRC_INST)) ==					\
+			   (AXP_TRC_CBOX | AXP_TRC_INST)) ==			\
 				(AXP_TRC_CBOX | AXP_TRC_INST)))
-#define AXP_CACHE_CALL	(AXP_TRCLOG_INIT &										\
+#define AXP_CACHE_CALL	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_CACHE | AXP_TRC_CALL)) ==					\
+			   (AXP_TRC_CACHE | AXP_TRC_CALL)) ==			\
 				(AXP_TRC_CACHE | AXP_TRC_CALL)))
-#define AXP_CACHE_BUFF	(AXP_TRCLOG_INIT &										\
+#define AXP_CACHE_BUFF	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_CACHE | AXP_TRC_BUFF)) ==					\
+			   (AXP_TRC_CACHE | AXP_TRC_BUFF)) ==			\
 				(AXP_TRC_CACHE | AXP_TRC_BUFF)))
-#define AXP_CACHE_OPT1	(AXP_TRCLOG_INIT &										\
+#define AXP_CACHE_OPT1	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_CACHE | AXP_TRC_OPT1)) ==					\
+			   (AXP_TRC_CACHE | AXP_TRC_OPT1)) ==			\
 				(AXP_TRC_CACHE | AXP_TRC_OPT1)))
-#define AXP_CACHE_OPT2	(AXP_TRCLOG_INIT &										\
+#define AXP_CACHE_OPT2	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_CPU) >> AXP_SHIFT_CPU) &	\
-			   (AXP_TRC_CACHE | AXP_TRC_OPT2)) ==					\
+			   (AXP_TRC_CACHE | AXP_TRC_OPT2)) ==			\
 				(AXP_TRC_CACHE | AXP_TRC_OPT2)))
-#define AXP_SYS_CALL	(AXP_TRCLOG_INIT &										\
+#define AXP_SYS_CALL	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
 			   AXP_TRC_CALL) == AXP_TRC_CALL))
-#define AXP_SYS_BUFF	(AXP_TRCLOG_INIT &										\
+#define AXP_SYS_BUFF	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
 			   AXP_TRC_BUFF) == AXP_TRC_BUFF))
-#define AXP_SYS_OPT1	(AXP_TRCLOG_INIT &										\
+#define AXP_SYS_OPT1	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
 			   AXP_TRC_OPT1) == AXP_TRC_OPT1))
-#define AXP_SYS_OPT2	(AXP_TRCLOG_INIT &										\
+#define AXP_SYS_OPT2	(AXP_TRCLOG_INIT &					\
 			 ((((_axp_trc_log_ & AXP_COMP_SYS) >> AXP_SHIFT_SYS) & 	\
 			   AXP_TRC_OPT2) == AXP_TRC_OPT2))
 

@@ -37,12 +37,18 @@
  * before the current state is set to the next state.  Otherwise, the current
  * state is set to the next state.
  */
+#define AXP_SM_MAX_ARGS		16
+typedef struct
+{
+    int		argc;
+    void	*argp[AXP_SM_MAX_ARGS];
+} AXP_SM_Args;
 typedef struct
 {
     u8		nextState;
-    void	(*actionRtn)(void *,...);
+    void	(*actionRtn)(AXP_SM_Args *);
 } AXP_StateMachine;
 
-u8 AXP_Execute_SM(u16, u16, AXP_StateMachine [*][*], u8, u8, ...);
+u8 AXP_Execute_SM(u16, u16, AXP_StateMachine [*][*], u8, u8, AXP_SM_Args *);
 
 #endif /* _AXP_STATE_MACHINE_ */

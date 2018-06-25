@@ -368,8 +368,7 @@ void *AXP_21264_EboxL1Main(void *voidPtr)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite("Ebox L1 is starting");
-	AXP_TRACE_END()
-	;
+	AXP_TRACE_END();
     }
 
     /*
