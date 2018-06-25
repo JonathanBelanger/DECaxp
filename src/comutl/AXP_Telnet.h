@@ -77,7 +77,7 @@ typedef enum
  * These definitions are used to determine the action being performed, the
  * current state of the option, and whether the option is preferred.
  */
-#define AXP_OPT_ACTION(cmd, opt)	((((cmd)-YES_SRV)*2)+(opt).preferred)
+#define AXP_OPT_ACTION(cmd, opt)	((((cmd)-YES_SRV)*2)+(opt).supported)
 #define AXP_OPT_STATE(options, opt)	options[(opt)].state;
 #define AXP_OPT_PREFERRED(options, opt)	options[(opt)].preferred;
 #define AXP_OPT_SUPPORTED(options, opt)	options[(opt)].supported;
@@ -128,9 +128,9 @@ typedef enum
  * state machine.
  */
 #define AXP_RCV_ACTION(c)						\
-    (((c) == '\0') ? AXP_ACT_NUL :					\
+    (((c) == NUL) ? AXP_ACT_NUL :					\
 	(((c) == IAC) ? AXP_ACT_IAC :					\
-	    (((c) == '\r') ? AXP_ACT_R :				\
+	    (((c) == CR) ? AXP_ACT_R :				\
 		((((c) >= WILL) || ((c) <= DONT)) ? AXP_ACT_CMD :	\
 		    (((c) == SE) ? AXP_ACT_SE :				\
 			(((c) == SB) ? AXP_ACT_SB :			\
