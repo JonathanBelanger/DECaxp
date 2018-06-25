@@ -30,16 +30,17 @@
 
 extern AXP_StateMachine	TN_Option_SM[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE];
 extern AXP_StateMachine	TN_Receive_SM[AXP_ACT_MAX][AXP_RCV_MAX_STATE];
-void Send_DO(void *, ...);
-void Send_DONT(void *, ...);
-void Send_WILL(void *, ...);
-void Send_WONT(void *, ...);
-void Echo_Data(void *, ...);
-void Process_CMD(void *, ...);
-void Cvt_Process_IAC(void *, ...);
-void SubOpt_Clear(void *, ...);
-void SubOpt_Accumulate(void *, ...);
-void SubOpt_TermProcess(void *, ...);
+void Send_DO(AXP_SM_Args *);
+void Send_DONT(AXP_SM_Args *);
+void Send_WILL(AXP_SM_Args *);
+void Send_WONT(AXP_SM_Args *);
+void Echo_Data(AXP_SM_Args *);
+void Save_CMD(AXP_SM_Args *);
+void Process_CMD(AXP_SM_Args *);
+void Cvt_Process_IAC(AXP_SM_Args *);
+void SubOpt_Clear(AXP_SM_Args *);
+void SubOpt_Accumulate(AXP_SM_Args *);
+void SubOpt_TermProcess(AXP_SM_Args *);
 
 typedef struct
 {
@@ -59,7 +60,7 @@ u16 testActionMask;
 #define SUBOPT_CLEAR		0x0200
 #define SUBOPT_ACCUM		0x0400
 #define PROC_IAC		0x0800
-#define PROC_SUBOPT		0x1000
+#define SAVE_CMD		0x1000
 #define CVT_PROC_IAC		0x2000
 #define SUBOPT_TERM		0x4000
 #define CLEAR_ACTION_MASK	(testActionMask) = 0;
@@ -254,7 +255,7 @@ AXP_Test_SM SM_Rcv_Tests[] =
     {AXP_RCV_IAC,		AXP_ACT_NUL,	AXP_RCV_DATA,		NO_ACTION},	/* 7 */
     {AXP_RCV_IAC,		AXP_ACT_IAC,	AXP_RCV_DATA,		ECHO_DATA},
     {AXP_RCV_IAC,		AXP_ACT_R,	AXP_RCV_DATA,		NO_ACTION},
-    {AXP_RCV_IAC,		AXP_ACT_CMD,	AXP_RCV_CMD,		NO_ACTION},
+    {AXP_RCV_IAC,		AXP_ACT_CMD,	AXP_RCV_CMD,		SAVE_CMD},
     {AXP_RCV_IAC,		AXP_ACT_SE,	AXP_RCV_DATA,		NO_ACTION},
     {AXP_RCV_IAC,		AXP_ACT_SB,	AXP_RCV_SB,		SUBOPT_CLEAR},
     {AXP_RCV_IAC,		AXP_ACT_CATCHALL,AXP_RCV_DATA,		NO_ACTION},
@@ -312,64 +313,64 @@ AXP_Test_SM SM_Rcv_Tests[] =
 /*
  * These are test action routines that will be called instead of the real ones.
  */
-void Test_Send_DO(void *sesPtr, ...)
+void Test_Send_DO(AXP_SM_Args *ign)
 {
     testActionMask |= DO_SENT;
     return;
 }
-void Test_Send_DONT(void *sesPtr, ...)
+void Test_Send_DONT(AXP_SM_Args *ign)
 {
     testActionMask |= DONT_SENT;
     return;
 }
-void Test_Send_WILL(void *sesPtr, ...)
+void Test_Send_WILL(AXP_SM_Args *ign)
 {
     testActionMask |= WILL_SENT;
     return;
 }
-void Test_Send_WONT(void *sesPtr, ...)
+void Test_Send_WONT(AXP_SM_Args *ign)
 {
     testActionMask |= WONT_SENT;
     return;
 }
-void Test_Echo_Data(void *sesPtr, ...)
+void Test_Echo_Data(AXP_SM_Args *ign)
 {
     testActionMask |= ECHO_DATA;
     return;
 }
-void Test_Process_CMD(void *sesPtr, ...)
+void Test_Save_CMD(AXP_SM_Args *ign)
+{
+    testActionMask |= SAVE_CMD;
+    return;
+}
+void Test_Process_CMD(AXP_SM_Args *ign)
 {
     testActionMask |= PROC_CMD;
     return;
 }
-void Test_Cvt_Process_IAC(void *sesPtr, ...)
+void Test_Cvt_Process_IAC(AXP_SM_Args *ign)
 {
     testActionMask |= CVT_PROC_IAC;
     return;
 }
-void Test_SubOpt_Clear(void *sesPtr, ...)
+void Test_SubOpt_Clear(AXP_SM_Args *ign)
 {
     testActionMask |= SUBOPT_CLEAR;
     return;
 }
-void Test_SubOpt_Accumulate(void *sesPtr, ...)
+void Test_SubOpt_Accumulate(AXP_SM_Args *ign)
 {
     testActionMask |= SUBOPT_ACCUM;
     return;
 }
-void Test_SubOpt_TermProcess(void *sesPtr, ...)
+void Test_SubOpt_TermProcess(AXP_SM_Args *ign)
 {
     testActionMask |= SUBOPT_TERM;
     return;
 }
-void Test_Process_IAC(void *sesPtr, ...)
+void Test_Process_IAC(AXP_SM_Args *ign)
 {
     testActionMask |= PROC_IAC;
-    return;
-}
-void Test_Process_Suboption(void *sesPtr, ...)
-{
-    testActionMask |= PROC_SUBOPT;
     return;
 }
 
@@ -473,6 +474,8 @@ bool test_options_StateMachine(void)
 		    {
 			if (TN_Receive_SM[ii][jj].actionRtn == Echo_Data)
 			    TN_Receive_SM[ii][jj].actionRtn = Test_Echo_Data;
+			else if (TN_Receive_SM[ii][jj].actionRtn == Save_CMD)
+			    TN_Receive_SM[ii][jj].actionRtn = Test_Save_CMD;
 			else if (TN_Receive_SM[ii][jj].actionRtn == Process_CMD)
 			    TN_Receive_SM[ii][jj].actionRtn = Test_Process_CMD;
 			else if (TN_Receive_SM[ii][jj].actionRtn == Cvt_Process_IAC)
@@ -533,6 +536,8 @@ bool test_options_StateMachine(void)
 		    {
 			if (TN_Receive_SM[ii][jj].actionRtn == Test_Echo_Data)
 			    TN_Receive_SM[ii][jj].actionRtn = Echo_Data;
+			else if (TN_Receive_SM[ii][jj].actionRtn == Test_Save_CMD)
+			    TN_Receive_SM[ii][jj].actionRtn = Save_CMD;
 			else if (TN_Receive_SM[ii][jj].actionRtn == Test_Process_CMD)
 			    TN_Receive_SM[ii][jj].actionRtn = Process_CMD;
 			else if (TN_Receive_SM[ii][jj].actionRtn == Test_Cvt_Process_IAC)
@@ -543,8 +548,6 @@ bool test_options_StateMachine(void)
 			    TN_Receive_SM[ii][jj].actionRtn = SubOpt_Accumulate;
 			else if (TN_Receive_SM[ii][jj].actionRtn == Test_SubOpt_TermProcess)
 			    TN_Receive_SM[ii][jj].actionRtn = SubOpt_TermProcess;
-			else if (TN_Receive_SM[ii][jj].actionRtn == Test_Process_Suboption)
-			    TN_Receive_SM[ii][jj].actionRtn = Process_Suboption;
 		    }
 		}
     }
@@ -559,12 +562,19 @@ int main(void)
 {
     bool retVal = true;
 
-    printf("\nDECaxp Telnet Testing...\n\n");
-    retVal = test_options_StateMachine();
-#if 0
-    if (retVal == true)
-	AXP_Telnet_Main();
-#endif
+    printf("\nDECaxp Telnet Testing...\n");
+    printf("\nTesting Options and Receive State Machines...\n");
+    if (AXP_TraceInit() == true)
+    {
+	retVal = test_options_StateMachine();
+	if (retVal == true)
+	{
+	    printf("\nTesting Telnet Server...\n");
+	    AXP_Telnet_Main();
+	}
+    }
+    else
+	retVal = false;
     if (retVal == true)
 	printf("All Tests Successful!\n");
     else

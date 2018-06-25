@@ -26,6 +26,7 @@
 #ifndef AXP_TELNET_H_
 #define AXP_TELNET_H_
 #include "AXP_Utility.h"
+#include "AXP_Blocks.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
 #include "AXP_StateMachine.h"
@@ -127,13 +128,13 @@ typedef enum
  * state machine.
  */
 #define AXP_RCV_ACTION(c)						\
-    (((c) == '\0') ? AXP_RCV_NULL :					\
-	(((c) == IAC) ? AXP_RCV_IAC :					\
-	    (((c) == '\r') ? AXP_RCV_R :				\
-		((((c) >= WILL) || ((c) <= DONT)) ? AXP_RCV_CMD :	\
-		    (((c) == SE) ? AXP_REC_SE :				\
-			(((c) == SB) ? AXP_RCV_SB :			\
-			    AXP_RCV_CATCHALL))))))
+    (((c) == '\0') ? AXP_ACT_NUL :					\
+	(((c) == IAC) ? AXP_ACT_IAC :					\
+	    (((c) == '\r') ? AXP_ACT_R :				\
+		((((c) >= WILL) || ((c) <= DONT)) ? AXP_ACT_CMD :	\
+		    (((c) == SE) ? AXP_ACT_SE :				\
+			(((c) == SB) ? AXP_ACT_SB :			\
+			    AXP_ACT_CATCHALL))))))
 
 typedef struct
 {
@@ -174,6 +175,7 @@ typedef struct
     /*
      * The following fields are used for processing sub-options.
      */
+    u8				cmd;
     u8				subOptionTType[AXP_TELNET_TTYPE_LEN];
     u8				subOptBuf[AXP_TELNET_SB_LEN];
     u16				subOptBufIdx;
@@ -191,7 +193,7 @@ typedef struct
 /*
  * Function prototypes.
  */
-bool AXP_Telnet_Send(AXP_TELNET_SESSION *, u8 *, u32);
+bool AXP_Telnet_Send(AXP_TELNET_SESSION *, u8 *, int);
 void AXP_Telnet_Main(void);
 void get_State_Machines(AXP_StateMachine ***, AXP_StateMachine ***);
 
