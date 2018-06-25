@@ -1221,8 +1221,8 @@ static AXP_TELNET_SESSION *AXP_Telnet_Accept(int sock)
     {
 	AXP_OPT_SET_PREF(ses->myOptions, TELOPT_ECHO);
 	AXP_OPT_SET_PREF(ses->myOptions, TELOPT_SGA);
-	AXP_OPT_SET_PREF(ses->myOptions, TELOPT_TTYPE);
-	AXP_OPT_SET_PREF(ses->myOptions, TELOPT_NEW_ENVIRON);
+	AXP_OPT_SET_SUPP(ses->myOptions, TELOPT_TTYPE);
+	AXP_OPT_SET_SUPP(ses->myOptions, TELOPT_NEW_ENVIRON);
 	AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_ECHO);
 	AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_SGA);
 	AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_NAWS);
