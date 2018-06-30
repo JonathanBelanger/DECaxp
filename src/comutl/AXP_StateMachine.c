@@ -54,17 +54,16 @@
  *  The value of the next state for the state machine.
  */
 u8 AXP_Execute_SM(
-	    u16 maxAction,
-	    u16 maxState,
-	    AXP_StateMachine sm[maxAction][maxState],
+	    AXP_StateMachine *sm,
 	    u8 action,
 	    u8 curState,
 	    AXP_SM_Args *args)
 {
-    char	trcBuf[512];
-    int		trcIdx = 0;
-    u8		retVal = curState;
-    bool	act;
+    AXP_SM_Entry	*entry;
+    char		trcBuf[512];
+    int			trcIdx = 0;
+    u8			retVal = curState;
+    bool		act;
 
     if (AXP_UTL_CALL)
     {
@@ -74,24 +73,31 @@ u8 AXP_Execute_SM(
     }
 
     /*
+     * We first need to determine the address of the entry in the state machine
+     * to be processed.
+     */
+    entry = AXP_SM_ENTRY(sm, action, curState);
+
+    /*
      * If there is an action Routine, go ahead and call it.
      */
-    if (action <= maxAction)
+    if (action <= sm->maxActions)
     {
 	trcIdx += sprintf(
 			&trcBuf[trcIdx],
-			"\tCurrent State = %d, Action = 0x%02x (%d) --> ",
+			"\tState Machine: %s Current State = %d, Action = 0x%02x (%d) --> ",
+			sm->smName,
 			curState,
 			action,
 			action);
-	if (sm[action][curState].actionRtn != NULL)
+	if (entry->actionRtn != NULL)
 	{
-	    (*sm[action][curState].actionRtn)(args);
+	    (*entry->actionRtn)(args);
 	    act = true;
 	}
 	else
 	    act = false;
-	retVal = sm[action][curState].nextState;
+	retVal = entry->nextState;
 	trcIdx += sprintf(
 			&trcBuf[trcIdx],
 			"Next State = %d (Action Routine %s called)",
@@ -108,17 +114,21 @@ u8 AXP_Execute_SM(
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite(
-		"\tState Machine not executed because action was outside limits "
+		"\tState Machine: %s not executed because action was outside limits "
 		"(action = %d, max = %d).",
+		sm->smName,
 		action,
-		maxAction);
+		sm->maxActions);
 	AXP_TRACE_END();
     }
 
     if (AXP_UTL_CALL)
     {
 	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_Execute_SM Returning (%d).", retVal);
+	AXP_TraceWrite(
+		"AXP_Execute_SM for State Machine: %s Returning (%d).",
+		sm->smName,
+		retVal);
 	AXP_TRACE_END();
     }
 
