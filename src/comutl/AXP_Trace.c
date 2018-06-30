@@ -229,7 +229,7 @@ void AXP_TraceBuffer(u8 *buf, u32 bufLen)
 	sprintf(&outBuf[offset], fmt1, buf[0]);
 	for (ii = 1; ((ii < 20) && (ii < remLen)); ii++)
 	    offset += sprintf(&outBuf[offset], fmt2, buf[ii]);
-	offset += sprintf(&outBuf[offset], fmt3, ' ');
+	offset += sprintf(&outBuf[offset], fmt3, (60-offset), ' ');
 	for (ii = 0; ((ii < 20) && (ii < remLen)); ii++)
 	    offset += sprintf(
 			&outBuf[offset],

@@ -62,9 +62,8 @@
 /*
  * Includes used throughout the code.
  */
-#ifndef WIN32
+#define _FILE_OFFSET_BITS	64
 #include <unistd.h>
-#endif
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>

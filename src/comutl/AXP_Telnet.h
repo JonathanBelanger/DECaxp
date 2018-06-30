@@ -143,7 +143,7 @@ typedef enum
     (((c) == NUL) ? AXP_ACT_NUL :					\
 	(((c) == IAC) ? AXP_ACT_IAC :					\
 	    (((c) == CR) ? AXP_ACT_R :				\
-		((((c) >= WILL) || ((c) <= DONT)) ? AXP_ACT_CMD :	\
+		((((c) >= WILL) && ((c) <= DONT)) ? AXP_ACT_CMD :	\
 		    (((c) == SE) ? AXP_ACT_SE :				\
 			(((c) == SB) ? AXP_ACT_SB :			\
 			    AXP_ACT_CATCHALL))))))

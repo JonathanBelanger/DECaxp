@@ -290,6 +290,14 @@ AXP_StateMachine TN_Receive_SM =
     .stateMachine = &TN_Receive[0][0]
 };
 
+static char *TN_dir[] =
+{
+    "<---",
+    "--->"
+};
+#define SENT	0
+#define RCVD	1
+
 /*
  * This state value is used to maintain the state of being able to listen and
  * accept connections.  Once a connection has been accepted, then a session
@@ -299,14 +307,11 @@ AXP_StateMachine TN_Receive_SM =
  */
 AXP_Telnet_Session_State srvState;
 
-#define DIRECTION(dir)	(((dir) == '<') ? "RCVD" : "SENT")
-
 /*
  * Local Prototypes.
  */
-static void Process_Suboption(AXP_TELNET_SESSION *);
-static void AXP_Telnet_PrintOption(char, u8 *, u32);
-static void AXP_Telnet_PrintSub(char, u8 *, int);
+static void Process_Suboption(AXP_SM_Args *);
+static u32 AXP_Telnet_Trace(int, u8 *, u32);
 static bool AXP_Telnet_Listener(int *);
 static AXP_TELNET_SESSION *AXP_Telnet_Accept(int);
 static bool AXP_Telnet_Receive(AXP_TELNET_SESSION *, u8 *, u32 *);
@@ -785,7 +790,7 @@ void SubOpt_Accumulate(AXP_SM_Args *args)
     if (AXP_UTL_OPT1)
     {
 	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("\tSubOpt_Accumulate Called.");
+	AXP_TraceWrite("\tSubOpt_Accumulate Called 0x%02x - %u.", c, c);
 	AXP_TRACE_END();
     }
 
@@ -837,7 +842,7 @@ void SubOpt_TermProcess(AXP_SM_Args *args)
     ses->subOptBufLen = ses->subOptBufIdx;
     ses->subOptBufIdx = 0;
 
-    Process_Suboption(ses);
+    Process_Suboption(args);
 
     /*
      * Return back to the caller.
@@ -859,16 +864,47 @@ void SubOpt_TermProcess(AXP_SM_Args *args)
  * Return Value:
  *  None.
  */
-void Process_Suboption(AXP_TELNET_SESSION *ses)
+void Process_Suboption(AXP_SM_Args *args)
 {
-    AXP_Telnet_PrintSub('<', ses->subOptBuf, ses->subOptBufLen);
+    AXP_TELNET_SESSION	*ses = (AXP_TELNET_SESSION *) args->argp[0];
 
     switch (ses->subOptBuf[ses->subOptBufIdx++])
     {
+	case TELOPT_STATUS:
+	case TELOPT_RCTE:
+	case TELOPT_NAOCRD:
+	case TELOPT_NAOHTS:
+	case TELOPT_NAOHTD:
+	case TELOPT_NAOFFD:
+	case TELOPT_NAOVTS:
+	case TELOPT_NAOVTD:
+	case TELOPT_NAOLFD:
+	case TELOPT_XASCII:
+	case TELOPT_BM:
+	case TELOPT_DET:
+	case TELOPT_SUPDUPOUTPUT:
+	case TELOPT_SNDLOC:
 	case TELOPT_TTYPE:
+	case TELOPT_TUID:
+	case TELOPT_OUTMRK:
+	case TELOPT_TTYLOC:
+	case TELOPT_3270REGIME:
+	case TELOPT_X3PAD:
+	case TELOPT_TSPEED:
+	case TELOPT_LFLOW:
+	case TELOPT_LINEMODE:
+	case TELOPT_XDISPLOC:
+	case TELOPT_OLD_ENVIRON:
+	case TELOPT_AUTHENTICATION:
+	case TELOPT_ENCRYPT:
+	case TELOPT_NEW_ENVIRON:
+	case TELOPT_EXOPL:
+	    break;
+
+	case TELOPT_NAWS:
 	    break;
     }
-    SubOpt_Clear((void *) ses);
+    SubOpt_Clear(args);
 
     /*
      * Return back to the caller.
@@ -877,258 +913,209 @@ void Process_Suboption(AXP_TELNET_SESSION *ses)
 }
 
 /*
- * AXP_Telnet_PrintOption
- *  This function is called to trace the option being processed.
+ * AXP_Telnet_Trace
+ *  This function is called to trace either the next command, or one or more
+ *  characters.  It is only called when tracing is turned on and is called
+ *  from within an "if (AXP_UTL_BUFF)..." set of statements.
  *
  * Input Parameters:
  *  dir:
- *	A value indicating the direction of the option (sent or received).
- *  cmd:
- *	A value indicating the command being traced.
- *  option:
- *	A value indicating the option associated with the command.
+ *	A value indicating the direction of the message (SENT or RCVD).
+ *  buf:
+ *	A pointer to the first character in the buffer to be traced.
+ *  bufLen:
+ *	A value representing the total number of bytes in the 'buf' parameter.
+ *	Depending upon the contents of the 'buf' parameter, not all the bytes
+ *	may be dumped (particularly where there are TELNET commands within the
+ *	buffer.
  *
  * Output Parameters:
  *  None.
  *
- * Return Values:
- *  None.
+ * Return Value:
+ *  The number of bytes actually traced.
  */
-static void AXP_Telnet_PrintOption(char dir, u8 *buf, u32 bufLen)
+static u32 AXP_Telnet_Trace(int dir, u8 *buf, u32 bufLen)
 {
-    char	trcBuf[512];
-    int		trcIdx = 0;
-    u32		idx = 0;
-    u8		cmd, option, subOpt;
-    char	*fmt;
-    char	*opt;
-
-    if (AXP_UTL_BUFF)
-    {
-	AXP_TRACE_BEGIN();
-
-	/*
-	 * If the command is the Interpret As Command, then the option contains
-	 * the command.  Otherwise, we have a command with an option.
-	 */
-	while (idx < bufLen)
-	{
-	    trcIdx += sprintf(&trcBuf[trcIdx], "\t%s ", DIRECTION(dir));
-	    cmd = buf[idx++];
-	    option = buf[idx++];
-	    if (cmd == IAC)
-	    {
-		subOpt = buf[idx++];
-		trcIdx += sprintf(&trcBuf[trcIdx], "IAC ");
-		if (TELCMD_OK(option))
-		    trcIdx += sprintf(&trcBuf[trcIdx], "%s ", TELCMD(option));
-		else
-		    trcIdx += sprintf(&trcBuf[trcIdx], "%d", option);
-		if (TELOPT_OK(subOpt))
-		    trcIdx += sprintf(&trcBuf[trcIdx], "%s", TELOPT(subOpt));
-		else
-		    trcIdx += sprintf(&trcBuf[trcIdx], "%d", subOpt);
-	    }
-	    else
-	    {
-		fmt = TELCMD(cmd);
-		if (fmt)
-		{
-		    if (TELOPT_OK(option))
-			opt = TELOPT(option);
-		    else if (option == TELOPT_EXOPL)
-			opt = "EXOPL";
-		    else
-			opt = NULL;
-
-		    if(opt)
-			trcIdx += sprintf(&trcBuf[trcIdx], "%s %s", fmt, opt);
-		    else
-			trcIdx += sprintf(&trcBuf[trcIdx], "%s %d", fmt, option);
-		}
-		else
-		    trcIdx += sprintf(&trcBuf[trcIdx], "%d %d", cmd, option);
-	    }
-	    AXP_TraceWrite(trcBuf);
-	    trcIdx = 0;
-	}
-	AXP_TRACE_END();
-    }
+    char	outBuf[256];
+    char	*direction = TN_dir[dir];
+    int		outLen = 0, ii;
+    u32		bufIdx = 0;
+    u32		start, end;
+    u32		retVal = 0;
+    bool	foundEnd = false;
 
     /*
-     * Return back to the caller.
+     * First, let's see if we are dealing with a command or buffer of data.
      */
-    return;
-}
-
-/*
- * AXP_Telnet_PrintSub
- *  This function is called to trace the sub option being processed.
- *
- * Input Parameters:
- *  dir:
- *	A value indicating the direction of the suboption (sent or received).
- *  pointer:
- *	A pointer to a string with the suboption data.
- *  length:
- *	A value indicating the length of the suboption data.
- *
- * Output Parameters:
- *  None.
- *
- * Return Values:
- *  None.
- */
-static void AXP_Telnet_PrintSub(char dir, u8 *pointer, int length)
-{
-    char	trcBuf[512];
-    int		trcIdx = 0;
-    int		ii = 0;
-    int		jj;
-
-    if (AXP_UTL_BUFF)
+    if ((bufLen >= 2) && (buf[bufIdx] == IAC) && (buf[bufIdx + 1]) != IAC)
     {
-	AXP_TRACE_BEGIN();
+	u32	cmdLen = 1;
 
 	/*
-	 * If we have a direction, then go ahead and write it out.
+	 * We have a TELNET command, but so far we only have the Interpret
+	 * as Command (IAC) portion of the message.  We need to determine
+	 * the total length of the command.
 	 */
-	if (dir != '\0')
+	switch (buf[cmdLen])
 	{
-	    trcIdx += sprintf(&trcBuf[trcIdx], "\t%s IAC SB ", DIRECTION(dir));
-	    if (length >= 3)
-	    {
-		ii = pointer[length-2];
-		jj = pointer[length-1];
+	    case NOP:
+	    case DM:
+	    case BREAK:
+	    case IP:
+	    case AO:
+	    case AYT:
+	    case EC:
+	    case EL:
+	    case GA:
+		cmdLen = 2;
+		break;
 
-		if (ii != IAC || jj != SE)
+	    case WILL:
+	    case WONT:
+	    case DO:
+	    case DONT:
+		cmdLen = (bufLen >= 3) ? 3 : bufLen;
+		break;
+
+	    case SB:
+
+		/*
+		 * So we have a <IAC> <SB>, now we need to find the <IAC> <SE>.
+		 */
+		cmdLen++;
+		while (foundEnd == false)
 		{
-		    trcIdx += sprintf(&trcBuf[trcIdx], "(terminated by ");
-		    if (TELOPT_OK(ii))
-			trcIdx += sprintf(&trcBuf[trcIdx], "%s ", TELOPT(ii));
-		    else if (TELCMD_OK(ii))
-			trcIdx += sprintf(&trcBuf[trcIdx], "%s ", TELCMD(ii));
-		    else
-			trcIdx += sprintf(&trcBuf[trcIdx], "%d ", ii);
-		    if (TELOPT_OK(jj))
-			trcIdx += sprintf(&trcBuf[trcIdx], "%s", TELOPT(jj));
-		    else if (TELCMD_OK(jj))
-			trcIdx += sprintf(&trcBuf[trcIdx], "%s", TELCMD(jj));
-		    else
-			trcIdx += sprintf(&trcBuf[trcIdx], "%d", jj);
-		    trcIdx += sprintf(&trcBuf[trcIdx], ", not IAC SE!) ");
-		}
-	    }
-	    length -= 2;
-	}
-
-	/*
-	 * We do the following whether we have a direction or not.
-	 */
-	if (length < 1)
-	    trcIdx += sprintf(&trcBuf[trcIdx], "(Empty suboption?)");
-	else
-	{
-
-	    /*
-	     * If the option is a valid one, then we go and print it out.
-	     */
-	    if (TELOPT_OK(pointer[0]))
-	    {
-		switch(pointer[0])
-		{
-		    case TELOPT_TTYPE:
-		    case TELOPT_XDISPLOC:
-		    case TELOPT_NEW_ENVIRON:
-			trcIdx += sprintf(
-					&trcBuf[trcIdx],
-					"%s",
-					TELOPT(pointer[0]));
-			break;
-
-		    default:
-			trcIdx += sprintf(
-					&trcBuf[trcIdx],
-					"%s (unsupported)",
-					TELOPT(pointer[0]));
-			break;
-		}
-	    }
-	    else
-		trcIdx += sprintf(&trcBuf[trcIdx], "%d (unknown)", pointer[ii]);
-
-	    switch(pointer[1])
-	    {
-		case TELQUAL_IS:
-		    trcIdx += sprintf(&trcBuf[trcIdx], " IS");
-		    break;
-
-		case TELQUAL_SEND:
-		    trcIdx += sprintf(&trcBuf[trcIdx], " SEND");
-		    break;
-
-		case TELQUAL_INFO:
-		    trcIdx += sprintf(&trcBuf[trcIdx], " INFO/REPLY");
-		    break;
-
-		case TELQUAL_NAME:
-		    trcIdx += sprintf(&trcBuf[trcIdx], " NAME");
-		    break;
-	    }
-
-	    switch(pointer[0])
-	    {
-		case TELOPT_TTYPE:
-		case TELOPT_XDISPLOC:
-		    pointer[length] = 0;
-		    trcIdx += sprintf(&trcBuf[trcIdx], " \"%s\"", &pointer[2]);
-		    break;
-
-		case TELOPT_NEW_ENVIRON:
-		    if(pointer[1] == TELQUAL_IS)
+		    if (cmdLen < bufLen)
 		    {
-			trcIdx += sprintf(&trcBuf[trcIdx], " ");
-			for(ii = 3; ii < length; ii++)
+			if (((cmdLen + 2) < bufLen) &&
+			    (buf[cmdLen] == IAC) &&
+			    (buf[cmdLen + 1] == SE))
 			{
-			    switch(pointer[ii])
-			    {
-				case NEW_ENV_VAR:
-				    trcIdx += sprintf(&trcBuf[trcIdx], ", ");
-				    break;
-
-				case NEW_ENV_VALUE:
-				    trcIdx += sprintf(&trcBuf[trcIdx], " = ");
-				    break;
-
-				default:
-				    trcIdx += sprintf(
-						&trcBuf[trcIdx],
-						"%c",
-						pointer[ii]);
-				    break;
-			    }
+			    cmdLen += 2;
+			    foundEnd = true;
 			}
+			else
+			    cmdLen++;
 		    }
-		    break;
-
-		default:
-		    for (ii = 2; ii < length; ii++)
-			trcIdx += sprintf(
-					&trcBuf[trcIdx],
-					" %.2x",
-					pointer[ii]);
-		    break;
+		    else
+			foundEnd = true;
+		}
+		break;
 	    }
+
+	/*
+	 * We now have the start and end of the command, so let's go and
+	 * generate the trace buffer.  NOTE: We do this twice, once for the
+	 * raw bytes (in hex) and once for the interpreted bytes.
+	 */
+	start = 0;
+	AXP_TraceWrite("Tracing Buffer 0x%016llx, Length: %u", buf, cmdLen);
+	while (start < cmdLen)
+	{
+	    int inNaws = 0;
+
+	    end = (cmdLen <= 20) ? cmdLen : 20;
+	    outLen = sprintf(outBuf, "%s ", direction);
+	    for (ii = start; ii < end; ii++)
+		outLen += sprintf(&outBuf[outLen], "%02x ", buf[ii]);
+	    outLen += sprintf(&outBuf[outLen], "%*c: ", (65-outLen), ' ');
+	    for (ii = start; ii < end; ii++)
+	    {
+		if (inNaws > 0)
+		{
+		    u16	size = htons(*((u16 *) &buf[ii++]));
+
+		    outLen += sprintf(&outBuf[outLen], "%u, ", size);
+		    inNaws = (inNaws + 1) % 3;
+		}
+		else if (TELCMD_OK(buf[ii]))
+		    outLen += sprintf(&outBuf[outLen], "%s, ", TELCMD(buf[ii]));
+		else if (TELOPT_OK(buf[ii]))
+		{
+		    outLen += sprintf(&outBuf[outLen], "%s, ", TELOPT(buf[ii]));
+		    inNaws = (buf[ii] == TELOPT_NAWS) ? 1 : 0;
+		}
+		else
+		    outLen += sprintf(
+				&outBuf[outLen],
+				"%c, ",
+				(isprint(buf[ii]) ? buf[ii] : '.'));
+	    }
+	    start += end;
+	    outBuf[outLen-2] = '\0';		/* remove the last ', ' */
+	    AXP_TraceWrite("%s", outBuf);
 	}
-	AXP_TraceWrite(trcBuf);
-	trcIdx = 0;
-	AXP_TRACE_END();
+
+	/*
+	 * The number of bytes traced is the length of the command just
+	 * output to the log file.
+	 */
+	retVal = cmdLen;
     }
 
     /*
-     * Return back to the caller.
+     * OK, we have a buffer of data.  Dump the buffer up to the next IAC
+     * command.
      */
-    return;
+    else
+    {
+	u32	dmpLen = 0;
+
+	for (ii = 0; ((ii < bufLen) || (foundEnd == false)); ii++)
+	{
+	    if (buf[ii] == IAC)
+	    {
+		if (((ii + 1) < bufLen) && (buf[ii] != IAC))
+		{
+		    dmpLen = ii - 1;
+		    foundEnd = true;
+		}
+		else if ((ii + 1) >= bufLen)
+		{
+		    dmpLen = bufLen;
+		    foundEnd = true;
+		}
+	    }
+	}
+	if (foundEnd == false)
+	    dmpLen = bufLen;
+
+	/*
+	 * Let's go dump the buffer.  Since this is not a command, we don't try
+	 * and interpret anything.
+	 */
+	start = 0;
+	AXP_TraceWrite("Tracing Buffer 0x%016llx, Length: %u", buf, dmpLen);
+	while (start < dmpLen)
+	{
+	    end = (dmpLen < 20) ? dmpLen : 20;
+	    outLen = sprintf(outBuf, "%s ", direction);
+	    for (ii = start; ii < end; ii++)
+		outLen += sprintf(&outBuf[outLen], "%02x ", buf[ii]);
+	    outLen += sprintf(&outBuf[outLen], "%*c: ", (65-outLen), ' ');
+	    for (ii = start; ii < end; ii++)
+	    {
+		outLen += sprintf(
+				&outBuf[outLen],
+				"%c",
+				(isprint(buf[ii]) ? buf[ii] : '.'));
+	    }
+	    start += end;
+	    AXP_TraceWrite("%s", outBuf);
+	}
+
+	/*
+	 * The number of bytes traced is the length of the buffer just
+	 * output to the log file.
+	 */
+	retVal = dmpLen;
+    }
+
+    /*
+     * Return the number of bytes traced back to the caller.
+     */
+    return(retVal);
 }
 
 /*
@@ -1337,7 +1324,12 @@ bool AXP_Telnet_Send(AXP_TELNET_SESSION *ses, u8 *buf, int bufLen)
      * A buffer's last character should be a null character.
      */
     if (TELCMD_OK(buf[0]))
-	AXP_Telnet_PrintOption('>', buf, bufLen);
+    {
+	u32	trcLen = 0;
+
+	while (trcLen < bufLen)
+	    trcLen += AXP_Telnet_Trace(SENT, &buf[trcLen], (bufLen - trcLen));
+    }
     else
     {
 	buf[bufLen] = '\0';
@@ -1461,23 +1453,24 @@ static bool AXP_Telnet_Processor(AXP_TELNET_SESSION *ses, u8 *buf, u32 bufLen)
 {
     AXP_SM_Args	args;
     bool	retVal = true;
+    u32		trcLen = 0;
     int		ii;
 
     /*
      * At this point we want to perform some action.
      */
-    if (TELCMD_OK(buf[0]))
-	AXP_Telnet_PrintOption('<', buf, bufLen);
-    else
-    {
-	buf[bufLen] = '\0';
-    }
-
     ii = 0;
     args.argc = 2;
     args.argp[0] = (void *) ses;
     while ((ii < bufLen) && (retVal == true))
     {
+	if (AXP_UTL_BUFF)
+	{
+	    AXP_TRACE_BEGIN();
+	    if (ii == trcLen)
+		trcLen += AXP_Telnet_Trace(RCVD, &buf[trcLen], (bufLen - trcLen));
+	    AXP_TRACE_END();
+	}
 	args.argp[1] = (void *) &buf[ii];
 	ses->rcvState = AXP_Execute_SM(
 			&TN_Receive_SM,
