@@ -33,6 +33,7 @@
 #include "AXP_21264_CPU.h"
 #include "AXP_21274_System.h"
 #include "AXP_Telnet.h"
+#include "AXP_Disk.h"
 
 void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 {
@@ -85,6 +86,20 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 
 		    ses->header.type = blockType;
 		    ses->header.size = sizeof(AXP_TELNET_SESSION);
+		}
+	    }
+	    break;
+
+	case AXP_DISK_BLK:
+	    {
+		AXP_PhysicalDisk *dsk = NULL;
+		retBlock = calloc(1, sizeof(AXP_TELNET_SESSION));
+		if (retBlock != NULL)
+		{
+		    dsk = (AXP_PhysicalDisk *) retBlock;
+
+		    dsk->header.type = blockType;
+		    dsk->header.size = sizeof(AXP_PhysicalDisk);
 		}
 	    }
 	    break;
