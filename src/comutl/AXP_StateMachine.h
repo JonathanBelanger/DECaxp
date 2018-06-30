@@ -47,8 +47,28 @@ typedef struct
 {
     u8		nextState;
     void	(*actionRtn)(AXP_SM_Args *);
+} AXP_SM_Entry;
+typedef struct
+{
+    char	*smName;
+    u8		maxActions;
+    u8		maxStates;
+    void 	*stateMachine;
 } AXP_StateMachine;
 
-u8 AXP_Execute_SM(u16, u16, AXP_StateMachine [*][*], u8, u8, AXP_SM_Args *);
+/*
+ * OK, This calculates the address of the entry we are looking to process in
+ * the state machine.  The address is calculated as follows (where action is
+ * the number of rows and current state is the column within that row):
+ *
+ * 	entry = base address + (row * (max columns * size of entry)) +
+ * 		(column * size of entry)
+ */
+#define AXP_SM_ENTRY(smp, row, col) \
+    ((smp)->stateMachine + \
+     ((row) * ((smp->maxStates)) * sizeof(AXP_SM_Entry)) + \
+     ((col) * sizeof(AXP_SM_Entry)))
+
+u8 AXP_Execute_SM(AXP_StateMachine *, u8, u8, AXP_SM_Args *);
 
 #endif /* _AXP_STATE_MACHINE_ */

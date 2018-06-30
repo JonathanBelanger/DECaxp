@@ -124,6 +124,18 @@ typedef enum
 #define AXP_ACT_MAX			7
 
 /*
+ * NVT required control codes.
+ */
+#define NUL				'\0'	/* ASCII 0x00 */
+#define BEL				'\a'	/* ASCII 0x07 */
+#define BS				'\b'	/* ASCII 0x08 */
+#define HT				'\t'	/* ASCII 0x09 */
+#define LF				'\n'	/* ASCII 0x0a */
+#define VT				'\v'	/* ASCII 0x0b */
+#define FF				'\f'	/* ASCII 0x0c */
+#define CR				'\r'	/* ASCII 0x0d */
+
+/*
  * This macro determines the action being performed for the TELNET receive
  * state machine.
  */

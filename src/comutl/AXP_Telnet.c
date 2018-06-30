@@ -56,7 +56,7 @@ void Cvt_Proc_CMD(AXP_SM_Args *);
  * This definition below is used for processing the options sent from the
  * client and ones we want to send to the client.
  */
-AXP_StateMachine TN_Option_SM[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
+AXP_SM_Entry TN_Option[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
 {
     /* YES_SRV	- NOT PREFERRED */
     {
@@ -203,12 +203,19 @@ AXP_StateMachine TN_Option_SM[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
 	{AXP_OPT_NO,		Send_WONT}
     }
 };
+AXP_StateMachine TN_Option_SM =
+{
+    .smName = "TELNET Option",
+    .maxActions = AXP_OPT_MAX_ACTION,
+    .maxStates = AXP_OPT_MAX_STATE,
+    .stateMachine = (void *) &TN_Option[0][0]
+};
 
 /*
  *
  * This definition below is used for processing data received from the client.
  */
-AXP_StateMachine TN_Receive_SM[AXP_ACT_MAX][AXP_RCV_MAX_STATE] =
+AXP_SM_Entry TN_Receive[AXP_ACT_MAX][AXP_RCV_MAX_STATE] =
 {
     /* '\0' */
     {
@@ -273,6 +280,14 @@ AXP_StateMachine TN_Receive_SM[AXP_ACT_MAX][AXP_RCV_MAX_STATE] =
 	{AXP_RCV_SB,		SubOpt_Accumulate},
 	{AXP_RCV_IAC,		Cvt_Process_IAC}
     }
+};
+
+AXP_StateMachine TN_Receive_SM =
+{
+    .smName = "TELNET Receive",
+    .maxActions = AXP_ACT_MAX,
+    .maxStates = AXP_RCV_MAX_STATE,
+    .stateMachine = &TN_Receive[0][0]
 };
 
 /*
@@ -640,9 +655,7 @@ void Process_CMD(AXP_SM_Args *args)
 	ses->myOptions :
 	ses->theirOptions;
     opts[opt].state = AXP_Execute_SM(
-			AXP_OPT_MAX_ACTION,
-			AXP_OPT_MAX_STATE,
-			TN_Option_SM,
+			&TN_Option_SM,
 			AXP_OPT_ACTION(ses->cmd, opts[opt]),
 			opts[opt].state,
 			&newArg);
@@ -1467,9 +1480,7 @@ static bool AXP_Telnet_Processor(AXP_TELNET_SESSION *ses, u8 *buf, u32 bufLen)
     {
 	args.argp[1] = (void *) &buf[ii];
 	ses->rcvState = AXP_Execute_SM(
-			AXP_ACT_MAX,
-			AXP_RCV_MAX_STATE,
-			TN_Receive_SM,
+			&TN_Receive_SM,
 			AXP_RCV_ACTION(buf[ii]),
 			ses->rcvState,
 			&args);
@@ -1558,9 +1569,7 @@ void AXP_Telnet_Main(void)
 		    if (ses->myOptions[ii].preferred == true)
 		    {
 			ses->myOptions[ii].state = AXP_Execute_SM(
-				AXP_OPT_MAX_ACTION,
-				AXP_OPT_MAX_STATE,
-				TN_Option_SM,
+				&TN_Option_SM,
 				AXP_OPT_ACTION(YES_SRV, ses->myOptions[ii]),
 				ses->myOptions[ii].state,
 				&args);
@@ -1568,9 +1577,7 @@ void AXP_Telnet_Main(void)
 		    if (ses->theirOptions[ii].preferred == true)
 		    {
 			ses->theirOptions[ii].state = AXP_Execute_SM(
-				AXP_OPT_MAX_ACTION,
-				AXP_OPT_MAX_STATE,
-				TN_Option_SM,
+				&TN_Option_SM,
 				AXP_OPT_ACTION(YES_CLI, ses->theirOptions[ii]),
 				ses->theirOptions[ii].state,
 				&args);

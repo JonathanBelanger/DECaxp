@@ -376,6 +376,8 @@ void Test_Process_IAC(AXP_SM_Args *ign)
 
 bool test_options_StateMachine(void)
 {
+    AXP_StateMachine	*sm;
+    AXP_SM_Entry	*entry;
     bool		retVal = true;
     int			ii, jj, kk = 1;
     u8			nextState;
@@ -385,19 +387,21 @@ bool test_options_StateMachine(void)
      * the test versions.
      */
     printf("...Initializing Option State Machine for Testing...\n");
+    sm = (AXP_StateMachine *) &TN_Option_SM;
     for (ii = 0; ii < AXP_OPT_MAX_ACTION; ii++)
 	for (jj = 0; jj < AXP_OPT_MAX_STATE; jj++)
 	{
-	    if (TN_Option_SM[ii][jj].actionRtn != NULL)
+	    entry = AXP_SM_ENTRY(sm, ii, jj);
+	    if (entry->actionRtn != NULL)
 	    {
-		if (TN_Option_SM[ii][jj].actionRtn == Send_DO)
-		    TN_Option_SM[ii][jj].actionRtn = Test_Send_DO;
-		else if (TN_Option_SM[ii][jj].actionRtn == Send_DONT)
-		    TN_Option_SM[ii][jj].actionRtn = Test_Send_DONT;
-		else if (TN_Option_SM[ii][jj].actionRtn == Send_WILL)
-		    TN_Option_SM[ii][jj].actionRtn = Test_Send_WILL;
-		else if (TN_Option_SM[ii][jj].actionRtn == Send_WONT)
-		    TN_Option_SM[ii][jj].actionRtn = Test_Send_WONT;
+		if (entry->actionRtn == Send_DO)
+		    entry->actionRtn = Test_Send_DO;
+		else if (entry->actionRtn == Send_DONT)
+		    entry->actionRtn = Test_Send_DONT;
+		else if (entry->actionRtn == Send_WILL)
+		    entry->actionRtn = Test_Send_WILL;
+		else if (entry->actionRtn == Send_WONT)
+		    entry->actionRtn = Test_Send_WONT;
 	    }
 	}
 
@@ -420,9 +424,7 @@ bool test_options_StateMachine(void)
 	    SM_Opt_Tests[ii].actionMask);
 	testActionMask = 0;
 	nextState = AXP_Execute_SM(
-			AXP_OPT_MAX_ACTION,
-			AXP_OPT_MAX_STATE,
-			TN_Option_SM,
+			sm,
 			SM_Opt_Tests[ii].action,
 			SM_Opt_Tests[ii].currentState,
 			NULL);
@@ -443,16 +445,17 @@ bool test_options_StateMachine(void)
     for (ii = 0; ii < AXP_OPT_MAX_ACTION; ii++)
 	for (jj = 0; jj < AXP_OPT_MAX_STATE; jj++)
 	{
-	    if (TN_Option_SM[ii][jj].actionRtn != NULL)
+	    entry = AXP_SM_ENTRY(sm, ii, jj);
+	    if (entry->actionRtn != NULL)
 	    {
-		if (TN_Option_SM[ii][jj].actionRtn == Test_Send_DO)
-		    TN_Option_SM[ii][jj].actionRtn = Send_DO;
-		else if (TN_Option_SM[ii][jj].actionRtn == Test_Send_DONT)
-		    TN_Option_SM[ii][jj].actionRtn = Send_DONT;
-		else if (TN_Option_SM[ii][jj].actionRtn == Test_Send_WILL)
-		    TN_Option_SM[ii][jj].actionRtn = Send_WILL;
-		else if (TN_Option_SM[ii][jj].actionRtn == Test_Send_WONT)
-		    TN_Option_SM[ii][jj].actionRtn = Send_WONT;
+		if (entry->actionRtn == Test_Send_DO)
+		    entry->actionRtn = Send_DO;
+		else if (entry->actionRtn == Test_Send_DONT)
+		    entry->actionRtn = Send_DONT;
+		else if (entry->actionRtn == Test_Send_WILL)
+		    entry->actionRtn = Send_WILL;
+		else if (entry->actionRtn == Test_Send_WONT)
+		    entry->actionRtn = Send_WONT;
 	    }
 	}
 
@@ -467,25 +470,27 @@ bool test_options_StateMachine(void)
 	     * routines with the test versions.
 	     */
 	    printf("...Initializing Receive State Machine for Testing...\n");
+	    sm = (AXP_StateMachine *) &TN_Receive_SM;
 	    for (ii = 0; ii < AXP_ACT_MAX; ii++)
 		for (jj = 0; jj < AXP_RCV_MAX_STATE; jj++)
 		{
-		    if (TN_Receive_SM[ii][jj].actionRtn != NULL)
+		    entry = AXP_SM_ENTRY(sm, ii, jj);
+		    if (entry->actionRtn != NULL)
 		    {
-			if (TN_Receive_SM[ii][jj].actionRtn == Echo_Data)
-			    TN_Receive_SM[ii][jj].actionRtn = Test_Echo_Data;
-			else if (TN_Receive_SM[ii][jj].actionRtn == Save_CMD)
-			    TN_Receive_SM[ii][jj].actionRtn = Test_Save_CMD;
-			else if (TN_Receive_SM[ii][jj].actionRtn == Process_CMD)
-			    TN_Receive_SM[ii][jj].actionRtn = Test_Process_CMD;
-			else if (TN_Receive_SM[ii][jj].actionRtn == Cvt_Process_IAC)
-			    TN_Receive_SM[ii][jj].actionRtn = Test_Cvt_Process_IAC;
-			else if (TN_Receive_SM[ii][jj].actionRtn == SubOpt_Clear)
-			    TN_Receive_SM[ii][jj].actionRtn = Test_SubOpt_Clear;
-			else if (TN_Receive_SM[ii][jj].actionRtn == SubOpt_Accumulate)
-			    TN_Receive_SM[ii][jj].actionRtn = Test_SubOpt_Accumulate;
-			else if (TN_Receive_SM[ii][jj].actionRtn == SubOpt_TermProcess)
-			    TN_Receive_SM[ii][jj].actionRtn = Test_SubOpt_TermProcess;
+			if (entry->actionRtn == Echo_Data)
+			    entry->actionRtn = Test_Echo_Data;
+			else if (entry->actionRtn == Save_CMD)
+			    entry->actionRtn = Test_Save_CMD;
+			else if (entry->actionRtn == Process_CMD)
+			    entry->actionRtn = Test_Process_CMD;
+			else if (entry->actionRtn == Cvt_Process_IAC)
+			    entry->actionRtn = Test_Cvt_Process_IAC;
+			else if (entry->actionRtn == SubOpt_Clear)
+			    entry->actionRtn = Test_SubOpt_Clear;
+			else if (entry->actionRtn == SubOpt_Accumulate)
+			    entry->actionRtn = Test_SubOpt_Accumulate;
+			else if (entry->actionRtn == SubOpt_TermProcess)
+			    entry->actionRtn = Test_SubOpt_TermProcess;
 		    }
 		}
 
@@ -508,9 +513,7 @@ bool test_options_StateMachine(void)
 		    SM_Rcv_Tests[ii].actionMask);
 		testActionMask = 0;
 		nextState = AXP_Execute_SM(
-				AXP_ACT_MAX,
-				AXP_RCV_MAX_STATE,
-				TN_Receive_SM,
+				sm,
 				SM_Rcv_Tests[ii].action,
 				SM_Rcv_Tests[ii].currentState,
 				NULL);
@@ -532,22 +535,23 @@ bool test_options_StateMachine(void)
 	    for (ii = 0; ii < AXP_ACT_MAX; ii++)
 		for (jj = 0; jj < AXP_RCV_MAX_STATE; jj++)
 		{
-		    if (TN_Receive_SM[ii][jj].actionRtn != NULL)
+		    entry = AXP_SM_ENTRY(sm, ii, jj);
+		    if (entry->actionRtn != NULL)
 		    {
-			if (TN_Receive_SM[ii][jj].actionRtn == Test_Echo_Data)
-			    TN_Receive_SM[ii][jj].actionRtn = Echo_Data;
-			else if (TN_Receive_SM[ii][jj].actionRtn == Test_Save_CMD)
-			    TN_Receive_SM[ii][jj].actionRtn = Save_CMD;
-			else if (TN_Receive_SM[ii][jj].actionRtn == Test_Process_CMD)
-			    TN_Receive_SM[ii][jj].actionRtn = Process_CMD;
-			else if (TN_Receive_SM[ii][jj].actionRtn == Test_Cvt_Process_IAC)
-			    TN_Receive_SM[ii][jj].actionRtn = Cvt_Process_IAC;
-			else if (TN_Receive_SM[ii][jj].actionRtn == Test_SubOpt_Clear)
-			    TN_Receive_SM[ii][jj].actionRtn = SubOpt_Clear;
-			else if (TN_Receive_SM[ii][jj].actionRtn == Test_SubOpt_Accumulate)
-			    TN_Receive_SM[ii][jj].actionRtn = SubOpt_Accumulate;
-			else if (TN_Receive_SM[ii][jj].actionRtn == Test_SubOpt_TermProcess)
-			    TN_Receive_SM[ii][jj].actionRtn = SubOpt_TermProcess;
+			if (entry->actionRtn == Test_Echo_Data)
+			    entry->actionRtn = Echo_Data;
+			else if (entry->actionRtn == Test_Save_CMD)
+			    entry->actionRtn = Save_CMD;
+			else if (entry->actionRtn == Test_Process_CMD)
+			    entry->actionRtn = Process_CMD;
+			else if (entry->actionRtn == Test_Cvt_Process_IAC)
+			    entry->actionRtn = Cvt_Process_IAC;
+			else if (entry->actionRtn == Test_SubOpt_Clear)
+			    entry->actionRtn = SubOpt_Clear;
+			else if (entry->actionRtn == Test_SubOpt_Accumulate)
+			    entry->actionRtn = SubOpt_Accumulate;
+			else if (entry->actionRtn == Test_SubOpt_TermProcess)
+			    entry->actionRtn = SubOpt_TermProcess;
 		    }
 		}
     }

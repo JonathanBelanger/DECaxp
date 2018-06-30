@@ -16,13 +16,17 @@
  *
  * Description:
  *
- *	This source module contains the code required to be able to trace the
- *	running of the Digital Alpha AXP 21264 Emulator.
+ *  This source module contains the code required to be able to trace the
+ *  running of the Digital Alpha AXP 21264 Emulator.
  *
  * Revision History:
  *
- *	V01.000		27-Jan-2018	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000	27-Jan-2018	Jonathan D. Belanger
+ *  Initially written.
+ *
+ *  V01.001	29-Jun-2018	Jonathan D. Belanger
+ *  Added a trace buffer function to dump out a buffer in hexidecimal and in
+ *  ASCII.
  */
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
@@ -194,19 +198,67 @@ void AXP_TraceWrite(char *fmt, ...)
 }
 
 /*
- * AXP_TraceLock
- *	This function is called by the AXP_TRACE_BEGIN() macro to lock the trace
- *	mutex.  We do this so that multiple calls to AXP_TraceWrite associated with
- *	a single trace opportunity are logged together.
+ * AXP_TraceBuffer
+ *  This function is called to trace a buffers worth of data.  It will dump out
+ *  a hexidecimal set of bytes, followed by those same bytes in ASCII (a '.'
+ *  will be used for non-printable characters.
  *
  * Input Parameters:
- *	None.
+ *  buf:
+ *	A pointer to the buffer of unsigned bytes to be dumped.
+ *  bufLen:
+ *	A value indicating the number of bytes in the buf parameter.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
+ */
+void AXP_TraceBuffer(u8 *buf, u32 bufLen)
+{
+    char outBuf[80];
+    char *fmt1 = "%02x";
+    char *fmt2 = " %02x";
+    char *fmt3 = "%*c: ";
+    char *fmt4 = "%c";
+    u32 ii, offset = 0, remLen = bufLen;
+
+    while (remLen > 0)
+    {
+	sprintf(&outBuf[offset], fmt1, buf[0]);
+	for (ii = 1; ((ii < 20) && (ii < remLen)); ii++)
+	    offset += sprintf(&outBuf[offset], fmt2, buf[ii]);
+	offset += sprintf(&outBuf[offset], fmt3, ' ');
+	for (ii = 0; ((ii < 20) && (ii < remLen)); ii++)
+	    offset += sprintf(
+			&outBuf[offset],
+			fmt4,
+			(isprint(buf[ii]) ? buf[ii] : '.'));
+	AXP_TraceWrite("%s", outBuf);
+	remLen -= ii;
+    }
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+
+/*
+ * AXP_TraceLock
+ *  This function is called by the AXP_TRACE_BEGIN() macro to lock the trace
+ *  mutex.  We do this so that multiple calls to AXP_TraceWrite associated with
+ *  a single trace opportunity are logged together.
+ *
+ * Input Parameters:
+ *  None.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Values:
+ *  None.
  */
 void AXP_TraceLock(void)
 {
