@@ -36,6 +36,8 @@ typedef enum
     AXP_21274_SYS_BLK,
     AXP_TELNET_SES_BLK,
     AXP_DISK_BLK,
+    AXP_SSD_BLK,
+    AXP_VHDX_BLK,
     AXP_BLOCK_MAX
 } AXP_BLOCK_TYPE;
 

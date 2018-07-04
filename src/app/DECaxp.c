@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 	    cpu = AXP_21264_AllocateCPU();
 	if (cpu != NULL)
 	{
-	    pthread_join(&cpu->cBoxThreadID, NULL);
+	    pthread_join(cpu->cBoxThreadID, NULL);
 
 	    /*
 	     * The following calls are just to keep the linker happy.
