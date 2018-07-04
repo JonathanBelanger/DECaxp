@@ -83,10 +83,14 @@
 /*
  * Define some regularly utilized definitions.
  */
-#define ONE_K				1024	/* 1K */
-#define FOUR_K				4096	/* 4K */
-#define EIGHT_K				8192	/* 8K */
-#define ONE_M				1048576	/* 1M */
+#define ONE_K				1024		/* 1K */
+#define FOUR_K				4096		/* 4K */
+#define EIGHT_K				8192		/* 8K */
+#define THIRTYTWO_K			32768		/* 32K */
+#define SIXTYFOUR_K			65536		/* 64K */
+#define ONE_M				1048576		/* 1M */
+#define ONE_G				1073741824	/* 1G */
+#define ONE_T				1099511627776	/* 1T */
 
 /*
  * Define some standard data types.
@@ -324,7 +328,7 @@ bool AXP_CondQueue_Empty(AXP_COND_Q_HDR *);
 /*
  * ROM and Executable file reading and writing.
  */
-u32 AXP_Crc32(u8 *, int, bool, u32);
+u32 AXP_Crc32(const u8 *, size_t, bool, u32);
 int AXP_LoadExecutable(char *, u8 *, u32);
 bool AXP_OpenRead_SROM(char *, AXP_SROM_HANDLE *);
 bool AXP_OpenWrite_SROM(char *, AXP_SROM_HANDLE *, u64, u32);
@@ -340,5 +344,10 @@ void AXP_MaskReset(u8 *);
 void AXP_MaskSet(u8 *, u64, u64, int);
 void AXP_MaskStartGet(int *);
 int AXP_MaskGet(int *, u8, int);
+
+/*
+ * File IO functions.
+ */
+bool AXP_WriteAtOffset(FILE *, void *, size_t, u64);
 
 #endif /* _AXP_UTIL_DEFS_ */

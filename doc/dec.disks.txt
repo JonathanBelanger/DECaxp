@@ -1,0 +1,457 @@
+DEC disk history
+Started 1/94 -pb
+Phil Budne <phil at ultimate.com>
+
+$Id: dec.disks,v 1.46 2017/06/09 02:30:41 phil Exp $
+
+The focus is on disks sold for use on DEC systems (whether
+manufactured by DEC or not) not general market peripherals
+(ie; the DSP SCSI line) manufactured by DEC.
+
+Capacity is approx, (1K=1024 1M=1024K) some formatted, some unformatted
+Geometry is (usually) physical (counts alternate sec & cyl)
+	~ on cylinder counts means average (zone bit recorded disk)
+
+Transfer rates are (usually) avg sustainted rates to/from media.
+	1K=1000, 1M=1000K, b=bits, B=8-bit bytes.
+
+All hard disks 3600 rpm unless noted
+
+Wanted:
+	corrections & additions!!
+	seek times (avg/min/max)
+	rotational latency
+	transfer rate
+	origal mfgr & designation for non-dec disks
+	interface type (ie; Massbus, MSCP) or controller type
+	year of introduction (dec or orig mfgr)
+	encoding?? bpi??
+
+Old interfaces (removable unless noted)
+=======================================
+
+disk	cap.	sec/trk	trk/cyl	cyl	notes
+			(surf)
+
+================ VAX730 IDC
+
+R80	121M	31	14	559	dec built; winchester; SMD interface
+					(RM80 with SMD/Massbus converter)
+
+================ IBM2315 style cartridge via PDP-11 RK-11, PDP-8 RK8
+
+RK01	831KW	16	2	203	up to 4 drives on RK8; mfr: CMD
+					200 data tracks, 3 spare
+					256w/sector (256-4096 words/block)
+					seek: avg 133ms; min 49ms; max 400ms
+					1500 rpm; avg latency 20ms
+					xfer: 16.7us/word
+					704-1026BPI; 100TPI 831,488words
+					700watts (1000W surge) @ 115VAC 60Hz
+RK02	1.2M	12*	2	203	Diablo model 31? low density (256B sect)
+					avg seek: 70ms (15ms min)
+					1500 rpm; avg rot delay: 20ms
+					xfer: 22.2us/word
+					1100 BPI max
+					1-of-n select
+RK03	2.5M	12*	2	203	Diablo model 31 high density (512B sect)
+					avg seek: 70ms (15ms min)
+					1500 rpm; avg rot delay: 20ms
+					xfer: 11.1us/word
+					2200 BPI max
+					1-of-n select
+RK04	1.2M	12*	2	203	low density (256B sectors)
+					binary select
+RK05(J)	2.5M	12*	2	203	1500rpm; RK03 cartridge;
+					RK8 max xfer 1.44Mb/s (8.32us/wd 1.1??)
+					seek: 50ms/10ms/85ms
+					binary select
+RK05F	5M	12*	2	203	1500rpm; fixed rk05; 2xRK05 to s/w
+
+*16 sec/trk on pdp-8
+
+================ via RK611 (Unibus)
+
+RK06	13M	22	3	411	2400rpm; dec built
+RK07	27M	22	3	823	2400rpm; dec built;
+					xfer 538KB/s; lat=12.5ms
+					seek: 36.5ms avg, 8.5ms min
+					avg access 49ms
+================
+
+RL01	5.2M	40	2	256	2400rpm; 256B/sect; dec built; pack
+					xfer 512KB/s; lat=12.5ms
+					seek (ms) 55avg/15min/100max
+					3725 BPI; 125 TPI
+RL02	10M	40	2	512	2400rpm; 512B/sect; dec built; pack
+					xfer 512KB/s; lat=12.5ms
+					seek (ms) 55avg/15min/100max
+					3725 BPI; 250 TPI
+
+================ via PDP-10 RA10
+
+RB10	20-100M	11	varied		"Giant Bryant" disk
+					(aka "MD10" Moby Disk???)
+					1200rpm? av seek 110ms?
+					6 to 20 platters; each w/ 2 arms
+					20,971,520 to 104,857,600 36bit words
+					xfer 22.us to 72us/w
+================ via PDP-10 RC10;
+
+RD10	2.5M	20	2	100	Burroughs disk
+					1800(1735)rpm; 32*36b/sect
+					fixed head; lat=17.6ms; xfer=2.7Mb/s
+					(76000W/S; 13us/W)
+					total of 512,000 36-bit words
+					(4000 128-word blocks)
+					200 tracks of 80 32W "segments"
+
+RM10B	2.07M	30	1	90	Bryant drum; 64*36b/sect; xfer 7.9Mb/s
+					@60Hz: 3450rpm, lat8.8ms
+					@50Hz: 2870rpm, lat10.6ms
+					total of 345,600 36-bit words
+					(2700 128-word blocks)
+					Drum surface was conical, and mounted
+					vertically.
+
+================ fixed head
+
+RF/RS11	512K	--	1	128	1800rpm; fixed head
+
+RS64	??		??	??	PDP-11 fixed head disk(?) (RS11 ctrlr)
+
+RS08	256KW	--	1	128	PDP-8 fixed head disk (RF08 ctrlr)
+					128 fixed heads (1/track)
+					3(+3 spare) timing tracks 
+					word addressable
+					2048 words/track; 1100 BPI max
+					@60Hz: xfer 16us/wd
+						access 16.9ms/250us/33.6ms
+					@50Hz: xfer 19.2us/wd
+						access 20.3ms/320us/40.3ms
+					max density 1100BPI, NRZI recording
+
+DF32	32KW	--	1	16	PDP-8 fixed head disk (13 bit words)
+					word addressable; 2KW tracks
+					@60Hz: xfer 32us/wd, avg access 16.67ms
+					@50Hz: xfer 39us/wd, avg access 20ms
+					max density 1100BPI, NRZI recording
+					10" rack 10.5" high
+
+					Upto 3 DS32 slaves can be chained.
+
+================ via PDP-10 RP10; PDP-11 RP-11; PDP-8 RP08
+
+RP01	5M	5	10	203	2400rpm; Memorex 630-1 ("Mark I"?) pack
+					IBM2311 clone (1316 pack)
+					[never released]
+					seek (ms) 50avg/20min/80max; lat13.7ms
+					xfer=837Kb/s
+RP02	20M	10	20	203	2400rpm; Memorex 660-1 (Mark VI?); pack
+					IBM2314 clone (2316 pack)
+					seek (ms) 50avg/20min/80max; lat12.5ms
+					xfer=1.8Mb/s. $25k c. 1969
+					Designer: Tom Gardner
+					TG: Mark VI was the IBM 2316 compatible
+RP03	40M	10	20	400	2400rpm; ISS; pack
+					double density IBM2314 clone
+================ via PDP-6 270
+
+5022	5.76MW	4/7	16	128/128	Data Products disk
+					inner and outer zones
+					each arm has heads for both
+					128 (36 bit) word sectors
+
+Massbus
+=======
+disk	cap.	sec/trk	trk/cyl	cyl	notes
+
+RP04	83M	22	19	411	pack; ISS-Sperry Univac (8430?)
+					IBM3330 clone
+					3500rpm? av seek 27ms?
+
+RP05	83M	22	19	411	pack; Memorex 677-51; drive looks like RP06
+					IBM3330 clone
+					field upgradable to RP06
+
+RP06	176M	22	19	815	pack; ISS/Memorex 677-01 "Mark XVI"
+					("Merlin"?) (clone of IBM 3330-II?)
+					avg access 38.3ms; avg lat 8.3ms
+					seek 30ms (avg), 10ms (min)
+					xfer=825KB/s
+					3600rpm
+
+RP07	504M	50(30?)	32	630	ISS/Sperry Univac; winchester
+					IBM3350 clone?
+					seek 23ms (avg) 3633 rpm?
+					xfer=2.3MB/s (36-bit)/ 1.3MB/s (32-bit)
+
+RP20	929M	24(25?)	30	1119(750?) two fixed spindles (on DX20 massbus/bus&tag adapt.)
+					seek 25ms (avg); xfer=1.3MB/s
+					3500 rpm? (840000 128*36b blocks)
+					Memorex 3652??
+					dual Memorex 3650 (IBM 3350 clone)
+
+RS03	512K	64	1	64	fixed head; 128B/sector
+RS04/5	1M	64(32?)	1	64	fixed head; 256B/sector
+					6ms access; spiral read
+					32 blks/trk 2048 blks/cyl?
+					3600rpm
+
+RM02	67M	32	5	823	pack; CDC 9762 HDA; 2400 rpm
+					xfer=6.4Mb/s (806KB/s); avg acc 42.5ms
+					seek 30ms (avg), 6ms (min)
+					avg latency 12.5ms
+RM03	67M	32	5	823	pack; CDC 9762 HDA; 3600 rpm
+					xfer=9.6Mb/s (1.2MB/s); avg acc 38.3ms
+					seek 30ms (avg), 6ms (min)
+					avg latency 8.3ms
+
+RM05	256M	32	19	823	pack; CDC 9766
+RM06	?
+
+RM80	124M	32	14	559	winchester (RA80 HDA)
+					xfer=9.6Mb/s (1.2MB/s)
+					avg access 33.3ms; avg lat 8.3
+					seek 25ms (avg), 6ms (min)
+					3600RPM
+
+ML11A	varies	-	-	-	solid-state (ram) disk; 2MB/s xfer
+					1-31 arrays of 512 or 2048 blocks ea
+					using 11/70 MK11 (MOS) memory
+					looked like RS03/RS04 to s/w
+
+MSCP/SDI
+========
+disk	cap.	sec/trk	trk/cyl	cyl	notes
+
+RA60	205M	42	4	2382	pack; seek 42 ms (avg);
+					xfer=2.1MB/s (1.98?)
+					3500 rpm?? 5 platters?
+
+=== 5.25" FH?
+
+RA70	280M	33	11	1507	
+RA71	684M	51	14	1915
+RA72	1G	51	20	1915
+RA73	2G	70	21	2667
+
+=== 19"
+
+RA80	124M	31	14	546 	dec; winchester; 3500 rpm?
+RA81	446M	51	14	1248	dec; winchester; 3500 rpm?
+					seek 28 ms (avg); xfer=2.3MB/s
+RA82	608M	57	15	1423	dec; winchester
+
+RA90	1.2G	69	13	2649
+RA92	1.5G	69	13	3279
+
+RC25	26M*2	42	4	302	"LESI" (Low End Storage Interconnect)
+					1 fixed, 1 removable; CDC9457? ("Lark")
+					Peak xfer 1.25 MB/s;
+					Seek 10/35/55ms
+					avg rotational latency: 10.5ms
+					avg access: 45.5 ms
+
+MSCP/DSSI
+=========
+
+RF30	143M	37	6	1320	5.25" HH
+RF31	380M	50	8	1861	5.25" HH
+RF35	852M				5.25" HH?
+RF36	1.6G				5.25" HH?
+RF71	390M	37	16	1320	5.25" FH
+RF72	1G	50	21	1861	5.25" FH
+RF73	2G				5.25" FH?
+RF74	3.5G				5.25" FH?
+
+=== ??
+
+ESE20	120M	4	128	483	Solid state disk
+
+Floppy
+================================================================
+disk	cap.	sec/trk	trk/cyl	cyl	notes
+
+RX01	256K	26	1	77	8" SSSD (IBM soft-sectored)
+					128B/sect; 360rpm
+					xfer 250Kb/s; lat 83ms
+					seek (ms) 405avg/30min/790max
+RX02	512K	26	1	77	8" SSDD (non-standard)
+					256B/sect; 360rpm
+					xfer 488Kb/s (61KB/s); lat 83ms
+					seek (ms) 154avg/6min
+					avg access 262ms
+
+RX03	1M	26	2	77	8" DSDD (non-standard) -- not released
+
+RX22
+
+RX23					3.5" SCSI
+ high	1.4M	18	2	80
+ double	720K	9	2	80
+ single	360K	9	2	40
+
+RX26					3.5" SCSI
+ extra	2.8M	36	2	80
+ high	1.4M	18	2	80
+ double	720K	9	2	80	
+ single	360K	9	2	40
+
+
+RX33					5.25" Teac FD55-GFR-17U MFM?
+ extra	1.2M	15	2	80
+ high	720K	9	2	80	DSDD
+ double	400K	10	1	80	SSDD (RX50 compat?)
+ single	360K	9	2	40	DSSD
+
+RX50	400K	10	1	80	5.25" single sided, dual drive
+					FM encoding
+
+MFM "ST506/412 interface" (on RQDX{1,2,3})
+==========================================
+disk	cap.	sec/trk	trk/cyl	cyl	notes
+
+=== 5.25" FH
+RD50	5M	17	4	153	Seagate ST506 seek 85/3?/??
+RD51	10M	17	4	306	Seagate ST412 seek 85/16.6?/??
+RD52	31M	18	7	480	Quantum 540 / ATASI 3046 (also Evotek?)
+RD53	71M	18	8	1024?	Microp 1325 (or 1335) w/ jumper at J7
+RD54	156M	17	15	1225	Maxtor XT-2190D
+
+=== 5.25" HH
+RD31	20M	17	4	615	ST225 seek (ms) 65/20/150
+RD32	40M	17	6	820	ST251(-1*) seek 40(28*)/8/70
+					ST277R(-1*) [MFM format] 40(28*)/8/70
+RD33	71M				Microscience HH-1090 [Never released]
+
+SMD disks popular on VAXen (Winchesters unless noted)
+=====================================================
+disk	cap.	sec/trk	trk/cyl	cyl	notes
+
+A9300	248M	32	19	815	Ampex 9300; removable
+A330	262M	32	16	1024	Ampex Capricorn 330
+
+CDC9720	275M	48	10	1147
+CDC9730	268M	32	10	823	removable
+CDC9762	65M	32	5	823	removable; (also RM03) [phys 80M?]
+CDC9766	256M	32	19	823	removable; (also RM05)
+CDC9775	839M	32	40	843
+
+M160	132M	32	10	823	Fujitsu 160
+M2351	337M	46	20	842	Fujitsu Eagle 19"
+M2351A	337M	48	20	842	Fujitsu Eagle 19"
+M2351AF	337M	48	20	842	Fujitsu Eagle 19" w/ 3 fixed heads
+M2361	549M	64	20	842	Fujitsu Super Eagle 19"
+M2361A	549M	68	20	842	Fujitsu Super Eagle 19"
+
+NEC800	800M	66	23	850
+NEC2363	1G	64	27	1024
+
+SCSI disks (Winchesters unless noted)
+=====================================
+disk	cap.	sec/trk	trk/cyl	cyl	notes
+
+=== 5.25" FH
+
+RZ55	325M				Micropolis 1578-15
+					or maxtor xt-4380sb2?
+RZ55L
+RZ56	650M	54	15	1632	Micropolis 1588-15
+RZ56L
+RZ57	1.01G	71	15	1925	Micropolis 1598-15
+RZ57I
+RZ57L
+RZ58	1.3G	85~	15	2117	5400rpm? Micropolis 1908?
+RZ59	8.9G	193	18	5111
+
+=== 5.25" FH?
+
+RZ72
+RZ73	2.0G	71	21	2621
+RZ74	3.57G	67~	25	4165
+
+=== 3.5" HH?
+
+RZ22	51M	33	4	776	Conner CP350
+RZ23	102M	33	8	776	Conner CP3100-1
+RZ23L	118M	39~	4	1524
+RZ24	205M	38	8	1348	Conner CP3200; 3500rpm?
+RZ24L	240M	66~	8	1818	Quantum LPS-240S?
+RZ25	416M	62	9	1492
+RZ25L	523M	79~	8	1891
+RZ26	1.05G	57	14	2570	5400rpm?
+RZ27	1.6G	143~	16	1366
+RZ28	2.1G	99~	16	2595	DEC manufactured (ST32550N???)
+RZ28B	2.1G	82~	19	2626	Seagate ST12400N; 5411 rpm; seek 10/2/22
+RZ29	4.2G	113~	20	3720	Quantum?
+
+================ 5" HH?
+
+RZ31
+RZ33	??
+RZ35	832M	57	14	2086
+
+================ 5" FH??
+
+RZ55	332M
+RZ56	635M
+RZ57	1G
+RZ58	1.3G
+
+================ 5" FH
+
+RZ73	2G
+RZ74	3.57G
+
+================ CD-ROM (IDE/ATAPI)
+
+RRD20?					PHILLIPS 2X IDE/ATAPI CDROM
+RRD32?					32X ATAPI CD-ROM
+RRD37					Toshiba XM-5201B
+
+================ CD-ROM (SCSI)
+
+RRD40					Laser Magnetics LMS CM 210 (no audio)
+RRD42					1X Sony CDU-541
+RRD43					2X Toshiba XM-4101B
+RRD44					2X Toshiba XM-3401B "high performance"
+RRD45					4X Toshiba XM-5401B
+RRD46					12x Toshiba XM-6302B (or XM-5701B?)
+RRD47					32x Toshiba XM-6201B
+RRD50					Philips/LMSI CM100 (no audio)
+
+================ Optical WORM
+
+RWZ01	288M	31	1	18751	Erasable Optical 5.25"
+					(Sony) EDM-1DA0/1DA1/650/600
+
+RWZ21					WORM 3.5" (MO)
+
+RV20	6GB?				Optical WORM 12"
+RSV20					Optical WORM
+RV60					12"
+RV64					Jukebox (RV20 based)
+
+RWZ52	1.2G				5.25"; rewritable; 600MB/side
+					HC: acc 36ms; r 1.6MB/s; w 0.53MB/s
+					LC: acc 38ms; r 1.0MB/s; w 0.33MB/s
+
+RVZ72	6.55G				tabletop 12" write once; SCSI
+					access 600ms; read 900KB/s; w 400 KB/s
+RV720	78GB				deskside jukebox w/ 1 drive, 12 disks
+RV730ZB	438GB				datacenter jukebox w/ 2 drives; 67 d.
+RV730ZD	308GB				datacenter jukebox w/ 4 drives; 47 d.
+					
+
+Decimage Express v2?			LMS 5.25"/12" WORM 
+
+Solid-state disks (SCSI?)
+=========================
+
+"disk"	cap.	sec/trk	trk/cyl	cyl	notes
+
+EZ51	104M	33	9	776
+EZ54	418M	62	10	1492
+EZ58	835M	20	10	8353
+

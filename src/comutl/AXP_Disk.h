@@ -54,6 +54,16 @@ typedef enum
 #define AXP_DISK_HEADS		8
 #define AXP_DISK_SECTORS	32
 
+/*
+ *
+ */
+typedef struct
+{
+    AXP_BLOCK_DSC	header;
+    u8			*memory;
+    off_t		position;
+} AXP_SSD_Handle;
+
 typedef struct
 {
 
@@ -67,26 +77,24 @@ typedef struct
      * Now we need some information to describe the disk.
      */
     AXP_DiskType	type;
-    FILE		*fp;
-    char		fileName[MAX_FILENAME_LEN+1];
+    union
+    {
+	AXP_SSD_Handle	*ssd;
+	void		*vhdx;
+    };
 
     /*
      * Information about the disk drive itself.
      */
-    char		serialNumber[MAX_SERIALNO_LEN+1];
-    char		modelNumber[MAX_SERIALNO_LEN+1];
-    char		revisionNumber[MAX_SERIALNO_LEN+1];
+    char		fileName[MAX_FILENAME_LEN + 1];
+    char		serialNumber[MAX_SERIALNO_LEN + 1];
+    char		modelNumber[MAX_SERIALNO_LEN + 1];
+    char		revisionNumber[MAX_SERIALNO_LEN + 1];
     off_t		diskSize;
     off_t		cylinders;
     size_t		blockSize;
     bool		readOnly;
     bool		isCdrom;
-    bool		atapiMode;
-
-    /*
-     * Where are we currently within the file, device, memory.
-     */
-    off_t		position;
-} AXP_PhysicalDisk;
+} AXP_Disk;
 
 #endif /* _AXP_DISK_H_ */
