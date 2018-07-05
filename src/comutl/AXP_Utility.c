@@ -58,6 +58,7 @@
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
 #include "AXP_Trace.h"
+#include <iconv.h>
 
 /*
  * This format is used throughout this module for writing a message to sysout.
@@ -2108,6 +2109,178 @@ int AXP_MaskGet(int *curPtr, u8 mask, int len)
 }
 
 /*
+ * AXP_Ascii2UTF_16
+ *  This function is called to convert an ASCII encoded string into a UTF-16
+ *  encoded string, minus the first 3 bytes.
+ *
+ * Input Parameters:
+ *  inBuf:
+ *	A pointer to a null-terminated ASCII string to be converted.
+ *  outLen:
+ *	A value indicating the length of outBuf, in bytes.
+ *
+ * Output Parameters:
+ *  outBuf:
+ *	A pointer to receive the UTF-16 conversion of the inBuf parameter.  The
+ *	first three bytes in the converted string will be dropped.
+ *
+ * Return Values:
+ *  0:		Normal Successful Completion.
+ *  EMFILE:	Maximum number of files descriptors are currently open.
+ *  ENFILE:	Too many files are currently open in the system.
+ *  ENOMEM:	Insufficient storage space is available.
+ *  EINVAL(1):	The conversion from ASCII to UTF-16 is not supported by the
+ *		implementation.
+ *  EINVAL(2):	Input conversion stopped due to an incomplete character or
+ *		shift sequence at the end of the input buffer.
+ *  EILSEQ:	Input conversion stopped due to an input byte that does not
+ *		belong to the input code set.
+ *  E2BIG:	Input conversion stopped due to lack of space in the output
+ *		buffer.
+ *  EBADF:	The cp argument is not a valid open conversion descriptor.
+ */
+i32 AXP_Ascii2UTF_16(char *inBuf, uint16_t *outBuf, size_t outLen)
+{
+    uint16_t	tmpOutBuf[outLen];
+    iconv_t	cp;
+    size_t	convLen, inLen = strlen(inBuf);
+    i32		retVal = 0;
+
+    /*
+     * First we need to open the conversion handle.
+     */
+    cp = iconv_open("UTF-16", "ASCII");
+
+    /*
+     * If that failed, then return the errno value.  Otherwise, continue with
+     * the conversion.
+     */
+    if (cp == (iconv_t) -1)
+	retVal = errno;
+    else
+    {
+
+	/*
+	 * Convert the input string into UTF-16.
+	 */
+	convLen = iconv(
+		    cp,
+		    &inBuf,
+		    &inLen,
+		    (char **) &tmpOutBuf,
+		    &outLen);
+
+	/*
+	 * If that failed, then return the errno value.  Otherwise, finalize
+	 * the conversion.
+	 */
+	if (convLen == -1)
+	    retVal = errno;
+	else
+	{
+
+	    /*
+	     * Clear out the target buffer and then copy all but the first 3
+	     * bytes of the converted string into the target buffer.
+	     */
+	    memset(outBuf, 0, outLen);
+	    memcpy(outBuf, &tmpOutBuf[3], convLen - 3);
+	}
+
+	/*
+	 * Since we opened the conversion handle, make sure to close it.
+	 */
+	iconv_close(cp);
+    }
+
+    /*
+     * Return the outcome back to the caller.
+     */
+    return(retVal);
+}
+
+/*
+ * AXP_UTF16_2Ascii
+ *  This function is called to convert a UTF-16 encoded string into an ASCII
+ *  encoded string.
+ *
+ * Input Parameters:
+ *  inBuf:
+ *	A pointer to an UTF-16 encoded string to be converted.
+ *  inLen:
+ *	A value indicating the length of the inBuf, in bytes.
+ *  outLen:
+ *	A value indicating the length of outBuf, in bytes.
+ *
+ * Output Parameters:
+ *  outBuf:
+ *	A pointer to receive the ASCII conversion of the inBuf parameter.
+ *
+ * Return Values:
+ *  0:		Normal Successful Completion.
+ *  EMFILE:	Maximum number of files descriptors are currently open.
+ *  ENFILE:	Too many files are currently open in the system.
+ *  ENOMEM:	Insufficient storage space is available.
+ *  EINVAL(1):	The conversion from UTF-16 to ASCII is not supported by the
+ *		implementation.
+ *  EINVAL(2):	Input conversion stopped due to an incomplete character or
+ *		shift sequence at the end of the input buffer.
+ *  EILSEQ:	Input conversion stopped due to an input byte that does not
+ *		belong to the input code set.
+ *  E2BIG:	Input conversion stopped due to lack of space in the output
+ *		buffer.
+ *  EBADF:	The cp argument is not a valid open conversion descriptor.
+ */
+i32 AXP_UTF16_2Ascii(uint16_t *inBuf, size_t inLen, char *outBuf, size_t outLen)
+{
+    iconv_t	cp;
+    size_t	convLen;
+    i32		retVal = 0;
+
+    /*
+     * First we need to open the conversion handle.
+     */
+    cp = iconv_open("ASCII", "UTF-16");
+
+    /*
+     * If that failed, then return the errno value.  Otherwise, continue with
+     * the conversion.
+     */
+    if (cp == (iconv_t) -1)
+	retVal = errno;
+    else
+    {
+
+	/*
+	 * Convert the input string into UTF-16.
+	 */
+	convLen = iconv(
+		    cp,
+		    (char **) &inBuf,
+		    &inLen,
+		    &outBuf,
+		    &outLen);
+
+	/*
+	 * If that failed, then return the errno value.  Otherwise, finalize
+	 * the conversion.
+	 */
+	if (convLen == -1)
+	    retVal = errno;
+
+	/*
+	 * Since we opened the conversion handle, make sure to close it.
+	 */
+	iconv_close(cp);
+    }
+
+    /*
+     * Return the outcome back to the caller.
+     */
+    return(retVal);
+}
+
+/*
  * AXP_WriteAtOffset
  *  This function is called to write a block of data at a particular offset
  *  within a file.
@@ -2138,6 +2311,8 @@ bool AXP_WriteAtOffset(FILE *fp, void *outBuf, size_t outLen, u64 offset)
 	fwrite(outBuf, sizeof(u8), outLen, fp);
 	if (ferror(fp) != 0)
 	    retVal = false;
+	else
+	    fflush(fp);
     }
     else
 	retVal = false;

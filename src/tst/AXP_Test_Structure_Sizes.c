@@ -45,10 +45,11 @@
 #include "AXP_21264_Ibox.h"
 #include "AXP_21264_Fbox.h"
 #include "AXP_21264_CPU.h"
+#include "AXP_VHDX.h"
 
 #define PRINT_SIZE(type, size, test) 					\
 	if (sizeof(type) != size) test = false;	\
-	printf("%-25s= %3lu (%3d): %s\n", #type, sizeof(type), size, (sizeof(type) == size ? pass : fail))
+	printf("%-25s= %4lu (%4d): %s\n", #type, sizeof(type), size, (sizeof(type) == size ? pass : fail))
 
 /*
  * main
@@ -69,7 +70,15 @@ int main()
 	char *pass = "passed";
 	char *fail = "failed";
 	bool passed = true;
+	AXP_VHDX_META_PAR_HDR par;
+	char *base = (char *) &par;
 
+	par.keyValCnt = 0;
+	par.res_1 = 0;
+	par.locType.data1 = 0;
+	par.locType.data2 = 0;
+	par.locType.data3 = 0;
+	par.locType.data4 = 0;
 	printf("Alpha AXP 21264 Data Structure Size Test.\n\n");
 	printf("AXP_Utility.h\n");
 	PRINT_SIZE(u8, 1, passed);
@@ -187,7 +196,7 @@ int main()
 
 	printf("\nAXP_21264_Cbox.h.h\n");
 	PRINT_SIZE(AXP_21264_CBOX_CSRS, 40, passed);
-	PRINT_SIZE(AXP_21264_CBOX_IOWB, 72, passed);
+	PRINT_SIZE(AXP_21264_CBOX_IOWB, 88, passed);
 
 	printf("\nAXP_21264_Predictions.h\n");
 	PRINT_SIZE(LCLindex, 8, passed);
@@ -198,7 +207,7 @@ int main()
 	PRINT_SIZE(AXP_VA_SPE1, 8, passed);
 	PRINT_SIZE(AXP_VA_SPE0, 8, passed);
 	PRINT_SIZE(AXP_VA_SPE, 8, passed);
-	PRINT_SIZE(AXP_DCACHE_BLK, 88, passed);
+	PRINT_SIZE(AXP_DCACHE_BLK, 64, passed);
 	PRINT_SIZE(AXP_ICACHE_BLK, 72, passed);
 	PRINT_SIZE(AXP_CACHE_IDX, 8, passed);
 	PRINT_SIZE(AXP_VA_FIELDS, 8, passed);
@@ -208,6 +217,31 @@ int main()
 
 	printf("\nAXP_21264_Fbox.h\n");
 	PRINT_SIZE(AXP_FP_FUNC, 4, passed);
+
+	printf("\nAXP_VHDX.h\n");
+	PRINT_SIZE(AXP_VHDX_GUID, 16, passed);
+	PRINT_SIZE(AXP_VHDX_ID, 520, passed);
+	PRINT_SIZE(AXP_VHDX_HDR, 4096, passed);
+	PRINT_SIZE(AXP_VHDX_REG_HDR, 16, passed);
+	PRINT_SIZE(AXP_VHDX_REG_ENT, 32, passed);
+	PRINT_SIZE(AXP_VHDX_LOG_HDR, 64, passed);
+	PRINT_SIZE(AXP_VHDX_ZERO_DSC, 32, passed);
+	PRINT_SIZE(AXP_VHDX_DATA_DSC, 32, passed);
+	PRINT_SIZE(AXP_VHDX_LOG_DATA, 4096, passed);
+	PRINT_SIZE(AXP_VHDX_BAT_ENT, 8, passed);
+	PRINT_SIZE(AXP_VHDX_META_HDR, 32, passed);
+	PRINT_SIZE(AXP_VHDX_META_ENT, 32, passed);
+	PRINT_SIZE(AXP_VHDX_META_FILE, 8, passed);
+	PRINT_SIZE(AXP_VHDX_META_DISK, 8, passed);
+	PRINT_SIZE(AXP_VHDX_META_PAGE83, 16, passed);
+	PRINT_SIZE(AXP_VHDX_META_SEC, 4, passed);
+	PRINT_SIZE(AXP_VHDX_META_PAR_HDR, 24, passed);
+	printf("\tAXP_VHDX_META_PAR_HDR is supposed to be 20 bytes, "
+	       "but the GCC compiler pads this out to 24 bytes (byte boundary)\n");
+	printf("\t\tlocType (len = %lu) at offset %ld\n", sizeof(par.locType), (char *) &par.locType - base);
+	printf("\t\tres_1 (len = %lu) at offset %ld\n", sizeof(par.res_1), (char *) &par.res_1 - base);
+	printf("\t\tkeyValCnt (len = %lu) at offset %ld\n", sizeof(par.keyValCnt), (char *) &par.keyValCnt - base);
+	PRINT_SIZE(AXP_VHDX_META_PAR_ENT, 12, passed);
 
 	printf("\nOverall Result: %s\n", (passed ? pass : fail));
 

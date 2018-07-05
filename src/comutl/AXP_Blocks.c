@@ -215,7 +215,10 @@ void AXP_Deallocate_Block(AXP_BLOCK_DSC *block)
 		AXP_VHDX_Handle *vhdx = (AXP_VHDX_Handle *) block;
 
 		if (vhdx->fp != NULL)
+		{
+		    fflush(vhdx->fp);
 		    fclose(vhdx->fp);
+		}
 		free(block);
 	    }
 	    break;
