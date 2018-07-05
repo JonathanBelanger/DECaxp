@@ -635,11 +635,25 @@ typedef struct
 } AXP_VHD_PROGRESS;
 
 #define AXP_VHD_DEF_BLK		0
-#define AXP_VHD_5KB_BLK		(5 * ONE_K)
-#define AXP_VHD_2MB_BLK		(2 * ONE_M)
+#define AXP_VHD_BLK_MIN		(512 * ONE_K)
+#define AXP_VHD_BLK_DEF		(2 * ONE_M)
+#define AXP_VHD_BLK_MAX		(2 * ONE_M)
+#define AXP_VHDX_BLK_MIN	(512 * ONE_K)
+#define AXP_VHDX_BLK_DEF	(32 * ONE_M)
+#define AXP_VHDX_BLK_MAX	(256 * ONE_M)
+#define AXP_ISO_BLK_DEF		0
+#define AXP_ISO_BLK_MIN		0
+#define AXP_ISO_BLK_MAX		0
 #define AXP_VHD_DEF_SEC		0
-#define AXP_VHD_512_SEC		512
-#define AXP_VHD_4KB_SEC		FOUR_K
+#define AXP_VHD_SEC_DEF		512
+#define AXP_VHD_SEC_MIN		512
+#define AXP_VHD_SEC_MAX		512
+#define AXP_VHDX_SEC_DEF	512
+#define AXP_VHDX_SEC_MIN	512
+#define AXP_VHDX_SEC_MAX	FOUR_K
+#define AXP_ISO_SEC_DEF		TWO_K
+#define AXP_ISO_SEC_MIN		TWO_K
+#define AXP_ISO_SEC_MAX		TWO_K
 
 typedef struct
 {

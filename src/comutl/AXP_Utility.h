@@ -84,6 +84,7 @@
  * Define some regularly utilized definitions.
  */
 #define ONE_K				1024		/* 1K */
+#define TWO_K				2048		/* 2K */
 #define FOUR_K				4096		/* 4K */
 #define EIGHT_K				8192		/* 8K */
 #define THIRTYTWO_K			32768		/* 32K */
@@ -91,6 +92,11 @@
 #define ONE_M				1048576		/* 1M */
 #define ONE_G				1073741824	/* 1G */
 #define ONE_T				1099511627776	/* 1T */
+
+/*
+ * Test for power of 2
+ */
+#define IS_POWER_OF_2(value)		((value) && !((value) & (value - 1)))
 
 /*
  * Define some standard data types.
@@ -344,6 +350,12 @@ void AXP_MaskReset(u8 *);
 void AXP_MaskSet(u8 *, u64, u64, int);
 void AXP_MaskStartGet(int *);
 int AXP_MaskGet(int *, u8, int);
+
+/*
+ * ASCII/UTF-16 conversion functions.
+ */
+i32 AXP_Ascii2UTF_16(char *, uint16_t *, size_t);
+i32 AXP_UTF16_2Ascii(uint16_t *, size_t, char *, size_t);
 
 /*
  * File IO functions.

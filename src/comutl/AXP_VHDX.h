@@ -46,6 +46,7 @@ typedef struct
     char		sig[AXP_VHDX_ID_SIG_LEN];	/* 'vhdxfile' */
     uint16_t		creator[AXP_VHDX_CREATOR_LEN];
 } AXP_VHDX_ID;
+#define AXP_VHDX_ID_LEN			520
 #define AXP_VHDX_RES_1_LEN		4016
 typedef struct
 {
@@ -61,6 +62,7 @@ typedef struct
     u64			logOff;
     u8			res_1[AXP_VHDX_RES_1_LEN];
 } AXP_VHDX_HDR;
+#define AXP_VHDX_HDR_LEN		4096
 typedef struct
 {
     char		sig[AXP_VHDX_SIG_LEN];		/* 'regi' */
@@ -68,6 +70,7 @@ typedef struct
     u32			entryCnt;
     u32			res_1;
 } AXP_VHDX_REG_HDR;
+#define AXP_VHDX_REG_HDR_LEN		16
 typedef struct
 {
     AXP_VHDX_GUID	guid;
@@ -76,6 +79,7 @@ typedef struct
     u32			req : 1;
     u32			res_1 : 31;
 } AXP_VHDX_REG_ENT;
+#define AXP_VHDX_REG_ENT_LEN		32
 typedef struct
 {
     char		sig[AXP_VHDX_SIG_LEN];		/* 'loge' */
@@ -89,6 +93,7 @@ typedef struct
     u64			flushedFileOff;
     u64			lastFileOff;
 } AXP_VHDX_LOG_HDR;
+#define AXP_VHDX_LOG_HDR_LEN		64
 typedef struct
 {
     char		sig[AXP_VHDX_SIG_LEN];		/* 'zero' */
@@ -97,6 +102,7 @@ typedef struct
     u64			fileOff;
     u64			seqNum;
 } AXP_VHDX_ZERO_DSC;
+#define AXP_VHDX_ZERO_DSC_LEN		32
 typedef struct
 {
     char		sig[AXP_VHDX_SIG_LEN];		/* 'desc' */
@@ -105,20 +111,23 @@ typedef struct
     u64			fileOff;
     u64			seqNum;
 } AXP_VHDX_DATA_DSC;
-#define AXP_VHDX_LOG_DATA_LEN	4084
+#define AXP_VHDX_DATA_DSC_LEN		32
+#define AXP_VHDX_LOG_DATA_SIZE		4084
 typedef struct
 {
     char		sig[AXP_VHDX_SIG_LEN];		/* 'data' */
     u32			seqHi;
-    u8			data[AXP_VHDX_LOG_DATA_LEN];
+    u8			data[AXP_VHDX_LOG_DATA_SIZE];
     u32			seqLo;
 } AXP_VHDX_LOG_DATA;
+#define AXP_VHDX_LOG_DATA_LEN		4096
 typedef struct
 {
     u64			state : 3;
     u64			res_1 : 17;
     u64			fileOff : 44;
 } AXP_VHDX_BAT_ENT;
+#define AXP_VHDX_BAT_ENT_LEN		8
 
 /*
  * Payload BAT Entry States
@@ -144,6 +153,7 @@ typedef struct
     u16			entryCnt;
     u32			res_2[AXP_VHDX_RES_2_LEN];
 } AXP_VHDX_META_HDR;
+#define AXP_VHDX_META_HDR_LEN		32
 #define AXP_VHDX_FILE_PARAM_GUID(name)		\
     (name) = (AXP_VHDX_GUID)			\
     {						\
@@ -220,6 +230,7 @@ typedef struct
     u32			res_1 : 29;
     u32			res_2;
 } AXP_VHDX_META_ENT;
+#define AXP_VHDX_META_ENT_LEN		32
 typedef struct
 {
     u32			blkSize;
@@ -227,24 +238,29 @@ typedef struct
     u32			hasParent : 1;
     u32			res_1 : 30;
 } AXP_VHDX_META_FILE;
+#define AXP_VHDX_META_FILE_LEN		8
 typedef struct
 {
     u64			virDskSize;
 } AXP_VHDX_META_DISK;
+#define AXP_VHDX_META_DISK_LEN		8
 typedef struct
 {
     AXP_VHDX_GUID	pg83Data;
 } AXP_VHDX_META_PAGE83;
+#define AXP_VHDX_META_PAGE83_LEN	16
 typedef struct
 {
     u32			secSize;
 } AXP_VHDX_META_SEC;
+#define AXP_VHDX_META_SEC_LEN		4
 typedef struct
 {
     AXP_VHDX_GUID	locType;
     u16			res_1;
     u16			keyValCnt;
 } AXP_VHDX_META_PAR_HDR;
+#define AXP_VHDX_META_PAR_HDR_LEN	20	/* gcc sizeof says this is 24 */
 typedef struct
 {
     u32			keyOff;
@@ -252,6 +268,7 @@ typedef struct
     u16			keyLen;
     u16			valLen;
 } AXP_VHDX_META_PAR_ENT;
+#define AXP_VHDX_META_PAR_ENT_LEN	12
 
 #define AXP_VHDX_MAX_ENTRIES		2047
 #define AXP_VHDX_CURRENT_VER		1
@@ -260,9 +277,9 @@ typedef struct
 #define AXP_VHDX_LOG_VER		0
 #define AXP_VHDX_BAT_LEN		ONE_M
 #define AXP_VHDX_BAT_LOC		(AXP_VHDX_LOG_LOC + AXP_VHDX_LOG_LEN)
-#define AXP_VHDX_METADATA_LEN		ONE_M
-#define AXP_VHDX_METADATA_LOC		(AXP_VHDX_BAT_LOC + AXP_VHDX_BAT_LEN)
-#define AXP_VHDX_METADATA_START_OFF	SIXTYFOUR_K
+#define AXP_VHDX_META_LEN		ONE_M
+#define AXP_VHDX_META_LOC		(AXP_VHDX_BAT_LOC + AXP_VHDX_BAT_LEN)
+#define AXP_VHDX_META_START_OFF		SIXTYFOUR_K
 #define AXP_VHDX_FILE_ID_OFF		0
 #define AXP_VHDX_HEADER1_OFF		(1 * SIXTYFOUR_K)
 #define AXP_VHDX_HEADER2_OFF		(2 * SIXTYFOUR_K)
@@ -285,8 +302,6 @@ typedef struct
 {
     AXP_BLOCK_DSC	header;
     FILE		*fp;
-    AXP_VHDX_ID		fileID;
-    AXP_VHDX_HDR	hdr;
 } AXP_VHDX_Handle;
 
 #endif /* _AXP_VHDX_H_ */
