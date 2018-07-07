@@ -634,6 +634,9 @@ typedef struct
     u64 complVal;
 } AXP_VHD_PROGRESS;
 
+/*
+ * We put these here because they limit values through the interface.
+ */
 #define AXP_VHD_DEF_BLK		0
 #define AXP_VHD_BLK_MIN		(512 * ONE_K)
 #define AXP_VHD_BLK_DEF		(2 * ONE_M)

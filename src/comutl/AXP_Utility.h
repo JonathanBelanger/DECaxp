@@ -354,12 +354,29 @@ int AXP_MaskGet(int *, u8, int);
 /*
  * ASCII/UTF-16 conversion functions.
  */
-i32 AXP_Ascii2UTF_16(char *, uint16_t *, size_t);
-i32 AXP_UTF16_2Ascii(uint16_t *, size_t, char *, size_t);
+i32 AXP_Ascii2UTF_16(char *, size_t, uint16_t *, size_t *);
+i32 AXP_UTF16_2Ascii(uint16_t *, size_t, char *, size_t *);
+
+/*
+ * VHD and Network to/from Native value conversions.
+ */
+typedef enum
+{
+    U8,
+    U16,
+    U32,
+    U64,
+    GUID,
+    CRC32,
+    CVTMax
+} AXP_CVT_Types;
+void AXP_Convert_To(AXP_CVT_Types, void *, void *);
+void AXP_Convert_From(AXP_CVT_Types, void *, void *);
 
 /*
  * File IO functions.
  */
+i64 AXP_GetFileSize(FILE *);
 bool AXP_WriteAtOffset(FILE *, void *, size_t, u64);
 
 #endif /* _AXP_UTIL_DEFS_ */

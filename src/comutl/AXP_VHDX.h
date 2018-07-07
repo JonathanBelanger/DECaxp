@@ -270,29 +270,44 @@ typedef struct
 } AXP_VHDX_META_PAR_ENT;
 #define AXP_VHDX_META_PAR_ENT_LEN	12
 
-#define AXP_VHDX_MAX_ENTRIES		2047
-#define AXP_VHDX_CURRENT_VER		1
-#define AXP_VHDX_LOG_LOC		ONE_M
+/*
+ * Lengths for various structures in the VHDX file.
+ */
+#define AXP_VHDX_LEN_HDR		ONE_M
+#define AXP_VHDX_SUBHDR_LEN		SIXTYFOUR_K
 #define AXP_VHDX_LOG_LEN		ONE_M
-#define AXP_VHDX_LOG_VER		0
-#define AXP_VHDX_BAT_LEN		ONE_M
-#define AXP_VHDX_BAT_LOC		(AXP_VHDX_LOG_LOC + AXP_VHDX_LOG_LEN)
 #define AXP_VHDX_META_LEN		ONE_M
-#define AXP_VHDX_META_LOC		(AXP_VHDX_BAT_LOC + AXP_VHDX_BAT_LEN)
-#define AXP_VHDX_META_START_OFF		SIXTYFOUR_K
+#define AXP_VHDX_BAT_LEN		ONE_M
+
+/*
+ * Offsets for various structures in the VHDX file,
+ */
+#define AXP_VHDX_HDR_LOC		0
+#define AXP_VHDX_LOG_LOC		(AXP_VHDX_HDR_LOC + AXP_VHDX_LEN_HDR)
+#define AXP_VHDX_META_LOC		(AXP_VHDX_LOG_LOC + AXP_VHDX_LOG_LEN)
+#define AXP_VHDX_BAT_LOC		(AXP_VHDX_META_LOC + AXP_VHDX_META_LEN)
+
+/*
+ * Header structure offsets (from AXP_VHDX_HDR_LOC)
+ */
 #define AXP_VHDX_FILE_ID_OFF		0
-#define AXP_VHDX_HEADER1_OFF		(1 * SIXTYFOUR_K)
-#define AXP_VHDX_HEADER2_OFF		(2 * SIXTYFOUR_K)
-#define AXP_VHDX_REG_TBL_HDR1_OFF	(3 * SIXTYFOUR_K)
-#define AXP_VHDX_REG_TBL_HDR2_OFF	(4 * SIXTYFOUR_K)
-#define AXP_VHDX_PHYS_SECTOR_SIZE	FOUR_K
-#define AXP_VHDX_MAX_DISK_SIZE		(64ULL * ONE_T)
-#define AXP_VHDX_MIN_BLK_SIZE		ONE_K
-#define AXP_VHDX_MAX_BLK_SIZE		(256 * ONE_K)
-#define AXP_VHDX_DEF_BLK_SIZE		THIRTYTWO_K
-#define AXP_VHDX_DEF_SEC_SIZE		512
-#define AXP_VHDX_MIN_ALIGNMENT		ONE_K
-#define AXP_VHDX_BLK_1MB		ONE_K
+#define AXP_VHDX_HEADER1_OFF		(AXP_VHDX_FILE_ID_OFF + AXP_VHDX_SUBHDR_LEN)
+#define AXP_VHDX_HEADER2_OFF		(AXP_VHDX_HEADER1_OFF + AXP_VHDX_SUBHDR_LEN)
+#define AXP_VHDX_REG_TBL_HDR1_OFF	(AXP_VHDX_HEADER2_OFF + AXP_VHDX_SUBHDR_LEN)
+#define AXP_VHDX_REG_TBL_HDR2_OFF	(AXP_VHDX_REG_TBL_HDR1_OFF + AXP_VHDX_SUBHDR_LEN)
+
+/*
+ * Metadata structure offsets (AXP_VHDX_META_LOC)
+ */
+#define AXP_VHDX_META_START_OFF		SIXTYFOUR_K
+
+/*
+ * Various other constants used through out the VHDX code and within the file.
+ */
+#define AXP_VHDX_CURRENT_VER		1
+#define AXP_VHDX_LOG_VER		0
+#define AXP_VHDX_MAX_ENTRIES		2047
+#define AXP_VHDX_PHYS_SEC_SIZE		FOUR_K
 
 /*
  * The below structure is used to maintain information about the virtual hard

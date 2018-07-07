@@ -30,8 +30,6 @@
 #include "AXP_Trace.h"
 #include "AXP_virtdisk.h"
 #include "AXP_VHDX.h"
-#include <byteswap.h>
-#include <arpa/inet.h>
 
 /*
  * Local Prototypes
@@ -148,6 +146,8 @@ u32 AXP_VHD_Create(
     AXP_VHDX_META_FILE	*metaFile;
     AXP_VHDX_META_DISK 	*metaDisk;
     AXP_VHDX_META_SEC	*metaSec;
+    AXP_VHDX_META_PAGE83 *meta83;
+    void 		*ptr;
     u64			diskSize, minDisk, maxDisk;
     u32			retVal = AXP_VHD_SUCCESS;
     u32			chunkRatio, dataBlksCnt, totBATEnt; /* secBitmapBlksCnt; */
@@ -492,14 +492,12 @@ u32 AXP_VHD_Create(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	uint16_t		*cvtBuf;
 	i32			convRet;
 
 	ID = (AXP_VHDX_ID *) outBuf;
 	memcpy(ID->sig, "vhdxfile", AXP_VHDX_ID_SIG_LEN);
-	cvtBuf = ID->creator;
-	outLen = AXP_VHDX_CREATOR_LEN * 2;	/* sizeof(uint16_t) */
-	convRet = AXP_Ascii2UTF_16(creator, ID->creator, outLen);
+	outLen = AXP_VHDX_CREATOR_LEN * sizeof(uint16_t);
+	convRet = AXP_Ascii2UTF_16(creator, creatorSize, ID->creator, &outLen);
 	switch (convRet)
 	{
 	    case E2BIG:
@@ -519,7 +517,10 @@ u32 AXP_VHD_Create(
 		break;
 	}
 	if (retVal != AXP_VHD_SUCCESS)
+	{
+	    _AXP_VHD_CreateCleanup(vhdx, path);
 	    AXP_Deallocate_Block(&vhdx->header);
+	}
 	else
 	{
 
@@ -541,7 +542,6 @@ u32 AXP_VHD_Create(
 	}
     }
 
-
     /*
      * Next we set up the header record.  This record is written to the file
      * twice.  This will be written at offset 64KB and 128KB.
@@ -561,16 +561,16 @@ u32 AXP_VHD_Create(
 	hdr = (AXP_VHDX_HDR *) outBuf;
 	memcpy(hdr->sig, "head", AXP_VHDX_SIG_LEN);
 	uuid_generate(hdr->fileWriteGuid.uuid);
-	hdr->logVer = htons(AXP_VHDX_LOG_VER);
-	hdr->ver = htons(AXP_VHDX_CURRENT_VER);
-	hdr->logLen = htonl(AXP_VHDX_LOG_LEN);
-	hdr->logOff = bswap_64(AXP_VHDX_LOG_LOC);
+ 	AXP_Convert_To(GUID, &hdr->fileWriteGuid, &hdr->fileWriteGuid);
+	hdr->logVer = AXP_VHDX_LOG_VER;
+	hdr->ver = AXP_VHDX_CURRENT_VER;
+	hdr->logLen = AXP_VHDX_LOG_LEN;
+	hdr->logOff = AXP_VHDX_LOG_LOC;
 	hdr->checkSum = AXP_Crc32(
 				outBuf,
 				AXP_VHDX_HDR_LEN,
 				false,
 				hdr->checkSum);
-	hdr->checkSum = htonl(hdr->checkSum );
 
 	/*
 	 * OK, let's write the Header 1 and Header 2 blocks out at the
@@ -610,37 +610,38 @@ u32 AXP_VHD_Create(
     {
 	memset(outBuf, 0, SIXTYFOUR_K);
 	reg = (AXP_VHDX_REG_HDR *) outBuf;
-	metaOff = AXP_VHDX_REG_HDR_LEN;
-	batOff = metaOff + AXP_VHDX_REG_ENT_LEN;
-	regMeta = (AXP_VHDX_REG_ENT *) &outBuf[metaOff];
+	batOff = AXP_VHDX_REG_HDR_LEN;
+	metaOff = batOff + AXP_VHDX_REG_ENT_LEN;
 	regBat = (AXP_VHDX_REG_ENT *) &outBuf[batOff];
+	regMeta = (AXP_VHDX_REG_ENT *) &outBuf[metaOff];
 
 	/*
 	 * Now we can initialize the region table.
 	 */
 	memcpy(reg->sig, "regi", AXP_VHDX_SIG_LEN);
-	reg->entryCnt = htonl(2);
+	reg->entryCnt = 2;
 
 	/*
 	 * Next we need at least 2 Region Table Entries (one for BAT and
 	 * one for Metadata).
 	 */
-	AXP_VHDX_META_GUID(regMeta->guid);
-	regMeta->fileOff = bswap_64(AXP_VHDX_META_LOC);
-	regMeta->len = htonl(AXP_VHDX_META_LEN);
-	regMeta->req = 1;
-
 	AXP_VHDX_BAT_GUID(regBat->guid);
-	regBat->fileOff = bswap_64(AXP_VHDX_BAT_LOC);
-	regBat->len = htonl(AXP_VHDX_BAT_LEN);
+ 	AXP_Convert_To(GUID, &regBat->guid, &regBat->guid);
+	regBat->fileOff = AXP_VHDX_BAT_LOC;
+	regBat->len = AXP_VHDX_BAT_LEN;
 	regBat->req = 1;
+
+	AXP_VHDX_META_GUID(regMeta->guid);
+ 	AXP_Convert_To(GUID, &regMeta->guid, &regMeta->guid);
+	regMeta->fileOff = AXP_VHDX_META_LOC;
+	regMeta->len = AXP_VHDX_META_LEN;
+	regMeta->req = 1;
 
 	reg->checkSum = AXP_Crc32(
 			outBuf,
 			SIXTYFOUR_K,
 			false,
 			reg->checkSum);
-	reg->checkSum = htonl(reg->checkSum);
 
 	/*
 	 * OK, let's write the Header 1 and Header 2 blocks out at the
@@ -657,63 +658,6 @@ u32 AXP_VHD_Create(
 			outBuf,
 			SIXTYFOUR_K,
 			AXP_VHDX_REG_TBL_HDR2_OFF);
-	if (writeRet == false)
-	{
-	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(&vhdx->header);
-	    retVal = AXP_VHD_WRITE_FAULT;
-	}
-    }
-
-    /*
-     * Next we need to the log area, with a Log Header.
-     *
-     * 3.2 - Log							Page 18
-     * The log is a single circular buffer stored contiguously at a
-     * location that is specified in the VHDX header. It consists of an
-     * ordered sequence of variable-sized entries, each of which represents
-     * a set of 4 KB sector updates that need to be performed to the VHDX
-     * structures.
-     *
-     * Figure 4: Log Layout Example
-     *
-     * |Older Sequence|         Active Sequence         |Older Sequence|
-     * +--------------+-------+-----+---+-----+---------+--------------+
-     * |              |   N   | N+1 |N+2| N+3 |   N+4   |              |
-     * +--------------+-------+-----+---+-----+---------+--------------+
-     *                  Tail                      Head
-     *                   ^      v    v    v        v
-     *                   |      |    |    |        |
-     *                   +------+    |    |        |
-     *                   +-----------+    |        |
-     *                   +----------------+        |
-     *                   +-------------------------+
-     */
-    if (retVal == AXP_VHD_SUCCESS)
-    {
-	memset(outBuf, 0, SIXTYFOUR_K);
-	logHdr = (AXP_VHDX_LOG_HDR *) outBuf;
-	memcpy(logHdr->sig, "loge",AXP_VHDX_SIG_LEN);
-	logHdr->entryLen = htonl(FOUR_K);
-	logHdr->seqNum = bswap_64(1);
-	uuid_generate(logHdr->logGuid.uuid);
-	logHdr->flushedFileOff = bswap_64(param->ver_1.maxSize);
-	logHdr->lastFileOff = bswap_64(4 * ONE_M);
-	logHdr->checkSum = AXP_Crc32(
-				outBuf,
-				FOUR_K,
-				false,
-				logHdr->checkSum);
-	logHdr->checkSum = htonl(logHdr->checkSum);
-
-	/*
-	 * OK, let's write the log header out to the correct offset.
-	 */
-	writeRet = AXP_WriteAtOffset(
-				vhdx->fp,
-				outBuf,
-				FOUR_K,
-				AXP_VHDX_LOG_LOC);
 	if (writeRet == false)
 	{
 	    _AXP_VHD_CreateCleanup(vhdx, path);
@@ -764,6 +708,8 @@ u32 AXP_VHD_Create(
      * last sector bitmap block that contains the last payload sector. The
      * total number of BAT entries can be calculated as:
      *	totBATEnt = secBitmapBlksCnt * (chunkRatio + 1)
+     *
+     * TODO: If we are not doing a fixed file, then the following can be skipped.
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
@@ -850,37 +796,42 @@ u32 AXP_VHD_Create(
 	 */
 	metaHdr = (AXP_VHDX_META_HDR *) outBuf;
 	memcpy(metaHdr->sig, "metadata", AXP_VHDX_ID_SIG_LEN);
-	metaHdr->entryCnt = htons(4);
+	metaHdr->entryCnt = 5;	/* Change below as well */
 
 	/*
 	 * The first entry is immediately after the header.
 	 */
 	metaEnt = (AXP_VHDX_META_ENT *) &outBuf[AXP_VHDX_META_HDR_LEN];
 	metaOff = AXP_VHDX_META_START_OFF;
-	for (ii = 0; ii < 4; ii++)
+	for (ii = 0; ii < 5; ii++)
 	{
 	    metaEnt->isRequired = 1;
-	    metaEnt->off = htonl(metaOff);
+	    metaEnt->off = metaOff;
 	    switch (ii)
 	    {
 		case 0:	/* File Parameters */
 		    AXP_VHDX_FILE_PARAM_GUID(metaEnt->guid);
-		    metaEnt->len = htonl(AXP_VHDX_META_FILE_LEN);
+		    metaEnt->len = AXP_VHDX_META_FILE_LEN;
 		    break;
 
 		case 1:	/* Virtual Disk Size */
 		    AXP_VHDX_VIRT_DSK_SIZE_GUID(metaEnt->guid);
-		    metaEnt->len = htonl(AXP_VHDX_META_DISK_LEN);
+		    metaEnt->len = AXP_VHDX_META_DISK_LEN;
 		    break;
 
 		case 2:	/* Logical Sector Size */
 		    AXP_VHDX_LOGI_SEC_SIZE_GUID(metaEnt->guid);
-		    metaEnt->len = htonl(AXP_VHDX_META_SEC_LEN);
+		    metaEnt->len = AXP_VHDX_META_SEC_LEN;
 		    break;
 
 		case 3:	/* Physical Sector Size */
 		    AXP_VHDX_PHYS_SEC_SIZE_GUID(metaEnt->guid);
-		    metaEnt->len = htonl(AXP_VHDX_META_SEC_LEN);
+		    metaEnt->len = AXP_VHDX_META_SEC_LEN;
+		    break;
+
+		case 5:
+		    AXP_VHDX_PAGE_83_DATA_GUID(metaEnt->guid);
+		    metaEnt->len = AXP_VHDX_META_PAGE83_LEN;
 		    break;
 	    }
 
@@ -888,6 +839,11 @@ u32 AXP_VHD_Create(
 	     * Calculate the offset for the next metadata item.
 	     */
 	    metaOff += metaEnt->len;
+
+	    /*
+	     * Don't forget to convert the GUID and length fields.
+	     */
+ 	    AXP_Convert_To(GUID, &metaEnt->guid, &metaEnt->guid);
 
 	    /*
 	     * Move to the next metadata table entry.
@@ -949,27 +905,35 @@ u32 AXP_VHD_Create(
 	 */
 	metaFile = (AXP_VHDX_META_FILE *) outBuf;
 	metaOff = AXP_VHDX_META_FILE_LEN;
-	metaFile->blkSize = htonl(blkSize);
+	metaFile->blkSize = blkSize;
 
 	/*
 	 * Now, Virtual Disk Size.
 	 */
 	metaDisk = (AXP_VHDX_META_DISK *) &outBuf[metaOff];
 	metaOff += AXP_VHDX_META_DISK_LEN;
-	metaDisk->virDskSize = bswap_64(diskSize);
+	metaDisk->virDskSize = diskSize;
 
 	/*
 	 * Next, Logical Sector Size
 	 */
 	metaSec = (AXP_VHDX_META_SEC *) &outBuf[metaOff];
 	metaOff += AXP_VHDX_META_SEC_LEN;
-	metaSec->secSize = htonl(sectorSize);
 
 	/*
-	 * Finally, Physical Sector Size
+	 * Second to last, Physical Sector Size
 	 */
 	metaSec = (AXP_VHDX_META_SEC *) &outBuf[metaOff];
-	metaSec->secSize = htonl(AXP_VHDX_PHYS_SECTOR_SIZE);
+	metaOff += AXP_VHDX_META_SEC_LEN;
+	metaSec->secSize = AXP_VHDX_PHYS_SEC_SIZE;
+
+	/*
+	 * Finally, Page 83 Data
+	 */
+	meta83 = (AXP_VHDX_META_PAGE83 *) &outBuf[metaOff];
+	metaOff += AXP_VHDX_META_PAGE83_LEN;
+	uuid_generate(meta83->pg83Data.uuid);
+ 	AXP_Convert_To(GUID, &meta83->pg83Data, &meta83->pg83Data);
 
 	/*
 	 * Write out the Metadata Items.
@@ -992,6 +956,86 @@ u32 AXP_VHD_Create(
 	     AXP_Deallocate_Block(&vhdx->header);
 	     retVal = AXP_VHD_WRITE_FAULT;
 	 }
+    }
+
+    /*
+     * We need to the write the log, with a Log Header, area last.  This is
+     * because the Flushed File Offset and Last File Offset need to consider
+     * the entire file size at the time the log entry was written.  In order to
+     * be able to do this, we need to have written everything above and now we
+     * can get the current file size and use this to calculate these values.
+     *
+     * 3.2 - Log							Page 18
+     * The log is a single circular buffer stored contiguously at a
+     * location that is specified in the VHDX header. It consists of an
+     * ordered sequence of variable-sized entries, each of which represents
+     * a set of 4 KB sector updates that need to be performed to the VHDX
+     * structures.
+     *
+     * Figure 4: Log Layout Example
+     *
+     * |Older Sequence|         Active Sequence         |Older Sequence|
+     * +--------------+-------+-----+---+-----+---------+--------------+
+     * |              |   N   | N+1 |N+2| N+3 |   N+4   |              |
+     * +--------------+-------+-----+---+-----+---------+--------------+
+     *                  Tail                      Head
+     *                   ^      v    v    v        v
+     *                   |      |    |    |        |
+     *                   +------+    |    |        |
+     *                   +-----------+    |        |
+     *                   +----------------+        |
+     *                   +-------------------------+
+     *
+     * 3.2.1.1 Entry Header						Page 20
+     * The FlushedFileOffset field stores the VHDX file size in bytes that must
+     * be at least as large as the size of the VHDX file at the time the log
+     * entry was written. The file size specified in the log entry must have
+     * been stable on the host disk such that, even in the case of a system
+     * power failure, a non-corrupted VHDX file will be at least as large as
+     * the size specified by the log entry. Before shrinking a file while the
+     * log is in use, a parser must write the target size to a log entry and
+     * flush the entry so that the update is stable on the log on the host disk
+     * storage media; this will ensure that the VHDX file is not treated as
+     * truncated during log replay. A parser should write the largest possible
+     * value that satisfies these requirements. The value must be a multiple
+     * of 1MB.
+     *
+     * The LastFileOffset field stores a file size in bytes that all allocated
+     * file structures fit into, at the time the log entry was written. A
+     * parser should write the smallest possible value that satisfies these
+     * requirements. The value must be a multiple of 1MB.
+     */
+    if (retVal == AXP_VHD_SUCCESS)
+    {
+	memset(outBuf, 0, SIXTYFOUR_K);
+	logHdr = (AXP_VHDX_LOG_HDR *) outBuf;
+	memcpy(logHdr->sig, "loge",AXP_VHDX_SIG_LEN);
+	logHdr->entryLen = FOUR_K;
+	logHdr->seqNum = 1;
+	uuid_generate(logHdr->logGuid.uuid);
+ 	AXP_Convert_To(GUID, &logHdr->logGuid, &logHdr->logGuid);
+	logHdr->flushedFileOff = (u64) AXP_GetFileSize(vhdx->fp);
+	logHdr->lastFileOff = (u64) AXP_GetFileSize(vhdx->fp);
+	logHdr->checkSum = AXP_Crc32(
+				outBuf,
+				FOUR_K,
+				false,
+				logHdr->checkSum);
+
+	/*
+	 * OK, let's write the log header out to the correct offset.
+	 */
+	writeRet = AXP_WriteAtOffset(
+				vhdx->fp,
+				outBuf,
+				FOUR_K,
+				AXP_VHDX_LOG_LOC);
+	if (writeRet == false)
+	{
+	    _AXP_VHD_CreateCleanup(vhdx, path);
+	    AXP_Deallocate_Block(&vhdx->header);
+	    retVal = AXP_VHD_WRITE_FAULT;
+	}
     }
 
     /*

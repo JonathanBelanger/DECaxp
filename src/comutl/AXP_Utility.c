@@ -58,7 +58,10 @@
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
 #include "AXP_Trace.h"
+#include "AXP_VHDX_GUID.h"
 #include <iconv.h>
+#include <arpa/inet.h>
+#include <byteswap.h>
 
 /*
  * This format is used throughout this module for writing a message to sysout.
@@ -81,70 +84,70 @@ static const char *_axp_fwid_str[] =
 
 static const u32 AXP_CRC_Table[256] =
 {
-    0x00000000, 0x77073096, 0xee0e612c, 0x990951ba,
-    0x076dc419, 0x706af48f, 0xe963a535, 0x9e6495a3,
-    0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
-    0x09b64c2b, 0x7eb17cbd, 0xe7b82d07, 0x90bf1d91,
-    0x1db71064, 0x6ab020f2, 0xf3b97148, 0x84be41de,
-    0x1adad47d, 0x6ddde4eb, 0xf4d4b551, 0x83d385c7,
-    0x136c9856, 0x646ba8c0, 0xfd62f97a, 0x8a65c9ec,
-    0x14015c4f, 0x63066cd9, 0xfa0f3d63, 0x8d080df5,
-    0x3b6e20c8, 0x4c69105e, 0xd56041e4, 0xa2677172,
-    0x3c03e4d1, 0x4b04d447, 0xd20d85fd, 0xa50ab56b,
-    0x35b5a8fa, 0x42b2986c, 0xdbbbc9d6, 0xacbcf940,
-    0x32d86ce3, 0x45df5c75, 0xdcd60dcf, 0xabd13d59,
-    0x26d930ac, 0x51de003a, 0xc8d75180, 0xbfd06116,
-    0x21b4f4b5, 0x56b3c423, 0xcfba9599, 0xb8bda50f,
-    0x2802b89e, 0x5f058808, 0xc60cd9b2, 0xb10be924,
-    0x2f6f7c87, 0x58684c11, 0xc1611dab, 0xb6662d3d,
-    0x76dc4190, 0x01db7106, 0x98d220bc, 0xefd5102a,
-    0x71b18589, 0x06b6b51f, 0x9fbfe4a5, 0xe8b8d433,
-    0x7807c9a2, 0x0f00f934, 0x9609a88e, 0xe10e9818,
-    0x7f6a0dbb, 0x086d3d2d, 0x91646c97, 0xe6635c01,
-    0x6b6b51f4, 0x1c6c6162, 0x856530d8, 0xf262004e,
-    0x6c0695ed, 0x1b01a57b, 0x8208f4c1, 0xf50fc457,
-    0x65b0d9c6, 0x12b7e950, 0x8bbeb8ea, 0xfcb9887c,
-    0x62dd1ddf, 0x15da2d49, 0x8cd37cf3, 0xfbd44c65,
-    0x4db26158, 0x3ab551ce, 0xa3bc0074, 0xd4bb30e2,
-    0x4adfa541, 0x3dd895d7, 0xa4d1c46d, 0xd3d6f4fb,
-    0x4369e96a, 0x346ed9fc, 0xad678846, 0xda60b8d0,
-    0x44042d73, 0x33031de5, 0xaa0a4c5f, 0xdd0d7cc9,
-    0x5005713c, 0x270241aa, 0xbe0b1010, 0xc90c2086,
-    0x5768b525, 0x206f85b3, 0xb966d409, 0xce61e49f,
-    0x5edef90e, 0x29d9c998, 0xb0d09822, 0xc7d7a8b4,
-    0x59b33d17, 0x2eb40d81, 0xb7bd5c3b, 0xc0ba6cad,
-    0xedb88320, 0x9abfb3b6, 0x03b6e20c, 0x74b1d29a,
-    0xead54739, 0x9dd277af, 0x04db2615, 0x73dc1683,
-    0xe3630b12, 0x94643b84, 0x0d6d6a3e, 0x7a6a5aa8,
-    0xe40ecf0b, 0x9309ff9d, 0x0a00ae27, 0x7d079eb1,
-    0xf00f9344, 0x8708a3d2, 0x1e01f268, 0x6906c2fe,
-    0xf762575d, 0x806567cb, 0x196c3671, 0x6e6b06e7,
-    0xfed41b76, 0x89d32be0, 0x10da7a5a, 0x67dd4acc,
-    0xf9b9df6f, 0x8ebeeff9, 0x17b7be43, 0x60b08ed5,
-    0xd6d6a3e8, 0xa1d1937e, 0x38d8c2c4, 0x4fdff252,
-    0xd1bb67f1, 0xa6bc5767, 0x3fb506dd, 0x48b2364b,
-    0xd80d2bda, 0xaf0a1b4c, 0x36034af6, 0x41047a60,
-    0xdf60efc3, 0xa867df55, 0x316e8eef, 0x4669be79,
-    0xcb61b38c, 0xbc66831a, 0x256fd2a0, 0x5268e236,
-    0xcc0c7795, 0xbb0b4703, 0x220216b9, 0x5505262f,
-    0xc5ba3bbe, 0xb2bd0b28, 0x2bb45a92, 0x5cb36a04,
-    0xc2d7ffa7, 0xb5d0cf31, 0x2cd99e8b, 0x5bdeae1d,
-    0x9b64c2b0, 0xec63f226, 0x756aa39c, 0x026d930a,
-    0x9c0906a9, 0xeb0e363f, 0x72076785, 0x05005713,
-    0x95bf4a82, 0xe2b87a14, 0x7bb12bae, 0x0cb61b38,
-    0x92d28e9b, 0xe5d5be0d, 0x7cdcefb7, 0x0bdbdf21,
-    0x86d3d2d4, 0xf1d4e242, 0x68ddb3f8, 0x1fda836e,
-    0x81be16cd, 0xf6b9265b, 0x6fb077e1, 0x18b74777,
-    0x88085ae6, 0xff0f6a70, 0x66063bca, 0x11010b5c,
-    0x8f659eff, 0xf862ae69, 0x616bffd3, 0x166ccf45,
-    0xa00ae278, 0xd70dd2ee, 0x4e048354, 0x3903b3c2,
-    0xa7672661, 0xd06016f7, 0x4969474d, 0x3e6e77db,
-    0xaed16a4a, 0xd9d65adc, 0x40df0b66, 0x37d83bf0,
-    0xa9bcae53, 0xdebb9ec5, 0x47b2cf7f, 0x30b5ffe9,
-    0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6,
-    0xbad03605, 0xcdd70693, 0x54de5729, 0x23d967bf,
-    0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94,
-    0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
+    0x00000000L, 0xf26b8303L, 0xe13b70f7L, 0x1350f3f4L,
+    0xc79a971fL, 0x35f1141cL, 0x26a1e7e8L, 0xd4ca64ebL,
+    0x8ad958cfL, 0x78b2dbccL, 0x6be22838L, 0x9989ab3bL,
+    0x4d43cfd0L, 0xbf284cd3L, 0xac78bf27L, 0x5e133c24L,
+    0x105ec76fL, 0xe235446cL, 0xf165b798L, 0x030e349bL,
+    0xd7c45070L, 0x25afd373L, 0x36ff2087L, 0xc494a384L,
+    0x9a879fa0L, 0x68ec1ca3L, 0x7bbcef57L, 0x89d76c54L,
+    0x5d1d08bfL, 0xaf768bbcL, 0xbc267848L, 0x4e4dfb4bL,
+    0x20bd8edeL, 0xd2d60dddL, 0xc186fe29L, 0x33ed7d2aL,
+    0xe72719c1L, 0x154c9ac2L, 0x061c6936L, 0xf477ea35L,
+    0xaa64d611L, 0x580f5512L, 0x4b5fa6e6L, 0xb93425e5L,
+    0x6dfe410eL, 0x9f95c20dL, 0x8cc531f9L, 0x7eaeb2faL,
+    0x30e349b1L, 0xc288cab2L, 0xd1d83946L, 0x23b3ba45L,
+    0xf779deaeL, 0x05125dadL, 0x1642ae59L, 0xe4292d5aL,
+    0xba3a117eL, 0x4851927dL, 0x5b016189L, 0xa96ae28aL,
+    0x7da08661L, 0x8fcb0562L, 0x9c9bf696L, 0x6ef07595L,
+    0x417b1dbcL, 0xb3109ebfL, 0xa0406d4bL, 0x522bee48L,
+    0x86e18aa3L, 0x748a09a0L, 0x67dafa54L, 0x95b17957L,
+    0xcba24573L, 0x39c9c670L, 0x2a993584L, 0xd8f2b687L,
+    0x0c38d26cL, 0xfe53516fL, 0xed03a29bL, 0x1f682198L,
+    0x5125dad3L, 0xa34e59d0L, 0xb01eaa24L, 0x42752927L,
+    0x96bf4dccL, 0x64d4cecfL, 0x77843d3bL, 0x85efbe38L,
+    0xdbfc821cL, 0x2997011fL, 0x3ac7f2ebL, 0xc8ac71e8L,
+    0x1c661503L, 0xee0d9600L, 0xfd5d65f4L, 0x0f36e6f7L,
+    0x61c69362L, 0x93ad1061L, 0x80fde395L, 0x72966096L,
+    0xa65c047dL, 0x5437877eL, 0x4767748aL, 0xb50cf789L,
+    0xeb1fcbadL, 0x197448aeL, 0x0a24bb5aL, 0xf84f3859L,
+    0x2c855cb2L, 0xdeeedfb1L, 0xcdbe2c45L, 0x3fd5af46L,
+    0x7198540dL, 0x83f3d70eL, 0x90a324faL, 0x62c8a7f9L,
+    0xb602c312L, 0x44694011L, 0x5739b3e5L, 0xa55230e6L,
+    0xfb410cc2L, 0x092a8fc1L, 0x1a7a7c35L, 0xe811ff36L,
+    0x3cdb9bddL, 0xceb018deL, 0xdde0eb2aL, 0x2f8b6829L,
+    0x82f63b78L, 0x709db87bL, 0x63cd4b8fL, 0x91a6c88cL,
+    0x456cac67L, 0xb7072f64L, 0xa457dc90L, 0x563c5f93L,
+    0x082f63b7L, 0xfa44e0b4L, 0xe9141340L, 0x1b7f9043L,
+    0xcfb5f4a8L, 0x3dde77abL, 0x2e8e845fL, 0xdce5075cL,
+    0x92a8fc17L, 0x60c37f14L, 0x73938ce0L, 0x81f80fe3L,
+    0x55326b08L, 0xa759e80bL, 0xb4091bffL, 0x466298fcL,
+    0x1871a4d8L, 0xea1a27dbL, 0xf94ad42fL, 0x0b21572cL,
+    0xdfeb33c7L, 0x2d80b0c4L, 0x3ed04330L, 0xccbbc033L,
+    0xa24bb5a6L, 0x502036a5L, 0x4370c551L, 0xb11b4652L,
+    0x65d122b9L, 0x97baa1baL, 0x84ea524eL, 0x7681d14dL,
+    0x2892ed69L, 0xdaf96e6aL, 0xc9a99d9eL, 0x3bc21e9dL,
+    0xef087a76L, 0x1d63f975L, 0x0e330a81L, 0xfc588982L,
+    0xb21572c9L, 0x407ef1caL, 0x532e023eL, 0xa145813dL,
+    0x758fe5d6L, 0x87e466d5L, 0x94b49521L, 0x66df1622L,
+    0x38cc2a06L, 0xcaa7a905L, 0xd9f75af1L, 0x2b9cd9f2L,
+    0xff56bd19L, 0x0d3d3e1aL, 0x1e6dcdeeL, 0xec064eedL,
+    0xc38d26c4L, 0x31e6a5c7L, 0x22b65633L, 0xd0ddd530L,
+    0x0417b1dbL, 0xf67c32d8L, 0xe52cc12cL, 0x1747422fL,
+    0x49547e0bL, 0xbb3ffd08L, 0xa86f0efcL, 0x5a048dffL,
+    0x8ecee914L, 0x7ca56a17L, 0x6ff599e3L, 0x9d9e1ae0L,
+    0xd3d3e1abL, 0x21b862a8L, 0x32e8915cL, 0xc083125fL,
+    0x144976b4L, 0xe622f5b7L, 0xf5720643L, 0x07198540L,
+    0x590ab964L, 0xab613a67L, 0xb831c993L, 0x4a5a4a90L,
+    0x9e902e7bL, 0x6cfbad78L, 0x7fab5e8cL, 0x8dc0dd8fL,
+    0xe330a81aL, 0x115b2b19L, 0x020bd8edL, 0xf0605beeL,
+    0x24aa3f05L, 0xd6c1bc06L, 0xc5914ff2L, 0x37faccf1L,
+    0x69e9f0d5L, 0x9b8273d6L, 0x88d28022L, 0x7ab90321L,
+    0xae7367caL, 0x5c18e4c9L, 0x4f48173dL, 0xbd23943eL,
+    0xf36e6f75L, 0x0105ec76L, 0x12551f82L, 0xe03e9c81L,
+    0x34f4f86aL, 0xc69f7b69L, 0xd5cf889dL, 0x27a40b9eL,
+    0x79b737baL, 0x8bdcb4b9L, 0x988c474dL, 0x6ae7c44eL,
+    0xbe2da0a5L, 0x4c4623a6L, 0x5f16d052L, 0xad7d5351L
 };
 
 /*
@@ -174,15 +177,13 @@ u32 AXP_Crc32(const u8 *msg, size_t len, bool inverse, u32 curCRC)
     int		ii;
 
     for (ii = 0; ii < len; ii++)
-	retVal = AXP_CRC_Table[(retVal ^ msg[ii]) & 0xff] ^ (retVal >> 8);
-
-    retVal ^= mask;
+	retVal = (retVal >> 8) ^ AXP_CRC_Table[(retVal ^ msg[ii]) & 0xff];
 
     /*
      * Return the newly calculated CRC, take the inverse if that is what is
      * being requested, back to the caller.
      */
-    return(inverse ? ~retVal : retVal);
+    return((inverse ? ~retVal : retVal) ^ mask);
 }
 
 /*
@@ -2116,13 +2117,18 @@ int AXP_MaskGet(int *curPtr, u8 mask, int len)
  * Input Parameters:
  *  inBuf:
  *	A pointer to a null-terminated ASCII string to be converted.
+ *  inLen:
+ *	A value indicating the length of inBuf.
  *  outLen:
- *	A value indicating the length of outBuf, in bytes.
+ *	A pointer to a value indicating the length of outBuf, in bytes.
  *
  * Output Parameters:
  *  outBuf:
  *	A pointer to receive the UTF-16 conversion of the inBuf parameter.  The
  *	first three bytes in the converted string will be dropped.
+ *  outLen:
+ *	A pointer to receive a value indicating the number of bytes written to
+ *	outBuf.
  *
  * Return Values:
  *  0:		Normal Successful Completion.
@@ -2139,11 +2145,17 @@ int AXP_MaskGet(int *curPtr, u8 mask, int len)
  *		buffer.
  *  EBADF:	The cp argument is not a valid open conversion descriptor.
  */
-i32 AXP_Ascii2UTF_16(char *inBuf, uint16_t *outBuf, size_t outLen)
+i32 AXP_Ascii2UTF_16(
+		char *inBuf, size_t inLen,
+		uint16_t *outBuf, size_t *outLen)
 {
-    uint16_t	tmpOutBuf[outLen];
+    char	*tmpInBuf = inBuf;
+    char	myOutBuf[*outLen];
+    char	*tmpOutBuf = myOutBuf;
     iconv_t	cp;
-    size_t	convLen, inLen = strlen(inBuf);
+    size_t	convRem;
+    size_t	tmpInLen = inLen;
+    size_t	tmpOutLen = *outLen;
     i32		retVal = 0;
 
     /*
@@ -2163,18 +2175,18 @@ i32 AXP_Ascii2UTF_16(char *inBuf, uint16_t *outBuf, size_t outLen)
 	/*
 	 * Convert the input string into UTF-16.
 	 */
-	convLen = iconv(
+	convRem = iconv(
 		    cp,
-		    &inBuf,
-		    &inLen,
+		    &tmpInBuf,
+		    &tmpInLen,
 		    (char **) &tmpOutBuf,
-		    &outLen);
+		    &tmpOutLen);
 
 	/*
 	 * If that failed, then return the errno value.  Otherwise, finalize
 	 * the conversion.
 	 */
-	if (convLen == -1)
+	if (convRem == -1)
 	    retVal = errno;
 	else
 	{
@@ -2183,8 +2195,9 @@ i32 AXP_Ascii2UTF_16(char *inBuf, uint16_t *outBuf, size_t outLen)
 	     * Clear out the target buffer and then copy all but the first 3
 	     * bytes of the converted string into the target buffer.
 	     */
-	    memset(outBuf, 0, outLen);
-	    memcpy(outBuf, &tmpOutBuf[3], convLen - 3);
+	    memset(outBuf, 0, *outLen);
+	    *outLen = *outLen - tmpOutLen - 3;
+	    memcpy(outBuf, &myOutBuf[3], *outLen);
 	}
 
 	/*
@@ -2210,11 +2223,14 @@ i32 AXP_Ascii2UTF_16(char *inBuf, uint16_t *outBuf, size_t outLen)
  *  inLen:
  *	A value indicating the length of the inBuf, in bytes.
  *  outLen:
- *	A value indicating the length of outBuf, in bytes.
+ *	A pointer to a value indicating the length of outBuf, in bytes.
  *
  * Output Parameters:
  *  outBuf:
  *	A pointer to receive the ASCII conversion of the inBuf parameter.
+ *  outLen:
+ *	A pointer to receive a value indicating the number bytes written to
+ *	outBuf.
  *
  * Return Values:
  *  0:		Normal Successful Completion.
@@ -2231,10 +2247,16 @@ i32 AXP_Ascii2UTF_16(char *inBuf, uint16_t *outBuf, size_t outLen)
  *		buffer.
  *  EBADF:	The cp argument is not a valid open conversion descriptor.
  */
-i32 AXP_UTF16_2Ascii(uint16_t *inBuf, size_t inLen, char *outBuf, size_t outLen)
+i32 AXP_UTF16_2Ascii(
+		uint16_t *inBuf, size_t inLen,
+		char *outBuf, size_t *outLen)
 {
+    uint16_t	*tmpInBuf = inBuf;
+    char	*tmpOutBuf = outBuf;
     iconv_t	cp;
-    size_t	convLen;
+    size_t	convRem;
+    size_t	tmpInLen = inLen;
+    size_t	tmpOutLen = *outLen;
     i32		retVal = 0;
 
     /*
@@ -2254,19 +2276,21 @@ i32 AXP_UTF16_2Ascii(uint16_t *inBuf, size_t inLen, char *outBuf, size_t outLen)
 	/*
 	 * Convert the input string into UTF-16.
 	 */
-	convLen = iconv(
+	convRem = iconv(
 		    cp,
-		    (char **) &inBuf,
-		    &inLen,
-		    &outBuf,
-		    &outLen);
+		    (char **) &tmpInBuf,
+		    &tmpInLen,
+		    &tmpOutBuf,
+		    &tmpOutLen);
 
 	/*
 	 * If that failed, then return the errno value.  Otherwise, finalize
 	 * the conversion.
 	 */
-	if (convLen == -1)
+	if (convRem == -1)
 	    retVal = errno;
+	else
+	    *outLen = strlen(outBuf);
 
 	/*
 	 * Since we opened the conversion handle, make sure to close it.
@@ -2276,6 +2300,160 @@ i32 AXP_UTF16_2Ascii(uint16_t *inBuf, size_t inLen, char *outBuf, size_t outLen)
 
     /*
      * Return the outcome back to the caller.
+     */
+    return(retVal);
+}
+
+/*
+ * AXP_Convert_To
+ *  This function is called to convert from Native to VHD/Network values.  Both
+ *  VHD and Network values are stored/transmitted in Big Endian.  There is no
+ *  assumption about Native.  If Native is Big Endian, then this call is a
+ *  NOOP.
+ *
+ * Input Parameter:
+ *  type:
+ *	This is an enumeration that indicates the type of data in the from
+ *	parameter.
+ *  from:
+ *	A pointer to the item to be converted.
+ *
+ * Output Parameters:
+ *  to:
+ *	A pointer to the location to store the converted item.
+ *
+ * Return Values:
+ *  None.
+ */
+void AXP_Convert_To(AXP_CVT_Types type, void *from, void *to)
+{
+    switch (type)
+    {
+	case U16:
+	    *((u16 *) to) = htons(*((u16 *) from));
+	    break;
+
+	case U32:
+	case CRC32:
+	    *((u32 *) to) = htonl(*((u32 *) from));
+	    break;
+
+	case U64:
+	    *((u64 *) to) = bswap_64(*((u64 *) from));
+	    break;
+
+	case GUID:
+	    {
+		AXP_VHDX_GUID *fromGUID = (AXP_VHDX_GUID *) from;
+		AXP_VHDX_GUID *toGUID = (AXP_VHDX_GUID *) to;
+
+		AXP_Convert_To(U64, &fromGUID->data4, &toGUID->data4);
+	    }
+	    break;
+
+	default:
+	    break;
+    }
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+
+/*
+ * AXP_Convert_From
+ *  This function is called to convert from VHD/Network to Native values.  Both
+ *  VHD and Network values are stored/transmitted in Big Endian.  There is no
+ *  assumption about Native.  If Native is Big Endian, then this call is a
+ *  NOOP.
+ *
+ * Input Parameter:
+ *  type:
+ *	This is an enumeration that indicates the type of data in the from
+ *	parameter.
+ *  from:
+ *	A pointer to the item to be converted.
+ *
+ * Output Parameters:
+ *  to:
+ *	A pointer to the location to store the converted item.
+ *
+ * Return Values:
+ *  None.
+ */
+void AXP_Convert_From(AXP_CVT_Types type, void *from, void *to)
+{
+    switch (type)
+    {
+	case U16:
+	    *((u16 *) to) = ntohs(*((u16 *) from));
+	    break;
+
+	case U32:
+	case CRC32:
+	    *((u32 *) to) = ntohl(*((u32 *) from));
+	    break;
+
+	case U64:
+	    *((u64 *) to) = bswap_64(*((u64 *) from));
+	    break;
+
+	case GUID:
+	    {
+		AXP_VHDX_GUID *fromGUID = (AXP_VHDX_GUID *) from;
+		AXP_VHDX_GUID *toGUID = (AXP_VHDX_GUID *) to;
+
+		AXP_Convert_From(U64, &fromGUID->data4, &toGUID->data4);
+	    }
+	    break;
+
+	default:
+	    break;
+    }
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+
+/*
+ * AXP_GetFileSize
+ *  This function is called to get the current file size, in bytes and return
+ *  it back to the caller.
+ *
+ * Input Parameters:
+ *  fp:
+ *	A file pointer.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Values:
+ *  <0:		An error was detected.
+ *  >=0:	The size of the file pointed to by fp, in bytes.
+ */
+i64 AXP_GetFileSize(FILE *fp)
+{
+    i64	retVal = 0;
+    i64 curLoc;
+
+    /*
+     * We find the size of the file by performing the following steps:
+     *	1) Get out current location in the file.
+     *	2) Move the location to the end of the file.
+     *	3) Get the end of file location (this is the size of the file, in
+     *	   bytes).
+     *	4) Move the location to the previous location retrieved in Step 1.
+     */
+    curLoc = ftell(fp);
+    fseek(fp, 0L, SEEK_END);
+    retVal = ftell(fp);
+    fseek(fp, curLoc, SEEK_SET);
+
+    /*
+     * Return what we found out about the file size.
      */
     return(retVal);
 }
