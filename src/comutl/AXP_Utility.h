@@ -289,10 +289,10 @@ typedef struct condQueueCountRoot
 /*
  * Error returns for various AXP Utility file load functions.
  */
-#define AXP_S_NORMAL		0
-#define AXP_E_FNF 			-1
+#define AXP_S_NORMAL		 0
+#define AXP_E_FNF 		-1
 #define AXP_E_BUFTOOSMALL	-2
-#define AXP_E_EOF			-3
+#define AXP_E_EOF		-3
 #define AXP_E_READERR		-4
 #define AXP_E_BADSROMFILE	-5
 #define AXP_E_BADCFGFILE	-6
@@ -378,5 +378,6 @@ void AXP_Convert_From(AXP_CVT_Types, void *, void *);
  */
 i64 AXP_GetFileSize(FILE *);
 bool AXP_WriteAtOffset(FILE *, void *, size_t, u64);
+bool AXP_ReadFromOffset(FILE *, void *, size_t *, u64);
 
 #endif /* _AXP_UTIL_DEFS_ */

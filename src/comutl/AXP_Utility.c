@@ -2466,9 +2466,9 @@ i64 AXP_GetFileSize(FILE *fp)
  * Input Parameters:
  *  fp:
  *	A file pointer.
- *  outBuf:
+ *  inBuf:
  *	A pointer to the buffer to be written.
- *  outLen:
+ *  inLen:
  *	A value indicating the length of the buffer to be written.
  *  offset:
  *	A value indicating the offset within the file where the buffer should
@@ -2480,17 +2480,61 @@ i64 AXP_GetFileSize(FILE *fp)
  *  true:	Normal Successful Completion.
  *  false:	An error occurred writing to the file.
  */
-bool AXP_WriteAtOffset(FILE *fp, void *outBuf, size_t outLen, u64 offset)
+bool AXP_WriteAtOffset(FILE *fp, void *inBuf, size_t inLen, u64 offset)
 {
     bool	retVal = true;
 
     if (fseek(fp, offset, SEEK_SET) == 0)
     {
-	fwrite(outBuf, sizeof(u8), outLen, fp);
+	fwrite(inBuf, sizeof(u8), inLen, fp);
 	if (ferror(fp) != 0)
 	    retVal = false;
 	else
 	    fflush(fp);
+    }
+    else
+	retVal = false;
+
+    /*
+     * Return the outcome of this call back to the caller.
+     */
+    return(retVal);
+}
+
+/*
+ * AXP_ReadFromOffset
+ *  This function is called to read a block of data from a particular offset
+ *  within a file.
+ *
+ * Input Parameters:
+ *  fp:
+ *	A file pointer.
+ *  offset:
+ *	A value indicating the offset within the file where the buffer should
+ *	be written.
+ *  outLen:
+ *	A pointer to a value indicating the length of the buffer to be read.
+ *
+ * Output Parameters:
+ *  outBuf:
+ *	A pointer to the buffer to be read.
+ *  outLen:
+ *	A pointer to a value value indicating the number of bytes actually
+ *	read.
+ *
+ * Return Values:
+ *  true:	Normal Successful Completion.
+ *  false:	An error occurred reading from the file.
+ */
+bool AXP_ReadFromOffset(FILE *fp, void *outBuf, size_t *outLen, u64 offset)
+{
+    bool	retVal = true;
+
+    if (fseek(fp, offset, SEEK_SET) == 0)
+    {
+	*outLen = fread(outBuf, sizeof(u8), *outLen, fp);
+	if (ferror(fp) != 0)
+	    retVal = false;
     }
     else
 	retVal = false;

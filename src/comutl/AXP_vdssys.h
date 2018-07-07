@@ -281,26 +281,6 @@ typedef struct
 #define STORAGE_TYPE_DEV_VHD		2
 #define STORAGE_TYPE_DEV_VHDX		3
 
-/*
- * Vendor ID.
- */
-#define STORAGE_TYPE_VENDOR_MSFT(name) 	\
-    (name) = (AXP_VHDX_GUID)		\
-    {					\
-	.data1 = 0xec984aec,		\
-	.data2 = 0xa0f9,		\
-	.data3 = 0x47e9,		\
-	.data4 = 0x901f71415a66345b	\
-    }
-#define STORAGE_TYPE_VENDOR_UNK(name) 	\
-    (name) = (AXP_VHDX_GUID)		\
-    {					\
-	.data1 = 0,			\
-	.data2 = 0,			\
-	.data3 = 0,			\
-	.data4 = 0			\
-    }
-
 typedef void	*AXP_VHD_HANDLE;
 typedef struct
 {
