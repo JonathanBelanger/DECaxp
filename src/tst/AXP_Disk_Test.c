@@ -26,6 +26,7 @@
 #include "AXP_Utility.h"
 #include "AXP_Trace.h"
 #include "AXP_virtdisk.h"
+#include "AXP_VHD_Utility.h"
 
 typedef struct
 {
@@ -234,7 +235,7 @@ int main(void)
     createParam.ver_1.srcPath = NULL;
 
     storageType.deviceID = STORAGE_TYPE_DEV_VHDX;
-    STORAGE_TYPE_VENDOR_MSFT(storageType.vendorID);
+    AXP_VHD_KnownGUIDMemory(AXP_Vendor_Microsoft, &storageType.vendorID);
 
     printf(
 	"Test %d: Create a VHDX(v%d) disk in %s with the name of %s of %lld "
@@ -259,6 +260,10 @@ int main(void)
     if (retVal == AXP_VHD_SUCCESS)
     {
 	printf("\t...Succeeded...\n");
+	if (AXP_TraceInit() == true)
+	{
+	    AXP_Dump_VHD_Info(handle);
+	}
 	AXP_VHD_CloseHandle(handle);
     }
     else

@@ -147,277 +147,29 @@ u32 AXP_VHD_Create(
     AXP_VHDX_META_DISK 	*metaDisk;
     AXP_VHDX_META_SEC	*metaSec;
     AXP_VHDX_META_PAGE83 *meta83;
-    void 		*ptr;
-    u64			diskSize, minDisk, maxDisk;
+    u64			diskSize, chunkRatio;
     u32			retVal = AXP_VHD_SUCCESS;
-    u32			chunkRatio, dataBlksCnt, totBATEnt; /* secBitmapBlksCnt; */
-    u32			blkSize, minBlk, maxBlk;
-    u32			sectorSize, minSector, maxSector;
+    u32			dataBlksCnt, totBATEnt, secBitmapBlksCnt;
+    u32			blkSize, sectorSize, deviceID;
     size_t		outLen;
     size_t		creatorSize = strlen(creator);
     int			metaOff, batOff, ii;
     bool		writeRet = false;
 
     /*
-     * Before we can really do some parameter checking, let's make sure the
-     * ones that indicate to use the default have the default value within
-     * them.  This will simplify the code later.
+     * Go check the parameters and extract some information from within them.
      */
-    if ((param != NULL) && (storageType != NULL))
-    {
-	switch (param->ver)
-	{
-	    case CREATE_VER_UNSPEC:
-		break;
-
-	    case CREATE_VER_1:
-		if (param->ver_1.blkSize == AXP_VHD_DEF_BLK)
-		{
-		    switch(storageType->deviceID)
-		    {
-			case STORAGE_TYPE_DEV_ISO:
-			    param->ver_1.blkSize = AXP_ISO_BLK_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHD:
-			    param->ver_1.blkSize = AXP_VHD_BLK_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHDX:
-			    param->ver_1.blkSize = AXP_VHDX_BLK_DEF;
-			    break;
-
-			default:
-			    break;
-		    }
-		}
-		if (param->ver_1.sectorSize == AXP_VHD_DEF_SEC)
-		{
-		    switch(storageType->deviceID)
-		    {
-			case STORAGE_TYPE_DEV_ISO:
-			    param->ver_1.sectorSize = AXP_ISO_SEC_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHD:
-			    param->ver_1.sectorSize = AXP_VHD_SEC_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHDX:
-			    param->ver_1.sectorSize = AXP_VHDX_SEC_DEF;
-			    break;
-
-			default:
-			    break;
-		    }
-		}
-		blkSize = param->ver_1.blkSize;
-		sectorSize = param->ver_1.sectorSize;
-		diskSize = param->ver_1.maxSize;
-		break;
-
-	    case CREATE_VER_2:
-		if (param->ver_2.blkSize == AXP_VHD_DEF_BLK)
-		{
-		    switch(storageType->deviceID)
-		    {
-			case STORAGE_TYPE_DEV_ISO:
-			    param->ver_2.blkSize = AXP_ISO_BLK_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHD:
-			    param->ver_2.blkSize = AXP_VHD_BLK_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHDX:
-			    param->ver_2.blkSize = AXP_VHDX_BLK_DEF;
-			    break;
-
-			default:
-			    break;
-		    }
-		}
-		if (param->ver_2.sectorSize == AXP_VHD_DEF_SEC)
-		{
-		    switch(storageType->deviceID)
-		    {
-			case STORAGE_TYPE_DEV_ISO:
-			    param->ver_2.sectorSize = AXP_ISO_SEC_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHD:
-			    param->ver_2.sectorSize = AXP_VHD_SEC_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHDX:
-			    param->ver_2.sectorSize = AXP_VHDX_SEC_DEF;
-			    break;
-
-			default:
-			    break;
-		    }
-		}
-		blkSize = param->ver_2.blkSize;
-		sectorSize = param->ver_2.sectorSize;
-		diskSize = param->ver_2.maxSize;
-		break;
-
-	    case CREATE_VER_3:
-		if (param->ver_3.blkSize == AXP_VHD_DEF_BLK)
-		{
-		    switch(storageType->deviceID)
-		    {
-			case STORAGE_TYPE_DEV_ISO:
-			    param->ver_3.blkSize = AXP_ISO_BLK_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHD:
-			    param->ver_3.blkSize = AXP_VHD_BLK_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHDX:
-			    param->ver_3.blkSize = AXP_VHDX_BLK_DEF;
-			    break;
-
-			default:
-			    break;
-		    }
-		}
-		if (param->ver_3.sectorSize == AXP_VHD_DEF_SEC)
-		{
-		    switch(storageType->deviceID)
-		    {
-			case STORAGE_TYPE_DEV_ISO:
-			    param->ver_3.sectorSize = AXP_ISO_SEC_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHD:
-			    param->ver_3.sectorSize = AXP_VHD_SEC_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHDX:
-			    param->ver_3.sectorSize = AXP_VHDX_SEC_DEF;
-			    break;
-
-			default:
-			    break;
-		    }
-		}
-		blkSize = param->ver_3.blkSize;
-		sectorSize = param->ver_3.sectorSize;
-		diskSize = param->ver_3.maxSize;
-		break;
-
-	    case CREATE_VER_4:
-		if (param->ver_4.blkSize == AXP_VHD_DEF_BLK)
-		{
-		    switch(storageType->deviceID)
-		    {
-			case STORAGE_TYPE_DEV_ISO:
-			    param->ver_4.blkSize = AXP_ISO_BLK_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHD:
-			    param->ver_4.blkSize = AXP_VHD_BLK_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHDX:
-			    param->ver_4.blkSize = AXP_VHDX_BLK_DEF;
-			    break;
-
-			default:
-			    break;
-		    }
-		}
-		if (param->ver_4.sectorSize == AXP_VHD_DEF_SEC)
-		{
-		    switch(storageType->deviceID)
-		    {
-			case STORAGE_TYPE_DEV_ISO:
-			    param->ver_4.sectorSize = AXP_ISO_SEC_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHD:
-			    param->ver_4.sectorSize = AXP_VHD_SEC_DEF;
-			    break;
-
-			case STORAGE_TYPE_DEV_VHDX:
-			    param->ver_4.sectorSize = AXP_VHDX_SEC_DEF;
-			    break;
-
-			default:
-			    break;
-		    }
-		}
-		blkSize = param->ver_4.blkSize;
-		sectorSize = param->ver_4.sectorSize;
-		diskSize = param->ver_4.maxSize;
-		break;
-	}
-	switch(storageType->deviceID)
-	{
-	    case STORAGE_TYPE_DEV_ISO:
-		minDisk = 0;
-		maxDisk = 0;
-		minBlk = 0;
-		maxBlk = 0;
-		minSector = 0;
-		maxSector = 0;
-		break;
-
-	    case STORAGE_TYPE_DEV_VHD:
-		minDisk = 3 * ONE_M;
-		maxDisk = 2040 * ONE_M;
-		minBlk = AXP_VHD_BLK_MIN;
-		maxBlk = AXP_VHD_BLK_MAX;
-		minSector = AXP_VHD_SEC_MIN;
-		maxSector = AXP_VHD_SEC_MAX;
-		break;
-
-	    case STORAGE_TYPE_DEV_VHDX:
-		minDisk = 3 * ONE_M;
-		maxDisk = 6 * ONE_T;
-		minBlk = AXP_VHDX_BLK_MIN;
-		maxBlk = AXP_VHDX_BLK_MAX;
-		minSector = AXP_VHDX_SEC_MIN;
-		maxSector = AXP_VHDX_SEC_MAX;
-		break;
-
-	    default:
-		break;
-	}
-    }
-
-    /*
-     * Let's do some quick parameter checking.
-     *
-     * First check that the required parameters passed by reference are
-     * actually available.
-     */
-    if ((storageType == NULL) || (param == NULL) || (handle == NULL) || (path == NULL))
-	retVal = AXP_VHD_INV_PARAM;
-
-    /*
-     * Now let's check the values supplied in various parameters.
-     *
-     *	1) Only Version 1 and Version 2 are supported at this time.
-     *	2) If Version 2, then the Access Mask must be NONE.
-     *	3) Block Size needs to be between the minimum and maximum, and be a
-     *	   power of 2.
-     *	4) Sector Size must be either the minimum or maximum (but not in
-     *	   between).
-     *	5) Disk Size needs to be between the minimum and maximum allowable
-     *	   sized and  be a multiple of Sector Size.
-     */
-    else if (((param->ver != CREATE_VER_1) && (param->ver != CREATE_VER_2)) ||
-	     ((param->ver == CREATE_VER_2) && (accessMask != ACCESS_NONE)) ||
-	     (flags > CREATE_FULL_PHYSICAL_ALLOCATION) ||
-	     (((blkSize <= minBlk) || (blkSize >= maxBlk)) ||
-	      (IS_POWER_OF_2(blkSize) == false)) ||
-	     ((sectorSize != minSector) && (sectorSize != maxSector)) ||
-	     ((diskSize < minDisk) || (diskSize > maxDisk) ||
-	      ((diskSize % sectorSize) != 0)))
-	retVal = AXP_VHD_INV_PARAM;
+    retVal = AXP_VHD_ValidateCreate(
+    		storageType,
+    		path,
+    		accessMask,
+    		flags,
+    		param,
+    		handle,
+    		&diskSize,
+    		&blkSize,
+    		&sectorSize,
+    		&deviceID);
 
     /*
      * We'll need this a bit later, but let's go get all the memory we are
@@ -448,7 +200,7 @@ u32 AXP_VHD_Create(
 	vhdx->fp = fopen(path, "rb");
 	if (vhdx->fp == NULL)
 	{
-	    vhdx->fp = fopen(path, "wb");
+	    vhdx->fp = fopen(path, "wb+");
 	    if (vhdx->fp == NULL)
 	    {
 		AXP_Deallocate_Block(&vhdx->header);
@@ -495,7 +247,7 @@ u32 AXP_VHD_Create(
 	i32			convRet;
 
 	ID = (AXP_VHDX_ID *) outBuf;
-	memcpy(ID->sig, "vhdxfile", AXP_VHDX_ID_SIG_LEN);
+	ID->sig= AXP_VHDXFILE_SIG;
 	outLen = AXP_VHDX_CREATOR_LEN * sizeof(uint16_t);
 	convRet = AXP_Ascii2UTF_16(creator, creatorSize, ID->creator, &outLen);
 	switch (convRet)
@@ -559,9 +311,9 @@ u32 AXP_VHD_Create(
     {
 	memset(outBuf, 0, SIXTYFOUR_K);
 	hdr = (AXP_VHDX_HDR *) outBuf;
-	memcpy(hdr->sig, "head", AXP_VHDX_SIG_LEN);
-	uuid_generate(hdr->fileWriteGuid.uuid);
- 	AXP_Convert_To(GUID, &hdr->fileWriteGuid, &hdr->fileWriteGuid);
+	hdr->sig = AXP_HEAD_SIG;
+	AXP_VHD_SetGUIDDisk(&hdr->fileWriteGuid);
+	AXP_VHD_SetGUIDDisk(&hdr->dataWriteGuid);
 	hdr->logVer = AXP_VHDX_LOG_VER;
 	hdr->ver = AXP_VHDX_CURRENT_VER;
 	hdr->logLen = AXP_VHDX_LOG_LEN;
@@ -618,21 +370,19 @@ u32 AXP_VHD_Create(
 	/*
 	 * Now we can initialize the region table.
 	 */
-	memcpy(reg->sig, "regi", AXP_VHDX_SIG_LEN);
+	reg->sig = AXP_REGI_SIG;
 	reg->entryCnt = 2;
 
 	/*
 	 * Next we need at least 2 Region Table Entries (one for BAT and
 	 * one for Metadata).
 	 */
-	AXP_VHDX_BAT_GUID(regBat->guid);
- 	AXP_Convert_To(GUID, &regBat->guid, &regBat->guid);
+	AXP_VHD_KnownGUIDDisk(AXP_Block_Allocation_Table, &regBat->guid);
 	regBat->fileOff = AXP_VHDX_BAT_LOC;
 	regBat->len = AXP_VHDX_BAT_LEN;
 	regBat->req = 1;
 
-	AXP_VHDX_META_GUID(regMeta->guid);
- 	AXP_Convert_To(GUID, &regMeta->guid, &regMeta->guid);
+	AXP_VHD_KnownGUIDDisk(AXP_Metadata_Region, &regMeta->guid);
 	regMeta->fileOff = AXP_VHDX_META_LOC;
 	regMeta->len = AXP_VHDX_META_LEN;
 	regMeta->req = 1;
@@ -713,13 +463,13 @@ u32 AXP_VHD_Create(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	chunkRatio = ((2^23) * sectorSize) / blkSize;
+	chunkRatio = (8 * ONE_M * (u64) sectorSize) / (u64) blkSize;
 	dataBlksCnt = ceil((double) diskSize / (double) blkSize);
 
 	/*
 	 * TODO: How is a differencing VHDX created?
-	    secBitmapBlksCnt = ceil((double) dataBlksCnt / (double) chunkRatio);
 	 */
+	secBitmapBlksCnt = ceil((double) dataBlksCnt / (double) chunkRatio);
 	totBATEnt = dataBlksCnt +
 		    floor((double) (dataBlksCnt - 1)/(double) chunkRatio);
 
@@ -795,43 +545,47 @@ u32 AXP_VHD_Create(
 	 * above).
 	 */
 	metaHdr = (AXP_VHDX_META_HDR *) outBuf;
-	memcpy(metaHdr->sig, "metadata", AXP_VHDX_ID_SIG_LEN);
-	metaHdr->entryCnt = 5;	/* Change below as well */
+	metaHdr->sig= AXP_METADATA_SIG;
+	metaHdr->entryCnt = 5;
 
 	/*
 	 * The first entry is immediately after the header.
 	 */
 	metaEnt = (AXP_VHDX_META_ENT *) &outBuf[AXP_VHDX_META_HDR_LEN];
 	metaOff = AXP_VHDX_META_START_OFF;
-	for (ii = 0; ii < 5; ii++)
+	for (ii = 0; ii < metaHdr->entryCnt; ii++)
 	{
 	    metaEnt->isRequired = 1;
 	    metaEnt->off = metaOff;
 	    switch (ii)
 	    {
 		case 0:	/* File Parameters */
-		    AXP_VHDX_FILE_PARAM_GUID(metaEnt->guid);
+		    AXP_VHD_KnownGUIDDisk(AXP_File_Parameter, &metaEnt->guid);
 		    metaEnt->len = AXP_VHDX_META_FILE_LEN;
 		    break;
 
 		case 1:	/* Virtual Disk Size */
-		    AXP_VHDX_VIRT_DSK_SIZE_GUID(metaEnt->guid);
+		    AXP_VHD_KnownGUIDDisk(AXP_Disk_Size, &metaEnt->guid);
 		    metaEnt->len = AXP_VHDX_META_DISK_LEN;
+		    metaEnt->isVirtualDisk = 1;
 		    break;
 
 		case 2:	/* Logical Sector Size */
-		    AXP_VHDX_LOGI_SEC_SIZE_GUID(metaEnt->guid);
+		    AXP_VHD_KnownGUIDDisk(AXP_Logical_Sector, &metaEnt->guid);
 		    metaEnt->len = AXP_VHDX_META_SEC_LEN;
+		    metaEnt->isVirtualDisk = 1;
 		    break;
 
 		case 3:	/* Physical Sector Size */
-		    AXP_VHDX_PHYS_SEC_SIZE_GUID(metaEnt->guid);
+		    AXP_VHD_KnownGUIDDisk(AXP_Physical_Sector, &metaEnt->guid);
 		    metaEnt->len = AXP_VHDX_META_SEC_LEN;
+		    metaEnt->isVirtualDisk = 1;
 		    break;
 
-		case 5:
-		    AXP_VHDX_PAGE_83_DATA_GUID(metaEnt->guid);
+		case 4:
+		    AXP_VHD_KnownGUIDDisk(AXP_Page_83, &metaEnt->guid);
 		    metaEnt->len = AXP_VHDX_META_PAGE83_LEN;
+		    metaEnt->isVirtualDisk = 1;
 		    break;
 	    }
 
@@ -841,14 +595,9 @@ u32 AXP_VHD_Create(
 	    metaOff += metaEnt->len;
 
 	    /*
-	     * Don't forget to convert the GUID and length fields.
-	     */
- 	    AXP_Convert_To(GUID, &metaEnt->guid, &metaEnt->guid);
-
-	    /*
 	     * Move to the next metadata table entry.
 	     */
-	    metaEnt += AXP_VHDX_META_ENT_LEN;
+	    metaEnt++;
 	}
 
 	/*
@@ -919,6 +668,7 @@ u32 AXP_VHD_Create(
 	 */
 	metaSec = (AXP_VHDX_META_SEC *) &outBuf[metaOff];
 	metaOff += AXP_VHDX_META_SEC_LEN;
+	metaSec->secSize = sectorSize;
 
 	/*
 	 * Second to last, Physical Sector Size
@@ -932,8 +682,7 @@ u32 AXP_VHD_Create(
 	 */
 	meta83 = (AXP_VHDX_META_PAGE83 *) &outBuf[metaOff];
 	metaOff += AXP_VHDX_META_PAGE83_LEN;
-	uuid_generate(meta83->pg83Data.uuid);
- 	AXP_Convert_To(GUID, &meta83->pg83Data, &meta83->pg83Data);
+	AXP_VHD_SetGUIDDisk(&meta83->pg83Data);
 
 	/*
 	 * Write out the Metadata Items.
@@ -1007,15 +756,15 @@ u32 AXP_VHD_Create(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
+	u64	fileSize = AXP_VHD_PerformFileSize(vhdx->fp);
+
 	memset(outBuf, 0, SIXTYFOUR_K);
 	logHdr = (AXP_VHDX_LOG_HDR *) outBuf;
-	memcpy(logHdr->sig, "loge",AXP_VHDX_SIG_LEN);
+	logHdr->sig = AXP_LOGE_SIG;
 	logHdr->entryLen = FOUR_K;
 	logHdr->seqNum = 1;
-	uuid_generate(logHdr->logGuid.uuid);
- 	AXP_Convert_To(GUID, &logHdr->logGuid, &logHdr->logGuid);
-	logHdr->flushedFileOff = (u64) AXP_GetFileSize(vhdx->fp);
-	logHdr->lastFileOff = (u64) AXP_GetFileSize(vhdx->fp);
+	AXP_VHD_SetGUIDDisk(&logHdr->logGuid);
+	logHdr->flushedFileOff = logHdr->lastFileOff = fileSize;
 	logHdr->checkSum = AXP_Crc32(
 				outBuf,
 				FOUR_K,
@@ -1030,7 +779,7 @@ u32 AXP_VHD_Create(
 				outBuf,
 				FOUR_K,
 				AXP_VHDX_LOG_LOC);
-	if (writeRet == false)
+	if ((writeRet == false) || (fileSize == 0))
 	{
 	    _AXP_VHD_CreateCleanup(vhdx, path);
 	    AXP_Deallocate_Block(&vhdx->header);

@@ -29,28 +29,34 @@
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
-#include "AXP_VHDX_GUID.h"
-#include <unicode/utypes.h>
-#include <iconv.h>
+#include "AXP_VHD_Utility.h"
+#include <errno.h>
 
 /*
  * The following set of definitions are based on the VHDX Image Format
  * Specification by Microsoft.  These are the basis for disk emulation for the
  * Digital Alpha AXP Emulator.
  */
-#define AXP_VHDX_ID_SIG_LEN		8
-#define AXP_VHDX_SIG_LEN		4
+#define AXP_VHDXFILE_SIG		0x656c696678646876ll
+#define AXP_HEAD_SIG			0x64616568l
+#define AXP_REGI_SIG			0x69676572l
+#define AXP_LOGE_SIG			0x65676f6cl
+#define AXP_ZERO_SIG			0x6f72657al
+#define AXP_DESC_SIG			0x63736564l
+#define AXP_DATA_SIG			0x61746164l
+#define AXP_METADATA_SIG		0x617461646174656dll
+
 #define AXP_VHDX_CREATOR_LEN		256
 typedef struct
 {
-    char		sig[AXP_VHDX_ID_SIG_LEN];	/* 'vhdxfile' */
+    u64			sig;				/* 'vhdxfile' */
     uint16_t		creator[AXP_VHDX_CREATOR_LEN];
 } AXP_VHDX_ID;
 #define AXP_VHDX_ID_LEN			520
 #define AXP_VHDX_RES_1_LEN		4016
 typedef struct
 {
-    char		sig[AXP_VHDX_SIG_LEN];		/* 'head' */
+    u32			sig;				/* 'head' */
     u32			checkSum;
     u64			seqNum;
     AXP_VHDX_GUID	fileWriteGuid;
@@ -65,7 +71,7 @@ typedef struct
 #define AXP_VHDX_HDR_LEN		4096
 typedef struct
 {
-    char		sig[AXP_VHDX_SIG_LEN];		/* 'regi' */
+    u32			sig;				/* 'regi' */
     u32			checkSum;
     u32			entryCnt;
     u32			res_1;
@@ -82,7 +88,7 @@ typedef struct
 #define AXP_VHDX_REG_ENT_LEN		32
 typedef struct
 {
-    char		sig[AXP_VHDX_SIG_LEN];		/* 'loge' */
+    u32			sig;				/* 'loge' */
     u32			checkSum;
     u32			entryLen;
     u32			tail;
@@ -96,7 +102,7 @@ typedef struct
 #define AXP_VHDX_LOG_HDR_LEN		64
 typedef struct
 {
-    char		sig[AXP_VHDX_SIG_LEN];		/* 'zero' */
+    u32			sig;				/* 'zero' */
     u32			res_1;
     u64			len;
     u64			fileOff;
@@ -105,7 +111,7 @@ typedef struct
 #define AXP_VHDX_ZERO_DSC_LEN		32
 typedef struct
 {
-    char		sig[AXP_VHDX_SIG_LEN];		/* 'desc' */
+    u32			sig;				/* 'desc' */
     u32			trailingBytes;
     u64			leadingBytes;
     u64			fileOff;
@@ -115,7 +121,7 @@ typedef struct
 #define AXP_VHDX_LOG_DATA_SIZE		4084
 typedef struct
 {
-    char		sig[AXP_VHDX_SIG_LEN];		/* 'data' */
+    u32			sig;				/* 'data' */
     u32			seqHi;
     u8			data[AXP_VHDX_LOG_DATA_SIZE];
     u32			seqLo;
@@ -148,76 +154,12 @@ typedef struct
 #define AXP_VHDX_RES_2_LEN		5
 typedef struct
 {
-    char		sig[AXP_VHDX_ID_SIG_LEN];	/* 'metadata' */
+    u64			sig;				/* 'metadata' */
     u16			res_1;
     u16			entryCnt;
     u32			res_2[AXP_VHDX_RES_2_LEN];
 } AXP_VHDX_META_HDR;
 #define AXP_VHDX_META_HDR_LEN		32
-#define AXP_VHDX_FILE_PARAM_GUID(name)		\
-    (name) = (AXP_VHDX_GUID)			\
-    {						\
-	.data1 = 0xcaa16737,			\
-	.data2 = 0xfa36,			\
-	.data3 = 0x4d43,			\
-	.data4 = 0xb3b633f0aa44e76b		\
-    }
-#define AXP_VHDX_VIRT_DSK_SIZE_GUID(name)	\
-    (name) = (AXP_VHDX_GUID)			\
-    {						\
-	.data1 = 0x2fa54224,			\
-	.data2 = 0xcd1b,			\
-	.data3 = 0x4876,			\
-	.data4 = 0xb2115dbed83bf4b8		\
-    }
-#define AXP_VHDX_PAGE_83_DATA_GUID(name)	\
-    (name) = (AXP_VHDX_GUID)			\
-    {						\
-	.data1 = 0xbeca12ab,			\
-	.data2 = 0xb2e6,			\
-	.data3 = 0x4523,			\
-	.data4 = 0x93efc309e000c746		\
-    }
-#define AXP_VHDX_LOGI_SEC_SIZE_GUID(name)	\
-    (name) = (AXP_VHDX_GUID)			\
-    {						\
-	.data1 = 0x8141bf1d,			\
-	.data2 = 0xa96f,			\
-	.data3 = 0x4709,			\
-	.data4 = 0xba47f233a8faab5f		\
-    }
-#define AXP_VHDX_PHYS_SEC_SIZE_GUID(name)	\
-    (name) = (AXP_VHDX_GUID)			\
-    {						\
-	.data1 = 0xcda348c7,			\
-	.data2 = 0x445d,			\
-	.data3 = 0x4471,			\
-	.data4 = 0x9cc9e9885251c556		\
-    }
-#define AXP_VHDX_PARENT_LOC_GUID(name)		\
-    (name) = (AXP_VHDX_GUID)			\
-    {						\
-	.data1 = 0xa8d35f2d,			\
-	.data2 = 0xb30b,			\
-	.data3 = 0x454d,			\
-	.data4 = 0xabf7d3d84834ab0c		\
-    }
-#define AXP_VHDX_BAT_GUID(name)			\
-    (name) = (AXP_VHDX_GUID)			\
-    {						\
-	.data1 = 0x2dc27766,			\
-	.data2 = 0xf623,			\
-	.data3 = 0x4200,			\
-	.data4 = 0x9d64115e9Bfd4a08		\
-    }
-#define AXP_VHDX_META_GUID(name)		\
-    (name) = (AXP_VHDX_GUID)			\
-    {						\
-	.data1 = 0x8b7ca206,			\
-	.data2 = 0x4790,			\
-	.data3 = 0x4b9a,			\
-	.data4 = 0xb8fe575f050f886e		\
-    }
 
 typedef struct
 {
