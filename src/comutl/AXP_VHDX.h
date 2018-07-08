@@ -257,8 +257,40 @@ typedef struct
  */
 typedef struct
 {
+
+    /*
+     * This header needs to be at the top of each structure.
+     */
     AXP_BLOCK_DSC	header;
+
+    /*
+     * These are parameters provided by the interface and stored for later
+     * usage.
+     */
+    u32			deviceID;
+    char		*filePath;
+    bool		fixed;
+
+    /*
+     * This is the file pointer and file name associated with the VHD.
+     */
     FILE		*fp;
+
+    /*
+     * These are things read from (or written to) the VHD file that are used
+     * while accessing the contents.
+     */
+    u64			logOffset;
+    u64			batOffset;
+    u64			metadataOffset;
+    u64			diskSize;
+    u32 		blkSize;
+    u32			sectorSize;
 } AXP_VHDX_Handle;
+
+/*
+ * Function Prototypes
+ */
+u32 _AXP_VHDX_Create(char *, u64, u32, u32, u32, AXP_VHD_HANDLE *);
 
 #endif /* _AXP_VHDX_H_ */

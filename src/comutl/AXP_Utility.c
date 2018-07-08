@@ -58,9 +58,9 @@
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
 #include "AXP_Trace.h"
-#include "AXP_VHDX_GUID.h"
 #include <iconv.h>
 #include <arpa/inet.h>
+#include <AXP_GUID.h>
 #include <byteswap.h>
 
 /*

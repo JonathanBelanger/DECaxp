@@ -26,9 +26,9 @@
  */
 #ifndef _AXP_VDSSYS_H_
 #define _AXP_VDSSYS_H_
+#include <AXP_GUID.h>
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
-#include "AXP_VHDX_GUID.h"
 
 /*
  * Enumerations
