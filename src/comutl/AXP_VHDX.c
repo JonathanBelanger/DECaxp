@@ -75,38 +75,22 @@ static void _AXP_VHD_CreateCleanup(AXP_VHDX_Handle *vhdx, char *path)
 }
 
 /*
- * AXP_VHD_Create
- *  Creates a virtual hard disk (VHD) image file, either using default
- *  parameters or using an existing virtual disk or physical disk.
+ * _AXP_VHDX_Create
+ *  Creates a virtual hard disk (VHDX) image file.
  *
  * Input Parameters:
- *  storageType:
- *	A pointer to a VIRTUAL_STORAGE_TYPE structure that contains the desired
- *	disk type and vendor information.
  *  path:
  *	A pointer to a valid string that represents the path to the new virtual
  *	disk image file.
- *  accessMask:
- *	The AXP_VHD_ACCESS_MASK value to use when opening the newly created
- *	virtual disk file.  If the version member of the param parameter is set
- *	to AXP_VHD_CREATE_VER_2 then only the AXP_VHD_ACCESS_NONE (0) value may
- *	be specified.
- *  securityDsc:
- *	An optional pointer to a AXP_VHD_SECURITY_DSC to apply to the virtual
- *	disk image file.  If this parameter is NULL, the parent directory's
- *	security descriptor will be used.
- *  flags:
- *	Creation flags, which must be a valid combination of the
- *	AXP_VHD_CREATE_FLAG enumeration.
- *  providerSpecFlags
- *	Flags specific to the type of virtual disk being created. May be zero
- *	if none are required.
- *  param:
- *	A pointer to a valid AXP_VHD_CREATE_PARAM structure that contains
- *	creation parameter data.
- *  async:
- *	An optional pointer to a valid AXP_VHD_ASYNC structure if asynchronous
- *	operation is desired.
+ *  diskSize:
+ *	An unsigned 64-bit value for the size of the disk to be created, in
+ *	bytes.
+ *  blkSize:
+ *	An unsigned 32-bit value for the size of each block.
+ *  sectorSize:
+ *	An unsigned 32-bit value for the size of each sector.
+ *  deviceID:
+ *	An unsigned 32-bit value indicating the desired disk type.
  *
  * Output Parameters:
  *  handle:
@@ -115,21 +99,17 @@ static void _AXP_VHD_CreateCleanup(AXP_VHDX_Handle *vhdx, char *path)
  *
  * Return Values:
  *  AXP_VHD_SUCCESS:		Normal Successful Completion.
- *  AXP_VHD_INV_PARAM:		An invalid parameter or combination of
- *				parameters was detected.
  *  AXP_VHD_FILE_EXISTS:	File already exists.
  *  AXP_VHD_INV_HANDLE:		Failed to create the VHDX file.
  *  AXP_VHD_WRITE_FAULT:	An error occurred writing to the VHDX file.
+ *  AXP_VHD_OUTOFMEMORY:	Insufficient memory to perform operation.
  */
-u32 AXP_VHD_Create(
-		AXP_VHD_STORAGE_TYPE *storageType,
+u32 _AXP_VHDX_Create(
 		char *path,
-		AXP_VHD_ACCESS_MASK accessMask,
-		AXP_VHD_SEC_DSC *securityDsc,
-		AXP_VHD_CREATE_FLAG flags,
-		u32 providerSpecFlags,
-		AXP_VHD_CREATE_PARAM *param,
-		AXP_VHD_ASYNC *async,
+		u64 diskSize,
+		u32 blkSize,
+		u32 sectorSize,
+		u32 deviceID,
 		AXP_VHD_HANDLE *handle)
 {
     AXP_VHDX_Handle	*vhdx = NULL;
@@ -147,36 +127,19 @@ u32 AXP_VHD_Create(
     AXP_VHDX_META_DISK 	*metaDisk;
     AXP_VHDX_META_SEC	*metaSec;
     AXP_VHDX_META_PAGE83 *meta83;
-    u64			diskSize, chunkRatio;
-    u32			retVal = AXP_VHD_SUCCESS;
+    u64			chunkRatio;
+    u32			retVal;
     u32			dataBlksCnt, totBATEnt, secBitmapBlksCnt;
-    u32			blkSize, sectorSize, deviceID;
     size_t		outLen;
     size_t		creatorSize = strlen(creator);
     int			metaOff, batOff, ii;
     bool		writeRet = false;
 
     /*
-     * Go check the parameters and extract some information from within them.
-     */
-    retVal = AXP_VHD_ValidateCreate(
-    		storageType,
-    		path,
-    		accessMask,
-    		flags,
-    		param,
-    		handle,
-    		&diskSize,
-    		&blkSize,
-    		&sectorSize,
-    		&deviceID);
-
-    /*
      * We'll need this a bit later, but let's go get all the memory we are
      * going to need up front.
      */
-    if (retVal == AXP_VHD_SUCCESS)
-	outBuf = (u8 *) calloc(SIXTYFOUR_K, 1);
+    outBuf = (u8 *) calloc(SIXTYFOUR_K, 1);
 
     /*
      * Let's allocate the block we need to maintain access to the virtual disk
@@ -184,6 +147,27 @@ u32 AXP_VHD_Create(
      */
     if (outBuf != NULL)
 	vhdx = (AXP_VHDX_Handle *) AXP_Allocate_Block(AXP_VHDX_BLK);
+    if (vhdx != NULL)
+    {
+	vhdx->filePath = calloc(1, strlen(path) + 1);
+	if (vhdx->filePath != NULL)
+	{
+	    strcpy(vhdx->filePath, path);
+	    vhdx->deviceID = deviceID;
+	    vhdx->logOffset = AXP_VHDX_LOG_LOC;
+	    vhdx->batOffset = AXP_VHDX_BAT_LOC;
+	    vhdx->metadataOffset = AXP_VHDX_META_LOC;
+	    vhdx->diskSize = diskSize;
+	    vhdx->blkSize = blkSize;
+	    vhdx->sectorSize = sectorSize;
+	    vhdx->fixed = false;
+	}
+	else
+	{
+	    AXP_Deallocate_Block(&vhdx->header);
+	    vhdx = NULL;
+	}
+    }
 
     /*
      * If we allocated the block we need, then continue out processing.
@@ -200,7 +184,12 @@ u32 AXP_VHD_Create(
 	vhdx->fp = fopen(path, "rb");
 	if (vhdx->fp == NULL)
 	{
-	    vhdx->fp = fopen(path, "wb+");
+
+	    /*
+	     * Open the file for write only.  We'll re-open it for read-write
+	     * before returning to the caller.
+	     */
+	    vhdx->fp = fopen(path, "wb");
 	    if (vhdx->fp == NULL)
 	    {
 		AXP_Deallocate_Block(&vhdx->header);
@@ -244,7 +233,7 @@ u32 AXP_VHD_Create(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	i32			convRet;
+	i32 convRet;
 
 	ID = (AXP_VHDX_ID *) outBuf;
 	ID->sig= AXP_VHDXFILE_SIG;
@@ -787,6 +776,17 @@ u32 AXP_VHD_Create(
 	}
     }
 
+    if (retVal == AXP_VHD_SUCCESS)
+    {
+	vhdx->fp = freopen(path, "wb+", vhdx->fp);
+	if (vhdx->fp == NULL)
+	{
+	    _AXP_VHD_CreateCleanup(vhdx, path);
+	    AXP_Deallocate_Block(&vhdx->header);
+	    retVal = AXP_VHD_INV_HANDLE;
+	}
+    }
+
     /*
      * Free what we allocated before we get out of here.
      */
@@ -798,45 +798,3 @@ u32 AXP_VHD_Create(
      */
     return(retVal);
 }
-
-/*
- * AXP_VHD_CloseHandle
- *  Closes an open object handle.
- *
- * Input Parameters:
- *  handle:
- *	A valid handle to an open object.
- *
- * Output Parameters:
- *  None.
- *
- * Return Values:
- *  AXP_VHD_SUCCESS:		Normal Successful Completion.
- *  AXP_VHD_INV_HANDLE:		Failed to create the VHDX file.
- */
-u32 AXP_VHD_CloseHandle(AXP_VHD_HANDLE handle)
-{
-    AXP_VHDX_Handle	*vhdx = (AXP_VHDX_Handle *) handle;
-    u32			retVal = AXP_VHD_SUCCESS;
-
-    /*
-     * Verify that we have a proper handle.
-     */
-    if ((vhdx->header.type == AXP_VHDX_BLK) &&
-	(vhdx->header.size == sizeof(AXP_VHDX_Handle)))
-    {
-
-	/*
-	 * TODO: Verify there are no references to the handle.
-	 */
-	AXP_Deallocate_Block(&vhdx->header);
-    }
-    else
-	retVal = AXP_VHD_INV_HANDLE;
-
-    /*
-     * Return the results of this call back to the caller.
-     */
-    return(retVal);
-}
-

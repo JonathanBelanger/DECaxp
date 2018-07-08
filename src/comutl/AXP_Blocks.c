@@ -47,10 +47,51 @@ static const char *blockNames[] =
     "VHDX"
 };
 
+/*
+ * Define some local variables to be used to keep track of memory allocated
+ * and deallocated.  These are also going to have a mutex associated with them.
+ */
+static pthread_once_t 	blksOnce = PTHREAD_ONCE_INIT;
+static pthread_mutex_t	blksMutex;
+static u32 blksAllocCalls = 0;
+static u32 blksDeallocCalls = 0;
+static u32 blksBytesAlloc = 0;
+
+/*
+ * _AXP_BlocksInit_Once
+ *  This function is called using the pthread_once function to make sure that
+ *  only one thread can call this function ever.
+ *
+ * Input Parameters:
+ *  None.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Value:
+ *  None.
+ */
+void _AXP_BlocksInit_Once(void)
+{
+
+    /*
+     * Allocate the mutex,then initialize the variables.
+     */
+    pthread_mutex_init(&blksMutex, NULL);
+
+    /*
+     * Return back to the caller.
+     */
+    return;
+}
+
+
 void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 {
     void	*retBlock = NULL;
     size_t	size;
+
+    pthread_once(&blksOnce, _AXP_BlocksInit_Once);
 
     switch (blockType)
     {
@@ -158,6 +199,15 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 	    break;
     }
 
+    /*
+     * Maintain some statistics
+     */
+    pthread_mutex_lock(&blksMutex);
+    blksAllocCalls++;
+    if (retBlock != NULL)
+    	blksBytesAlloc += size;
+    pthread_mutex_unlock(&blksMutex);
+
     if (AXP_UTL_OPT1)
     {
 	AXP_TRACE_BEGIN();
@@ -166,6 +216,13 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 	    blockNames[blockType],
 	    size,
 	    retBlock);
+	AXP_TraceWrite(
+	    "Calls to AXP_Allocate_Block = %u; "
+	    "Calls to AXP_Deallocate_Block = %u; "
+	    "Memory Outstanding = %u",
+	    blksAllocCalls,
+	    blksDeallocCalls,
+	    blksBytesAlloc);
 	AXP_TRACE_END();
     }
 
@@ -178,6 +235,14 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 void AXP_Deallocate_Block(AXP_BLOCK_DSC *block)
 {
 
+    /*
+     * Maintain some statistics
+     */
+    pthread_mutex_lock(&blksMutex);
+    blksDeallocCalls++;
+    blksBytesAlloc -= block->size;
+    pthread_mutex_unlock(&blksMutex);
+
     if (AXP_UTL_OPT1)
     {
 	AXP_TRACE_BEGIN();
@@ -186,6 +251,13 @@ void AXP_Deallocate_Block(AXP_BLOCK_DSC *block)
 	    blockNames[block->type],
 	    block->size,
 	    block);
+	AXP_TraceWrite(
+	    "Calls to AXP_Allocate_Block = %u; "
+	    "Calls to AXP_Deallocate_Block = %u; "
+	    "Memory Outstanding = %u",
+	    blksAllocCalls,
+	    blksDeallocCalls,
+	    blksBytesAlloc);
 	AXP_TRACE_END();
     }
 
@@ -219,6 +291,8 @@ void AXP_Deallocate_Block(AXP_BLOCK_DSC *block)
 		    fflush(vhdx->fp);
 		    fclose(vhdx->fp);
 		}
+		if (vhdx->filePath != NULL)
+		    free(vhdx->filePath);
 		free(block);
 	    }
 	    break;
