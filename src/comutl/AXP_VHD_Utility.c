@@ -24,12 +24,12 @@
  *  V01.000	07-Jul-2018	Jonathan D. Belanger
  *  Initially written.
  */
+#include <AXP_VirtualDisk.h>
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_Blocks.h"
 #include "AXP_Trace.h"
 #include "AXP_VHD_Utility.h"
-#include "AXP_virtdisk.h"
 #include "AXP_VHDX.h"
 
 /*
@@ -136,6 +136,16 @@ static AXP_VHDX_GUID AXP_WellKnownGUIDs[] =
 	.data2 = 0x4790,
 	.data3 = 0x4b9a,
 	.data4 = 0xb8fe575f050f886e
+    },
+
+    /*
+     * Metadata = Parent Locator Type (from VHDX Functional Spec - Page 34)
+     */
+    {
+	.data1 = 0xb04aefb7,
+	.data2 = 0xd19e,
+	.data3 = 0x4a81,
+	.data4 = 0xb78925b8e9445913
     }
 };
 
@@ -444,6 +454,13 @@ u64 AXP_VHD_PerformFileSize(FILE *fp)
  *	A pointer to the VHD handle
  *
  * Output Parameters:
+ *  parentPath:
+ *  	A pointer to the address for the parent path provided in the param
+ *  	parameter.  This is used to create a Differencing virtual disk.
+ *  parentDevID:
+ *	A pointer to a 32-bit unsigned integer to receive the type of device
+ *	associated with the parentPath.  If parentPath is returned as a NULL,
+ *	then this parameter is not relevant.
  *  diskSize:
  *	A pointer to a 64-bit unsigned integer to receive the total number of
  *	bytes that this VHD should represent.  This is as big as the VHD can
@@ -460,6 +477,8 @@ u64 AXP_VHD_PerformFileSize(FILE *fp)
  *
  * Return Values:
  *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_NOT_SUPPORTED:	Requested function is not supported
+ *  				(Differencing Disk)
  *  AXP_VHD_INV_PARAM:		An invalid parameter or combination of
  *				parameters was detected.
  */
@@ -470,6 +489,8 @@ u32 AXP_VHD_ValidateCreate(
 		AXP_VHD_CREATE_FLAG flags,
 		AXP_VHD_CREATE_PARAM *param,
 		AXP_VHD_HANDLE *handle,
+		char *parentPath,
+		u32 *parentDevID,
 		u64 *diskSize,
 		u32 *blkSize,
 		u32 *sectorSize,
@@ -547,6 +568,8 @@ u32 AXP_VHD_ValidateCreate(
 		    *sectorSize = (param->ver_1.sectorSize == AXP_VHD_DEF_SEC) ?
 				defSector : param->ver_1.sectorSize;
 		    *diskSize = param->ver_1.maxSize;
+		    *parentPath = param->ver_1.parentPath;
+		    *parentDevID = storageType->deviceID;
 		    break;
 
 		case CREATE_VER_2:
@@ -556,6 +579,8 @@ u32 AXP_VHD_ValidateCreate(
 		    *sectorSize = (param->ver_2.sectorSize == AXP_VHD_DEF_SEC) ?
 				defSector : param->ver_2.sectorSize;
 		    *diskSize = param->ver_2.maxSize;
+		    *parentPath = param->ver_2.parentPath;
+		    *parentDevID = param->ver_2.parentStorageType.deviceID;
 		    break;
 
 		case CREATE_VER_3:
@@ -565,6 +590,8 @@ u32 AXP_VHD_ValidateCreate(
 		    *sectorSize = (param->ver_3.sectorSize == AXP_VHD_DEF_SEC) ?
 				defSector : param->ver_3.sectorSize;
 		    *diskSize = param->ver_3.maxSize;
+		    *parentPath = param->ver_3.parentPath;
+		    *parentDevID = param->ver_3.parentStorageType.deviceID;
 		    break;
 
 		case CREATE_VER_4:
@@ -574,8 +601,18 @@ u32 AXP_VHD_ValidateCreate(
 		    *sectorSize = (param->ver_4.sectorSize == AXP_VHD_DEF_SEC) ?
 				defSector : param->ver_4.sectorSize;
 		    *diskSize = param->ver_4.maxSize;
+		    *parentPath = param->ver_4.parentPath;
+		    *parentDevID = param->ver_4.parentStorageType.deviceID;
 		    break;
 	    }
+
+	    /*
+	     * If the flags indicates a Fixed VHDX, then the returned parent
+	     * path needs to be ignored (set to NULL).
+	     */
+	    if (flags == CREATE_FULL_PHYSICAL_ALLOCATION)
+		*parentPath = NULL;
+
 
 	    /*
 	     * Finally, let's check the values supplied in various parameters.
@@ -598,6 +635,8 @@ u32 AXP_VHD_ValidateCreate(
 		((*diskSize < minDisk) || (*diskSize > maxDisk) ||
 		 ((*diskSize % *sectorSize) != 0)))
 		retVal = AXP_VHD_INV_PARAM;
+	    else if (*parentPath != NULL)
+		retVal = AXP_VHD_NOT_SUPPORTED;
 	}
 	else
 	    retVal = AXP_VHD_INV_PARAM;
@@ -684,7 +723,7 @@ void AXP_Dump_VHD_Info(AXP_VHD_HANDLE handle)
 		    AXP_TraceWrite("\t3.1.1 File Type Identifier: @ 0x%016llx", AXP_VHDX_HDR_LOC);
 		    AXP_TraceWrite("\t\tSignature: %.8s", (char *) &id->sig);
 		    for (ii = 0;
-			 ((ptr[ii] != '\0') && (ii < sizeof(creator)));
+			 ((ii < sizeof(creator)) && (ptr[ii] != '\0'));
 			 ii += 2)
 			creator[ii/2] = ptr[ii];
 		    creator[ii/2] = '\0';

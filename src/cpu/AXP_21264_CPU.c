@@ -350,12 +350,12 @@ void AXP_21264_Save_WHAMI(void *cpuPtr, u64 *cpuID)
  */
 void AXP_21264_Save_SystemInterfaces(
     void *cpuPtr,
-    pthread_mutex_t *cpuMutex,
-    pthread_cond_t *cpuCond,
-    void *pq,
-    u8 *pqTop,
-    u8 *pqBottom,
-    u8 *irq_H,
+    pthread_mutex_t **cpuMutex,
+    pthread_cond_t **cpuCond,
+    void **pq,
+    u8 **pqTop,
+    u8 **pqBottom,
+    u8 **irq_H,
     pthread_mutex_t *sysMutex,
     pthread_cond_t *sysCond,
     AXP_QUEUE_HDR *rq)
@@ -374,12 +374,12 @@ void AXP_21264_Save_SystemInterfaces(
      * Finally, set the data needed for the System to be able to communicate
      * with the CPU into the output parameters.
      */
-    cpuMutex = &cpu->cBoxInterfaceMutex;
-    cpuCond = &cpu->cBoxInterfaceCond;
-    pq = (void *) cpu->pq;
-    pqTop = &cpu->pqTop;
-    pqBottom = &cpu->pqBottom;
-    irq_H = &cpu->irqH;
+    *cpuMutex = &cpu->cBoxInterfaceMutex;
+    *cpuCond = &cpu->cBoxInterfaceCond;
+    *pq = (void *) cpu->pq;
+    *pqTop = &cpu->pqTop;
+    *pqBottom = &cpu->pqBottom;
+    *irq_H = &cpu->irqH;
 
     /*
      * Return back to the caller.

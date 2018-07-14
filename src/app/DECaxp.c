@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 	    /*
 	     * The following calls are just to keep the linker happy.
 	     */
-	    if (cpu == NULL)
+	    if (false)
 	    {
 		AXP_21264_Set_IRQ(cpu, 0);
 		AXP_21264_Add_PQ(cpu,

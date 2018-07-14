@@ -228,6 +228,7 @@ typedef struct
 #define AXP_VHDX_LOG_LOC		(AXP_VHDX_HDR_LOC + AXP_VHDX_LEN_HDR)
 #define AXP_VHDX_META_LOC		(AXP_VHDX_LOG_LOC + AXP_VHDX_LOG_LEN)
 #define AXP_VHDX_BAT_LOC		(AXP_VHDX_META_LOC + AXP_VHDX_META_LEN)
+#define AXP_VHDX_DATA_LOC		(AXP_VHDX_BAT_LOC + AXP_VHDX_BAT_LEN)
 
 /*
  * Header structure offsets (from AXP_VHDX_HDR_LOC)
@@ -291,6 +292,15 @@ typedef struct
 /*
  * Function Prototypes
  */
-u32 _AXP_VHDX_Create(char *, u64, u32, u32, u32, AXP_VHD_HANDLE *);
+u32 _AXP_VHDX_Create(
+		char *,
+		AXP_VHD_CREATE_FLAG,
+		char *,
+		u32,
+		u64,
+		u32,
+		u32,
+		u32,
+		AXP_VHD_HANDLE *);
 
 #endif /* _AXP_VHDX_H_ */

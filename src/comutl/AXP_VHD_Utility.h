@@ -26,10 +26,10 @@
  */
 #ifndef _AXP_VHD_UTILITY_H_
 #define _AXP_VHD_UTILITY_H_
+#include <AXP_VirtualDisk.h>
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
-#include "AXP_virtdisk.h"
 
 /*
  * This enumeration is used to select the correct well known GUIDs.
@@ -47,6 +47,7 @@ typedef enum
     AXP_Parent_Locator,
     AXP_Block_Allocation_Table,
     AXP_Metadata_Region,
+    AXP_ParentLocator_Type,
     AXP_Known_MAX
 } AXP_VHD_KnownGUIDs;
 
@@ -68,6 +69,8 @@ u32 AXP_VHD_ValidateCreate(
 		AXP_VHD_CREATE_FLAG,
 		AXP_VHD_CREATE_PARAM *,
 		AXP_VHD_HANDLE *,
+		char **,
+		u32 *,
 		u64 *,
 		u32 *,
 		u32 *,

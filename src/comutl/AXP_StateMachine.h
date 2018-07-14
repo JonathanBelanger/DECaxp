@@ -65,7 +65,7 @@ typedef struct
  * 		(column * size of entry)
  */
 #define AXP_SM_ENTRY(smp, row, col) \
-    ((smp)->stateMachine + \
+    ((u8 *) (smp)->stateMachine + \
      ((row) * ((smp->maxStates)) * sizeof(AXP_SM_Entry)) + \
      ((col) * sizeof(AXP_SM_Entry)))
 

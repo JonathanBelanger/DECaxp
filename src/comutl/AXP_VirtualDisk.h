@@ -16,19 +16,57 @@
  *
  * Description:
  *
- *  This header file contains the definitions in vdssys.h, required to
+ *  This header file contains the definitions in virtdisk.h, required to
  *  implement the virtual disk functions defined by Microsoft.
  *
  * Revision History:
  *
- *  V01.000	01-Jul-2018	Jonathan D. Belanger
+ *  V01.000	02-Jul-2018	Jonathan D. Belanger
  *  Initially written.
  */
-#ifndef _AXP_VDSSYS_H_
-#define _AXP_VDSSYS_H_
-#include <AXP_GUID.h>
+#ifndef AXP_VIRTUALDISK_H_
+#define AXP_VIRTUALDISK_H_
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
+#include <AXP_GUID.h>
+
+/*
+ * Various length definitions.
+ */
+#define AXP_VHD_DEF_BLK		0
+#define AXP_VHD_BLK_MIN		(512 * ONE_K)
+#define AXP_VHD_BLK_DEF		(2 * ONE_M)
+#define AXP_VHD_BLK_MAX		(2 * ONE_M)
+#define AXP_VHDX_BLK_MIN	(512 * ONE_K)
+#define AXP_VHDX_BLK_DEF	(32 * ONE_M)
+#define AXP_VHDX_BLK_MAX	(256 * ONE_M)
+#define AXP_ISO_BLK_DEF		0
+#define AXP_ISO_BLK_MIN		0
+#define AXP_ISO_BLK_MAX		0
+#define AXP_VHD_DEF_SEC		0
+#define AXP_VHD_SEC_DEF		512
+#define AXP_VHD_SEC_MIN		512
+#define AXP_VHD_SEC_MAX		512
+#define AXP_VHDX_SEC_DEF	512
+#define AXP_VHDX_SEC_MIN	512
+#define AXP_VHDX_SEC_MAX	FOUR_K
+#define AXP_ISO_SEC_DEF		TWO_K
+#define AXP_ISO_SEC_MIN		TWO_K
+#define AXP_ISO_SEC_MAX		TWO_K
+
+/*
+ * Device type (DeviceID)
+ *
+ * The ANY device type is used on the Open call.  The device type will be
+ * be determined by analyzing the contents of the virtual disk during the open
+ * operation.
+ */
+#define STORAGE_TYPE_DEV_UNKNOWN	0
+#define STORAGE_TYPE_DEV_ISO		1
+#define STORAGE_TYPE_DEV_VHD		2
+#define STORAGE_TYPE_DEV_VHDX		3
+#define STORAGE_TYPE_DEV_RAW		4
+#define STORAGE_TYPE_DEV_ANY		5
 
 /*
  * Enumerations
@@ -260,11 +298,63 @@ typedef enum
     ACCESS_WRITABLE
 } AXP_VHD_ACCESS_MASK;
 
-/*
- * Typedefs and Data Structures.
- */
+typedef enum
+{
+    RESIZE_NONE,
+    RESIZE_ALLOW_UNSAFE_VIRT_SIZE,
+    RESIZE_RESIZE_SMALLEST_SAFE_SIZE
+} AXP_VHD_RESIZE_FLAG;
+typedef enum
+{
+    RESIZE_VER_UNSPECIFIED,
+    RESIZE_VER_1
+} AXP_VHD_RESIZE_VER;
 
 /*
+ * These are error codes consistent with the Microsoft definitions.
+ */
+typedef enum
+{
+    AXP_VHD_SUCCESS = 0,
+    AXP_VHD_FILE_NOT_FOUND = 2,
+    AXP_VHD_PATH_NOT_FOUND = 3,
+    AXP_VHD_ACCESS_DENIED = 5,
+    AXP_VHD_INV_HANDLE = 6,
+    AXP_VHD_NOT_ENOUGH_MEMORY = 8,
+    AXP_VHD_OUTOFMEMORY = 14,
+    AXP_VHD_CRC = 23,
+    AXP_VHD_SEEK = 25,
+    AXP_VHD_SECTOR_NOT_FOUND = 27,
+    AXP_VHD_WRITE_FAULT = 29,
+    AXP_VHD_READ_FAULT = 30,
+    AXP_VHD_HANDLE_EOF = 38,
+    AXP_VHD_HANDLE_DISK_FULL = 39,
+    AXP_VHD_NOT_SUPPORTED = 50,
+    AXP_VHD_FILE_EXISTS = 80,
+    AXP_VHD_INV_PARAM = 87,
+    AXP_VHD_OPEN_FAILED = 110,
+    AXP_VHD_BUFFER_OVERFLOW = 111,
+    AXP_VHD_DISK_FULL = 112,
+    AXP_VHD_CALL_NOT_IMPL = 120,
+    AXP_VHD_INV_NAME = 123,
+    AXP_VHD_NEGATIVE_SEEK = 131,
+    AXP_VHD_DEVICE_ALREADY_ATTACHED = 548,
+    AXP_VHD_ILLEGAL_CHAR = 582,
+    AXP_VHD_UNDEFINED_CHAR = 583,
+    AXP_VHD_UNSUP_COMPRESSION = 618,
+    AXP_VHD_RANGE_NOT_FOUND = 644,
+    AXP_VHD_IO_INCOMPLETE = 996,
+    AXP_VHD_IO_PENDING = 997,
+    AXP_VHD_INV_FLAGS = 1004,
+    AXP_VHD_FILE_CORRUPT = 1392,
+    AXP_VHD_INV_HANDLE_STATE = 1609,
+    AXP_VHD_FILE_ENCRYPTED = 6002,
+    AXP_VHD_FILE_READ_ONLY = 6009
+} AXP_VHDX_SYS_ERR;
+
+/*
+ * Typedefs and Data Structures.
+ *
  * Device time and Vendor information.
  */
 typedef struct
@@ -272,14 +362,6 @@ typedef struct
     u32 deviceID;
     AXP_VHDX_GUID vendorID;
 } AXP_VHD_STORAGE_TYPE;
-
-/*
- * Device type (DeviceID)
- */
-#define STORAGE_TYPE_DEV_UNKNOWN	0
-#define STORAGE_TYPE_DEV_ISO		1
-#define STORAGE_TYPE_DEV_VHD		2
-#define STORAGE_TYPE_DEV_VHDX		3
 
 typedef void	*AXP_VHD_HANDLE;
 typedef struct
@@ -614,29 +696,17 @@ typedef struct
     u64 complVal;
 } AXP_VHD_PROGRESS;
 
-/*
- * We put these here because they limit values through the interface.
- */
-#define AXP_VHD_DEF_BLK		0
-#define AXP_VHD_BLK_MIN		(512 * ONE_K)
-#define AXP_VHD_BLK_DEF		(2 * ONE_M)
-#define AXP_VHD_BLK_MAX		(2 * ONE_M)
-#define AXP_VHDX_BLK_MIN	(512 * ONE_K)
-#define AXP_VHDX_BLK_DEF	(32 * ONE_M)
-#define AXP_VHDX_BLK_MAX	(256 * ONE_M)
-#define AXP_ISO_BLK_DEF		0
-#define AXP_ISO_BLK_MIN		0
-#define AXP_ISO_BLK_MAX		0
-#define AXP_VHD_DEF_SEC		0
-#define AXP_VHD_SEC_DEF		512
-#define AXP_VHD_SEC_MIN		512
-#define AXP_VHD_SEC_MAX		512
-#define AXP_VHDX_SEC_DEF	512
-#define AXP_VHDX_SEC_MIN	512
-#define AXP_VHDX_SEC_MAX	FOUR_K
-#define AXP_ISO_SEC_DEF		TWO_K
-#define AXP_ISO_SEC_MIN		TWO_K
-#define AXP_ISO_SEC_MAX		TWO_K
+typedef struct
+{
+    AXP_VHD_RESIZE_VER ver;
+    union
+    {
+	struct
+	{
+	    u64 newSize;
+	} ver_1;
+    };
+} AXP_VHD_RESIZE_PARAM;
 
 typedef struct
 {
@@ -858,45 +928,49 @@ u32 AXP_VHD_TakeSnap(
 u32 AXP_VHD_CloseHandle(AXP_VHD_HANDLE handle);
 
 /*
- * These are error codes consistent with the Microsoft definitions.
+ * Attaches a parent to a virtual disk opened with the OPEN_CUSTOM_DIFF_CHAIN
+ * flag.
  */
-typedef enum
-{
-    AXP_VHD_SUCCESS = 0,
-    AXP_VHD_FILE_NOT_FOUND = 2,
-    AXP_VHD_PATH_NOT_FOUND = 3,
-    AXP_VHD_ACCESS_DENIED = 5,
-    AXP_VHD_INV_HANDLE = 6,
-    AXP_VHD_NOT_ENOUGH_MEMORY = 8,
-    AXP_VHD_OUTOFMEMORY = 14,
-    AXP_VHD_CRC = 23,
-    AXP_VHD_SEEK = 25,
-    AXP_VHD_SECTOR_NOT_FOUND = 27,
-    AXP_VHD_WRITE_FAULT = 29,
-    AXP_VHD_READ_FAULT = 30,
-    AXP_VHD_HANDLE_EOF = 38,
-    AXP_VHD_HANDLE_DISK_FULL = 39,
-    AXP_VHD_NOT_SUPPORTED = 50,
-    AXP_VHD_FILE_EXISTS = 80,
-    AXP_VHD_INV_PARAM = 87,
-    AXP_VHD_OPEN_FAILED = 110,
-    AXP_VHD_BUFFER_OVERFLOW = 111,
-    AXP_VHD_DISK_FULL = 112,
-    AXP_VHD_CALL_NOT_IMPL = 120,
-    AXP_VHD_INV_NAME = 123,
-    AXP_VHD_NEGATIVE_SEEK = 131,
-    AXP_VHD_DEVICE_ALREADY_ATTACHED = 548,
-    AXP_VHD_ILLEGAL_CHAR = 582,
-    AXP_VHD_UNDEFINED_CHAR = 583,
-    AXP_VHD_UNSUP_COMPRESSION = 618,
-    AXP_VHD_RANGE_NOT_FOUND = 644,
-    AXP_VHD_IO_INCOMPLETE = 996,
-    AXP_VHD_IO_PENDING = 997,
-    AXP_VHD_INV_FLAGS = 1004,
-    AXP_VHD_FILE_CORRUPT = 1392,
-    AXP_VHD_INV_HANDLE_STATE = 1609,
-    AXP_VHD_FILE_ENCRYPTED = 6002,
-    AXP_VHD_FILE_READ_ONLY = 6009
-} AXP_VHDX_SYS_ERR;
+u32 AXP_VHD_AddParent(AXP_VHD_HANDLE handle, char *parentPath);
 
-#endif /* _AXP_VDSSYS_H_ */
+/*
+ * Deletes metadata from a virtual disk.
+ */
+u32 AXP_VHD_DeleteMeta(AXP_VHD_HANDLE handle, const AXP_VHDX_GUID *item);
+
+/*
+ * Enumerates the metadata associated with a virtual disk.
+ */
+u32 AXP_VHD_EnumerateMeta(
+		AXP_VHD_HANDLE handle,
+		u32 *numItems,
+		AXP_VHDX_GUID *items);
+
+/*
+ * Retrieves the specified metadata from the virtual disk.
+ */
+u32 AXP_VHD_GetMeta(
+		AXP_VHD_HANDLE handle,
+		const AXP_VHDX_GUID *item,
+		u32 *metaSize,
+		void *metaData);
+
+/*
+ * Resizes a virtual disk.
+ */
+u32 AXP_VHD_Resize(
+		AXP_VHD_HANDLE handle,
+		AXP_VHD_RESIZE_FLAG plags,
+		AXP_VHD_RESIZE_PARAM *param,
+		AXP_VHD_ASYNC *async);
+
+/*
+ * Sets a metadata item for a virtual disk.
+ */
+u32 AXP_VHD_SetMeta(
+		AXP_VHD_HANDLE handle,
+		const AXP_VHDX_GUID *item,
+		u32 metaSize,
+		const void *metaData);
+
+#endif /* AXP_VIRTUALDISK_H_ */

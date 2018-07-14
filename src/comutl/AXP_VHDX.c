@@ -24,11 +24,11 @@
  *  V01.000	03-Jul-2018	Jonathan D. Belanger
  *  Initially written.
  */
+#include <AXP_VirtualDisk.h>
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_Blocks.h"
 #include "AXP_Trace.h"
-#include "AXP_virtdisk.h"
 #include "AXP_VHDX.h"
 
 /*
@@ -82,6 +82,15 @@ static void _AXP_VHD_CreateCleanup(AXP_VHDX_Handle *vhdx, char *path)
  *  path:
  *	A pointer to a valid string that represents the path to the new virtual
  *	disk image file.
+ *  flags:
+ *	Creation flags, which must be a valid combination of the
+ *	AXP_VHD_CREATE_FLAG enumeration.
+ *  parentPath:
+ *	A pointer to a valid string that represents the path to the parent
+ *	virtual disk image file.  This means that we are creating a
+ *	differential VHDX.
+ *  parentDevID:
+ *	An unsigned 32-bit value indicating the disk type of the parent.
  *  diskSize:
  *	An unsigned 64-bit value for the size of the disk to be created, in
  *	bytes.
@@ -106,6 +115,9 @@ static void _AXP_VHD_CreateCleanup(AXP_VHDX_Handle *vhdx, char *path)
  */
 u32 _AXP_VHDX_Create(
 		char *path,
+		AXP_VHD_CREATE_FLAG flags,
+		char *parentPath,
+		u32 parentDevID,
 		u64 diskSize,
 		u32 blkSize,
 		u32 sectorSize,
@@ -114,7 +126,7 @@ u32 _AXP_VHDX_Create(
 {
     AXP_VHDX_Handle	*vhdx = NULL;
     char		*creator = "Digital Alpha AXP Emulator 1.0";
-    u8			*outBuf = NULL;
+    u8			*outBuf;
     AXP_VHDX_ID		*ID;
     AXP_VHDX_HDR	*hdr;
     AXP_VHDX_REG_HDR	*reg;
@@ -127,8 +139,10 @@ u32 _AXP_VHDX_Create(
     AXP_VHDX_META_DISK 	*metaDisk;
     AXP_VHDX_META_SEC	*metaSec;
     AXP_VHDX_META_PAGE83 *meta83;
+    AXP_VHDX_META_PAR_HDR *metaParHdr;
+    AXP_VHDX_META_PAR_ENT *metaParEnt;
     u64			chunkRatio;
-    u32			retVal;
+    u32			retVal = AXP_VHD_SUCCESS;
     u32			dataBlksCnt, totBATEnt, secBitmapBlksCnt;
     size_t		outLen;
     size_t		creatorSize = strlen(creator);
@@ -160,7 +174,7 @@ u32 _AXP_VHDX_Create(
 	    vhdx->diskSize = diskSize;
 	    vhdx->blkSize = blkSize;
 	    vhdx->sectorSize = sectorSize;
-	    vhdx->fixed = false;
+	    vhdx->fixed = (flags == CREATE_FULL_PHYSICAL_ALLOCATION);
 	}
 	else
 	{
@@ -447,20 +461,31 @@ u32 _AXP_VHDX_Create(
      * last sector bitmap block that contains the last payload sector. The
      * total number of BAT entries can be calculated as:
      *	totBATEnt = secBitmapBlksCnt * (chunkRatio + 1)
-     *
-     * TODO: If we are not doing a fixed file, then the following can be skipped.
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
+	u64	blkOffset = (vhdx->fixed ? AXP_VHDX_DATA_LOC : 0);
+	u64	batState = (vhdx->fixed ?
+			AXP_VHDX_PAYL_BLK_FULLY_PRESENT :
+			AXP_VHDX_PAYL_BLK_NOT_PRESENT);;
+
 	chunkRatio = (8 * ONE_M * (u64) sectorSize) / (u64) blkSize;
 	dataBlksCnt = ceil((double) diskSize / (double) blkSize);
 
 	/*
-	 * TODO: How is a differencing VHDX created?
+	 * If we don't have a parent disk, then we are not creating a
+	 * differencing VHDX.  Otherwise, we are.  The calculation for the
+	 * total number of BAT entries is different depending upon this
+	 * distinction.
 	 */
-	secBitmapBlksCnt = ceil((double) dataBlksCnt / (double) chunkRatio);
-	totBATEnt = dataBlksCnt +
+	if (parentPath == NULL)
+	    totBATEnt = dataBlksCnt +
 		    floor((double) (dataBlksCnt - 1)/(double) chunkRatio);
+	else
+	{
+	    secBitmapBlksCnt = ceil((double) dataBlksCnt / (double) chunkRatio);
+	    totBATEnt = secBitmapBlksCnt * (chunkRatio + 1);
+	}
 
 	/*
 	 * Since we are creating the file, we will repeat the BAT Entry to
@@ -469,8 +494,8 @@ u32 _AXP_VHDX_Create(
 	 */
 	memset(outBuf, 0, SIXTYFOUR_K);
 	batEnt = (AXP_VHDX_BAT_ENT *) outBuf;
-	batEnt->state = AXP_VHDX_PAYL_BLK_NOT_PRESENT;
-	batEnt->fileOff = 0;
+	batEnt->state = batState;
+	batEnt->fileOff = blkOffset / ONE_M;
 
 	/*
 	 * Go write out all the BAT entries to the virtual disk.
@@ -478,12 +503,35 @@ u32 _AXP_VHDX_Create(
 	batOff = AXP_VHDX_BAT_LOC;
 	for (ii = 0; ((ii < totBATEnt) && (writeRet == true)); ii++)
 	{
+
+	    /*
+	     * If we are writing a Sector Bitmap Block, then we need to make
+	     * sure the state and offset are correct.
+	     */
+	    if ((ii != 0) && ((ii % chunkRatio) == 0))
+	    {
+		batEnt->state = AXP_VHDX_SB_BLK_NOT_PRESENT;
+		batEnt->fileOff = 0;
+	    }
 	    writeRet = AXP_WriteAtOffset(
 				vhdx->fp,
 				outBuf,
 				AXP_VHDX_BAT_ENT_LEN,
 				batOff);
+
+	    /*
+	     * If we just wrote a Sector Bitmap Block, then we need to set the
+	     * state and offset back to what it should be for a Payload Block.
+	     */
+	    if ((ii != 0) && ((ii % chunkRatio) == 0))
+	    {
+		batEnt->state = batState;
+		batEnt->fileOff = blkOffset / ONE_M;
+	    }
 	    batOff += AXP_VHDX_BAT_ENT_LEN;
+
+	    if (vhdx->fixed == true)
+		blkOffset += blkSize;
 	}
 	if (writeRet == false)
 	{
@@ -521,6 +569,7 @@ u32 _AXP_VHDX_Create(
      *	2) Virtual Disk Size
      *	3) Logical Sector Size
      *	4) Physical Sector Size
+     *	5)
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
@@ -535,7 +584,7 @@ u32 _AXP_VHDX_Create(
 	 */
 	metaHdr = (AXP_VHDX_META_HDR *) outBuf;
 	metaHdr->sig= AXP_METADATA_SIG;
-	metaHdr->entryCnt = 5;
+	metaHdr->entryCnt = (parentPath != NULL) ? 6: 5;
 
 	/*
 	 * The first entry is immediately after the header.
@@ -571,9 +620,16 @@ u32 _AXP_VHDX_Create(
 		    metaEnt->isVirtualDisk = 1;
 		    break;
 
-		case 4:
+		case 4: /* Paga 83 */
 		    AXP_VHD_KnownGUIDDisk(AXP_Page_83, &metaEnt->guid);
 		    metaEnt->len = AXP_VHDX_META_PAGE83_LEN;
+		    metaEnt->isVirtualDisk = 1;
+		    break;
+
+		case 5: /* Parent Locator */
+		    AXP_VHD_KnownGUIDDisk(AXP_Parent_Locator, &metaEnt->guid);
+		    metaEnt->len =
+			AXP_VHDX_META_PAR_HDR_LEN + AXP_VHDX_META_PAR_ENT_LEN;
 		    metaEnt->isVirtualDisk = 1;
 		    break;
 	    }
@@ -638,11 +694,11 @@ u32 _AXP_VHDX_Create(
 
 	/*
 	 * First, the File Parameters.
-	 *
-	 * TODO: Do we want to have a fixed or dynamic VHDX file?
 	 */
 	metaFile = (AXP_VHDX_META_FILE *) outBuf;
 	metaOff = AXP_VHDX_META_FILE_LEN;
+	metaFile->leaveBlksAlloc = (vhdx->fixed) ? 1 : 0;
+	metaFile->hasParent = (parentPath != NULL) ? 1 : 0;
 	metaFile->blkSize = blkSize;
 
 	/*
@@ -667,11 +723,41 @@ u32 _AXP_VHDX_Create(
 	metaSec->secSize = AXP_VHDX_PHYS_SEC_SIZE;
 
 	/*
-	 * Finally, Page 83 Data
+	 * Last required item, Page 83 Data
 	 */
 	meta83 = (AXP_VHDX_META_PAGE83 *) &outBuf[metaOff];
 	metaOff += AXP_VHDX_META_PAGE83_LEN;
 	AXP_VHD_SetGUIDDisk(&meta83->pg83Data);
+
+	/*
+	 * Optionally, the Parent Locator.
+	 */
+	if (parentPath != NULL)
+	{
+	    char *key = "absolute_win32_path";
+
+	    /*
+	     * Parent Locator Header
+	     */
+	    metaParHdr = (AXP_VHDX_META_PAR_HDR *) &outBuf[metaOff];
+	    metaOff += AXP_VHDX_META_PAR_HDR_LEN;
+	    AXP_VHD_KnownGUIDDisk(AXP_ParentLocator_Type, &metaEnt->guid);
+	    metaParHdr->keyValCnt = 1;
+
+	    /*
+	     * Parent Locator Entry
+	     */
+	    metaParEnt = (AXP_VHDX_META_PAR_ENT *) &outBuf[metaOff];
+	    metaOff += AXP_VHDX_META_PAR_ENT_LEN;
+	    metaParEnt->keyLen = strlen(key);
+	    metaParEnt->valLen = strlen(parentPath);
+	    metaParEnt->keyOff = metaOff;
+	    metaOff += metaParEnt->keyLen;
+	    metaParEnt->valOff = metaOff;
+	    metaOff += metaParEnt->valLen;
+	    strncpy(&outBuf[metaParEnt->keyOff], key, metaParEnt->keyLen);
+	    strncpy(&outBuf[metaParEnt->valOff], parentPath, metaParEnt->valLen);
+	}
 
 	/*
 	 * Write out the Metadata Items.
@@ -681,6 +767,15 @@ u32 _AXP_VHDX_Create(
 				outBuf,
 				SIXTYFOUR_K,
 				(AXP_VHDX_META_LOC + AXP_VHDX_META_START_OFF));
+
+	if ((writeRet == true) && (vhdx->fixed == true))
+	{
+	    writeRet = AXP_WriteAtOffset(
+				vhdx->fp,
+				"\0",
+				1,
+				AXP_VHDX_DATA_LOC + vhdx->diskSize - 1);
+	}
 
 	/*
 	 * Before returning to the caller, set the value of the handle to

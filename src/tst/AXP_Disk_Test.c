@@ -23,9 +23,9 @@
  *  V01.000	01-Jul-2018	Jonathan D. Belanger
  *  Initially written.
  */
+#include <AXP_VirtualDisk.h>
 #include "AXP_Utility.h"
 #include "AXP_Trace.h"
-#include "AXP_virtdisk.h"
 #include "AXP_VHD_Utility.h"
 
 typedef struct
@@ -238,7 +238,7 @@ int main(void)
     AXP_VHD_KnownGUIDMemory(AXP_Vendor_Microsoft, &storageType.vendorID);
 
     printf(
-	"Test %d: Create a VHDX(v%d) disk in %s with the name of %s of %lld "
+	"Test %d: Create a VHDX(v%d) disk in %s with the name of %s of %llu "
 	"bytes in size...\n",
 	ii++,
 	createParam.ver,
