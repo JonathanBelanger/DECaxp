@@ -167,6 +167,15 @@ typedef u32		AXP_VHD_BAT_ENT;
 /*
  * Function Prototypes
  */
-u32 _AXP_VHD_Create(char *, u64, u32, u32, u32, AXP_VHD_HANDLE *);
+u32 _AXP_VHD_Create(
+		char *,
+		AXP_VHD_CREATE_FLAG,
+		char *,
+		u32,
+		u64,
+		u32,
+		u32,
+		u32,
+		AXP_VHD_HANDLE *);
 
 #endif /* _AXP_VHD_H_ */

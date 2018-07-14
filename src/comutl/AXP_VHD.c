@@ -173,12 +173,18 @@ void AXP_VHD_CHSCalc(
  *  Creates a virtual hard disk (VHD) image file.
  *
  * Input Parameters:
- *  storageType:
- *	A pointer to a VIRTUAL_STORAGE_TYPE structure that contains the desired
- *	disk type and vendor information.
  *  path:
  *	A pointer to a valid string that represents the path to the new virtual
  *	disk image file.
+ *  flags:
+ *	Creation flags, which must be a valid combination of the
+ *	AXP_VHD_CREATE_FLAG enumeration.
+ *  parentPath:
+ *	A pointer to a valid string that represents the path to the parent
+ *	virtual disk image file.  This means that we are creating a
+ *	differential VHD.
+ *  parentDevID:
+ *	An unsigned 32-bit value indicating the disk type of the parent.
  *  diskSize:
  *	An unsigned 64-bit value for the size of the disk to be created, in
  *	bytes.
@@ -203,6 +209,9 @@ void AXP_VHD_CHSCalc(
  */
 u32 _AXP_VHD_Create(
 		char *path,
+		AXP_VHD_CREATE_FLAG flags,
+		char *parentPath,
+		u32 parentDevID,
 		u64 diskSize,
 		u32 blkSize,
 		u32 sectorSize,
@@ -235,7 +244,7 @@ u32 _AXP_VHD_Create(
 	    vhd->diskSize = diskSize;
 	    vhd->blkSize = blkSize;
 	    vhd->sectorSize = sectorSize;
-	    vhd->fixed = false;
+	    vhd->fixed = (flags == CREATE_FULL_PHYSICAL_ALLOCATION);
 	}
 	else
 	{

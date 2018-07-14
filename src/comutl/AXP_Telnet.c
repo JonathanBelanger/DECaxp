@@ -315,7 +315,7 @@ static u32 AXP_Telnet_Trace(int, u8 *, u32);
 static bool AXP_Telnet_Listener(int *);
 static AXP_TELNET_SESSION *AXP_Telnet_Accept(int);
 static bool AXP_Telnet_Receive(AXP_TELNET_SESSION *, u8 *, u32 *);
-static bool AXP_Telnet_Reject(AXP_TELNET_SESSION *);
+static bool AXP_Telnet_Reject(AXP_TELNET_SESSION **);
 static bool AXP_Telnet_Ignore(int);
 static bool AXP_Telnet_Processor(AXP_TELNET_SESSION *, u8 *, u32);
 
@@ -1279,7 +1279,7 @@ static bool AXP_Telnet_Receive(AXP_TELNET_SESSION *ses, u8 *buf, u32 *bufLen)
      * the connection has been terminated for one reason or other (them
      * or us).
      */
-    if (*bufLen <= 0)
+    if ((i32) *bufLen <= 0)
 	retVal = false;
 
     /*
@@ -1364,8 +1364,8 @@ bool AXP_Telnet_Send(AXP_TELNET_SESSION *ses, u8 *buf, int bufLen)
  *  does not close the socket used to receive connection requests.
  *
  * Input Parameters:
- *  sock:
- *	The value of the socket to be closed.
+ *  ses:
+ *	A pointer to the address of the TELNET session block..
  *
  * Output Parameters:
  *  None.
@@ -1374,20 +1374,20 @@ bool AXP_Telnet_Send(AXP_TELNET_SESSION *ses, u8 *buf, int bufLen)
  *  true:	The TELNET socket has been closed.
  *  false:	Failure.
  */
-static bool AXP_Telnet_Reject(AXP_TELNET_SESSION *ses)
+static bool AXP_Telnet_Reject(AXP_TELNET_SESSION **ses)
 {
     bool	retVal = true;
 
     /*
      * Close the socket.
      */
-    close(ses->mySocket);
+    close((*ses)->mySocket);
 
     /*
      * Return the block of memory back to the system.
      */
     AXP_Deallocate_Block((AXP_BLOCK_DSC *) ses);
-    ses = NULL;
+    *ses = NULL;
     printf("TELNET session has been closed...\n");
 
     /*
@@ -1600,7 +1600,7 @@ void AXP_Telnet_Main(void)
 		break;
 
 	    case Inactive:
-		retVal = AXP_Telnet_Reject(ses);
+		retVal = AXP_Telnet_Reject(&ses);
 		ses = NULL;
 		srvState = Listen;
 		break;

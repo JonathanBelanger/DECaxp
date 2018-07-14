@@ -24,11 +24,11 @@
  *  V01.000	08-Jul-2018	Jonathan D. Belanger
  *  Initially written.
  */
+#include <AXP_VirtualDisk.h>
 #include "AXP_Utility.h"
 #include "AXP_Blocks.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
-#include "AXP_virtdisk.h"
 #include "AXP_VHDX.h"
 #include "AXP_VHD.h"
 
@@ -90,9 +90,10 @@ u32 AXP_VHD_Create(
 		AXP_VHD_ASYNC *async,
 		AXP_VHD_HANDLE *handle)
 {
+    char		*parentPath;
     u64			diskSize;
     u32			retVal = AXP_VHD_SUCCESS;
-    u32			blkSize, sectorSize, deviceID;
+    u32			blkSize, sectorSize, deviceID, parentDevID;
 
     /*
      * Go check the parameters and extract some information from within them.
@@ -104,6 +105,8 @@ u32 AXP_VHD_Create(
     		flags,
     		param,
     		handle,
+		&parentPath,
+		&parentDevID,
     		&diskSize,
     		&blkSize,
     		&sectorSize,
@@ -114,9 +117,16 @@ u32 AXP_VHD_Create(
      */
     switch (storageType->deviceID)
     {
+
+	/*
+	 * Create a VHD formatted virtual disk.
+	 */
 	case STORAGE_TYPE_DEV_VHD:
 	    retVal = _AXP_VHD_Create(
 	    		path,
+			flags,
+			parentPath,
+			parentDevID,
 	    		diskSize,
 	    		blkSize,
 	    		sectorSize,
@@ -124,14 +134,28 @@ u32 AXP_VHD_Create(
 	    		handle);
 	    break;
 
+
+	/*
+	 * Create a VHDX formatted virtual disk.
+	 */
 	case STORAGE_TYPE_DEV_VHDX:
 	    retVal = _AXP_VHDX_Create(
 	    		path,
+			flags,
+			parentPath,
+			parentDevID,
 	    		diskSize,
 	    		blkSize,
 	    		sectorSize,
 			deviceID,
 	    		handle);
+	    break;
+
+	/*
+	 * Create a RAW virtual disk.  This is used for either an entire disk
+	 * drive or a virtual disk drive.
+	 */
+	case STORAGE_TYPE_DEV_RAW:
 	    break;
 
 	case STORAGE_TYPE_DEV_UNKNOWN:
