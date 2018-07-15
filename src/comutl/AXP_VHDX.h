@@ -271,6 +271,7 @@ typedef struct
     u32			deviceID;
     char		*filePath;
     bool		fixed;
+    bool		readOnly;
 
     /*
      * This is the file pointer and file name associated with the VHD.
@@ -302,5 +303,6 @@ u32 _AXP_VHDX_Create(
 		u32,
 		u32,
 		AXP_VHD_HANDLE *);
+u32 _AXP_VHDX_Open(char *, AXP_VHD_OPEN_FLAG, u32, AXP_VHD_HANDLE *);
 
 #endif /* _AXP_VHDX_H_ */

@@ -893,3 +893,36 @@ u32 _AXP_VHDX_Create(
      */
     return(retVal);
 }
+
+/*
+ * _AXP_VHDX_Open
+ *  This function is called to open a VHDX virtual disk.
+ *
+ * Input Parameters:
+ *  path:
+ *	A pointer to a valid string that represents the path to the new VHDX
+ *	disk image file.
+ *  flags:
+ *	Open flags, which must be a valid combination of the AXP_VHD_OPEN_FLAG
+ *	enumeration.
+ *  deviceID:
+ *	An unsigned 32-bit value indicating the disk type being opened.
+ *
+ * Output Parameters:
+ *  handle:
+ *  	A pointer to the handle object that represents the newly opened
+ *  	VHDX disk.
+ */
+u32 _AXP_VHDX_Open(
+		char *path,
+		AXP_VHD_OPEN_FLAG flags,
+		u32 deviceID,
+		AXP_VHD_HANDLE *handle)
+{
+    u32		retVal = AXP_VHD_SUCCESS;
+
+    /*
+     * Return the outcome of this call back to the caller.
+     */
+    return(retVal);
+}
