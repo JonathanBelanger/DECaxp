@@ -177,5 +177,6 @@ u32 _AXP_VHD_Create(
 		u32,
 		u32,
 		AXP_VHD_HANDLE *);
+u32 _AXP_VHD_Open(char *, AXP_VHD_OPEN_FLAG, u32, AXP_VHD_HANDLE *);
 
 #endif /* _AXP_VHD_H_ */

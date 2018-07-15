@@ -30,7 +30,10 @@
 #include "AXP_Blocks.h"
 #include "AXP_Trace.h"
 #include "AXP_VHD_Utility.h"
+#include "AXP_VHD.h"
 #include "AXP_VHDX.h"
+#include <sys/stat.h>
+#include <fcntl.h>
 
 /*
  * Let's define some local items.
@@ -613,12 +616,12 @@ u32 AXP_VHD_ValidateCreate(
 	    if (flags == CREATE_FULL_PHYSICAL_ALLOCATION)
 		*parentPath = NULL;
 
-
 	    /*
 	     * Finally, let's check the values supplied in various parameters.
 	     *
 	     *	1) Only Version 1 and Version 2 are supported at this time.
 	     *	2) If Version 2, then the Access Mask must be NONE.
+	     *	3) The access mask must only include the same bits set by ALL.
 	     *	3) Block Size needs to be between the minimum and maximum, and
 	     *	   be a power of 2.
 	     *	4) Sector Size must be either the minimum or maximum (but not
@@ -629,6 +632,7 @@ u32 AXP_VHD_ValidateCreate(
 	    if (((param->ver != CREATE_VER_1) && (param->ver != CREATE_VER_2)) ||
 		((param->ver == CREATE_VER_2) && (accessMask != ACCESS_NONE)) ||
 		(flags > CREATE_FULL_PHYSICAL_ALLOCATION) ||
+		((accessMask & ~ACCESS_ALL) != 0) ||
 		(((*blkSize <= minBlk) || (*blkSize >= maxBlk)) ||
 		 (IS_POWER_OF_2(*blkSize) == false)) ||
 		((*sectorSize != minSector) && (*sectorSize != maxSector)) ||
@@ -640,6 +644,356 @@ u32 AXP_VHD_ValidateCreate(
 	}
 	else
 	    retVal = AXP_VHD_INV_PARAM;
+    }
+    else
+	retVal = AXP_VHD_INV_PARAM;
+
+    /*
+     * Return the parameter checking results back to the caller.
+     */
+    return(retVal);
+}
+
+/*
+ * AXP_VHD_ValidateOpen
+ *  This function is called to validate the parameters for the AXP_VHD_Open.
+ *  The output parameters are local, to the AXP_VHD_Open function, so that it
+ *  can only deal with a known set of values.
+ *
+ * Input Parameters:
+ *  storageType:
+ *	A pointer to a structure containing the storage type information.
+ *  path:
+ *	A pointer to the string containing the full path to the file.
+ *  accessMask:
+ *	A value indicating the type of access being requested.  This is
+ *	validated, but not necessarily utilized.
+ *  flags:
+ *	A value indicating the type of open being requested.
+ *  param:
+ *	A pointer to a structure containing the information supplied by the
+ *	caller to specifics about the Virtual Hard Disk (VHD) being opened.
+ *  handle:
+ *	A pointer to the VHD handle
+ *
+ * Output Parameters:
+ *  deviceID:
+ *	A pointer to a 32-bit unsigned integer to receive the type of device
+ *	being opened.  This may be different that what is specified in the
+ *	storageType parameter, since storageType can indicate ANY.
+ *
+ * Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_INV_PARAM:		An invalid parameter or combination of
+ *				parameters was detected.
+ */
+u32 AXP_VHD_ValidateOpen(
+		AXP_VHD_STORAGE_TYPE *storageType,
+		char *path,
+		AXP_VHD_ACCESS_MASK accessMask,
+		AXP_VHD_OPEN_FLAG flags,
+		AXP_VHD_OPEN_PARAM *param,
+		AXP_VHD_HANDLE *handle,
+		u32 *deviceID)
+{
+    u32			retVal = AXP_VHD_SUCCESS;
+    AXP_VHD_KnownGUIDs	vendorGuid;
+
+    /*
+     * We really should have all the following parameters supplied on the call.
+     * We assume the return parameters are present, since this function is only
+     * ever called from within the tool.
+     */
+    if ((storageType != NULL) &&
+	(handle != NULL) &&
+	(path != NULL))
+    {
+
+	/*
+	 * Let's check the values supplied in various parameters.
+	 *
+	 *	1) Only Version 1 is supported at this time.
+	 *	2) The access mask must only include the same bits set by ALL.
+	 *	3) The flags is not equal to OPEN_NO_PARENTS or OPEN_BLANK_FILE.
+	 */
+	if (((param != NULL) && (param->ver != OPEN_VER_1)) ||
+	    ((accessMask & ~ACCESS_ALL) != 0) ||
+	    ((flags != OPEN_NO_PARENTS) && (flags != OPEN_BLANK_FILE)))
+	    retVal = AXP_VHD_INV_PARAM;
+	else
+	{
+	    vendorGuid = AXP_VHD_KnownGUID(&storageType->vendorID);
+	    if ((vendorGuid == AXP_Vendor_Microsoft) ||
+		(vendorGuid == AXP_Vendor_Unknown))
+		*deviceID = storageType->deviceID;
+	    else
+		retVal = AXP_VHD_INV_PARAM;
+	}
+    }
+    else
+	retVal = AXP_VHD_INV_PARAM;
+
+    /*
+     * Return the parameter checking results back to the caller.
+     */
+    return(retVal);
+}
+
+/*
+ * AXP_VHD_GetDeviceID
+ *  This function is called when the device ID specified on the open call
+ *  indicates that any supported virtual/physical disk drive can be used.  The
+ *  way this is performed is as follows:
+ *
+ *	1) The file/device is opened.
+ *	2) Certain locations are read from the file/device.
+ *	3) Based on what is read in step 2, the device ID is determined (if
+ *	   it can be).  If not, a AXP_VHD_FILE_CORRUPT error is returned.
+ *
+ * Input Parameters:
+ *  path:
+ *	A pointer to the string containing the full path to the file.
+ *
+ * Output Parameters:
+ *  deviceID:
+ *	A pointer to a 32-bit unsigned integer to receive the type of device
+ *	being opened.  This may be different that what is specified in the
+ *	storageType parameter, since storageType can indicate ANY.
+ *
+ * Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_INV_PARAM:		The path points to a directory (folder).  We
+ *				don't support this.
+ *  AXP_VHD_FILE_NOT_FOUND:	Virtual disk file not found.
+ *  AXP_VHD_PATH_NOT_FOUND:	Physical disk not found.
+ *  AXP_VHD_FILE_CORRUPT:	The type of virtual/physical device could not
+ *  				be determined.  The files/device may be
+ *  				corrupt.
+ */
+u32 AXP_VHD_GetDeviceID(char *path, u32 *deviceID)
+{
+    FILE		*fp;
+    char		*dot;
+    u32			retVal = AXP_VHD_SUCCESS;
+    u32			likelyDevID;
+    struct stat		statBuf;
+    bool		isFile = false;
+    bool		isDirectory = false;
+    bool		isDevice = false;
+
+    /*
+     * So, we need to determine they device type.  To do this, we open the file
+     * for read only (we don't want to corrupt anything or make any kind of
+     * changes).  The easiest format to detect is VHDX, as this virtual hard
+     * disk (VHD) file has the string "vhdxfile" in the first 8 bytes.  Next
+     * will be VHD, as this file has at 512 (or 511) bytes from the end of the
+     * file the string "conectix".  Next, we'll look to determine if the file
+     * is an ISO file.  And finally, a physical disk drive.
+     *
+     * We can look at the path parameter for a potential device type.  If it
+     * has a file extension of .vhdx, .vhd, or .iso, then it may be one of
+     * these.
+     */
+    dot = strchr(path, '.');
+    if (dot != NULL)
+    {
+	if (strcmp(dot, ".vhdx") == 0)
+	    likelyDevID = STORAGE_TYPE_DEV_VHDX;
+	else if (strcmp(dot, ".vhd") == 0)
+	    likelyDevID = STORAGE_TYPE_DEV_VHD;
+	else if (strcmp(dot, ".iso") == 0)
+	    likelyDevID = STORAGE_TYPE_DEV_ISO;
+	else
+	    likelyDevID = STORAGE_TYPE_DEV_RAW;
+    }
+    else
+	likelyDevID = STORAGE_TYPE_DEV_RAW;
+
+    /*
+     * Use stat() to get information about the item pointed to by the path
+     * parameter.
+     */
+    if (stat(path, &statBuf) != -1)
+    {
+	if (S_ISREG(statBuf.st_mode))
+	    isFile = true;
+	else if (S_ISDIR(statBuf.st_mode))
+	    isDirectory = true;
+	else if (S_ISBLK(statBuf.st_mode))
+	    isDevice = true;
+    }
+
+    /*
+     * OK, if we have a file or device, then we have something to test further.
+     * If this is a directory, we'll return a File Corrupt error.
+     */
+    if ((isFile == true) || (isDevice == true))
+    {
+	struct
+	{
+	    u8		type;
+	    char	identifier[5];
+	    u8		version;
+	    u8		data[2041];
+	}		_cd001;
+	size_t		outLen;
+	u64		offset;
+
+	fp = fopen(path, "rb");
+	if (fp != NULL)
+	{
+
+	    /*
+	     * If we have what we think is a device or an ISO file, then it can
+	     * either be an actual device or possibly a CDROM/DVD.  So, we need
+	     * to go a bit deeper to determine this.
+	     */
+	    if (((isFile == true) && (likelyDevID == STORAGE_TYPE_DEV_ISO)) ||
+		((isDevice == true) && (likelyDevID == STORAGE_TYPE_DEV_RAW)))
+	    {
+
+		/*
+		 * An ISO 9660 formatted device or file has it's volume
+		 * descriptors starting at the 16th 2K sector in.
+		 */
+		outLen = TWO_K;
+		offset = (16 * TWO_K);
+		if (AXP_ReadFromOffset(fp, &_cd001, &outLen, offset) == true)
+		{
+
+		    /*
+		     * If the identifier field is 'CD001', then we have an ISO
+		     * file.  If we think we should have had a RAW device, then
+		     * we have a device.  If we ended up with 'CD001' not being
+		     * in the file/device, and we thought we should have had an
+		     * ISO file, then something does not match up.  We're going
+		     * to return a File Corrupt error.
+		     */
+		    if (strncmp(_cd001.identifier, "CD001", 5) == 0)
+			*deviceID = STORAGE_TYPE_DEV_ISO;
+		    else if (likelyDevID == STORAGE_TYPE_DEV_RAW)
+			*deviceID = STORAGE_TYPE_DEV_RAW;
+		    else
+			retVal = AXP_VHD_FILE_CORRUPT;
+		}
+		else
+		    *deviceID = STORAGE_TYPE_DEV_RAW;
+	    }
+
+	    /*
+	     * OK, a file can be one of:
+	     *
+	     *	1) VHD	has 'conectix' at either EOF - [512|511] bytes.
+	     *	2) VHDX	has 'vhdxfile' at beginning of file.
+	     *	3) ISO	has 'CD001' at offset 32K (16th 2K sector) byte.
+	     */
+	    else if (isFile == true)
+	    {
+		u64	signature;
+
+		/*
+		 * It's easiest to check for VHDX, as the signature for this
+		 * virtual hard disk type is at the very beginning of the file.
+		 */
+		outLen = sizeof(u64);
+		offset = 0;
+		if (AXP_ReadFromOffset(fp, &signature, &outLen, offset) == true)
+		{
+		    if (signature == AXP_VHDXFILE_SIG)
+		    {
+			if ((likelyDevID == STORAGE_TYPE_DEV_VHDX) ||
+			    (likelyDevID == STORAGE_TYPE_DEV_RAW))
+			    *deviceID = STORAGE_TYPE_DEV_VHDX;
+			else
+			    retVal = AXP_VHD_FILE_CORRUPT;
+		    }
+		    else
+		    {
+			i64 fileSize = AXP_GetFileSize(fp);
+			u64 signature2;
+			u8 inBuf[9];
+
+			if (fileSize >= 511)
+			{
+			    outLen = 9;
+			    offset = fileSize - (fileSize == 511 ? 511 : 512);
+			    if (AXP_ReadFromOffset(
+					fp,
+					&inBuf,
+					&outLen,
+					offset) == true)
+			    {
+				signature = *((u64 *) inBuf);
+				signature2 = *((u64 *) &inBuf[1]);
+				if ((signature == AXP_VHD_DYNAMIC_SIG) ||
+				    (signature2 == AXP_VHD_DYNAMIC_SIG))
+				{
+				    if ((likelyDevID == STORAGE_TYPE_DEV_VHD) ||
+					(likelyDevID == STORAGE_TYPE_DEV_RAW))
+					*deviceID = STORAGE_TYPE_DEV_VHD;
+				    else
+					retVal = AXP_VHD_FILE_CORRUPT;
+				}
+			    }
+			    else
+			    {
+
+				/*
+				 * An ISO 9660 formatted device or file has
+				 * it's volume descriptors starting at the 16th
+				 * 2K sector in.
+				 */
+				outLen = TWO_K;
+				offset = (16 * TWO_K);
+				if (AXP_ReadFromOffset(
+						fp,
+						&_cd001,
+						&outLen,
+						offset) == true)
+				{
+
+				    /*
+				     * If the identifier field is 'CD001', then
+				     * we have an ISO file.
+				     */
+				    if (strncmp(_cd001.identifier, "CD001", 5) == 0)
+				    {
+					if ((likelyDevID == STORAGE_TYPE_DEV_ISO) ||
+					    (likelyDevID == STORAGE_TYPE_DEV_RAW))
+					    *deviceID = STORAGE_TYPE_DEV_ISO;
+					else
+					    retVal = AXP_VHD_FILE_CORRUPT;
+				    }
+				    else
+					retVal = AXP_VHD_FILE_CORRUPT;
+				}
+				else
+				    retVal = AXP_VHD_FILE_CORRUPT;
+			    }
+			}
+			else
+			    retVal = AXP_VHD_FILE_CORRUPT;
+		    }
+		}
+		else
+		    retVal = AXP_VHD_FILE_CORRUPT;
+	    }
+
+	    /*
+	     * Close the file, so it can be reopened later when we need to and
+	     * also parse some things out.
+	     */
+	    fclose(fp);
+	}
+	else
+	{
+	    if (isFile == true)
+		retVal = AXP_VHD_FILE_NOT_FOUND;
+	    else if (isDevice == true)
+		retVal = AXP_VHD_PATH_NOT_FOUND;
+	    else
+		retVal = AXP_VHD_INV_PARAM;
+	}
     }
     else
 	retVal = AXP_VHD_INV_PARAM;

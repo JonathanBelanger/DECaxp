@@ -75,6 +75,15 @@ u32 AXP_VHD_ValidateCreate(
 		u32 *,
 		u32 *,
 		u32 *);
+u32 AXP_VHD_ValidateOpen(
+		AXP_VHD_STORAGE_TYPE *,
+		char *,
+		AXP_VHD_ACCESS_MASK,
+		AXP_VHD_OPEN_FLAG,
+		AXP_VHD_OPEN_PARAM *,
+		AXP_VHD_HANDLE *,
+		u32 *);
+u32 AXP_VHD_GetDeviceID(char *, u32 *);
 void AXP_Dump_VHD_Info(AXP_VHD_HANDLE);
 
 #endif /* _AXP_VHD_UTILITY_H_ */

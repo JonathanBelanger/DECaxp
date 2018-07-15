@@ -35,7 +35,7 @@
 /*
  * AXP_VHD_Create
  *  Creates a virtual hard disk (VHD) image file, either using default
- *  parameters or using an existing virtual disk or physical disk.
+ *  parameters or using an existing virtual disk.
  *
  * Input Parameters:
  *  storageType:
@@ -113,60 +113,201 @@ u32 AXP_VHD_Create(
     		&deviceID);
 
     /*
-     * Based on storage type, call the appropriate create function.
+     * If the parameters we good, then we can proceed with trying to create the
+     * virtual hard disk.
      */
-    switch (storageType->deviceID)
+    if (retVal == AXP_VHD_SUCCESS)
     {
 
 	/*
-	 * Create a VHD formatted virtual disk.
+	 * Based on storage type, call the appropriate create function.
 	 */
-	case STORAGE_TYPE_DEV_VHD:
-	    retVal = _AXP_VHD_Create(
-	    		path,
-			flags,
-			parentPath,
-			parentDevID,
-	    		diskSize,
-	    		blkSize,
-	    		sectorSize,
-			deviceID,
-	    		handle);
-	    break;
+	switch (deviceID)
+	{
+
+	    /*
+	     * Create a VHD formatted virtual disk.
+	     */
+	    case STORAGE_TYPE_DEV_VHD:
+		retVal = _AXP_VHD_Create(
+			    path,
+			    flags,
+			    parentPath,
+			    parentDevID,
+			    diskSize,
+			    blkSize,
+			    sectorSize,
+			    deviceID,
+			    handle);
+		break;
 
 
-	/*
-	 * Create a VHDX formatted virtual disk.
-	 */
-	case STORAGE_TYPE_DEV_VHDX:
-	    retVal = _AXP_VHDX_Create(
-	    		path,
-			flags,
-			parentPath,
-			parentDevID,
-	    		diskSize,
-	    		blkSize,
-	    		sectorSize,
-			deviceID,
-	    		handle);
-	    break;
+	    /*
+	     * Create a VHDX formatted virtual disk.
+	     */
+	    case STORAGE_TYPE_DEV_VHDX:
+		retVal = _AXP_VHDX_Create(
+			    path,
+			    flags,
+			    parentPath,
+			    parentDevID,
+			    diskSize,
+			    blkSize,
+			    sectorSize,
+			    deviceID,
+			    handle);
+		break;
 
-	/*
-	 * Create a RAW virtual disk.  This is used for either an entire disk
-	 * drive or a virtual disk drive.
-	 */
-	case STORAGE_TYPE_DEV_RAW:
-	    break;
-
-	case STORAGE_TYPE_DEV_UNKNOWN:
-	case STORAGE_TYPE_DEV_ISO:
-	default:
-	    retVal = AXP_VHD_CALL_NOT_IMPL;
-	    break;
+	    /*
+	     * We don't create RAW or ISO disks.  For RAW disks, we are accessing
+	     * the physical disk drive.  For ISO disks, these have an file format
+	     * that is embedded in the disk, so at the system level, we should not
+	     * be making any assumptions.
+	     */
+	    case STORAGE_TYPE_DEV_RAW:
+	    case STORAGE_TYPE_DEV_ISO:
+	    case STORAGE_TYPE_DEV_UNKNOWN:
+	    default:
+		retVal = AXP_VHD_CALL_NOT_IMPL;
+		break;
+	}
     }
 
     /*
      * Return the result of this call back to the caller.
+     */
+    return(retVal);
+}
+
+/*
+ * AXP_VHD_Open
+ *  This function is called to open an already created virtual disk.  This
+ *  function can be called to determine, based on the file path, whether the
+ *  disk being opened is a VHDX, VHD, or RAW format.  The last is used for
+ *  physical disks.
+ *
+ * Input Parameters:
+ *  storageType:
+ *	A pointer to a VIRTUAL_STORAGE_TYPE structure that contains the desired
+ *	disk type and vendor information.
+ *  path:
+ *	A pointer to a valid string that represents the path to the virtual
+ *	disk image file or physical disk.
+ *  accessMask:
+ *	The AXP_VHD_ACCESS_MASK value to use when opening the virtual disk
+ *	file or physical disk.
+ *  flags:
+ *	Open flags, which must be a valid combination of the
+ *	AXP_VHD_OPEN_FLAG enumeration.
+ *  param:
+ *	A pointer to a valid AXP_VHD_OPEN_PARAM structure that contains open
+ *	parameter data.
+ *
+ * Output Parameters:
+ *  handle:
+ *  	A pointer to the handle object that represents the newly opened virtual
+ *  	or physical disk.
+ *
+ * Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_INV_PARAM:		An invalid parameter or combination of
+ *				parameters was detected.
+ *  AXP_VHD_FILE_NOT_FOUND:	Virtual disk file not found.
+ *  AXP_VHD_PATH_NOT_FOUND:	Physical disk file not found.
+ *  AXP_VHD_INV_HANDLE:		Failed to create the VHDX file.
+ */
+u32 AXP_VHD_Open(
+		AXP_VHD_STORAGE_TYPE *storageType,
+		char *path,
+		AXP_VHD_ACCESS_MASK accessMask,
+		AXP_VHD_OPEN_FLAG flags,
+		AXP_VHD_OPEN_PARAM *param,
+		AXP_VHD_HANDLE *handle)
+{
+    u32			retVal = AXP_VHD_SUCCESS;
+    u32			deviceID;
+
+    /*
+     * Go check the parameters and extract some information from within them.
+     */
+    retVal = AXP_VHD_ValidateOpen(
+    		storageType,
+    		path,
+    		accessMask,
+    		flags,
+    		param,
+    		handle,
+    		&deviceID);
+
+    /*
+     * If the device type indicates ANY, we need to go and determine what
+     * the file format actually is.  This call does not verify or validate
+     * the contents, it just looks for an indicate of what the file format
+     * actually is.
+     */
+    if ((retVal == AXP_VHD_SUCCESS) && (deviceID == STORAGE_TYPE_DEV_ANY))
+	retVal = AXP_VHD_GetDeviceID(path, &deviceID);
+
+    /*
+     * If the parameters look good, then we can proceed with trying to open
+     * the virtual/physical disk (or determining which we have).
+     */
+    if (retVal == AXP_VHD_SUCCESS)
+    {
+
+	/*
+	 * Based on storage type, call the appropriate open function.
+	 */
+	switch (deviceID)
+	{
+
+	    /*
+	     * Create a VHD formatted virtual disk.
+	     */
+	    case STORAGE_TYPE_DEV_VHD:
+		retVal = _AXP_VHD_Open(
+			    path,
+			    flags,
+			    deviceID,
+			    handle);
+		break;
+
+
+	    /*
+	     * Create a VHDX formatted virtual disk.
+	     */
+	    case STORAGE_TYPE_DEV_VHDX:
+		retVal = _AXP_VHDX_Open(
+			    path,
+			    flags,
+			    deviceID,
+			    handle);
+		break;
+
+	    case STORAGE_TYPE_DEV_RAW:
+	    case STORAGE_TYPE_DEV_ISO:
+		retVal = _AXP_RAW_Open(
+			    path,
+			    flags,
+			    deviceID,
+			    handle);
+		break;
+
+	    /*
+	     * We don't create RAW or ISO disks.  For RAW disks, we are accessing
+	     * the physical disk drive.  For ISO disks, these have an file format
+	     * that is embedded in the disk, so at the system level, we should not
+	     * be making any assumptions.
+	     */
+	    case STORAGE_TYPE_DEV_UNKNOWN:
+	    default:
+		retVal = AXP_VHD_CALL_NOT_IMPL;
+		break;
+	}
+    }
+
+    /*
+     * Return the results of this call back to the caller.
      */
     return(retVal);
 }
@@ -196,13 +337,7 @@ u32 AXP_VHD_CloseHandle(AXP_VHD_HANDLE handle)
      */
     if ((vhdx->header.type == AXP_VHDX_BLK) &&
 	(vhdx->header.size == sizeof(AXP_VHDX_Handle)))
-    {
-
-	/*
-	 * TODO: Verify there are no references to the handle.
-	 */
 	AXP_Deallocate_Block(&vhdx->header);
-    }
     else
 	retVal = AXP_VHD_INV_HANDLE;
 
