@@ -44,18 +44,21 @@ static const char *blockNames[] =
     "Telnet",
     "Disk",
     "SSD",
-    "VHDX"
+    "VHDX",
+	"Void"
 };
 
 /*
  * Define some local variables to be used to keep track of memory allocated
  * and deallocated.  These are also going to have a mutex associated with them.
  */
-static pthread_once_t 	blksOnce = PTHREAD_ONCE_INIT;
-static pthread_mutex_t	blksMutex;
-static u32 blksAllocCalls = 0;
-static u32 blksDeallocCalls = 0;
-static u32 blksBytesAlloc = 0;
+static pthread_once_t 	_blksOnce = PTHREAD_ONCE_INIT;
+static pthread_mutex_t	_blksMutex;
+static AXP_QUEUE_HDR	_blkQ = {.flink = .blink = (AXP_QUEUE_HDR *) &_blkQ};
+static u32 				_blksAllocCalls = 0;
+static u32 				_blksDeallocCalls = 0;
+static u64 				_blksBytesAlloc = 0;
+static u64 				_blksBytesDealloc = 0;
 
 /*
  * _AXP_BlocksInit_Once
@@ -77,7 +80,7 @@ void _AXP_BlocksInit_Once(void)
     /*
      * Allocate the mutex,then initialize the variables.
      */
-    pthread_mutex_init(&blksMutex, NULL);
+    pthread_mutex_init(&_blksMutex, NULL);
 
     /*
      * Return back to the caller.
@@ -86,12 +89,22 @@ void _AXP_BlocksInit_Once(void)
 }
 
 
-void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
+void *AXP_Allocate_Block(i32 blockType)
 {
-    void	*retBlock = NULL;
-    size_t	size;
+    void			*retBlock = NULL;
+	u8				*allocBlock;
+	AXP_BLOCK_HD	*head = NULL;
+	AXP_BLOCK_TL	*tail;
+	AXP_BLOCK_TYPE	type;
+    size_t			size = sizeof(AXP_BLOCK_HD) + sizeof(AXP_BLOCK_TL);
+	size_t			reqSize;
 
-    pthread_once(&blksOnce, _AXP_BlocksInit_Once);
+    pthread_once(&_blksOnce, _AXP_BlocksInit_Once);
+
+	if (blockType < 0)
+		type = AXP_VOID_BLK;
+	else
+		type = blockType;
 
     switch (blockType)
     {
@@ -99,17 +112,18 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 	    {
 		AXP_21264_CPU *cpu = NULL;
 
-		size = sizeof(AXP_21264_CPU);
-		retBlock = calloc(1, size);
-		if (retBlock != NULL)
+		reqSize = sizeof(AXP_21264_CPU);
+		size += reqSize;
+		allocBlock = calloc(1, size);
+		if (allocBlock != NULL)
 		{
+			head = (AXP_BLOCK_HD *) &allocBlock[0];
+			cpu = (AXP_21264_CPU *) &allocBlock[sizeof(AXP_BLOCK_HD)];
+			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
 
 		    /*
-		     * The calloc cleared all the memory.
+		     * Set the initial CPU state.
 		     */
-		    cpu = (AXP_21264_CPU *) retBlock;
-		    cpu->header.type = blockType;
-		    cpu->header.size = size;
 		    cpu->cpuState = Cold;
 		}
 	    }
@@ -119,14 +133,14 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 	    {
 		AXP_21274_SYSTEM *sys = NULL;
 
-		size = sizeof(AXP_21274_SYSTEM);
-		retBlock = calloc(1, size);
-		if (retBlock != NULL)
+		reqSize = sizeof(AXP_21274_SYSTEM);
+		size += reqSize;
+		allocBlock = calloc(1, size);
+		if (allocBlock != NULL)
 		{
-		    sys = (AXP_21274_SYSTEM *) retBlock;
-
-		    sys->header.type = blockType;
-		    sys->header.size = size;
+			head = (AXP_BLOCK_HD *) &allocBlock[0];
+			sys = (AXP_21274_SYSTEM *) &allocBlock[sizeof(AXP_BLOCK_HD)];
+			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
 		}
 	    }
 	    break;
@@ -135,14 +149,14 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 	    {
 		AXP_TELNET_SESSION *ses = NULL;
 
-		size = sizeof(AXP_TELNET_SESSION);
-		retBlock = calloc(1, size);
-		if (retBlock != NULL)
+		reqSize = sizeof(AXP_TELNET_SESSION);
+		size += reqSize;
+		allocBlock = calloc(1, size);
+		if (allocBlock != NULL)
 		{
-		    ses = (AXP_TELNET_SESSION *) retBlock;
-
-		    ses->header.type = blockType;
-		    ses->header.size = size;
+			head = (AXP_BLOCK_HD *) &allocBlock[0];
+			ses = (AXP_TELNET_SESSION *) &allocBlock[sizeof(AXP_BLOCK_HD)];
+			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
 		}
 	    }
 	    break;
@@ -151,14 +165,14 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 	    {
 		AXP_Disk *dsk = NULL;
 
-		size = sizeof(AXP_Disk);
-		retBlock = calloc(1, size);
-		if (retBlock != NULL)
+		reqSize = sizeof(AXP_Disk);
+		size += reqSize;
+		allocBlock = calloc(1, size);
+		if (allocBlock != NULL)
 		{
-		    dsk = (AXP_Disk *) retBlock;
-
-		    dsk->header.type = blockType;
-		    dsk->header.size = size;
+			head = (AXP_BLOCK_HD *) &allocBlock[0];
+			dsk = (AXP_Disk *) &allocBlock[sizeof(AXP_BLOCK_HD)];
+			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
 		}
 	    }
 	    break;
@@ -167,14 +181,14 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 	    {
 		AXP_SSD_Handle *ssd = NULL;
 
-		size = sizeof(AXP_SSD_Handle);
-		retBlock = calloc(1, size);
-		if (retBlock != NULL)
+		reqSize = sizeof(AXP_SSD_Handle);
+		size += reqSize;
+		allocBlock = calloc(1, size);
+		if (allocBlock != NULL)
 		{
-		    ssd = (AXP_SSD_Handle *) retBlock;
-
-		    ssd->header.type = blockType;
-		    ssd->header.size = size;
+			head = (AXP_BLOCK_HD *) &allocBlock[0];
+			ssd = (AXP_SSD_Handle *) &allocBlock[sizeof(AXP_BLOCK_HD)];
+			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
 		}
 	    }
 	    break;
@@ -183,14 +197,30 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 	    {
 		AXP_VHDX_Handle *vhdx = NULL;
 
-		size = sizeof(AXP_VHDX_Handle);
-		retBlock = calloc(1, size);
-		if (retBlock != NULL)
+		reqSize = sizeof(AXP_VHDX_Handle);
+		size += reqSize;
+		allocBlock = calloc(1, size);
+		if (allocBlock != NULL)
 		{
-		    vhdx = (AXP_VHDX_Handle *) retBlock;
+			head = (AXP_BLOCK_HD *) &allocBlock[0];
+			vhdx = (AXP_VHDX_Handle *) &allocBlock[sizeof(AXP_BLOCK_HD)];
+			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
+		}
+	    }
+	    break;
 
-		    vhdx->header.type = blockType;
-		    vhdx->header.size = size;
+	case AXP_VOID_BLK:
+	    {
+		u8		*blk = NULL;
+
+		reqSize = abs(blockType);
+		size += reqSize;
+		allocBlock = calloc(1, size);
+		if (allocBlock != NULL)
+		{
+			head = (AXP_BLOCK_HD *) &allocBlock[0];
+			blk = &allocBlock[sizeof(AXP_BLOCK_HD)];
+			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
 		}
 	    }
 	    break;
@@ -200,13 +230,35 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
     }
 
     /*
-     * Maintain some statistics
+     * If we are returning something, then we need to do some initialization
+     * for accounting purposes.
      */
-    pthread_mutex_lock(&blksMutex);
-    blksAllocCalls++;
-    if (retBlock != NULL)
-    	blksBytesAlloc += size;
-    pthread_mutex_unlock(&blksMutex);
+    if (head != NULL)
+    {
+
+	/*
+	 * Set the return value.
+	 */
+	retBlock = allocBlock;
+
+	/*
+	 * Perform some final initializations.
+	 */
+	AXP_INSQUE(_blkQ.blink, head->head);
+	head->type = tail->type = type;
+	head->size = tail->size = size;
+	head->magicNumber = 0x5555deadbeefaaaa;
+	tail->magicNumber = ~head->magicNumber;
+
+	/*
+	 * Maintain some statistics
+	 */
+	pthread_mutex_lock(&blksMutex);
+	blksAllocCalls++;
+	if (retBlock != NULL)
+	    blksBytesAlloc += size;
+	pthread_mutex_unlock(&blksMutex);
+	}
 
     if (AXP_UTL_OPT1)
     {
@@ -219,10 +271,14 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
 	AXP_TraceWrite(
 	    "Calls to AXP_Allocate_Block = %u; "
 	    "Calls to AXP_Deallocate_Block = %u; "
+	    "Memory Allocated = %u",
+	    "Memory Deallocated = %u",
 	    "Memory Outstanding = %u",
 	    blksAllocCalls,
 	    blksDeallocCalls,
-	    blksBytesAlloc);
+	    blksBytesAlloc,
+	    blksBytesDealloc,
+	    (blksBytesAlloc - blksBytesDealloc));
 	AXP_TRACE_END();
     }
 
@@ -232,81 +288,100 @@ void *AXP_Allocate_Block(AXP_BLOCK_TYPE blockType)
     return (retBlock);
 }
 
-void AXP_Deallocate_Block(AXP_BLOCK_DSC *block)
+void AXP_Deallocate_Block(void *block)
 {
+    AXP_BLOCK_HD	*head;
+    AXP_BLOCK_TL	*tail;
 
-    /*
-     * Maintain some statistics
-     */
-    pthread_mutex_lock(&blksMutex);
-    blksDeallocCalls++;
-    blksBytesAlloc -= block->size;
-    pthread_mutex_unlock(&blksMutex);
+    head = (AXP_BLOCK_HD *) ((u8 *) block - sizeof(AXP_BLOCK_HD));
+    tail = (AXP_BLOCK_TL *) ((u8 *) block + head->size - sizeof(AXP_BLOCK_TL));
 
-    if (AXP_UTL_OPT1)
-    {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_Deallocate_Block deallocating %s of size %d at 0x%016llx",
-	    blockNames[block->type],
-	    block->size,
-	    block);
-	AXP_TraceWrite(
-	    "Calls to AXP_Allocate_Block = %u; "
-	    "Calls to AXP_Deallocate_Block = %u; "
-	    "Memory Outstanding = %u",
-	    blksAllocCalls,
-	    blksDeallocCalls,
-	    blksBytesAlloc);
-	AXP_TRACE_END();
-    }
+    if ((head->head.flink != NULL) &&
+		(head->head.blink != NULL) &&
+		(head->type == tail->type) &&
+		(head->size == tail->size) &&
+		(tail->magicNumber == ~head->magicNumber))
+	{
+	AXP_REMQUE(&head->head);
+	head->head.flink = head->head.blink = NULL;
 
-    /*
-     * Deallocate the block based on its type.
-     */
-    switch (block->type)
-    {
-	case AXP_21264_CPU_BLK:
-	case AXP_21274_SYS_BLK:
-	case AXP_TELNET_SES_BLK:
-	    free(block);
-	    break;
+	/*
+	 * Maintain some statistics
+	 */
+	pthread_mutex_lock(&blksMutex);
+	blksDeallocCalls++;
+	blksBytesDelloc -= block->size;
+	pthread_mutex_unlock(&blksMutex);
 
-	case AXP_SSD_BLK:
-	    {
+	if (AXP_UTL_OPT1)
+	{
+	    AXP_TRACE_BEGIN();
+	    AXP_TraceWrite(
+		"AXP_Deallocate_Block deallocating %s of size %d at 0x%016llx",
+		blockNames[block->type],
+		block->size,
+		block);
+	    AXP_TraceWrite(
+		"Calls to AXP_Allocate_Block = %u; "
+		"Calls to AXP_Deallocate_Block = %u; "
+		"Memory Allocated = %u; "
+		"Memory Deallocated = %u; "
+		"Memory Outstanding = %u",
+		blksAllocCalls,
+		blksDeallocCalls,
+		blksBytesAlloc,
+		blksBytesDealloc,
+		(blksBytesAlloc - blksBytesDealloc));
+	    AXP_TRACE_END();
+	}
+
+	/*
+	 * Deallocate the block based on its type.
+	 */
+	switch (header->type)
+	{
+	    case AXP_21264_CPU_BLK:
+	    case AXP_21274_SYS_BLK:
+	    case AXP_TELNET_SES_BLK:
+		case AXP_VOID_BLK:
+		free(head);
+		break;
+
+	    case AXP_SSD_BLK:
+		{
 		AXP_SSD_Handle *ssd = (AXP_SSD_Handle *) block;
 
 		if (ssd->memory != NULL)
 		    free(ssd->memory);
-		free(block);
-	    }
-	    break;
-
-	case AXP_VHDX_BLK:
-	    {
-		AXP_VHDX_Handle *vhdx = (AXP_VHDX_Handle *) block;
-
-		if (vhdx->fp != NULL)
-		{
-		    fflush(vhdx->fp);
-		    fclose(vhdx->fp);
+		    free(head);
 		}
-		if (vhdx->filePath != NULL)
-		    free(vhdx->filePath);
-		free(block);
-	    }
-	    break;
+		break;
 
-	case AXP_DISK_BLK:
-	    {
-		AXP_Disk *dsk = (AXP_Disk *) block;
+	    case AXP_VHDX_BLK:
+		{
+		    AXP_VHDX_Handle *vhdx = (AXP_VHDX_Handle *) block;
 
-		if (dsk->ssd != NULL)
-		    AXP_Deallocate_Block((AXP_BLOCK_DSC *) dsk->ssd);
-		else if (dsk->vhdx != NULL)
-		    AXP_Deallocate_Block((AXP_BLOCK_DSC *) dsk->vhdx);
-		free(block);
-	    }
+		    if (vhdx->fp != NULL)
+		    {
+			fflush(vhdx->fp);
+			fclose(vhdx->fp);
+		    }
+		    if (vhdx->filePath != NULL)
+			free(vhdx->filePath);
+		    free(head);
+		}
+		break;
+
+	    case AXP_DISK_BLK:
+		{
+		    AXP_Disk *dsk = (AXP_Disk *) block;
+
+		    if (dsk->ssd != NULL)
+			AXP_Deallocate_Block((AXP_BLOCK_DSC *) dsk->ssd);
+		    else if (dsk->vhdx != NULL)
+			AXP_Deallocate_Block((AXP_BLOCK_DSC *) dsk->vhdx);
+		    free(head);
+		}
 	    break;
 
 	default:
