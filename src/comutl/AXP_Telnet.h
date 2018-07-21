@@ -165,12 +165,6 @@ typedef struct
 {
 
     /*
-     * This field needs to be at the top of all data blocks/structures
-     * that need to be specifically allocated by the Blocks module.
-     */
-    AXP_BLOCK_DSC header;
-
-    /*
      * This where the rest of the fields are needed to maintain a TELNET
      * session with a client.
      */

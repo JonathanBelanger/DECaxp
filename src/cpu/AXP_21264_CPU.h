@@ -337,12 +337,6 @@ typedef struct
 {
 
     /*
-     * This field needs to be at the top of all data blocks/structures
-     * that need to be specifically allocated by the Blocks module.
-     */
-    AXP_BLOCK_DSC header;
-
-    /*
      * CPU state.
      */
     pthread_mutex_t cpuMutex;

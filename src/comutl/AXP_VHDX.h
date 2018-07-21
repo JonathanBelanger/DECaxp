@@ -260,11 +260,6 @@ typedef struct
 {
 
     /*
-     * This header needs to be at the top of each structure.
-     */
-    AXP_BLOCK_DSC	header;
-
-    /*
      * These are parameters provided by the interface and stored for later
      * usage.
      */
