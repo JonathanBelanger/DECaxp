@@ -113,12 +113,6 @@ typedef struct
 typedef struct
 {
 
-    /*
-     * This field needs to be at the top of all data blocks/structures
-     * that need to be specifically allocated by the Blocks module.
-     */
-    AXP_BLOCK_DSC header;
-
     /*************************************************************************
      * Cchip Data and Information											 *
      *************************************************************************/

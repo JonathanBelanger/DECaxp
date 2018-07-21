@@ -59,7 +59,6 @@ typedef enum
  */
 typedef struct
 {
-    AXP_BLOCK_DSC	header;
     u8			*memory;
     off_t		position;
 } AXP_SSD_Handle;
@@ -68,19 +67,13 @@ typedef struct
 {
 
     /*
-     * This field needs to be at the top of all data blocks/structures
-     * that need to be specifically allocated by the Blocks module.
-     */
-    AXP_BLOCK_DSC	header;
-
-    /*
      * Now we need some information to describe the disk.
      */
     AXP_DiskType	type;
     union
     {
 	AXP_SSD_Handle	*ssd;
-	void		*vhdx;
+	AXP_VHDX_Handle	*vhdx;
     };
 
     /*

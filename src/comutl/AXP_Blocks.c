@@ -16,17 +16,27 @@
  *
  * Description:
  *
- *	This source file contains the functions needed to allocate, deallocate, and
- *	initialize various data blocks used throughout the Alpha AXP Emulator.
+ *  This source file contains the functions needed to allocate, deallocate, and
+ *  initialize various data blocks used throughout the Alpha AXP Emulator.
  *
- *	NOTE:	This code does not need to be thread safe, as all the calls made
- *			from this module are thread safe.
+ *  NOTE:	This code does not need to be thread safe, as all the calls made
+ *		from this module are thread safe.
  *
- *	Revision History:
+ * Revision History:
  *
- *	V01.000		16-May-2017	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000		16-May-2017	Jonathan D. Belanger
+ *  Initially written.
  *
+ *  V01.001		19-Jul-2018	Jonathan D. Belanger
+ *  I am changing the way memory is allocated and deallocated.  In the initial
+ *  implementation, a memory block needed to have the below structure defined
+ *  at it's top.  The new implementation will have a hidden block before and
+ *  after the block being requested.  The header and trailer blocks will have
+ *  magic numbers in them at the boundary of the memory block being requested.
+ *  This will help to determine when memory was overwritten.  Also, the header
+ *  header block will contain a place for the block to be queued up, so that we
+ *  can detect when a block is deallocated more than once, or not deallocated
+ *  at all.
  */
 #include "AXP_Configure.h"
 #include "AXP_Blocks.h"
@@ -37,7 +47,7 @@
 #include "AXP_Disk.h"
 #include "AXP_VHDX.h"
 
-static const char *blockNames[] =
+static const char *_blockNames[] =
 {
     "CPU",
     "System",
@@ -45,7 +55,7 @@ static const char *blockNames[] =
     "Disk",
     "SSD",
     "VHDX",
-	"Void"
+    "Void"
 };
 
 /*
@@ -54,11 +64,23 @@ static const char *blockNames[] =
  */
 static pthread_once_t 	_blksOnce = PTHREAD_ONCE_INIT;
 static pthread_mutex_t	_blksMutex;
-static AXP_QUEUE_HDR	_blkQ = {.flink = .blink = (AXP_QUEUE_HDR *) &_blkQ};
-static u32 				_blksAllocCalls = 0;
-static u32 				_blksDeallocCalls = 0;
-static u64 				_blksBytesAlloc = 0;
-static u64 				_blksBytesDealloc = 0;
+static AXP_QUEUE_HDR	_blkQ =
+    {
+	.flink = &_blkQ.flink,
+	.blink = &_blkQ.flink
+    };
+static u32 		_blksAllocCalls = 0;
+static u32 		_blksDeallocCalls = 0;
+static u64 		_blksBytesAlloc = 0;
+static u64 		_blksBytesDealloc = 0;
+static const size_t	_cpu_blk_size = sizeof(_CPU_BLK);
+static const size_t	_sys_blk_size = sizeof(_SYS_BLK);
+static const size_t	_ses_blk_size = sizeof(_SES_BLK);
+static const size_t	_disk_blk_size = sizeof(_DISK_BLK);
+static const size_t	_ssd_blk_size = sizeof(_SSD_BLK);
+static const size_t	_vhdx_blk_size = sizeof(_VHDX_BLK);
+static const size_t	_head_tail_size = sizeof(AXP_BLOCK_HD) +
+					  sizeof(AXP_BLOCK_TL);
 
 /*
  * _AXP_BlocksInit_Once
@@ -88,140 +110,220 @@ void _AXP_BlocksInit_Once(void)
     return;
 }
 
-
-void *AXP_Allocate_Block(i32 blockType)
+/*
+ * AXP_Allocate_Block
+ */
+void *AXP_Allocate_Block(i32 blockType, ...)
 {
-    void			*retBlock = NULL;
-	u8				*allocBlock;
-	AXP_BLOCK_HD	*head = NULL;
-	AXP_BLOCK_TL	*tail;
-	AXP_BLOCK_TYPE	type;
-    size_t			size = sizeof(AXP_BLOCK_HD) + sizeof(AXP_BLOCK_TL);
-	size_t			reqSize;
+    void		*retBlock = NULL;
+    void		*allocBlock;
+    va_list		ap;
+    AXP_BLOCK_TYPE	type;
+    size_t		size = 0;
 
     pthread_once(&_blksOnce, _AXP_BlocksInit_Once);
 
-	if (blockType < 0)
-		type = AXP_VOID_BLK;
-	else
-		type = blockType;
+    if (blockType < 0)
+	type = AXP_VOID_BLK;
+    else
+	type = blockType;
 
-    switch (blockType)
+    switch (type)
     {
 	case AXP_21264_CPU_BLK:
 	    {
-		AXP_21264_CPU *cpu = NULL;
+		_CPU_BLK *cpu = NULL;
 
-		reqSize = sizeof(AXP_21264_CPU);
-		size += reqSize;
+		size = _cpu_blk_size;
 		allocBlock = calloc(1, size);
 		if (allocBlock != NULL)
 		{
-			head = (AXP_BLOCK_HD *) &allocBlock[0];
-			cpu = (AXP_21264_CPU *) &allocBlock[sizeof(AXP_BLOCK_HD)];
-			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
+		    cpu = (_CPU_BLK *) allocBlock;
+
+		    cpu->head.type = cpu->tail.type = type;
+		    cpu->head.size = cpu->tail.size = size;
+		    cpu->head.magicNumber = AXP_HD_MAGIC;
+		    cpu->tail.magicNumber = AXP_TL_MAGIC;
+		    AXP_INSQUE(_blkQ.blink, &cpu->head.head);
 
 		    /*
 		     * Set the initial CPU state.
 		     */
-		    cpu->cpuState = Cold;
+		    cpu->cpu->cpuState = Cold;
+
+		    /*
+		     * Set the return value to the correct item.
+		     */
+		    retBlock = (void *) &cpu->cpu;
 		}
 	    }
 	    break;
 
 	case AXP_21274_SYS_BLK:
 	    {
-		AXP_21274_SYSTEM *sys = NULL;
+		_SYS_BLK *sys = NULL;
 
-		reqSize = sizeof(AXP_21274_SYSTEM);
-		size += reqSize;
+		size = _sys_blk_size;
 		allocBlock = calloc(1, size);
 		if (allocBlock != NULL)
 		{
-			head = (AXP_BLOCK_HD *) &allocBlock[0];
-			sys = (AXP_21274_SYSTEM *) &allocBlock[sizeof(AXP_BLOCK_HD)];
-			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
+		    sys = (_SYS_BLK *) allocBlock;
+
+		    sys->head.type = sys->tail.type = type;
+		    sys->head.size = sys->tail.size = size;
+		    sys->head.magicNumber = AXP_HD_MAGIC;
+		    sys->tail.magicNumber = AXP_TL_MAGIC;
+		    AXP_INSQUE(_blkQ.blink, &sys->head.head);
+
+		    /*
+		     * Set the return value to the correct item.
+		     */
+		    retBlock = (void *) &sys->sys;
 		}
 	    }
 	    break;
 
 	case AXP_TELNET_SES_BLK:
 	    {
-		AXP_TELNET_SESSION *ses = NULL;
+		_SES_BLK *ses = NULL;
 
-		reqSize = sizeof(AXP_TELNET_SESSION);
-		size += reqSize;
+		size = _ses_blk_size;
 		allocBlock = calloc(1, size);
 		if (allocBlock != NULL)
 		{
-			head = (AXP_BLOCK_HD *) &allocBlock[0];
-			ses = (AXP_TELNET_SESSION *) &allocBlock[sizeof(AXP_BLOCK_HD)];
-			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
+		    ses = (_SES_BLK *) allocBlock;
+
+		    ses->head.type = ses->tail.type = type;
+		    ses->head.size = ses->tail.size = size;
+		    ses->head.magicNumber = AXP_HD_MAGIC;
+		    ses->tail.magicNumber = AXP_TL_MAGIC;
+		    AXP_INSQUE(_blkQ.blink, &ses->head.head);
+
+		    /*
+		     * Set the return value to the correct item.
+		     */
+		    retBlock = (void *) &ses->ses;
 		}
 	    }
 	    break;
 
 	case AXP_DISK_BLK:
 	    {
-		AXP_Disk *dsk = NULL;
+		_DISK_BLK *dsk = NULL;
 
-		reqSize = sizeof(AXP_Disk);
-		size += reqSize;
+		size = _disk_blk_size;
 		allocBlock = calloc(1, size);
 		if (allocBlock != NULL)
 		{
-			head = (AXP_BLOCK_HD *) &allocBlock[0];
-			dsk = (AXP_Disk *) &allocBlock[sizeof(AXP_BLOCK_HD)];
-			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
+
+		    dsk->head.type = dsk->tail.type = type;
+		    dsk->head.size = dsk->tail.size = size;
+		    dsk->head.magicNumber = AXP_HD_MAGIC;
+		    dsk->tail.magicNumber = AXP_TL_MAGIC;
+		    AXP_INSQUE(_blkQ.blink, &dsk->head.head);
+
+		    /*
+		     * Set the return value to the correct item.
+		     */
+		    retBlock = (void *) &dsk->disk;
 		}
 	    }
 	    break;
 
 	case AXP_SSD_BLK:
 	    {
-		AXP_SSD_Handle *ssd = NULL;
+		_SSD_BLK *ssd = NULL;
 
-		reqSize = sizeof(AXP_SSD_Handle);
-		size += reqSize;
+		size = _ssd_blk_size;
 		allocBlock = calloc(1, size);
 		if (allocBlock != NULL)
 		{
-			head = (AXP_BLOCK_HD *) &allocBlock[0];
-			ssd = (AXP_SSD_Handle *) &allocBlock[sizeof(AXP_BLOCK_HD)];
-			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
+		    ssd->head.type = ssd->tail.type = type;
+		    ssd->head.size = ssd->tail.size = size;
+		    ssd->head.magicNumber = AXP_HD_MAGIC;
+		    ssd->tail.magicNumber = AXP_TL_MAGIC;
+		    AXP_INSQUE(_blkQ.blink, &ssd->head.head);
+
+		    /*
+		     * Set the return value to the correct item.
+		     */
+		    retBlock = (void *) &ssd->ssd;
 		}
 	    }
 	    break;
 
 	case AXP_VHDX_BLK:
 	    {
-		AXP_VHDX_Handle *vhdx = NULL;
+		_VHDX_BLK *vhdx = NULL;
 
-		reqSize = sizeof(AXP_VHDX_Handle);
-		size += reqSize;
+		size = _vhdx_blk_size;
 		allocBlock = calloc(1, size);
 		if (allocBlock != NULL)
 		{
-			head = (AXP_BLOCK_HD *) &allocBlock[0];
-			vhdx = (AXP_VHDX_Handle *) &allocBlock[sizeof(AXP_BLOCK_HD)];
-			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
+		    vhdx->head.type = vhdx->tail.type = type;
+		    vhdx->head.size = vhdx->tail.size = size;
+		    vhdx->head.magicNumber = AXP_HD_MAGIC;
+		    vhdx->tail.magicNumber = AXP_TL_MAGIC;
+		    AXP_INSQUE(_blkQ.blink, &vhdx->head.head);
+
+		    /*
+		     * Set the return value to the correct item.
+		     */
+		    retBlock = (void *) &vhdx->vhdx;
 		}
 	    }
 	    break;
 
 	case AXP_VOID_BLK:
 	    {
+		size_t		bytes = abs(blockType);
 		u8		*blk = NULL;
+		void		*replaceBlk = NULL;
+		size_t		bytes = abs(blockType);
 
-		reqSize = abs(blockType);
-		size += reqSize;
+		va_start(ap, blockType);
+		replaceBlk = va_arg(ap, void *);
+
+		size = _head_tail_size + bytes;
 		allocBlock = calloc(1, size);
 		if (allocBlock != NULL)
 		{
-			head = (AXP_BLOCK_HD *) &allocBlock[0];
-			blk = &allocBlock[sizeof(AXP_BLOCK_HD)];
-			tail = (AXP_BLOCK_TL *) &allocBlock[sizeof(AXP_BLOCK_HD) + reqSize);
+		    AXP_BLOCK_HD *head;
+
+		    blk = (u8 *) allocBlock;
+
+		    /*
+		     * If this is a realloc, then we just copy the contents of
+		     * the old block into the new and then deallocate the old
+		     * block.
+		     */
+		    if (replaceBlk != NULL)
+		    {
+			head = (AXP_BLOCK_HD *) &blk[0];
+
+			memcpy(replaceBlk, allocBlock, head->size);
+			AXP_Deallocate_Block(replaceBlk);
+		    }
+		    else
+		    {
+			AXP_BLOCK_TL *tail;
+
+			head = (AXP_BLOCK_HD *) &blk[0];
+			tail = (AXP_BLOCK_TL *) &blk[sizeof(AXP_BLOCK_HD) + bytes];
+
+			head->type = tail->type = type;
+			head->size = tail->size = size;
+			head->magicNumber = AXP_HD_MAGIC;
+			tail->magicNumber = AXP_TL_MAGIC;
+			AXP_INSQUE(_blkQ.blink, &head->head);
+		    }
+
+		    /*
+		     * Set the return value to the correct item.
+		     */
+		    retBlock = (void *) &blk[sizeof(AXP_BLOCK_HD)];
 		}
+		va_end(ap);
 	    }
 	    break;
 
@@ -233,39 +335,25 @@ void *AXP_Allocate_Block(i32 blockType)
      * If we are returning something, then we need to do some initialization
      * for accounting purposes.
      */
-    if (head != NULL)
+    if (retBlock != NULL)
     {
-
-	/*
-	 * Set the return value.
-	 */
-	retBlock = allocBlock;
-
-	/*
-	 * Perform some final initializations.
-	 */
-	AXP_INSQUE(_blkQ.blink, head->head);
-	head->type = tail->type = type;
-	head->size = tail->size = size;
-	head->magicNumber = 0x5555deadbeefaaaa;
-	tail->magicNumber = ~head->magicNumber;
 
 	/*
 	 * Maintain some statistics
 	 */
-	pthread_mutex_lock(&blksMutex);
-	blksAllocCalls++;
+	pthread_mutex_lock(&_blksMutex);
+	_blksAllocCalls++;
 	if (retBlock != NULL)
-	    blksBytesAlloc += size;
-	pthread_mutex_unlock(&blksMutex);
-	}
+	    _blksBytesAlloc += size;
+	pthread_mutex_unlock(&_blksMutex);
+    }
 
     if (AXP_UTL_OPT1)
     {
 	AXP_TRACE_BEGIN();
 	AXP_TraceWrite(
 	    "AXP_Allocate_Block allocated %s of size %d at 0x%016llx",
-	    blockNames[blockType],
+	    _blockNames[blockType],
 	    size,
 	    retBlock);
 	AXP_TraceWrite(
@@ -274,11 +362,11 @@ void *AXP_Allocate_Block(i32 blockType)
 	    "Memory Allocated = %u",
 	    "Memory Deallocated = %u",
 	    "Memory Outstanding = %u",
-	    blksAllocCalls,
-	    blksDeallocCalls,
-	    blksBytesAlloc,
-	    blksBytesDealloc,
-	    (blksBytesAlloc - blksBytesDealloc));
+	    _blksAllocCalls,
+	    _blksDeallocCalls,
+	    _blksBytesAlloc,
+	    _blksBytesDealloc,
+	    (_blksBytesAlloc - _blksBytesDealloc));
 	AXP_TRACE_END();
     }
 
@@ -288,6 +376,9 @@ void *AXP_Allocate_Block(i32 blockType)
     return (retBlock);
 }
 
+/*
+ * AXP_Dellocate_Block
+ */
 void AXP_Deallocate_Block(void *block)
 {
     AXP_BLOCK_HD	*head;
@@ -297,29 +388,29 @@ void AXP_Deallocate_Block(void *block)
     tail = (AXP_BLOCK_TL *) ((u8 *) block + head->size - sizeof(AXP_BLOCK_TL));
 
     if ((head->head.flink != NULL) &&
-		(head->head.blink != NULL) &&
-		(head->type == tail->type) &&
-		(head->size == tail->size) &&
-		(tail->magicNumber == ~head->magicNumber))
-	{
+	(head->head.blink != NULL) &&
+	(head->type == tail->type) &&
+	(head->size == tail->size) &&
+	(tail->magicNumber == ~head->magicNumber))
+    {
 	AXP_REMQUE(&head->head);
 	head->head.flink = head->head.blink = NULL;
 
 	/*
 	 * Maintain some statistics
 	 */
-	pthread_mutex_lock(&blksMutex);
-	blksDeallocCalls++;
-	blksBytesDelloc -= block->size;
-	pthread_mutex_unlock(&blksMutex);
+	pthread_mutex_lock(&_blksMutex);
+	_blksDeallocCalls++;
+	_blksBytesDelloc += head->size;
+	pthread_mutex_unlock(&_blksMutex);
 
 	if (AXP_UTL_OPT1)
 	{
 	    AXP_TRACE_BEGIN();
 	    AXP_TraceWrite(
 		"AXP_Deallocate_Block deallocating %s of size %d at 0x%016llx",
-		blockNames[block->type],
-		block->size,
+		_blockNames[head->type],
+		head->size,
 		block);
 	    AXP_TraceWrite(
 		"Calls to AXP_Allocate_Block = %u; "
@@ -327,18 +418,19 @@ void AXP_Deallocate_Block(void *block)
 		"Memory Allocated = %u; "
 		"Memory Deallocated = %u; "
 		"Memory Outstanding = %u",
-		blksAllocCalls,
-		blksDeallocCalls,
-		blksBytesAlloc,
-		blksBytesDealloc,
-		(blksBytesAlloc - blksBytesDealloc));
+		_blksAllocCalls,
+		_blksDeallocCalls,
+		_blksBytesAlloc,
+		_blksBytesDealloc,
+		(_blksBytesAlloc - _blksBytesDealloc));
 	    AXP_TRACE_END();
 	}
+    }
 
 	/*
 	 * Deallocate the block based on its type.
 	 */
-	switch (header->type)
+	switch (head->type)
 	{
 	    case AXP_21264_CPU_BLK:
 	    case AXP_21274_SYS_BLK:
@@ -377,9 +469,9 @@ void AXP_Deallocate_Block(void *block)
 		    AXP_Disk *dsk = (AXP_Disk *) block;
 
 		    if (dsk->ssd != NULL)
-			AXP_Deallocate_Block((AXP_BLOCK_DSC *) dsk->ssd);
+			AXP_Deallocate_Block(dsk->ssd);
 		    else if (dsk->vhdx != NULL)
-			AXP_Deallocate_Block((AXP_BLOCK_DSC *) dsk->vhdx);
+			AXP_Deallocate_Block(dsk->vhdx);
 		    free(head);
 		}
 	    break;

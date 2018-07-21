@@ -49,26 +49,70 @@ typedef enum
     AXP_DISK_BLK,
     AXP_SSD_BLK,
     AXP_VHDX_BLK,
-	AXP_VOID_BLK,
+    AXP_VOID_BLK,
     AXP_BLOCK_MAX
 } AXP_BLOCK_TYPE;
 
+#define AXP_HD_MAGIC	0x5555deadbeefaaaall
+#define AXP_TL_MAGIC	0xaaaa215241105555ll
+
 typedef struct
 {
-	AXP_QUEUE_HDR	head;
+    AXP_QUEUE_HDR	head;
     AXP_BLOCK_TYPE	type;
-    size_t			size;
-	u64				magicNumber;
+    size_t		size;
+    u64			magicNumber;
 } AXP_BLOCK_HD;
 
 typedef struct
 {
-	u64				magicNumber;
-	size_t			size;
-	AXP_BLOCK_TYPE	type;
+    u64			magicNumber;
+    size_t		size;
+    AXP_BLOCK_TYPE	type;
 } AXP_BLOCK_TL;
 
-void *AXP_Allocate_Block(i32 blockType);
+/*
+ * These are local typedefs to make allocating and returning memory a bit
+ * easier.
+ */
+typedef struct
+{
+    AXP_BLOCK_HD	head;
+    AXP_21264_CPU	cpu;
+    AXP_BLOCK_TL	tail;
+} _CPU_BLK;
+typedef struct
+{
+    AXP_BLOCK_HD	head;
+    AXP_21274_SYSTEM	sys;
+    AXP_BLOCK_TL	tail;
+} _SYS_BLK;
+typedef struct
+{
+    AXP_BLOCK_HD	head;
+    AXP_TELNET_SESSION	ses;
+    AXP_BLOCK_TL	tail;
+} _SES_BLK;
+typedef struct
+{
+    AXP_BLOCK_HD	head;
+    AXP_Disk		disk;
+    AXP_BLOCK_TL	tail;
+} _DISK_BLK;
+typedef struct
+{
+    AXP_BLOCK_HD	head;
+    AXP_SSD_Handle	ssd;
+    AXP_BLOCK_TL	tail;
+} _SSD_BLK;
+typedef struct
+{
+    AXP_BLOCK_HD	head;
+    AXP_VHDX_Handle	vhdx;
+    AXP_BLOCK_TL	tail;
+} _VHDX_BLK;
+
+void *AXP_Allocate_Block(i32 blockType, ...);
 void AXP_Deallocate_Block(void *block);
 
 #endif /* _AXP_21264_BLOCKS_ */
