@@ -551,16 +551,6 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 		    cpu->csr.BcSize = value;
 
 		    /*
-		     * Now that we know the Bcache size, go an allocate a
-		     * buffer large enough for it.  First, deallocate
-		     * anything that was previously allocated.
-		     */
-		    if (cpu->bCache != NULL)
-			free(cpu->bCache);
-		    if (cpu->bTag != NULL)
-			free(cpu->bTag);
-
-		    /*
 		     * OK, now allocate a Bcache large enough for the size.
 		     * NOTE: Each Bcache block contains 64 bytes, so the
 		     * array size is the Bcache size divided by 64.
@@ -572,12 +562,12 @@ bool AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
 		     * Go and actually allocate the 2 arrays needed for the
 		     * Bcache (the cache array and the tag array).
 		     */
-		    cpu->bCache = calloc(
-			bCacheArraySize,
-			sizeof(AXP_21264_BCACHE_BLK));
-		    cpu->bTag = calloc(
-			bCacheArraySize,
-			sizeof(AXP_21264_BCACHE_TAG));
+		    cpu->bCache = AXP_Allocate_Block(
+			-(bCacheArraySize * sizeof(AXP_21264_BCACHE_BLK)),
+			cpu->bCache);
+		    cpu->bTag = AXP_Allocate_Block(
+			-(bCacheArraySize * sizeof(AXP_21264_BCACHE_TAG)),
+			cpu->bTag);
 
 		    /*
 		     * If we failed to allocate either, then we are done

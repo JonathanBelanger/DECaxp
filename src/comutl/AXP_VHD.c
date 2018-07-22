@@ -233,7 +233,7 @@ u32 _AXP_VHD_Create(
     vhd = (AXP_VHDX_Handle *) AXP_Allocate_Block(AXP_VHDX_BLK);
     if (vhd != NULL)
     {
-	vhd->filePath = calloc(1, strlen(path) + 1);
+	vhd->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
 	if (vhd->filePath != NULL)
 	{
 	    strcpy(vhd->filePath, path);
@@ -248,7 +248,7 @@ u32 _AXP_VHD_Create(
 	}
 	else
 	{
-	    AXP_Deallocate_Block(&vhd->header);
+	    AXP_Deallocate_Block(vhd);
 	    vhd = NULL;
 	}
     }
@@ -276,13 +276,13 @@ u32 _AXP_VHD_Create(
 	    vhd->fp = fopen(path, "wb");
 	    if (vhd->fp == NULL)
 	    {
-		AXP_Deallocate_Block(&vhd->header);
+		AXP_Deallocate_Block(vhd);
 		retVal = AXP_VHD_INV_HANDLE;
 	    }
 	}
 	else
 	{
-	    AXP_Deallocate_Block(&vhd->header);
+	    AXP_Deallocate_Block(vhd);
 	    retVal = AXP_VHD_FILE_EXISTS;
 	}
     }
@@ -521,7 +521,7 @@ u32 _AXP_VHD_Create(
 	    if (vhd->fp == NULL)
 	    {
 		remove(path);		/* Delete the file */
-		AXP_Deallocate_Block(&vhd->header);
+		AXP_Deallocate_Block(vhd);
 		retVal = AXP_VHD_INV_HANDLE;
 	    }
 	}
@@ -531,7 +531,7 @@ u32 _AXP_VHD_Create(
 		fclose(vhd->fp);	/* Close the file we opened */
 	    vhd->fp = NULL;		/* Prevent Deallocate Blocks closing again */
 	    remove(path);		/* Delete the file */
-	    AXP_Deallocate_Block(&vhd->header);
+	    AXP_Deallocate_Block(vhd);
 	    retVal = AXP_VHD_WRITE_FAULT;
 	}
     }

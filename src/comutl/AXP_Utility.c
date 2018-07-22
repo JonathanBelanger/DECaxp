@@ -1756,7 +1756,7 @@ bool AXP_Write_SROM(AXP_SROM_HANDLE *sromHandle, u32 *buf, u32 bufLen)
      * [re]allocate the write buffer to be able to store the next bit of data.
      */
     newSize = (sromHandle->imgSize + bufLen) * sizeof(u32);
-    sromHandle->writeBuf = realloc(sromHandle->writeBuf, newSize);
+    sromHandle->writeBuf = AXP_Allocate_Block(-newSize, sromHandle->writeBuf);
 
     /*
      * If the buffer was reallocated, copy the next chunk of data.
@@ -1875,7 +1875,7 @@ bool AXP_Close_SROM(AXP_SROM_HANDLE *sromHandle)
 	     * Free the buffer we allocated for the image data.  We no longer
 	     * need it.
 	     */
-	    free(sromHandle->writeBuf);
+	    AXP_Deallocate_Block(sromHandle->writeBuf);
 	}
 
 	/*

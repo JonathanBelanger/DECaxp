@@ -16,37 +16,37 @@
  *
  * Description:
  *
- *	This source file contains the code to read in a CSV file and convert it to
- *	a SROM file that can be loaded during initial load of the Digital Alpha AXP
- *	21264 Emulator.
+ *  This source file contains the code to read in a CSV file and convert it to
+ *  a SROM file that can be loaded during initial load of the Digital Alpha AXP
+ *  21264 Emulator.
  *
  * Revision History:
  *
- *	V01.000		03-Feb-2018	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000		03-Feb-2018	Jonathan D. Belanger
+ *  Initially written.
  */
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
 
 /*
  * main
- *	This function is called by the image activator.
+ *  This function is called by the image activator.
  *
  * Input Parameters:
- *	argc:
- *		A value indicating the number of entries in the argv parameter.  This
- *		parameter is always one more than the actual arguments provided on the
- *		command line.
- *	argv:
- *		An array, limit argc, of strings representing the image filename being
- *		executed, please each of the arguments provided on the command line.
+ *  argc:
+ *	A value indicating the number of entries in the argv parameter.  This
+ *	parameter is always one more than the actual arguments provided on the
+ *	command line.
+ *  argv:
+ *	An array, limit argc, of strings representing the image filename being
+ *	executed, please each of the arguments provided on the command line.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	0:	Normal Successful Completion.
- *	!0:	An Error occurred that is causing the image to exit.
+ *  0:	Normal Successful Completion.
+ *  !0:	An Error occurred that is causing the image to exit.
  */
 int main(int argc, char **argv)
 {

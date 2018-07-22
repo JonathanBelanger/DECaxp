@@ -16,17 +16,17 @@
  *
  * Description:
  *
- *	This source file contains the code to read in a configuration file, parse
- *	it, and return requested information from it.
+ *  This source file contains the code to read in a configuration file, parse
+ *  it, and return requested information from it.
  *
  * Revision History:
  *
- *	V01.000		28-Jan-2018	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000		28-Jan-2018	Jonathan D. Belanger
+ *  Initially written.
  *
- *	V01.001		02-Mar-2018	Jonathan D. Belanger
- *	Added functions to return values from the configuration structure.  Also
- *	made the configuration structure static.
+ *  V01.001		02-Mar-2018	Jonathan D. Belanger
+ *  Added functions to return values from the configuration structure.  Also
+ *  made the configuration structure static.
  */
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
@@ -196,219 +196,105 @@ struct AXP_Tapes
 
 static struct AXP_TopLevel _top_level_nodes[] =
 {
-    {
-	"DECaxp", DECaxp
-    },
-    {
-	"Owner", Owner
-    },
-    {
-	"System", SystemConf
-    },
-    {
-	NULL, NoNodes
-    }
+    {"DECaxp", DECaxp},
+    {"Owner", Owner},
+    {"System", SystemConf},
+    {NULL, NoNodes}
 };
 static struct AXP_Owner _owner_level_nodes[] =
 {
-    {
-	"Name", Name
-    },
-    {
-	"CreationDate", CreationDate
-    },
-    {
-	"ModifyDate", ModifyDate
-    },
-    {
-	NULL, NoOwner
-    }
+    {"Name", Name},
+    {"CreationDate", CreationDate},
+    {"ModifyDate", ModifyDate},
+    {NULL, NoOwner}
 };
 static struct AXP_Name _name_level_nodes[] =
 {
-    {
-	"First", FirstName
-    },
-    {
-	"MI", MI
-    },
-    {
-	"Last", LastName
-    },
-    {
-	"Suffix", NameSuffix
-    },
-    {
-	NULL, NoName
-    }
+    {"First", FirstName},
+    {"MI", MI},
+    {"Last", LastName},
+    {"Suffix", NameSuffix},
+    {NULL, NoName}
 };
 static struct AXP_System _system_level_nodes[] =
 {
-    {
-	"Model", Model
-    },
-    {
-	"SROM", SROM
-    },
-    {
-	"CPUs", CPUS
-    },
-    {
-	"DARRAYs", DARRAYS
-    },
-    {
-	"Disks", Disks
-    },
-    {
-	"Console", Console
-    },
-    {
-	"Networks", Networks
-    },
-    {
-	"Printers", Printers
-    },
-    {
-	"Tapes", Tapes
-    },
-    {
-	NULL, NoSystem
-    }
+    {"Model", Model},
+    {"SROM", SROM},
+    {"CPUs", CPUS},
+    {"DARRAYs", DARRAYS},
+    {"Disks", Disks},
+    {"Console", Console},
+    {"Networks", Networks},
+    {"Printers", Printers},
+    {"Tapes", Tapes},
+    {NULL, NoSystem}
 };
 static struct AXP_Model _model_level_nodes[] =
 {
-    {
-	"Name", ModelName
-    },
-    {
-	"Model", ModelModel
-    },
-    {
-	NULL, NoModel
-    }
+    {"Name", ModelName},
+    {"Model", ModelModel},
+    {NULL, NoModel}
 };
 static struct AXP_SROM _srom_level_nodes[] =
 {
-    {
-	"InitFile", InitFile
-    },
-    {
-	"PALImage", PALImage
-    },
-    {
-	"ROMImage", ROMImage
-    },
-    {
-	"NVRamFile", NVRamFile
-    },
-    {
-	"CboxCSRFile", CboxCSRs
-    },
-    {
-	NULL, NoSROM
-    }
+    {"InitFile", InitFile},
+    {"PALImage", PALImage},
+    {"ROMImage", ROMImage},
+    {"NVRamFile", NVRamFile},
+    {"CboxCSRFile", CboxCSRs},
+    {NULL, NoSROM}
 };
 static struct AXP_CPUS _cpu_level_nodes[] =
 {
-    {
-	"Count", CPUCount
-    },
-    {
-	"Generation", Generation
-    },
-    {
-	"Pass", MfgPass
-    },
-    {
-	NULL, NoCPUs
-    }
+    {"Count", CPUCount},
+    {"Generation", Generation},
+    {"Pass", MfgPass},
+    {NULL, NoCPUs}
 };
 static struct AXP_DARRAYS _darray_level_nodes[] =
 {
-    {
-	"Count", DARRAYCount
-    },
-    {
-	"Size", DARRAYSize
-    },
-    {
-	NULL, NoDARRAYs
-    }
+    {"Count", DARRAYCount},
+    {"Size", DARRAYSize},
+    {NULL, NoDARRAYs}
 };
 static struct AXP_Disks _disks_level_nodes[] =
 {
-    {
-	"Disk", DECDisk
-    },
-    {
-	NULL, NoDisks
-    }
+    {"Disk", DECDisk},
+    {NULL, NoDisks}
 };
 static struct AXP_Disk _disk_level_nodes[] =
 {
-    {
-	"Type", DiskType
-    },
-    {
-	"Name", DiskName
-    },
-    {
-	"Size", DiskSize
-    },
-    {
-	"File", DiskFile
-    },
-    {
-	NULL, NoDisk
-    }
+    {"Type", DiskType},
+    {"Name", DiskName},
+    {"Size", DiskSize},
+    {"File", DiskFile},
+    {NULL, NoDisk}
 };
 static struct AXP_Console _console_level_nodes[] =
 {
-    {
-	"Port", Port
-    },
-    {
-	NULL, NoConsole
-    }
+    {"Port", Port},
+    {NULL, NoConsole}
 };
 static struct AXP_Networks _networks_level_nodes[] =
 {
-    {
-	"Network", TopNetworks
-    },
-    {
-	NULL, NoNetworks
-    }
+    {"Network", TopNetworks},
+    {NULL, NoNetworks}
 };
 static struct AXP_Network _network_level_nodes[] =
 {
-    {
-	"Name", NetworkName
-    },
-    {
-	"MAC", NetworkMAC
-    },
-    {
-	NULL, NoNetwork
-    }
+    {"Name", NetworkName},
+    {"MAC", NetworkMAC},
+    {NULL, NoNetwork}
 };
 static struct AXP_Printers _printers_level_nodes[] =
 {
-    {
-	"Printers", TopPrinters
-    },
-    {
-	NULL, NoPrinters
-    }
+    {"Printers", TopPrinters},
+    {NULL, NoPrinters}
 };
 static struct AXP_Tapes _tapes_level_nodes[] =
 {
-    {
-	"Tapes", TopTapes
-    },
-    {
-	NULL, NoTapes
-    }
+    {"Tapes", TopTapes},
+    {NULL, NoTapes}
 };
 
 static char *months[] =
@@ -1585,18 +1471,20 @@ static void parse_network_names(
 	    switch (parent)
 	    {
 		case NetworkName:
-		    _axp_21264_config_.system.networks[ii].name = realloc(
-			_axp_21264_config_.system.networks[ii].name,
-			(strlen(nodeValue) + 1));
+		    _axp_21264_config_.system.networks[ii].name =
+			AXP_Allocate_Block(
+			    -(strlen(nodeValue) + 1),
+			    _axp_21264_config_.system.networks[ii].name);
 		    strcpy(
 			_axp_21264_config_.system.networks[ii].name,
 			nodeValue);
 		    break;
 
 		case NetworkMAC:
-		    _axp_21264_config_.system.networks[ii].mac = realloc(
-			_axp_21264_config_.system.networks[ii].mac,
-			(strlen(nodeValue) + 1));
+		    _axp_21264_config_.system.networks[ii].mac =
+			AXP_Allocate_BLock(
+			    -(strlen(nodeValue) + 1),
+			    _axp_21264_config_.system.networks[ii].mac);
 		    strcpy(
 			_axp_21264_config_.system.networks[ii].mac,
 			nodeValue);
@@ -1725,10 +1613,10 @@ static void parse_networks_names(
 	    /*
 	     * Allocate an array large enough to handle an additional entry.
 	     */
-	    _axp_21264_config_.system.networks = realloc(
-		_axp_21264_config_.system.networks,
-		(_axp_21264_config_.system.networkCount
-		    * sizeof(AXP_21264_NETWORK_INFO)));
+	    _axp_21264_config_.system.networks = AXP_Allocate_Block(
+		-(_axp_21264_config_.system.networkCount
+		    * sizeof(AXP_21264_NETWORK_INFO)),
+		_axp_21264_config_.system.networks);
 
 	    /*
 	     * Set the unit number for this new entry (which should always be
@@ -1994,9 +1882,10 @@ static void parse_disk_names(
 		    break;
 
 		case DiskName:
-		    _axp_21264_config_.system.disks[ii].name = realloc(
-			_axp_21264_config_.system.disks[ii].name,
-			(strlen(nodeValue) + 1));
+		    _axp_21264_config_.system.disks[ii].name =
+			AXP_Allocate_Block(
+			    -(strlen(nodeValue) + 1),
+			    _axp_21264_config_.system.disks[ii].name);
 		    strcpy(_axp_21264_config_.system.disks[ii].name, nodeValue);
 		    break;
 
@@ -2006,9 +1895,10 @@ static void parse_disk_names(
 		    break;
 
 		case DiskFile:
-		    _axp_21264_config_.system.disks[ii].fileSpec = realloc(
-			_axp_21264_config_.system.disks[ii].fileSpec,
-			(strlen(nodeValue) + 1));
+		    _axp_21264_config_.system.disks[ii].fileSpec =
+			AXP_Allocate_Block(
+			    -(strlen(nodeValue) + 1),
+			    _axp_21264_config_.system.disks[ii].fileSpec);
 		    strcpy(
 			_axp_21264_config_.system.disks[ii].fileSpec,
 			nodeValue);
@@ -2140,10 +2030,10 @@ static void parse_disks_names(
 	    /*
 	     * Allocate an array large enough to handle an additional entry.
 	     */
-	    _axp_21264_config_.system.disks = realloc(
-		_axp_21264_config_.system.disks,
-		(_axp_21264_config_.system.diskCount
-		    * sizeof(AXP_21264_DISK_INFO)));
+	    _axp_21264_config_.system.disks = AXP_Allocate_Block(
+		-(_axp_21264_config_.system.diskCount
+		    * sizeof(AXP_21264_DISK_INFO)),
+		_axp_21264_config_.system.disks);
 
 	    /*
 	     * Set the unit number for this new entry (which should always be
@@ -2550,37 +2440,42 @@ static void parse_srom_names(
 	    switch (parent)
 	    {
 		case InitFile:
-		    _axp_21264_config_.system.srom.initFile = realloc(
-			_axp_21264_config_.system.srom.initFile,
-			(strlen(nodeValue) + 1));
+		    _axp_21264_config_.system.srom.initFile =
+			AXP_Allocate_Block(
+			    -(strlen(nodeValue) + 1),
+			    _axp_21264_config_.system.srom.initFile);
 		    strcpy(_axp_21264_config_.system.srom.initFile, nodeValue);
 		    break;
 
 		case PALImage:
-		    _axp_21264_config_.system.srom.PALImage = realloc(
-			_axp_21264_config_.system.srom.PALImage,
-			(strlen(nodeValue) + 1));
+		    _axp_21264_config_.system.srom.PALImage =
+			AXP_Allocate_Block(
+			    -(strlen(nodeValue) + 1),
+			    _axp_21264_config_.system.srom.PALImage);
 		    strcpy(_axp_21264_config_.system.srom.PALImage, nodeValue);
 		    break;
 
 		case ROMImage:
-		    _axp_21264_config_.system.srom.ROMImage = realloc(
-			_axp_21264_config_.system.srom.ROMImage,
-			(strlen(nodeValue) + 1));
+		    _axp_21264_config_.system.srom.ROMImage =
+			AXP_Allocate_Block(
+			    -(strlen(nodeValue) + 1),
+			    _axp_21264_config_.system.srom.ROMImage);
 		    strcpy(_axp_21264_config_.system.srom.ROMImage, nodeValue);
 		    break;
 
 		case NVRamFile:
-		    _axp_21264_config_.system.srom.NVRamFile = realloc(
-			_axp_21264_config_.system.srom.NVRamFile,
-			(strlen(nodeValue) + 1));
+		    _axp_21264_config_.system.srom.NVRamFile =
+			AXP_Allocate_Block(
+			    -(strlen(nodeValue) + 1),
+			    _axp_21264_config_.system.srom.NVRamFile);
 		    strcpy(_axp_21264_config_.system.srom.NVRamFile, nodeValue);
 		    break;
 
 		case CboxCSRs:
-		    _axp_21264_config_.system.srom.CboxCSRFile = realloc(
-			_axp_21264_config_.system.srom.CboxCSRFile,
-			(strlen(nodeValue) + 1));
+		    _axp_21264_config_.system.srom.CboxCSRFile =
+			AXP_Allocate_Block(
+			    -(strlen(nodeValue) + 1),
+			    _axp_21264_config_.system.srom.CboxCSRFile);
 		    strcpy(
 			_axp_21264_config_.system.srom.CboxCSRFile,
 			nodeValue);
@@ -2703,16 +2598,16 @@ static void parse_model_names(
 	    switch (parent)
 	    {
 		case ModelName:
-		    _axp_21264_config_.system.model.name = realloc(
-			_axp_21264_config_.system.model.name,
-			(strlen(nodeValue) + 1));
+		    _axp_21264_config_.system.model.name = AXP_Allocate_Block(
+			-(strlen(nodeValue) + 1),
+			_axp_21264_config_.system.model.name);
 		    strcpy(_axp_21264_config_.system.model.name, nodeValue);
 		    break;
 
 		case ModelModel:
-		    _axp_21264_config_.system.model.model = realloc(
-			_axp_21264_config_.system.model.model,
-			(strlen(nodeValue) + 1));
+		    _axp_21264_config_.system.model.model = AXP_Allocate_Block(
+			-(strlen(nodeValue) + 1),
+			_axp_21264_config_.system.model.model);
 		    strcpy(_axp_21264_config_.system.model.model, nodeValue);
 		    break;
 
@@ -2970,9 +2865,9 @@ static void parse_name_names(
 	    case FirstName:
 		parse_name_names(doc, cur_node->children, parent, nodeValue);
 		parent = NoName;
-		_axp_21264_config_.owner.first = realloc(
-		    _axp_21264_config_.owner.first,
-		    strlen(nodeValue) + 1);
+		_axp_21264_config_.owner.first = AXP_Allocate_Block(
+		    -(strlen(nodeValue) + 1),
+		    _axp_21264_config_.owner.first);
 		if (_axp_21264_config_.owner.first != NULL)
 		    strcpy(_axp_21264_config_.owner.first, nodeValue);
 		nodeValue[0] = '\0';
@@ -2981,9 +2876,9 @@ static void parse_name_names(
 	    case MI:
 		parse_name_names(doc, cur_node->children, parent, nodeValue);
 		parent = NoName;
-		_axp_21264_config_.owner.mi = realloc(
-		    _axp_21264_config_.owner.mi,
-		    strlen(nodeValue) + 1);
+		_axp_21264_config_.owner.mi = AXP_Allocate_Block(
+		    -(strlen(nodeValue) + 1),
+		    _axp_21264_config_.owner.mi);
 		if (_axp_21264_config_.owner.mi != NULL)
 		    strcpy(_axp_21264_config_.owner.mi, nodeValue);
 		nodeValue[0] = '\0';
@@ -2992,9 +2887,9 @@ static void parse_name_names(
 	    case LastName:
 		parse_name_names(doc, cur_node->children, parent, nodeValue);
 		parent = NoName;
-		_axp_21264_config_.owner.last = realloc(
-		    _axp_21264_config_.owner.last,
-		    strlen(nodeValue) + 1);
+		_axp_21264_config_.owner.last = AXP_Allocate_Block(
+		    -(strlen(nodeValue) + 1),
+		    _axp_21264_config_.owner.last);
 		if (_axp_21264_config_.owner.last != NULL)
 		    strcpy(_axp_21264_config_.owner.last, nodeValue);
 		nodeValue[0] = '\0';
@@ -3003,9 +2898,9 @@ static void parse_name_names(
 	    case NameSuffix:
 		parse_name_names(doc, cur_node->children, parent, nodeValue);
 		parent = NoName;
-		_axp_21264_config_.owner.suffix = realloc(
-		    _axp_21264_config_.owner.suffix,
-		    strlen(nodeValue) + 1);
+		_axp_21264_config_.owner.suffix = AXP_Allocate_Block(
+		    -(strlen(nodeValue) + 1),
+		    _axp_21264_config_.owner.suffix);
 		if (_axp_21264_config_.owner.suffix != NULL)
 		    strcpy(_axp_21264_config_.owner.suffix, nodeValue);
 		nodeValue[0] = '\0';

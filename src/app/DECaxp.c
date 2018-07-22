@@ -16,13 +16,13 @@
  *
  * Description:
  *
- *	This source file contains the main function for the Digital Alpha AXP 21264
- *	Emulator.
+ *  This source file contains the main function for the Digital Alpha AXP 21264
+ *  Emulator.
  *
  * Revision History:
  *
- *	V01.000		20-Jan-2018	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000		20-Jan-2018	Jonathan D. Belanger
+ *  Initially written.
  */
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
@@ -33,24 +33,24 @@
 
 /*
  * reconstituteFilename
- *	This function is called with argc and argv and looks for the parts of a
- *	filename that have spaces and got scattered into the argument vector.
+ *  This function is called with argc and argv and looks for the parts of a
+ *  filename that have spaces and got scattered into the argument vector.
  *
  * Input Parameters:
- *	argc:
- *		A value indicating the number of entries in the argv parameter.  This
- *		parameter is always one more than the actual arguments provided on the
- *		command line.
- *	argv:
- *		An array, limit argc, of strings representing the image filename being
- *		executed, please each of the arguments provided on the command line.
+ *  argc:
+ *	A value indicating the number of entries in the argv parameter.  This
+ *	parameter is always one more than the actual arguments provided on the
+ *	command line.
+ *  argv:
+ *	An array, limit argc, of strings representing the image filename being
+ *	executed, please each of the arguments provided on the command line.
  *
  * Output Parameters:
- *	configFilename:
- *		A pointer to a string to receive the reconstituted filename.
+ *  configFilename:
+ *	A pointer to a string to receive the reconstituted filename.
  *
  * Return Values:
- * 	None.
+ *  	None.
  */
 void reconstituteFilename(int argc, char **argv, char *configFilename)
 {
@@ -86,26 +86,26 @@ void reconstituteFilename(int argc, char **argv, char *configFilename)
 
 /*
  * main
- *	This is the main function for the Digital Alpha AXP 21264 Emulator.  It
- *	allocates the things it needs to and then starts the ball rolling around
- *	getting everything initialized.  The other threads will handle the rest of
- *	the work.
+ *  This is the main function for the Digital Alpha AXP 21264 Emulator.  It
+ *  allocates the things it needs to and then starts the ball rolling around
+ *  getting everything initialized.  The other threads will handle the rest of
+ *  the work.
  *
  * Input Parameters:
- *	argc:
- *		A value indicating the number of entries in the argv parameter.  This
- *		parameter is always one more than the actual arguments provided on the
- *		command line.
- *	argv:
- *		An array, limit argc, of strings representing the image filename being
- *		executed, please each of the arguments provided on the command line.
+ *  argc:
+ *	A value indicating the number of entries in the argv parameter.  This
+ *	parameter is always one more than the actual arguments provided on the
+ *	command line.
+ *  argv:
+ *	An array, limit argc, of strings representing the image filename being
+ *	executed, please each of the arguments provided on the command line.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	0:	Normal Successful Completion.
- *	!0:	An Error occurred that is causing the image to exit.
+ *  0:	Normal Successful Completion.
+ *  !0:	An Error occurred that is causing the image to exit.
  */
 int main(int argc, char **argv)
 {

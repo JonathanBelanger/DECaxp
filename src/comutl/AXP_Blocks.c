@@ -49,6 +49,7 @@
 
 static const char *_blockNames[] =
 {
+    "Unknown",
     "CPU",
     "System",
     "Telnet",
@@ -143,6 +144,7 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		    cpu->head.type = cpu->tail.type = type;
 		    cpu->head.size = cpu->tail.size = size;
 		    cpu->head.magicNumber = AXP_HD_MAGIC;
+		    cpu->head.tail = &cpu->tail;
 		    cpu->tail.magicNumber = AXP_TL_MAGIC;
 		    AXP_INSQUE(_blkQ.blink, &cpu->head.head);
 
@@ -172,6 +174,7 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		    sys->head.type = sys->tail.type = type;
 		    sys->head.size = sys->tail.size = size;
 		    sys->head.magicNumber = AXP_HD_MAGIC;
+		    sys->head.tail = &sys->tail;
 		    sys->tail.magicNumber = AXP_TL_MAGIC;
 		    AXP_INSQUE(_blkQ.blink, &sys->head.head);
 
@@ -196,6 +199,7 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		    ses->head.type = ses->tail.type = type;
 		    ses->head.size = ses->tail.size = size;
 		    ses->head.magicNumber = AXP_HD_MAGIC;
+		    ses->head.tail = &ses->tail;
 		    ses->tail.magicNumber = AXP_TL_MAGIC;
 		    AXP_INSQUE(_blkQ.blink, &ses->head.head);
 
@@ -219,6 +223,7 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		    dsk->head.type = dsk->tail.type = type;
 		    dsk->head.size = dsk->tail.size = size;
 		    dsk->head.magicNumber = AXP_HD_MAGIC;
+		    dsk->head.tail = &dsk->tail;
 		    dsk->tail.magicNumber = AXP_TL_MAGIC;
 		    AXP_INSQUE(_blkQ.blink, &dsk->head.head);
 
@@ -241,6 +246,7 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		    ssd->head.type = ssd->tail.type = type;
 		    ssd->head.size = ssd->tail.size = size;
 		    ssd->head.magicNumber = AXP_HD_MAGIC;
+		    ssd->head.tail = &ssd->tail;
 		    ssd->tail.magicNumber = AXP_TL_MAGIC;
 		    AXP_INSQUE(_blkQ.blink, &ssd->head.head);
 
@@ -263,6 +269,7 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		    vhdx->head.type = vhdx->tail.type = type;
 		    vhdx->head.size = vhdx->tail.size = size;
 		    vhdx->head.magicNumber = AXP_HD_MAGIC;
+		    vhdx->head.tail = &vhdx->tail;
 		    vhdx->tail.magicNumber = AXP_TL_MAGIC;
 		    AXP_INSQUE(_blkQ.blink, &vhdx->head.head);
 
@@ -289,6 +296,7 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		if (allocBlock != NULL)
 		{
 		    AXP_BLOCK_HD *head;
+		    AXP_BLOCK_TL *tail;
 
 		    blk = (u8 *) allocBlock;
 
@@ -299,14 +307,46 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		     */
 		    if (replaceBlk != NULL)
 		    {
+			AXP_BLOCK_HD *oldHead =
+			    (AXP_BLOCK_HD *) ((u8 *) replaceBlk -
+				sizeof(AXP_BLOCK_HD));
+
 			head = (AXP_BLOCK_HD *) &blk[0];
 
-			memcpy(replaceBlk, allocBlock, head->size);
+			/*
+			 * Copy the old block into the new block, but just from
+			 * the head to the byte just before the tail in the
+			 * old block.
+			 */
+			memcpy(
+			    replaceBlk,
+			    allocBlock,
+			    (head->size - sizeof(AXP_BLOCK_TL)));
+
+			/*
+			 * Determine the location of the tail block in the
+			 * newly allocated block.
+			 */
+			head->tail =
+			    (AXP_BLOCK_TL *) &blk[sizeof(AXP_BLOCK_HD) + bytes];
+
+			/*
+			 * Copy the old tail into the new tail location.
+			 */
+			memcpy(head->tail, oldHead->tail, sizeof(AXP_BLOCK_TL));
+
+			/*
+			 * Correct the sizes.
+			 */
+			head->size = head->tail->size = size;
+
+			/*
+			 * We no longer need the old block.
+			 */
 			AXP_Deallocate_Block(replaceBlk);
 		    }
 		    else
 		    {
-			AXP_BLOCK_TL *tail;
 
 			head = (AXP_BLOCK_HD *) &blk[0];
 			tail = (AXP_BLOCK_TL *) &blk[sizeof(AXP_BLOCK_HD) + bytes];
@@ -314,6 +354,7 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 			head->type = tail->type = type;
 			head->size = tail->size = size;
 			head->magicNumber = AXP_HD_MAGIC;
+			head->tail = tail;
 			tail->magicNumber = AXP_TL_MAGIC;
 			AXP_INSQUE(_blkQ.blink, &head->head);
 		    }
@@ -385,13 +426,12 @@ void AXP_Deallocate_Block(void *block)
     AXP_BLOCK_TL	*tail;
 
     head = (AXP_BLOCK_HD *) ((u8 *) block - sizeof(AXP_BLOCK_HD));
-    tail = (AXP_BLOCK_TL *) ((u8 *) block + head->size - sizeof(AXP_BLOCK_TL));
+    tail = head->tail;
 
-    if ((head->head.flink != NULL) &&
-	(head->head.blink != NULL) &&
-	(head->type == tail->type) &&
-	(head->size == tail->size) &&
-	(tail->magicNumber == ~head->magicNumber))
+    if ((head->head.flink != NULL) && (head->head.blink != NULL) &&
+	(head->type == tail->type) && (head->size == tail->size) &&
+	(head->magicNumber == AXP_HD_MAGIC) &&
+	(tail->magicNumber == AXP_TL_MAGIC))
     {
 	AXP_REMQUE(&head->head);
 	head->head.flink = head->head.blink = NULL;
@@ -425,7 +465,6 @@ void AXP_Deallocate_Block(void *block)
 		(_blksBytesAlloc - _blksBytesDealloc));
 	    AXP_TRACE_END();
 	}
-    }
 
 	/*
 	 * Deallocate the block based on its type.
@@ -435,16 +474,16 @@ void AXP_Deallocate_Block(void *block)
 	    case AXP_21264_CPU_BLK:
 	    case AXP_21274_SYS_BLK:
 	    case AXP_TELNET_SES_BLK:
-		case AXP_VOID_BLK:
+	    case AXP_VOID_BLK:
 		free(head);
 		break;
 
 	    case AXP_SSD_BLK:
 		{
-		AXP_SSD_Handle *ssd = (AXP_SSD_Handle *) block;
+		    AXP_SSD_Handle *ssd = (AXP_SSD_Handle *) block;
 
-		if (ssd->memory != NULL)
-		    free(ssd->memory);
+		    if (ssd->memory != NULL)
+			AXP_Dealocate_Block(ssd->memory);
 		    free(head);
 		}
 		break;
@@ -459,7 +498,7 @@ void AXP_Deallocate_Block(void *block)
 			fclose(vhdx->fp);
 		    }
 		    if (vhdx->filePath != NULL)
-			free(vhdx->filePath);
+			AXP_Dealocate_Block(vhdx->filePath);
 		    free(head);
 		}
 		break;
@@ -478,10 +517,70 @@ void AXP_Deallocate_Block(void *block)
 
 	default:
 	    break;
+	}
     }
 
     /*
      * Return back to the caller.
      */
     return;
+}
+
+/*
+ * AXP_ReturnType_Block
+ */
+AXP_BLOCK_TYPE AXP_ReturnType_Block(void *block)
+{
+    AXP_BLOCK_HD	*head;
+    AXP_BLOCK_TL	*tail;
+    AXP_BLOCK_TYPE	retVal = AXP_UNKNOWN_BLK;
+
+    /*
+     * Let's try and determine the type of block we are dealing with here.
+     */
+    if (block != NULL)
+    {
+	head = (AXP_BLOCK_HD *) ((u8 *) block - sizeof(AXP_BLOCK_HD));
+	tail = head->tail;
+
+	/*
+	 * We have a valid block if all are true:
+	 *
+	 *  1)	The forward and backward links in the head of the block are
+	 *	not NULL (they need to be pointing to something).
+	 *  2)	The types saved in the head and tail of the block are the same,
+	 *  	and a valid type.
+	 *  3)	The sizes saved in the head and tail are the same, and also
+	 *	valid.
+	 *  4)	The magic numbers at the head and tail are correct.
+	 */
+	if ((head->head.flink != NULL) && (head->head.blink != NULL) &&
+	    (head->type == tail->type) &&
+	    ((head->type > AXP_UNKNOWN_BLK) && (head->type < AXP_BLOCK_MAX)) &&
+	    (head->size == tail->size) &&
+	    (((head->type == AXP_21264_CPU_BLK) &&
+	      (head->size == _cpu_blk_size)) ||
+	     ((head->type == AXP_21274_SYS_BLK) &&
+	      (head->size == _sys_blk_size)) ||
+	     ((head->type == AXP_TELNET_SES_BLK) &&
+	      (head->size == _ses_blk_size)) ||
+	     ((head->type == AXP_DISK_BLK) &&
+	      (head->size == _disk_blk_size)) ||
+	     ((head->type == AXP_SSD_BLK) &&
+	      (head->size == _ssd_blk_size)) ||
+	     ((head->type == AXP_VHDX_BLK) &&
+	      (head->size == _vhdx_blk_size)) ||
+	     ((head->type == AXP_VOID_BLK) &&
+	      (head->size >= _head_tail_size))) &&
+	    (head->magicNumber == AXP_HD_MAGIC) &&
+	    (tail->magicNumber == AXP_TL_MAGIC))
+	{
+	    retVal = head->type;
+	}
+    }
+
+    /*
+     * Return the block type back to the caller.
+     */
+    return(retVal);
 }

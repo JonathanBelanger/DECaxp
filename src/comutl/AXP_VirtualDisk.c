@@ -335,9 +335,8 @@ u32 AXP_VHD_CloseHandle(AXP_VHD_HANDLE handle)
     /*
      * Verify that we have a proper handle.
      */
-    if ((vhdx->header.type == AXP_VHDX_BLK) &&
-	(vhdx->header.size == sizeof(AXP_VHDX_Handle)))
-	AXP_Deallocate_Block(&vhdx->header);
+    if (AXP_ReturnType_Block(handle) == AXP_VHDX_BLK)
+	AXP_Deallocate_Block(vhdx);
     else
 	retVal = AXP_VHD_INV_HANDLE;
 
