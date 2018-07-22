@@ -153,7 +153,7 @@ u32 _AXP_VHDX_Create(
      * We'll need this a bit later, but let's go get all the memory we are
      * going to need up front.
      */
-    outBuf = (u8 *) calloc(SIXTYFOUR_K, 1);
+    outBuf = AXP_Allocate_Block(-SIXTYFOUR_K);
 
     /*
      * Let's allocate the block we need to maintain access to the virtual disk
@@ -163,7 +163,7 @@ u32 _AXP_VHDX_Create(
 	vhdx = (AXP_VHDX_Handle *) AXP_Allocate_Block(AXP_VHDX_BLK);
     if (vhdx != NULL)
     {
-	vhdx->filePath = calloc(1, strlen(path) + 1);
+	vhdx->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
 	if (vhdx->filePath != NULL)
 	{
 	    strcpy(vhdx->filePath, path);
@@ -178,7 +178,7 @@ u32 _AXP_VHDX_Create(
 	}
 	else
 	{
-	    AXP_Deallocate_Block(&vhdx->header);
+	    AXP_Deallocate_Block(vhdx);
 	    vhdx = NULL;
 	}
     }
@@ -206,13 +206,13 @@ u32 _AXP_VHDX_Create(
 	    vhdx->fp = fopen(path, "wb");
 	    if (vhdx->fp == NULL)
 	    {
-		AXP_Deallocate_Block(&vhdx->header);
+		AXP_Deallocate_Block(vhdx);
 		retVal = AXP_VHD_INV_HANDLE;
 	    }
 	}
 	else
 	{
-	    AXP_Deallocate_Block(&vhdx->header);
+	    AXP_Deallocate_Block(vhdx);
 	    retVal = AXP_VHD_FILE_EXISTS;
 	}
     }
@@ -274,7 +274,7 @@ u32 _AXP_VHDX_Create(
 	if (retVal != AXP_VHD_SUCCESS)
 	{
 	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(&vhdx->header);
+	    AXP_Deallocate_Block(vhdx);
 	}
 	else
 	{
@@ -291,7 +291,7 @@ u32 _AXP_VHDX_Create(
 	    if (writeRet == false)
 	    {
 		_AXP_VHD_CreateCleanup(vhdx, path);
-		AXP_Deallocate_Block(&vhdx->header);
+		AXP_Deallocate_Block(vhdx);
 		retVal = AXP_VHD_WRITE_FAULT;
 	    }
 	}
@@ -345,7 +345,7 @@ u32 _AXP_VHDX_Create(
 	if (writeRet == false)
 	{
 	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(&vhdx->header);
+	    AXP_Deallocate_Block(vhdx);
 	    retVal = AXP_VHD_WRITE_FAULT;
 	}
     }
@@ -414,7 +414,7 @@ u32 _AXP_VHDX_Create(
 	if (writeRet == false)
 	{
 	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(&vhdx->header);
+	    AXP_Deallocate_Block(vhdx);
 	    retVal = AXP_VHD_WRITE_FAULT;
 	}
     }
@@ -536,7 +536,7 @@ u32 _AXP_VHDX_Create(
 	if (writeRet == false)
 	{
 	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(&vhdx->header);
+	    AXP_Deallocate_Block(vhdx);
 	    retVal = AXP_VHD_WRITE_FAULT;
 	}
     }
@@ -656,7 +656,7 @@ u32 _AXP_VHDX_Create(
 	 if (writeRet == false)
 	 {
 	     _AXP_VHD_CreateCleanup(vhdx, path);
-	     AXP_Deallocate_Block(&vhdx->header);
+	     AXP_Deallocate_Block(vhdx);
 	     retVal = AXP_VHD_WRITE_FAULT;
 	 }
     }
@@ -786,7 +786,7 @@ u32 _AXP_VHDX_Create(
 	else
 	 {
 	     _AXP_VHD_CreateCleanup(vhdx, path);
-	     AXP_Deallocate_Block(&vhdx->header);
+	     AXP_Deallocate_Block(vhdx);
 	     retVal = AXP_VHD_WRITE_FAULT;
 	 }
     }
@@ -866,7 +866,7 @@ u32 _AXP_VHDX_Create(
 	if ((writeRet == false) || (fileSize == 0))
 	{
 	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(&vhdx->header);
+	    AXP_Deallocate_Block(vhdx);
 	    retVal = AXP_VHD_WRITE_FAULT;
 	}
     }
@@ -877,7 +877,7 @@ u32 _AXP_VHDX_Create(
 	if (vhdx->fp == NULL)
 	{
 	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(&vhdx->header);
+	    AXP_Deallocate_Block(vhdx);
 	    retVal = AXP_VHD_INV_HANDLE;
 	}
     }
@@ -886,7 +886,7 @@ u32 _AXP_VHDX_Create(
      * Free what we allocated before we get out of here.
      */
     if (outBuf != NULL)
-	free(outBuf);
+	AXP_Deallocate_Block(outBuf);
 
     /*
      * Return the result of this call back to the caller.

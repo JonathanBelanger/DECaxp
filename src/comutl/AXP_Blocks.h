@@ -43,6 +43,7 @@
 
 typedef enum
 {
+    AXP_UNKNOWN_BLK,
     AXP_21264_CPU_BLK,
     AXP_21274_SYS_BLK,
     AXP_TELNET_SES_BLK,
@@ -58,18 +59,19 @@ typedef enum
 
 typedef struct
 {
-    AXP_QUEUE_HDR	head;
-    AXP_BLOCK_TYPE	type;
-    size_t		size;
-    u64			magicNumber;
-} AXP_BLOCK_HD;
-
-typedef struct
-{
     u64			magicNumber;
     size_t		size;
     AXP_BLOCK_TYPE	type;
 } AXP_BLOCK_TL;
+
+typedef struct
+{
+    AXP_QUEUE_HDR	head;
+    AXP_BLOCK_TYPE	type;
+    size_t		size;
+    AXP_BLOCK_TL	*tail;
+    u64			magicNumber;
+} AXP_BLOCK_HD;
 
 /*
  * These are local typedefs to make allocating and returning memory a bit
@@ -114,5 +116,6 @@ typedef struct
 
 void *AXP_Allocate_Block(i32 blockType, ...);
 void AXP_Deallocate_Block(void *block);
+AXP_BLOCK_TYPE AXP_ReturnType_Block(void *);
 
 #endif /* _AXP_21264_BLOCKS_ */

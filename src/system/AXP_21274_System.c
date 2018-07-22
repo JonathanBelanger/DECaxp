@@ -111,7 +111,7 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 	    for (ii = 0; ii < AXP_21274_MAX_ARRAYS; ii++)
 	    {
 		if (ii < sys->arrayCount)
-		    sys->array[ii] = calloc(sys->arraySizes, 1);
+		    sys->array[ii] = AXP_Allocate_Block(-sys->arraySizes);
 		else
 		    sys->array[ii] = NULL;
 	    }
@@ -145,14 +145,13 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
     /*
      * If something failed, then deallocate everything.
      */
-    if ((sys != NULL)
-	    && ((pthreadRet != 0) || (qRet != true) || (sys->cpuCount == 0)
-	            || (sys->arrayCount == 0)))
+    if ((sys != NULL) && ((pthreadRet != 0) || (qRet != true) ||
+	(sys->cpuCount == 0) || (sys->arrayCount == 0)))
     {
 	for (ii = 0; ii < AXP_21274_MAX_CPUS; ii++)
 	    if (cpu[ii] != NULL)
-		AXP_Deallocate_Block((AXP_BLOCK_DSC *) cpu[ii]);
-	AXP_Deallocate_Block((AXP_BLOCK_DSC *) sys);
+		AXP_Deallocate_Block(cpu[ii]);
+	AXP_Deallocate_Block(sys);
 	sys = NULL;
     }
 
