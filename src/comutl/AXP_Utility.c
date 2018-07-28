@@ -57,6 +57,7 @@
  */
 #include "AXP_Configure.h"
 #include "AXP_Utility.h"
+#include "AXP_Blocks.h"
 #include "AXP_Trace.h"
 #include <iconv.h>
 #include <arpa/inet.h>

@@ -492,7 +492,7 @@ u32 AXP_VHD_ValidateCreate(
 		AXP_VHD_CREATE_FLAG flags,
 		AXP_VHD_CREATE_PARAM *param,
 		AXP_VHD_HANDLE *handle,
-		char *parentPath,
+		char **parentPath,
 		u32 *parentDevID,
 		u64 *diskSize,
 		u32 *blkSize,
@@ -827,7 +827,7 @@ u32 AXP_VHD_GetDeviceID(char *path, u32 *deviceID)
      * OK, if we have a file or device, then we have something to test further.
      * If this is a directory, we'll return a File Corrupt error.
      */
-    if ((isFile == true) || (isDevice == true))
+    if (((isFile == true) || (isDevice == true)) && (isDirectory == false))
     {
 	struct
 	{
@@ -1041,9 +1041,7 @@ void AXP_Dump_VHD_Info(AXP_VHD_HANDLE handle)
 	 * Before we go too far, let's make sure that we have a valid handle
 	 * with data we need from within.
 	 */
-	if ((handle != NULL) &&
-	    (vhdx->header.type == AXP_VHDX_BLK) &&
-	    (vhdx->header.size == sizeof(AXP_VHDX_Handle)))
+	if (AXP_ReturnType_Block(vhdx) == AXP_VHDX_BLK)
 	{
 	    if (vhdx->fp != NULL)
 	    {

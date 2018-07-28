@@ -48,6 +48,7 @@
  */
 #include "AXP_21264_Cbox.h"
 #include "AXP_Configure.h"
+#include "AXP_Blocks.h"
 #include "AXP_NameValuePair_Read.h"
 #include "AXP_21264_CacheDefs.h"
 #include "AXP_21264_Mbox.h"

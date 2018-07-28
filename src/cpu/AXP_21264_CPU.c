@@ -30,6 +30,7 @@
  *	initialized.
  */
 #include "AXP_21264_CPUDefs.h"
+#include "AXP_Blocks.h"
 #include "AXP_21264_Ibox.h"
 #include "AXP_21264_Ibox_Initialize.h"
 #include "AXP_21264_Ebox.h"
@@ -252,7 +253,7 @@ void *AXP_21264_AllocateCPU(u64 cpuID)
 	 */
 	if ((cpu != NULL) && ((pthreadRet != 0) || (qRet != true)))
 	{
-	    AXP_Deallocate_Block((AXP_BLOCK_DSC *) cpu);
+	    AXP_Deallocate_Block(cpu);
 	    cpu = NULL;
 	}
     }

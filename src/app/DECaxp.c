@@ -128,7 +128,7 @@ int main(int argc, char **argv)
 	reconstituteFilename(argc, argv, filename);
 	if ((AXP_LoadConfig_File(filename) == AXP_S_NORMAL)
 	        && (AXP_TraceInit() == true))
-	    cpu = AXP_21264_AllocateCPU();
+	    cpu = AXP_21264_AllocateCPU(0);
 	if (cpu != NULL)
 	{
 	    pthread_join(cpu->cBoxThreadID, NULL);
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 		AXP_21264_Set_IRQ(cpu, 0);
 		AXP_21264_Add_PQ(cpu,
 		        AXP_21264_SET_PROBE(AXP_21264_DM_NOP, AXP_21264_NS_NOP),
-		        NOPsysdc, 0x0000000000000000ll, 0, NULL, false, false,
+			SysDC_Nop, 0x0000000000000000ll, 0, NULL, false, false,
 		        false, false);
 	    }
 	    AXP_TraceEnd();

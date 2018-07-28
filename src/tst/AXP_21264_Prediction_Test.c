@@ -283,6 +283,6 @@ int main()
 		printf("Average choice selected Correctly:\t%d\n", totalChoiceCorrect / numberOfFiles);
 		printf("Average choice wrong:\t\t\t%d\n", totalChoiceWrong / numberOfFiles);
 	}
-	AXP_Deallocate_Block((AXP_BLOCK_DSC *) cpu);
+	AXP_Deallocate_Block(cpu);
 	return(0);
 }
