@@ -755,8 +755,8 @@ u32 _AXP_VHDX_Create(
 	    metaOff += metaParEnt->keyLen;
 	    metaParEnt->valOff = metaOff;
 	    metaOff += metaParEnt->valLen;
-	    strncpy(&outBuf[metaParEnt->keyOff], key, metaParEnt->keyLen);
-	    strncpy(&outBuf[metaParEnt->valOff], parentPath, metaParEnt->valLen);
+	    memcpy(&outBuf[metaParEnt->keyOff], key, metaParEnt->keyLen);
+	    memcpy(&outBuf[metaParEnt->valOff], parentPath, metaParEnt->valLen);
 	}
 
 	/*

@@ -64,10 +64,10 @@ typedef struct
  * 	entry = base address + (row * (max columns * size of entry)) +
  * 		(column * size of entry)
  */
-#define AXP_SM_ENTRY(smp, row, col) \
-    ((u8 *) (smp)->stateMachine + \
-     ((row) * ((smp->maxStates)) * sizeof(AXP_SM_Entry)) + \
-     ((col) * sizeof(AXP_SM_Entry)))
+#define AXP_SM_ENTRY(smp, row, col)				\
+    (AXP_SM_Entry *) ((u8 *) (smp)->stateMachine +		\
+	((row) * ((smp->maxStates)) * sizeof(AXP_SM_Entry)) +	\
+	((col) * sizeof(AXP_SM_Entry)))
 
 u8 AXP_Execute_SM(AXP_StateMachine *, u8, u8, AXP_SM_Args *);
 

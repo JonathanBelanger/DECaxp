@@ -67,8 +67,8 @@ static pthread_once_t 	_blksOnce = PTHREAD_ONCE_INIT;
 static pthread_mutex_t	_blksMutex;
 static AXP_QUEUE_HDR	_blkQ =
     {
-	.flink = &_blkQ.flink,
-	.blink = &_blkQ.flink
+	.flink = (AXP_QUEUE_HDR *) &_blkQ.flink,
+	.blink = (AXP_QUEUE_HDR *) &_blkQ.flink
     };
 static u32 		_blksAllocCalls = 0;
 static u32 		_blksDeallocCalls = 0;
@@ -151,7 +151,7 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		    /*
 		     * Set the initial CPU state.
 		     */
-		    cpu->cpu->cpuState = Cold;
+		    cpu->cpu.cpuState = Cold;
 
 		    /*
 		     * Set the return value to the correct item.
@@ -283,7 +283,6 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 
 	case AXP_VOID_BLK:
 	    {
-		size_t		bytes = abs(blockType);
 		u8		*blk = NULL;
 		void		*replaceBlk = NULL;
 		size_t		bytes = abs(blockType);
@@ -441,7 +440,7 @@ void AXP_Deallocate_Block(void *block)
 	 */
 	pthread_mutex_lock(&_blksMutex);
 	_blksDeallocCalls++;
-	_blksBytesDelloc += head->size;
+	_blksBytesDealloc += head->size;
 	pthread_mutex_unlock(&_blksMutex);
 
 	if (AXP_UTL_OPT1)
@@ -483,7 +482,7 @@ void AXP_Deallocate_Block(void *block)
 		    AXP_SSD_Handle *ssd = (AXP_SSD_Handle *) block;
 
 		    if (ssd->memory != NULL)
-			AXP_Dealocate_Block(ssd->memory);
+			AXP_Deallocate_Block(ssd->memory);
 		    free(head);
 		}
 		break;
@@ -498,7 +497,7 @@ void AXP_Deallocate_Block(void *block)
 			fclose(vhdx->fp);
 		    }
 		    if (vhdx->filePath != NULL)
-			AXP_Dealocate_Block(vhdx->filePath);
+			AXP_Deallocate_Block(vhdx->filePath);
 		    free(head);
 		}
 		break;

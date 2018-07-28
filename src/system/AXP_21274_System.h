@@ -27,7 +27,6 @@
 #define _AXP_SYSTEM_DEFS_	1
 
 #include "AXP_Utility.h"
-#include "AXP_Blocks.h"
 #include "AXP_Configure.h"
 #include "AXP_21274_21264_Common.h"
 #include "AXP_21274_Registers.h"

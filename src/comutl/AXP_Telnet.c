@@ -33,6 +33,7 @@
 #define TELCMDS 		1
 #define TELOPTS			1
 #include "AXP_Telnet.h"
+#include "AXP_Blocks.h"
 
 /*
  * State machine definitions.
@@ -1213,7 +1214,7 @@ static AXP_TELNET_SESSION *AXP_Telnet_Accept(int sock)
     ses->mySocket = accept(sock, &theirName, &theirNameSize);
     if (ses->mySocket < 0)
     {
-	AXP_Deallocate_Block((AXP_BLOCK_DSC *) ses);
+	AXP_Deallocate_Block(ses);
 	ses = NULL;
 	printf("Accepting a TELNET connection has failed...\n");
     }
@@ -1386,7 +1387,7 @@ static bool AXP_Telnet_Reject(AXP_TELNET_SESSION **ses)
     /*
      * Return the block of memory back to the system.
      */
-    AXP_Deallocate_Block((AXP_BLOCK_DSC *) ses);
+    AXP_Deallocate_Block(ses);
     *ses = NULL;
     printf("TELNET session has been closed...\n");
 

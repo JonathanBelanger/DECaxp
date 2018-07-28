@@ -177,9 +177,17 @@ typedef struct
  */
 void *AXP_21264_AllocateCPU(u64);
 void AXP_21264_Save_WHAMI(void *, u64 *);
-void AXP_21264_Save_SystemInterfaces(void *, pthread_mutex_t *,
-        pthread_cond_t *, void *rm, u8 *, u8 *, u8 *, pthread_mutex_t *,
-        pthread_cond_t *, AXP_QUEUE_HDR *);
+void AXP_21264_Save_SystemInterfaces(
+    void *,
+    pthread_mutex_t **,
+    pthread_cond_t **,
+    void **,
+    u8 **,
+    u8 **,
+    u8 **,
+    pthread_mutex_t *,
+    pthread_cond_t *,
+    AXP_QUEUE_HDR *);
 void AXP_21264_Unlock_CPU(void *);
 
 #endif /* _AXP_21274_21264_COMMON_H_ */

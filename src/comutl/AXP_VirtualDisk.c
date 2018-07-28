@@ -24,13 +24,14 @@
  *  V01.000	08-Jul-2018	Jonathan D. Belanger
  *  Initially written.
  */
-#include <AXP_VirtualDisk.h>
+#include "AXP_VirtualDisk.h"
 #include "AXP_Utility.h"
 #include "AXP_Blocks.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
 #include "AXP_VHDX.h"
 #include "AXP_VHD.h"
+#include "AXP_RAW.h"
 
 /*
  * AXP_VHD_Create

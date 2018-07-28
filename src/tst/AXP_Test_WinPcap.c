@@ -1,11 +1,18 @@
 #include "AXP_Utility.h"
+#include <netdb.h>
 #include <pcap.h>
+
+/*
+ * Function Prototypes
+ */
+char *ip2s(u32);
+char *ip62s(struct sockaddr *, char *, u32);
 
 /*
  * interfacePrint
  *  Print all the available information on the given interface
  */
-void interfacePrint(pcap_addr *deviceAddr)
+void interfacePrint(pcap_addr_t *deviceAddr)
 {
     pcap_addr_t         *tmpDevAddr;
     struct sockaddr_in  *addr;
@@ -18,27 +25,27 @@ void interfacePrint(pcap_addr *deviceAddr)
     while (tmpDevAddr != NULL)
     {
         addr = (struct sockaddr_in *) tmpDevAddr->addr;
-        printf("\t\tAddress Family: #%d\n", addr->sa_family);
+        printf("\t\tAddress Family: #%d\n", addr->sin_family);
 
         /*
          * Dump out the address information, based upon the family.
          */
-        switch(addr->sa_family)
+        switch(addr->sin_family)
         {
             case AF_INET:
                 printf("\t\t\tAddress Family Name: AF_INET\n");
-                printf("\t\t\tAddress: %s\n", addr->sin_addr.s_addr);
+                printf("\t\t\tAddress: %s\n", ip2s(addr->sin_addr.s_addr));
                 if (tmpDevAddr->netmask != NULL)
                 {
                     addr = (struct sockaddr_in *) tmpDevAddr->netmask;
-                    printf("\t\t\tNetmask: %s\n", ip2s(addr->sin_addr.s_addr);
+                    printf("\t\t\tNetmask: %s\n", ip2s(addr->sin_addr.s_addr));
                 }
                 if (tmpDevAddr->broadaddr != NULL)
                 {
                     addr = (struct sockaddr_in *) tmpDevAddr->broadaddr;
                     printf(
                         "\t\t\tBroadcast Address: %s\n",
-                        ip2s(addr->sin_addr.s_addr);
+                        ip2s(addr->sin_addr.s_addr));
                 }
                 if (tmpDevAddr->dstaddr != NULL)
                 {
@@ -76,7 +83,7 @@ void interfacePrint(pcap_addr *deviceAddr)
 
 /*
  * ip2s
- *  From tcptraceroute, convert a numeric IP address to a string
+ *  From tcp tracert, convert a numeric IP address to a string
  */
 #define IPTOSBUFFERS    12
 char *ip2s(u32 in)
@@ -87,9 +94,8 @@ char *ip2s(u32 in)
 
     ptr = (u8 *) &in;
     which = (((which + 1) == IPTOSBUFFERS) ? 0 : (which + 1));
-    _snprintf_s(
+    snprintf(
         output[which],
-        sizeof(output[which]),
         sizeof(output[which]),
         "%d.%d.%d.%d",
         ptr[0],
@@ -106,14 +112,14 @@ char *ip2s(u32 in)
 /*
  * ip62s
  */
-char* ip62s(struct sockaddr *sockaddr, char *address, u32 addrlen)
+char *ip62s(struct sockaddr *sockaddr, char *address, u32 addrlen)
 {
     socklen_t sockaddrlen;
 
     sockaddrlen = sizeof(struct sockaddr_storage);
 
     /*
-     * Get the name inforamtion from the sock address supplied on the call.
+     * Get the name information from the sock address supplied on the call.
      */
     if (getnameinfo(
             sockaddr, 
@@ -124,7 +130,7 @@ char* ip62s(struct sockaddr *sockaddr, char *address, u32 addrlen)
             0, 
             NI_NUMERICHOST) != 0)
     {
-        strcpy(address, "<Error Getting IPv6 Hostname>");
+        strcpy(address, "<Error Getting IPv6 hostname>");
     }
 
     /*
@@ -145,11 +151,7 @@ int main(void)
     /*
      * Call WinPcap to return all network devices that can be opened.
      */
-    retVal = pcap_findalldevs_ex(
-                        PCAP_SRC_IF_STRING,
-                        NULL,           /* Authentication is not needed */
-                        &allDevices,
-                        errorBuf);
+    retVal = pcap_findalldevs(&allDevices, errorBuf);
 
     /*
      * If the above call returns a success, then if any devices were returned,
@@ -180,13 +182,13 @@ int main(void)
                     ((device->description != NULL) ?
                         device->description :
                         "No description available"),
-                    ((d->flags & PCAP_IF_LOOPBACK) != 0) ? "Yes" : "No");
+                    ((device->flags & PCAP_IF_LOOPBACK) != 0) ? "Yes" : "No");
                 printf("\tAddresses:\n");
                 if (device->addresses != NULL)
                     interfacePrint(device->addresses);
                 else
                     printf("\t\tNone.\n");
-                device = device->next
+                device = device->next;
             }
 
             /*

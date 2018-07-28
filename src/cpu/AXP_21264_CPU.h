@@ -91,7 +91,6 @@
 #define _AXP_21264_CPU_DEFS_
 
 #include "AXP_Utility.h"
-#include "AXP_Blocks.h"
 #include "AXP_Base_CPU.h"
 #include "AXP_21264_Instructions.h"
 #include "AXP_21264_Predictions.h"
@@ -890,5 +889,10 @@ typedef struct
  * Bits associated with a naturally aligned 64-byte block of memory.
  */
 #define AXP_21264_ALIGN_MEM_BLK		0xffffffffffffffc0ll
+
+/*
+ * Function Prototypes.
+ */
+void *AXP_21264_AllocateCPU(u64);
 
 #endif /* _AXP_21264_CPU_DEFS_ */

@@ -26,7 +26,6 @@
 #ifndef AXP_TELNET_H_
 #define AXP_TELNET_H_
 #include "AXP_Utility.h"
-#include "AXP_Blocks.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
 #include "AXP_StateMachine.h"

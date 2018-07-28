@@ -31,6 +31,7 @@
 #include "AXP_Utility.h"
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
+#include "AXP_Blocks.h"
 #include <libxml/xmlversion.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -1482,7 +1483,7 @@ static void parse_network_names(
 
 		case NetworkMAC:
 		    _axp_21264_config_.system.networks[ii].mac =
-			AXP_Allocate_BLock(
+			AXP_Allocate_Block(
 			    -(strlen(nodeValue) + 1),
 			    _axp_21264_config_.system.networks[ii].mac);
 		    strcpy(
