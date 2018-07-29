@@ -46,6 +46,7 @@
 #include "AXP_Telnet.h"
 #include "AXP_Disk.h"
 #include "AXP_VHDX.h"
+#include "AXP_Ethernet.h"
 
 static const char *_blockNames[] =
 {
@@ -53,6 +54,7 @@ static const char *_blockNames[] =
     "CPU",
     "System",
     "Telnet",
+    "Ethernet",
     "Disk",
     "SSD",
     "VHDX",
@@ -77,6 +79,7 @@ static u64 		_blksBytesDealloc = 0;
 static const size_t	_cpu_blk_size = sizeof(_CPU_BLK);
 static const size_t	_sys_blk_size = sizeof(_SYS_BLK);
 static const size_t	_ses_blk_size = sizeof(_SES_BLK);
+static const size_t	_eth_blk_size = sizeof(_ETH_BLK);
 static const size_t	_disk_blk_size = sizeof(_DISK_BLK);
 static const size_t	_ssd_blk_size = sizeof(_SSD_BLK);
 static const size_t	_vhdx_blk_size = sizeof(_VHDX_BLK);
@@ -207,6 +210,31 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		     * Set the return value to the correct item.
 		     */
 		    retBlock = (void *) &ses->ses;
+		}
+	    }
+	    break;
+
+	case AXP_ETHERNET_BLK:
+	    {
+		_ETH_BLK *eth = NULL;
+
+		size = _eth_blk_size;
+		allocBlock = calloc(1, size);
+		if (allocBlock != NULL)
+		{
+		    eth = (_ETH_BLK *) allocBlock;
+
+		    eth->head.type = eth->tail.type = type;
+		    eth->head.size = eth->tail.size = size;
+		    eth->head.magicNumber = AXP_HD_MAGIC;
+		    eth->head.tail = &eth->tail;
+		    eth->tail.magicNumber = AXP_TL_MAGIC;
+		    AXP_INSQUE(_blkQ.blink, &eth->head.head);
+
+		    /*
+		     * Set the return value to the correct item.
+		     */
+		    retBlock = (void *) &eth->eth;
 		}
 	    }
 	    break;
@@ -475,6 +503,16 @@ void AXP_Deallocate_Block(void *block)
 	    case AXP_TELNET_SES_BLK:
 	    case AXP_VOID_BLK:
 		free(head);
+		break;
+
+	    case AXP_ETHERNET_BLK:
+		{
+		    AXP_Ethernet_Handle *eth = (AXP_Ethernet_Handle *) block;
+		    if (eth->handle != NULL)
+			AXP_EthernetClose(eth);
+		    else
+			free(head);
+		}
 		break;
 
 	    case AXP_SSD_BLK:
