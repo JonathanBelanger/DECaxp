@@ -283,6 +283,9 @@ typedef struct
     u64			diskSize;
     u32 		blkSize;
     u32			sectorSize;
+    u32			cylinders;
+    u32			heads;
+    u32			sectors;
 } AXP_VHDX_Handle;
 
 /*

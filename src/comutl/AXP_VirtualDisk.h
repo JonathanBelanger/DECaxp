@@ -17,7 +17,9 @@
  * Description:
  *
  *  This header file contains the definitions in virtdisk.h, required to
- *  implement the virtual disk functions defined by Microsoft.
+ *  implement the virtual disk functions defined by Microsoft.  The API for
+ *  Virtual Hard Disks from Microsoft is documented at the following URL:
+ *  	https://docs.microsoft.com/en-us/windows/desktop/api/_vhd/
  *
  * Revision History:
  *

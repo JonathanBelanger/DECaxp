@@ -71,6 +71,22 @@ u32 AXP_VHD_Checksum(u8 *buf, size_t bufLen)
  *
  *  NOTE: I performed some code clean-up from the specification.  There were
  *  some missing parentheses and ambiguous coding.
+ *
+ * Input Parameters:
+ *  diskSize:
+ *	A value indicating the total number of bytes allocated to the virtual
+ *	disk.  This may not be the actual size of the file, if it is dynamic.
+ *
+ *  sectorSize:
+ *	A value indicating the size of each sector on the disk.
+ *
+ * Output Parameters:
+ *  chs:
+ *	A pointer to a structure to receive the Cylinder, Heads, and Sector
+ *	information associated with the VHD.
+ *
+ * Return Values:
+ *  None.
  */
 void AXP_VHD_CHSCalc(
 		u64 diskSize,
@@ -385,6 +401,13 @@ u32 _AXP_VHD_Create(
 	foot.checksum = AXP_VHD_Checksum((u8 *) &foot, sizeof(AXP_VHD_Footer));
 
 	/*
+	 * Save the CHS information into the handle.
+	 */
+	vhd->cylinders = foot.chs.cylinders;
+	vhd->heads = foot.chs.heads;
+	vhd->sectors = foot.chs.sectors;
+
+	/*
 	 * If this is a dynamic file, then we need to create the Dynamic Disk
 	 * Header.
 	 *
@@ -524,6 +547,8 @@ u32 _AXP_VHD_Create(
 		AXP_Deallocate_Block(vhd);
 		retVal = AXP_VHD_INV_HANDLE;
 	    }
+	    else
+		*handle = (AXP_VHD_HANDLE) vhd;
 	}
 	else
 	{
@@ -560,6 +585,13 @@ u32 _AXP_VHD_Create(
  *  handle:
  *  	A pointer to the handle object that represents the newly opened
  *  	VHD disk.
+ *
+ * Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_FILE_NOT_FOUND:	File Not Found.
+ *  AXP_VHD_READ_FAULT:		Failed to read information from the file.
+ *  AXP_VHD_OUTOFMEMORY:	Insufficient memory to perform operation.
+ *  AXP_VHD_FILE_CORRUPT:	The file appears to be corrupt.
  */
 u32 _AXP_VHD_Open(
 		char *path,
@@ -567,7 +599,234 @@ u32 _AXP_VHD_Open(
 		u32 deviceID,
 		AXP_VHD_HANDLE *handle)
 {
-    u32		retVal = AXP_VHD_SUCCESS;
+    AXP_VHDX_Handle	*vhd = NULL;
+    AXP_VHD_Footer	*footer;
+    u8			footerBuf[sizeof(AXP_VHD_Footer) + 1];
+    i64			fileSize;
+    u32			retVal = AXP_VHD_SUCCESS;
+    u32			oldChecksum;
+    u32			newChecksum;
+
+    /*
+     * Let's allocate the block we need to maintain access to the virtual disk
+     * image.
+     */
+    vhd = (AXP_VHDX_Handle *) AXP_Allocate_Block(AXP_VHDX_BLK);
+    if (vhd != NULL)
+    {
+
+	/*
+	 * Allocate a buffer long enough for for the filename (plus null
+	 * character).
+	 */
+	vhd->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+	if (vhd->filePath != NULL)
+	{
+	    strcpy(vhd->filePath, path);
+	    vhd->deviceID = deviceID;
+
+	    /*
+	     * Try and open the file for binary read-only.  We don't know yet
+	     * if this file is a valid VHD file and definitely don't want to
+	     * write to it (yet).  If everything looks good, then we will
+	     * reopen it for binary read/write.
+	     */
+	    vhd->fp = fopen(path, "rb");
+	    if (vhd->fp != NULL)
+	    {
+
+		/*
+		 * Whether the VHD is dynamic, differencing, or fixed, the last
+		 * 512 (or 511) bytes of the file contains a footer.  We use
+		 * the footer to determine the validity of the file, as well
+		 * as type.  If dynamic or differencing, then we will also read
+		 * the header.
+		 *
+		 *	NOTE:	For VHD formatted virtual hard disks, there is
+		 * 		no header record.
+		 */
+		fileSize = AXP_GetFileSize(vhd->fp);
+		if (fileSize >= sizeof(AXP_VHD_Footer))
+		{
+
+		    /*
+		     * Read in the footer record.  Assume it is in the last 512
+		     * bytes of the file.  We'll correct our reference if the
+		     * footer is in the last 511 bytes of the file.
+		     */
+		    if (AXP_ReadFromOffset(
+				vhd->fp,
+				footerBuf,
+				sizeof(AXP_VHD_Footer),
+				(fileSize - sizeof(AXP_VHD_Footer))) == true)
+		    {
+
+			/*
+			 * The footer has a specific structure format.  Cast
+			 * the last 512 bytes to the pointer for this
+			 * structure.  If the cookie field does not look
+			 * correct, shift the cast pointer one byte.  If the
+			 * cookie is still not correct, then we have a file
+			 * that appears to be corrupt.
+			 */
+			footer = (AXP_VHD_Footer *) footerBuf;
+			if (footer->cookie != AXP_VHDFILE_SIG)
+			{
+			    footer = (AXP_VHD_Footer *) &footerBuf[1];
+			    if (footer->cookie != AXP_VHDFILE_SIG)
+				retVal = AXP_VHD_FILE_CORRUPT;
+			}
+
+			/*
+			 * All right, it appears that we have a valid footer.
+			 * so, let's go perform some additional validation of
+			 * the footer record.
+			 */
+			if (retVal == AXP_VHD_SUCCESS)
+			{
+
+			    /*
+			     * Recalculate the footer checksum.  Note, that the
+			     * original checksum was calculated with the
+			     * checksum itself, being equal to zero.
+			     */
+			    oldChecksum = footer->checksum;
+			    footer->checksum = 0;
+			    newChecksum = AXP_VHD_Checksum(
+						(u8 *) footer,
+						sizeof(AXP_VHD_Footer));
+
+			    /*
+			     * Type to do some validation of the footer.  If
+			     * the features and format have the expected
+			     * values, and if the checksum matches or if it
+			     * does not, then we will check the header (only
+			     * for Dynamic and Differencing VHDs) checksum
+			     * before deciding that the file is corrupt.
+			     * Otherwise, we'll extract some information from
+			     * the footer.
+			     */
+			    if ((footer->features == AXP_FEATURES_RES) &&
+				(footer->formatVer == AXP_FORMAT_VER) &&
+				(AXP_VHD_TypeValid(footer->diskType)) &&
+				(((footer->diskType == DiskFixed) &&
+				  (footer->dataOffset == AXP_FIXED_OFFSET)) ||
+				 ((footer->diskType != DiskFixed) &&
+				  (footer->dataOffset != AXP_FIXED_OFFSET))) &&
+				((oldChecksum == newChecksum) ||
+				 ((oldChecksum != newChecksum) &&
+				  ((footer->diskType == DiskDynamic) ||
+				   (footer->diskType == DiskDifferencing)))))
+			    {
+				vhd->logOffset = 0;
+				vhd->batOffset = 0;
+				vhd->metadataOffset = 0;
+				vhd->diskSize = footer->currentSize;
+				vhd->blkSize = 0;
+				vhd->cylinders = footer->chs.cylinders;
+				vhd->heads = footer->chs.heads;
+				vhd->sectors = footer->chs.sectors;
+				vhd->sectorSize =
+					vhd->diskSize /
+					    ((u64) vhd->cylinders *
+					     (u64) vhd->heads *
+					     (u64) vhd->sectors);
+				vhd->fixed = footer->diskType == DiskFixed;
+			    }
+			    else
+				retVal = AXP_VHD_FILE_CORRUPT;
+			}
+
+			/*
+			 * If we still have what appears to be a valid VHD
+			 * file and it is a dynamic or differencing VHD, then
+			 * go get the header.
+			 */
+			if ((retVal == AXP_VHD_SUCCESS) &&
+			    (vhd->fixed == false))
+			{
+			    AXP_VHD_Dynamic	dyn;
+
+			    /*
+			     * The footer record is 512 bytes and the dynamic
+			     * record is 1024 bytes.  The header record has a
+			     * copy of the footer, so the file has to be at
+			     * least 2048 bytes in size.  If it is not, then
+			     * something is wrong with the file.
+			     */
+			    if (fileSize > TWO_K)
+			    {
+				if (AXP_ReadFromOffset(
+						vhd->fp,
+						(u8 *) &dyn,
+						sizeof(AXP_VHD_Dynamic),
+						sizeof(AXP_VHD_Footer)) == true)
+				{
+
+				    /*
+				     * Recalculate the dynamic checksum.  Note,
+				     * that the original checksum was
+				     * calculated with the checksum itself,
+				     * being equal to zero.
+				     */
+				    oldChecksum = dyn.checksum;
+				    dyn.checksum = 0;
+				    newChecksum = AXP_VHD_Checksum(
+							(u8 *) &dyn,
+							sizeof(AXP_VHD_Dynamic));
+				    if ((dyn.cookie == AXP_VHD_DYNAMIC_SIG) &&
+					(dyn.dataOff == AXP_VHD_DATA_OFFSET) &&
+					(dyn.headerVer == AXP_VHD_HEADER_VER) &&
+					(oldChecksum == newChecksum))
+				    {
+					vhd->batOffset = dyn.tableOff;
+					vhd->blkSize = dyn.blockSize;
+				    }
+				    else
+					retVal = AXP_VHD_FILE_CORRUPT;
+				}
+				else
+				    retVal = AXP_VHD_READ_FAULT;
+			    }
+			    else
+				retVal = AXP_VHD_FILE_CORRUPT;
+			}
+		    }
+		    else
+			retVal = AXP_VHD_READ_FAULT;
+		}
+		else
+		    retVal = AXP_VHD_READ_FAULT;
+	    }
+	    else
+		retVal = AXP_VHD_FILE_NOT_FOUND;
+	}
+	else
+	    retVal = AXP_VHD_OUTOFMEMORY;
+    }
+    else
+	retVal = AXP_VHD_OUTOFMEMORY;
+
+    /*
+     * OK, if we get this far and the return status is still successful, then
+     * we need to reopen the file for binary read/write.
+     */
+    if (retVal == AXP_VHD_SUCCESS)
+    {
+	vhd->fp = freopen(path, "wb+", vhd->fp);
+	if (vhd->fp == NULL)
+	    retVal = AXP_VHD_INV_HANDLE;
+	else
+	    *handle = (AXP_VHD_HANDLE) vhd;
+    }
+
+    /*
+     * OK, if we don't have a success at this point, and we allocated a VHD
+     * handle, then deallocate the handle, since the VHD was not successfully
+     * opened.
+     */
+    if ((retVal != AXP_VHD_SUCCESS) && (vhd != NULL))
+	AXP_Deallocate_Block(vhd);
 
     /*
      * Return the outcome of this call back to the caller.

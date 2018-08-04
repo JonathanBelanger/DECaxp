@@ -31,6 +31,7 @@
 #include <pcap.h>
 
 #define AXP_ETH_READ_TIMEOUT	1000
+#define AXP_MAC_ADDR_LEN	6
 
 /*
  * Ethernet handle.  Ethernet packets will be sent and received through this
@@ -40,6 +41,7 @@ typedef struct
 {
     pcap_t	*handle;
     char	errorBuf[PCAP_ERRBUF_SIZE];
+    u8		macAddr[AXP_MAC_ADDR_LEN];
 } AXP_Ethernet_Handle;
 
 /*
