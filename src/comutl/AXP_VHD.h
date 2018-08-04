@@ -46,6 +46,9 @@ typedef enum
     DiskDifferencing = 4
 } AXP_VHD_DiskType;
 
+#define AXP_VHD_TypeValid(type)	\
+    (((type) >= DiskFixed) && ((type) <= DiskDifferencing))
+
 /*
  * Hard Disk Footer Format						Page 5
  *

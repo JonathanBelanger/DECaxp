@@ -912,6 +912,13 @@ u32 _AXP_VHDX_Create(
  *  handle:
  *  	A pointer to the handle object that represents the newly opened
  *  	VHDX disk.
+ *
+ * Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_FILE_NOT_FOUND:	File Not Found.
+ *  AXP_VHD_READ_FAULT:		Failed to read information from the file.
+ *  AXP_VHD_OUTOFMEMORY:	Insufficient memory to perform operation.
+ *  AXP_VHD_FILE_CORRUPT:	The file appears to be corrupt.
  */
 u32 _AXP_VHDX_Open(
 		char *path,
@@ -919,7 +926,184 @@ u32 _AXP_VHDX_Open(
 		u32 deviceID,
 		AXP_VHD_HANDLE *handle)
 {
-    u32		retVal = AXP_VHD_SUCCESS;
+    AXP_VHDX_Handle	*vhdx = NULL;
+    AXP_VHDX_ID		ID;
+    AXP_VHDX_HDR	hdr[2];
+    AXP_VHDX_REG_HDR	reg[2];
+    AXP_VHDX_REG_ENT	regMeta, regBat;
+    AXP_VHDX_LOG_HDR	logHdr;
+    AXP_VHDX_BAT_ENT	batEnt;
+    AXP_VHDX_META_HDR	metaHdr;
+    AXP_VHDX_META_ENT	metaEnt;
+    AXP_VHDX_META_FILE	metaFile;
+    AXP_VHDX_META_DISK 	metaDisk;
+    AXP_VHDX_META_SEC	metaSec;
+    AXP_VHDX_META_PAGE83 meta83;
+    AXP_VHDX_META_PAR_HDR metaParHdr;
+    AXP_VHDX_META_PAR_ENT metaParEnt;
+    i64			fileSize;
+    int			currentHdr = -1, currentReg = -1;
+    u32			oldChecksum, newChecksum;
+    u32			retVal = AXP_VHD_SUCCESS;
+
+    /*
+     * Let's allocate the block we need to maintain access to the virtual disk
+     * image.
+     */
+    vhdx = (AXP_VHDX_Handle *) AXP_Allocate_Block(AXP_VHDX_BLK);
+    if (vhdx != NULL)
+    {
+
+	/*
+	 * Allocate a buffer long enough for for the filename (plus null
+	 * character).
+	 */
+	vhdx->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+	if (vhdx->filePath != NULL)
+	{
+	    strcpy(vhdx->filePath, path);
+	    vhdx->deviceID = deviceID;
+
+	    /*
+	     * Try and open the file for binary read-only.  We don't know yet
+	     * if this file is a valid VHDX file and definitely don't want to
+	     * write to it (yet).  If everything looks good, then we will
+	     * reopen it for binary read/write.
+	     */
+	    vhdx->fp = fopen(path, "rb");
+	    if (vhdx->fp != NULL)
+	    {
+
+		/*
+		 * The header section of a VHDX formatted file is 1MB in size,
+		 * so the file size needs to be at least that large.
+		 */
+		fileSize = AXP_GetFileSize(vhdx->fp);
+		if (fileSize >= ONE_M)
+		{
+
+		    /*
+		     * Read in the File Identifier record.
+		     */
+		    if (AXP_ReadFromOffset(
+				vhdx->fp,
+				(u8 *) &ID,
+				sizeof(AXP_VHDX_ID),
+				AXP_VHDX_FILE_ID_OFF) == true)
+		    {
+			if (ID.sig != AXP_VHDXFILE_SIG)
+			    retVal = AXP_VHD_FILE_CORRUPT;
+		    }
+		    else
+			retVal = AXP_VHD_READ_FAULT;
+
+		    /*
+		     * If the File ID was good, then read Header 1 and
+		     * Header 2.
+		     */
+		    if (retVal == AXP_VHD_SUCCESS)
+		    {
+			if (AXP_ReadFromOffset(
+					vhdx->fp,
+					(u8 *) &hdr[0],
+					AXP_VHDX_HDR_LEN,
+					AXP_VHDX_HEADER1_OFF) == true)
+			{
+			    if (AXP_ReadFromOffset(
+					vhdx->fp,
+					(u8 *) &hdr[1],
+					AXP_VHDX_HDR_LEN,
+					AXP_VHDX_HEADER2_OFF) == false)
+				retVal = AXP_VHD_READ_FAULT;
+			}
+			else
+			    retVal = AXP_VHD_READ_FAULT;
+
+			/*
+			 * If we successfully read in the 2 header records,
+			 * now to some validation of them.
+			 */
+			if ((retVal == AXP_VHD_SUCCESS) &&
+			    (hdr[0].sig == AXP_HEAD_SIG) &&
+			    (hdr[1].sig == AXP_HEAD_SIG) &&
+			    (hdr[0].logVer == AXP_VHDX_LOG_VER) &&
+			    (hdr[1].logVer == AXP_VHDX_LOG_VER) &&
+			    (hdr[0].ver == AXP_VHDX_CURRENT_VER) &&
+			    (hdr[1].ver == AXP_VHDX_CURRENT_VER))
+			{
+			    newChecksum = 0;
+			    oldChecksum = hdr[0].checkSum;
+			    hdr[0].checkSum = 0;
+			    newChecksum = AXP_Crc32(
+						(u8 *) &hdr[0],
+						AXP_VHDX_HDR_LEN,
+						false,
+						newChecksum);
+			    hdr[0].checkSum = oldChecksum;
+			    if (oldChecksum == newChecksum)
+			    {
+				currentHdr = 0;
+				newChecksum = 0;
+				oldChecksum = hdr[1].checkSum;
+				hdr[1].checkSum = 0;
+				newChecksum = AXP_Crc32(
+						(u8 *) &hdr[1],
+						AXP_VHDX_HDR_LEN,
+						false,
+						newChecksum);
+				hdr[1].checkSum = oldChecksum;
+				if ((oldChecksum == newChecksum) &&
+				    (hdr[1].seqNum > hdr[0].seqNum))
+				    currentHdr = 1;
+			    }
+			    else
+				retVal = AXP_VHD_FILE_CORRUPT;
+			}
+		    }
+
+		    /*
+		     * OK, if the File ID and header record(s) are valid, then
+		     * we can look at the Region records.  There are 2 region
+		     * records, but there is nothing to indicate whether one
+		     * region is current or not, so if one validates out, then
+		     * it is current.  If none validate out, then the file is
+		     * considered corrupt (NOTE: we may have to replay log
+		     * records).
+		     *
+		     * TODO: Write this code.
+		     */
+		    if (retVal == AXP_VHD_SUCCESS)
+		    {
+		    }
+		}
+	    }
+	}
+	else
+	    retVal = AXP_VHD_OUTOFMEMORY;
+    }
+    else
+	retVal = AXP_VHD_OUTOFMEMORY;
+
+    /*
+     * OK, if we get this far and the return status is still successful, then
+     * we need to reopen the file for binary read/write.
+     */
+    if (retVal == AXP_VHD_SUCCESS)
+    {
+	vhdx->fp = freopen(path, "wb+", vhdx->fp);
+	if (vhdx->fp == NULL)
+	    retVal = AXP_VHD_INV_HANDLE;
+	else
+	    *handle = (AXP_VHD_HANDLE) vhdx;
+    }
+
+    /*
+     * OK, if we don't have a success at this point, and we allocated a VHDX
+     * handle, then deallocate the handle, since the VHDX was not successfully
+     * opened.
+     */
+    if ((retVal != AXP_VHD_SUCCESS) && (vhdx != NULL))
+	AXP_Deallocate_Block(vhdx);
 
     /*
      * Return the outcome of this call back to the caller.
