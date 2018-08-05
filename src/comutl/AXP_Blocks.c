@@ -54,10 +54,10 @@ static const char *_blockNames[] =
     "System",
     "Telnet",
     "Ethernet",
-    "Disk",
     "SSD",
     "VHDX",
-    "Void"
+    "Void",
+    "RAW/CDROM/ISO"
 };
 
 /*
@@ -81,6 +81,7 @@ static const size_t	_ses_blk_size = sizeof(_SES_BLK);
 static const size_t	_eth_blk_size = sizeof(_ETH_BLK);
 static const size_t	_ssd_blk_size = sizeof(_SSD_BLK);
 static const size_t	_vhdx_blk_size = sizeof(_VHDX_BLK);
+static const size_t	_raw_blk_size = sizeof(_RAW_BLK);
 static const size_t	_head_tail_size = sizeof(AXP_BLOCK_HD) +
 					  sizeof(AXP_BLOCK_TL);
 
@@ -373,6 +374,31 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 	    }
 	    break;
 
+	case AXP_RAW_BLK:
+	    {
+		_RAW_BLK *raw = NULL;
+
+		size = _raw_blk_size;
+		allocBlock = calloc(1, size);
+		if (allocBlock != NULL)
+		{
+		    raw = (_RAW_BLK *) allocBlock;
+
+		    raw->head.type = raw->tail.type = type;
+		    raw->head.size = raw->tail.size = size;
+		    raw->head.magicNumber = AXP_HD_MAGIC;
+		    raw->head.tail = &raw->tail;
+		    raw->tail.magicNumber = AXP_TL_MAGIC;
+		    AXP_INSQUE(_blkQ.blink, &raw->head.head);
+
+		    /*
+		     * Set the return value to the correct item.
+		     */
+		    retBlock = (void *) &raw->raw;
+		}
+	    }
+	    break;
+
 	default:
 	    break;
     }
@@ -514,6 +540,22 @@ void AXP_Deallocate_Block(void *block)
 		    }
 		    if (vhdx->filePath != NULL)
 			AXP_Deallocate_Block(vhdx->filePath);
+		    free(head);
+		}
+		break;
+
+	    case AXP_RAW_BLK:
+		{
+		    AXP_RAW_Handle *raw = (AXP_RAW_Handle *) block;
+
+		    if (raw->fp != NULL)
+		    {
+			if (raw->readOnly == false)
+			    fflush(raw->fp);
+			fclose(raw->fp);
+		    }
+		    if (raw->filePath != NULL)
+			AXP_Deallocate_Block(raw->filePath);
 		    free(head);
 		}
 		break;

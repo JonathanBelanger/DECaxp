@@ -35,16 +35,39 @@
 #include "AXP_Trace.h"
 #include "AXP_VirtualDisk.h"
 
-u32 _AXP_RAW_Create(
-		char *,
-		AXP_VHD_CREATE_FLAG,
-		char *,
-		u32,
-		u64,
-		u32,
-		u32,
-		u32,
-		AXP_VHD_HANDLE *);
+/*
+ * The below structure is used to maintain information about accessing a disk
+ * in RAW format.  The disk can be either an entire hard drive, CDROM, or ISO
+ * file.
+ */
+typedef struct
+{
+
+    /*
+     * These are parameters provided by the interface and stored for later
+     * usage.
+     */
+    u32			deviceID;
+    char		*filePath;
+    bool		readOnly;
+
+    /*
+     * This is the file pointer and file name associated with the device.
+     */
+    FILE		*fp;
+
+    /*
+     * These are things read from (or written to) the VHD file that are used
+     * while accessing the contents.
+     */
+    u64			diskSize;
+    u32 		blkSize;
+    u32			sectorSize;
+    u32			cylinders;
+    u32			heads;
+    u32			sectors;
+} AXP_RAW_Handle;
+
 u32 _AXP_RAW_Open(char *, AXP_VHD_OPEN_FLAG, u32, AXP_VHD_HANDLE *);
 
 #endif /* AXP_RAW_H_ */

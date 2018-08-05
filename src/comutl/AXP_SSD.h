@@ -31,10 +31,53 @@
 #include "AXP_Configure.h"
 #include "AXP_Trace.h"
 
+#define AXP_SSD_SIG1	0x424a707861434544ll
+#define AXP_SSD_SIG2	0x4445436178704a42ll
+
 typedef struct
 {
+    u8		ID1[8];
+    u64		diskSize;
+    u32		blkSize;
+    u32		sectorSize;
+    u32		cylinders;
+    u32		heads;
+    u32		sectors;
+    u8		reserved[20];
+    u8		ID2[8];
+} AXP_SSD_Geometry;
+
+typedef struct
+{
+
+    /*
+     * These are parameters provided by the interface and stored for later
+     * usage.
+     */
+    u32		deviceID;
+    char	*filePath;
+
+    /*
+     * This is the file pointer associated with backing store for the SSD.
+     */
     FILE	*fp;
+
+    /*
+     * This is the actual solid state drive.  This is exactly the size of the
+     * disk (there is no header or trailer information.
+     */
     u8		*memory;
+
+    /*
+     * These are things read from (or written to) the backing store file that
+     * are used while accessing the contents.
+     */
+    u64		diskSize;
+    u32		blkSize;
+    u32		sectorSize;
+    u32		cylinders;
+    u32		heads;
+    u32		sectors;
 } AXP_SSD_Handle;
 
 #endif /* AXP_SSD_H_ */
