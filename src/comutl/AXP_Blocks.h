@@ -45,6 +45,7 @@
 #include "AXP_Telnet.h"
 #include "AXP_SSD.h"
 #include "AXP_VHDX.h"
+#include "AXP_RAW.h"
 #include "AXP_Ethernet.h"
 
 typedef enum
@@ -57,6 +58,7 @@ typedef enum
     AXP_SSD_BLK,
     AXP_VHDX_BLK,
     AXP_VOID_BLK,
+    AXP_RAW_BLK,
     AXP_BLOCK_MAX
 } AXP_BLOCK_TYPE;
 
@@ -119,6 +121,12 @@ typedef struct
     AXP_VHDX_Handle	vhdx;
     AXP_BLOCK_TL	tail;
 } _VHDX_BLK;
+typedef struct
+{
+    AXP_BLOCK_HD	head;
+    AXP_RAW_Handle	raw;
+    AXP_BLOCK_TL	tail;
+} _RAW_BLK;
 
 void *AXP_Allocate_Block(i32 blockType, ...);
 void AXP_Deallocate_Block(void *block);

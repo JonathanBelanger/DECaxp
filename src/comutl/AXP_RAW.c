@@ -31,60 +31,6 @@
 #include "AXP_RAW.h"
 
 /*
- * _AXP_RAW_Create
- *  Creates a RAW hard disk (RAW) image file.
- *
- * Input Parameters:
- *  path:
- *	A pointer to a valid string that represents the path to the new RAW
- *	disk image file.
- *  flags:
- *	Creation flags, which must be a valid combination of the
- *	AXP_VHD_CREATE_FLAG enumeration.
- *  parentPath:
- *	A pointer to a valid string that represents the path to the parent
- *	virtual disk image file.  This means that we are creating a
- *	differential RAW.
- *  parentDevID:
- *	An unsigned 32-bit value indicating the disk type of the parent.
- *  diskSize:
- *	An unsigned 64-bit value for the size of the disk to be created, in
- *	bytes.
- *  blkSize:
- *	An unsigned 32-bit value for the size of each block.
- *  sectorSize:
- *	An unsigned 32-bit value for the size of each sector.
- *  deviceID:
- *	An unsigned 32-bit value indicating the desired disk type.
- *
- * Output Parameters:
- *  handle:
- *  	A pointer to the handle object that represents the newly created
- *  	RAW disk.
- *
- * Return Values:
- *  AXP_VHD_CALL_NOT_IMPL:	This function is not implemented.
- */
-u32 _AXP_RAW_Create(
-		char *path,
-		AXP_VHD_CREATE_FLAG flags,
-		char *parentPath,
-		u32 parentDevID,
-		u64 diskSize,
-		u32 blkSize,
-		u32 sectorSize,
-		u32 deviceID,
-		AXP_VHD_HANDLE *handle)
-{
-    u32		retVal = AXP_VHD_CALL_NOT_IMPL;
-
-    /*
-     * Return the outcome of this call back to the caller.
-     */
-    return(retVal);
-}
-
-/*
  * _AXP_RAW_Open
  *  This function is called to open a RAW device or CD.
  *
@@ -109,7 +55,76 @@ u32 _AXP_RAW_Open(
 		u32 deviceID,
 		AXP_VHD_HANDLE *handle)
 {
-    u32		retVal = AXP_VHD_SUCCESS;
+    AXP_RAW_Handle	*raw;
+    i64			fileSize;
+    size_t		outLen;
+    u32			retVal = AXP_VHD_SUCCESS;
+
+    /*
+     * Let's allocate the block we need to maintain access to the physical disk
+     * image.
+     */
+    raw = (AXP_RAW_Handle *) AXP_Allocate_Block(AXP_RAW_BLK);
+    if (raw != NULL)
+    {
+
+	/*
+	 * Allocate a buffer long enough for for the filename (plus null
+	 * character).
+	 */
+	raw->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+	if (raw->filePath != NULL)
+	{
+	    strcpy(raw->filePath, path);
+	    raw->deviceID = deviceID;
+
+	    /*
+	     * Open the device/file.  If it is an ISO file or a CDROM device,
+	     * then do some initialization and we are done.  If it is a
+	     * physical device, then we re-open the device for binary
+	     * read/write.
+	     */
+	    raw->fp = fopen(path, "rb");
+	    if (raw->fp != NULL)
+	    {
+		raw->deviceID = deviceID;
+		if (deviceID == STORAGE_TYPE_DEV_ISO)
+		{
+		    raw->readOnly = true;
+		    raw->diskSize = 0;
+		    raw->blkSize = 0;
+		    raw->sectorSize = 0;
+		    raw->cylinders = 0;
+		    raw->heads = 0;
+		    raw->sectors = 0;
+		}
+		else
+		{
+		    raw->readOnly = true;
+		    raw->diskSize = 0;
+		    raw->blkSize = 0;
+		    raw->sectorSize = 0;
+		    raw->cylinders = 0;
+		    raw->heads = 0;
+		    raw->sectors = 0;
+		}
+	    }
+	    else
+		retVal = AXP_VHD_FILE_NOT_FOUND;
+	}
+	else
+	    retVal = AXP_VHD_OUTOFMEMORY;
+    }
+    else
+	retVal = AXP_VHD_OUTOFMEMORY;
+
+    /*
+     * OK, if we don't have a success at this point, and we allocated a VHD
+     * handle, then deallocate the handle, since the VHD was not successfully
+     * opened.
+     */
+    if ((retVal != AXP_VHD_SUCCESS) && (raw != NULL))
+	AXP_Deallocate_Block(raw);
 
     /*
      * Return the outcome of this call back to the caller.
