@@ -93,7 +93,7 @@ u32 AXP_VHD_Create(
 {
     char		*parentPath;
     u64			diskSize;
-    u32			retVal = AXP_VHD_SUCCESS;
+    u32			retVal;
     u32			blkSize, sectorSize, deviceID, parentDevID;
 
     /*
@@ -225,7 +225,7 @@ u32 AXP_VHD_Open(
 		AXP_VHD_OPEN_PARAM *param,
 		AXP_VHD_HANDLE *handle)
 {
-    u32			retVal = AXP_VHD_SUCCESS;
+    u32			retVal;
     u32			deviceID;
 
     /*

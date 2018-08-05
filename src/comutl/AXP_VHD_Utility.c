@@ -523,6 +523,7 @@ u32 AXP_VHD_ValidateCreate(
 	    switch(storageType->deviceID)
 	    {
 		case STORAGE_TYPE_DEV_ISO:
+		case STORAGE_TYPE_DEV_SSD:
 		    minDisk = 0;
 		    maxDisk = 0;
 		    minBlk = 0;
@@ -555,10 +556,16 @@ u32 AXP_VHD_ValidateCreate(
 		    maxSector = AXP_VHDX_SEC_MAX;
 		    break;
 
+		case STORAGE_TYPE_DEV_RAW:
+		    break;
+
 		default:
+		    retVal = AXP_VHD_INV_PARAM;
 		    break;
 	    }
-
+	}
+	if (retVal == AXP_VHD_SUCCESS)
+	{
 	    switch (param->ver)
 	    {
 		case CREATE_VER_UNSPEC:
@@ -642,8 +649,6 @@ u32 AXP_VHD_ValidateCreate(
 	    else if (*parentPath != NULL)
 		retVal = AXP_VHD_NOT_SUPPORTED;
 	}
-	else
-	    retVal = AXP_VHD_INV_PARAM;
     }
     else
 	retVal = AXP_VHD_INV_PARAM;
@@ -803,6 +808,8 @@ u32 AXP_VHD_GetDeviceID(char *path, u32 *deviceID)
 	    likelyDevID = STORAGE_TYPE_DEV_VHD;
 	else if (strcmp(dot, ".iso") == 0)
 	    likelyDevID = STORAGE_TYPE_DEV_ISO;
+	else if (strcmp(dot, ".ssd") == 0)
+	    likelyDevID = STORAGE_TYPE_DEV_SSD;
 	else
 	    likelyDevID = STORAGE_TYPE_DEV_RAW;
     }
@@ -886,6 +893,7 @@ u32 AXP_VHD_GetDeviceID(char *path, u32 *deviceID)
 	     *	1) VHD	has 'conectix' at either EOF - [512|511] bytes.
 	     *	2) VHDX	has 'vhdxfile' at beginning of file.
 	     *	3) ISO	has 'CD001' at offset 32K (16th 2K sector) byte.
+	     *	4) TODO: SSD.
 	     */
 	    else if (isFile == true)
 	    {

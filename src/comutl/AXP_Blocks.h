@@ -43,8 +43,8 @@
 #include "AXP_21264_CPU.h"
 #include "AXP_21274_System.h"
 #include "AXP_Telnet.h"
+#include "AXP_SSD.h"
 #include "AXP_VHDX.h"
-#include "AXP_Disk.h"
 #include "AXP_Ethernet.h"
 
 typedef enum
@@ -54,7 +54,6 @@ typedef enum
     AXP_21274_SYS_BLK,
     AXP_TELNET_SES_BLK,
     AXP_ETHERNET_BLK,
-    AXP_DISK_BLK,
     AXP_SSD_BLK,
     AXP_VHDX_BLK,
     AXP_VOID_BLK,
@@ -108,12 +107,6 @@ typedef struct
     AXP_Ethernet_Handle	eth;
     AXP_BLOCK_TL	tail;
 } _ETH_BLK;
-typedef struct
-{
-    AXP_BLOCK_HD	head;
-    AXP_Disk		disk;
-    AXP_BLOCK_TL	tail;
-} _DISK_BLK;
 typedef struct
 {
     AXP_BLOCK_HD	head;

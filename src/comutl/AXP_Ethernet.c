@@ -53,7 +53,7 @@
  */
 AXP_Ethernet_Handle *AXP_EthernetOpen(char *name, u8 cardNo)
 {
-    AXP_Ethernet_Handle *retVal = NULL;
+    AXP_Ethernet_Handle *retVal;
 
     retVal = AXP_Allocate_Block(AXP_ETHERNET_BLK);
     if (retVal != NULL)

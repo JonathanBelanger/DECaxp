@@ -281,6 +281,10 @@ typedef struct
     u64			batOffset;
     u64			metadataOffset;
     u64			diskSize;
+    u32			logLength;
+    u32			batLength;
+    u32			batCount;
+    u32			metadataLength;
     u32 		blkSize;
     u32			sectorSize;
     u32			cylinders;

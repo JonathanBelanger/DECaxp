@@ -234,7 +234,7 @@ u32 _AXP_VHD_Create(
 		u32 deviceID,
 		AXP_VHD_HANDLE *handle)
 {
-    AXP_VHDX_Handle	*vhd = NULL;
+    AXP_VHDX_Handle	*vhd;
     AXP_VHD_Footer	foot;
     AXP_VHD_Dynamic	dyn;
     u64			eofOff;
@@ -599,10 +599,11 @@ u32 _AXP_VHD_Open(
 		u32 deviceID,
 		AXP_VHD_HANDLE *handle)
 {
-    AXP_VHDX_Handle	*vhd = NULL;
+    AXP_VHDX_Handle	*vhd;
     AXP_VHD_Footer	*footer;
     u8			footerBuf[sizeof(AXP_VHD_Footer) + 1];
     i64			fileSize;
+    size_t		outLen;
     u32			retVal = AXP_VHD_SUCCESS;
     u32			oldChecksum;
     u32			newChecksum;
@@ -654,10 +655,11 @@ u32 _AXP_VHD_Open(
 		     * bytes of the file.  We'll correct our reference if the
 		     * footer is in the last 511 bytes of the file.
 		     */
+		    outLen = sizeof(AXP_VHD_Footer);
 		    if (AXP_ReadFromOffset(
 				vhd->fp,
 				footerBuf,
-				sizeof(AXP_VHD_Footer),
+				&outLen,
 				(fileSize - sizeof(AXP_VHD_Footer))) == true)
 		    {
 
@@ -714,13 +716,16 @@ u32 _AXP_VHD_Open(
 				 ((footer->diskType != DiskFixed) &&
 				  (footer->dataOffset != AXP_FIXED_OFFSET))) &&
 				((oldChecksum == newChecksum) ||
-				 ((oldChecksum != newChecksum) &&
 				  ((footer->diskType == DiskDynamic) ||
-				   (footer->diskType == DiskDifferencing)))))
+				   (footer->diskType == DiskDifferencing))))
 			    {
 				vhd->logOffset = 0;
+				vhd->logLength = 0;
 				vhd->batOffset = 0;
+				vhd->batLength = 0;
+				vhd->batCount = 0;
 				vhd->metadataOffset = 0;
+				vhd->metadataLength = 0;
 				vhd->diskSize = footer->currentSize;
 				vhd->blkSize = 0;
 				vhd->cylinders = footer->chs.cylinders;
@@ -756,10 +761,11 @@ u32 _AXP_VHD_Open(
 			     */
 			    if (fileSize > TWO_K)
 			    {
+				outLen = sizeof(AXP_VHD_Dynamic);
 				if (AXP_ReadFromOffset(
 						vhd->fp,
 						(u8 *) &dyn,
-						sizeof(AXP_VHD_Dynamic),
+						&outLen,
 						sizeof(AXP_VHD_Footer)) == true)
 				{
 
@@ -780,6 +786,9 @@ u32 _AXP_VHD_Open(
 					(oldChecksum == newChecksum))
 				    {
 					vhd->batOffset = dyn.tableOff;
+					vhd->batCount = dyn.maxTableEnt;
+					vhd->batLength =
+					    dyn.maxTableEnt * sizeof(u32);
 					vhd->blkSize = dyn.blockSize;
 				    }
 				    else

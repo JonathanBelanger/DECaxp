@@ -44,7 +44,6 @@
 #include "AXP_21264_CPU.h"
 #include "AXP_21274_System.h"
 #include "AXP_Telnet.h"
-#include "AXP_Disk.h"
 #include "AXP_VHDX.h"
 #include "AXP_Ethernet.h"
 
@@ -80,7 +79,6 @@ static const size_t	_cpu_blk_size = sizeof(_CPU_BLK);
 static const size_t	_sys_blk_size = sizeof(_SYS_BLK);
 static const size_t	_ses_blk_size = sizeof(_SES_BLK);
 static const size_t	_eth_blk_size = sizeof(_ETH_BLK);
-static const size_t	_disk_blk_size = sizeof(_DISK_BLK);
 static const size_t	_ssd_blk_size = sizeof(_SSD_BLK);
 static const size_t	_vhdx_blk_size = sizeof(_VHDX_BLK);
 static const size_t	_head_tail_size = sizeof(AXP_BLOCK_HD) +
@@ -239,30 +237,6 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 	    }
 	    break;
 
-	case AXP_DISK_BLK:
-	    {
-		_DISK_BLK *dsk = NULL;
-
-		size = _disk_blk_size;
-		allocBlock = calloc(1, size);
-		if (allocBlock != NULL)
-		{
-
-		    dsk->head.type = dsk->tail.type = type;
-		    dsk->head.size = dsk->tail.size = size;
-		    dsk->head.magicNumber = AXP_HD_MAGIC;
-		    dsk->head.tail = &dsk->tail;
-		    dsk->tail.magicNumber = AXP_TL_MAGIC;
-		    AXP_INSQUE(_blkQ.blink, &dsk->head.head);
-
-		    /*
-		     * Set the return value to the correct item.
-		     */
-		    retBlock = (void *) &dsk->disk;
-		}
-	    }
-	    break;
-
 	case AXP_SSD_BLK:
 	    {
 		_SSD_BLK *ssd = NULL;
@@ -271,6 +245,8 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		allocBlock = calloc(1, size);
 		if (allocBlock != NULL)
 		{
+		    ssd = (_SSD_BLK *) allocBlock;
+
 		    ssd->head.type = ssd->tail.type = type;
 		    ssd->head.size = ssd->tail.size = size;
 		    ssd->head.magicNumber = AXP_HD_MAGIC;
@@ -294,6 +270,8 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 		allocBlock = calloc(1, size);
 		if (allocBlock != NULL)
 		{
+		    vhdx = (_VHDX_BLK *) allocBlock;
+
 		    vhdx->head.type = vhdx->tail.type = type;
 		    vhdx->head.size = vhdx->tail.size = size;
 		    vhdx->head.magicNumber = AXP_HD_MAGIC;
@@ -312,7 +290,7 @@ void *AXP_Allocate_Block(i32 blockType, ...)
 	case AXP_VOID_BLK:
 	    {
 		u8		*blk = NULL;
-		void		*replaceBlk = NULL;
+		void		*replaceBlk;
 		size_t		bytes = abs(blockType);
 
 		va_start(ap, blockType);
@@ -540,18 +518,6 @@ void AXP_Deallocate_Block(void *block)
 		}
 		break;
 
-	    case AXP_DISK_BLK:
-		{
-		    AXP_Disk *dsk = (AXP_Disk *) block;
-
-		    if (dsk->ssd != NULL)
-			AXP_Deallocate_Block(dsk->ssd);
-		    else if (dsk->vhdx != NULL)
-			AXP_Deallocate_Block(dsk->vhdx);
-		    free(head);
-		}
-	    break;
-
 	default:
 	    break;
 	}
@@ -601,8 +567,6 @@ AXP_BLOCK_TYPE AXP_ReturnType_Block(void *block)
 	      (head->size == _sys_blk_size)) ||
 	     ((head->type == AXP_TELNET_SES_BLK) &&
 	      (head->size == _ses_blk_size)) ||
-	     ((head->type == AXP_DISK_BLK) &&
-	      (head->size == _disk_blk_size)) ||
 	     ((head->type == AXP_SSD_BLK) &&
 	      (head->size == _ssd_blk_size)) ||
 	     ((head->type == AXP_VHDX_BLK) &&
