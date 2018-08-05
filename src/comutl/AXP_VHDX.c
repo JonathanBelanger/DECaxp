@@ -926,23 +926,21 @@ u32 _AXP_VHDX_Open(
 		u32 deviceID,
 		AXP_VHD_HANDLE *handle)
 {
-    AXP_VHDX_Handle	*vhdx = NULL;
+    u8			inBuf[2][SIXTYFOUR_K];
+    AXP_VHDX_Handle	*vhdx;
     AXP_VHDX_ID		ID;
     AXP_VHDX_HDR	hdr[2];
-    AXP_VHDX_REG_HDR	reg[2];
-    AXP_VHDX_REG_ENT	regMeta, regBat;
-    AXP_VHDX_LOG_HDR	logHdr;
-    AXP_VHDX_BAT_ENT	batEnt;
-    AXP_VHDX_META_HDR	metaHdr;
-    AXP_VHDX_META_ENT	metaEnt;
+    AXP_VHDX_REG_HDR	*reg[2] = { NULL, NULL };
+    AXP_VHDX_META_HDR	*metaHdr;
+    AXP_VHDX_META_ENT	*metaEnt;
     AXP_VHDX_META_FILE	metaFile;
     AXP_VHDX_META_DISK 	metaDisk;
     AXP_VHDX_META_SEC	metaSec;
-    AXP_VHDX_META_PAGE83 meta83;
-    AXP_VHDX_META_PAR_HDR metaParHdr;
-    AXP_VHDX_META_PAR_ENT metaParEnt;
     i64			fileSize;
+    size_t		outLen;
     int			currentHdr = -1, currentReg = -1;
+    int			ii;
+    u32			offset;
     u32			oldChecksum, newChecksum;
     u32			retVal = AXP_VHD_SUCCESS;
 
@@ -985,10 +983,11 @@ u32 _AXP_VHDX_Open(
 		    /*
 		     * Read in the File Identifier record.
 		     */
+		    outLen = AXP_VHDX_ID_LEN;
 		    if (AXP_ReadFromOffset(
 				vhdx->fp,
 				(u8 *) &ID,
-				sizeof(AXP_VHDX_ID),
+				&outLen,
 				AXP_VHDX_FILE_ID_OFF) == true)
 		    {
 			if (ID.sig != AXP_VHDXFILE_SIG)
@@ -1003,16 +1002,18 @@ u32 _AXP_VHDX_Open(
 		     */
 		    if (retVal == AXP_VHD_SUCCESS)
 		    {
+			outLen = AXP_VHDX_HDR_LEN;
 			if (AXP_ReadFromOffset(
 					vhdx->fp,
 					(u8 *) &hdr[0],
-					AXP_VHDX_HDR_LEN,
+					&outLen,
 					AXP_VHDX_HEADER1_OFF) == true)
 			{
+			    outLen = AXP_VHDX_HDR_LEN;
 			    if (AXP_ReadFromOffset(
 					vhdx->fp,
 					(u8 *) &hdr[1],
-					AXP_VHDX_HDR_LEN,
+					&outLen,
 					AXP_VHDX_HEADER2_OFF) == false)
 				retVal = AXP_VHD_READ_FAULT;
 			}
@@ -1021,7 +1022,8 @@ u32 _AXP_VHDX_Open(
 
 			/*
 			 * If we successfully read in the 2 header records,
-			 * now to some validation of them.
+			 * now to some validation of them, and determine which
+			 * one is current.
 			 */
 			if ((retVal == AXP_VHD_SUCCESS) &&
 			    (hdr[0].sig == AXP_HEAD_SIG) &&
@@ -1031,6 +1033,13 @@ u32 _AXP_VHDX_Open(
 			    (hdr[0].ver == AXP_VHDX_CURRENT_VER) &&
 			    (hdr[1].ver == AXP_VHDX_CURRENT_VER))
 			{
+
+			    /*
+			     * A header record is valid if the checksum read
+			     * from the file and one recalculated match.
+			     * Recalculate header 1's checksum and compare it
+			     * to what was read from the file.
+			     */
 			    newChecksum = 0;
 			    oldChecksum = hdr[0].checkSum;
 			    hdr[0].checkSum = 0;
@@ -1040,24 +1049,64 @@ u32 _AXP_VHDX_Open(
 						false,
 						newChecksum);
 			    hdr[0].checkSum = oldChecksum;
+
+			    /*
+			     * If header 1's checksums match, then it is
+			     * possible that this header is the current one.
+			     */
 			    if (oldChecksum == newChecksum)
-			    {
 				currentHdr = 0;
-				newChecksum = 0;
-				oldChecksum = hdr[1].checkSum;
-				hdr[1].checkSum = 0;
-				newChecksum = AXP_Crc32(
+
+			    /*
+			     * Recalculate header 2's checksum and compare it
+			     * to what was read from the file.
+			     */
+			    newChecksum = 0;
+			    oldChecksum = hdr[1].checkSum;
+			    hdr[1].checkSum = 0;
+			    newChecksum = AXP_Crc32(
 						(u8 *) &hdr[1],
 						AXP_VHDX_HDR_LEN,
 						false,
 						newChecksum);
-				hdr[1].checkSum = oldChecksum;
-				if ((oldChecksum == newChecksum) &&
-				    (hdr[1].seqNum > hdr[0].seqNum))
+			    hdr[1].checkSum = oldChecksum;
+
+			    /*
+			     * If header 2's checksums match, then it is
+			     * possible that this header is the current one.
+			     */
+			    if (oldChecksum == newChecksum)
+			    {
+
+				/*
+				 * If header 1 was determined to be valid and
+				 * we now know that header 2 is valid, then
+				 * either header 1 or header 2 can be current.
+				 * Otherwise, header 2 is current.
+				 */
+				if (currentHdr == 0)
+				{
+
+				    /*
+				     * Either header can be current.  So, if
+				     * the sequence number for header 2 is
+				     * greater than header 1, then header 2
+				     * will be made the current one. Otherwise,
+				     * header 1 will remain current.
+				     */
+				    if (hdr[1].seqNum > hdr[0].seqNum)
+					currentHdr = 1;
+				}
+				else
 				    currentHdr = 1;
 			    }
-			    else
+			    if (currentHdr < 0)
 				retVal = AXP_VHD_FILE_CORRUPT;
+			    else
+			    {
+				vhdx->logOffset = hdr[currentHdr].logOff;
+				vhdx->logLength = hdr[currentHdr].logLen;
+			    }
 			}
 		    }
 
@@ -1069,11 +1118,240 @@ u32 _AXP_VHDX_Open(
 		     * it is current.  If none validate out, then the file is
 		     * considered corrupt (NOTE: we may have to replay log
 		     * records).
-		     *
-		     * TODO: Write this code.
 		     */
 		    if (retVal == AXP_VHD_SUCCESS)
 		    {
+			outLen = SIXTYFOUR_K;
+			if (AXP_ReadFromOffset(
+					vhdx->fp,
+					inBuf[0],
+					&outLen,
+					AXP_VHDX_REG_TBL_HDR1_OFF) == true)
+			{
+			    outLen = SIXTYFOUR_K;
+			    if (AXP_ReadFromOffset(
+					vhdx->fp,
+					inBuf[1],
+					&outLen,
+					AXP_VHDX_REG_TBL_HDR2_OFF) == false)
+				retVal = AXP_VHD_READ_FAULT;
+			    else
+			    {
+				reg[0] = (AXP_VHDX_REG_HDR *) inBuf[0];
+				reg[1] = (AXP_VHDX_REG_HDR *) inBuf[1];
+			    }
+			}
+			else
+			    retVal = AXP_VHD_READ_FAULT;
+			if ((retVal == AXP_VHD_SUCCESS) &&
+			    (reg[0]->sig == AXP_REGI_SIG) &&
+			    (reg[1]->sig == AXP_REGI_SIG))
+			{
+
+			    /*
+			     * A region table header record is valid if the
+			     * checksum read from the file and one recalculated
+			     * match.  Recalculate region table header 1's
+			     * checksum and compare it to what was read from
+			     * the file.
+			     */
+			    newChecksum = 0;
+			    oldChecksum = reg[0]->checkSum;
+			    reg[0]->checkSum = 0;
+			    newChecksum = AXP_Crc32(
+						(u8 *) &reg[0],
+						SIXTYFOUR_K,
+						false,
+						newChecksum);
+			    reg[0]->checkSum = oldChecksum;
+
+			    /*
+			     * If region table header 1's checksums match, then
+			     * it is the current one and there is no need to
+			     * check region header 2.
+			     */
+			    if (oldChecksum == newChecksum)
+				currentReg = 0;
+			    else
+			    {
+
+				/*
+				 * Region table header 1's checksum did not
+				 * validate.  Let's see if region table header
+				 * 2 does.  Recalculate region table header 2's
+				 * checksum and compare it to what was read
+				 * from the file.
+				 */
+				newChecksum = 0;
+				oldChecksum = reg[1]->checkSum;
+				reg[1]->checkSum = 0;
+				newChecksum = AXP_Crc32(
+						(u8 *) &reg[1],
+						SIXTYFOUR_K,
+						false,
+						newChecksum);
+				reg[1]->checkSum = oldChecksum;
+
+				/*
+				 * If header 2's checksums match, then it is
+				 * possible that this header is the current one.
+				 */
+				if (oldChecksum == newChecksum)
+				    currentReg = 1;
+				else
+				    retVal = AXP_VHD_FILE_CORRUPT;
+			    }
+			}
+		    }
+
+		    /*
+		     * OK, if we are still have a success status, we now know
+		     * that one of the region tables is valid.  Go look at the
+		     * information we need from the selected region table
+		     * entries.
+		     */
+		    if (retVal == AXP_VHD_SUCCESS)
+		    {
+			AXP_VHDX_REG_ENT	*ent;
+
+			offset = AXP_VHDX_REG_HDR_LEN;
+			for (ii = 0; ii < reg[currentReg]->entryCnt; ii++)
+			{
+			    ent = (AXP_VHDX_REG_ENT *) &inBuf[currentReg][offset];
+			    switch(AXP_VHD_KnownGUID(&ent->guid))
+			    {
+				case AXP_Block_Allocation_Table:
+				    if (ent->req == 1)
+				    {
+					vhdx->batOffset = ent->fileOff;
+					vhdx->batLength = ent->len;
+					vhdx->batCount = ent->len / sizeof(u64);
+				    }
+				    else
+					retVal = AXP_VHD_FILE_CORRUPT;
+				    break;
+
+				case AXP_Metadata_Region:
+				    if (ent->req == 1)
+				    {
+					vhdx->metadataOffset = ent->fileOff;
+					vhdx->metadataLength = ent->len;
+				    }
+				    else
+					retVal = AXP_VHD_FILE_CORRUPT;
+				    break;
+
+				default:
+				    retVal = AXP_VHD_FILE_CORRUPT;
+				    break;
+			    }
+			    offset += AXP_VHDX_REG_ENT_LEN;
+			}
+		    }
+
+		    /*
+		     * OK, we finally go after the metadata to get the last set
+		     * of information about this VHD.
+		     */
+		    if (retVal == AXP_VHD_SUCCESS)
+		    {
+			outLen = SIXTYFOUR_K;
+			if (AXP_ReadFromOffset(
+					vhdx->fp,
+					inBuf[0],
+					&outLen,
+					vhdx->metadataOffset) == true)
+			{
+			    metaHdr = (AXP_VHDX_META_HDR *) inBuf[0];
+			    offset = AXP_VHDX_META_HDR_LEN;
+			    for (ii = 0;
+				 ((ii < metaHdr->entryCnt) &&
+				  (retVal == AXP_VHD_SUCCESS));
+				 ii++)
+			    {
+				metaEnt = (AXP_VHDX_META_ENT *) &inBuf[0][offset];
+				switch(AXP_VHD_KnownGUID(&metaEnt->guid))
+				{
+				    case AXP_File_Parameter:
+					if (metaEnt->isRequired == 1)
+					{
+					    outLen = AXP_VHDX_META_FILE_LEN;
+					    if (AXP_ReadFromOffset(
+							vhdx->fp,
+							&metaFile,
+							&outLen,
+							(vhdx->metadataOffset +
+							 metaEnt->off)) == true)
+					    {
+						vhdx->blkSize = metaFile.blkSize;
+						vhdx->fixed = metaFile.leaveBlksAlloc == 1;
+					    }
+					    else
+						retVal = AXP_VHD_READ_FAULT;
+					}
+					else
+					    retVal = AXP_VHD_FILE_CORRUPT;
+					break;
+
+				    case AXP_Disk_Size:
+					if (metaEnt->isRequired == 1)
+					{
+					    outLen = AXP_VHDX_META_DISK_LEN;
+					    if (AXP_ReadFromOffset(
+							vhdx->fp,
+							&metaDisk,
+							&outLen,
+							(vhdx->metadataOffset +
+							 metaEnt->off)) == true)
+						vhdx->diskSize = metaDisk.virDskSize;
+					    else
+						retVal = AXP_VHD_READ_FAULT;
+					}
+					else
+					    retVal = AXP_VHD_FILE_CORRUPT;
+					break;
+
+				    case AXP_Page_83:
+					if (metaEnt->isRequired != 1)
+					    retVal = AXP_VHD_FILE_CORRUPT;
+					break;
+
+				    case AXP_Logical_Sector:
+					if (metaEnt->isRequired == 1)
+					{
+					    outLen = AXP_VHDX_META_SEC_LEN;
+					    if (AXP_ReadFromOffset(
+							vhdx->fp,
+							&metaSec,
+							&outLen,
+							(vhdx->metadataOffset +
+							 metaEnt->off)) == true)
+						vhdx->sectorSize  = metaSec.secSize;
+					    else
+						retVal = AXP_VHD_READ_FAULT;
+					}
+					else
+					    retVal = AXP_VHD_FILE_CORRUPT;
+					break;
+
+				    case AXP_Physical_Sector:
+					if (metaEnt->isRequired != 1)
+					    retVal = AXP_VHD_FILE_CORRUPT;
+					break;
+
+				    case AXP_Parent_Locator:
+					if (metaEnt->isRequired != 1)
+					    retVal = AXP_VHD_FILE_CORRUPT;
+					break;
+
+				    default:
+					break;
+				}
+			    }
+
+			}
+			else
+			    retVal = AXP_VHD_READ_FAULT;
 		    }
 		}
 	    }

@@ -1196,7 +1196,7 @@ static bool AXP_Telnet_Listener(int *sock)
 static AXP_TELNET_SESSION *AXP_Telnet_Accept(int sock)
 {
     AXP_SM_Args		args;
-    AXP_TELNET_SESSION	*ses = NULL;
+    AXP_TELNET_SESSION	*ses;
     struct sockaddr	theirName;
     int			theirNameSize = sizeof(theirName);
 

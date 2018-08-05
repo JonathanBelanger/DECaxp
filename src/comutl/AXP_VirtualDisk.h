@@ -68,7 +68,8 @@
 #define STORAGE_TYPE_DEV_VHD		2
 #define STORAGE_TYPE_DEV_VHDX		3
 #define STORAGE_TYPE_DEV_RAW		4
-#define STORAGE_TYPE_DEV_ANY		5
+#define STORAGE_TYPE_DEV_SSD		5
+#define STORAGE_TYPE_DEV_ANY		6
 
 /*
  * Enumerations

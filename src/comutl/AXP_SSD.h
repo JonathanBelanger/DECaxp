@@ -16,39 +16,25 @@
  *
  * Description:
  *
- *  This header file contains the definitions to allow the emulator to use one
- *  or more ethernet devices and send and receive packets over then for
- *  specific MAC addresses.
+ *  This header file contains the definitions needed to support a solid state
+ *  disk (SSD).
  *
  * Revision History:
  *
- *  V01.000	28-Jul-2018	Jonathan D. Belanger
+ *  V01.000	05-Aug-2018	Jonathan D. Belanger
  *  Initially written.
  */
-#ifndef _AXP_ETHERNET_H_
-#define _AXP_ETHERNET_H_
-#define HAVE_REMOTE	1
-#include <pcap.h>
+#ifndef AXP_SSD_H_
+#define AXP_SSD_H_
 
-#define AXP_ETH_READ_TIMEOUT	1000
-#define AXP_MAC_ADDR_LEN	6
+#include "AXP_Utility.h"
+#include "AXP_Configure.h"
+#include "AXP_Trace.h"
 
-/*
- * Ethernet handle.  Ethernet packets will be sent and received through this
- * handle.
- */
 typedef struct
 {
-    pcap_t	*handle;
-    char	errorBuf[PCAP_ERRBUF_SIZE];
-    u8		macAddr[AXP_MAC_ADDR_LEN];
-} AXP_Ethernet_Handle;
+    FILE	*fp;
+    u8		*memory;
+} AXP_SSD_Handle;
 
-/*
- * Function prototypes.
- */
-AXP_Ethernet_Handle *AXP_EthernetOpen(char *, u8);
-void AXP_EthernetClose(AXP_Ethernet_Handle *);
-
-
-#endif /* _AXP_ETHERNET_H_ */
+#endif /* AXP_SSD_H_ */
