@@ -523,6 +523,11 @@ void AXP_Deallocate_Block(void *block)
 		{
 		    AXP_SSD_Handle *ssd = (AXP_SSD_Handle *) block;
 
+		    if (ssd->fp != NULL)
+		    {
+			fflush(ssd->fp);
+			fclose(ssd->fp);
+		    }
 		    if (ssd->memory != NULL)
 			AXP_Deallocate_Block(ssd->memory);
 		    free(head);
@@ -548,11 +553,11 @@ void AXP_Deallocate_Block(void *block)
 		{
 		    AXP_RAW_Handle *raw = (AXP_RAW_Handle *) block;
 
-		    if (raw->fp != NULL)
+		    if (raw->fd >= 0)
 		    {
 			if (raw->readOnly == false)
-			    fflush(raw->fp);
-			fclose(raw->fp);
+			    fsync(raw->fd);
+			close(raw->fd);
 		    }
 		    if (raw->filePath != NULL)
 			AXP_Deallocate_Block(raw->filePath);

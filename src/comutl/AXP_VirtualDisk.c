@@ -32,6 +32,7 @@
 #include "AXP_VHDX.h"
 #include "AXP_VHD.h"
 #include "AXP_RAW.h"
+#include "AXP_SSD.h"
 
 /*
  * AXP_VHD_Create
@@ -160,6 +161,14 @@ u32 AXP_VHD_Create(
 		break;
 
 	    case STORAGE_TYPE_DEV_SSD:
+		retVal = _AXP_SSD_Create(
+			    path,
+			    flags,
+			    diskSize,
+			    blkSize,
+			    sectorSize,
+			    deviceID,
+			    handle);
 		break;
 
 	    /*
@@ -297,6 +306,14 @@ u32 AXP_VHD_Open(
 			    handle);
 		break;
 
+	    case STORAGE_TYPE_DEV_SSD:
+		retVal = _AXP_SSD_Open(
+			    path,
+			    flags,
+			    deviceID,
+			    handle);
+		break;
+
 	    /*
 	     * We don't create RAW or ISO disks.  For RAW disks, we are accessing
 	     * the physical disk drive.  For ISO disks, these have an file format
@@ -304,7 +321,6 @@ u32 AXP_VHD_Open(
 	     * be making any assumptions.
 	     */
 	    case STORAGE_TYPE_DEV_UNKNOWN:
-	    case STORAGE_TYPE_DEV_SSD:
 	    default:
 		retVal = AXP_VHD_CALL_NOT_IMPL;
 		break;

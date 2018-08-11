@@ -36,15 +36,16 @@
 
 typedef struct
 {
-    u8		ID1[8];
+    u64		ID1;
     u64		diskSize;
     u32		blkSize;
     u32		sectorSize;
     u32		cylinders;
     u32		heads;
     u32		sectors;
-    u8		reserved[20];
-    u8		ID2[8];
+    u8		reserved[12];
+    u64		byteZeroOffset;
+    u64		ID2;
 } AXP_SSD_Geometry;
 
 typedef struct
@@ -72,6 +73,7 @@ typedef struct
      * These are things read from (or written to) the backing store file that
      * are used while accessing the contents.
      */
+    u64		byteZeroOffset;
     u64		diskSize;
     u32		blkSize;
     u32		sectorSize;
@@ -79,5 +81,11 @@ typedef struct
     u32		heads;
     u32		sectors;
 } AXP_SSD_Handle;
+
+/*
+ * Function Prototypes
+ */
+u32 _AXP_SSD_Create(char *,AXP_VHD_CREATE_FLAG, u64, u32, u32, u32, AXP_VHD_HANDLE *);
+u32 _AXP_SSD_Open(char *, AXP_VHD_OPEN_FLAG, u32, AXP_VHD_HANDLE *);
 
 #endif /* AXP_SSD_H_ */
