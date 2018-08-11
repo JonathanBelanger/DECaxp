@@ -29,6 +29,80 @@
  *  Initially written.
  */
 #include "AXP_RAW.h"
+#include "AXP_Blocks.h"
+
+/*
+ * _GetDiskInfo
+ *  This function is called to get various pieces of information from the newly
+ *  opened device using ioctl.
+ *
+ * Input Parameters:
+ *  raw:
+ *	A pointer to the raw device handle to be initialized according to
+ *	information from the device.
+ *
+ * Output Parameters:
+ *  raw:
+ *	A pointer to the raw device handle with information from the device.
+ *
+ * Return Values:
+ *  true:	Normal Successful Completion.
+ *  false:	An error occurred.
+ */
+static bool _GetDiskInfo(AXP_RAW_Handle *raw)
+{
+    bool	retVal = true, done = false;
+    int		ioctlCnt = 0;
+    int		ro;
+
+    /*
+     * Let's get information about the device.
+     */
+    while ((retVal == true) && (done == false))
+	switch(ioctlCnt++)
+	{
+	    case 0:
+		retVal = ioctl(raw->fd, BLKROGET, &ro) == 0;
+		raw->readOnly = ro != 0;
+		break;
+
+	    case 1:
+		retVal = ioctl(raw->fd, BLKGETSIZE64, &raw->diskSize) == 0;
+		break;
+
+	    case 2:
+		retVal = ioctl(raw->fd, BLKBSZGET, &raw->blkSize) == 0;
+		break;
+
+	    case 3:
+		retVal = ioctl(raw->fd, BLKSSZGET, &raw->sectorSize) == 0;
+
+	    default:
+		done = true;
+		break;
+	}
+
+    /*
+     * Calculate some geometry numbers.  This code is consistent with the
+     * function recount_geometry in the alignment.c module of the UNIX fdisk
+     * utility.  NOTE: It differs from the geometry calculation used in VHD
+     * file format.
+     */
+    if (retVal == true)
+    {
+	u64	totalSectors;
+
+	totalSectors = raw->diskSize / raw->sectorSize;
+	raw->heads = 255;
+	raw->sectors = 63;
+	raw->cylinders = totalSectors / (raw->heads * raw->sectors);
+    }
+
+    /*
+     * Return the results of this call back to the caller.
+     */
+    return(retVal);
+}
 
 /*
  * _AXP_RAW_Open
@@ -48,6 +122,12 @@
  *  handle:
  *  	A pointer to the handle object that represents the newly opened
  *  	RAW disk.
+ *
+ *  Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_FILE_NOT_FOUND:	File Not Found.
+ *  AXP_VHD_READ_FAULT:		Failed to read information from the file.
+ *  AXP_VHD_OUTOFMEMORY:	Insufficient memory to perform operation.
  */
 u32 _AXP_RAW_Open(
 		char *path,
@@ -56,8 +136,6 @@ u32 _AXP_RAW_Open(
 		AXP_VHD_HANDLE *handle)
 {
     AXP_RAW_Handle	*raw;
-    i64			fileSize;
-    size_t		outLen;
     u32			retVal = AXP_VHD_SUCCESS;
 
     /*
@@ -75,6 +153,8 @@ u32 _AXP_RAW_Open(
 	raw->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
 	if (raw->filePath != NULL)
 	{
+	    int	mode = (deviceID == STORAGE_TYPE_DEV_ISO) ? O_RDONLY : O_RDWR;
+
 	    strcpy(raw->filePath, path);
 	    raw->deviceID = deviceID;
 
@@ -83,31 +163,15 @@ u32 _AXP_RAW_Open(
 	     * then do some initialization and we are done.  If it is a
 	     * physical device, then we re-open the device for binary
 	     * read/write.
+	     *
+	     * TODO: Do we need to do something different for ISO files.
 	     */
-	    raw->fp = fopen(path, "rb");
-	    if (raw->fp != NULL)
+	    raw->fd = open(path, mode, 0);
+	    if (raw->fd >= 0)
 	    {
 		raw->deviceID = deviceID;
-		if (deviceID == STORAGE_TYPE_DEV_ISO)
-		{
-		    raw->readOnly = true;
-		    raw->diskSize = 0;
-		    raw->blkSize = 0;
-		    raw->sectorSize = 0;
-		    raw->cylinders = 0;
-		    raw->heads = 0;
-		    raw->sectors = 0;
-		}
-		else
-		{
-		    raw->readOnly = true;
-		    raw->diskSize = 0;
-		    raw->blkSize = 0;
-		    raw->sectorSize = 0;
-		    raw->cylinders = 0;
-		    raw->heads = 0;
-		    raw->sectors = 0;
-		}
+		if (_GetDiskInfo(raw) == false)
+		    retVal = AXP_VHD_READ_FAULT;
 	    }
 	    else
 		retVal = AXP_VHD_FILE_NOT_FOUND;

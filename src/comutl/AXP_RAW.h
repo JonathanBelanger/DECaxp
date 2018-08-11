@@ -35,6 +35,22 @@
 #include "AXP_Trace.h"
 #include "AXP_VirtualDisk.h"
 
+#ifndef BLKROGET
+#define BLKROGET	_IO(0x12,94)	/* get read-only status */
+#endif
+#ifndef BLKSSZGET
+#define BLKSSZGET	_IO(0x12,104)	/* get sector size */
+#endif
+#ifndef BLKBSZGET
+#define BLKBSZGET	_IOR(0x12,112,size_t) /* get logical block size */
+#endif
+#ifndef BLKPBSZGET
+#define BLKPBSZGET	_IO(0x12,123)	/* get physical block size */
+#endif
+#ifndef BLKGETSIZE64
+#define BLKGETSIZE64	_IOR(0x12,114,size_t) /* return device size in bytes */
+#endif
+
 /*
  * The below structure is used to maintain information about accessing a disk
  * in RAW format.  The disk can be either an entire hard drive, CDROM, or ISO
@@ -52,9 +68,9 @@ typedef struct
     bool		readOnly;
 
     /*
-     * This is the file pointer and file name associated with the device.
+     * This is the file descriptor to the device.
      */
-    FILE		*fp;
+    int			fd;
 
     /*
      * These are things read from (or written to) the VHD file that are used

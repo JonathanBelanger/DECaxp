@@ -43,9 +43,9 @@
 #include "AXP_21264_CPU.h"
 #include "AXP_21274_System.h"
 #include "AXP_Telnet.h"
-#include "AXP_SSD.h"
 #include "AXP_VHDX.h"
 #include "AXP_RAW.h"
+#include "AXP_SSD.h"
 #include "AXP_Ethernet.h"
 
 typedef enum

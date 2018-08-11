@@ -63,6 +63,7 @@
  * Includes used throughout the code.
  */
 #define _FILE_OFFSET_BITS	64
+#define __USE_LINUX_IOCTL_DEFS
 #include <unistd.h>
 #include <pthread.h>
 #include <stdint.h>
@@ -77,6 +78,8 @@
 #include <limits.h>
 #include <fenv.h>
 #include <sys/time.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 
 #include "AXP_NoCompilerHack.h"
 

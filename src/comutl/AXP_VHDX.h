@@ -196,6 +196,8 @@ typedef struct
     u32			secSize;
 } AXP_VHDX_META_SEC;
 #define AXP_VHDX_META_SEC_LEN		4
+#pragma pack(push)	/* push current alignment on the stack */
+#pragma pack(1)		/* set the alignment on the byte boundary */
 typedef struct
 {
     AXP_VHDX_GUID	locType;
@@ -203,6 +205,7 @@ typedef struct
     u16			keyValCnt;
 } AXP_VHDX_META_PAR_HDR;
 #define AXP_VHDX_META_PAR_HDR_LEN	20	/* gcc sizeof says this is 24 */
+#pragma pack(pop)	/* restore the original alignment */
 typedef struct
 {
     u32			keyOff;
