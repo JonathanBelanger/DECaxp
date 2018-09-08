@@ -80,6 +80,7 @@
  *  AXP_VHD_FILE_EXISTS:	File already exists.
  *  AXP_VHD_INV_HANDLE:		Failed to create the VHDX file.
  *  AXP_VHD_WRITE_FAULT:	An error occurred writing to the VHDX file.
+ *  TODO: Cross reference with format specific function returns.
  */
 u32 AXP_VHD_Create(
 		AXP_VHD_STORAGE_TYPE *storageType,
@@ -228,6 +229,7 @@ u32 AXP_VHD_Create(
  *  AXP_VHD_FILE_NOT_FOUND:	Virtual disk file not found.
  *  AXP_VHD_PATH_NOT_FOUND:	Physical disk file not found.
  *  AXP_VHD_INV_HANDLE:		Failed to create the VHDX file.
+ *  TODO: Cross reference with format specific function returns.
  */
 u32 AXP_VHD_Open(
 		AXP_VHD_STORAGE_TYPE *storageType,
@@ -275,7 +277,7 @@ u32 AXP_VHD_Open(
 	{
 
 	    /*
-	     * Create a VHD formatted virtual disk.
+	     * Open a VHD formatted virtual disk.
 	     */
 	    case STORAGE_TYPE_DEV_VHD:
 		retVal = _AXP_VHD_Open(
@@ -285,9 +287,8 @@ u32 AXP_VHD_Open(
 			    handle);
 		break;
 
-
 	    /*
-	     * Create a VHDX formatted virtual disk.
+	     * Open a VHDX formatted virtual disk.
 	     */
 	    case STORAGE_TYPE_DEV_VHDX:
 		retVal = _AXP_VHDX_Open(
@@ -297,6 +298,9 @@ u32 AXP_VHD_Open(
 			    handle);
 		break;
 
+	    /*
+	     * Open a RAW or ISO formatted physical/virtual disk.
+	     */
 	    case STORAGE_TYPE_DEV_RAW:
 	    case STORAGE_TYPE_DEV_ISO:
 		retVal = _AXP_RAW_Open(
@@ -306,6 +310,9 @@ u32 AXP_VHD_Open(
 			    handle);
 		break;
 
+	    /*
+	     * Open a Solid State Disk (SSD).
+	     */
 	    case STORAGE_TYPE_DEV_SSD:
 		retVal = _AXP_SSD_Open(
 			    path,
@@ -314,18 +321,218 @@ u32 AXP_VHD_Open(
 			    handle);
 		break;
 
-	    /*
-	     * We don't create RAW or ISO disks.  For RAW disks, we are accessing
-	     * the physical disk drive.  For ISO disks, these have an file format
-	     * that is embedded in the disk, so at the system level, we should not
-	     * be making any assumptions.
-	     */
 	    case STORAGE_TYPE_DEV_UNKNOWN:
 	    default:
 		retVal = AXP_VHD_CALL_NOT_IMPL;
 		break;
 	}
     }
+
+    /*
+     * Return the results of this call back to the caller.
+     */
+    return(retVal);
+}
+
+/*
+ * AXP_VHD_ReadSectors
+ *  This function is called to read one or more sectors from a Virtual Hard
+ *  Disk (VHD).
+ *
+ * Input Parameters:
+ *  handle:
+ *	A valid handle to an open object.
+ *  lba:
+ *	A value representing the Logical Block Address from where the read is
+ *	to be started.
+ *  sectorsRead:
+ *	A pointer to a value representing the number of sectors to be read from
+ *	the VHD.
+ *
+ * Output Parameters:
+ *  outBuf:
+ *	A pointer to an array of unsigned bytes to receive the data read in
+ *	from the sectors.
+ *  sectorsRead:
+ *	A pointer to an unsigned 32-bit location to receive the number of
+ *	actual sectors read.
+ *
+ * Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_INV_HANDLE:		Failed to create the VHDX file.
+ *  TODO: Cross reference with format specific function returns.
+ */
+u32 AXP_VHD_ReadSectors(AXP_VHD_HANDLE handle,
+			u64 lba,
+			u32 *sectorsRead,
+			u8 *outBuf)
+{
+    u32			retVal;
+    u32			deviceID;
+
+    /*
+     * Go check the parameters.
+     */
+    retVal = AXP_VHD_ValidateRead(handle, lba, *sectorsRead, &deviceID);
+    if (retVal == AXP_VHD_SUCCESS)
+    {
+
+	/*
+	 * Based on storage type, call the appropriate read sectors function.
+	 */
+	switch (deviceID)
+	{
+
+	    /*
+	     * Read from a VHD formatted virtual disk.
+	     */
+	    case STORAGE_TYPE_DEV_VHD:
+		retVal = _AXP_VHD_ReadSectors(handle, lba, sectorsRead, outBuf);
+		break;
+
+
+	    /*
+	     * Read from a VHDX formatted virtual disk.
+	     */
+	    case STORAGE_TYPE_DEV_VHDX:
+		retVal = _AXP_VHDX_ReadSectors(
+					handle,
+					lba,
+					sectorsRead,
+					outBuf);
+		break;
+
+	    /*
+	     * Read from a RAW or ISO formatted physical/virtual disk.
+	     */
+	    case STORAGE_TYPE_DEV_RAW:
+	    case STORAGE_TYPE_DEV_ISO:
+		retVal = _AXP_RAW_ReadSectors(handle, lba, sectorsRead, outBuf);
+		break;
+
+	    /*
+	     * Read from a Solid State Disk (SSD).
+	     */
+	    case STORAGE_TYPE_DEV_SSD:
+		retVal = _AXP_SSD_ReadSectors(handle, lba, sectorsRead, outBuf);
+		break;
+
+	    case STORAGE_TYPE_DEV_UNKNOWN:
+	    default:
+		retVal = AXP_VHD_CALL_NOT_IMPL;
+		break;
+	}
+   }
+
+    /*
+     * Return the results of this call back to the caller.
+     */
+    return(retVal);
+}
+
+/*
+ * AXP_VHD_WriteSectors
+ *  This function is called to write one or more sectors to a Virtual Hard
+ *  Disk (VHD).
+ *
+ * Input Parameters:
+ *  handle:
+ *	A valid handle to an open object.
+ *  lba:
+ *	A value representing the Logical Block Address from where the write is
+ *	to be started.
+ *  sectorsWritten:
+ *	A pointer to a value representing the number of sectors to be written
+ *	to the VHD.
+ *  inBuf:
+ *	A pointer to an array of unsigned bytes from which to write the data to
+ *	the sectors.
+ *
+ * Output Parameters:
+ *  sectorsWritten:
+ *	A pointer to an unsigned 32-bit location to receive the number of
+ *	actual sectors written.
+ *
+ * Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_INV_HANDLE:		Failed to create the VHDX file.
+ *  TODO: Cross reference with format specific function returns.
+ */
+u32 AXP_VHD_WriteSectors(AXP_VHD_HANDLE handle,
+			u64 lba,
+			u32 *sectorsWritten,
+			u8 *inBuf)
+{
+    u32			retVal;
+    u32			deviceID;
+
+    /*
+     * Go check the parameters.
+     */
+    retVal = AXP_VHD_ValidateWrite(handle, lba, *sectorsWritten, &deviceID);
+    if (retVal == AXP_VHD_SUCCESS)
+    {
+
+	/*
+	 * Based on storage type, call the appropriate read sectors function.
+	 */
+	switch (deviceID)
+	{
+
+	    /*
+	     * Write to a VHD formatted virtual disk.
+	     */
+	    case STORAGE_TYPE_DEV_VHD:
+		retVal = _AXP_VHD_ReadSectors(
+					handle,
+					lba, sectorsWritten,
+					inBuf);
+		break;
+
+
+	    /*
+	     * Write to a VHDX formatted virtual disk.
+	     */
+	    case STORAGE_TYPE_DEV_VHDX:
+		retVal = _AXP_VHDX_ReadSectors(
+					handle,
+					lba,
+					sectorsWritten,
+					inBuf);
+		break;
+
+	    /*
+	     * Write to a RAW formatted physical disk.
+	     */
+	    case STORAGE_TYPE_DEV_RAW:
+		retVal = _AXP_RAW_ReadSectors(
+					handle,
+					lba,
+					sectorsWritten,
+					inBuf);
+		break;
+
+	    /*
+	     * Write to a Solid State Disk (SSD).
+	     */
+	    case STORAGE_TYPE_DEV_SSD:
+		retVal = _AXP_SSD_ReadSectors(
+					handle,
+					lba,
+					sectorsWritten,
+					inBuf);
+		break;
+
+	    /*
+	     * We don't write to these kinds of VHDs.
+	     */
+	    case STORAGE_TYPE_DEV_UNKNOWN:
+	    case STORAGE_TYPE_DEV_ISO:
+	    default:
+		retVal = AXP_VHD_CALL_NOT_IMPL;
+		break;
+	}
+   }
 
     /*
      * Return the results of this call back to the caller.

@@ -976,4 +976,23 @@ u32 AXP_VHD_SetMeta(
 		u32 metaSize,
 		const void *metaData);
 
+/*
+ * These are not part of the API, but are added because we need to be able to
+ * read from and write to these virtual disks.
+ *
+ * Read one or more sectors from the VHD.
+ */
+u32 AXP_VHD_ReadSectors(AXP_VHD_HANDLE handle,
+			u64 lba,
+			u32 *sectorsRead,
+			u8 *outBuf);
+
+/*
+ * Write one or more sectors to the VHD.
+ */
+u32 AXP_VHD_WriteSectors(AXP_VHD_HANDLE handle,
+			u64 lba,
+			u32 *sectorsWritten,
+			u8 *outBuf);
+
 #endif /* AXP_VIRTUALDISK_H_ */

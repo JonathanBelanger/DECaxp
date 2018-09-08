@@ -181,5 +181,7 @@ u32 _AXP_VHD_Create(
 		u32,
 		AXP_VHD_HANDLE *);
 u32 _AXP_VHD_Open(char *, AXP_VHD_OPEN_FLAG, u32, AXP_VHD_HANDLE *);
+u32 _AXP_VHD_ReadSectors(AXP_VHD_HANDLE, u64, u32 *, u8 *);
+u32 _AXP_VHD_WritreSectors(AXP_VHD_HANDLE, u64, u32 *, u8 *);
 
 #endif /* _AXP_VHD_H_ */

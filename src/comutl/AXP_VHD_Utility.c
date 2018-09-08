@@ -745,6 +745,100 @@ u32 AXP_VHD_ValidateOpen(
 }
 
 /*
+ * AXP_VHD_ValidateRead
+ *  This function is called to verify the parameters on a read function call.
+ *
+ * Input Parameters:
+ *
+ * Output Parameters:
+ *  deviceID:
+ *	A pointer to a 32-bit unsigned integer to receive the type of device
+ *	being read.
+ *
+ * Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_INV_PARAM:		An invalid parameter or combination of
+ *				parameters was detected.
+ *  AXP_VHD_INV_HANDLE:		The handle is not valid.
+ *  TODO: Look at other potential valid error return values.
+ */
+u32 AXP_VHD_ValidateRead(
+		AXP_VHD_HANDLE handle,
+		u64 lba,
+		u32 sectorsRead,
+		u32 *deviceID)
+{
+    AXP_VHDX_Handle	*vhdHandle;
+    u32			retVal = AXP_VHD_SUCCESS;
+    u64			blkOffset;
+
+    if (AXP_ReturnType_Block(handle) == AXP_VHDX_BLK)
+    {
+	vhdHandle = (AXP_VHDX_Handle *) handle;
+	blkOffset = (u64) vhdHandle->sectorSize * lba;
+	blkOffset += ((u64) sectorsRead * (u64) vhdHandle->sectorSize);
+	if (blkOffset > vhdHandle->diskSize)
+	    retVal = AXP_VHD_INV_PARAM;
+	else
+	    *deviceID = vhdHandle->deviceID;
+    }
+    else
+	retVal = AXP_VHD_INV_HANDLE;
+
+    /*
+     * Return the parameter checking results back to the caller.
+     */
+    return(retVal);
+}
+
+/*
+ * AXP_VHD_ValidateWrite
+ *  This function is called to verify the parameters on a write function call.
+ *
+ * Input Parameters:
+ *
+ * Output Parameters:
+ *  deviceID:
+ *	A pointer to a 32-bit unsigned integer to receive the type of device
+ *	being written.
+ *
+ * Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_INV_PARAM:		An invalid parameter or combination of
+ *				parameters was detected.
+ *  AXP_VHD_INV_HANDLE:		The handle is not valid.
+ *  TODO: Look at other potential valid error return values.
+ */
+u32 AXP_VHD_ValidateWrite(
+		AXP_VHD_HANDLE handle,
+		u64 lba,
+		u32 sectorsWritten,
+		u32 *deviceID)
+{
+    AXP_VHDX_Handle	*vhdHandle;
+    u32			retVal = AXP_VHD_SUCCESS;
+    u64			blkOffset;
+
+    if (AXP_ReturnType_Block(handle) == AXP_VHDX_BLK)
+    {
+	vhdHandle = (AXP_VHDX_Handle *) handle;
+	blkOffset = (u64) vhdHandle->sectorSize * lba;
+	blkOffset += ((u64) sectorsWritten * (u64) vhdHandle->sectorSize);
+	if (blkOffset > vhdHandle->diskSize)
+	    retVal = AXP_VHD_INV_PARAM;
+	else
+	    *deviceID = vhdHandle->deviceID;
+    }
+    else
+	retVal = AXP_VHD_INV_HANDLE;
+
+    /*
+     * Return the parameter checking results back to the caller.
+     */
+    return(retVal);
+}
+
+/*
  * AXP_VHD_GetDeviceID
  *  This function is called when the device ID specified on the open call
  *  indicates that any supported virtual/physical disk drive can be used.  The

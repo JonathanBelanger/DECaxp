@@ -220,7 +220,7 @@ void AXP_VHD_CHSCalc(
  *  AXP_VHD_SUCCESS:		Normal Successful Completion.
  *  AXP_VHD_FILE_EXISTS:	File already exists.
  *  AXP_VHD_INV_HANDLE:		Failed to create the VHDX file.
- *  AXP_VHD_WRITE_FAULT:	An error occurred writing to the VHDX file.
+ *  AXP_VHD_WRITE_FAULT:	An error occurred writing to the VHD file.
  *  AXP_VHD_OUTOFMEMORY:	Insufficient memory to perform operation.
  */
 u32 _AXP_VHD_Create(
@@ -450,9 +450,9 @@ u32 _AXP_VHD_Create(
 	 */
 	if (vhd->fixed == false)
 	{
-	    u32	unused, ii;
-	    u64 curOffset = 0;
-	    u32	blockOff = AXP_VHD_BAT_UNUSED;
+	    u32			unused, ii;
+	    u64			curOffset = 0;
+	    AXP_VHD_BAT_ENT	blockOff = AXP_VHD_BAT_UNUSED;
 
 	    /*
 	     * Because this is a dynamic file, the footer is replicated at the
@@ -469,9 +469,11 @@ u32 _AXP_VHD_Create(
 	    memset(&dyn, 0, sizeof(AXP_VHD_Dynamic));
 	    dyn.cookie = AXP_VHD_DYNAMIC_SIG;
 	    dyn.dataOff = AXP_VHD_DATA_OFFSET;
-	    dyn.tableOff = sizeof(AXP_VHD_Footer) + sizeof(AXP_VHD_Dynamic);
+	    vhd->batOffset = dyn.tableOff =
+		sizeof(AXP_VHD_Footer) + sizeof(AXP_VHD_Dynamic);
+	    vhd->batCount = dyn.maxTableEnt = diskSize / blkSize;
+	    vhd->batLength = vhd->batCount * sizeof(AXP_VHD_BAT_ENT);
 	    dyn.headerVer = AXP_VHD_HEADER_VER;
-	    dyn.maxTableEnt = diskSize / blkSize;
 	    dyn.blockSize = blkSize;
 	    dyn.checksum = AXP_VHD_Checksum((u8 *) &dyn, sizeof(AXP_VHD_Dynamic));
 
@@ -490,41 +492,50 @@ u32 _AXP_VHD_Create(
 	    unused = sectorSize -
 		((dyn.tableOff + (dyn.maxTableEnt * sizeof(u32))) % sectorSize);
 
-	    /*
-	     * So we are ready to write out the dynamic portions of the VHD
-	     * file.  The initial file will be laid out as follows:
-	     *
-	     * 	1) Copy of hard disk footer	512
-	     * 	2) Dynamic Disk Header		1024
-	     * 	3) BAT (Block Allocation table)	As needed.
-	     * 	4) Hard Disk Footer		512
-	     */
-	    writeRet = AXP_WriteAtOffset(
-				vhd->fp,
-				&foot,
-				sizeof(AXP_VHD_Footer),
-				curOffset);
-	    dyn.tableOff = 0; /* there is nothing after the footer record */
-	    curOffset += sizeof(AXP_VHD_Footer);
-	    if (writeRet == true)
-		writeRet = AXP_WriteAtOffset(
-				vhd->fp,
-				&dyn,
-				sizeof(AXP_VHD_Dynamic),
-				curOffset);
-	    curOffset += sizeof(AXP_VHD_Dynamic);
-	    for (ii = 0;
-		 ((ii < (dyn.maxTableEnt + unused)) && (writeRet == true));
-		 ii++)
+	    vhd->bat = AXP_Allocate_Block(-vhd->batLength);
+	    if (vhd->bat != NULL)
 	    {
+		AXP_VHD_BAT_ENT *batPtr = (AXP_VHD_BAT_ENT *) vhd->bat;
+
+		/*
+		 * So we are ready to write out the dynamic portions of the VHD
+		 * file.  The initial file will be laid out as follows:
+		 *
+		 * 	1) Copy of hard disk footer	512
+		 * 	2) Dynamic Disk Header		1024
+		 * 	3) BAT (Block Allocation table)	As needed.
+		 * 	4) Hard Disk Footer		512
+		 */
 		writeRet = AXP_WriteAtOffset(
-				vhd->fp,
-				&blockOff,
-				sizeof(blockOff),
-				curOffset);
-		curOffset += sizeof(blockOff);
+				    vhd->fp,
+				    &foot,
+				    sizeof(AXP_VHD_Footer),
+				    curOffset);
+		dyn.tableOff = 0; /* there is nothing after the footer record */
+		curOffset += sizeof(AXP_VHD_Footer);
+		if (writeRet == true)
+		    writeRet = AXP_WriteAtOffset(
+				    vhd->fp,
+				    &dyn,
+				    sizeof(AXP_VHD_Dynamic),
+				    curOffset);
+		curOffset += sizeof(AXP_VHD_Dynamic);
+		for (ii = 0;
+		     ((ii < (dyn.maxTableEnt + unused)) && (writeRet == true));
+		     ii++)
+		{
+		    batPtr[ii] = blockOff;
+		    writeRet = AXP_WriteAtOffset(
+				    vhd->fp,
+				    &blockOff,
+				    sizeof(blockOff),
+				    curOffset);
+		    curOffset += sizeof(blockOff);
+		}
+		eofOff = curOffset;
 	    }
-	    eofOff = curOffset;
+	    else
+		retVal = AXP_VHD_OUTOFMEMORY;
 	}
 	else
 	    eofOff = diskSize;
@@ -532,13 +543,13 @@ u32 _AXP_VHD_Create(
 	/*
 	 * Write the footer, where ever it is supposed to end up.
 	 */
-	if (writeRet == true)
+	if ((writeRet == true) && (retVal == AXP_VHD_SUCCESS))
 	    writeRet = AXP_WriteAtOffset(
 				vhd->fp,
 				&foot,
 				sizeof(AXP_VHD_Footer),
 				eofOff);
-	if (writeRet == true)
+	if ((writeRet == true) && (retVal == AXP_VHD_SUCCESS))
 	{
 	    vhd->fp = freopen(path, "wb+", vhd->fp);
 	    if (vhd->fp == NULL)
@@ -557,7 +568,8 @@ u32 _AXP_VHD_Create(
 	    vhd->fp = NULL;		/* Prevent Deallocate Blocks closing again */
 	    remove(path);		/* Delete the file */
 	    AXP_Deallocate_Block(vhd);
-	    retVal = AXP_VHD_WRITE_FAULT;
+	    if (retVal == AXP_VHD_SUCCESS)
+		retVal = AXP_VHD_WRITE_FAULT;
 	}
     }
 
@@ -796,6 +808,25 @@ u32 _AXP_VHD_Open(
 				}
 				else
 				    retVal = AXP_VHD_READ_FAULT;
+
+				/*
+				 * OK, if we still have a success, go read the
+				 * BAT information, but first allocate an array
+				 * of sufficient size.
+				 */
+				vhd->bat = AXP_Allocate_Block(-vhd->batLength);
+				if (vhd->bat != NULL)
+				{
+				    outLen = vhd->batLength;
+				    if (AXP_ReadFromOffset(
+							vhd->fp,
+							(u8 *) vhd->bat,
+							&outLen,
+							vhd->batOffset) == false)
+					retVal = AXP_VHD_READ_FAULT;
+				}
+				else
+				    retVal = AXP_VHD_OUTOFMEMORY;
 			    }
 			    else
 				retVal = AXP_VHD_FILE_CORRUPT;
@@ -836,6 +867,183 @@ u32 _AXP_VHD_Open(
      */
     if ((retVal != AXP_VHD_SUCCESS) && (vhd != NULL))
 	AXP_Deallocate_Block(vhd);
+
+    /*
+     * Return the outcome of this call back to the caller.
+     */
+    return(retVal);
+}
+
+/*
+ * _AXP_VHD_ReadSectors
+ *  Reads one or more sectors from a virtual hard disk (VHD) image file.
+ *
+ * Input Parameters:
+ *  handle:
+ *	A pointer to the handle object that represents the virtual disk from
+ *	which to read..
+ *  lba:
+ *	A value representing the Logical Block Address from where the read is
+ *	to be started.
+ *  sectorsRead: TODO
+ *	A pointer to a value representing the number of sectors to be read from
+ *	the VHD.
+ *
+ * Output Parameters:
+ *  sectorsRead: TODO
+ *	A pointer to an unsigned 32-bit value to receive the actual number of
+ *	bytes read.
+ *  outBuf:
+ *  	A pointer to an unsigned 8-bit array in which to receive the read in
+ *  	data.
+ *
+ * Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_READ_FAULT:		An error occurred reading from the VHD file.
+ */
+u32 _AXP_VHD_ReadSectors(
+		AXP_VHD_HANDLE handle,
+		u64 lba,
+		u32 *sectorsRead,
+		u8 *outBuf)
+{
+    AXP_VHDX_Handle	*vhd = (AXP_VHDX_Handle *) handle;
+    u64			offset;
+    u32			retVal = AXP_VHD_SUCCESS;
+
+    /*
+     * If this is a fixed sized VHD, then all the blocks for the disk have been
+     * preallocated.  Go ahead and read from the file.
+     */
+    if (vhd->fixed == true)
+    {
+	offset = lba * (u64) vhd->sectorSize;
+	*sectorsRead *= vhd->sectorSize;
+	if (AXP_ReadFromOffset(
+			vhd->fp,
+			outBuf,
+			sectorsRead,
+			offset) == true)
+	    *sectorsRead /= vhd->sectorSize;
+	else
+	    retVal = AXP_VHD_READ_FAULT;
+    }
+
+    /*
+     * OK, we have a dynamic VHD.  We need to determine a few things.  First,
+     * is the block we are looking to read in the file.  And second, if it is,
+     * then find out where it is located and read it in.  NOTE: There is
+     * nothing to say that sectors are continuous, so we are going to have read
+     * them in one at a time.
+     */
+    else
+    {
+	AXP_VHD_BAT_ENT *bat = (AXP_VHD_BAT_ENT *) vhd->bat;
+	u8		*bufPtr = outBuf;
+	u32		sectorsPerBlk = vhd->blkSize / vhd->sectorSize;
+	u64		blkNum = lba / (u64) sectorsPerBlk;
+	u32		bitMapBytes = (7 + sectorsPerBlk) / 8;
+	u32		bitMapSects = (bitMapBytes + vhd->sectorSize - 1) /
+				vhd->sectorSize;
+	u32		sectorsInRead = sectorsPerBlk - lba % sectorsPerBlk;;
+	u32		sectorsRem = *sectorsRead;
+	u64		bytesInRead = sectorsInRead * vhd->sectorSize;
+
+	*sectorsRead = 0;
+	while ((sectorsRem > 0) && (retVal == AXP_VHD_SUCCESS))
+	{
+	    if (bat[blkNum] == AXP_VHD_BAT_UNUSED)
+		memset(bufPtr, 0, bytesInRead);
+	    else
+	    {
+		offset = ((u64) bat[blkNum] + lba % (u64) sectorsPerBlk +
+			    (u64) bitMapSects) * (u64) vhd->sectorSize;
+		if (AXP_ReadFromOffset(
+				vhd->fp,
+				bufPtr,
+				&bytesInRead,
+				offset) == true)
+		{
+		    /* TODO: finish */
+		    sectorsRem -= sectorsInRead;
+		    bufPtr = &bufPtr[bytesInRead];
+		}
+		else
+		    retVal = AXP_VHD_READ_FAULT;
+	    }
+	}
+    }
+
+    /*
+     * Return the outcome of this call back to the caller.
+     */
+    return(retVal);
+}
+
+/*
+ * _AXP_VHD_WriteSectors
+ *  Writes one or more sectors to a virtual hard disk (VHD) image file.
+ *
+ * Input Parameters:
+ *  handle:
+ *	A pointer to the handle object that represents the virtual disk from
+ *	which to read..
+ *  lba:
+ *	A value representing the Logical Block Address from where the read is
+ *	to be started.
+ *  sectorsWritten: TODO
+ *	A pointer to a value representing the number of sectors to be written
+ *	to the VHD.
+ *  inBuf:
+ *  	A pointer to an unsigned 8-bit array to be written to the file.
+ *
+ * Output Parameters:
+ *  sectorsWritten: TODO
+ *	A pointer to an unsigned 32-bit value to receive the actual number of
+ *	bytes written.
+ *
+ * Return Values:
+ *  AXP_VHD_SUCCESS:		Normal Successful Completion.
+ *  AXP_VHD_WRITE_FAULT:	An error occurred writing to the VHD file.
+ */
+u32 _AXP_VHD_WriteSectors(
+		AXP_VHD_HANDLE handle,
+		u64 lba,
+		u32 *sectorsWritten,
+		u8 *inBuf)
+{
+    AXP_VHDX_Handle	*vhd = (AXP_VHDX_Handle *) handle;
+    u64			offset;
+    u32			retVal = AXP_VHD_SUCCESS;
+
+    /*
+     * If this is a fixed sized VHD, then all the blocks for the disk have been
+     * preallocated.  Go ahead and read from the file.
+     */
+    if (vhd->fixed == true)
+    {
+	offset = lba * (u64) vhd->sectorSize;
+	*sectorsWritten *= vhd->sectorSize;
+	if (AXP_WriteToOffset(
+			vhd->fp,
+			inBuf,
+			sectorsWritten,
+			offset) == true)
+	    *sectorsWritten /= vhd->sectorSize;
+	else
+	    retVal = AXP_VHD_WRITE_FAULT;
+    }
+
+    /*
+     * OK, we have a dynamic VHD.  We need to determine a few things.  First,
+     * is the block we are looking to write in the file.  And second, if it is,
+     * then find out where it is located and write it.  NOTE: There is
+     * nothing to say that sectors are continuous, so we are going to have to
+     * write them one at a time.
+     */
+    else
+    {
+    }
 
     /*
      * Return the outcome of this call back to the caller.
