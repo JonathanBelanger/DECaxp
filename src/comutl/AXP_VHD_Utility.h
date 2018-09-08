@@ -61,7 +61,7 @@ void AXP_VHD_SetGUIDMemory(AXP_VHDX_GUID *);
 void AXP_VHD_SetGUIDDisk(AXP_VHDX_GUID *);
 void AXP_VHD_KnownGUIDMemory(AXP_VHD_KnownGUIDs, AXP_VHDX_GUID *);
 void AXP_VHD_KnownGUIDDisk(AXP_VHD_KnownGUIDs, AXP_VHDX_GUID *);
-u64 AXP_VHD_PerformFileSize(FILE *fp);
+u64 AXP_VHD_PerformFileSize(FILE *);
 u32 AXP_VHD_ValidateCreate(
 		AXP_VHD_STORAGE_TYPE *,
 		char *,
@@ -83,6 +83,8 @@ u32 AXP_VHD_ValidateOpen(
 		AXP_VHD_OPEN_PARAM *,
 		AXP_VHD_HANDLE *,
 		u32 *);
+u32 AXP_VHD_ValidateRead(AXP_VHD_HANDLE, u64, u32, u32 *);
+u32 AXP_VHD_ValidateWrite(AXP_VHD_HANDLE, u64, u32, u32 *);
 u32 AXP_VHD_GetDeviceID(char *, u32 *);
 void AXP_Dump_VHD_Info(AXP_VHD_HANDLE);
 

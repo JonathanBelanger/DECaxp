@@ -263,6 +263,11 @@ typedef struct
 {
 
     /*
+     * This is the file pointer and file name associated with the VHD.
+     */
+    FILE		*fp;
+
+    /*
      * These are parameters provided by the interface and stored for later
      * usage.
      */
@@ -272,9 +277,12 @@ typedef struct
     bool		readOnly;
 
     /*
-     * This is the file pointer and file name associated with the VHD.
+     * This is where the Block Allocation Table will be stored.  Its format is
+     * determined by deviceID.
      */
-    FILE		*fp;
+    u32			batLength;
+    u32			batCount;
+    void		*bat;
 
     /*
      * These are things read from (or written to) the VHD file that are used
@@ -285,8 +293,6 @@ typedef struct
     u64			metadataOffset;
     u64			diskSize;
     u32			logLength;
-    u32			batLength;
-    u32			batCount;
     u32			metadataLength;
     u32 		blkSize;
     u32			sectorSize;
