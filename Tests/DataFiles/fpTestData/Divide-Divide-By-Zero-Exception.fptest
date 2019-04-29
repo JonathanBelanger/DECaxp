@@ -1,0 +1,36 @@
+Floating point tests: Divide: Divide by zero exception
+Copyright of IBM Corp. 2005
+---------------------------
+
+b32/ =0 -Zero +Zero -> Q i
+b32/ =0 -1.5DC960P-111 -Zero -> +Inf z
+b32/ =0 +Inf +Zero -> +Inf 
+b32/ =0 S -Zero -> Q i
+b32/ =0 -Zero -1.1F7AF0P-63 -> +Zero 
+b32/ =0 +1.2CEE1BP-64 +1.50EFBDP-30 -> +1.53E212P-35 x
+b32/ =0 -Inf -1.673481P-105 -> +Inf 
+b32/ =0 S +1.09F7C9P-17 -> Q i
+b32/ =0 +Zero -Inf -> -Zero 
+b32/ =0 -1.24E2FBP-109 -Inf -> +Zero 
+b32/ =0 +Inf +Inf -> Q i
+b32/ =0 S -Inf -> Q i
+b32/ =0 -Zero S -> Q i
+b32/ =0 +1.730777P-63 Q -> Q 
+b32/ =0 -Inf Q -> Q 
+b32/ =0 S S -> Q i
+b32/ =0 oz -Zero +Zero -> Q i
+b32/ =0 oz -1.5DC960P-111 -Zero -> +Inf z
+b32/ =0 oz +Inf +Zero -> +Inf 
+b32/ =0 oz S -Zero -> Q i
+b32/ =0 oz -Zero -1.1F7AF0P-63 -> +Zero 
+b32/ =0 oz +1.2CEE1BP-64 +1.50EFBDP-30 -> +1.53E212P-35 x
+b32/ =0 oz -Inf -1.673481P-105 -> +Inf 
+b32/ =0 oz S +1.09F7C9P-17 -> Q i
+b32/ =0 oz +Zero -Inf -> -Zero 
+b32/ =0 oz -1.24E2FBP-109 -Inf -> +Zero 
+b32/ =0 oz +Inf +Inf -> Q i
+b32/ =0 oz S -Inf -> Q i
+b32/ =0 oz -Zero S -> Q i
+b32/ =0 oz +1.730777P-63 Q -> Q 
+b32/ =0 oz -Inf Q -> Q 
+b32/ =0 oz S S -> Q i
