@@ -36,43 +36,43 @@ int parseLine(char *line, u32 *oper, u32 *addr, u32 *data)
     bool count;
 
     while ((line[ii] != ' ')
-	&& !(((line[ii] >= '0') && (line[ii] <= '9'))
-	    || ((line[ii] >= 'a') && (line[ii] <= 'f'))))
-	ii++;
+  && !(((line[ii] >= '0') && (line[ii] <= '9'))
+      || ((line[ii] >= 'a') && (line[ii] <= 'f'))))
+  ii++;
     *oper = line[ii] - '0';
     retVal++;
     ii += 2;
     *addr = 0;
     count = false;
     while ((ii < len)
-	&& (((line[ii] >= '0') && (line[ii] <= '9'))
-	    || ((line[ii] >= 'a') && line[ii] <= 'f')))
+  && (((line[ii] >= '0') && (line[ii] <= '9'))
+      || ((line[ii] >= 'a') && line[ii] <= 'f')))
     {
-	*addr *= 16;
-	if ((line[ii] >= '0') && (line[ii] <= '9'))
-	    *addr += (line[ii] - '0');
-	else
-	    *addr += (10 + line[ii] - 'a');
-	ii++;
-	count = true;
+  *addr *= 16;
+  if ((line[ii] >= '0') && (line[ii] <= '9'))
+      *addr += (line[ii] - '0');
+  else
+      *addr += (10 + line[ii] - 'a');
+  ii++;
+  count = true;
     }
     if (count == true)
-	retVal++;
+  retVal++;
     ii++;
     *data = 0;
     count = false;
     while ((ii < len) && (line[ii] != 13))
     {
-	*data *= 16;
-	if ((line[ii] >= '0') && (line[ii] <= '9'))
-	    *data += (line[ii] - '0');
-	else
-	    *data += (10 + line[ii] - 'a');
-	ii++;
-	count = true;
+  *data *= 16;
+  if ((line[ii] >= '0') && (line[ii] <= '9'))
+      *data += (line[ii] - '0');
+  else
+      *data += (10 + line[ii] - 'a');
+  ii++;
+  count = true;
     }
     if (count == true)
-	retVal++;
+  retVal++;
 
     return (retVal);
 }
@@ -91,8 +91,8 @@ int main()
     FILE *fp = NULL;
     char *fileNames[] =
     {
-	"../tst/compress.trace", "../tst/tex.trace", "../tst/cc.trace",
-	NULL
+  "../tst/compress.trace", "../tst/tex.trace", "../tst/cc.trace",
+  NULL
     };
     char *line;
     size_t lineLen = 32;
@@ -114,8 +114,8 @@ int main()
     cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
     if (cpu != NULL)
     {
-	cpu->iCtl.ic_en = 3; /* Use both Icache sets */
-	cpu->dcCtl.set_en = 3; /* Use both Dcache sets */
+  cpu->iCtl.ic_en = 3; /* Use both Icache sets */
+  cpu->dcCtl.set_en = 3; /* Use both Dcache sets */
     }
     readMiss = 0;
     writeMiss = 0;
@@ -136,249 +136,249 @@ int main()
      * memory" as NoOps.  When we get a Miss, this is what is filled in.
      */
     for (ii = 0; ii < AXP_ICACHE_LINE_INS; ii++)
-	readIns[ii] = noOp;
+  readIns[ii] = noOp;
     memset(&nextIns, 0, sizeof(nextIns));
     ii = 0;
     while ((fileNames[ii] != NULL) && (cpu != NULL))
     {
-	printf("\n>>> Processing file: %s\n", fileNames[ii]);
-	if ((fp = fopen(fileNames[ii], "r")) != NULL)
-	{
-	    while (getline(&line, &lineLen, fp) != -1)
-	    {
-		totalOper++;
-		oper = addr = data = 0;
-		items = parseLine(line, &oper, &addr, &data);
-		if ((items != 2) && (items != 3))
-		{
-		    printf("%s\n", line);
-		    printf("%u %08x %08x\n", oper, addr, data);
-		    printf(
-			"parseLine did not return the number of expected items %u\n",
-			items);
-		    abort();
-		}
-		switch (oper)
-		{
-		    case 0: /* Read from Memory */
-			readData++;
+  printf("\n>>> Processing file: %s\n", fileNames[ii]);
+  if ((fp = fopen(fileNames[ii], "r")) != NULL)
+  {
+      while (getline(&line, &lineLen, fp) != -1)
+      {
+    totalOper++;
+    oper = addr = data = 0;
+    items = parseLine(line, &oper, &addr, &data);
+    if ((items != 2) && (items != 3))
+    {
+        printf("%s\n", line);
+        printf("%u %08x %08x\n", oper, addr, data);
+        printf(
+      "parseLine did not return the number of expected items %u\n",
+      items);
+        abort();
+    }
+    switch (oper)
+    {
+        case 0: /* Read from Memory */
+      readData++;
 
-			/*
-			 * The data should be in the Dcache block, so if we get
-			 * a Miss, then we have an error (at least for this
-			 * test).
-			 */
-			va = addr;
-			pa = AXP_va2pa(cpu, va, zeroPC,
-			true, Read, &_asm, &fault, &except);
+      /*
+       * The data should be in the Dcache block, so if we get
+       * a Miss, then we have an error (at least for this
+       * test).
+       */
+      va = addr;
+      pa = AXP_va2pa(cpu, va, zeroPC,
+      true, Read, &_asm, &fault, &except);
 
-			/*
-			 * For all the reads, the call to convert from VA
-			 * to PA should not generate a fault.
-			 */
-			if ((fault == AXP_DTBM_DOUBLE_3)
-			    || (fault == AXP_DTBM_DOUBLE_4)
-			    || (fault == AXP_DTBM_SINGLE))
-			{
-			    readMiss++;
+      /*
+       * For all the reads, the call to convert from VA
+       * to PA should not generate a fault.
+       */
+      if ((fault == AXP_DTBM_DOUBLE_3)
+          || (fault == AXP_DTBM_DOUBLE_4)
+          || (fault == AXP_DTBM_SINGLE))
+      {
+          readMiss++;
 
-			    /*
-			     * First create an Address Translation Buffer.
-			     */
-			    AXP_addTLBEntry(cpu, va, va, true);
+          /*
+           * First create an Address Translation Buffer.
+           */
+          AXP_addTLBEntry(cpu, va, va, true);
 
-			    /*
-			     * Now try and convert the virtual address to a
-			     * physical one.
-			     */
-			    pa = AXP_va2pa(cpu, va, zeroPC,
-			    true, Read, &_asm, &fault, &except);
-			    if (fault != 0)
-			    {
-				printf(
-				    "Got a va2pa(Read 2) fault 0x%04x\n",
-				    fault);
-				abort();
-			    }
-			}
-			else if (fault != 0)
-			{
-			    printf("Got a va2pa(Read 1) fault 0x%04x\n", fault);
-			    abort();
-			}
-			else
-			{
-			    readHit++;
-			}
-			break;
+          /*
+           * Now try and convert the virtual address to a
+           * physical one.
+           */
+          pa = AXP_va2pa(cpu, va, zeroPC,
+          true, Read, &_asm, &fault, &except);
+          if (fault != 0)
+          {
+        printf(
+            "Got a va2pa(Read 2) fault 0x%04x\n",
+            fault);
+        abort();
+          }
+      }
+      else if (fault != 0)
+      {
+          printf("Got a va2pa(Read 1) fault 0x%04x\n", fault);
+          abort();
+      }
+      else
+      {
+          readHit++;
+      }
+      break;
 
-		    case 1: /* Write to Memory */
-			writeData++;
+        case 1: /* Write to Memory */
+      writeData++;
 
-			/*
-			 * First check that the memory item is not already in
-			 * the Dcache.  If it is, then update the cache record
-			 * (using a bit of slight of hand because we are not
-			 * using instructions to manipulate the cache).  If the
-			 * memory item is not already in the cache, then  add
-			 * it.  Note, we will have to handle the Data
-			 * Translation Look-aside Buffer (DTB) because it is
-			 * used to locate and store items in the cache.  We may
-			 * also have to perform a virtual to physical address
-			 * translation as well.  BTW: The DTB is going to be
-			 * setup to have virtual and physical addresses be the
-			 * same (at least for the first attempt at this test
-			 * code).
-			 */
-			va = addr;
-			pa = AXP_va2pa(cpu, va, zeroPC,
-			true, Write, &_asm, &fault, &except);
-			if ((fault == AXP_DTBM_DOUBLE_3)
-			    || (fault == AXP_DTBM_DOUBLE_4)
-			    || (fault == AXP_DTBM_SINGLE))
-			{
-			    writeWayMiss++;
+      /*
+       * First check that the memory item is not already in
+       * the Dcache.  If it is, then update the cache record
+       * (using a bit of slight of hand because we are not
+       * using instructions to manipulate the cache).  If the
+       * memory item is not already in the cache, then  add
+       * it.  Note, we will have to handle the Data
+       * Translation Look-aside Buffer (DTB) because it is
+       * used to locate and store items in the cache.  We may
+       * also have to perform a virtual to physical address
+       * translation as well.  BTW: The DTB is going to be
+       * setup to have virtual and physical addresses be the
+       * same (at least for the first attempt at this test
+       * code).
+       */
+      va = addr;
+      pa = AXP_va2pa(cpu, va, zeroPC,
+      true, Write, &_asm, &fault, &except);
+      if ((fault == AXP_DTBM_DOUBLE_3)
+          || (fault == AXP_DTBM_DOUBLE_4)
+          || (fault == AXP_DTBM_SINGLE))
+      {
+          writeWayMiss++;
 
-			    /*
-			     * First create an Address Translation Buffer.
-			     */
-			    AXP_addTLBEntry(cpu, va, va, true);
+          /*
+           * First create an Address Translation Buffer.
+           */
+          AXP_addTLBEntry(cpu, va, va, true);
 
-			    /*
-			     * Now try and convert the virtual address to a
-			     * physical one.
-			     */
-			    pa = AXP_va2pa(cpu, va, zeroPC,
-			    true, Write, &_asm, &fault, &except);
-			}
-			else if (fault != 0)
-			{
-			    printf(
-				"Got a va2pa(Write 2) fault 0x%04x\n",
-				fault);
-			    abort();
-			}
+          /*
+           * Now try and convert the virtual address to a
+           * physical one.
+           */
+          pa = AXP_va2pa(cpu, va, zeroPC,
+          true, Write, &_asm, &fault, &except);
+      }
+      else if (fault != 0)
+      {
+          printf(
+        "Got a va2pa(Write 2) fault 0x%04x\n",
+        fault);
+          abort();
+      }
 
-			/*
-			 * At this point one of the above calls to convert from
-			 * a virtual address to a physical one.  If not, then
-			 * we have an unexpected error.
-			 */
-			if (fault == 0)
-			{
+      /*
+       * At this point one of the above calls to convert from
+       * a virtual address to a physical one.  If not, then
+       * we have an unexpected error.
+       */
+      if (fault == 0)
+      {
 
-			    /*
-			     * At this point we don't know if the data to be
-			     * saved is already in the Data Cache or not.  We
-			     * first need to fetch it.  If that fails, then we
-			     * either add it or update it.
-			     */
-			    if (AXP_DcacheRead(
-				cpu,
-				va,
-				pa,
-				sizeof(fetchedData),
-				&fetchedData,
-				&dataLoc) == true)
-			    {
-				writeHit++;
-				AXP_DcacheWrite(
-				    cpu,
-				    &dataLoc,
-				    sizeof(data),
-				    &data,
-				    0);
-			    }
-			    else
-			    {
-				writeMiss++;
-				AXP_DcacheWrite(cpu,
-				NULL, sizeof(data), &data, 0);
-			    }
-			}
-			else
-			{
-			    printf(
-				"Got a va2pa(Write 1) fault 0x%04x\n",
-				fault);
-			    abort();
-			}
-			break;
+          /*
+           * At this point we don't know if the data to be
+           * saved is already in the Data Cache or not.  We
+           * first need to fetch it.  If that fails, then we
+           * either add it or update it.
+           */
+          if (AXP_DcacheRead(
+        cpu,
+        va,
+        pa,
+        sizeof(fetchedData),
+        &fetchedData,
+        &dataLoc) == true)
+          {
+        writeHit++;
+        AXP_DcacheWrite(
+            cpu,
+            &dataLoc,
+            sizeof(data),
+            &data,
+            0);
+          }
+          else
+          {
+        writeMiss++;
+        AXP_DcacheWrite(cpu,
+        NULL, sizeof(data), &data, 0);
+          }
+      }
+      else
+      {
+          printf(
+        "Got a va2pa(Write 1) fault 0x%04x\n",
+        fault);
+          abort();
+      }
+      break;
 
-		    case 2: /* Read instruction from Memory */
-			readInst++;
+        case 2: /* Read instruction from Memory */
+      readInst++;
 
-			/*
-			 * This is just an emulation.  There is no attempt to
-			 * actually interpret what is returned.  So, what we
-			 * will do is, when an instruction that is not in the
-			 * Icache, we will create one.  Remember, each Icache
-			 * block contains 16 32-bit instructions, which are
-			 * aligned on a 64 byte boundary.  We will need to make
-			 * sure that when creating an Icache block, that we do
-			 * so on the 64 byte boundary, less than or equal to
-			 * the virtual address of the instruction being read by
-			 * clearing the low 5 bits of virtual address.
-			 *
-			 * The input to this test code indicates where an
-			 * instruction should be fetched from, but does not
-			 * contain any instructions.  When we are told to
-			 * fetch an instruction and it is not in the cache,
-			 * then we'll actually store 16 no-op instructions,
-			 * one a 64 byte boundary.
-			 */
-			va = addr; /* We use this when searching for the TLB */
-			pc = *((AXP_PC *) &va);
-			if (AXP_IcacheFetch(cpu, pc, &nextIns) == false)
-			{
-			    AXP_PC boundaryPC;
-			    u64 tmpAddr = addr;
+      /*
+       * This is just an emulation.  There is no attempt to
+       * actually interpret what is returned.  So, what we
+       * will do is, when an instruction that is not in the
+       * Icache, we will create one.  Remember, each Icache
+       * block contains 16 32-bit instructions, which are
+       * aligned on a 64 byte boundary.  We will need to make
+       * sure that when creating an Icache block, that we do
+       * so on the 64 byte boundary, less than or equal to
+       * the virtual address of the instruction being read by
+       * clearing the low 5 bits of virtual address.
+       *
+       * The input to this test code indicates where an
+       * instruction should be fetched from, but does not
+       * contain any instructions.  When we are told to
+       * fetch an instruction and it is not in the cache,
+       * then we'll actually store 16 no-op instructions,
+       * one a 64 byte boundary.
+       */
+      va = addr; /* We use this when searching for the TLB */
+      pc = *((AXP_PC *) &va);
+      if (AXP_IcacheFetch(cpu, pc, &nextIns) == false)
+      {
+          AXP_PC boundaryPC;
+          u64 tmpAddr = addr;
 
-			    tmpAddr &= 0x7ffffc0; /* Round to 64 byte boundary */
-			    boundaryPC = *((AXP_PC *) &tmpAddr);
+          tmpAddr &= 0x7ffffc0; /* Round to 64 byte boundary */
+          boundaryPC = *((AXP_PC *) &tmpAddr);
 
-			    itb = AXP_findTLBEntry(cpu, va, false);
-			    if (itb == NULL)
-			    {
+          itb = AXP_findTLBEntry(cpu, va, false);
+          if (itb == NULL)
+          {
 
-				instrWayMiss++;
+        instrWayMiss++;
 
-				/*
-				 * First create an Address Translation Buffer.
-				 */
-				AXP_addTLBEntry(cpu, va, va, false);
-				itb = AXP_findTLBEntry(cpu, va, false);
-				if (itb == NULL)
-				{
-				    printf(
-					"AXP_findTLBNEntry(Icache) unexpectedly returned NULL\n");
-				    abort();
-				}
-				AXP_IcacheAdd(cpu, boundaryPC, readIns, itb);
-			    }
-			    else
-			    {
-				instrMiss++;
-				AXP_IcacheAdd(cpu, boundaryPC, readIns, itb);
-			    }
-			    if (AXP_IcacheFetch(cpu, pc, &nextIns) == false)
-			    {
-				printf(
-				    "AXP_IcacheFetch unexpectedly returned false\n");
-				abort();
-			    }
-			}
-			else
-			    instrHit++;
-			break;
-		}
-	    }
-	    AXP_DcacheFlush(cpu);
-	    AXP_IcacheFlush(cpu, false);
-	}
-	fclose(fp);
-	fp = NULL;
-	ii++;
+        /*
+         * First create an Address Translation Buffer.
+         */
+        AXP_addTLBEntry(cpu, va, va, false);
+        itb = AXP_findTLBEntry(cpu, va, false);
+        if (itb == NULL)
+        {
+            printf(
+          "AXP_findTLBNEntry(Icache) unexpectedly returned NULL\n");
+            abort();
+        }
+        AXP_IcacheAdd(cpu, boundaryPC, readIns, itb);
+          }
+          else
+          {
+        instrMiss++;
+        AXP_IcacheAdd(cpu, boundaryPC, readIns, itb);
+          }
+          if (AXP_IcacheFetch(cpu, pc, &nextIns) == false)
+          {
+        printf(
+            "AXP_IcacheFetch unexpectedly returned false\n");
+        abort();
+          }
+      }
+      else
+          instrHit++;
+      break;
+    }
+      }
+      AXP_DcacheFlush(cpu);
+      AXP_IcacheFlush(cpu, false);
+  }
+  fclose(fp);
+  fp = NULL;
+  ii++;
     }
     printf("Total operations executed: %u\n\n", totalOper);
     printf("Total reads from Dcache: %u\n", readData);

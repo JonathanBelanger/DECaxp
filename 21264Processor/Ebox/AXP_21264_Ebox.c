@@ -81,34 +81,34 @@ void AXP_21264_Ebox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      */
     if (instr->excRegMask == NoException)
     {
-	switch (instr->opcode)
-	{
-	    case LDBU:
-		instr->destv.r.uq = AXP_ZEXT_BYTE(instr->destv.r.uq);
-		break;
+  switch (instr->opcode)
+  {
+      case LDBU:
+    instr->destv.r.uq = AXP_ZEXT_BYTE(instr->destv.r.uq);
+    break;
 
-	    case LDW_U:
-		instr->destv.r.uq = AXP_ZEXT_WORD(instr->destv.r.uq);
-		break;
+      case LDW_U:
+    instr->destv.r.uq = AXP_ZEXT_WORD(instr->destv.r.uq);
+    break;
 
-	    case LDL:
-	    case LDL_L:
-		instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
-		break;
+      case LDL:
+      case LDL_L:
+    instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
+    break;
 
-	    case HW_LD:
-		if (instr->quadword == false)
-		    instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
-		break;
+      case HW_LD:
+    if (instr->quadword == false)
+        instr->destv.r.uq = AXP_SEXT_LONG(instr->destv.r.uq);
+    break;
 
-	    case STL_C:
-	    case STQ_C:
-		instr->destv.r.uq = 1;
-		break;
+      case STL_C:
+      case STQ_C:
+    instr->destv.r.uq = 1;
+    break;
 
-	    default:
-		break;
-	}
+      default:
+    break;
+  }
     }
 
     /*
@@ -155,10 +155,10 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 
     if (AXP_EBOX_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Ebox is initializing");
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Ebox is initializing");
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -189,10 +189,10 @@ bool AXP_21264_Ebox_Init(AXP_21264_CPU *cpu)
 
     if (AXP_EBOX_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Ebox has initialized");
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Ebox has initialized");
+  AXP_TRACE_END()
+  ;
     }
 
     return (retVal);
@@ -222,10 +222,10 @@ void *AXP_21264_EboxU0Main(void *voidPtr)
 
     if (AXP_EBOX_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Ebox U0 is starting");
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Ebox U0 is starting");
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -233,12 +233,12 @@ void *AXP_21264_EboxU0Main(void *voidPtr)
      * to execute instructions for a specific Integer Pipeline.
      */
     AXP_Execution_Box(
-	cpu,
-	EboxU0,
-	&cpu->iq,
-	&cpu->eBoxCondition,
-	&cpu->eBoxMutex,
-	&AXP_ReturnIQEntry);
+  cpu,
+  EboxU0,
+  &cpu->iq,
+  &cpu->eBoxCondition,
+  &cpu->eBoxMutex,
+  &AXP_ReturnIQEntry);
 
     /*
      * Return back to the caller.
@@ -270,10 +270,10 @@ void *AXP_21264_EboxU1Main(void *voidPtr)
 
     if (AXP_EBOX_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Ebox U1 is starting");
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Ebox U1 is starting");
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -281,12 +281,12 @@ void *AXP_21264_EboxU1Main(void *voidPtr)
      * to execute instructions for a specific Integer Pipeline.
      */
     AXP_Execution_Box(
-	cpu,
-	EboxU1,
-	&cpu->iq,
-	&cpu->eBoxCondition,
-	&cpu->eBoxMutex,
-	&AXP_ReturnIQEntry);
+  cpu,
+  EboxU1,
+  &cpu->iq,
+  &cpu->eBoxCondition,
+  &cpu->eBoxMutex,
+  &AXP_ReturnIQEntry);
 
     /*
      * Return back to the caller.
@@ -318,10 +318,10 @@ void *AXP_21264_EboxL0Main(void *voidPtr)
 
     if (AXP_EBOX_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Ebox L0 is starting");
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Ebox L0 is starting");
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -329,12 +329,12 @@ void *AXP_21264_EboxL0Main(void *voidPtr)
      * to execute instructions for a specific Integer Pipeline.
      */
     AXP_Execution_Box(
-	cpu,
-	EboxL0,
-	&cpu->iq,
-	&cpu->eBoxCondition,
-	&cpu->eBoxMutex,
-	&AXP_ReturnIQEntry);
+  cpu,
+  EboxL0,
+  &cpu->iq,
+  &cpu->eBoxCondition,
+  &cpu->eBoxMutex,
+  &AXP_ReturnIQEntry);
 
     /*
      * Return back to the caller.
@@ -366,9 +366,9 @@ void *AXP_21264_EboxL1Main(void *voidPtr)
 
     if (AXP_EBOX_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Ebox L1 is starting");
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Ebox L1 is starting");
+  AXP_TRACE_END();
     }
 
     /*
@@ -376,12 +376,12 @@ void *AXP_21264_EboxL1Main(void *voidPtr)
      * to execute instructions for a specific Integer Pipeline.
      */
     AXP_Execution_Box(
-	cpu,
-	EboxL1,
-	&cpu->iq,
-	&cpu->eBoxCondition,
-	&cpu->eBoxMutex,
-	&AXP_ReturnIQEntry);
+  cpu,
+  EboxL1,
+  &cpu->iq,
+  &cpu->eBoxCondition,
+  &cpu->eBoxMutex,
+  &AXP_ReturnIQEntry);
 
     /*
      * Return back to the caller.

@@ -43,116 +43,116 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
     sys = AXP_Allocate_Block(AXP_21274_SYS_BLK);
     if (sys != NULL)
     {
-	pthreadRet = pthread_mutex_init(&sys->cChipMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&sys->memMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&sys->p0.mutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&sys->p1.mutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_cond_init(&sys->cChipCond, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_cond_init(&sys->p0.cond, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_cond_init(&sys->p1.cond, NULL);
+  pthreadRet = pthread_mutex_init(&sys->cChipMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&sys->memMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&sys->p0.mutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&sys->p1.mutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_cond_init(&sys->cChipCond, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_cond_init(&sys->p0.cond, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_cond_init(&sys->p1.cond, NULL);
 
-	/*
-	 * Let's go allocate all the CPUs configured to this emulation
-	 */
-	if (pthreadRet == 0)
-	{
-	    sys->cpuCount = AXP_ConfigGet_CPUCount();
-	    for (ii = 0; ii < AXP_21274_MAX_CPUS; ii++)
-	    {
+  /*
+   * Let's go allocate all the CPUs configured to this emulation
+   */
+  if (pthreadRet == 0)
+  {
+      sys->cpuCount = AXP_ConfigGet_CPUCount();
+      for (ii = 0; ii < AXP_21274_MAX_CPUS; ii++)
+      {
 
-		/*
-		 * Go and allocate a CPU.
-		 */
-		if (ii < sys->cpuCount)
-		{
-		    cpu[ii] = AXP_21264_AllocateCPU(ii);
-		    if (cpu[ii] != NULL)
-		    {
+    /*
+     * Go and allocate a CPU.
+     */
+    if (ii < sys->cpuCount)
+    {
+        cpu[ii] = AXP_21264_AllocateCPU(ii);
+        if (cpu[ii] != NULL)
+        {
 
-			/*
-			 * Use the CPU ID as an entry into the CPU array to
-			 * initialize the information needed for the System to
-			 * be able to communicate with the CPU.
-			 */
-			AXP_21264_Save_SystemInterfaces(cpu[ii],
-			        &sys->cpu[ii].mutex, &sys->cpu[ii].cond,
-			        (void **) &sys->cpu[ii].pq, &sys->cpu[ii].pqTop,
-			        &sys->cpu[ii].pqBottom, &sys->cpu[ii].irq_H,
-			        &sys->cChipMutex, &sys->cChipCond,
-			        &sys->skidBufferQ);
+      /*
+       * Use the CPU ID as an entry into the CPU array to
+       * initialize the information needed for the System to
+       * be able to communicate with the CPU.
+       */
+      AXP_21264_Save_SystemInterfaces(cpu[ii],
+              &sys->cpu[ii].mutex, &sys->cpu[ii].cond,
+              (void **) &sys->cpu[ii].pq, &sys->cpu[ii].pqTop,
+              &sys->cpu[ii].pqBottom, &sys->cpu[ii].irq_H,
+              &sys->cChipMutex, &sys->cChipCond,
+              &sys->skidBufferQ);
 
-		    }
-		    else
-			qRet = false;
-		}
-		else
-		    cpu[ii] = NULL;
-	    }
-	}
+        }
+        else
+      qRet = false;
+    }
+    else
+        cpu[ii] = NULL;
+      }
+  }
 
-	/*
-	 * If things are still going well, go get the size and number of memory
-	 * arrays and then allocate the memory accordingly.
-	 */
-	if (qRet == true)
-	{
-	    AXP_ConfigGet_DarrayInfo(&sys->arrayCount, &sys->arraySizes);
+  /*
+   * If things are still going well, go get the size and number of memory
+   * arrays and then allocate the memory accordingly.
+   */
+  if (qRet == true)
+  {
+      AXP_ConfigGet_DarrayInfo(&sys->arrayCount, &sys->arraySizes);
 
-	    /*
-	     * Now that we know the sizes, go and allocate the individual
-	     * arrays.  Each array contains a contiguous memory address space.
-	     */
-	    for (ii = 0; ii < AXP_21274_MAX_ARRAYS; ii++)
-	    {
-		if (ii < sys->arrayCount)
-		    sys->array[ii] = AXP_Allocate_Block(-sys->arraySizes);
-		else
-		    sys->array[ii] = NULL;
-	    }
-	}
+      /*
+       * Now that we know the sizes, go and allocate the individual
+       * arrays.  Each array contains a contiguous memory address space.
+       */
+      for (ii = 0; ii < AXP_21274_MAX_ARRAYS; ii++)
+      {
+    if (ii < sys->arrayCount)
+        sys->array[ii] = AXP_Allocate_Block(-sys->arraySizes);
+    else
+        sys->array[ii] = NULL;
+      }
+  }
 
-	/*
-	 * If we are, thus far, successful, time to initialize the rest of the
-	 * system and then create the System threads.
-	 */
-	if (qRet == true)
-	{
+  /*
+   * If we are, thus far, successful, time to initialize the rest of the
+   * system and then create the System threads.
+   */
+  if (qRet == true)
+  {
 
-	    /*
-	     * First, go initialize the rest of the system.
-	     */
-	    AXP_21274_CchipInit(sys);
-	    AXP_21274_DchipInit(sys);
-	    AXP_21274_PchipInit(&sys->p0, 0);
-	    AXP_21274_PchipInit(&sys->p1, 1);
-	    pthreadRet = pthread_create(&sys->cChipThreadID, NULL,
-		    AXP_21274_CchipMain, sys);
-	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(&sys->p0.threadID, NULL,
-		        AXP_21274_PchipMain, sys);
-	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(&sys->p1.threadID, NULL,
-		        AXP_21274_PchipMain, sys);
-	}
+      /*
+       * First, go initialize the rest of the system.
+       */
+      AXP_21274_CchipInit(sys);
+      AXP_21274_DchipInit(sys);
+      AXP_21274_PchipInit(&sys->p0, 0);
+      AXP_21274_PchipInit(&sys->p1, 1);
+      pthreadRet = pthread_create(&sys->cChipThreadID, NULL,
+        AXP_21274_CchipMain, sys);
+      if (pthreadRet == 0)
+    pthreadRet = pthread_create(&sys->p0.threadID, NULL,
+            AXP_21274_PchipMain, sys);
+      if (pthreadRet == 0)
+    pthreadRet = pthread_create(&sys->p1.threadID, NULL,
+            AXP_21274_PchipMain, sys);
+  }
     }
 
     /*
      * If something failed, then deallocate everything.
      */
     if ((sys != NULL) && ((pthreadRet != 0) || (qRet != true) ||
-	(sys->cpuCount == 0) || (sys->arrayCount == 0)))
+  (sys->cpuCount == 0) || (sys->arrayCount == 0)))
     {
-	for (ii = 0; ii < AXP_21274_MAX_CPUS; ii++)
-	    if (cpu[ii] != NULL)
-		AXP_Deallocate_Block(cpu[ii]);
-	AXP_Deallocate_Block(sys);
-	sys = NULL;
+  for (ii = 0; ii < AXP_21274_MAX_CPUS; ii++)
+      if (cpu[ii] != NULL)
+    AXP_Deallocate_Block(cpu[ii]);
+  AXP_Deallocate_Block(sys);
+  sys = NULL;
     }
 
     /*

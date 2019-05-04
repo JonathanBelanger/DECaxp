@@ -77,88 +77,88 @@ void AXP_21264_Fbox_Compl(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
     if (instr->excRegMask == NoException)
     {
-	switch (instr->opcode)
-	{
-	    case LDF:
+  switch (instr->opcode)
+  {
+      case LDF:
 
-		/*
-		 * The load operation put the value we were supposed to read
-		 * into the destination value location.  Get it out of there so
-		 * that we can convert it from memory format to register
-		 * format.
-		 */
-		tmp = instr->destv.fp.uq;
+    /*
+     * The load operation put the value we were supposed to read
+     * into the destination value location.  Get it out of there so
+     * that we can convert it from memory format to register
+     * format.
+     */
+    tmp = instr->destv.fp.uq;
 
-		/*
-		 * Extract the exponent, then expand it from 8-bits to 11-bits.
-		 */
-		exp = tmpF->exponent;
-		if (exp != 0)
-		    exp += (AXP_G_BIAS - AXP_F_BIAS);
+    /*
+     * Extract the exponent, then expand it from 8-bits to 11-bits.
+     */
+    exp = tmpF->exponent;
+    if (exp != 0)
+        exp += (AXP_G_BIAS - AXP_F_BIAS);
 
-		/*
-		 * Now put everything back together, but this time in register
-		 * format and 64-bits.
-		 */
-		instr->destv.fp.fCvt.sign = tmpF->sign;
-		instr->destv.fp.fCvt.exponent = exp;
-		instr->destv.fp.fCvt.fractionHigh = tmpF->fractionHigh;
-		instr->destv.fp.fCvt.fractionLow = tmpF->fractionLow;
-		instr->destv.fp.fCvt.zero = 0;
-		break;
+    /*
+     * Now put everything back together, but this time in register
+     * format and 64-bits.
+     */
+    instr->destv.fp.fCvt.sign = tmpF->sign;
+    instr->destv.fp.fCvt.exponent = exp;
+    instr->destv.fp.fCvt.fractionHigh = tmpF->fractionHigh;
+    instr->destv.fp.fCvt.fractionLow = tmpF->fractionLow;
+    instr->destv.fp.fCvt.zero = 0;
+    break;
 
-	    case LDG:
+      case LDG:
 
-		/*
-		 * The load operation put the value we were supposed to read into the
-		 * destination value location.  Get it out of there so that we can convert
-		 * it from memory format to register format.
-		 */
-		tmp = instr->destv.fp.uq;
+    /*
+     * The load operation put the value we were supposed to read into the
+     * destination value location.  Get it out of there so that we can convert
+     * it from memory format to register format.
+     */
+    tmp = instr->destv.fp.uq;
 
-		/*
-		 * Now put everything back together, but this time in register format and
-		 * 64-bits.
-		 */
-		instr->destv.fp.gCvt.sign = tmpG->sign;
-		instr->destv.fp.gCvt.exponent = tmpG->exponent;
-		instr->destv.fp.gCvt.fractionHigh = tmpG->fractionHigh;
-		instr->destv.fp.gCvt.fractionMidHigh = tmpG->fractionMidHigh;
-		instr->destv.fp.gCvt.fractionMidLow = tmpG->fractionMidLow;
-		instr->destv.fp.gCvt.fractionLow = tmpG->fractionLow;
-		break;
+    /*
+     * Now put everything back together, but this time in register format and
+     * 64-bits.
+     */
+    instr->destv.fp.gCvt.sign = tmpG->sign;
+    instr->destv.fp.gCvt.exponent = tmpG->exponent;
+    instr->destv.fp.gCvt.fractionHigh = tmpG->fractionHigh;
+    instr->destv.fp.gCvt.fractionMidHigh = tmpG->fractionMidHigh;
+    instr->destv.fp.gCvt.fractionMidLow = tmpG->fractionMidLow;
+    instr->destv.fp.gCvt.fractionLow = tmpG->fractionLow;
+    break;
 
-	    case LDS:
+      case LDS:
 
-		/*
-		 * The load operation put the value we were supposed to read into the
-		 * destination value location.  Get it out of there so that we can convert
-		 * it from memory format to register format.
-		 */
-		tmp = instr->destv.fp.uq;
+    /*
+     * The load operation put the value we were supposed to read into the
+     * destination value location.  Get it out of there so that we can convert
+     * it from memory format to register format.
+     */
+    tmp = instr->destv.fp.uq;
 
-		/*
-		 * Extract the exponent, then expand it from 8-bits to 11-bits.
-		 */
-		exp = tmpS->exponent;
-		if (exp == AXP_S_NAN)
-		    exp = AXP_R_NAN;
-		else if (exp != 0)
-		    exp += (AXP_T_BIAS - AXP_S_BIAS);
+    /*
+     * Extract the exponent, then expand it from 8-bits to 11-bits.
+     */
+    exp = tmpS->exponent;
+    if (exp == AXP_S_NAN)
+        exp = AXP_R_NAN;
+    else if (exp != 0)
+        exp += (AXP_T_BIAS - AXP_S_BIAS);
 
-		/*
-		 * Now put everything back together, but this time in register format and
-		 * 64-bits.
-		 */
-		instr->destv.fp.sCvt.sign = tmpS->sign;
-		instr->destv.fp.sCvt.exponent = exp;
-		instr->destv.fp.sCvt.fraction = tmpS->fraction;
-		instr->destv.fp.sCvt.zero = 0;
-		break;
+    /*
+     * Now put everything back together, but this time in register format and
+     * 64-bits.
+     */
+    instr->destv.fp.sCvt.sign = tmpS->sign;
+    instr->destv.fp.sCvt.exponent = exp;
+    instr->destv.fp.sCvt.fraction = tmpS->fraction;
+    instr->destv.fp.sCvt.zero = 0;
+    break;
 
-	    default:
-		break;
-	}
+      default:
+    break;
+  }
     }
 
     /*
@@ -205,10 +205,10 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 
     if (AXP_FBOX_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Fbox is initializing");
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Fbox is initializing");
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -233,10 +233,10 @@ bool AXP_21264_Fbox_Init(AXP_21264_CPU *cpu)
 
     if (AXP_FBOX_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Fbox has initialized");
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Fbox has initialized");
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -276,10 +276,10 @@ void *AXP_21264_FboxMulMain(void *voidPtr)
 
     if (AXP_FBOX_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Fbox Multiply is starting");
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Fbox Multiply is starting");
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -287,12 +287,12 @@ void *AXP_21264_FboxMulMain(void *voidPtr)
      * to execute instructions for a specific Integer Pipeline.
      */
     AXP_Execution_Box(
-	cpu,
-	FboxMul,
-	&cpu->fq,
-	&cpu->fBoxCondition,
-	&cpu->fBoxMutex,
-	&AXP_ReturnFQEntry);
+  cpu,
+  FboxMul,
+  &cpu->fq,
+  &cpu->fBoxCondition,
+  &cpu->fBoxMutex,
+  &AXP_ReturnFQEntry);
 
     /*
      * Return back to the caller.
@@ -331,10 +331,10 @@ void *AXP_21264_FboxOthMain(void *voidPtr)
 
     if (AXP_FBOX_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Fbox Other is starting");
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Fbox Other is starting");
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -342,12 +342,12 @@ void *AXP_21264_FboxOthMain(void *voidPtr)
      * to execute instructions for a specific Integer Pipeline.
      */
     AXP_Execution_Box(
-	cpu,
-	FboxOther,
-	&cpu->fq,
-	&cpu->fBoxCondition,
-	&cpu->fBoxMutex,
-	&AXP_ReturnFQEntry);
+  cpu,
+  FboxOther,
+  &cpu->fq,
+  &cpu->fBoxCondition,
+  &cpu->fBoxMutex,
+  &AXP_ReturnFQEntry);
 
     /*
      * Return back to the caller.

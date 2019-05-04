@@ -88,12 +88,12 @@ bool AXP_Branch_Prediction(
 
     if (AXP_IBOX_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "Called into AXP_Branch_Prediction for pc: 0x%016llx",
-	    *((u64 *) &vpc));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "Called into AXP_Branch_Prediction for pc: 0x%016llx",
+      *((u64 *) &vpc));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -107,59 +107,59 @@ bool AXP_Branch_Prediction(
     if ((cpu->iCtl.bp_mode & AXP_I_CTL_BP_MODE_FALL) != AXP_I_CTL_BP_MODE_FALL)
     {
 
-	/*
-	 * Need to extract the index into the Local History Table from the VPC, and
-	 * use this to determine the index into the Local Predictor Table.
-	 */
-	lpt_index.vpc = vpc;
-	lcl_history_idx = lpt_index.index.index;
-	lcl_predictor_idx = cpu->localHistoryTable.lcl_history[lcl_history_idx];
+  /*
+   * Need to extract the index into the Local History Table from the VPC, and
+   * use this to determine the index into the Local Predictor Table.
+   */
+  lpt_index.vpc = vpc;
+  lcl_history_idx = lpt_index.index.index;
+  lcl_predictor_idx = cpu->localHistoryTable.lcl_history[lcl_history_idx];
 
-	/*
-	 * Return the take(true)/don't take(false) for each of the Predictor
-	 * Tables.  The choice is determined and returned, but my not be used by
-	 * the caller.
-	 */
-	*localTaken = AXP_3BIT_TAKE(
-	    cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
-	if (cpu->iCtl.bp_mode == AXP_I_CTL_BP_MODE_CHOICE)
-	{
-	    *globalTaken = AXP_2BIT_TAKE(
-		cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
-	    *choice = AXP_2BIT_TAKE(
-		cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
-	}
-	else
-	{
-	    *globalTaken = false;
-	    *choice = false; /* This will force choice to select Local */
-	}
-	if (*localTaken != *globalTaken)
-	    retVal = (*choice == true) ? *globalTaken : *localTaken;
-	else
-	    retVal = *localTaken;
+  /*
+   * Return the take(true)/don't take(false) for each of the Predictor
+   * Tables.  The choice is determined and returned, but my not be used by
+   * the caller.
+   */
+  *localTaken = AXP_3BIT_TAKE(
+      cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
+  if (cpu->iCtl.bp_mode == AXP_I_CTL_BP_MODE_CHOICE)
+  {
+      *globalTaken = AXP_2BIT_TAKE(
+    cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
+      *choice = AXP_2BIT_TAKE(
+    cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
+  }
+  else
+  {
+      *globalTaken = false;
+      *choice = false; /* This will force choice to select Local */
+  }
+  if (*localTaken != *globalTaken)
+      retVal = (*choice == true) ? *globalTaken : *localTaken;
+  else
+      retVal = *localTaken;
     }
     else
     {
-	*localTaken = false;
-	*globalTaken = false;
-	*choice = false;
-	retVal = false;
+  *localTaken = false;
+  *globalTaken = false;
+  *choice = false;
+  retVal = false;
     }
 
     if (AXP_IBOX_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "Returning (%d) from AXP_Branch_Prediction for pc: 0x%016llx ,"
-		"local taken = %d, global taken = %d, choice = %d",
-	    retVal,
-	    *((u64 *) &vpc),
-	    *localTaken,
-	    *globalTaken,
-	    *choice);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "Returning (%d) from AXP_Branch_Prediction for pc: 0x%016llx ,"
+    "local taken = %d, global taken = %d, choice = %d",
+      retVal,
+      *((u64 *) &vpc),
+      *localTaken,
+      *globalTaken,
+      *choice);
+  AXP_TRACE_END()
+  ;
     }
 
     return (retVal);
@@ -203,12 +203,12 @@ void AXP_Branch_Direction(
 
     if (AXP_IBOX_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "Called into AXP_Branch_Direction for pc: 0x%016llx",
-	    *((u64 *) &vpc));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "Called into AXP_Branch_Direction for pc: 0x%016llx",
+      *((u64 *) &vpc));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -226,15 +226,15 @@ void AXP_Branch_Direction(
      */
     if ((taken == localTaken) && (taken != globalTaken))
     {
-	if (AXP_IBOX_OPT1)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite("AXP_Branch_Direction for pc: 0x%016llx, "
-		"Local Prediction Correct", *((u64 *) &vpc));
-	    AXP_TRACE_END()
-	    ;
-	}
-	AXP_2BIT_DECR(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
+  if (AXP_IBOX_OPT1)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite("AXP_Branch_Direction for pc: 0x%016llx, "
+    "Local Prediction Correct", *((u64 *) &vpc));
+      AXP_TRACE_END()
+      ;
+  }
+  AXP_2BIT_DECR(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
     }
 
     /*
@@ -248,15 +248,15 @@ void AXP_Branch_Direction(
      */
     else if ((taken != localTaken) && (taken == globalTaken))
     {
-	if (AXP_IBOX_OPT1)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite("AXP_Branch_Direction for pc: 0x%016llx, "
-		"Global Prediction Correct", *((u64 *) &vpc));
-	    AXP_TRACE_END()
-	    ;
-	}
-	AXP_2BIT_INCR(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
+  if (AXP_IBOX_OPT1)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite("AXP_Branch_Direction for pc: 0x%016llx, "
+    "Global Prediction Correct", *((u64 *) &vpc));
+      AXP_TRACE_END()
+      ;
+  }
+  AXP_2BIT_INCR(cpu->choicePredictor.choice_pred[cpu->globalPathHistory]);
     }
 
     /*
@@ -272,37 +272,37 @@ void AXP_Branch_Direction(
      */
     if (taken == true)
     {
-	if (AXP_IBOX_OPT1)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite(
-		"AXP_Branch_Direction for pc: 0x%016llx, Branch Taken",
-		*((u64 *) &vpc));
-	    AXP_TRACE_END()
-	    ;
-	}
-	AXP_3BIT_INCR(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
-	AXP_2BIT_INCR(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
-	AXP_LOCAL_PATH_TAKEN(
-	    cpu->localHistoryTable.lcl_history[lcl_history_idx]);
-	AXP_GLOBAL_PATH_TAKEN(cpu->globalPathHistory);
+  if (AXP_IBOX_OPT1)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite(
+    "AXP_Branch_Direction for pc: 0x%016llx, Branch Taken",
+    *((u64 *) &vpc));
+      AXP_TRACE_END()
+      ;
+  }
+  AXP_3BIT_INCR(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
+  AXP_2BIT_INCR(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
+  AXP_LOCAL_PATH_TAKEN(
+      cpu->localHistoryTable.lcl_history[lcl_history_idx]);
+  AXP_GLOBAL_PATH_TAKEN(cpu->globalPathHistory);
     }
     else
     {
-	if (AXP_IBOX_OPT1)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite(
-		"AXP_Branch_Direction for pc: 0x%016llx, Branch Not Taken",
-		*((u64 *) &vpc));
-	    AXP_TRACE_END()
-	    ;
-	}
-	AXP_3BIT_DECR(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
-	AXP_2BIT_DECR(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
-	AXP_LOCAL_PATH_NOT_TAKEN(
-	    cpu->localHistoryTable.lcl_history[lcl_history_idx]);
-	AXP_GLOBAL_PATH_NOT_TAKEN(cpu->globalPathHistory);
+  if (AXP_IBOX_OPT1)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite(
+    "AXP_Branch_Direction for pc: 0x%016llx, Branch Not Taken",
+    *((u64 *) &vpc));
+      AXP_TRACE_END()
+      ;
+  }
+  AXP_3BIT_DECR(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
+  AXP_2BIT_DECR(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
+  AXP_LOCAL_PATH_NOT_TAKEN(
+      cpu->localHistoryTable.lcl_history[lcl_history_idx]);
+  AXP_GLOBAL_PATH_NOT_TAKEN(cpu->globalPathHistory);
     }
     return;
 }

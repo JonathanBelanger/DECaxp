@@ -16,13 +16,13 @@
  *
  * Description:
  *
- *	This module contains the code for the protocol sent from the System to the
- *	CPU over the Sysbus.
+ *  This module contains the code for the protocol sent from the System to the
+ *  CPU over the Sysbus.
  *
- *	Revision History:
+ *  Revision History:
  *
- *	V01.000		30-Mar2018	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000 30-Mar2018  Jonathan D. Belanger
+ *  Initially written.
  */
 #include "TyphoonTsunami/Cchip/CPUInterface/AXP_21274_21264_Common.h"
 #include "CommonUtilities/AXP_Utility.h"
@@ -31,15 +31,15 @@
 
 /*
  * AXP_21274_SendToCPU
- *	This function is called with a pointer to the SysBus message and a pointer
- *	to the CPU structure, and send the message to the CPU, locking the correct
- *	mutex and signaling the correct condition variable.
+ *  This function is called with a pointer to the SysBus message and a pointer
+ *  to the CPU structure, and send the message to the CPU, locking the correct
+ *  mutex and signaling the correct condition variable.
  *
  * Input Parameters:
- * 	msg:
- * 		A pointer to the message to send to the specified CPU.
- * 	cpu:
- * 		A pointer to the CPU to receive the message.
+ *   msg:
+ *       A pointer to the message to send to the specified CPU.
+ *   cpu:
+ *       A pointer to the CPU to receive the message.
  */
 void AXP_21264_SendToCPU(AXP_21274_SYSBUS_CPU *msg, AXP_21274_CPU *cpu)
 {
@@ -55,7 +55,9 @@ void AXP_21264_SendToCPU(AXP_21274_SYSBUS_CPU *msg, AXP_21274_CPU *cpu)
      * Queue up the next PQ entry for the CPU to process.
      */
     if (cpu->pq[*cpu->pqBottom].valid == true)
-	*cpu->pqBottom = (*cpu->pqBottom + 1) & (AXP_21274_PQ_LEN - 1);
+    {
+        *cpu->pqBottom = (*cpu->pqBottom + 1) & (AXP_21274_PQ_LEN - 1);
+    }
     pq = &cpu->pq[*cpu->pqBottom];
 
     /*
@@ -76,23 +78,23 @@ void AXP_21264_SendToCPU(AXP_21274_SYSBUS_CPU *msg, AXP_21274_CPU *cpu)
     pq->ID = msg->id;
     switch (msg->sysDc)
     {
-	case ReadDataError:
-	    memset(pq->sysData, 0xff, AXP_21274_DATA_SIZE);
-	    pq->dm = true;
-	    break;
+        case ReadDataError:
+            memset(pq->sysData, 0xff, (AXP_21274_DATA_SIZE * sizeof(pq->sysData)));
+            pq->dm = true;
+            break;
 
-	case ReadData:
-	case ReadDataDirty:
-	case ReadDataShared:
-	case ReadDataSharedDirty:
-	    memcpy(pq->sysData, msg->sysData, AXP_21274_DATA_SIZE);
-	    pq->dm = true;
-	    pq->wrap = msg->wrap;
-	    break;
+        case ReadData:
+        case ReadDataDirty:
+        case ReadDataShared:
+        case ReadDataSharedDirty:
+            memcpy(pq->sysData, msg->sysData, AXP_21274_DATA_SIZE);
+            pq->dm = true;
+            pq->wrap = msg->wrap;
+            break;
 
-	default:
-	    pq->dm = false;
-	    break;
+        default:
+            pq->dm = false;
+            break;
     }
 
     /*
@@ -114,15 +116,15 @@ void AXP_21264_SendToCPU(AXP_21274_SYSBUS_CPU *msg, AXP_21274_CPU *cpu)
 
 /*
  * AXP_21274_InterruptToCPU
- *	This function is called with a pointer to the irq_H bits and a pointer
- *	to the CPU structure, and updates the equivalent field in the CPU, locking
- *	the correct mutex and signaling the correct condition variable.
+ *  This function is called with a pointer to the irq_H bits and a pointer
+ *  to the CPU structure, and updates the equivalent field in the CPU, locking
+ *  the correct mutex and signaling the correct condition variable.
  *
  * Input Parameters:
- * 	irq_H:
- * 		A value of the interrupt bits to be set in the CPU.
- * 	cpu:
- * 		A pointer to the CPU to receive the interrupts.
+ *   irq_H:
+ *       A value of the interrupt bits to be set in the CPU.
+ *   cpu:
+ *       A pointer to the CPU to receive the interrupts.
  */
 void AXP_21264_InterruptToCPU(u8 irq_H, AXP_21274_CPU *cpu)
 {

@@ -265,7 +265,7 @@ AXP_EXCEPTIONS AXP_CMOVEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if (instr->src1v.r.sq == 0)
-	instr->destv.r.uq = Rbv;
+  instr->destv.r.uq = Rbv;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -301,7 +301,7 @@ AXP_EXCEPTIONS AXP_CMOVGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if (instr->src1v.r.sq >= 0)
-	instr->destv.r.uq = Rbv;
+  instr->destv.r.uq = Rbv;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -337,7 +337,7 @@ AXP_EXCEPTIONS AXP_CMOVGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if (instr->src1v.r.sq > 0)
-	instr->destv.r.uq = Rbv;
+  instr->destv.r.uq = Rbv;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -373,7 +373,7 @@ AXP_EXCEPTIONS AXP_CMOVLBC(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if ((instr->src1v.r.uq & 0x01) == 0)
-	instr->destv.r.uq = Rbv;
+  instr->destv.r.uq = Rbv;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -409,7 +409,7 @@ AXP_EXCEPTIONS AXP_CMOVLBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if ((instr->src1v.r.uq & 0x01) == 1)
-	instr->destv.r.uq = Rbv;
+  instr->destv.r.uq = Rbv;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -445,7 +445,7 @@ AXP_EXCEPTIONS AXP_CMOVLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if (instr->src1v.r.sq <= 0)
-	instr->destv.r.uq = Rbv;
+  instr->destv.r.uq = Rbv;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -481,7 +481,7 @@ AXP_EXCEPTIONS AXP_CMOVLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if (instr->src1v.r.sq < 0)
-	instr->destv.r.uq = Rbv;
+  instr->destv.r.uq = Rbv;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -517,7 +517,7 @@ AXP_EXCEPTIONS AXP_CMOVNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if (instr->src1v.r.sq != 0)
-	instr->destv.r.uq = Rbv;
+  instr->destv.r.uq = Rbv;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -625,7 +625,7 @@ AXP_EXCEPTIONS AXP_SRA(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
     Rbv &= 0x000000000000003fll;
     instr->destv.r.uq = instr->src1v.r.uq >> Rbv;
     if ((Rbv != 0) && ((instr->src1v.r.uq & 0x8000000000000000ll) != 0))
-	instr->destv.r.uq |= 0xffffffffffffffffll << (64 - Rbv);
+  instr->destv.r.uq |= 0xffffffffffffffffll << (64 - Rbv);
 
     /*
      * Return back to the caller with any exception that may have occurred.

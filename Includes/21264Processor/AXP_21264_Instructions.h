@@ -61,8 +61,8 @@ typedef struct
 {
     union
     {
-	u16 func :16; /* Memory function						*/
-	i16 disp :16; /* Memory displacement from PC (SEXT)	*/
+  u16 func :16; /* Memory function						*/
+  i16 disp :16; /* Memory displacement from PC (SEXT)	*/
     } mem;
     u32 rb :5; /* Register b (source)					*/
     u32 ra :5; /* Register a (destination)				*/

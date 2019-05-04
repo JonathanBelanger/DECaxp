@@ -154,9 +154,9 @@ typedef union
     u8 value;
     struct
     {
-	u8 rs :4; /* Rate Selector */
-	u8 dv :3; /* Oscillator on/off */
-	u8 uip :1; /* Update In Progress */
+  u8 rs :4; /* Rate Selector */
+  u8 dv :3; /* Oscillator on/off */
+  u8 uip :1; /* Update In Progress */
     };
 } AXP_DS12887A_ControlA;
 #define AXP_ADDR_ControlA	10
@@ -284,14 +284,14 @@ typedef union
     u8 value;
     struct
     {
-	u8 dse :1;		/* Daylight Savings Enable */
-	u8 twentyFour :1;	/* 24-12 Hour Mode */
-	u8 dm :1;		/* Data Mode */
-	u8 sqwe :1;		/* Square-Wave Enable */
-	u8 uie :1;		/* Update-Ended Interrupt Enable */
-	u8 aie :1;		/* Alarm Interrupt Enable */
-	u8 pie :1;		/* Periodic Interrupt Enable */
-	u8 set :1;		/* Update Transfer Function */
+  u8 dse :1;		/* Daylight Savings Enable */
+  u8 twentyFour :1;	/* 24-12 Hour Mode */
+  u8 dm :1;		/* Data Mode */
+  u8 sqwe :1;		/* Square-Wave Enable */
+  u8 uie :1;		/* Update-Ended Interrupt Enable */
+  u8 aie :1;		/* Alarm Interrupt Enable */
+  u8 pie :1;		/* Periodic Interrupt Enable */
+  u8 set :1;		/* Update Transfer Function */
     };
 } AXP_DS12887A_ControlB;
 #define AXP_ADDR_ControlB	11
@@ -334,11 +334,11 @@ typedef union
     u8 value;
     struct
     {
-	u8 res :4;
-	u8 uf :1; 		/* Update-Ended Interrupt Flag */
-	u8 af :1;		/* Alarm Interrupt Flag */
-	u8 pf :1;		/* Periodic Interrupt Flag */
-	u8 irqf :1;		/* PF=PIE=1 or AF-AIE=1 or UF=UIE=1 */
+  u8 res :4;
+  u8 uf :1; 		/* Update-Ended Interrupt Flag */
+  u8 af :1;		/* Alarm Interrupt Flag */
+  u8 pf :1;		/* Periodic Interrupt Flag */
+  u8 irqf :1;		/* PF=PIE=1 or AF-AIE=1 or UF=UIE=1 */
     };
 } AXP_DS12887A_ControlC;
 #define AXP_ADDR_ControlC	12
@@ -366,11 +366,11 @@ typedef union
     u8 value;
     struct
     {
-	u8 eu : 1;		/* DSE must be set and this is for Europe DST */
-	u8 isDst : 1;		/* The time stored is in DST */
-	u8 fellBack : 1;	/* Time fell back already */
-	u8 res :4;
-	u8 vrt :1;		/* Valid RAM and Time */
+  u8 eu : 1;		/* DSE must be set and this is for Europe DST */
+  u8 isDst : 1;		/* The time stored is in DST */
+  u8 fellBack : 1;	/* Time fell back already */
+  u8 res :4;
+  u8 vrt :1;		/* Valid RAM and Time */
     };
 } AXP_DS12887A_ControlD;
 #define AXP_ADDR_ControlD	13
@@ -389,14 +389,14 @@ typedef union
     u8 value;
     struct			/* Range: 0|0-5|9 */
     {
-	u8 sec :4;
-	u8 tenSec :3;
-	u8 res :1;
+  u8 sec :4;
+  u8 tenSec :3;
+  u8 res :1;
     } BCD;
     struct			/* Range: 0x00-0x3b */
     {
-	u8 sec :6;
-	u8 res :2;
+  u8 sec :6;
+  u8 res :2;
     } bin;
 } AXP_DS12887A_Seconds;
 #define AXP_ADDR_Seconds	0
@@ -414,14 +414,14 @@ typedef union
     u8 value;
     struct			/* Range: 0|0-5|9 */
     {
-	u8 sec :4;
-	u8 tenSec :3;
-	u8 res :1;
+  u8 sec :4;
+  u8 tenSec :3;
+  u8 res :1;
     } BCD;
     struct			/* Range: 0x00-0x3b */
     {
-	u8 sec :6;
-	u8 res :2;
+  u8 sec :6;
+  u8 res :2;
     } bin;
 } AXP_DS12887A_SecondsAlarm;
 #define AXP_ADDR_SecondsAlarm	1
@@ -437,14 +437,14 @@ typedef union
     u8 value;
     struct			/* Range: 0|0-5|9 */
     {
-	u8 min :4;
-	u8 tenMin :3;
-	u8 res :1;
+  u8 min :4;
+  u8 tenMin :3;
+  u8 res :1;
     } BCD;
     struct			/* Range: 0x00-0x3b */
     {
-	u8 min :6;
-	u8 res :2;
+  u8 min :6;
+  u8 res :2;
     } bin;
 } AXP_DS12887A_Minutes;
 #define AXP_ADDR_Minutes	2
@@ -462,14 +462,14 @@ typedef union
     u8 value;
     struct			/* Range: 0|0-5|9 */
     {
-	u8 min :4;
-	u8 tenMin :3;
-	u8 res :1;
+  u8 min :4;
+  u8 tenMin :3;
+  u8 res :1;
     } BCD;
     struct			/* Range: 0x00-0x3b */
     {
-	u8 min :6;
-	u8 res :2;
+  u8 min :6;
+  u8 res :2;
     } bin;
 } AXP_DS12887A_MinutesAlarm;
 #define AXP_ADDR_MinutesAlarm	3
@@ -485,16 +485,16 @@ typedef union
     u8 value;
     struct			/* Range: 0|1-1|2 AM/PM or 0|0-2|3 */
     {
-	u8 hrs :4;
-	u8 tenHrs :2;
-	u8 res :1;
-	u8 amPm :1;
+  u8 hrs :4;
+  u8 tenHrs :2;
+  u8 res :1;
+  u8 amPm :1;
     } BCD;
     struct			/* Range: 0x01-0x0c AM/PM or 0x00-0x17 */
     {
-	u8 hrs :5;
-	u8 res :2;
-	u8 amPm :1;
+  u8 hrs :5;
+  u8 res :2;
+  u8 amPm :1;
     } bin;
 } AXP_DS12887A_Hours;
 #define AXP_ADDR_Hours		4
@@ -514,16 +514,16 @@ typedef union
     u8 value;
     struct			/* Range: 0|1-1|2 AM/PM or 0|0-2|3 */
     {
-	u8 hrs :4;
-	u8 tenHrs :2;
-	u8 res :1;
-	u8 amPm :1;
+  u8 hrs :4;
+  u8 tenHrs :2;
+  u8 res :1;
+  u8 amPm :1;
     } BCD;
     struct			/* Range: 0x01-0x0c AM/PM or 0x00-0x17 */
     {
-	u8 hrs :5;
-	u8 res :2;
-	u8 amPm :1;
+  u8 hrs :5;
+  u8 res :2;
+  u8 amPm :1;
     } bin;
 } AXP_DS12887A_HoursAlarm;
 #define AXP_ADDR_HoursAlarm	5
@@ -539,13 +539,13 @@ typedef union
     u8 value;
     struct			/* Range: 1-7 */
     {
-	u8 day :3;
-	u8 res :5;
+  u8 day :3;
+  u8 res :5;
     } BCD;
     struct			/* Range: 0x1-0x7 */
     {
-	u8 day :3;
-	u8 res :5;
+  u8 day :3;
+  u8 res :5;
     } bin;
 } AXP_DS12887A_Day;
 #define AXP_ADDR_Day		6
@@ -566,14 +566,14 @@ typedef union
     u8 value;
     struct			/* Range: 0|1-3|1 */
     {
-	u8 date :4;
-	u8 tenDate :2;
-	u8 res :4;
+  u8 date :4;
+  u8 tenDate :2;
+  u8 res :4;
     } BCD;
     struct			/* Range: 0x01-0x1f */
     {
-	u8 date :5;
-	u8 res :3;
+  u8 date :5;
+  u8 res :3;
     } bin;
 } AXP_DS12887A_Date;
 #define AXP_ADDR_Date		7
@@ -591,14 +591,14 @@ typedef union
     u8 value;
     struct			/* Range: 0|1-1|2 */
     {
-	u8 month :4;
-	u8 tenMonth :1;
-	u8 res :3;
+  u8 month :4;
+  u8 tenMonth :1;
+  u8 res :3;
     } BCD;
     struct			/* Range: 0x01-0x0c */
     {
-	u8 month :4;
-	u8 res :4;
+  u8 month :4;
+  u8 res :4;
     } bin;
 } AXP_DS12887A_Month;
 #define AXP_ADDR_Month		8
@@ -616,13 +616,13 @@ typedef union
     u8 value;
     struct			/* Range: 0|0-9|9 */
     {
-	u8 year :4;
-	u8 tenYear :4;
+  u8 year :4;
+  u8 tenYear :4;
     } BCD;
     struct			/* Range: 0x00-0x63 */
     {
-	u8 year :7;
-	u8 res :1;
+  u8 year :7;
+  u8 res :1;
     } bin;
 } AXP_DS12887A_Year;
 #define AXP_ADDR_Year		9
@@ -643,13 +643,13 @@ typedef union
     u8 value;
     struct			/* Range: 0|0-9|9 */
     {
-	u8 century :4;
-	u8 tenCentury :4;
+  u8 century :4;
+  u8 tenCentury :4;
     } BCD;
     struct			/* Range: 0x00-0x63 */
     {
-	u8 century :7;
-	u8 res :1;
+  u8 century :7;
+  u8 res :1;
     } bin;
 } AXP_DS12887A_Century;
 #define AXP_ADDR_Century	50

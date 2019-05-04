@@ -77,81 +77,81 @@ static u64 AXP_21274_ReadPCSR(AXP_21274_PCHIP *p, AXP_CAPbusMsg *msg)
      */
     switch (msg->csr)
     {
-	case 0x00: /* WSBA0 */
-	    retVal = *((u64 *) &p->wsba0) & AXP_21274_WSBAn_RMASK;
-	    break;
+  case 0x00: /* WSBA0 */
+      retVal = *((u64 *) &p->wsba0) & AXP_21274_WSBAn_RMASK;
+      break;
 
-	case 0x01: /* WSBA1 */
-	    retVal = *((u64 *) &p->wsba1) & AXP_21274_WSBAn_RMASK;
-	    break;
+  case 0x01: /* WSBA1 */
+      retVal = *((u64 *) &p->wsba1) & AXP_21274_WSBAn_RMASK;
+      break;
 
-	case 0x02: /* WSBA2 */
-	    retVal = *((u64 *) &p->wsba2) & AXP_21274_WSBAn_RMASK;
-	    break;
+  case 0x02: /* WSBA2 */
+      retVal = *((u64 *) &p->wsba2) & AXP_21274_WSBAn_RMASK;
+      break;
 
-	case 0x03: /* WSBA3 */
-	    retVal = *((u64 *) &p->wsba3) & AXP_21274_WSBA3_RMASK;
-	    break;
+  case 0x03: /* WSBA3 */
+      retVal = *((u64 *) &p->wsba3) & AXP_21274_WSBA3_RMASK;
+      break;
 
-	case 0x04: /* WSM0 */
-	    retVal = *((u64 *) &p->wsm0) & AXP_21274_WSMn_RMASK;
-	    break;
+  case 0x04: /* WSM0 */
+      retVal = *((u64 *) &p->wsm0) & AXP_21274_WSMn_RMASK;
+      break;
 
-	case 0x05: /* WSM1 */
-	    retVal = *((u64 *) &p->wsm1) & AXP_21274_WSMn_RMASK;
-	    break;
+  case 0x05: /* WSM1 */
+      retVal = *((u64 *) &p->wsm1) & AXP_21274_WSMn_RMASK;
+      break;
 
-	case 0x06: /* WSM2 */
-	    retVal = *((u64 *) &p->wsm2) & AXP_21274_WSMn_RMASK;
-	    break;
+  case 0x06: /* WSM2 */
+      retVal = *((u64 *) &p->wsm2) & AXP_21274_WSMn_RMASK;
+      break;
 
-	case 0x07: /* WSM3 */
-	    retVal = *((u64 *) &p->wsm3) & AXP_21274_WSMn_RMASK;
-	    break;
+  case 0x07: /* WSM3 */
+      retVal = *((u64 *) &p->wsm3) & AXP_21274_WSMn_RMASK;
+      break;
 
-	case 0x08: /* TBA0 */
-	    retVal = *((u64 *) &p->tba0) & AXP_21274_TBAn_RMASK;
-	    break;
+  case 0x08: /* TBA0 */
+      retVal = *((u64 *) &p->tba0) & AXP_21274_TBAn_RMASK;
+      break;
 
-	case 0x09: /* TBA1 */
-	    retVal = *((u64 *) &p->tba1) & AXP_21274_TBAn_RMASK;
-	    break;
+  case 0x09: /* TBA1 */
+      retVal = *((u64 *) &p->tba1) & AXP_21274_TBAn_RMASK;
+      break;
 
-	case 0x0a: /* TBA2 */
-	    retVal = *((u64 *) &p->tba2) & AXP_21274_TBAn_RMASK;
-	    break;
+  case 0x0a: /* TBA2 */
+      retVal = *((u64 *) &p->tba2) & AXP_21274_TBAn_RMASK;
+      break;
 
-	case 0x0b: /* TBA3 */
-	    retVal = *((u64 *) &p->tba3) & AXP_21274_TBAn_RMASK;
-	    break;
+  case 0x0b: /* TBA3 */
+      retVal = *((u64 *) &p->tba3) & AXP_21274_TBAn_RMASK;
+      break;
 
-	case 0x0c: /* PCTL */
-	    retVal = *((u64 *) &p->pctl) & AXP_21274_PCTL_RMASK;
-	    break;
+  case 0x0c: /* PCTL */
+      retVal = *((u64 *) &p->pctl) & AXP_21274_PCTL_RMASK;
+      break;
 
-	case 0x0d: /* PLAT */
-	    retVal = *((u64 *) &p->plat) & AXP_21274_PLAT_RMASK;
-	    break;
+  case 0x0d: /* PLAT */
+      retVal = *((u64 *) &p->plat) & AXP_21274_PLAT_RMASK;
+      break;
 
-	case 0x0f: /* PERROR */
-	    retVal = *((u64 *) &p->perror) & AXP_21274_PERROR_RMASK;
-	    break;
+  case 0x0f: /* PERROR */
+      retVal = *((u64 *) &p->perror) & AXP_21274_PERROR_RMASK;
+      break;
 
-	case 0x10: /* PERRMASK */
-	    retVal = *((u64 *) &p->perrMask) & AXP_21274_PERRMASK_RMASK;
-	    break;
+  case 0x10: /* PERRMASK */
+      retVal = *((u64 *) &p->perrMask) & AXP_21274_PERRMASK_RMASK;
+      break;
 
-	case 0x14: /* PMONCTL */
-	    retVal = *((u64 *) &p->pMonCtl) & AXP_21274_PMONC_RMASK;
-	    break;
+  case 0x14: /* PMONCTL */
+      retVal = *((u64 *) &p->pMonCtl) & AXP_21274_PMONC_RMASK;
+      break;
 
-	case 0x15: /* PMONCNT */
-	    retVal = *((u64 *) &p->pMonCnt);
-	    break;
+  case 0x15: /* PMONCNT */
+      retVal = *((u64 *) &p->pMonCnt);
+      break;
 
-	default:
-	    /* TODO: non-existent memory */
-	    break;
+  default:
+      /* TODO: non-existent memory */
+      break;
     }
 
     /*
@@ -214,111 +214,111 @@ static void AXP_21274_WritePCSR(AXP_21274_PCHIP *p, AXP_CAPbusMsg *msg)
      */
     switch (msg->csr)
     {
-	case 0x00: /* WSBA0 */
-	    csrValue.value = msg->data[0] & AXP_21274_WSBAn_WMASK;
-	    p->wsba0 = csrValue.Wsban;
-	    break;
+  case 0x00: /* WSBA0 */
+      csrValue.value = msg->data[0] & AXP_21274_WSBAn_WMASK;
+      p->wsba0 = csrValue.Wsban;
+      break;
 
-	case 0x01: /* WSBA1 */
-	    csrValue.value = msg->data[0] & AXP_21274_WSBAn_WMASK;
-	    p->wsba1 = csrValue.Wsban;
-	    break;
+  case 0x01: /* WSBA1 */
+      csrValue.value = msg->data[0] & AXP_21274_WSBAn_WMASK;
+      p->wsba1 = csrValue.Wsban;
+      break;
 
-	case 0x02: /* WSBA2 */
-	    csrValue.value = msg->data[0] & AXP_21274_WSBAn_WMASK;
-	    p->wsba2 = csrValue.Wsban;
-	    break;
+  case 0x02: /* WSBA2 */
+      csrValue.value = msg->data[0] & AXP_21274_WSBAn_WMASK;
+      p->wsba2 = csrValue.Wsban;
+      break;
 
-	case 0x03: /* WSBA3 */
-	    csrValue.value = msg->data[0] & AXP_21274_WSBA3_WMASK;
-	    p->wsba3 = csrValue.Wsba3;
-	    break;
+  case 0x03: /* WSBA3 */
+      csrValue.value = msg->data[0] & AXP_21274_WSBA3_WMASK;
+      p->wsba3 = csrValue.Wsba3;
+      break;
 
-	case 0x04: /* WSM0 */
-	    csrValue.value = msg->data[0] & AXP_21274_WSMn_WMASK;
-	    p->wsm0 = csrValue.Wsmn;
-	    break;
+  case 0x04: /* WSM0 */
+      csrValue.value = msg->data[0] & AXP_21274_WSMn_WMASK;
+      p->wsm0 = csrValue.Wsmn;
+      break;
 
-	case 0x05: /* WSM1 */
-	    csrValue.value = msg->data[0] & AXP_21274_WSMn_WMASK;
-	    p->wsm1 = csrValue.Wsmn;
-	    break;
+  case 0x05: /* WSM1 */
+      csrValue.value = msg->data[0] & AXP_21274_WSMn_WMASK;
+      p->wsm1 = csrValue.Wsmn;
+      break;
 
-	case 0x06: /* WSM2 */
-	    csrValue.value = msg->data[0] & AXP_21274_WSMn_WMASK;
-	    p->wsm2 = csrValue.Wsmn;
-	    break;
+  case 0x06: /* WSM2 */
+      csrValue.value = msg->data[0] & AXP_21274_WSMn_WMASK;
+      p->wsm2 = csrValue.Wsmn;
+      break;
 
-	case 0x07: /* WSM3 */
-	    csrValue.value = msg->data[0] & AXP_21274_WSMn_WMASK;
-	    p->wsm3 = csrValue.Wsmn;
-	    break;
+  case 0x07: /* WSM3 */
+      csrValue.value = msg->data[0] & AXP_21274_WSMn_WMASK;
+      p->wsm3 = csrValue.Wsmn;
+      break;
 
-	case 0x08: /* TBA0 */
-	    csrValue.value = msg->data[0] & AXP_21274_TBAn_WMASK;
-	    p->tba0 = csrValue.Tban;
-	    break;
+  case 0x08: /* TBA0 */
+      csrValue.value = msg->data[0] & AXP_21274_TBAn_WMASK;
+      p->tba0 = csrValue.Tban;
+      break;
 
-	case 0x09: /* TBA1 */
-	    csrValue.value = msg->data[0] & AXP_21274_TBAn_WMASK;
-	    p->tba1 = csrValue.Tban;
-	    break;
+  case 0x09: /* TBA1 */
+      csrValue.value = msg->data[0] & AXP_21274_TBAn_WMASK;
+      p->tba1 = csrValue.Tban;
+      break;
 
-	case 0x0a: /* TBA2 */
-	    csrValue.value = msg->data[0] & AXP_21274_TBAn_WMASK;
-	    p->tba2 = csrValue.Tban;
-	    break;
+  case 0x0a: /* TBA2 */
+      csrValue.value = msg->data[0] & AXP_21274_TBAn_WMASK;
+      p->tba2 = csrValue.Tban;
+      break;
 
-	case 0x0b: /* TBA3 */
-	    csrValue.value = msg->data[0] & AXP_21274_TBAn_WMASK;
-	    p->tba3 = csrValue.Tban;
-	    break;
+  case 0x0b: /* TBA3 */
+      csrValue.value = msg->data[0] & AXP_21274_TBAn_WMASK;
+      p->tba3 = csrValue.Tban;
+      break;
 
-	case 0x0c: /* PCTL */
-	    csrValue.value = msg->data[0] & AXP_21274_PCTL_WMASK;
-	    p->pctl = csrValue.Pctl;
-	    break;
+  case 0x0c: /* PCTL */
+      csrValue.value = msg->data[0] & AXP_21274_PCTL_WMASK;
+      p->pctl = csrValue.Pctl;
+      break;
 
-	case 0x0d: /* PLAT */
-	    csrValue.value = msg->data[0] & AXP_21274_PLAT_WMASK;
-	    p->plat = csrValue.Plat;
-	    break;
+  case 0x0d: /* PLAT */
+      csrValue.value = msg->data[0] & AXP_21274_PLAT_WMASK;
+      p->plat = csrValue.Plat;
+      break;
 
-	case 0x0f: /* PERROR */
-	    /* TODO: HRM says RW, but I think it should be RO sys->p0Perror */
-	    break;
+  case 0x0f: /* PERROR */
+      /* TODO: HRM says RW, but I think it should be RO sys->p0Perror */
+      break;
 
-	case 0x10: /* PERRMASK */
-	    csrValue.value = msg->data[0] & AXP_21274_PERRMASK_WMASK;
-	    p->perrMask = csrValue.PerrMask;
-	    break;
+  case 0x10: /* PERRMASK */
+      csrValue.value = msg->data[0] & AXP_21274_PERRMASK_WMASK;
+      p->perrMask = csrValue.PerrMask;
+      break;
 
-	case 0x11: /* PERRSET */
-	    csrValue.value = msg->data[0] & AXP_21274_PERRSET_WMASK;
-	    p->perrSet = csrValue.PerrSet;
-	    break;
+  case 0x11: /* PERRSET */
+      csrValue.value = msg->data[0] & AXP_21274_PERRSET_WMASK;
+      p->perrSet = csrValue.PerrSet;
+      break;
 
-	case 0x12: /* TLBIV */
-	    csrValue.value = msg->data[0] & AXP_21274_TLBIV_WMASK;
-	    p->tlbiv = csrValue.Tlbiv;
-	    break;
+  case 0x12: /* TLBIV */
+      csrValue.value = msg->data[0] & AXP_21274_TLBIV_WMASK;
+      p->tlbiv = csrValue.Tlbiv;
+      break;
 
-	case 0x13: /* TLBIA */
-	    /* TODO: Invalidate SG TLB sys->p0Tlbia; */
-	    break;
+  case 0x13: /* TLBIA */
+      /* TODO: Invalidate SG TLB sys->p0Tlbia; */
+      break;
 
-	case 0x14: /* PMONCTL */
-	    csrValue.value = msg->data[0] & AXP_21274_PMONC_WMASK;
-	    p->pMonCtl = csrValue.MonCtl;
-	    break;
+  case 0x14: /* PMONCTL */
+      csrValue.value = msg->data[0] & AXP_21274_PMONC_WMASK;
+      p->pMonCtl = csrValue.MonCtl;
+      break;
 
-	case 0x20: /* SPRST */
-	    /* TODO: Soft PCI Reset sys->p0SprSt; */
-	    break;
+  case 0x20: /* SPRST */
+      /* TODO: Soft PCI Reset sys->p0SprSt; */
+      break;
 
-	default:
-	    /* TODO: non-existent memory */
-	    break;
+  default:
+      /* TODO: non-existent memory */
+      break;
     }
 
     /*
@@ -361,7 +361,7 @@ void AXP_21274_PchipInit(AXP_21274_PCHIP *p, u32 id)
     AXP_INIT_QUE(p->fpr);
     for (ii = 0; ii < AXP_21274_CAPBUS_MQ_SIZE; ii++)
     {
-	AXP_INIT_QUE(p->rq[ii].header);
+  AXP_INIT_QUE(p->rq[ii].header);
     }
 
     /*
@@ -576,10 +576,10 @@ void *AXP_21274_PchipMain(void *voidPtr)
      */
     if (AXP_SYS_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Pchip p%d is starting", p->pChipID);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Pchip p%d is starting", p->pChipID);
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -594,72 +594,72 @@ void *AXP_21274_PchipMain(void *voidPtr)
     while (true)
     {
 
-	/*
-	 * The Pchip performs the following functions:
-	 *
-	 * This first thing we need to do is wait for something to arrive to be
-	 * processed.
-	 */
-	while AXP_QUE_EMPTY(p->tpr)
-	    pthread_cond_wait(&p->cond, &p->mutex);
+  /*
+   * The Pchip performs the following functions:
+   *
+   * This first thing we need to do is wait for something to arrive to be
+   * processed.
+   */
+  while AXP_QUE_EMPTY(p->tpr)
+      pthread_cond_wait(&p->cond, &p->mutex);
 
-	/*
-	 * We have something to process.
-	 */
-	msg = (AXP_CAPbusMsg *) p->tpr.flink;
-	AXP_REMQUE(&msg->header);
+  /*
+   * We have something to process.
+   */
+  msg = (AXP_CAPbusMsg *) p->tpr.flink;
+  AXP_REMQUE(&msg->header);
 
-	/*
-	 * At this point, we can unlock the Pchip mutex so that other threads
-	 * can send requests to the Pchip.  We'll lock it before we mark the
-	 * request to be processed as no longer in use.
-	 */
-	pthread_mutex_unlock(&p->mutex);
+  /*
+   * At this point, we can unlock the Pchip mutex so that other threads
+   * can send requests to the Pchip.  We'll lock it before we mark the
+   * request to be processed as no longer in use.
+   */
+  pthread_mutex_unlock(&p->mutex);
 
-	/*
-	 * Determine what has been requested and make the call needed to
-	 * complete request.
-	 */
-	switch (msg->cmd)
-	{
-	    case PIO_IACK:
-	    case PIO_SpecialCycle:
-	    case PIO_Read:
-	    case PIO_Write:
-	    case PIO_MemoryWritePTP:
-	    case PIO_MemoryRead:
-	    case PIO_MemoryWriteCPU:
-		break;
+  /*
+   * Determine what has been requested and make the call needed to
+   * complete request.
+   */
+  switch (msg->cmd)
+  {
+      case PIO_IACK:
+      case PIO_SpecialCycle:
+      case PIO_Read:
+      case PIO_Write:
+      case PIO_MemoryWritePTP:
+      case PIO_MemoryRead:
+      case PIO_MemoryWriteCPU:
+    break;
 
-	    case CSR_Read:
-		AXP_21274_ReadPCSR(p, msg);
-		break;
+      case CSR_Read:
+    AXP_21274_ReadPCSR(p, msg);
+    break;
 
-	    case CSR_Write:
-		AXP_21274_WritePCSR(p, msg);
-		break;
+      case CSR_Write:
+    AXP_21274_WritePCSR(p, msg);
+    break;
 
-	    case PCI_ConfigRead:
-	    case PCI_ConfigWrite:
-	    case LoadPADbusDataDown:
-	    case LoadPADbusDataUp:
-	    case CAPbus_NoOp:
-	    case DMAReadNQW:
-	    case SGTEReadNQW:
-	    case PTPMemoryRead:
-	    case PTPMemoryWrite:
-	    case DMARdModyWrQW:
-	    case DMAWriteNQW:
-	    case PTPWrByteMaskByp:
-		break;
-	}
+      case PCI_ConfigRead:
+      case PCI_ConfigWrite:
+      case LoadPADbusDataDown:
+      case LoadPADbusDataUp:
+      case CAPbus_NoOp:
+      case DMAReadNQW:
+      case SGTEReadNQW:
+      case PTPMemoryRead:
+      case PTPMemoryWrite:
+      case DMARdModyWrQW:
+      case DMAWriteNQW:
+      case PTPWrByteMaskByp:
+    break;
+  }
 
-	/*
-	 * We are shutting down.  Since we started everything, we need to clean
-	 * ourself up.  The main function will be joining to all the threads it
-	 * created and then freeing up the memory and exiting the image.
-	 */
-	pthread_exit(NULL);
-	return (NULL);
+  /*
+   * We are shutting down.  Since we started everything, we need to clean
+   * ourself up.  The main function will be joining to all the threads it
+   * created and then freeing up the memory and exiting the image.
+   */
+  pthread_exit(NULL);
+  return (NULL);
     }
 }

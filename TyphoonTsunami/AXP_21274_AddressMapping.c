@@ -82,7 +82,7 @@ static LINEAR_TABLE linearTable[] =
  * The following definition is used to decode a device number to an IDSEL.
  */
 #define AXP_21274_DEV_TO_IDSEL(devNo)	\
-	(((0x00000001) << ((devNo) & 0x1f)) & 0x001fffff)
+  (((0x00000001) << ((devNo) & 0x1f)) & 0x001fffff)
 
 /*
  * AXP_21274_cvtLinearAddr
@@ -127,30 +127,30 @@ void AXP_21274_cvtLinearAddr(u64 addr, AXP_System_Commands cmd, u8 mask,
     switch (cmd)
     {
 
-	/*
-	 * We have either Bytes or Words.  Need to determine from the mask
-	 * parameter.
-	 */
-	case ReadBytes:
-	case WrBytes:
-	    if ((mask == 0x03) || (mask == 0x0c) || (mask == 0x30)
-		    || (mask == 0xc0))
-		type = Word;
-	    else
-		type = Byte;
-	    break;
+  /*
+   * We have either Bytes or Words.  Need to determine from the mask
+   * parameter.
+   */
+  case ReadBytes:
+  case WrBytes:
+      if ((mask == 0x03) || (mask == 0x0c) || (mask == 0x30)
+        || (mask == 0xc0))
+    type = Word;
+      else
+    type = Byte;
+      break;
 
-	case ReadLWs:
-	case WrLWs:
-	    type = Long;
-	    break;
+  case ReadLWs:
+  case WrLWs:
+      type = Long;
+      break;
 
-	    /*
-	     * Assume ReadQWs or WrQWs.
-	     */
-	default:
-	    type = Quad;
-	    break;
+      /*
+       * Assume ReadQWs or WrQWs.
+       */
+  default:
+      type = Quad;
+      break;
     }
 
     /*
@@ -158,78 +158,78 @@ void AXP_21274_cvtLinearAddr(u64 addr, AXP_System_Commands cmd, u8 mask,
      */
     if (AXP_21274_LINEAR_MEMORY(addr))
     {
-	pciMem = (AXP_21274_PCI_MEMADDR *) pciAddr;
-	mem.addr = addr;
-	pciMem->pciAddr = mem.linear;
-	for (ii = 0; ((linearTable[ii].type != Nada) && (done == false)); ii++)
-	{
-	    if ((linearTable[ii].type == type)
-		    && (linearTable[ii].mask == mask))
-	    {
-		pciMem->idx = linearTable[ii].addr_2_0;
-		*pciByteEnable =
-		        (bits32 ?
-		                linearTable[ii].cbe_32 : linearTable[ii].cbe_64);
-		done = true;
-	    }
-	}
+  pciMem = (AXP_21274_PCI_MEMADDR *) pciAddr;
+  mem.addr = addr;
+  pciMem->pciAddr = mem.linear;
+  for (ii = 0; ((linearTable[ii].type != Nada) && (done == false)); ii++)
+  {
+      if ((linearTable[ii].type == type)
+        && (linearTable[ii].mask == mask))
+      {
+    pciMem->idx = linearTable[ii].addr_2_0;
+    *pciByteEnable =
+            (bits32 ?
+                    linearTable[ii].cbe_32 : linearTable[ii].cbe_64);
+    done = true;
+      }
+  }
     }
     else if (AXP_21274_LINEAR_IO(addr))
     {
-	pciIO = (AXP_21274_PCI_IOADDR *) pciAddr;
-	io.addr = addr;
-	pciIO->mbz = 0;
-	pciIO->pciAddr = io.linear;
-	for (ii = 0; ((linearTable[ii].type != Nada) && (done == false)); ii++)
-	{
-	    if ((linearTable[ii].type == type)
-		    && (linearTable[ii].mask == mask))
-	    {
-		pciIO->idx = linearTable[ii].addr_2_0;
-		*pciByteEnable =
-		        (bits32 ?
-		                linearTable[ii].cbe_32 : linearTable[ii].cbe_64);
-		done = true;
-	    }
-	}
+  pciIO = (AXP_21274_PCI_IOADDR *) pciAddr;
+  io.addr = addr;
+  pciIO->mbz = 0;
+  pciIO->pciAddr = io.linear;
+  for (ii = 0; ((linearTable[ii].type != Nada) && (done == false)); ii++)
+  {
+      if ((linearTable[ii].type == type)
+        && (linearTable[ii].mask == mask))
+      {
+    pciIO->idx = linearTable[ii].addr_2_0;
+    *pciByteEnable =
+            (bits32 ?
+                    linearTable[ii].cbe_32 : linearTable[ii].cbe_64);
+    done = true;
+      }
+  }
     }
     else if (AXP_21274_LINEAR_CFG(addr))
     {
-	pciCfg = (AXP_21274_PCI_CFGADDR *) pciAddr;
-	cfg.addr = addr;
-	if (cfg.bus == 0)
-	{
-	    pciCfg->type0.idsel = AXP_21274_DEV_TO_IDSEL(cfg.dev);
-	    pciCfg->type0.func = cfg.func;
-	    pciCfg->type0.reg = cfg.reg;
-	    pciCfg->type0.type = 0;
-	}
-	else
-	{
-	    pciCfg->type1.bus = cfg.bus;
-	    pciCfg->type1.dev = cfg.dev;
-	    pciCfg->type1.func = cfg.func;
-	    pciCfg->type1.reg = cfg.reg;
-	    pciCfg->type1.type = 1;
-	}
-	for (ii = 0; ((linearTable[ii].type != Nada) && (done == false)); ii++)
-	{
-	    if ((linearTable[ii].type == type)
-		    && (linearTable[ii].mask == mask))
-	    {
-		if (cfg.bus == 0)
-		    pciCfg->type0.regLsb = linearTable[ii].regLSB;
-		else
-		    pciCfg->type1.regLsb = linearTable[ii].regLSB;
-		*pciByteEnable =
-		        (bits32 ?
-		                linearTable[ii].cbe_32 : linearTable[ii].cbe_64);
-		done = true;
-	    }
-	}
+  pciCfg = (AXP_21274_PCI_CFGADDR *) pciAddr;
+  cfg.addr = addr;
+  if (cfg.bus == 0)
+  {
+      pciCfg->type0.idsel = AXP_21274_DEV_TO_IDSEL(cfg.dev);
+      pciCfg->type0.func = cfg.func;
+      pciCfg->type0.reg = cfg.reg;
+      pciCfg->type0.type = 0;
+  }
+  else
+  {
+      pciCfg->type1.bus = cfg.bus;
+      pciCfg->type1.dev = cfg.dev;
+      pciCfg->type1.func = cfg.func;
+      pciCfg->type1.reg = cfg.reg;
+      pciCfg->type1.type = 1;
+  }
+  for (ii = 0; ((linearTable[ii].type != Nada) && (done == false)); ii++)
+  {
+      if ((linearTable[ii].type == type)
+        && (linearTable[ii].mask == mask))
+      {
+    if (cfg.bus == 0)
+        pciCfg->type0.regLsb = linearTable[ii].regLSB;
+    else
+        pciCfg->type1.regLsb = linearTable[ii].regLSB;
+    *pciByteEnable =
+            (bits32 ?
+                    linearTable[ii].cbe_32 : linearTable[ii].cbe_64);
+    done = true;
+      }
+  }
     }
     else
-	; /* TODO: non-existent memory? */
+  ; /* TODO: non-existent memory? */
 
     /*
      * Return the results of the conversion back to the caller.

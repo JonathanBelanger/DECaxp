@@ -64,7 +64,7 @@ static void _AXP_VHD_CreateCleanup(AXP_VHDX_Handle *vhdx, char *path)
      * Clean-up after ourselves
      */
     if (vhdx->fp != NULL)
-	fclose(vhdx->fp);	/* Close the file we opened */
+  fclose(vhdx->fp);	/* Close the file we opened */
     vhdx->fp = NULL;		/* Prevent Deallocate Blocks closing again */
     remove(path);		/* Delete the file */
 
@@ -114,15 +114,15 @@ static void _AXP_VHD_CreateCleanup(AXP_VHDX_Handle *vhdx, char *path)
  *  AXP_VHD_OUTOFMEMORY:	Insufficient memory to perform operation.
  */
 u32 _AXP_VHDX_Create(
-		char *path,
-		AXP_VHD_CREATE_FLAG flags,
-		char *parentPath,
-		u32 parentDevID,
-		u64 diskSize,
-		u32 blkSize,
-		u32 sectorSize,
-		u32 deviceID,
-		AXP_VHD_HANDLE *handle)
+    char *path,
+    AXP_VHD_CREATE_FLAG flags,
+    char *parentPath,
+    u32 parentDevID,
+    u64 diskSize,
+    u32 blkSize,
+    u32 sectorSize,
+    u32 deviceID,
+    AXP_VHD_HANDLE *handle)
 {
     AXP_VHDX_Handle	*vhdx = NULL;
     char		*creator = "Digital Alpha AXP Emulator 1.0";
@@ -160,27 +160,27 @@ u32 _AXP_VHDX_Create(
      * image.
      */
     if (outBuf != NULL)
-	vhdx = (AXP_VHDX_Handle *) AXP_Allocate_Block(AXP_VHDX_BLK);
+  vhdx = (AXP_VHDX_Handle *) AXP_Allocate_Block(AXP_VHDX_BLK);
     if (vhdx != NULL)
     {
-	vhdx->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
-	if (vhdx->filePath != NULL)
-	{
-	    strcpy(vhdx->filePath, path);
-	    vhdx->deviceID = deviceID;
-	    vhdx->logOffset = AXP_VHDX_LOG_LOC;
-	    vhdx->batOffset = AXP_VHDX_BAT_LOC;
-	    vhdx->metadataOffset = AXP_VHDX_META_LOC;
-	    vhdx->diskSize = diskSize;
-	    vhdx->blkSize = blkSize;
-	    vhdx->sectorSize = sectorSize;
-	    vhdx->fixed = (flags == CREATE_FULL_PHYSICAL_ALLOCATION);
-	}
-	else
-	{
-	    AXP_Deallocate_Block(vhdx);
-	    vhdx = NULL;
-	}
+  vhdx->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+  if (vhdx->filePath != NULL)
+  {
+      strcpy(vhdx->filePath, path);
+      vhdx->deviceID = deviceID;
+      vhdx->logOffset = AXP_VHDX_LOG_LOC;
+      vhdx->batOffset = AXP_VHDX_BAT_LOC;
+      vhdx->metadataOffset = AXP_VHDX_META_LOC;
+      vhdx->diskSize = diskSize;
+      vhdx->blkSize = blkSize;
+      vhdx->sectorSize = sectorSize;
+      vhdx->fixed = (flags == CREATE_FULL_PHYSICAL_ALLOCATION);
+  }
+  else
+  {
+      AXP_Deallocate_Block(vhdx);
+      vhdx = NULL;
+  }
     }
 
     /*
@@ -190,34 +190,34 @@ u32 _AXP_VHDX_Create(
     if (vhdx != NULL)
     {
 
-	/*
-	 * The next call is to see if the file already exists.  If it does
-	 * we'll return an error.  Otherwise, we'll try to create the file
-	 * we need to create.
-	 */
-	vhdx->fp = fopen(path, "rb");
-	if (vhdx->fp == NULL)
-	{
+  /*
+   * The next call is to see if the file already exists.  If it does
+   * we'll return an error.  Otherwise, we'll try to create the file
+   * we need to create.
+   */
+  vhdx->fp = fopen(path, "rb");
+  if (vhdx->fp == NULL)
+  {
 
-	    /*
-	     * Open the file for write only.  We'll re-open it for read-write
-	     * before returning to the caller.
-	     */
-	    vhdx->fp = fopen(path, "wb");
-	    if (vhdx->fp == NULL)
-	    {
-		AXP_Deallocate_Block(vhdx);
-		retVal = AXP_VHD_INV_HANDLE;
-	    }
-	}
-	else
-	{
-	    AXP_Deallocate_Block(vhdx);
-	    retVal = AXP_VHD_FILE_EXISTS;
-	}
+      /*
+       * Open the file for write only.  We'll re-open it for read-write
+       * before returning to the caller.
+       */
+      vhdx->fp = fopen(path, "wb");
+      if (vhdx->fp == NULL)
+      {
+    AXP_Deallocate_Block(vhdx);
+    retVal = AXP_VHD_INV_HANDLE;
+      }
+  }
+  else
+  {
+      AXP_Deallocate_Block(vhdx);
+      retVal = AXP_VHD_FILE_EXISTS;
+  }
     }
     else if (retVal == AXP_VHD_SUCCESS)
-	retVal = AXP_VHD_OUTOFMEMORY;
+  retVal = AXP_VHD_OUTOFMEMORY;
 
     /*
      * OK, if we get this far, the parameters are good, the handle has been
@@ -247,54 +247,54 @@ u32 _AXP_VHDX_Create(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	i32 convRet;
+  i32 convRet;
 
-	ID = (AXP_VHDX_ID *) outBuf;
-	ID->sig= AXP_VHDXFILE_SIG;
-	outLen = AXP_VHDX_CREATOR_LEN * sizeof(uint16_t);
-	convRet = AXP_Ascii2UTF_16(creator, creatorSize, ID->creator, &outLen);
-	switch (convRet)
-	{
-	    case E2BIG:
-	    case EMFILE:
-	    case ENFILE:
-	    case ENOMEM:
-		retVal = AXP_VHD_OUTOFMEMORY;
-		break;
+  ID = (AXP_VHDX_ID *) outBuf;
+  ID->sig= AXP_VHDXFILE_SIG;
+  outLen = AXP_VHDX_CREATOR_LEN * sizeof(uint16_t);
+  convRet = AXP_Ascii2UTF_16(creator, creatorSize, ID->creator, &outLen);
+  switch (convRet)
+  {
+      case E2BIG:
+      case EMFILE:
+      case ENFILE:
+      case ENOMEM:
+    retVal = AXP_VHD_OUTOFMEMORY;
+    break;
 
-	    case EINVAL:
-	    case EILSEQ:
-	    case EBADF:
-		retVal = AXP_VHD_INV_PARAM;
-		break;
+      case EINVAL:
+      case EILSEQ:
+      case EBADF:
+    retVal = AXP_VHD_INV_PARAM;
+    break;
 
-	    default:
-		break;
-	}
-	if (retVal != AXP_VHD_SUCCESS)
-	{
-	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(vhdx);
-	}
-	else
-	{
+      default:
+    break;
+  }
+  if (retVal != AXP_VHD_SUCCESS)
+  {
+      _AXP_VHD_CreateCleanup(vhdx, path);
+      AXP_Deallocate_Block(vhdx);
+  }
+  else
+  {
 
-	    /*
-	     * OK, let's write the File Identifier block out at the correct
-	     * offset.
-	     */
-	    writeRet = AXP_WriteAtOffset(
-				vhdx->fp,
-				outBuf,
-				SIXTYFOUR_K,
-				AXP_VHDX_FILE_ID_OFF);
-	    if (writeRet == false)
-	    {
-		_AXP_VHD_CreateCleanup(vhdx, path);
-		AXP_Deallocate_Block(vhdx);
-		retVal = AXP_VHD_WRITE_FAULT;
-	    }
-	}
+      /*
+       * OK, let's write the File Identifier block out at the correct
+       * offset.
+       */
+      writeRet = AXP_WriteAtOffset(
+        vhdx->fp,
+        outBuf,
+        SIXTYFOUR_K,
+        AXP_VHDX_FILE_ID_OFF);
+      if (writeRet == false)
+      {
+    _AXP_VHD_CreateCleanup(vhdx, path);
+    AXP_Deallocate_Block(vhdx);
+    retVal = AXP_VHD_WRITE_FAULT;
+      }
+  }
     }
 
     /*
@@ -312,42 +312,42 @@ u32 _AXP_VHDX_Create(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	memset(outBuf, 0, SIXTYFOUR_K);
-	hdr = (AXP_VHDX_HDR *) outBuf;
-	hdr->sig = AXP_HEAD_SIG;
-	AXP_VHD_SetGUIDDisk(&hdr->fileWriteGuid);
-	AXP_VHD_SetGUIDDisk(&hdr->dataWriteGuid);
-	hdr->logVer = AXP_VHDX_LOG_VER;
-	hdr->ver = AXP_VHDX_CURRENT_VER;
-	hdr->logLen = AXP_VHDX_LOG_LEN;
-	hdr->logOff = AXP_VHDX_LOG_LOC;
-	hdr->checkSum = AXP_Crc32(
-				outBuf,
-				AXP_VHDX_HDR_LEN,
-				false,
-				hdr->checkSum);
+  memset(outBuf, 0, SIXTYFOUR_K);
+  hdr = (AXP_VHDX_HDR *) outBuf;
+  hdr->sig = AXP_HEAD_SIG;
+  AXP_VHD_SetGUIDDisk(&hdr->fileWriteGuid);
+  AXP_VHD_SetGUIDDisk(&hdr->dataWriteGuid);
+  hdr->logVer = AXP_VHDX_LOG_VER;
+  hdr->ver = AXP_VHDX_CURRENT_VER;
+  hdr->logLen = AXP_VHDX_LOG_LEN;
+  hdr->logOff = AXP_VHDX_LOG_LOC;
+  hdr->checkSum = AXP_Crc32(
+        outBuf,
+        AXP_VHDX_HDR_LEN,
+        false,
+        hdr->checkSum);
 
-	/*
-	 * OK, let's write the Header 1 and Header 2 blocks out at the
-	 * correct offset.
-	 */
-	writeRet = AXP_WriteAtOffset(
-				vhdx->fp,
-				outBuf,
-				SIXTYFOUR_K,
-				AXP_VHDX_HEADER1_OFF);
-	if (writeRet == true)
-	    writeRet = AXP_WriteAtOffset(
-				vhdx->fp,
-				outBuf,
-				SIXTYFOUR_K,
-				AXP_VHDX_HEADER2_OFF);
-	if (writeRet == false)
-	{
-	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(vhdx);
-	    retVal = AXP_VHD_WRITE_FAULT;
-	}
+  /*
+   * OK, let's write the Header 1 and Header 2 blocks out at the
+   * correct offset.
+   */
+  writeRet = AXP_WriteAtOffset(
+        vhdx->fp,
+        outBuf,
+        SIXTYFOUR_K,
+        AXP_VHDX_HEADER1_OFF);
+  if (writeRet == true)
+      writeRet = AXP_WriteAtOffset(
+        vhdx->fp,
+        outBuf,
+        SIXTYFOUR_K,
+        AXP_VHDX_HEADER2_OFF);
+  if (writeRet == false)
+  {
+      _AXP_VHD_CreateCleanup(vhdx, path);
+      AXP_Deallocate_Block(vhdx);
+      retVal = AXP_VHD_WRITE_FAULT;
+  }
     }
 
     /*
@@ -363,60 +363,60 @@ u32 _AXP_VHDX_Create(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	memset(outBuf, 0, SIXTYFOUR_K);
-	reg = (AXP_VHDX_REG_HDR *) outBuf;
-	batOff = AXP_VHDX_REG_HDR_LEN;
-	metaOff = batOff + AXP_VHDX_REG_ENT_LEN;
-	regBat = (AXP_VHDX_REG_ENT *) &outBuf[batOff];
-	regMeta = (AXP_VHDX_REG_ENT *) &outBuf[metaOff];
+  memset(outBuf, 0, SIXTYFOUR_K);
+  reg = (AXP_VHDX_REG_HDR *) outBuf;
+  batOff = AXP_VHDX_REG_HDR_LEN;
+  metaOff = batOff + AXP_VHDX_REG_ENT_LEN;
+  regBat = (AXP_VHDX_REG_ENT *) &outBuf[batOff];
+  regMeta = (AXP_VHDX_REG_ENT *) &outBuf[metaOff];
 
-	/*
-	 * Now we can initialize the region table.
-	 */
-	reg->sig = AXP_REGI_SIG;
-	reg->entryCnt = 2;
+  /*
+   * Now we can initialize the region table.
+   */
+  reg->sig = AXP_REGI_SIG;
+  reg->entryCnt = 2;
 
-	/*
-	 * Next we need at least 2 Region Table Entries (one for BAT and
-	 * one for Metadata).
-	 */
-	AXP_VHD_KnownGUIDDisk(AXP_Block_Allocation_Table, &regBat->guid);
-	regBat->fileOff = AXP_VHDX_BAT_LOC;
-	regBat->len = AXP_VHDX_BAT_LEN;
-	regBat->req = 1;
+  /*
+   * Next we need at least 2 Region Table Entries (one for BAT and
+   * one for Metadata).
+   */
+  AXP_VHD_KnownGUIDDisk(AXP_Block_Allocation_Table, &regBat->guid);
+  regBat->fileOff = AXP_VHDX_BAT_LOC;
+  regBat->len = AXP_VHDX_BAT_LEN;
+  regBat->req = 1;
 
-	AXP_VHD_KnownGUIDDisk(AXP_Metadata_Region, &regMeta->guid);
-	regMeta->fileOff = AXP_VHDX_META_LOC;
-	regMeta->len = AXP_VHDX_META_LEN;
-	regMeta->req = 1;
+  AXP_VHD_KnownGUIDDisk(AXP_Metadata_Region, &regMeta->guid);
+  regMeta->fileOff = AXP_VHDX_META_LOC;
+  regMeta->len = AXP_VHDX_META_LEN;
+  regMeta->req = 1;
 
-	reg->checkSum = AXP_Crc32(
-			outBuf,
-			SIXTYFOUR_K,
-			false,
-			reg->checkSum);
+  reg->checkSum = AXP_Crc32(
+      outBuf,
+      SIXTYFOUR_K,
+      false,
+      reg->checkSum);
 
-	/*
-	 * OK, let's write the Header 1 and Header 2 blocks out at the
-	 * correct offset.
-	 */
-	writeRet = AXP_WriteAtOffset(
-			vhdx->fp,
-			outBuf,
-			SIXTYFOUR_K,
-			AXP_VHDX_REG_TBL_HDR1_OFF);
-	if (writeRet == true)
-	    AXP_WriteAtOffset(
-			vhdx->fp,
-			outBuf,
-			SIXTYFOUR_K,
-			AXP_VHDX_REG_TBL_HDR2_OFF);
-	if (writeRet == false)
-	{
-	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(vhdx);
-	    retVal = AXP_VHD_WRITE_FAULT;
-	}
+  /*
+   * OK, let's write the Header 1 and Header 2 blocks out at the
+   * correct offset.
+   */
+  writeRet = AXP_WriteAtOffset(
+      vhdx->fp,
+      outBuf,
+      SIXTYFOUR_K,
+      AXP_VHDX_REG_TBL_HDR1_OFF);
+  if (writeRet == true)
+      AXP_WriteAtOffset(
+      vhdx->fp,
+      outBuf,
+      SIXTYFOUR_K,
+      AXP_VHDX_REG_TBL_HDR2_OFF);
+  if (writeRet == false)
+  {
+      _AXP_VHD_CreateCleanup(vhdx, path);
+      AXP_Deallocate_Block(vhdx);
+      retVal = AXP_VHD_WRITE_FAULT;
+  }
     }
 
     /*
@@ -464,81 +464,81 @@ u32 _AXP_VHDX_Create(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	u64	blkOffset = (vhdx->fixed ? AXP_VHDX_DATA_LOC : 0);
-	u64	batState = (vhdx->fixed ?
-			AXP_VHDX_PAYL_BLK_FULLY_PRESENT :
-			AXP_VHDX_PAYL_BLK_NOT_PRESENT);;
+  u64	blkOffset = (vhdx->fixed ? AXP_VHDX_DATA_LOC : 0);
+  u64	batState = (vhdx->fixed ?
+      AXP_VHDX_PAYL_BLK_FULLY_PRESENT :
+      AXP_VHDX_PAYL_BLK_NOT_PRESENT);;
 
-	chunkRatio = (8 * ONE_M * (u64) sectorSize) / (u64) blkSize;
-	dataBlksCnt = ceil((double) diskSize / (double) blkSize);
+  chunkRatio = (8 * ONE_M * (u64) sectorSize) / (u64) blkSize;
+  dataBlksCnt = ceil((double) diskSize / (double) blkSize);
 
-	/*
-	 * If we don't have a parent disk, then we are not creating a
-	 * differencing VHDX.  Otherwise, we are.  The calculation for the
-	 * total number of BAT entries is different depending upon this
-	 * distinction.
-	 */
-	if (parentPath == NULL)
-	    totBATEnt = dataBlksCnt +
-		    floor((double) (dataBlksCnt - 1)/(double) chunkRatio);
-	else
-	{
-	    secBitmapBlksCnt = ceil((double) dataBlksCnt / (double) chunkRatio);
-	    totBATEnt = secBitmapBlksCnt * (chunkRatio + 1);
-	}
+  /*
+   * If we don't have a parent disk, then we are not creating a
+   * differencing VHDX.  Otherwise, we are.  The calculation for the
+   * total number of BAT entries is different depending upon this
+   * distinction.
+   */
+  if (parentPath == NULL)
+      totBATEnt = dataBlksCnt +
+        floor((double) (dataBlksCnt - 1)/(double) chunkRatio);
+  else
+  {
+      secBitmapBlksCnt = ceil((double) dataBlksCnt / (double) chunkRatio);
+      totBATEnt = secBitmapBlksCnt * (chunkRatio + 1);
+  }
 
-	/*
-	 * Since we are creating the file, we will repeat the BAT Entry to
-	 * account for all possible ones that will ever be needed for the
-	 * current virtual disk size.
-	 */
-	memset(outBuf, 0, SIXTYFOUR_K);
-	batEnt = (AXP_VHDX_BAT_ENT *) outBuf;
-	batEnt->state = batState;
-	batEnt->fileOff = blkOffset / ONE_M;
+  /*
+   * Since we are creating the file, we will repeat the BAT Entry to
+   * account for all possible ones that will ever be needed for the
+   * current virtual disk size.
+   */
+  memset(outBuf, 0, SIXTYFOUR_K);
+  batEnt = (AXP_VHDX_BAT_ENT *) outBuf;
+  batEnt->state = batState;
+  batEnt->fileOff = blkOffset / ONE_M;
 
-	/*
-	 * Go write out all the BAT entries to the virtual disk.
-	 */
-	batOff = AXP_VHDX_BAT_LOC;
-	for (ii = 0; ((ii < totBATEnt) && (writeRet == true)); ii++)
-	{
+  /*
+   * Go write out all the BAT entries to the virtual disk.
+   */
+  batOff = AXP_VHDX_BAT_LOC;
+  for (ii = 0; ((ii < totBATEnt) && (writeRet == true)); ii++)
+  {
 
-	    /*
-	     * If we are writing a Sector Bitmap Block, then we need to make
-	     * sure the state and offset are correct.
-	     */
-	    if ((ii != 0) && ((ii % chunkRatio) == 0))
-	    {
-		batEnt->state = AXP_VHDX_SB_BLK_NOT_PRESENT;
-		batEnt->fileOff = 0;
-	    }
-	    writeRet = AXP_WriteAtOffset(
-				vhdx->fp,
-				outBuf,
-				AXP_VHDX_BAT_ENT_LEN,
-				batOff);
+      /*
+       * If we are writing a Sector Bitmap Block, then we need to make
+       * sure the state and offset are correct.
+       */
+      if ((ii != 0) && ((ii % chunkRatio) == 0))
+      {
+    batEnt->state = AXP_VHDX_SB_BLK_NOT_PRESENT;
+    batEnt->fileOff = 0;
+      }
+      writeRet = AXP_WriteAtOffset(
+        vhdx->fp,
+        outBuf,
+        AXP_VHDX_BAT_ENT_LEN,
+        batOff);
 
-	    /*
-	     * If we just wrote a Sector Bitmap Block, then we need to set the
-	     * state and offset back to what it should be for a Payload Block.
-	     */
-	    if ((ii != 0) && ((ii % chunkRatio) == 0))
-	    {
-		batEnt->state = batState;
-		batEnt->fileOff = blkOffset / ONE_M;
-	    }
-	    batOff += AXP_VHDX_BAT_ENT_LEN;
+      /*
+       * If we just wrote a Sector Bitmap Block, then we need to set the
+       * state and offset back to what it should be for a Payload Block.
+       */
+      if ((ii != 0) && ((ii % chunkRatio) == 0))
+      {
+    batEnt->state = batState;
+    batEnt->fileOff = blkOffset / ONE_M;
+      }
+      batOff += AXP_VHDX_BAT_ENT_LEN;
 
-	    if (vhdx->fixed == true)
-		blkOffset += blkSize;
-	}
-	if (writeRet == false)
-	{
-	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(vhdx);
-	    retVal = AXP_VHD_WRITE_FAULT;
-	}
+      if (vhdx->fixed == true)
+    blkOffset += blkSize;
+  }
+  if (writeRet == false)
+  {
+      _AXP_VHD_CreateCleanup(vhdx, path);
+      AXP_Deallocate_Block(vhdx);
+      retVal = AXP_VHD_WRITE_FAULT;
+  }
     }
 
     /*
@@ -573,92 +573,92 @@ u32 _AXP_VHDX_Create(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	memset(outBuf, 0, SIXTYFOUR_K);
+  memset(outBuf, 0, SIXTYFOUR_K);
 
-	/*
-	 * So, first things first.  We need a metadata table header that will
-	 * be used to describe the total number of metadata entries.  At some
-	 * point, we'll create a few user metadata entries, but for now we are
-	 * just going to create the system ones we care about (see the list
-	 * above).
-	 */
-	metaHdr = (AXP_VHDX_META_HDR *) outBuf;
-	metaHdr->sig= AXP_METADATA_SIG;
-	metaHdr->entryCnt = (parentPath != NULL) ? 6: 5;
+  /*
+   * So, first things first.  We need a metadata table header that will
+   * be used to describe the total number of metadata entries.  At some
+   * point, we'll create a few user metadata entries, but for now we are
+   * just going to create the system ones we care about (see the list
+   * above).
+   */
+  metaHdr = (AXP_VHDX_META_HDR *) outBuf;
+  metaHdr->sig= AXP_METADATA_SIG;
+  metaHdr->entryCnt = (parentPath != NULL) ? 6: 5;
 
-	/*
-	 * The first entry is immediately after the header.
-	 */
-	metaEnt = (AXP_VHDX_META_ENT *) &outBuf[AXP_VHDX_META_HDR_LEN];
-	metaOff = AXP_VHDX_META_START_OFF;
-	for (ii = 0; ii < metaHdr->entryCnt; ii++)
-	{
-	    metaEnt->isRequired = 1;
-	    metaEnt->off = metaOff;
-	    switch (ii)
-	    {
-		case 0:	/* File Parameters */
-		    AXP_VHD_KnownGUIDDisk(AXP_File_Parameter, &metaEnt->guid);
-		    metaEnt->len = AXP_VHDX_META_FILE_LEN;
-		    break;
+  /*
+   * The first entry is immediately after the header.
+   */
+  metaEnt = (AXP_VHDX_META_ENT *) &outBuf[AXP_VHDX_META_HDR_LEN];
+  metaOff = AXP_VHDX_META_START_OFF;
+  for (ii = 0; ii < metaHdr->entryCnt; ii++)
+  {
+      metaEnt->isRequired = 1;
+      metaEnt->off = metaOff;
+      switch (ii)
+      {
+    case 0:	/* File Parameters */
+        AXP_VHD_KnownGUIDDisk(AXP_File_Parameter, &metaEnt->guid);
+        metaEnt->len = AXP_VHDX_META_FILE_LEN;
+        break;
 
-		case 1:	/* Virtual Disk Size */
-		    AXP_VHD_KnownGUIDDisk(AXP_Disk_Size, &metaEnt->guid);
-		    metaEnt->len = AXP_VHDX_META_DISK_LEN;
-		    metaEnt->isVirtualDisk = 1;
-		    break;
+    case 1:	/* Virtual Disk Size */
+        AXP_VHD_KnownGUIDDisk(AXP_Disk_Size, &metaEnt->guid);
+        metaEnt->len = AXP_VHDX_META_DISK_LEN;
+        metaEnt->isVirtualDisk = 1;
+        break;
 
-		case 2:	/* Logical Sector Size */
-		    AXP_VHD_KnownGUIDDisk(AXP_Logical_Sector, &metaEnt->guid);
-		    metaEnt->len = AXP_VHDX_META_SEC_LEN;
-		    metaEnt->isVirtualDisk = 1;
-		    break;
+    case 2:	/* Logical Sector Size */
+        AXP_VHD_KnownGUIDDisk(AXP_Logical_Sector, &metaEnt->guid);
+        metaEnt->len = AXP_VHDX_META_SEC_LEN;
+        metaEnt->isVirtualDisk = 1;
+        break;
 
-		case 3:	/* Physical Sector Size */
-		    AXP_VHD_KnownGUIDDisk(AXP_Physical_Sector, &metaEnt->guid);
-		    metaEnt->len = AXP_VHDX_META_SEC_LEN;
-		    metaEnt->isVirtualDisk = 1;
-		    break;
+    case 3:	/* Physical Sector Size */
+        AXP_VHD_KnownGUIDDisk(AXP_Physical_Sector, &metaEnt->guid);
+        metaEnt->len = AXP_VHDX_META_SEC_LEN;
+        metaEnt->isVirtualDisk = 1;
+        break;
 
-		case 4: /* Paga 83 */
-		    AXP_VHD_KnownGUIDDisk(AXP_Page_83, &metaEnt->guid);
-		    metaEnt->len = AXP_VHDX_META_PAGE83_LEN;
-		    metaEnt->isVirtualDisk = 1;
-		    break;
+    case 4: /* Paga 83 */
+        AXP_VHD_KnownGUIDDisk(AXP_Page_83, &metaEnt->guid);
+        metaEnt->len = AXP_VHDX_META_PAGE83_LEN;
+        metaEnt->isVirtualDisk = 1;
+        break;
 
-		case 5: /* Parent Locator */
-		    AXP_VHD_KnownGUIDDisk(AXP_Parent_Locator, &metaEnt->guid);
-		    metaEnt->len =
-			AXP_VHDX_META_PAR_HDR_LEN + AXP_VHDX_META_PAR_ENT_LEN;
-		    metaEnt->isVirtualDisk = 1;
-		    break;
-	    }
+    case 5: /* Parent Locator */
+        AXP_VHD_KnownGUIDDisk(AXP_Parent_Locator, &metaEnt->guid);
+        metaEnt->len =
+      AXP_VHDX_META_PAR_HDR_LEN + AXP_VHDX_META_PAR_ENT_LEN;
+        metaEnt->isVirtualDisk = 1;
+        break;
+      }
 
-	    /*
-	     * Calculate the offset for the next metadata item.
-	     */
-	    metaOff += metaEnt->len;
+      /*
+       * Calculate the offset for the next metadata item.
+       */
+      metaOff += metaEnt->len;
 
-	    /*
-	     * Move to the next metadata table entry.
-	     */
-	    metaEnt++;
-	}
+      /*
+       * Move to the next metadata table entry.
+       */
+      metaEnt++;
+  }
 
-	/*
-	 * Write out the Metadata Table.
-	 */
-	 writeRet = AXP_WriteAtOffset(
-				vhdx->fp,
-				outBuf,
-				SIXTYFOUR_K,
-				AXP_VHDX_META_LOC);
-	 if (writeRet == false)
-	 {
-	     _AXP_VHD_CreateCleanup(vhdx, path);
-	     AXP_Deallocate_Block(vhdx);
-	     retVal = AXP_VHD_WRITE_FAULT;
-	 }
+  /*
+   * Write out the Metadata Table.
+   */
+   writeRet = AXP_WriteAtOffset(
+        vhdx->fp,
+        outBuf,
+        SIXTYFOUR_K,
+        AXP_VHDX_META_LOC);
+   if (writeRet == false)
+   {
+       _AXP_VHD_CreateCleanup(vhdx, path);
+       AXP_Deallocate_Block(vhdx);
+       retVal = AXP_VHD_WRITE_FAULT;
+   }
     }
 
     /*
@@ -687,108 +687,108 @@ u32 _AXP_VHDX_Create(
     if (retVal == AXP_VHD_SUCCESS)
     {
 
-	/*
-	 * Now it's time to write out the Metadata Items.
-	 */
-	memset(outBuf, 0, SIXTYFOUR_K);
+  /*
+   * Now it's time to write out the Metadata Items.
+   */
+  memset(outBuf, 0, SIXTYFOUR_K);
 
-	/*
-	 * First, the File Parameters.
-	 */
-	metaFile = (AXP_VHDX_META_FILE *) outBuf;
-	metaOff = AXP_VHDX_META_FILE_LEN;
-	metaFile->leaveBlksAlloc = (vhdx->fixed) ? 1 : 0;
-	metaFile->hasParent = (parentPath != NULL) ? 1 : 0;
-	metaFile->blkSize = blkSize;
+  /*
+   * First, the File Parameters.
+   */
+  metaFile = (AXP_VHDX_META_FILE *) outBuf;
+  metaOff = AXP_VHDX_META_FILE_LEN;
+  metaFile->leaveBlksAlloc = (vhdx->fixed) ? 1 : 0;
+  metaFile->hasParent = (parentPath != NULL) ? 1 : 0;
+  metaFile->blkSize = blkSize;
 
-	/*
-	 * Now, Virtual Disk Size.
-	 */
-	metaDisk = (AXP_VHDX_META_DISK *) &outBuf[metaOff];
-	metaOff += AXP_VHDX_META_DISK_LEN;
-	metaDisk->virDskSize = diskSize;
+  /*
+   * Now, Virtual Disk Size.
+   */
+  metaDisk = (AXP_VHDX_META_DISK *) &outBuf[metaOff];
+  metaOff += AXP_VHDX_META_DISK_LEN;
+  metaDisk->virDskSize = diskSize;
 
-	/*
-	 * Next, Logical Sector Size
-	 */
-	metaSec = (AXP_VHDX_META_SEC *) &outBuf[metaOff];
-	metaOff += AXP_VHDX_META_SEC_LEN;
-	metaSec->secSize = sectorSize;
+  /*
+   * Next, Logical Sector Size
+   */
+  metaSec = (AXP_VHDX_META_SEC *) &outBuf[metaOff];
+  metaOff += AXP_VHDX_META_SEC_LEN;
+  metaSec->secSize = sectorSize;
 
-	/*
-	 * Second to last, Physical Sector Size
-	 */
-	metaSec = (AXP_VHDX_META_SEC *) &outBuf[metaOff];
-	metaOff += AXP_VHDX_META_SEC_LEN;
-	metaSec->secSize = AXP_VHDX_PHYS_SEC_SIZE;
+  /*
+   * Second to last, Physical Sector Size
+   */
+  metaSec = (AXP_VHDX_META_SEC *) &outBuf[metaOff];
+  metaOff += AXP_VHDX_META_SEC_LEN;
+  metaSec->secSize = AXP_VHDX_PHYS_SEC_SIZE;
 
-	/*
-	 * Last required item, Page 83 Data
-	 */
-	meta83 = (AXP_VHDX_META_PAGE83 *) &outBuf[metaOff];
-	metaOff += AXP_VHDX_META_PAGE83_LEN;
-	AXP_VHD_SetGUIDDisk(&meta83->pg83Data);
+  /*
+   * Last required item, Page 83 Data
+   */
+  meta83 = (AXP_VHDX_META_PAGE83 *) &outBuf[metaOff];
+  metaOff += AXP_VHDX_META_PAGE83_LEN;
+  AXP_VHD_SetGUIDDisk(&meta83->pg83Data);
 
-	/*
-	 * Optionally, the Parent Locator.
-	 */
-	if (parentPath != NULL)
-	{
-	    char *key = "absolute_win32_path";
+  /*
+   * Optionally, the Parent Locator.
+   */
+  if (parentPath != NULL)
+  {
+      char *key = "absolute_win32_path";
 
-	    /*
-	     * Parent Locator Header
-	     */
-	    metaParHdr = (AXP_VHDX_META_PAR_HDR *) &outBuf[metaOff];
-	    metaOff += AXP_VHDX_META_PAR_HDR_LEN;
-	    AXP_VHD_KnownGUIDDisk(AXP_ParentLocator_Type, &metaEnt->guid);
-	    metaParHdr->keyValCnt = 1;
+      /*
+       * Parent Locator Header
+       */
+      metaParHdr = (AXP_VHDX_META_PAR_HDR *) &outBuf[metaOff];
+      metaOff += AXP_VHDX_META_PAR_HDR_LEN;
+      AXP_VHD_KnownGUIDDisk(AXP_ParentLocator_Type, &metaEnt->guid);
+      metaParHdr->keyValCnt = 1;
 
-	    /*
-	     * Parent Locator Entry
-	     */
-	    metaParEnt = (AXP_VHDX_META_PAR_ENT *) &outBuf[metaOff];
-	    metaOff += AXP_VHDX_META_PAR_ENT_LEN;
-	    metaParEnt->keyLen = strlen(key);
-	    metaParEnt->valLen = strlen(parentPath);
-	    metaParEnt->keyOff = metaOff;
-	    metaOff += metaParEnt->keyLen;
-	    metaParEnt->valOff = metaOff;
-	    metaOff += metaParEnt->valLen;
-	    memcpy(&outBuf[metaParEnt->keyOff], key, metaParEnt->keyLen);
-	    memcpy(&outBuf[metaParEnt->valOff], parentPath, metaParEnt->valLen);
-	}
+      /*
+       * Parent Locator Entry
+       */
+      metaParEnt = (AXP_VHDX_META_PAR_ENT *) &outBuf[metaOff];
+      metaOff += AXP_VHDX_META_PAR_ENT_LEN;
+      metaParEnt->keyLen = strlen(key);
+      metaParEnt->valLen = strlen(parentPath);
+      metaParEnt->keyOff = metaOff;
+      metaOff += metaParEnt->keyLen;
+      metaParEnt->valOff = metaOff;
+      metaOff += metaParEnt->valLen;
+      memcpy(&outBuf[metaParEnt->keyOff], key, metaParEnt->keyLen);
+      memcpy(&outBuf[metaParEnt->valOff], parentPath, metaParEnt->valLen);
+  }
 
-	/*
-	 * Write out the Metadata Items.
-	 */
-	writeRet = AXP_WriteAtOffset(
-				vhdx->fp,
-				outBuf,
-				SIXTYFOUR_K,
-				(AXP_VHDX_META_LOC + AXP_VHDX_META_START_OFF));
+  /*
+   * Write out the Metadata Items.
+   */
+  writeRet = AXP_WriteAtOffset(
+        vhdx->fp,
+        outBuf,
+        SIXTYFOUR_K,
+        (AXP_VHDX_META_LOC + AXP_VHDX_META_START_OFF));
 
-	if ((writeRet == true) && (vhdx->fixed == true))
-	{
-	    writeRet = AXP_WriteAtOffset(
-				vhdx->fp,
-				"\0",
-				1,
-				AXP_VHDX_DATA_LOC + vhdx->diskSize - 1);
-	}
+  if ((writeRet == true) && (vhdx->fixed == true))
+  {
+      writeRet = AXP_WriteAtOffset(
+        vhdx->fp,
+        "\0",
+        1,
+        AXP_VHDX_DATA_LOC + vhdx->diskSize - 1);
+  }
 
-	/*
-	 * Before returning to the caller, set the value of the handle to
-	 * the address of the VHDX handle.
-	 */
-	if (writeRet == true)
-	    *handle = (AXP_VHD_HANDLE) vhdx;
-	else
-	 {
-	     _AXP_VHD_CreateCleanup(vhdx, path);
-	     AXP_Deallocate_Block(vhdx);
-	     retVal = AXP_VHD_WRITE_FAULT;
-	 }
+  /*
+   * Before returning to the caller, set the value of the handle to
+   * the address of the VHDX handle.
+   */
+  if (writeRet == true)
+      *handle = (AXP_VHD_HANDLE) vhdx;
+  else
+   {
+       _AXP_VHD_CreateCleanup(vhdx, path);
+       AXP_Deallocate_Block(vhdx);
+       retVal = AXP_VHD_WRITE_FAULT;
+   }
     }
 
     /*
@@ -840,53 +840,53 @@ u32 _AXP_VHDX_Create(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	u64	fileSize = AXP_VHD_PerformFileSize(vhdx->fp);
+  u64	fileSize = AXP_VHD_PerformFileSize(vhdx->fp);
 
-	memset(outBuf, 0, SIXTYFOUR_K);
-	logHdr = (AXP_VHDX_LOG_HDR *) outBuf;
-	logHdr->sig = AXP_LOGE_SIG;
-	logHdr->entryLen = FOUR_K;
-	logHdr->seqNum = 1;
-	AXP_VHD_SetGUIDDisk(&logHdr->logGuid);
-	logHdr->flushedFileOff = logHdr->lastFileOff = fileSize;
-	logHdr->checkSum = AXP_Crc32(
-				outBuf,
-				FOUR_K,
-				false,
-				logHdr->checkSum);
+  memset(outBuf, 0, SIXTYFOUR_K);
+  logHdr = (AXP_VHDX_LOG_HDR *) outBuf;
+  logHdr->sig = AXP_LOGE_SIG;
+  logHdr->entryLen = FOUR_K;
+  logHdr->seqNum = 1;
+  AXP_VHD_SetGUIDDisk(&logHdr->logGuid);
+  logHdr->flushedFileOff = logHdr->lastFileOff = fileSize;
+  logHdr->checkSum = AXP_Crc32(
+        outBuf,
+        FOUR_K,
+        false,
+        logHdr->checkSum);
 
-	/*
-	 * OK, let's write the log header out to the correct offset.
-	 */
-	writeRet = AXP_WriteAtOffset(
-				vhdx->fp,
-				outBuf,
-				FOUR_K,
-				AXP_VHDX_LOG_LOC);
-	if ((writeRet == false) || (fileSize == 0))
-	{
-	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(vhdx);
-	    retVal = AXP_VHD_WRITE_FAULT;
-	}
+  /*
+   * OK, let's write the log header out to the correct offset.
+   */
+  writeRet = AXP_WriteAtOffset(
+        vhdx->fp,
+        outBuf,
+        FOUR_K,
+        AXP_VHDX_LOG_LOC);
+  if ((writeRet == false) || (fileSize == 0))
+  {
+      _AXP_VHD_CreateCleanup(vhdx, path);
+      AXP_Deallocate_Block(vhdx);
+      retVal = AXP_VHD_WRITE_FAULT;
+  }
     }
 
     if (retVal == AXP_VHD_SUCCESS)
     {
-	vhdx->fp = freopen(path, "wb+", vhdx->fp);
-	if (vhdx->fp == NULL)
-	{
-	    _AXP_VHD_CreateCleanup(vhdx, path);
-	    AXP_Deallocate_Block(vhdx);
-	    retVal = AXP_VHD_INV_HANDLE;
-	}
+  vhdx->fp = freopen(path, "wb+", vhdx->fp);
+  if (vhdx->fp == NULL)
+  {
+      _AXP_VHD_CreateCleanup(vhdx, path);
+      AXP_Deallocate_Block(vhdx);
+      retVal = AXP_VHD_INV_HANDLE;
+  }
     }
 
     /*
      * Free what we allocated before we get out of here.
      */
     if (outBuf != NULL)
-	AXP_Deallocate_Block(outBuf);
+  AXP_Deallocate_Block(outBuf);
 
     /*
      * Return the result of this call back to the caller.
@@ -921,10 +921,10 @@ u32 _AXP_VHDX_Create(
  *  AXP_VHD_FILE_CORRUPT:	The file appears to be corrupt.
  */
 u32 _AXP_VHDX_Open(
-		char *path,
-		AXP_VHD_OPEN_FLAG flags,
-		u32 deviceID,
-		AXP_VHD_HANDLE *handle)
+    char *path,
+    AXP_VHD_OPEN_FLAG flags,
+    u32 deviceID,
+    AXP_VHD_HANDLE *handle)
 {
     u8			inBuf[2][SIXTYFOUR_K];
     AXP_VHDX_Handle	*vhdx;
@@ -952,415 +952,415 @@ u32 _AXP_VHDX_Open(
     if (vhdx != NULL)
     {
 
-	/*
-	 * Allocate a buffer long enough for for the filename (plus null
-	 * character).
-	 */
-	vhdx->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
-	if (vhdx->filePath != NULL)
-	{
-	    strcpy(vhdx->filePath, path);
-	    vhdx->deviceID = deviceID;
+  /*
+   * Allocate a buffer long enough for for the filename (plus null
+   * character).
+   */
+  vhdx->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+  if (vhdx->filePath != NULL)
+  {
+      strcpy(vhdx->filePath, path);
+      vhdx->deviceID = deviceID;
 
-	    /*
-	     * Try and open the file for binary read-only.  We don't know yet
-	     * if this file is a valid VHDX file and definitely don't want to
-	     * write to it (yet).  If everything looks good, then we will
-	     * reopen it for binary read/write.
-	     */
-	    vhdx->fp = fopen(path, "rb");
-	    if (vhdx->fp != NULL)
-	    {
+      /*
+       * Try and open the file for binary read-only.  We don't know yet
+       * if this file is a valid VHDX file and definitely don't want to
+       * write to it (yet).  If everything looks good, then we will
+       * reopen it for binary read/write.
+       */
+      vhdx->fp = fopen(path, "rb");
+      if (vhdx->fp != NULL)
+      {
 
-		/*
-		 * The header section of a VHDX formatted file is 1MB in size,
-		 * so the file size needs to be at least that large.
-		 */
-		fileSize = AXP_GetFileSize(vhdx->fp);
-		if (fileSize >= ONE_M)
-		{
+    /*
+     * The header section of a VHDX formatted file is 1MB in size,
+     * so the file size needs to be at least that large.
+     */
+    fileSize = AXP_GetFileSize(vhdx->fp);
+    if (fileSize >= ONE_M)
+    {
 
-		    /*
-		     * Read in the File Identifier record.
-		     */
-		    outLen = AXP_VHDX_ID_LEN;
-		    if (AXP_ReadFromOffset(
-				vhdx->fp,
-				(u8 *) &ID,
-				&outLen,
-				AXP_VHDX_FILE_ID_OFF) == true)
-		    {
-			if (ID.sig != AXP_VHDXFILE_SIG)
-			    retVal = AXP_VHD_FILE_CORRUPT;
-		    }
-		    else
-			retVal = AXP_VHD_READ_FAULT;
+        /*
+         * Read in the File Identifier record.
+         */
+        outLen = AXP_VHDX_ID_LEN;
+        if (AXP_ReadFromOffset(
+        vhdx->fp,
+        (u8 *) &ID,
+        &outLen,
+        AXP_VHDX_FILE_ID_OFF) == true)
+        {
+      if (ID.sig != AXP_VHDXFILE_SIG)
+          retVal = AXP_VHD_FILE_CORRUPT;
+        }
+        else
+      retVal = AXP_VHD_READ_FAULT;
 
-		    /*
-		     * If the File ID was good, then read Header 1 and
-		     * Header 2.
-		     */
-		    if (retVal == AXP_VHD_SUCCESS)
-		    {
-			outLen = AXP_VHDX_HDR_LEN;
-			if (AXP_ReadFromOffset(
-					vhdx->fp,
-					(u8 *) &hdr[0],
-					&outLen,
-					AXP_VHDX_HEADER1_OFF) == true)
-			{
-			    outLen = AXP_VHDX_HDR_LEN;
-			    if (AXP_ReadFromOffset(
-					vhdx->fp,
-					(u8 *) &hdr[1],
-					&outLen,
-					AXP_VHDX_HEADER2_OFF) == false)
-				retVal = AXP_VHD_READ_FAULT;
-			}
-			else
-			    retVal = AXP_VHD_READ_FAULT;
+        /*
+         * If the File ID was good, then read Header 1 and
+         * Header 2.
+         */
+        if (retVal == AXP_VHD_SUCCESS)
+        {
+      outLen = AXP_VHDX_HDR_LEN;
+      if (AXP_ReadFromOffset(
+          vhdx->fp,
+          (u8 *) &hdr[0],
+          &outLen,
+          AXP_VHDX_HEADER1_OFF) == true)
+      {
+          outLen = AXP_VHDX_HDR_LEN;
+          if (AXP_ReadFromOffset(
+          vhdx->fp,
+          (u8 *) &hdr[1],
+          &outLen,
+          AXP_VHDX_HEADER2_OFF) == false)
+        retVal = AXP_VHD_READ_FAULT;
+      }
+      else
+          retVal = AXP_VHD_READ_FAULT;
 
-			/*
-			 * If we successfully read in the 2 header records,
-			 * now to some validation of them, and determine which
-			 * one is current.
-			 */
-			if ((retVal == AXP_VHD_SUCCESS) &&
-			    (hdr[0].sig == AXP_HEAD_SIG) &&
-			    (hdr[1].sig == AXP_HEAD_SIG) &&
-			    (hdr[0].logVer == AXP_VHDX_LOG_VER) &&
-			    (hdr[1].logVer == AXP_VHDX_LOG_VER) &&
-			    (hdr[0].ver == AXP_VHDX_CURRENT_VER) &&
-			    (hdr[1].ver == AXP_VHDX_CURRENT_VER))
-			{
+      /*
+       * If we successfully read in the 2 header records,
+       * now to some validation of them, and determine which
+       * one is current.
+       */
+      if ((retVal == AXP_VHD_SUCCESS) &&
+          (hdr[0].sig == AXP_HEAD_SIG) &&
+          (hdr[1].sig == AXP_HEAD_SIG) &&
+          (hdr[0].logVer == AXP_VHDX_LOG_VER) &&
+          (hdr[1].logVer == AXP_VHDX_LOG_VER) &&
+          (hdr[0].ver == AXP_VHDX_CURRENT_VER) &&
+          (hdr[1].ver == AXP_VHDX_CURRENT_VER))
+      {
 
-			    /*
-			     * A header record is valid if the checksum read
-			     * from the file and one recalculated match.
-			     * Recalculate header 1's checksum and compare it
-			     * to what was read from the file.
-			     */
-			    newChecksum = 0;
-			    oldChecksum = hdr[0].checkSum;
-			    hdr[0].checkSum = 0;
-			    newChecksum = AXP_Crc32(
-						(u8 *) &hdr[0],
-						AXP_VHDX_HDR_LEN,
-						false,
-						newChecksum);
-			    hdr[0].checkSum = oldChecksum;
+          /*
+           * A header record is valid if the checksum read
+           * from the file and one recalculated match.
+           * Recalculate header 1's checksum and compare it
+           * to what was read from the file.
+           */
+          newChecksum = 0;
+          oldChecksum = hdr[0].checkSum;
+          hdr[0].checkSum = 0;
+          newChecksum = AXP_Crc32(
+            (u8 *) &hdr[0],
+            AXP_VHDX_HDR_LEN,
+            false,
+            newChecksum);
+          hdr[0].checkSum = oldChecksum;
 
-			    /*
-			     * If header 1's checksums match, then it is
-			     * possible that this header is the current one.
-			     */
-			    if (oldChecksum == newChecksum)
-				currentHdr = 0;
+          /*
+           * If header 1's checksums match, then it is
+           * possible that this header is the current one.
+           */
+          if (oldChecksum == newChecksum)
+        currentHdr = 0;
 
-			    /*
-			     * Recalculate header 2's checksum and compare it
-			     * to what was read from the file.
-			     */
-			    newChecksum = 0;
-			    oldChecksum = hdr[1].checkSum;
-			    hdr[1].checkSum = 0;
-			    newChecksum = AXP_Crc32(
-						(u8 *) &hdr[1],
-						AXP_VHDX_HDR_LEN,
-						false,
-						newChecksum);
-			    hdr[1].checkSum = oldChecksum;
+          /*
+           * Recalculate header 2's checksum and compare it
+           * to what was read from the file.
+           */
+          newChecksum = 0;
+          oldChecksum = hdr[1].checkSum;
+          hdr[1].checkSum = 0;
+          newChecksum = AXP_Crc32(
+            (u8 *) &hdr[1],
+            AXP_VHDX_HDR_LEN,
+            false,
+            newChecksum);
+          hdr[1].checkSum = oldChecksum;
 
-			    /*
-			     * If header 2's checksums match, then it is
-			     * possible that this header is the current one.
-			     */
-			    if (oldChecksum == newChecksum)
-			    {
+          /*
+           * If header 2's checksums match, then it is
+           * possible that this header is the current one.
+           */
+          if (oldChecksum == newChecksum)
+          {
 
-				/*
-				 * If header 1 was determined to be valid and
-				 * we now know that header 2 is valid, then
-				 * either header 1 or header 2 can be current.
-				 * Otherwise, header 2 is current.
-				 */
-				if (currentHdr == 0)
-				{
+        /*
+         * If header 1 was determined to be valid and
+         * we now know that header 2 is valid, then
+         * either header 1 or header 2 can be current.
+         * Otherwise, header 2 is current.
+         */
+        if (currentHdr == 0)
+        {
 
-				    /*
-				     * Either header can be current.  So, if
-				     * the sequence number for header 2 is
-				     * greater than header 1, then header 2
-				     * will be made the current one. Otherwise,
-				     * header 1 will remain current.
-				     */
-				    if (hdr[1].seqNum > hdr[0].seqNum)
-					currentHdr = 1;
-				}
-				else
-				    currentHdr = 1;
-			    }
-			    if (currentHdr < 0)
-				retVal = AXP_VHD_FILE_CORRUPT;
-			    else
-			    {
-				vhdx->logOffset = hdr[currentHdr].logOff;
-				vhdx->logLength = hdr[currentHdr].logLen;
-			    }
-			}
-		    }
+            /*
+             * Either header can be current.  So, if
+             * the sequence number for header 2 is
+             * greater than header 1, then header 2
+             * will be made the current one. Otherwise,
+             * header 1 will remain current.
+             */
+            if (hdr[1].seqNum > hdr[0].seqNum)
+          currentHdr = 1;
+        }
+        else
+            currentHdr = 1;
+          }
+          if (currentHdr < 0)
+        retVal = AXP_VHD_FILE_CORRUPT;
+          else
+          {
+        vhdx->logOffset = hdr[currentHdr].logOff;
+        vhdx->logLength = hdr[currentHdr].logLen;
+          }
+      }
+        }
 
-		    /*
-		     * OK, if the File ID and header record(s) are valid, then
-		     * we can look at the Region records.  There are 2 region
-		     * records, but there is nothing to indicate whether one
-		     * region is current or not, so if one validates out, then
-		     * it is current.  If none validate out, then the file is
-		     * considered corrupt (NOTE: we may have to replay log
-		     * records).
-		     */
-		    if (retVal == AXP_VHD_SUCCESS)
-		    {
-			outLen = SIXTYFOUR_K;
-			if (AXP_ReadFromOffset(
-					vhdx->fp,
-					inBuf[0],
-					&outLen,
-					AXP_VHDX_REG_TBL_HDR1_OFF) == true)
-			{
-			    outLen = SIXTYFOUR_K;
-			    if (AXP_ReadFromOffset(
-					vhdx->fp,
-					inBuf[1],
-					&outLen,
-					AXP_VHDX_REG_TBL_HDR2_OFF) == false)
-				retVal = AXP_VHD_READ_FAULT;
-			    else
-			    {
-				reg[0] = (AXP_VHDX_REG_HDR *) inBuf[0];
-				reg[1] = (AXP_VHDX_REG_HDR *) inBuf[1];
-			    }
-			}
-			else
-			    retVal = AXP_VHD_READ_FAULT;
-			if ((retVal == AXP_VHD_SUCCESS) &&
-			    (reg[0]->sig == AXP_REGI_SIG) &&
-			    (reg[1]->sig == AXP_REGI_SIG))
-			{
+        /*
+         * OK, if the File ID and header record(s) are valid, then
+         * we can look at the Region records.  There are 2 region
+         * records, but there is nothing to indicate whether one
+         * region is current or not, so if one validates out, then
+         * it is current.  If none validate out, then the file is
+         * considered corrupt (NOTE: we may have to replay log
+         * records).
+         */
+        if (retVal == AXP_VHD_SUCCESS)
+        {
+      outLen = SIXTYFOUR_K;
+      if (AXP_ReadFromOffset(
+          vhdx->fp,
+          inBuf[0],
+          &outLen,
+          AXP_VHDX_REG_TBL_HDR1_OFF) == true)
+      {
+          outLen = SIXTYFOUR_K;
+          if (AXP_ReadFromOffset(
+          vhdx->fp,
+          inBuf[1],
+          &outLen,
+          AXP_VHDX_REG_TBL_HDR2_OFF) == false)
+        retVal = AXP_VHD_READ_FAULT;
+          else
+          {
+        reg[0] = (AXP_VHDX_REG_HDR *) inBuf[0];
+        reg[1] = (AXP_VHDX_REG_HDR *) inBuf[1];
+          }
+      }
+      else
+          retVal = AXP_VHD_READ_FAULT;
+      if ((retVal == AXP_VHD_SUCCESS) &&
+          (reg[0]->sig == AXP_REGI_SIG) &&
+          (reg[1]->sig == AXP_REGI_SIG))
+      {
 
-			    /*
-			     * A region table header record is valid if the
-			     * checksum read from the file and one recalculated
-			     * match.  Recalculate region table header 1's
-			     * checksum and compare it to what was read from
-			     * the file.
-			     */
-			    newChecksum = 0;
-			    oldChecksum = reg[0]->checkSum;
-			    reg[0]->checkSum = 0;
-			    newChecksum = AXP_Crc32(
-						(u8 *) &reg[0],
-						SIXTYFOUR_K,
-						false,
-						newChecksum);
-			    reg[0]->checkSum = oldChecksum;
+          /*
+           * A region table header record is valid if the
+           * checksum read from the file and one recalculated
+           * match.  Recalculate region table header 1's
+           * checksum and compare it to what was read from
+           * the file.
+           */
+          newChecksum = 0;
+          oldChecksum = reg[0]->checkSum;
+          reg[0]->checkSum = 0;
+          newChecksum = AXP_Crc32(
+            (u8 *) &reg[0],
+            SIXTYFOUR_K,
+            false,
+            newChecksum);
+          reg[0]->checkSum = oldChecksum;
 
-			    /*
-			     * If region table header 1's checksums match, then
-			     * it is the current one and there is no need to
-			     * check region header 2.
-			     */
-			    if (oldChecksum == newChecksum)
-				currentReg = 0;
-			    else
-			    {
+          /*
+           * If region table header 1's checksums match, then
+           * it is the current one and there is no need to
+           * check region header 2.
+           */
+          if (oldChecksum == newChecksum)
+        currentReg = 0;
+          else
+          {
 
-				/*
-				 * Region table header 1's checksum did not
-				 * validate.  Let's see if region table header
-				 * 2 does.  Recalculate region table header 2's
-				 * checksum and compare it to what was read
-				 * from the file.
-				 */
-				newChecksum = 0;
-				oldChecksum = reg[1]->checkSum;
-				reg[1]->checkSum = 0;
-				newChecksum = AXP_Crc32(
-						(u8 *) &reg[1],
-						SIXTYFOUR_K,
-						false,
-						newChecksum);
-				reg[1]->checkSum = oldChecksum;
+        /*
+         * Region table header 1's checksum did not
+         * validate.  Let's see if region table header
+         * 2 does.  Recalculate region table header 2's
+         * checksum and compare it to what was read
+         * from the file.
+         */
+        newChecksum = 0;
+        oldChecksum = reg[1]->checkSum;
+        reg[1]->checkSum = 0;
+        newChecksum = AXP_Crc32(
+            (u8 *) &reg[1],
+            SIXTYFOUR_K,
+            false,
+            newChecksum);
+        reg[1]->checkSum = oldChecksum;
 
-				/*
-				 * If header 2's checksums match, then it is
-				 * possible that this header is the current one.
-				 */
-				if (oldChecksum == newChecksum)
-				    currentReg = 1;
-				else
-				    retVal = AXP_VHD_FILE_CORRUPT;
-			    }
-			}
-		    }
+        /*
+         * If header 2's checksums match, then it is
+         * possible that this header is the current one.
+         */
+        if (oldChecksum == newChecksum)
+            currentReg = 1;
+        else
+            retVal = AXP_VHD_FILE_CORRUPT;
+          }
+      }
+        }
 
-		    /*
-		     * OK, if we are still have a success status, we now know
-		     * that one of the region tables is valid.  Go look at the
-		     * information we need from the selected region table
-		     * entries.
-		     */
-		    if (retVal == AXP_VHD_SUCCESS)
-		    {
-			AXP_VHDX_REG_ENT	*ent;
+        /*
+         * OK, if we are still have a success status, we now know
+         * that one of the region tables is valid.  Go look at the
+         * information we need from the selected region table
+         * entries.
+         */
+        if (retVal == AXP_VHD_SUCCESS)
+        {
+      AXP_VHDX_REG_ENT	*ent;
 
-			offset = AXP_VHDX_REG_HDR_LEN;
-			for (ii = 0; ii < reg[currentReg]->entryCnt; ii++)
-			{
-			    ent = (AXP_VHDX_REG_ENT *) &inBuf[currentReg][offset];
-			    switch(AXP_VHD_KnownGUID(&ent->guid))
-			    {
-				case AXP_Block_Allocation_Table:
-				    if (ent->req == 1)
-				    {
-					vhdx->batOffset = ent->fileOff;
-					vhdx->batLength = ent->len;
-					vhdx->batCount = ent->len / sizeof(u64);
-				    }
-				    else
-					retVal = AXP_VHD_FILE_CORRUPT;
-				    break;
+      offset = AXP_VHDX_REG_HDR_LEN;
+      for (ii = 0; ii < reg[currentReg]->entryCnt; ii++)
+      {
+          ent = (AXP_VHDX_REG_ENT *) &inBuf[currentReg][offset];
+          switch(AXP_VHD_KnownGUID(&ent->guid))
+          {
+        case AXP_Block_Allocation_Table:
+            if (ent->req == 1)
+            {
+          vhdx->batOffset = ent->fileOff;
+          vhdx->batLength = ent->len;
+          vhdx->batCount = ent->len / sizeof(u64);
+            }
+            else
+          retVal = AXP_VHD_FILE_CORRUPT;
+            break;
 
-				case AXP_Metadata_Region:
-				    if (ent->req == 1)
-				    {
-					vhdx->metadataOffset = ent->fileOff;
-					vhdx->metadataLength = ent->len;
-				    }
-				    else
-					retVal = AXP_VHD_FILE_CORRUPT;
-				    break;
+        case AXP_Metadata_Region:
+            if (ent->req == 1)
+            {
+          vhdx->metadataOffset = ent->fileOff;
+          vhdx->metadataLength = ent->len;
+            }
+            else
+          retVal = AXP_VHD_FILE_CORRUPT;
+            break;
 
-				default:
-				    retVal = AXP_VHD_FILE_CORRUPT;
-				    break;
-			    }
-			    offset += AXP_VHDX_REG_ENT_LEN;
-			}
-		    }
+        default:
+            retVal = AXP_VHD_FILE_CORRUPT;
+            break;
+          }
+          offset += AXP_VHDX_REG_ENT_LEN;
+      }
+        }
 
-		    /*
-		     * OK, we finally go after the metadata to get the last set
-		     * of information about this VHD.
-		     */
-		    if (retVal == AXP_VHD_SUCCESS)
-		    {
-			outLen = SIXTYFOUR_K;
-			if (AXP_ReadFromOffset(
-					vhdx->fp,
-					inBuf[0],
-					&outLen,
-					vhdx->metadataOffset) == true)
-			{
-			    metaHdr = (AXP_VHDX_META_HDR *) inBuf[0];
-			    offset = AXP_VHDX_META_HDR_LEN;
-			    for (ii = 0;
-				 ((ii < metaHdr->entryCnt) &&
-				  (retVal == AXP_VHD_SUCCESS));
-				 ii++)
-			    {
-				metaEnt = (AXP_VHDX_META_ENT *) &inBuf[0][offset];
-				switch(AXP_VHD_KnownGUID(&metaEnt->guid))
-				{
-				    case AXP_File_Parameter:
-					if (metaEnt->isRequired == 1)
-					{
-					    outLen = AXP_VHDX_META_FILE_LEN;
-					    if (AXP_ReadFromOffset(
-							vhdx->fp,
-							&metaFile,
-							&outLen,
-							(vhdx->metadataOffset +
-							 metaEnt->off)) == true)
-					    {
-						vhdx->blkSize = metaFile.blkSize;
-						vhdx->fixed = metaFile.leaveBlksAlloc == 1;
-					    }
-					    else
-						retVal = AXP_VHD_READ_FAULT;
-					}
-					else
-					    retVal = AXP_VHD_FILE_CORRUPT;
-					break;
+        /*
+         * OK, we finally go after the metadata to get the last set
+         * of information about this VHD.
+         */
+        if (retVal == AXP_VHD_SUCCESS)
+        {
+      outLen = SIXTYFOUR_K;
+      if (AXP_ReadFromOffset(
+          vhdx->fp,
+          inBuf[0],
+          &outLen,
+          vhdx->metadataOffset) == true)
+      {
+          metaHdr = (AXP_VHDX_META_HDR *) inBuf[0];
+          offset = AXP_VHDX_META_HDR_LEN;
+          for (ii = 0;
+         ((ii < metaHdr->entryCnt) &&
+          (retVal == AXP_VHD_SUCCESS));
+         ii++)
+          {
+        metaEnt = (AXP_VHDX_META_ENT *) &inBuf[0][offset];
+        switch(AXP_VHD_KnownGUID(&metaEnt->guid))
+        {
+            case AXP_File_Parameter:
+          if (metaEnt->isRequired == 1)
+          {
+              outLen = AXP_VHDX_META_FILE_LEN;
+              if (AXP_ReadFromOffset(
+              vhdx->fp,
+              &metaFile,
+              &outLen,
+              (vhdx->metadataOffset +
+               metaEnt->off)) == true)
+              {
+            vhdx->blkSize = metaFile.blkSize;
+            vhdx->fixed = metaFile.leaveBlksAlloc == 1;
+              }
+              else
+            retVal = AXP_VHD_READ_FAULT;
+          }
+          else
+              retVal = AXP_VHD_FILE_CORRUPT;
+          break;
 
-				    case AXP_Disk_Size:
-					if (metaEnt->isRequired == 1)
-					{
-					    outLen = AXP_VHDX_META_DISK_LEN;
-					    if (AXP_ReadFromOffset(
-							vhdx->fp,
-							&metaDisk,
-							&outLen,
-							(vhdx->metadataOffset +
-							 metaEnt->off)) == true)
-						vhdx->diskSize = metaDisk.virDskSize;
-					    else
-						retVal = AXP_VHD_READ_FAULT;
-					}
-					else
-					    retVal = AXP_VHD_FILE_CORRUPT;
-					break;
+            case AXP_Disk_Size:
+          if (metaEnt->isRequired == 1)
+          {
+              outLen = AXP_VHDX_META_DISK_LEN;
+              if (AXP_ReadFromOffset(
+              vhdx->fp,
+              &metaDisk,
+              &outLen,
+              (vhdx->metadataOffset +
+               metaEnt->off)) == true)
+            vhdx->diskSize = metaDisk.virDskSize;
+              else
+            retVal = AXP_VHD_READ_FAULT;
+          }
+          else
+              retVal = AXP_VHD_FILE_CORRUPT;
+          break;
 
-				    case AXP_Page_83:
-					if (metaEnt->isRequired != 1)
-					    retVal = AXP_VHD_FILE_CORRUPT;
-					break;
+            case AXP_Page_83:
+          if (metaEnt->isRequired != 1)
+              retVal = AXP_VHD_FILE_CORRUPT;
+          break;
 
-				    case AXP_Logical_Sector:
-					if (metaEnt->isRequired == 1)
-					{
-					    outLen = AXP_VHDX_META_SEC_LEN;
-					    if (AXP_ReadFromOffset(
-							vhdx->fp,
-							&metaSec,
-							&outLen,
-							(vhdx->metadataOffset +
-							 metaEnt->off)) == true)
-						vhdx->sectorSize  = metaSec.secSize;
-					    else
-						retVal = AXP_VHD_READ_FAULT;
-					}
-					else
-					    retVal = AXP_VHD_FILE_CORRUPT;
-					break;
+            case AXP_Logical_Sector:
+          if (metaEnt->isRequired == 1)
+          {
+              outLen = AXP_VHDX_META_SEC_LEN;
+              if (AXP_ReadFromOffset(
+              vhdx->fp,
+              &metaSec,
+              &outLen,
+              (vhdx->metadataOffset +
+               metaEnt->off)) == true)
+            vhdx->sectorSize  = metaSec.secSize;
+              else
+            retVal = AXP_VHD_READ_FAULT;
+          }
+          else
+              retVal = AXP_VHD_FILE_CORRUPT;
+          break;
 
-				    case AXP_Physical_Sector:
-					if (metaEnt->isRequired != 1)
-					    retVal = AXP_VHD_FILE_CORRUPT;
-					break;
+            case AXP_Physical_Sector:
+          if (metaEnt->isRequired != 1)
+              retVal = AXP_VHD_FILE_CORRUPT;
+          break;
 
-				    case AXP_Parent_Locator:
-					if (metaEnt->isRequired != 1)
-					    retVal = AXP_VHD_FILE_CORRUPT;
-					break;
+            case AXP_Parent_Locator:
+          if (metaEnt->isRequired != 1)
+              retVal = AXP_VHD_FILE_CORRUPT;
+          break;
 
-				    default:
-					break;
-				}
-			    }
+            default:
+          break;
+        }
+          }
 
-			}
-			else
-			    retVal = AXP_VHD_READ_FAULT;
-		    }
-		}
-	    }
-	}
-	else
-	    retVal = AXP_VHD_OUTOFMEMORY;
+      }
+      else
+          retVal = AXP_VHD_READ_FAULT;
+        }
+    }
+      }
+  }
+  else
+      retVal = AXP_VHD_OUTOFMEMORY;
     }
     else
-	retVal = AXP_VHD_OUTOFMEMORY;
+  retVal = AXP_VHD_OUTOFMEMORY;
 
     /*
      * OK, if we get this far and the return status is still successful, then
@@ -1368,11 +1368,11 @@ u32 _AXP_VHDX_Open(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	vhdx->fp = freopen(path, "wb+", vhdx->fp);
-	if (vhdx->fp == NULL)
-	    retVal = AXP_VHD_INV_HANDLE;
-	else
-	    *handle = (AXP_VHD_HANDLE) vhdx;
+  vhdx->fp = freopen(path, "wb+", vhdx->fp);
+  if (vhdx->fp == NULL)
+      retVal = AXP_VHD_INV_HANDLE;
+  else
+      *handle = (AXP_VHD_HANDLE) vhdx;
     }
 
     /*
@@ -1381,7 +1381,7 @@ u32 _AXP_VHDX_Open(
      * opened.
      */
     if ((retVal != AXP_VHD_SUCCESS) && (vhdx != NULL))
-	AXP_Deallocate_Block(vhdx);
+  AXP_Deallocate_Block(vhdx);
 
     /*
      * Return the outcome of this call back to the caller.

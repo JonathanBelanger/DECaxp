@@ -58,15 +58,15 @@ int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
 
     if (cpu->vdbTop > cpu->vdbBottom)
     {
-	start1 = cpu->vdbTop;
-	end1 = AXP_21264_VDB_LEN - 1;
-	start2 = 0;
-	end2 = cpu->vdbBottom;
+  start1 = cpu->vdbTop;
+  end1 = AXP_21264_VDB_LEN - 1;
+  start2 = 0;
+  end2 = cpu->vdbBottom;
     }
     else
     {
-	start1 = cpu->vdbTop;
-	end1 = cpu->vdbBottom;
+  start1 = cpu->vdbTop;
+  end1 = cpu->vdbBottom;
     }
 
     /*
@@ -76,16 +76,16 @@ int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
     end = end1;
     while ((ii <= end) && (retVal == -1))
     {
-	if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].processed == false))
-	    retVal = ii;
-	if ((retVal == -1) && (start2 != -1) && (ii == end))
-	{
-	    ii = start2;
-	    end = end2;
-	    start2 = -1;
-	}
-	else
-	    ii++;
+  if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].processed == false))
+      retVal = ii;
+  if ((retVal == -1) && (start2 != -1) && (ii == end))
+  {
+      ii = start2;
+      end = end2;
+      start2 = -1;
+  }
+  else
+      ii++;
     }
 
     /*
@@ -123,40 +123,40 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
     switch (vdb->type)
     {
 
-	/*
-	 * Istream cache blocks from memory or Dcache blocks to be written to
-	 * the Bcache.
-	 */
-	case toBcache:
-	    AXP_21264_Bcache_Write(cpu, vdb->pa, (u8 *) vdb->sysData);
-	    break;
+  /*
+   * Istream cache blocks from memory or Dcache blocks to be written to
+   * the Bcache.
+   */
+  case toBcache:
+      AXP_21264_Bcache_Write(cpu, vdb->pa, (u8 *) vdb->sysData);
+      break;
 
-	    /*
-	     * We need to write a Bcache block out to memory.
-	     * 			or
-	     * Dcache or Bcache blocks to send to the system in response to a
-	     * probe command.
-	     */
-	case toMemory:
-	case probeResponse:
+      /*
+       * We need to write a Bcache block out to memory.
+       * 			or
+       * Dcache or Bcache blocks to send to the system in response to a
+       * probe command.
+       */
+  case toMemory:
+  case probeResponse:
 
-	    /*
-	     * Go check the Oldest pending PQ and set the flags for it here and
-	     * now.  Only if the oldest PQ entry is a miss.
-	     */
-	    AXP_21264_OldestPQFlags(cpu, &sys.m1, &sys.m2, &sys.ch);
+      /*
+       * Go check the Oldest pending PQ and set the flags for it here and
+       * now.  Only if the oldest PQ entry is a miss.
+       */
+      AXP_21264_OldestPQFlags(cpu, &sys.m1, &sys.m2, &sys.ch);
 
-	    /*
-	     * OK, send what we have to the System.
-	     */
-	    sys.cmd = WrVictimBlk;
-	    sys.mask = AXP_LOW_QUAD;
-	    sys.rv = true;
-	    sys.id = entry;
-	    sys.pa = vdb->pa;
-	    memcpy(sys.sysData, vdb->sysData, AXP_21264_SIZE_QUAD);
-	    AXP_21264_SendToSystem(cpu, &sys);
-	    break;
+      /*
+       * OK, send what we have to the System.
+       */
+      sys.cmd = WrVictimBlk;
+      sys.mask = AXP_LOW_QUAD;
+      sys.rv = true;
+      sys.id = entry;
+      sys.pa = vdb->pa;
+      memcpy(sys.sysData, vdb->sysData, AXP_21264_SIZE_QUAD);
+      AXP_21264_SendToSystem(cpu, &sys);
+      break;
     }
 
     /*
@@ -202,15 +202,15 @@ u8 AXP_21264_Add_VDB(
      */
     if (alreadyLocked == false)
     {
-	pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
-	locked = true;
+  pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+  locked = true;
     }
 
     /*
      * Add a record to the next available VDB.
      */
     if (cpu->vdb[cpu->vdbBottom].valid == true)
-	cpu->vdbBottom = (cpu->vdbBottom + 1) & 0x07;
+  cpu->vdbBottom = (cpu->vdbBottom + 1) & 0x07;
     cpu->vdb[cpu->vdbBottom].type = type;
     cpu->vdb[cpu->vdbBottom].pa = pa;
     cpu->vdb[cpu->vdbBottom].validProbe = probe;
@@ -225,8 +225,8 @@ u8 AXP_21264_Add_VDB(
      */
     if (locked == true)
     {
-	pthread_cond_signal(&cpu->cBoxInterfaceCond);
-	pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
+  pthread_cond_signal(&cpu->cBoxInterfaceCond);
+  pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
     }
     return (cpu->vdbBottom);
 }
@@ -259,15 +259,15 @@ bool AXP_21264_IsSetP_VDB(AXP_21264_CPU *cpu, u64 pa)
     int end, start1, end1, start2 = -1, end2;
     if (cpu->vdbTop > cpu->vdbBottom)
     {
-	start1 = cpu->vdbTop;
-	end1 = AXP_21264_VDB_LEN - 1;
-	start2 = 0;
-	end2 = cpu->vdbBottom;
+  start1 = cpu->vdbTop;
+  end1 = AXP_21264_VDB_LEN - 1;
+  start2 = 0;
+  end2 = cpu->vdbBottom;
     }
     else
     {
-	start1 = cpu->vdbTop;
-	end1 = cpu->vdbBottom;
+  start1 = cpu->vdbTop;
+  end1 = cpu->vdbBottom;
     }
 
     /*
@@ -277,16 +277,16 @@ bool AXP_21264_IsSetP_VDB(AXP_21264_CPU *cpu, u64 pa)
     end = end1;
     while ((ii <= end) && (retVal == false))
     {
-	if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].pa == pa))
-	    retVal = true;
-	if ((retVal == false) && (start2 != -1) && (ii == end))
-	{
-	    ii = start2;
-	    end = end2;
-	    start2 = -1;
-	}
-	else
-	    ii++;
+  if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].pa == pa))
+      retVal = true;
+  if ((retVal == false) && (start2 != -1) && (ii == end))
+  {
+      ii = start2;
+      end = end2;
+      start2 = -1;
+  }
+  else
+      ii++;
     }
 
     /*
@@ -369,15 +369,15 @@ void AXP_21264_Free_VDB(AXP_21264_CPU *cpu, u8 entry)
      */
     if (cpu->vdbTop > cpu->vdbBottom)
     {
-	start1 = cpu->vdbTop;
-	end1 = AXP_21264_VDB_LEN - 1;
-	start2 = 0;
-	end2 = cpu->vdbBottom;
+  start1 = cpu->vdbTop;
+  end1 = AXP_21264_VDB_LEN - 1;
+  start2 = 0;
+  end2 = cpu->vdbBottom;
     }
     else
     {
-	start1 = cpu->vdbTop;
-	end1 = cpu->vdbBottom;
+  start1 = cpu->vdbTop;
+  end1 = cpu->vdbBottom;
     }
 
     /*
@@ -387,18 +387,18 @@ void AXP_21264_Free_VDB(AXP_21264_CPU *cpu, u8 entry)
     end = end1;
     while ((ii <= end) && (done == false))
     {
-	if (cpu->vdb[ii].valid == false)
-	    cpu->vdbTop = (cpu->vdbTop + 1) & 0x07;
-	else
-	    done = true;
-	if ((done == false) && (start2 != -1) && (ii == end))
-	{
-	    ii = start2;
-	    end = end2;
-	    start2 = -1;
-	}
-	else
-	    ii++;
+  if (cpu->vdb[ii].valid == false)
+      cpu->vdbTop = (cpu->vdbTop + 1) & 0x07;
+  else
+      done = true;
+  if ((done == false) && (start2 != -1) && (ii == end))
+  {
+      ii = start2;
+      end = end2;
+      start2 = -1;
+  }
+  else
+      ii++;
     }
 
     /*

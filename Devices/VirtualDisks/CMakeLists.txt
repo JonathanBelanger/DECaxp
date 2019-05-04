@@ -32,4 +32,4 @@ add_library(VirtualDisks STATIC
     AXP_VirtualDisk.c)
 
 target_include_directories(VirtualDisks PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

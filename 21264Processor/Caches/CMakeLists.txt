@@ -27,4 +27,4 @@ add_library(Caches STATIC
     AXP_21264_BCache.c)
 
 target_include_directories(Caches PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

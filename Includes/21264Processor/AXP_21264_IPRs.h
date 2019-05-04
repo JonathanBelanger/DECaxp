@@ -62,9 +62,9 @@ typedef struct
     u32 offset;
 } AXP_EBOX_CC; /* Cycle Counter Register */
 #define AXP_EBOX_READ_CC(dest, cpu)			\
-		*((u64 *) &dest) = *((u64 *) &cpu->cc)
+    *((u64 *) &dest) = *((u64 *) &cpu->cc)
 #define AXP_EBOX_WRITE_CC(src, cpu)	\
-		cpu->cc.offset = *((u32 *) &src)
+    cpu->cc.offset = *((u32 *) &src)
 
 typedef struct
 {
@@ -74,11 +74,11 @@ typedef struct
     u32 res_2 :31;
 } AXP_EBOX_CC_CTL; /* Cycle Counter Control Register */
 #define AXP_EBOX_WRITE_CC_CTL(src, cpu)		\
-		*((u64 *) &(cpu->ccCtl)) = *((u64 *) &src) & 0x00000001fffffff0ll
+    *((u64 *) &(cpu->ccCtl)) = *((u64 *) &src) & 0x00000001fffffff0ll
 
 typedef u64 AXP_EBOX_VA; /* Virtual Address Register */
 #define AXP_EBOX_READ_VA(dest, cpu)			\
-		*((u64 *) &dest) = cpu->va
+    *((u64 *) &dest) = cpu->va
 
 typedef struct
 {
@@ -89,7 +89,7 @@ typedef struct
     u64 vptb :34; /* Virtual Page Table Base */
 } AXP_EBOX_VA_CTL;
 #define AXP_EBOX_WRITE_VA_CTL(src, cpu)		\
-		*((u64 *) &(cpu->vaCtl)) = *((u64 *) &src) & 0xffffffffc0000007ll
+    *((u64 *) &(cpu->vaCtl)) = *((u64 *) &src) & 0xffffffffc0000007ll
 
 typedef struct
 {
@@ -137,8 +137,8 @@ typedef union
     u64 form;
 } AXP_EBOX_VA_FORM;
 #define AXP_EBOX_READ_VA_FORM(dest, cpu)	\
-		*((u64 *) &dest) = (cpu->vaForm.form & (0xffffffffc03ffff8ll |	\
-				((cpu->vaCtl.va_form_32 == 0) ? 0x000000003fc00000ll : 0)))
+    *((u64 *) &dest) = (cpu->vaForm.form & (0xffffffffc03ffff8ll |	\
+        ((cpu->vaCtl.va_form_32 == 0) ? 0x000000003fc00000ll : 0)))
 
 /*
  * The following definitions are for the Fbox IPRs
@@ -168,9 +168,9 @@ typedef struct
     u64 sum :1; /* Summary bit (OR of exception bits) */
 } AXP_FBOX_FPCR;
 #define AXP_FBOX_READ_FPCR(dest, cpu)		\
-		*((u64 *) &dest) = (*(u64 *) &(cpu->fpcr)) & 0xffff000000000000ll
+    *((u64 *) &dest) = (*(u64 *) &(cpu->fpcr)) & 0xffff000000000000ll
 #define AXP_FBOX_WRITE_FPCR(src, cpu)		\
-		*((u64 *) &cpu->fpcr) = (*(u64 *) &src) & 0xffff000000000000ll
+    *((u64 *) &cpu->fpcr) = (*(u64 *) &src) & 0xffff000000000000ll
 
 /*
  * The following definitions are for the Ibox IPRs
@@ -215,7 +215,7 @@ typedef struct
     u64 res_2 :16;
 } AXP_IBOX_ITB_TAG;
 #define AXP_IBOX_WRITE_ITB_TAG(src, cpu)	\
-		*((u64 *) &cpu->itbTag) = *((u64 *) &src) & 0x0000ffffffffe000ll
+    *((u64 *) &cpu->itbTag) = *((u64 *) &src) & 0x0000ffffffffe000ll
 
 typedef struct
 {
@@ -232,7 +232,7 @@ typedef struct
     u64 res_4 :20;
 } AXP_IBOX_ITB_PTE;
 #define AXP_IBOX_WRITE_ITB_PTE(src, cpu)	\
-		*((u64 *) &cpu->itbPte) = *((u64 *) &src) & 0x00000fffffffef70ll
+    *((u64 *) &cpu->itbPte) = *((u64 *) &src) & 0x00000fffffffef70ll
 
 typedef struct
 {
@@ -241,7 +241,7 @@ typedef struct
     u64 res_2 :16;
 } AXP_IBOX_ITB_IS;
 #define AXP_IBOX_WRITE_ITB_IS(src, cpu)		\
-		*((u64 *) &cpu->itbIs) = *((u64 *) &src) & 0x0000ffffffffe000ll
+    *((u64 *) &cpu->itbIs) = *((u64 *) &src) & 0x0000ffffffffe000ll
 
 typedef union
 {
@@ -249,7 +249,7 @@ typedef union
     u64 exc_addr;
 } AXP_IBOX_EXC_ADDR;
 #define AXP_IBOX_READ_EXC_ADDR(dest, cpu)	\
-		*((u64 *) &dest) = (cpu)->excAddr.exc_addr
+    *((u64 *) &dest) = (cpu)->excAddr.exc_addr
 
 typedef struct
 {
@@ -291,8 +291,8 @@ typedef union
     u64 form;
 } AXP_IBOX_IVA_FORM;
 #define AXP_IBOX_READ_IVA_FORM(dest, cpu)	\
-	*((u64 *) &dest) = (cpu->ivaForm.form & (0xffffffffc03ffff8ll | \
-			((cpu->vaCtl.va_form_32 == 0) ? 0x000000003fc00000ll : 0)))
+  *((u64 *) &dest) = (cpu->ivaForm.form & (0xffffffffc03ffff8ll | \
+      ((cpu->vaCtl.va_form_32 == 0) ? 0x000000003fc00000ll : 0)))
 
 /*
  * Interrupt enable and current mode register
@@ -316,21 +316,21 @@ typedef struct
     u64 res_3 :25;
 } AXP_IBOX_IER_CM;
 #define AXP_IBOX_READ_CM(dest, cpu)			\
-		*((u64 *) &dest) = *((u64 *) &cpu->ierCm) & 0x0000000000000018ll
+    *((u64 *) &dest) = *((u64 *) &cpu->ierCm) & 0x0000000000000018ll
 #define AXP_IBOX_READ_IER(dest, cpu)		\
-		*((u64 *) &dest) = *((u64 *) &cpu->ierCm) & 0x0000007ffffe0000ll
+    *((u64 *) &dest) = *((u64 *) &cpu->ierCm) & 0x0000007ffffe0000ll
 #define AXP_IBOX_READ_IER_CM(dest, cpu)		\
-		*((u64 *) &dest) = *((u64 *) &cpu->ierCm) & 0x0000007ffffe0018ll
+    *((u64 *) &dest) = *((u64 *) &cpu->ierCm) & 0x0000007ffffe0018ll
 #define AXP_IBOX_WRITE_CM(src, cpu)			\
-		*((u64 *) &cpu->ierCm) = 			\
-			(*((u64 *) &cpu->ierCm) & 0x0000007ffffe0000ll) |	\
-			(*((u64 *) &src) & 0x0000000000000018ll)
+    *((u64 *) &cpu->ierCm) = 			\
+      (*((u64 *) &cpu->ierCm) & 0x0000007ffffe0000ll) |	\
+      (*((u64 *) &src) & 0x0000000000000018ll)
 #define AXP_IBOX_WRITE_IER(src, cpu)		\
-		*((u64 *) &cpu->ierCm) = 			\
-			(*((u64 *) &cpu->ierCm) & 0x0000000000000018ll) |	\
-			(*((u64 *) &src) & 0x0000007ffffe0000ll)
+    *((u64 *) &cpu->ierCm) = 			\
+      (*((u64 *) &cpu->ierCm) & 0x0000000000000018ll) |	\
+      (*((u64 *) &src) & 0x0000007ffffe0000ll)
 #define AXP_IBOX_WRITE_IER_CM(src, cpu)		\
-		*((u64 *) &cpu->ierCm) = *((u64 *) &src) & 0x0000007ffffe0018ll
+    *((u64 *) &cpu->ierCm) = *((u64 *) &src) & 0x0000007ffffe0018ll
 
 typedef struct
 {
@@ -339,9 +339,9 @@ typedef struct
     u64 res_2 :35;
 } AXP_IBOX_SIRR;
 #define AXP_IBOX_READ_SIRR(dest, cpu)		\
-		*((u64 *) &dest) = *((u64 *) &cpu->sirr) & 0x000000001fffc000ll
+    *((u64 *) &dest) = *((u64 *) &cpu->sirr) & 0x000000001fffc000ll
 #define AXP_IBOX_WRITE_SIRR(src, cpu)		\
-		*((u64 *) &cpu->sirr) = *((u64 *) &src) & 0x000000001fffc000ll
+    *((u64 *) &cpu->sirr) = *((u64 *) &src) & 0x000000001fffc000ll
 
 /*
  * Interrupt Summary Register - Used to report what interrupts are currently
@@ -367,7 +367,7 @@ typedef struct
     u64 res_4 :25;
 } AXP_IBOX_ISUM;
 #define AXP_IBOX_READ_ISUM(dest, cpu)		\
-		*((u64 *) &dest) = *((u64 *) &cpu->iSum) & 0x0000007fffffc618ll
+    *((u64 *) &dest) = *((u64 *) &cpu->iSum) & 0x0000007fffffc618ll
 
 typedef struct
 {
@@ -381,7 +381,7 @@ typedef struct
     u64 res_3 :31;
 } AXP_IBOX_HW_INT_CLR;
 #define AXP_IBOX_WRITE_HW_INT_CLR(src, cpu)	\
-		*((u64 *) &cpu->hwIntClr) = *((u64 *) &src) & 0x00000001f4000000ll
+    *((u64 *) &cpu->hwIntClr) = *((u64 *) &src) & 0x00000001f4000000ll
 
 typedef struct
 {
@@ -406,23 +406,23 @@ typedef struct
     u64 sext_set_iov :16; /* Sign-extended (SEXT) of SET_IOV */
 } AXP_IBOX_EXC_SUM;
 #define AXP_IBOX_READ_EXC_SUM(dest, cpu)	\
-		*((u64 *) &dest) = *((u64 *) &cpu->excSum) & 0xfffffc0000003fffll
+    *((u64 *) &dest) = *((u64 *) &cpu->excSum) & 0xfffffc0000003fffll
 
 typedef union
 {
     struct
     {
-	u64 res_1 :15;
-	u64 pal_base :29; /* Base physical address for PALcode */
-	u64 res_2 :20;
+  u64 res_1 :15;
+  u64 pal_base :29; /* Base physical address for PALcode */
+  u64 res_2 :20;
     } fields;
     AXP_PC pal_base_addr;
     u64 pal_base_pc;
 } AXP_IBOX_PAL_BASE;
 #define AXP_IBOX_READ_PAL_BASE(dest, cpu)	\
-		*((u64 *) &dest) = cpu->palBase.pal_base_pc
+    *((u64 *) &dest) = cpu->palBase.pal_base_pc
 #define AXP_IBOX_WRITE_PAL_BASE(src, cpu)	\
-		cpu->palBase.pal_base_pc = *((u64 *) &src) & 0x00000fffffff8000ll
+    cpu->palBase.pal_base_pc = *((u64 *) &src) & 0x00000fffffff8000ll
 
 /*
  * Ibox Control Register
@@ -455,9 +455,9 @@ typedef struct
     u64 sext_vptb :16; /* Sign extension of 'vptb' */
 } AXP_IBOX_I_CTL;
 #define AXP_IBOX_READ_I_CTL(dest, cpu)		\
-		*((u64 *) &dest) = *((u64 *) &cpu->iCtl) & 0xffffffffffffdfffll
+    *((u64 *) &dest) = *((u64 *) &cpu->iCtl) & 0xffffffffffffdfffll
 #define AXP_IBOX_WRITE_I_CTL(src, cpu)		\
-		*((u64 *) &cpu->iCtl) = *((u64 *) &src) & 0xffffffffc07fbfffll
+    *((u64 *) &cpu->iCtl) = *((u64 *) &src) & 0xffffffffc07fbfffll
 
 #define AXP_I_CTL_BP_MODE_FALL		0x2		/* 1x, where 'x' is not relevant */
 #define AXP_I_CTL_BP_MODE_DYN		0x0		/* 0x, where 'x' is relevant */
@@ -474,9 +474,9 @@ typedef struct
     u64 res_2 :33;
 } AXP_IBOX_I_STAT;
 #define AXP_IBOX_READ_I_STAT(dest, cpu)		\
-	*((u64 *) &dest) = *((u64 *) &cpu->iStat) & 0x00000000000060000000ll
+  *((u64 *) &dest) = *((u64 *) &cpu->iStat) & 0x00000000000060000000ll
 #define AXP_IBOX_WRITE_I_STAT(src, cpu)		\
-	*((u64 *) &cpu->iStat) = *((u64 *) &src) & 0x00000000000060000000ll
+  *((u64 *) &cpu->iStat) = *((u64 *) &src) & 0x00000000000060000000ll
 
 /*
  * Process Context Register
@@ -499,7 +499,7 @@ typedef struct
     u64 res_4 :17;
 } AXP_IBOX_PCTX;
 #define AXP_IBOX_READ_PCTX(dest, cpu)		\
-		*((u64 *) &dest) = *((u64 *) &cpu->pCtx) & 0x00007f8000001fe6ll
+    *((u64 *) &dest) = *((u64 *) &cpu->pCtx) & 0x00007f8000001fe6ll
 /* NOTE: No write macro because writing to individual fields is easier */
 
 /*
@@ -528,9 +528,9 @@ typedef struct
     u64 sext_pctr0 :16;
 } AXP_IBOX_PCTR_CTL;
 #define AXP_IBOX_READ_PCTR_CTL(dest, cpu)	\
-		*((u64 *) &dest) = *((u64 *) &cpu->pCtrCtl) & 0xfffffffff7ffffdfll
+    *((u64 *) &dest) = *((u64 *) &cpu->pCtrCtl) & 0xfffffffff7ffffdfll
 #define AXP_IBOX_WRITE_PCTR_CTL(src, cpu)	\
-		*((u64 *) &cpu->pCtrCtl) = *((u64 *) &src) & 0xfffffffff7ffffdfll
+    *((u64 *) &cpu->pCtrCtl) = *((u64 *) &src) & 0xfffffffff7ffffdfll
 
 /*
  * The following definitions are for the Mbox IPRs
@@ -564,9 +564,9 @@ typedef struct
     u64 res_2 :16;
 } AXP_MBOX_DTB_TAG;
 #define AXP_MBOX_WRITE_DTB_TAG0(src, cpu)	\
-		*((u64 *) &cpu->dtbTag0) = *((u64 *) &src) & 0x0000ffffffffe000ll
+    *((u64 *) &cpu->dtbTag0) = *((u64 *) &src) & 0x0000ffffffffe000ll
 #define AXP_MBOX_WRITE_DTB_TAG1(src, cpu)	\
-		*((u64 *) &cpu->dtbTag1) = *((u64 *) &src) & 0x0000ffffffffe000ll
+    *((u64 *) &cpu->dtbTag1) = *((u64 *) &src) & 0x0000ffffffffe000ll
 
 typedef struct
 {
@@ -590,9 +590,9 @@ typedef struct
     u64 res_5 :1;
 } AXP_MBOX_DTB_PTE;
 #define AXP_MBOX_WRITE_DTB_PTE0(src, cpu)	\
-		*((u64 *) &cpu->dtbPte0) = *((u64 *) &src) & 0x7fffffff0000ff76ll
+    *((u64 *) &cpu->dtbPte0) = *((u64 *) &src) & 0x7fffffff0000ff76ll
 #define AXP_MBOX_WRITE_DTB_PTE1(src, cpu)	\
-		*((u64 *) &cpu->dtbPte1) = *((u64 *) &src) & 0x7fffffff0000ff76ll
+    *((u64 *) &cpu->dtbPte1) = *((u64 *) &src) & 0x7fffffff0000ff76ll
 
 typedef struct
 {
@@ -600,7 +600,7 @@ typedef struct
     u64 res :62;
 } AXP_MBOX_DTB_ALTMODE;
 #define AXP_MBOX_WRITE_DTB_ALTMODE(src, cpu) \
-		*((u64 *) &cpu->dtbAltMode) = *((u64 *) &src) & 0x0000000000000003ll
+    *((u64 *) &cpu->dtbAltMode) = *((u64 *) &src) & 0x0000000000000003ll
 
 #define AXP_MBOX_ALTMODE_KERNEL	0
 #define AXP_MBOX_ALTMODE_EXEC	1
@@ -609,9 +609,9 @@ typedef struct
 
 typedef AXP_IBOX_ITB_IS AXP_MBOX_DTB_IS;
 #define AXP_MBOX_WRITE_DTB_IS0(src, cpu)	\
-		*((u64 *) &cpu->dtbIs0) = *((u64 *) &src) & 0x0000ffffffffe000ll
+    *((u64 *) &cpu->dtbIs0) = *((u64 *) &src) & 0x0000ffffffffe000ll
 #define AXP_MBOX_WRITE_DTB_IS1(src, cpu)	\
-		*((u64 *) &cpu->dtbIs1) = *((u64 *) &src) & 0x0000ffffffffe000ll
+    *((u64 *) &cpu->dtbIs1) = *((u64 *) &src) & 0x0000ffffffffe000ll
 
 typedef struct
 {
@@ -620,9 +620,9 @@ typedef struct
     u64 res_2 :32;
 } AXP_MBOX_DTB_ASN;
 #define AXP_MBOX_WRITE_DTB_ASN0(src, cpu)	\
-		*((u64 *) &cpu->dtbAsn0) = *((u64 *) &src) & 0x00000000ff000000ll
+    *((u64 *) &cpu->dtbAsn0) = *((u64 *) &src) & 0x00000000ff000000ll
 #define AXP_MBOX_WRITE_DTB_ASN1(src, cpu)	\
-		*((u64 *) &cpu->dtbAsn1) = *((u64 *) &src) & 0x00000000ff000000ll
+    *((u64 *) &cpu->dtbAsn1) = *((u64 *) &src) & 0x00000000ff000000ll
 
 typedef struct
 {
@@ -635,7 +635,7 @@ typedef struct
     u64 res :53;
 } AXP_MBOX_MM_STAT;
 #define AXP_MBOX_READ_MM_STAT(dest, cpu)	\
-		*((u64 *) &dest) = *((u64 *) &cpu->mmStat) & 0x00000000000007ffll
+    *((u64 *) &dest) = *((u64 *) &cpu->mmStat) & 0x00000000000007ffll
 
 typedef struct
 {
@@ -644,7 +644,7 @@ typedef struct
     u64 res_2 :60;
 } AXP_MBOX_M_CTL;
 #define AXP_MBOX_WRITE_M_CTL(src, cpu)		\
-		*((u64 *) &cpu->mCtl) = *((u64 *) &src) & 0x000000000000000ell
+    *((u64 *) &cpu->mCtl) = *((u64 *) &src) & 0x000000000000000ell
 
 typedef struct
 {
@@ -658,7 +658,7 @@ typedef struct
     u64 res_2 :56;
 } AXP_MBOX_DC_CTL;
 #define AXP_MBOX_WRITE_DC_CTL(src, cpu)		\
-		*((u64 *) &cpu->dcCtl) = *((u64 *) &src) & 0x00000000000000f7ll
+    *((u64 *) &cpu->dcCtl) = *((u64 *) &src) & 0x00000000000000f7ll
 
 typedef struct
 {
@@ -670,9 +670,9 @@ typedef struct
     u64 res :59;
 } AXP_MBOX_DC_STAT;
 #define AXP_MBOX_READ_DC_STAT(dest, cpu)	\
-		*((u64 *) &dest) = *((u64 *) &cpu->dcStat) & 0x000000000000001fll
+    *((u64 *) &dest) = *((u64 *) &cpu->dcStat) & 0x000000000000001fll
 #define AXP_MBOX_WRITE_DC_STAT(src, cpu)	\
-		*((u64 *) &cpu->dcStat) = *((u64 *) &src) & 0x000000000000001fll
+    *((u64 *) &cpu->dcStat) = *((u64 *) &src) & 0x000000000000001fll
 
 /*
  * The following definitions are for the Cbox IPRs
@@ -691,9 +691,9 @@ typedef struct
     u64 res :58;
 } AXP_CBOX_C_DATA;
 #define AXP_CBOX_READ_C_DATA(dest, cpu)		\
-		*((u64 *) &dest) = *((u64 *) &cpu->cData) & 0x000000000000003fll
+    *((u64 *) &dest) = *((u64 *) &cpu->cData) & 0x000000000000003fll
 #define AXP_CBOX_WRITE_C_DATA(src, cpu)		\
-		*((u64 *) &cpu->cData) = *((u64 *) &src) & 0x000000000000003fll
+    *((u64 *) &cpu->cData) = *((u64 *) &src) & 0x000000000000003fll
 
 typedef struct
 {
@@ -701,7 +701,7 @@ typedef struct
     u64 res :63;
 } AXP_CBOX_C_SHFT;
 #define AXP_CBOX_WRITE_C_SHFT(src, cpu)		\
-		*((u64 *) &cpu->cShft) = *((u64 *) &src) & 0x0000000000000001ll
+    *((u64 *) &cpu->cShft) = *((u64 *) &src) & 0x0000000000000001ll
 
 /*
  * HRM Table 5-25 Cbox Read IPR Fields Description

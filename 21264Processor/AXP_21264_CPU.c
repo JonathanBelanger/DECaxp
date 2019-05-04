@@ -66,196 +66,196 @@ void *AXP_21264_AllocateCPU(u64 cpuID)
     if (cpu != NULL)
     {
 
-	/*
-	 * First things first.  Create all the mutexes and condition variables.
-	 *
-	 * Let's start with all the mutexes.
-	 */
-	pthreadRet = pthread_mutex_init(&cpu->cpuMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->iBoxMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->iBoxIPRMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->robMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->iCacheMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->itbMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->eBoxMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->eBoxIPRMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->fBoxMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->mBoxMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->mBoxIPRMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->dCacheMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->dtagMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->lqMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->sqMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->dtbMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->cBoxInterfaceMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->cBoxIPRMutex, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_mutex_init(&cpu->bCacheMutex, NULL);
+  /*
+   * First things first.  Create all the mutexes and condition variables.
+   *
+   * Let's start with all the mutexes.
+   */
+  pthreadRet = pthread_mutex_init(&cpu->cpuMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->iBoxMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->iBoxIPRMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->robMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->iCacheMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->itbMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->eBoxMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->eBoxIPRMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->fBoxMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->mBoxMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->mBoxIPRMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->dCacheMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->dtagMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->lqMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->sqMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->dtbMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->cBoxInterfaceMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->cBoxIPRMutex, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_mutex_init(&cpu->bCacheMutex, NULL);
 
-	/*
-	 * Let's create the condition variables.
-	 */
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_cond_init(&cpu->cpuCond, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_cond_init(&cpu->iBoxCondition, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_cond_init(&cpu->eBoxCondition, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_cond_init(&cpu->fBoxCondition, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_cond_init(&cpu->mBoxCondition, NULL);
-	if (pthreadRet == 0)
-	    pthreadRet = pthread_cond_init(&cpu->cBoxInterfaceCond, NULL);
-	else
-	    qRet = false;
+  /*
+   * Let's create the condition variables.
+   */
+  if (pthreadRet == 0)
+      pthreadRet = pthread_cond_init(&cpu->cpuCond, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_cond_init(&cpu->iBoxCondition, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_cond_init(&cpu->eBoxCondition, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_cond_init(&cpu->fBoxCondition, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_cond_init(&cpu->mBoxCondition, NULL);
+  if (pthreadRet == 0)
+      pthreadRet = pthread_cond_init(&cpu->cBoxInterfaceCond, NULL);
+  else
+      qRet = false;
 
-	/*
-	 * Let's initialize the counted queues (these have both a mutex and a
-	 * condition variable.  We also have to initialize the preallocated
-	 * queue entries.
-	 */
-	if (qRet == true)
-	    AXP_InitCountedQueue(&cpu->iq, AXP_IQ_LEN);
-	if (qRet == true)
-	{
-	    cpu->iqEFlStart = cpu->iqEFlEnd = 0;
-	    for (ii = 0; ii < AXP_IQ_LEN; ii++)
-	    {
-		AXP_INIT_CQENTRY(cpu->iqEntries[ii].header, cpu->iq);
-		cpu->iqEntries[ii].ins = NULL;
-		cpu->iqEntries[ii].index = ii;
-		cpu->iqEntries[ii].processing = false;
-		cpu->iqEFreelist[ii] = ii;
-	    }
-	}
-	if (qRet == true)
-	    AXP_InitCountedQueue(&cpu->fq, AXP_IQ_LEN);
-	if (qRet == true)
-	{
-	    cpu->fqEFlStart = cpu->fqEFlEnd = 0;
-	    for (ii = 0; ii < AXP_FQ_LEN; ii++)
-	    {
-		AXP_INIT_CQENTRY(cpu->fqEntries[ii].header, cpu->fq);
-		cpu->fqEntries[ii].ins = NULL;
-		cpu->fqEntries[ii].index = ii;
-		cpu->fqEntries[ii].processing = false;
-		cpu->fqEFreelist[ii] = ii;
-	    }
-	}
+  /*
+   * Let's initialize the counted queues (these have both a mutex and a
+   * condition variable.  We also have to initialize the preallocated
+   * queue entries.
+   */
+  if (qRet == true)
+      AXP_InitCountedQueue(&cpu->iq, AXP_IQ_LEN);
+  if (qRet == true)
+  {
+      cpu->iqEFlStart = cpu->iqEFlEnd = 0;
+      for (ii = 0; ii < AXP_IQ_LEN; ii++)
+      {
+    AXP_INIT_CQENTRY(cpu->iqEntries[ii].header, cpu->iq);
+    cpu->iqEntries[ii].ins = NULL;
+    cpu->iqEntries[ii].index = ii;
+    cpu->iqEntries[ii].processing = false;
+    cpu->iqEFreelist[ii] = ii;
+      }
+  }
+  if (qRet == true)
+      AXP_InitCountedQueue(&cpu->fq, AXP_IQ_LEN);
+  if (qRet == true)
+  {
+      cpu->fqEFlStart = cpu->fqEFlEnd = 0;
+      for (ii = 0; ii < AXP_FQ_LEN; ii++)
+      {
+    AXP_INIT_CQENTRY(cpu->fqEntries[ii].header, cpu->fq);
+    cpu->fqEntries[ii].ins = NULL;
+    cpu->fqEntries[ii].index = ii;
+    cpu->fqEntries[ii].processing = false;
+    cpu->fqEFreelist[ii] = ii;
+      }
+  }
 
-	/*
-	 * Go initialize the register map.
-	 */
-	AXP_21264_Ibox_ResetRegMap(cpu);
+  /*
+   * Go initialize the register map.
+   */
+  AXP_21264_Ibox_ResetRegMap(cpu);
 
-	/*
-	 * Pull some configuration items out of the configuration and
-	 * initialize the appropriate CPU fields.
-	 */
-	qRet = AXP_ConfigGet_CPUType(&cpu->majorType, &cpu->minorType);
+  /*
+   * Pull some configuration items out of the configuration and
+   * initialize the appropriate CPU fields.
+   */
+  qRet = AXP_ConfigGet_CPUType(&cpu->majorType, &cpu->minorType);
 
-	/*
-	 * Get the CPU-ID and store it in the WHAMI IPR/
-	 */
-	cpu->whami = cpuID;
+  /*
+   * Get the CPU-ID and store it in the WHAMI IPR/
+   */
+  cpu->whami = cpuID;
 
-	/*
-	 * At this point, we lock the CPU mutex, to hold back any of the CPU
-	 * initialization that will occur when the iBox, mBox, dBox, eBoxes,
-	 * fBoxes, and cBox threads are created.  We'll unlock it after the
-	 * system has done its initialization and is ready for the CPUs.
-	 */
-	if (qRet == true)
-	    pthreadRet = pthread_mutex_lock(&cpu->cpuMutex);
+  /*
+   * At this point, we lock the CPU mutex, to hold back any of the CPU
+   * initialization that will occur when the iBox, mBox, dBox, eBoxes,
+   * fBoxes, and cBox threads are created.  We'll unlock it after the
+   * system has done its initialization and is ready for the CPUs.
+   */
+  if (qRet == true)
+      pthreadRet = pthread_mutex_lock(&cpu->cpuMutex);
 
-	/*
-	 * At this point everything should be initialize.  Time to create all
-	 * the threads.
-	 */
-	if ((pthreadRet == 0) || (qRet == true))
-	{
-	    pthreadRet = pthread_create(
-		&cpu->iBoxThreadID,
-		NULL,
-		AXP_21264_IboxMain,
-		cpu);
-	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(
-		    &cpu->eBoxU0ThreadID,
-		    NULL,
-		    AXP_21264_EboxU0Main,
-		    cpu);
-	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(
-		    &cpu->eBoxU1ThreadID,
-		    NULL,
-		    AXP_21264_EboxU1Main,
-		    cpu);
-	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(
-		    &cpu->eBoxL0ThreadID,
-		    NULL,
-		    AXP_21264_EboxL0Main,
-		    cpu);
-	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(
-		    &cpu->eBoxL1ThreadID,
-		    NULL,
-		    AXP_21264_EboxL1Main,
-		    cpu);
-	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(
-		    &cpu->fBoxMulThreadID,
-		    NULL,
-		    AXP_21264_FboxMulMain,
-		    cpu);
-	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(
-		    &cpu->fBoxOthThreadID,
-		    NULL,
-		    AXP_21264_FboxOthMain,
-		    cpu);
-	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(
-		    &cpu->mBoxThreadID,
-		    NULL,
-		    AXP_21264_MboxMain,
-		    cpu);
-	    if (pthreadRet == 0)
-		pthreadRet = pthread_create(
-		    &cpu->cBoxThreadID,
-		    NULL,
-		    AXP_21264_CboxMain,
-		    cpu);
-	}
+  /*
+   * At this point everything should be initialize.  Time to create all
+   * the threads.
+   */
+  if ((pthreadRet == 0) || (qRet == true))
+  {
+      pthreadRet = pthread_create(
+    &cpu->iBoxThreadID,
+    NULL,
+    AXP_21264_IboxMain,
+    cpu);
+      if (pthreadRet == 0)
+    pthreadRet = pthread_create(
+        &cpu->eBoxU0ThreadID,
+        NULL,
+        AXP_21264_EboxU0Main,
+        cpu);
+      if (pthreadRet == 0)
+    pthreadRet = pthread_create(
+        &cpu->eBoxU1ThreadID,
+        NULL,
+        AXP_21264_EboxU1Main,
+        cpu);
+      if (pthreadRet == 0)
+    pthreadRet = pthread_create(
+        &cpu->eBoxL0ThreadID,
+        NULL,
+        AXP_21264_EboxL0Main,
+        cpu);
+      if (pthreadRet == 0)
+    pthreadRet = pthread_create(
+        &cpu->eBoxL1ThreadID,
+        NULL,
+        AXP_21264_EboxL1Main,
+        cpu);
+      if (pthreadRet == 0)
+    pthreadRet = pthread_create(
+        &cpu->fBoxMulThreadID,
+        NULL,
+        AXP_21264_FboxMulMain,
+        cpu);
+      if (pthreadRet == 0)
+    pthreadRet = pthread_create(
+        &cpu->fBoxOthThreadID,
+        NULL,
+        AXP_21264_FboxOthMain,
+        cpu);
+      if (pthreadRet == 0)
+    pthreadRet = pthread_create(
+        &cpu->mBoxThreadID,
+        NULL,
+        AXP_21264_MboxMain,
+        cpu);
+      if (pthreadRet == 0)
+    pthreadRet = pthread_create(
+        &cpu->cBoxThreadID,
+        NULL,
+        AXP_21264_CboxMain,
+        cpu);
+  }
 
-	/*
-	 * If anything happened in error, then deallocate the CPU block just
-	 * allocated and return NULL to the caller.
-	 */
-	if ((cpu != NULL) && ((pthreadRet != 0) || (qRet != true)))
-	{
-	    AXP_Deallocate_Block(cpu);
-	    cpu = NULL;
-	}
+  /*
+   * If anything happened in error, then deallocate the CPU block just
+   * allocated and return NULL to the caller.
+   */
+  if ((cpu != NULL) && ((pthreadRet != 0) || (qRet != true)))
+  {
+      AXP_Deallocate_Block(cpu);
+      cpu = NULL;
+  }
     }
 
     /*

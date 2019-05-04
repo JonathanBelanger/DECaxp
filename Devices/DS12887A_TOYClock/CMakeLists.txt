@@ -27,4 +27,4 @@ add_library(TOYClock STATIC
     AXP_DS12887A_TOYClock.c)
 
 target_include_directories(TOYClock PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

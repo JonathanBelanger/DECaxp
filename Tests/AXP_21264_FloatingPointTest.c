@@ -373,21 +373,21 @@ void ieeeFormatToStr(AXP_IEEEFormat ieeeFmt, char *retVal)
 {
     switch (ieeeFmt)
     {
-	case ieeeS:
-	    strcpy(retVal, "'IEEE S'");
-	    break;
+  case ieeeS:
+      strcpy(retVal, "'IEEE S'");
+      break;
 
-	case ieeeT:
-	    strcpy(retVal, "'IEEE T'");
-	    break;
+  case ieeeT:
+      strcpy(retVal, "'IEEE T'");
+      break;
 
-	case ieeeX:
-	    strcpy(retVal, "'IEEE X'");
-	    break;
+  case ieeeX:
+      strcpy(retVal, "'IEEE X'");
+      break;
 
-	case ieeeUnknown:
-	    strcpy(retVal, "'IEEE Unknown'");
-	    break;
+  case ieeeUnknown:
+      strcpy(retVal, "'IEEE Unknown'");
+      break;
     }
     return;
 }
@@ -399,12 +399,12 @@ void printFormat(AXP_IEEEFormat operand, AXP_IEEEFormat result)
 
     ieeeFormatToStr(operand, fmt1);
     if (operand == result)
-	printf("operand & result format set to %s\n", fmt1);
+  printf("operand & result format set to %s\n", fmt1);
     else
     {
-	ieeeFormatToStr(result, fmt2);
-	printf("operand format set to %s, ", fmt1);
-	printf("result format set to %s\n", fmt2);
+  ieeeFormatToStr(result, fmt2);
+  printf("operand format set to %s, ", fmt1);
+  printf("result format set to %s\n", fmt2);
     }
     return;
 }
@@ -439,14 +439,14 @@ i32 readNextToken(FILE *fp, char *retStr, int len)
 
     getC = fgetc(fp);
     while ((getC != EOF) && (getC != ' ') && (getC != '\n')
-	&& (retStrIdx < (len - 1)))
+  && (retStrIdx < (len - 1)))
     {
-	retStr[retStrIdx++] = (char) getC;
-	getC = fgetc(fp);
+  retStr[retStrIdx++] = (char) getC;
+  getC = fgetc(fp);
     }
     retStr[retStrIdx] = '\0';
     if (getC == EOF)
-	retVal = 0;
+  retVal = 0;
 
     /*
      * Return back to the caller.
@@ -491,80 +491,80 @@ i32 parseOperands(
     int retVal = 1;
 
     if (inputStr[0] == '-')
-	fpReg->fpr.sign = 1;
+  fpReg->fpr.sign = 1;
     else if (inputStr[0] == 'Q')
     {
-	*whichResults = 1;
-	fpReg->uq = (inputFormat == ieeeS) ? AXP_S_CQ_NAN : AXP_T_CQ_NAN;
-	return (retVal);
+  *whichResults = 1;
+  fpReg->uq = (inputFormat == ieeeS) ? AXP_S_CQ_NAN : AXP_T_CQ_NAN;
+  return (retVal);
     }
     else if (inputStr[0] == 'S')
     {
-	*whichResults = 1;
-	fpReg->uq = (inputFormat == ieeeS) ? AXP_S_CS_NAN : AXP_T_CS_NAN;
-	return (retVal);
+  *whichResults = 1;
+  fpReg->uq = (inputFormat == ieeeS) ? AXP_S_CS_NAN : AXP_T_CS_NAN;
+  return (retVal);
     }
     if (inputStr[1] == 'I')
     {
-	*whichResults = 1;
-	fpReg->fpr.exponent = 0x7ff;
+  *whichResults = 1;
+  fpReg->fpr.exponent = 0x7ff;
     }
     else if (inputStr[1] == 'Z')
     {
-	*whichResults = 1;
-	fpReg->fpr.exponent = 0;
-	fpReg->fpr.fraction = 0;
+  *whichResults = 1;
+  fpReg->fpr.exponent = 0;
+  fpReg->fpr.fraction = 0;
     }
     else
     {
 
-	/*
-	 * For now, we only support binary floating point
-	 * format and boolean formats.  Also, we assume that
-	 * the boolean format is only used for results.
-	 */
-	if (inputStr[1] == 'x')
-	{
-	    *whichResults = -1;
-	    *result = (inputStr[2] == '1');
-	}
-	else
-	{
-	    char *ptr;
-	    bool normal;
+  /*
+   * For now, we only support binary floating point
+   * format and boolean formats.  Also, we assume that
+   * the boolean format is only used for results.
+   */
+  if (inputStr[1] == 'x')
+  {
+      *whichResults = -1;
+      *result = (inputStr[2] == '1');
+  }
+  else
+  {
+      char *ptr;
+      bool normal;
 
-	    *whichResults = 1;
-	    normal = inputStr[1] == '1';
-	    if (inputFormat == ieeeS)
-	    {
-		u16 exponent;
+      *whichResults = 1;
+      normal = inputStr[1] == '1';
+      if (inputFormat == ieeeS)
+      {
+    u16 exponent;
 
-		fpReg->fpr32.fraction = strtol(&inputStr[3], &ptr, 16);
-		if (normal == true)
-		{
-		    ptr++;
-		    exponent = (atoi(ptr) + AXP_S_BIAS) & 0xff;
-		    fpReg->fpr32.exponent = ((exponent & 0x80) << 3)
-			| (exponent & 0x7f);
-		    fpReg->fpr32.exponent |=
-			(exponent & 0x80) ?
-			    ((exponent & 0x3f) != 0x3f ? 0 : 0x380) :
-			    (exponent ? 0x380 : 0);
-		}
-		else
-		    fpReg->fpr32.exponent = 0;
-		fpReg->fpr32.zero = 0;
-	    }
-	    else
-	    {
-		fpReg->fpr.fraction = strtol(&inputStr[3], &ptr, 16);
-		ptr++;
-		if (normal == true)
-		    fpReg->fpr.exponent = (atoi(ptr) + AXP_T_BIAS) & 0x3ff;
-		else
-		    fpReg->fpr.exponent = 0;
-	    }
-	}
+    fpReg->fpr32.fraction = strtol(&inputStr[3], &ptr, 16);
+    if (normal == true)
+    {
+        ptr++;
+        exponent = (atoi(ptr) + AXP_S_BIAS) & 0xff;
+        fpReg->fpr32.exponent = ((exponent & 0x80) << 3)
+      | (exponent & 0x7f);
+        fpReg->fpr32.exponent |=
+      (exponent & 0x80) ?
+          ((exponent & 0x3f) != 0x3f ? 0 : 0x380) :
+          (exponent ? 0x380 : 0);
+    }
+    else
+        fpReg->fpr32.exponent = 0;
+    fpReg->fpr32.zero = 0;
+      }
+      else
+      {
+    fpReg->fpr.fraction = strtol(&inputStr[3], &ptr, 16);
+    ptr++;
+    if (normal == true)
+        fpReg->fpr.exponent = (atoi(ptr) + AXP_T_BIAS) & 0x3ff;
+    else
+        fpReg->fpr.exponent = 0;
+      }
+  }
     }
 
     return (retVal);
@@ -637,95 +637,95 @@ i32 parseNextLine(
     getC = fgetc(fp);
     while (getC == 'b')
     {
-	getC = fgetc(fp);
-	switch (getC)
-	{
-	    case '3':
-		if (*resultFmt != ieeeUnknown)
-		    *resultFmt = ieeeS;
-		else
-		    *operandFmt = *resultFmt = ieeeS;
-		getC = fgetc(fp);
-		if ((getC != EOF) && (getC != '2'))
-		{
-		    sprintf(
-			workingStr,
-			"format not OK, got 'b3%c', expected 'b32'",
-			*((char *) &getC));
-		    printf(msgStr, fatal, "FMTNOTOK", workingStr);
-		    retVal = -1;
-		}
-		break;
+  getC = fgetc(fp);
+  switch (getC)
+  {
+      case '3':
+    if (*resultFmt != ieeeUnknown)
+        *resultFmt = ieeeS;
+    else
+        *operandFmt = *resultFmt = ieeeS;
+    getC = fgetc(fp);
+    if ((getC != EOF) && (getC != '2'))
+    {
+        sprintf(
+      workingStr,
+      "format not OK, got 'b3%c', expected 'b32'",
+      *((char *) &getC));
+        printf(msgStr, fatal, "FMTNOTOK", workingStr);
+        retVal = -1;
+    }
+    break;
 
-	    case '6':
-		if (*resultFmt != ieeeUnknown)
-		    *resultFmt = ieeeT;
-		else
-		    *operandFmt = *resultFmt = ieeeT;
-		getC = fgetc(fp);
-		if ((getC != EOF) && (getC != '4'))
-		{
-		    sprintf(
-			workingStr,
-			"format not OK, got 'b6%c', expected 'b164'",
-			getC);
-		    printf(msgStr, fatal, "FMTNOTOK", workingStr);
-		    retVal = -1;
-		}
-		break;
+      case '6':
+    if (*resultFmt != ieeeUnknown)
+        *resultFmt = ieeeT;
+    else
+        *operandFmt = *resultFmt = ieeeT;
+    getC = fgetc(fp);
+    if ((getC != EOF) && (getC != '4'))
+    {
+        sprintf(
+      workingStr,
+      "format not OK, got 'b6%c', expected 'b164'",
+      getC);
+        printf(msgStr, fatal, "FMTNOTOK", workingStr);
+        retVal = -1;
+    }
+    break;
 
-	    case '1':
-		if (*resultFmt != ieeeUnknown)
-		    *resultFmt = ieeeX;
-		else
-		    *operandFmt = *resultFmt = ieeeX;
-		getC = fgetc(fp);
-		if ((getC != EOF) && (getC == '2'))
-		{
-		    getC = fgetc(fp);
-		    if ((getC != EOF) && (getC != '8'))
-		    {
-			sprintf(
-			    workingStr,
-			    "format not OK, got 'b12%c', expected 'b128'",
-			    getC);
-			printf(msgStr, fatal, "FMTNOTOK", workingStr);
-			retVal = -1;
-		    }
-		}
-		else if (getC != EOF)
-		{
-		    sprintf(
-			workingStr,
-			"format not OK, got 'b1%c', expected 'b128'",
-			getC);
-		    printf(msgStr, fatal, "FMTNOTOK", workingStr);
-		    retVal = -1;
-		}
-		break;
-	}
-	getC = fgetc(fp);
+      case '1':
+    if (*resultFmt != ieeeUnknown)
+        *resultFmt = ieeeX;
+    else
+        *operandFmt = *resultFmt = ieeeX;
+    getC = fgetc(fp);
+    if ((getC != EOF) && (getC == '2'))
+    {
+        getC = fgetc(fp);
+        if ((getC != EOF) && (getC != '8'))
+        {
+      sprintf(
+          workingStr,
+          "format not OK, got 'b12%c', expected 'b128'",
+          getC);
+      printf(msgStr, fatal, "FMTNOTOK", workingStr);
+      retVal = -1;
+        }
+    }
+    else if (getC != EOF)
+    {
+        sprintf(
+      workingStr,
+      "format not OK, got 'b1%c', expected 'b128'",
+      getC);
+        printf(msgStr, fatal, "FMTNOTOK", workingStr);
+        retVal = -1;
+    }
+    break;
+  }
+  getC = fgetc(fp);
     }
     if (getC == EOF)
     {
-	retVal = 0;
-	if (*operandFmt != ieeeUnknown)
-	{
-	    printf("Got EOF with");
-	    printFormat(*operandFmt, *resultFmt);
-	}
+  retVal = 0;
+  if (*operandFmt != ieeeUnknown)
+  {
+      printf("Got EOF with");
+      printFormat(*operandFmt, *resultFmt);
+  }
     }
     else
     {
-	if (*operandFmt == ieeeUnknown)
-	{
-	    printf(
-		msgStr,
-		fatal,
-		"FMTUNKNOWN",
-		"operand and result formats are unknown");
-	    retVal = -1;
-	}
+  if (*operandFmt == ieeeUnknown)
+  {
+      printf(
+    msgStr,
+    fatal,
+    "FMTUNKNOWN",
+    "operand and result formats are unknown");
+      retVal = -1;
+  }
     }
 
     /*
@@ -733,31 +733,31 @@ i32 parseNextLine(
      */
     if (retVal == 1)
     {
-	getC = ungetc(getC, fp);
-	retVal = readNextToken(fp, workingStr, sizeof(workingStr));
-	if (retVal == 1)
-	{
-	    for (ii = 0; ii < AXP_NUM_OPER; ii++)
-		if (strcmp(cvtOperStr[ii].operStr, workingStr) == 0)
-		{
-		    *operation = cvtOperStr[ii].oper;
-		    found = true;
-		    break;
-		}
-	    if (found == false)
-	    {
-		char localStr[80];
+  getC = ungetc(getC, fp);
+  retVal = readNextToken(fp, workingStr, sizeof(workingStr));
+  if (retVal == 1)
+  {
+      for (ii = 0; ii < AXP_NUM_OPER; ii++)
+    if (strcmp(cvtOperStr[ii].operStr, workingStr) == 0)
+    {
+        *operation = cvtOperStr[ii].oper;
+        found = true;
+        break;
+    }
+      if (found == false)
+      {
+    char localStr[80];
 
-		sprintf(
-		    localStr,
-		    "floating-point operation (%s) not found",
-		    workingStr);
-		printf(msgStr, fatal, "OPNOTFOUND", localStr);
-		retVal = -1;
-	    }
-	    else if (getC == EOF)
-		retVal = 0;
-	}
+    sprintf(
+        localStr,
+        "floating-point operation (%s) not found",
+        workingStr);
+    printf(msgStr, fatal, "OPNOTFOUND", localStr);
+    retVal = -1;
+      }
+      else if (getC == EOF)
+    retVal = 0;
+  }
     }
 
     /*
@@ -765,31 +765,31 @@ i32 parseNextLine(
      */
     if (retVal == 1)
     {
-	retVal = readNextToken(fp, workingStr, sizeof(workingStr));
-	if (retVal == 1)
-	{
-	    found = false;
-	    for (ii = 0; ii < AXP_NUM_ROUNDING; ii++)
-		if (strcmp(cvtRoundingStr[ii].str, workingStr) == 0)
-		{
-		    *roundMode = cvtRoundingStr[ii].round;
-		    found = true;
-		    break;
-		}
-	    if (found == false)
-	    {
-		char localStr[80];
+  retVal = readNextToken(fp, workingStr, sizeof(workingStr));
+  if (retVal == 1)
+  {
+      found = false;
+      for (ii = 0; ii < AXP_NUM_ROUNDING; ii++)
+    if (strcmp(cvtRoundingStr[ii].str, workingStr) == 0)
+    {
+        *roundMode = cvtRoundingStr[ii].round;
+        found = true;
+        break;
+    }
+      if (found == false)
+      {
+    char localStr[80];
 
-		sprintf(
-		    localStr,
-		    "floating-point rounding mode (%s) not found",
-		    workingStr);
-		printf(msgStr, fatal, "RNDNOTFOUND", localStr);
-		retVal = -1;
-	    }
-	    else if (getC == EOF)
-		retVal = 0;
-	}
+    sprintf(
+        localStr,
+        "floating-point rounding mode (%s) not found",
+        workingStr);
+    printf(msgStr, fatal, "RNDNOTFOUND", localStr);
+    retVal = -1;
+      }
+      else if (getC == EOF)
+    retVal = 0;
+  }
 
     }
 
@@ -799,41 +799,41 @@ i32 parseNextLine(
     if (retVal == 1)
     {
 
-	/*
-	 * OK, the trapped expression may or may not be present.  If it is
-	 * present, then parse it an read in the next space character, so that
-	 * we are ready to parse the input parameters.  IF it is not present,
-	 * then un-get it and move on to the next parsing stage.
-	 */
-	getC = fgetc(fp);
-	if (getC != EOF)
-	{
-	    found = false;
-	    for (ii = 1; ii < AXP_NUM_EXCEPTION; ii++)
-	    {
-		if (cvtTExceptionChar[ii].exceptionChar == getC)
-		{
-		    *exception = cvtTExceptionChar[ii].exception;
-		    found = true;
-		    break;
-		}
-	    }
+  /*
+   * OK, the trapped expression may or may not be present.  If it is
+   * present, then parse it an read in the next space character, so that
+   * we are ready to parse the input parameters.  IF it is not present,
+   * then un-get it and move on to the next parsing stage.
+   */
+  getC = fgetc(fp);
+  if (getC != EOF)
+  {
+      found = false;
+      for (ii = 1; ii < AXP_NUM_EXCEPTION; ii++)
+      {
+    if (cvtTExceptionChar[ii].exceptionChar == getC)
+    {
+        *exception = cvtTExceptionChar[ii].exception;
+        found = true;
+        break;
+    }
+      }
 
-	    /*
-	     * If we did not find the exception, then we are processing the
-	     * first input value.  Put the character back onto the character
-	     * stream.  Otherwise, read the next character (it is a space).
-	     */
-	    if (found != true)
-		getC = ungetc(getC, fp);
-	    else
-	    {
-		if (fgetc(fp) == EOF)
-		    retVal = 0;
-	    }
-	}
-	else
-	    retVal = 0;
+      /*
+       * If we did not find the exception, then we are processing the
+       * first input value.  Put the character back onto the character
+       * stream.  Otherwise, read the next character (it is a space).
+       */
+      if (found != true)
+    getC = ungetc(getC, fp);
+      else
+      {
+    if (fgetc(fp) == EOF)
+        retVal = 0;
+      }
+  }
+  else
+      retVal = 0;
     }
 
     /*
@@ -841,21 +841,21 @@ i32 parseNextLine(
      */
     if (retVal == 1)
     {
-	int tmpBoolResults;
-	bool tmpResults;
+  int tmpBoolResults;
+  bool tmpResults;
 
-	retVal = readNextToken(fp, workingStr, sizeof(workingStr));
-	while ((strcmp("->", workingStr) != 0) && (retVal == 1))
-	{
-	    retVal = parseOperands(
-		workingStr,
-		*operandFmt,
-		&tmpBoolResults,
-		nextFPReg[nextFPRegIdx++],
-		&tmpResults);
-	    if (retVal == 1)
-		retVal = readNextToken(fp, workingStr, sizeof(workingStr));
-	}
+  retVal = readNextToken(fp, workingStr, sizeof(workingStr));
+  while ((strcmp("->", workingStr) != 0) && (retVal == 1))
+  {
+      retVal = parseOperands(
+    workingStr,
+    *operandFmt,
+    &tmpBoolResults,
+    nextFPReg[nextFPRegIdx++],
+    &tmpResults);
+      if (retVal == 1)
+    retVal = readNextToken(fp, workingStr, sizeof(workingStr));
+  }
     }
 
     /*
@@ -863,19 +863,19 @@ i32 parseNextLine(
      */
     if (retVal == 1)
     {
-	retVal = readNextToken(fp, workingStr, sizeof(workingStr));
-	if (retVal == 1)
-	{
-	    if (workingStr[0] != '#')
-		retVal = parseOperands(
-		    workingStr,
-		    *resultFmt,
-		    useResult,
-		    dest,
-		    result);
-	    else
-		*useResult += 1;
-	}
+  retVal = readNextToken(fp, workingStr, sizeof(workingStr));
+  if (retVal == 1)
+  {
+      if (workingStr[0] != '#')
+    retVal = parseOperands(
+        workingStr,
+        *resultFmt,
+        useResult,
+        dest,
+        result);
+      else
+    *useResult += 1;
+  }
     }
 
     /*
@@ -884,60 +884,60 @@ i32 parseNextLine(
     if (retVal == 1)
     {
 
-	/*
-	 * OK, the trapped expression may or may not be present.  If it is
-	 * present, then parse it an read in the next space character, so that
-	 * we are ready to parse the input parameters.  IF it is not present,
-	 * then un-get it and move on to the next parsing stage.
-	 */
-	found = false;
-	getC = fgetc(fp);
-	while ((getC != EOF) && (getC != ' ') && (getC != '\n'))
-	{
-	    switch (getC)
-	    {
-		case 'x':
-		    expectedFPCR->ine = 1;
-		    found = true;
-		    break;
+  /*
+   * OK, the trapped expression may or may not be present.  If it is
+   * present, then parse it an read in the next space character, so that
+   * we are ready to parse the input parameters.  IF it is not present,
+   * then un-get it and move on to the next parsing stage.
+   */
+  found = false;
+  getC = fgetc(fp);
+  while ((getC != EOF) && (getC != ' ') && (getC != '\n'))
+  {
+      switch (getC)
+      {
+    case 'x':
+        expectedFPCR->ine = 1;
+        found = true;
+        break;
 
-		case 'u':
-		case 'v':
-		case 'w':
-		    expectedFPCR->unf = 1;
-		    found = true;
-		    break;
+    case 'u':
+    case 'v':
+    case 'w':
+        expectedFPCR->unf = 1;
+        found = true;
+        break;
 
-		case 'o':
-		    expectedFPCR->ovf = 1;
-		    found = true;
-		    break;
+    case 'o':
+        expectedFPCR->ovf = 1;
+        found = true;
+        break;
 
-		case 'z':
-		    expectedFPCR->dze = 1;
-		    found = true;
-		    break;
+    case 'z':
+        expectedFPCR->dze = 1;
+        found = true;
+        break;
 
-		case 'i':
-		    expectedFPCR->inv = 1;
-		    found = true;
-		    break;
-	    }
+    case 'i':
+        expectedFPCR->inv = 1;
+        found = true;
+        break;
+      }
 
-	    /*
-	     * Get the next character.
-	     */
-	    getC = fgetc(fp);
-	}
-	if (found == true)
-	{
-	    expectedFPCR->sum = 1;
-	    *useResult += 1;
-	}
-	else
-	    *useResult -= 1;
-	if (getC == EOF)
-	    retVal = 0;
+      /*
+       * Get the next character.
+       */
+      getC = fgetc(fp);
+  }
+  if (found == true)
+  {
+      expectedFPCR->sum = 1;
+      *useResult += 1;
+  }
+  else
+      *useResult -= 1;
+  if (getC == EOF)
+      retVal = 0;
     }
     return (retVal);
 }
@@ -968,13 +968,13 @@ FILE *openNextFile(char *fileName)
     fp = fopen(fileName, "r");
     while ((ready == false) && (fp != NULL))
     {
-	if (fgets(line, sizeof(line), fp) != NULL)
-	    ready = strlen(line) == 1;
-	else
-	{
-	    fclose(fp);
-	    fp = NULL;
-	}
+  if (fgets(line, sizeof(line), fp) != NULL)
+      ready = strlen(line) == 1;
+  else
+  {
+      fclose(fp);
+      fp = NULL;
+  }
     }
 
     /*
@@ -1140,547 +1140,547 @@ int main()
 
     if (fp != NULL)
     {
-	Ra = (double *) &instr.src1v.fp.uq;
-	Rb = (double *) &instr.src2v.fp.uq;
-	Rd = (double *) &src3v.uq;
-	Rc = (double *) &instr.destv.fp.uq;
-	expectedRc = (double *) &expectedResults;
-	while ((retVal = parseNextLine(
-	    fp,
-	    &oper,
-	    &operandFmt,
-	    &resultFmt,
-	    &roundMode,
-	    &trappedException,
-	    &instr.src1v.fp,
-	    &instr.src2v.fp,
-	    &src3v,
-	    &useResults,
-	    &expectedResults,
-	    &results,
-	    &FPCR)) != 0)
-	{
-	    testCnt++;
-	    offset = 0;
-	    printOut = false;
-	    switch (retVal)
-	    {
-		case 1:
-		    encoding = AXP_FP_ENCODE(&instr.src1v.fp.fpr, true);
-		    switch (oper)
-		    {
-			/*
-			 * TODO: It may be worth utilizing the comparison
-			 * instructions (CMPTxx) below, instead of the compiler
-			 * provided ones.
-			 *
-			 * TODO: We should look at also executing the
-			 * instructions for T, G, and F floats.  This is
-			 * starting to look like a separate testing function.
-			 */
-			case addAction:
-			case copySignAction:
-			case subtractAction:
-			case multiplyAction:
-			case divideAction:
-			case squareRootAction:
-			    offset += sprintf(
-				&outStr[offset],
-				"%7d: ",
-				testCnt + 4);
-			    if (oper == addAction)
-			    {
-				offset += sprintf(&outStr[offset], "ADDS");
-				instr.function = AXP_FUNC_ADDS;
-				if (FPCR.ine == 1)
-				    instr.function |= AXP_FUNC_ADDS_SUI;
-			    }
-			    else if (oper == copySignAction)
-			    {
-				offset += sprintf(&outStr[offset], "CPYS");
-				instr.function = AXP_FUNC_CPYS;
-			    }
-			    else if (oper == subtractAction)
-			    {
-				offset += sprintf(&outStr[offset], "SUBS");
-				instr.function = AXP_FUNC_SUBS;
-				if (FPCR.ine == 1)
-				    instr.function |= AXP_FUNC_SUBS_SUI;
-			    }
-			    else if (oper == multiplyAction)
-			    {
-				offset += sprintf(&outStr[offset], "MULS");
-				instr.function = AXP_FUNC_MULS;
-				if (FPCR.ine == 1)
-				    instr.function |= AXP_FUNC_MULS_SUI;
-			    }
-			    else if (oper == divideAction)
-			    {
-				offset += sprintf(&outStr[offset], "DIVS");
-				instr.function = AXP_FUNC_DIVS;
-				if (FPCR.ine == 1)
-				    instr.function |= AXP_FUNC_DIVS_SUI;
-			    }
-			    else if (oper == squareRootAction)
-			    {
-				offset += sprintf(&outStr[offset], "SQRTS");
-				instr.function = AXP_FUNC_SQRTS;
-				if (FPCR.ine == 1)
-				    instr.function |= AXP_FUNC_SQRTS_SUI;
-			    }
-			    offset +=
-				sprintf(
-				    &outStr[offset],
-				    "(%d): Ra: %f, Rb: %f; expecting %f (0x%016llx) --> ",
-				    useResults,
-				    *Ra,
-				    *Rb,
-				    *expectedRc,
-				    *((u64 *) &FPCR));
-			    instr.opcode = FLTI;
-			    memset(&instr.insFpcr, 0, sizeof(u64));
-			    if (oper == addAction)
-				retValIns = AXP_ADDS(cpu, &instr);
-			    else if (oper == copySignAction)
-				retValIns = AXP_CPYS(cpu, &instr);
-			    else if (oper == subtractAction)
-				retValIns = AXP_SUBS(cpu, &instr);
-			    else if (oper == multiplyAction)
-				retValIns = AXP_MULS(cpu, &instr);
-			    else if (oper == divideAction)
-				retValIns = AXP_DIVS(cpu, &instr);
-			    else if (oper == squareRootAction)
-				retValIns = AXP_SQRTS(cpu, &instr);
-			    if (useResults == 2)
-			    {
+  Ra = (double *) &instr.src1v.fp.uq;
+  Rb = (double *) &instr.src2v.fp.uq;
+  Rd = (double *) &src3v.uq;
+  Rc = (double *) &instr.destv.fp.uq;
+  expectedRc = (double *) &expectedResults;
+  while ((retVal = parseNextLine(
+      fp,
+      &oper,
+      &operandFmt,
+      &resultFmt,
+      &roundMode,
+      &trappedException,
+      &instr.src1v.fp,
+      &instr.src2v.fp,
+      &src3v,
+      &useResults,
+      &expectedResults,
+      &results,
+      &FPCR)) != 0)
+  {
+      testCnt++;
+      offset = 0;
+      printOut = false;
+      switch (retVal)
+      {
+    case 1:
+        encoding = AXP_FP_ENCODE(&instr.src1v.fp.fpr, true);
+        switch (oper)
+        {
+      /*
+       * TODO: It may be worth utilizing the comparison
+       * instructions (CMPTxx) below, instead of the compiler
+       * provided ones.
+       *
+       * TODO: We should look at also executing the
+       * instructions for T, G, and F floats.  This is
+       * starting to look like a separate testing function.
+       */
+      case addAction:
+      case copySignAction:
+      case subtractAction:
+      case multiplyAction:
+      case divideAction:
+      case squareRootAction:
+          offset += sprintf(
+        &outStr[offset],
+        "%7d: ",
+        testCnt + 4);
+          if (oper == addAction)
+          {
+        offset += sprintf(&outStr[offset], "ADDS");
+        instr.function = AXP_FUNC_ADDS;
+        if (FPCR.ine == 1)
+            instr.function |= AXP_FUNC_ADDS_SUI;
+          }
+          else if (oper == copySignAction)
+          {
+        offset += sprintf(&outStr[offset], "CPYS");
+        instr.function = AXP_FUNC_CPYS;
+          }
+          else if (oper == subtractAction)
+          {
+        offset += sprintf(&outStr[offset], "SUBS");
+        instr.function = AXP_FUNC_SUBS;
+        if (FPCR.ine == 1)
+            instr.function |= AXP_FUNC_SUBS_SUI;
+          }
+          else if (oper == multiplyAction)
+          {
+        offset += sprintf(&outStr[offset], "MULS");
+        instr.function = AXP_FUNC_MULS;
+        if (FPCR.ine == 1)
+            instr.function |= AXP_FUNC_MULS_SUI;
+          }
+          else if (oper == divideAction)
+          {
+        offset += sprintf(&outStr[offset], "DIVS");
+        instr.function = AXP_FUNC_DIVS;
+        if (FPCR.ine == 1)
+            instr.function |= AXP_FUNC_DIVS_SUI;
+          }
+          else if (oper == squareRootAction)
+          {
+        offset += sprintf(&outStr[offset], "SQRTS");
+        instr.function = AXP_FUNC_SQRTS;
+        if (FPCR.ine == 1)
+            instr.function |= AXP_FUNC_SQRTS_SUI;
+          }
+          offset +=
+        sprintf(
+            &outStr[offset],
+            "(%d): Ra: %f, Rb: %f; expecting %f (0x%016llx) --> ",
+            useResults,
+            *Ra,
+            *Rb,
+            *expectedRc,
+            *((u64 *) &FPCR));
+          instr.opcode = FLTI;
+          memset(&instr.insFpcr, 0, sizeof(u64));
+          if (oper == addAction)
+        retValIns = AXP_ADDS(cpu, &instr);
+          else if (oper == copySignAction)
+        retValIns = AXP_CPYS(cpu, &instr);
+          else if (oper == subtractAction)
+        retValIns = AXP_SUBS(cpu, &instr);
+          else if (oper == multiplyAction)
+        retValIns = AXP_MULS(cpu, &instr);
+          else if (oper == divideAction)
+        retValIns = AXP_DIVS(cpu, &instr);
+          else if (oper == squareRootAction)
+        retValIns = AXP_SQRTS(cpu, &instr);
+          if (useResults == 2)
+          {
 
-				/*
-				 * We are only expected an exception.  No need
-				 * to compare the expected Rc to the returned
-				 * Rc.  Just compare the expected FPCR to the
-				 * one in the instruction.
-				 */
-				if (memcmp(&FPCR, &instr.insFpcr, sizeof(FPCR))
-				    == 0)
-				{
-				    passed++;
-				    offset += sprintf(
-					&outStr[offset],
-					"passed");
-				}
-				else
-				{
-				    pass = false;
-				    failed++;
-				    offset += sprintf(
-					&outStr[offset],
-					" failed FPCR: 0x%016llx",
-					*((u64 *) &instr.insFpcr));
-				    printOut = true;
-				}
-			    }
-			    else if ((useResults == 1) || (useResults == 3))
-			    {
+        /*
+         * We are only expected an exception.  No need
+         * to compare the expected Rc to the returned
+         * Rc.  Just compare the expected FPCR to the
+         * one in the instruction.
+         */
+        if (memcmp(&FPCR, &instr.insFpcr, sizeof(FPCR))
+            == 0)
+        {
+            passed++;
+            offset += sprintf(
+          &outStr[offset],
+          "passed");
+        }
+        else
+        {
+            pass = false;
+            failed++;
+            offset += sprintf(
+          &outStr[offset],
+          " failed FPCR: 0x%016llx",
+          *((u64 *) &instr.insFpcr));
+            printOut = true;
+        }
+          }
+          else if ((useResults == 1) || (useResults == 3))
+          {
 
-				/*
-				 * OK, we got 2 things to check out.  First,
-				 * that the returned Rc is equal to the
-				 * expected Rc.
-				 */
-				if (*expectedRc == *Rc)
-				{
+        /*
+         * OK, we got 2 things to check out.  First,
+         * that the returned Rc is equal to the
+         * expected Rc.
+         */
+        if (*expectedRc == *Rc)
+        {
 
-				    /*
-				     * OK, the values matched.  Now we need to
-				     * check the returned exceptions.
-				     */
-				    if (memcmp(
-					&FPCR,
-					&instr.insFpcr,
-					sizeof(FPCR)) == 0)
-				    {
-					passed++;
-					offset += sprintf(
-					    &outStr[offset],
-					    "passed");
-				    }
-				    else
-				    {
-					pass = false;
-					failed++;
-					offset +=
-					    sprintf(
-						&outStr[offset],
-						"Rc values matched, exception failed FPCR: 0x%016llx",
-						*((u64 *) &instr.insFpcr));
-					printOut = true;
-				    }
-				}
-				else
-				{
+            /*
+             * OK, the values matched.  Now we need to
+             * check the returned exceptions.
+             */
+            if (memcmp(
+          &FPCR,
+          &instr.insFpcr,
+          sizeof(FPCR)) == 0)
+            {
+          passed++;
+          offset += sprintf(
+              &outStr[offset],
+              "passed");
+            }
+            else
+            {
+          pass = false;
+          failed++;
+          offset +=
+              sprintf(
+            &outStr[offset],
+            "Rc values matched, exception failed FPCR: 0x%016llx",
+            *((u64 *) &instr.insFpcr));
+          printOut = true;
+            }
+        }
+        else
+        {
 
-				    /*
-				     * OK, the values did not match.  If we
-				     * were supposed to get exceptions, then
-				     * let's check for their correctness.
-				     * Otherwise, we failed.
-				     */
-				    if (useResults == 3)
-				    {
-					pass = false;
-					failed++;
+            /*
+             * OK, the values did not match.  If we
+             * were supposed to get exceptions, then
+             * let's check for their correctness.
+             * Otherwise, we failed.
+             */
+            if (useResults == 3)
+            {
+          pass = false;
+          failed++;
 
-					/*
-					 * OK, the values did not matched.  Now
-					 * we need to check the returned
-					 * exceptions.
-					 */
-					if (memcmp(
-					    &FPCR,
-					    &instr.insFpcr,
-					    sizeof(FPCR)) == 0)
-					{
-					    pass = false;
-					    failed++;
-					    offset += sprintf(
-						&outStr[offset],
-						"Rc %f, FPCRs matched.",
-						*Rc);
-					}
-					else
-					{
-					    pass = false;
-					    failed++;
-					    offset +=
-						sprintf(
-						    &outStr[offset],
-						    "Nothing matched, Rc: %f, FPCR: 0x%016llx",
-						    *Rc,
-						    *((u64 *) &instr.insFpcr));
-					}
-					printOut = true;
-				    }
-				    else
-				    {
-					pass = false;
-					failed++;
-					offset += sprintf(
-					    &outStr[offset],
-					    " failed Rc: %f (0x%016llx)",
-					    *Rc,
-					    *((u64 *) &instr.insFpcr));
-					printOut = true;
-				    }
-				}
-			    }
-			    else
-			    {
+          /*
+           * OK, the values did not matched.  Now
+           * we need to check the returned
+           * exceptions.
+           */
+          if (memcmp(
+              &FPCR,
+              &instr.insFpcr,
+              sizeof(FPCR)) == 0)
+          {
+              pass = false;
+              failed++;
+              offset += sprintf(
+            &outStr[offset],
+            "Rc %f, FPCRs matched.",
+            *Rc);
+          }
+          else
+          {
+              pass = false;
+              failed++;
+              offset +=
+            sprintf(
+                &outStr[offset],
+                "Nothing matched, Rc: %f, FPCR: 0x%016llx",
+                *Rc,
+                *((u64 *) &instr.insFpcr));
+          }
+          printOut = true;
+            }
+            else
+            {
+          pass = false;
+          failed++;
+          offset += sprintf(
+              &outStr[offset],
+              " failed Rc: %f (0x%016llx)",
+              *Rc,
+              *((u64 *) &instr.insFpcr));
+          printOut = true;
+            }
+        }
+          }
+          else
+          {
 
-				/*
-				 * We were not expecting anything.  There is
-				 * probably some test that can occur, but I
-				 * have no idea what it might be.  I'm just
-				 * going to blindly assume we passed.
-				 */
-				passed++;
-				offset += sprintf(&outStr[offset], "passed");
-			    }
-			    offset += sprintf(
-				&outStr[offset],
-				", AXP Exception: %d\n",
-				retValIns);
-			    break;
+        /*
+         * We were not expecting anything.  There is
+         * probably some test that can occur, but I
+         * have no idea what it might be.  I'm just
+         * going to blindly assume we passed.
+         */
+        passed++;
+        offset += sprintf(&outStr[offset], "passed");
+          }
+          offset += sprintf(
+        &outStr[offset],
+        ", AXP Exception: %d\n",
+        retValIns);
+          break;
 
-			case isSignedAction:
-			    offset += sprintf(
-				&outStr[offset],
-				"%7d: isSigned: %f, expecting %d --> ",
-				testCnt + 4,
-				*Ra,
-				results);
-			    if (isSigned(*Ra) == results)
-			    {
-				passed++;
-				offset += sprintf(&outStr[offset], "passed\n");
-			    }
-			    else
-			    {
-				pass = false;
-				failed++;
-				offset += sprintf(
-				    &outStr[offset],
-				    "failed (0x%016llx)\n",
-				    instr.src1v.fp.uq);
-				printOut = true;
-			    }
-			    break;
+      case isSignedAction:
+          offset += sprintf(
+        &outStr[offset],
+        "%7d: isSigned: %f, expecting %d --> ",
+        testCnt + 4,
+        *Ra,
+        results);
+          if (isSigned(*Ra) == results)
+          {
+        passed++;
+        offset += sprintf(&outStr[offset], "passed\n");
+          }
+          else
+          {
+        pass = false;
+        failed++;
+        offset += sprintf(
+            &outStr[offset],
+            "failed (0x%016llx)\n",
+            instr.src1v.fp.uq);
+        printOut = true;
+          }
+          break;
 
-			case isNormalAction:
-			    offset += sprintf(
-				&outStr[offset],
-				"%7d: isNormal (%s): %f, expecting %d --> ",
-				testCnt + 4,
-				cvtEncoding[encoding],
-				*Ra,
-				results);
-			    if (isnormal(*Ra) == results)
-			    {
-				passed++;
-				offset += sprintf(&outStr[offset], "passed\n");
-			    }
-			    else
-			    {
-				pass = false;
-				failed++;
-				offset += sprintf(
-				    &outStr[offset],
-				    "failed (0x%016llx)\n",
-				    instr.src1v.fp.uq);
-				printOut = true;
-			    }
-			    break;
+      case isNormalAction:
+          offset += sprintf(
+        &outStr[offset],
+        "%7d: isNormal (%s): %f, expecting %d --> ",
+        testCnt + 4,
+        cvtEncoding[encoding],
+        *Ra,
+        results);
+          if (isnormal(*Ra) == results)
+          {
+        passed++;
+        offset += sprintf(&outStr[offset], "passed\n");
+          }
+          else
+          {
+        pass = false;
+        failed++;
+        offset += sprintf(
+            &outStr[offset],
+            "failed (0x%016llx)\n",
+            instr.src1v.fp.uq);
+        printOut = true;
+          }
+          break;
 
-			case isFiniteAction:
-			    offset += sprintf(
-				&outStr[offset],
-				"%7d: isFinite (%s): %f, expecting %d --> ",
-				testCnt + 4,
-				cvtEncoding[encoding],
-				*Ra,
-				results);
-			    if (isfinite(*Ra) == results)
-			    {
-				passed++;
-				offset += sprintf(&outStr[offset], "passed\n");
-			    }
-			    else
-			    {
-				pass = false;
-				failed++;
-				offset += sprintf(
-				    &outStr[offset],
-				    "failed (0x%016llx)\n",
-				    instr.src1v.fp.uq);
-				printOut = true;
-			    }
-			    break;
+      case isFiniteAction:
+          offset += sprintf(
+        &outStr[offset],
+        "%7d: isFinite (%s): %f, expecting %d --> ",
+        testCnt + 4,
+        cvtEncoding[encoding],
+        *Ra,
+        results);
+          if (isfinite(*Ra) == results)
+          {
+        passed++;
+        offset += sprintf(&outStr[offset], "passed\n");
+          }
+          else
+          {
+        pass = false;
+        failed++;
+        offset += sprintf(
+            &outStr[offset],
+            "failed (0x%016llx)\n",
+            instr.src1v.fp.uq);
+        printOut = true;
+          }
+          break;
 
-			case isZeroAction:
-			    offset += sprintf(
-				&outStr[offset],
-				"%7d: isZero (%s): %f, expecting %d --> ",
-				testCnt + 4,
-				cvtEncoding[encoding],
-				*Ra,
-				results);
-			    if ((*Ra == 0.0) == results)
-			    {
-				passed++;
-				offset += sprintf(&outStr[offset], "passed\n");
-			    }
-			    else
-			    {
-				pass = false;
-				failed++;
-				offset += sprintf(
-				    &outStr[offset],
-				    "failed (0x%016llx)\n",
-				    instr.src1v.fp.uq);
-				printOut = true;
-			    }
-			    break;
+      case isZeroAction:
+          offset += sprintf(
+        &outStr[offset],
+        "%7d: isZero (%s): %f, expecting %d --> ",
+        testCnt + 4,
+        cvtEncoding[encoding],
+        *Ra,
+        results);
+          if ((*Ra == 0.0) == results)
+          {
+        passed++;
+        offset += sprintf(&outStr[offset], "passed\n");
+          }
+          else
+          {
+        pass = false;
+        failed++;
+        offset += sprintf(
+            &outStr[offset],
+            "failed (0x%016llx)\n",
+            instr.src1v.fp.uq);
+        printOut = true;
+          }
+          break;
 
-			case isSubnormalAction:
-			    offset += sprintf(
-				&outStr[offset],
-				"%7d: isSubnormal (%s): %f, expecting %d --> ",
-				testCnt + 4,
-				cvtEncoding[encoding],
-				*Ra,
-				results);
-			    if ((fpclassify(*Ra) == FP_SUBNORMAL) == results)
-			    {
-				passed++;
-				offset += sprintf(&outStr[offset], "passed\n");
-			    }
-			    else
-			    {
-				pass = false;
-				failed++;
-				offset += sprintf(
-				    &outStr[offset],
-				    "failed (0x%016llx)\n",
-				    instr.src1v.fp.uq);
-				printOut = true;
-			    }
-			    break;
+      case isSubnormalAction:
+          offset += sprintf(
+        &outStr[offset],
+        "%7d: isSubnormal (%s): %f, expecting %d --> ",
+        testCnt + 4,
+        cvtEncoding[encoding],
+        *Ra,
+        results);
+          if ((fpclassify(*Ra) == FP_SUBNORMAL) == results)
+          {
+        passed++;
+        offset += sprintf(&outStr[offset], "passed\n");
+          }
+          else
+          {
+        pass = false;
+        failed++;
+        offset += sprintf(
+            &outStr[offset],
+            "failed (0x%016llx)\n",
+            instr.src1v.fp.uq);
+        printOut = true;
+          }
+          break;
 
-			case isInfiniteAction:
-			    offset += sprintf(
-				&outStr[offset],
-				"%7d: isInfinite (%s): %f, expecting %d --> ",
-				testCnt + 4,
-				cvtEncoding[encoding],
-				*Ra,
-				results);
-			    if (isInf(*Ra) == results)
-			    {
-				passed++;
-				offset += sprintf(&outStr[offset], "passed\n");
-			    }
-			    else
-			    {
-				pass = false;
-				failed++;
-				offset += sprintf(
-				    &outStr[offset],
-				    "failed (0x%016llx)\n",
-				    instr.src1v.fp.uq);
-				printOut = true;
-			    }
-			    break;
+      case isInfiniteAction:
+          offset += sprintf(
+        &outStr[offset],
+        "%7d: isInfinite (%s): %f, expecting %d --> ",
+        testCnt + 4,
+        cvtEncoding[encoding],
+        *Ra,
+        results);
+          if (isInf(*Ra) == results)
+          {
+        passed++;
+        offset += sprintf(&outStr[offset], "passed\n");
+          }
+          else
+          {
+        pass = false;
+        failed++;
+        offset += sprintf(
+            &outStr[offset],
+            "failed (0x%016llx)\n",
+            instr.src1v.fp.uq);
+        printOut = true;
+          }
+          break;
 
-			case isNotANumberAction:
-			    offset += sprintf(
-				&outStr[offset],
-				"%7d: isNotANumber (%s): %f, expecting %d --> ",
-				testCnt + 4,
-				cvtEncoding[encoding],
-				*Ra,
-				results);
-			    if (isnan(*Ra) == results)
-			    {
-				passed++;
-				offset += sprintf(&outStr[offset], "passed\n");
-			    }
-			    else
-			    {
-				pass = false;
-				failed++;
-				offset += sprintf(
-				    &outStr[offset],
-				    "failed (0x%016llx)\n",
-				    instr.src1v.fp.uq);
-				printOut = true;
-			    }
-			    break;
+      case isNotANumberAction:
+          offset += sprintf(
+        &outStr[offset],
+        "%7d: isNotANumber (%s): %f, expecting %d --> ",
+        testCnt + 4,
+        cvtEncoding[encoding],
+        *Ra,
+        results);
+          if (isnan(*Ra) == results)
+          {
+        passed++;
+        offset += sprintf(&outStr[offset], "passed\n");
+          }
+          else
+          {
+        pass = false;
+        failed++;
+        offset += sprintf(
+            &outStr[offset],
+            "failed (0x%016llx)\n",
+            instr.src1v.fp.uq);
+        printOut = true;
+          }
+          break;
 
-			case isSignalingAction:
-			    offset += sprintf(
-				&outStr[offset],
-				"%7d: isSignaling (%s): %f, expecting %d --> ",
-				testCnt + 4,
-				cvtEncoding[encoding],
-				*Ra,
-				results);
-			    if (isSignaling(*Ra) == results)
-			    {
-				passed++;
-				offset += sprintf(&outStr[offset], "passed\n");
-			    }
-			    else
-			    {
-				pass = false;
-				failed++;
-				offset += sprintf(
-				    &outStr[offset],
-				    "failed (0x%016llx)\n",
-				    instr.src1v.fp.uq);
-				printOut = true;
-			    }
-			    break;
+      case isSignalingAction:
+          offset += sprintf(
+        &outStr[offset],
+        "%7d: isSignaling (%s): %f, expecting %d --> ",
+        testCnt + 4,
+        cvtEncoding[encoding],
+        *Ra,
+        results);
+          if (isSignaling(*Ra) == results)
+          {
+        passed++;
+        offset += sprintf(&outStr[offset], "passed\n");
+          }
+          else
+          {
+        pass = false;
+        failed++;
+        offset += sprintf(
+            &outStr[offset],
+            "failed (0x%016llx)\n",
+            instr.src1v.fp.uq);
+        printOut = true;
+          }
+          break;
 
-			    /*
-			     * These are not yet implemented.
-			     */
-			case multiplyAddAction:
-			case remainderAction:
-			case roundFloatToIntAction:
-			case convertFloatToFloatAction:
-			case convertFloatToIntAction:
-			case convertIntToFloatAction:
-			case convertToDecimalStrAction:
-			case convertDecimalStrToFloatAction:
-			case quietComparisonAction:
-			case signalingComparisonAction:
-			case copyAction:
-			case negateAction:
-			case absoluteValueAction:
-			case scalbAction:
-			case logbAction:
-			case nextAfterAction:
-			case classAction:
-			case minNumAction:
-			case maxNumAction:
-			case minNumMagAction:
-			case maxNumMagAction:
-			case sameQuantumAction:
-			case quantizeAction:
-			case nextUpAction:
-			case nextDownAction:
-			case equivalentAction:
-			    for (ii = 0; ii < AXP_NUM_OPER; ii++)
-				if (oper == cvtOperStr[ii].oper)
-				    break;
-			    offset +=
-				sprintf(
-				    &outStr[offset],
-				    "%7d: %s (%s): Ra: %f, Rb: %f, Rd: %f, expecting useResults %d, results: %d, Rc: %f (0x%016llx)\n",
-				    testCnt + 4,
-				    cvtOperStr[ii].humanReadable,
-				    cvtEncoding[encoding],
-				    *Ra,
-				    *Rb,
-				    *Rd,
-				    useResults,
-				    results,
-				    *expectedRc,
-				    *((u64 *) &instr.insFpcr));
-			    skipped++;
-			    break;
+          /*
+           * These are not yet implemented.
+           */
+      case multiplyAddAction:
+      case remainderAction:
+      case roundFloatToIntAction:
+      case convertFloatToFloatAction:
+      case convertFloatToIntAction:
+      case convertIntToFloatAction:
+      case convertToDecimalStrAction:
+      case convertDecimalStrToFloatAction:
+      case quietComparisonAction:
+      case signalingComparisonAction:
+      case copyAction:
+      case negateAction:
+      case absoluteValueAction:
+      case scalbAction:
+      case logbAction:
+      case nextAfterAction:
+      case classAction:
+      case minNumAction:
+      case maxNumAction:
+      case minNumMagAction:
+      case maxNumMagAction:
+      case sameQuantumAction:
+      case quantizeAction:
+      case nextUpAction:
+      case nextDownAction:
+      case equivalentAction:
+          for (ii = 0; ii < AXP_NUM_OPER; ii++)
+        if (oper == cvtOperStr[ii].oper)
+            break;
+          offset +=
+        sprintf(
+            &outStr[offset],
+            "%7d: %s (%s): Ra: %f, Rb: %f, Rd: %f, expecting useResults %d, results: %d, Rc: %f (0x%016llx)\n",
+            testCnt + 4,
+            cvtOperStr[ii].humanReadable,
+            cvtEncoding[encoding],
+            *Ra,
+            *Rb,
+            *Rd,
+            useResults,
+            results,
+            *expectedRc,
+            *((u64 *) &instr.insFpcr));
+          skipped++;
+          break;
 
-			case NoOp:
-			    break;
-		    }
-		    break;
+      case NoOp:
+          break;
+        }
+        break;
 
-		case -1:
-		    offset += sprintf(
-			&outStr[offset],
-			"%7d: >>>>>> ReadNextLine Failed <<<<<\n",
-			testCnt + 4);
-		    pass = false;
-		    failed++;
-		    printOut = true;
-		    break;
-	    }
-	    if (printOut)
-		printf(outStr);
-	}
-	fclose(fp);
+    case -1:
+        offset += sprintf(
+      &outStr[offset],
+      "%7d: >>>>>> ReadNextLine Failed <<<<<\n",
+      testCnt + 4);
+        pass = false;
+        failed++;
+        printOut = true;
+        break;
+      }
+      if (printOut)
+    printf(outStr);
+  }
+  fclose(fp);
     }
     else
     {
-	printf("Unable to open test data file: %s\n", fileName);
-	pass = false;
+  printf("Unable to open test data file: %s\n", fileName);
+  pass = false;
     }
 
     /*
      * Display the results of the test.
      */
     if (pass == true)
-	printf(
-	    "\n% d tests passed, %d tests skipped, and %d test cases executed.\n",
-	    passed,
-	    skipped,
-	    testCnt);
+  printf(
+      "\n% d tests passed, %d tests skipped, and %d test cases executed.\n",
+      passed,
+      skipped,
+      testCnt);
     else
-	printf(
-	    "\n%d tests passed, %d failed, and %d skipped, with a total of %d tests.\n",
-	    passed,
-	    failed,
-	    skipped,
-	    testCnt);
+  printf(
+      "\n%d tests passed, %d failed, and %d skipped, with a total of %d tests.\n",
+      passed,
+      failed,
+      skipped,
+      testCnt);
 
     /*
      * We are done.

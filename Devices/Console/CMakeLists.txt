@@ -27,4 +27,4 @@ add_library(Console STATIC
     AXP_Telnet.c)
 
 target_include_directories(Console PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

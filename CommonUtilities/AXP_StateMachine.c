@@ -54,10 +54,10 @@
  *  The value of the next state for the state machine.
  */
 u8 AXP_Execute_SM(
-	    AXP_StateMachine *sm,
-	    u8 action,
-	    u8 curState,
-	    AXP_SM_Args *args)
+      AXP_StateMachine *sm,
+      u8 action,
+      u8 curState,
+      AXP_SM_Args *args)
 {
     AXP_SM_Entry	*entry;
     char		trcBuf[512];
@@ -67,9 +67,9 @@ u8 AXP_Execute_SM(
 
     if (AXP_UTL_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_Execute_SM Called.");
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_Execute_SM Called.");
+  AXP_TRACE_END();
     }
 
     /*
@@ -83,53 +83,53 @@ u8 AXP_Execute_SM(
      */
     if (action <= sm->maxActions)
     {
-	trcIdx += sprintf(
-			&trcBuf[trcIdx],
-			"\tState Machine: %s Current State = %d, Action = 0x%02x (%d) --> ",
-			sm->smName,
-			curState,
-			action,
-			action);
-	if (entry->actionRtn != NULL)
-	{
-	    (*entry->actionRtn)(args);
-	    act = true;
-	}
-	else
-	    act = false;
-	retVal = entry->nextState;
-	trcIdx += sprintf(
-			&trcBuf[trcIdx],
-			"Next State = %d (Action Routine %s called)",
-			retVal,
-			(act ? "" : "not"));
-	if (AXP_UTL_OPT2)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite(trcBuf);
-	    AXP_TRACE_END();
-	}
+  trcIdx += sprintf(
+      &trcBuf[trcIdx],
+      "\tState Machine: %s Current State = %d, Action = 0x%02x (%d) --> ",
+      sm->smName,
+      curState,
+      action,
+      action);
+  if (entry->actionRtn != NULL)
+  {
+      (*entry->actionRtn)(args);
+      act = true;
+  }
+  else
+      act = false;
+  retVal = entry->nextState;
+  trcIdx += sprintf(
+      &trcBuf[trcIdx],
+      "Next State = %d (Action Routine %s called)",
+      retVal,
+      (act ? "" : "not"));
+  if (AXP_UTL_OPT2)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite(trcBuf);
+      AXP_TRACE_END();
+  }
     }
     else if (AXP_UTL_OPT2)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-		"\tState Machine: %s not executed because action was outside limits "
-		"(action = %d, max = %d).",
-		sm->smName,
-		action,
-		sm->maxActions);
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+    "\tState Machine: %s not executed because action was outside limits "
+    "(action = %d, max = %d).",
+    sm->smName,
+    action,
+    sm->maxActions);
+  AXP_TRACE_END();
     }
 
     if (AXP_UTL_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-		"AXP_Execute_SM for State Machine: %s Returning (%d).",
-		sm->smName,
-		retVal);
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+    "AXP_Execute_SM for State Machine: %s Returning (%d).",
+    sm->smName,
+    retVal);
+  AXP_TRACE_END();
     }
 
     /*

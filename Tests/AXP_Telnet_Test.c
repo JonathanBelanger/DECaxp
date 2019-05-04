@@ -389,21 +389,21 @@ bool test_options_StateMachine(void)
     printf("...Initializing Option State Machine for Testing...\n");
     sm = (AXP_StateMachine *) &TN_Option_SM;
     for (ii = 0; ii < AXP_OPT_MAX_ACTION; ii++)
-	for (jj = 0; jj < AXP_OPT_MAX_STATE; jj++)
-	{
-	    entry = AXP_SM_ENTRY(sm, ii, jj);
-	    if (entry->actionRtn != NULL)
-	    {
-		if (entry->actionRtn == Send_DO)
-		    entry->actionRtn = Test_Send_DO;
-		else if (entry->actionRtn == Send_DONT)
-		    entry->actionRtn = Test_Send_DONT;
-		else if (entry->actionRtn == Send_WILL)
-		    entry->actionRtn = Test_Send_WILL;
-		else if (entry->actionRtn == Send_WONT)
-		    entry->actionRtn = Test_Send_WONT;
-	    }
-	}
+  for (jj = 0; jj < AXP_OPT_MAX_STATE; jj++)
+  {
+      entry = AXP_SM_ENTRY(sm, ii, jj);
+      if (entry->actionRtn != NULL)
+      {
+    if (entry->actionRtn == Send_DO)
+        entry->actionRtn = Test_Send_DO;
+    else if (entry->actionRtn == Send_DONT)
+        entry->actionRtn = Test_Send_DONT;
+    else if (entry->actionRtn == Send_WILL)
+        entry->actionRtn = Test_Send_WILL;
+    else if (entry->actionRtn == Send_WONT)
+        entry->actionRtn = Test_Send_WONT;
+      }
+  }
 
     /*
      * Now we can run our tests.  Loop through the test cases, execute the
@@ -413,29 +413,29 @@ bool test_options_StateMachine(void)
     ii = 0;
     while ((SM_Opt_Tests[ii].currentState < AXP_OPT_MAX_STATE) && (retVal == true))
     {
-	printf(
-	    "...Executing Option State Machine Test %3d for [%d]="
-	    "{curState: %d, action: %d, nextState: %d, action: 0x%04x}...",
-	    kk++,
-	    ii,
-	    SM_Opt_Tests[ii].currentState,
-	    SM_Opt_Tests[ii].action,
-	    SM_Opt_Tests[ii].resultantState,
-	    SM_Opt_Tests[ii].actionMask);
-	testActionMask = 0;
-	nextState = AXP_Execute_SM(
-			sm,
-			SM_Opt_Tests[ii].action,
-			SM_Opt_Tests[ii].currentState,
-			NULL);
-	printf(
-	    " got {x,x, nextState: %d, action: 0x%04x}...\n",
-	    nextState,
-	    testActionMask);
-	if ((nextState != SM_Opt_Tests[ii].resultantState) ||
-	    (testActionMask != SM_Opt_Tests[ii].actionMask))
-	    retVal = false;
-	ii++;
+  printf(
+      "...Executing Option State Machine Test %3d for [%d]="
+      "{curState: %d, action: %d, nextState: %d, action: 0x%04x}...",
+      kk++,
+      ii,
+      SM_Opt_Tests[ii].currentState,
+      SM_Opt_Tests[ii].action,
+      SM_Opt_Tests[ii].resultantState,
+      SM_Opt_Tests[ii].actionMask);
+  testActionMask = 0;
+  nextState = AXP_Execute_SM(
+      sm,
+      SM_Opt_Tests[ii].action,
+      SM_Opt_Tests[ii].currentState,
+      NULL);
+  printf(
+      " got {x,x, nextState: %d, action: 0x%04x}...\n",
+      nextState,
+      testActionMask);
+  if ((nextState != SM_Opt_Tests[ii].resultantState) ||
+      (testActionMask != SM_Opt_Tests[ii].actionMask))
+      retVal = false;
+  ii++;
     }
 
     /*
@@ -443,21 +443,21 @@ bool test_options_StateMachine(void)
      */
     printf("...Resetting Option State Machine for Use...\n");
     for (ii = 0; ii < AXP_OPT_MAX_ACTION; ii++)
-	for (jj = 0; jj < AXP_OPT_MAX_STATE; jj++)
-	{
-	    entry = AXP_SM_ENTRY(sm, ii, jj);
-	    if (entry->actionRtn != NULL)
-	    {
-		if (entry->actionRtn == Test_Send_DO)
-		    entry->actionRtn = Send_DO;
-		else if (entry->actionRtn == Test_Send_DONT)
-		    entry->actionRtn = Send_DONT;
-		else if (entry->actionRtn == Test_Send_WILL)
-		    entry->actionRtn = Send_WILL;
-		else if (entry->actionRtn == Test_Send_WONT)
-		    entry->actionRtn = Send_WONT;
-	    }
-	}
+  for (jj = 0; jj < AXP_OPT_MAX_STATE; jj++)
+  {
+      entry = AXP_SM_ENTRY(sm, ii, jj);
+      if (entry->actionRtn != NULL)
+      {
+    if (entry->actionRtn == Test_Send_DO)
+        entry->actionRtn = Send_DO;
+    else if (entry->actionRtn == Test_Send_DONT)
+        entry->actionRtn = Send_DONT;
+    else if (entry->actionRtn == Test_Send_WILL)
+        entry->actionRtn = Send_WILL;
+    else if (entry->actionRtn == Test_Send_WONT)
+        entry->actionRtn = Send_WONT;
+      }
+  }
 
     /*
      * Now, let's do the session state machine.
@@ -465,95 +465,95 @@ bool test_options_StateMachine(void)
     if (retVal == true)
     {
 
-	    /*
-	     * First things first, we need to substitute the real action
-	     * routines with the test versions.
-	     */
-	    printf("...Initializing Receive State Machine for Testing...\n");
-	    sm = (AXP_StateMachine *) &TN_Receive_SM;
-	    for (ii = 0; ii < AXP_ACT_MAX; ii++)
-		for (jj = 0; jj < AXP_RCV_MAX_STATE; jj++)
-		{
-		    entry = AXP_SM_ENTRY(sm, ii, jj);
-		    if (entry->actionRtn != NULL)
-		    {
-			if (entry->actionRtn == Echo_Data)
-			    entry->actionRtn = Test_Echo_Data;
-			else if (entry->actionRtn == Save_CMD)
-			    entry->actionRtn = Test_Save_CMD;
-			else if (entry->actionRtn == Process_CMD)
-			    entry->actionRtn = Test_Process_CMD;
-			else if (entry->actionRtn == Cvt_Process_IAC)
-			    entry->actionRtn = Test_Cvt_Process_IAC;
-			else if (entry->actionRtn == SubOpt_Clear)
-			    entry->actionRtn = Test_SubOpt_Clear;
-			else if (entry->actionRtn == SubOpt_Accumulate)
-			    entry->actionRtn = Test_SubOpt_Accumulate;
-			else if (entry->actionRtn == SubOpt_TermProcess)
-			    entry->actionRtn = Test_SubOpt_TermProcess;
-		    }
-		}
+      /*
+       * First things first, we need to substitute the real action
+       * routines with the test versions.
+       */
+      printf("...Initializing Receive State Machine for Testing...\n");
+      sm = (AXP_StateMachine *) &TN_Receive_SM;
+      for (ii = 0; ii < AXP_ACT_MAX; ii++)
+    for (jj = 0; jj < AXP_RCV_MAX_STATE; jj++)
+    {
+        entry = AXP_SM_ENTRY(sm, ii, jj);
+        if (entry->actionRtn != NULL)
+        {
+      if (entry->actionRtn == Echo_Data)
+          entry->actionRtn = Test_Echo_Data;
+      else if (entry->actionRtn == Save_CMD)
+          entry->actionRtn = Test_Save_CMD;
+      else if (entry->actionRtn == Process_CMD)
+          entry->actionRtn = Test_Process_CMD;
+      else if (entry->actionRtn == Cvt_Process_IAC)
+          entry->actionRtn = Test_Cvt_Process_IAC;
+      else if (entry->actionRtn == SubOpt_Clear)
+          entry->actionRtn = Test_SubOpt_Clear;
+      else if (entry->actionRtn == SubOpt_Accumulate)
+          entry->actionRtn = Test_SubOpt_Accumulate;
+      else if (entry->actionRtn == SubOpt_TermProcess)
+          entry->actionRtn = Test_SubOpt_TermProcess;
+        }
+    }
 
-	    /*
-	     * Now we can run our tests.  Loop through the test cases, execute the
-	     * state machine and determine if what occurred is what was expected (as
-	     * far as state transitions and action routines called).
-	     */
-	    ii = 0;
-	    while ((SM_Rcv_Tests[ii].currentState < AXP_RCV_MAX_STATE) && (retVal == true))
-	    {
-		printf(
-		    "...Executing Receive State Machine Test %3d for [%d]="
-		    "{curState: %d, action: %d, nextState: %d, action: 0x%04x}...",
-		    kk++,
-		    ii,
-		    SM_Rcv_Tests[ii].currentState,
-		    SM_Rcv_Tests[ii].action,
-		    SM_Rcv_Tests[ii].resultantState,
-		    SM_Rcv_Tests[ii].actionMask);
-		testActionMask = 0;
-		nextState = AXP_Execute_SM(
-				sm,
-				SM_Rcv_Tests[ii].action,
-				SM_Rcv_Tests[ii].currentState,
-				NULL);
-		printf(
-		    " got {x,x, nextState: %d, action: 0x%04x}...\n",
-		    nextState,
-		    testActionMask);
-		if ((nextState != SM_Rcv_Tests[ii].resultantState) ||
-		    (testActionMask != SM_Rcv_Tests[ii].actionMask))
-		    retVal = false;
-		ii++;
-	    }
+      /*
+       * Now we can run our tests.  Loop through the test cases, execute the
+       * state machine and determine if what occurred is what was expected (as
+       * far as state transitions and action routines called).
+       */
+      ii = 0;
+      while ((SM_Rcv_Tests[ii].currentState < AXP_RCV_MAX_STATE) && (retVal == true))
+      {
+    printf(
+        "...Executing Receive State Machine Test %3d for [%d]="
+        "{curState: %d, action: %d, nextState: %d, action: 0x%04x}...",
+        kk++,
+        ii,
+        SM_Rcv_Tests[ii].currentState,
+        SM_Rcv_Tests[ii].action,
+        SM_Rcv_Tests[ii].resultantState,
+        SM_Rcv_Tests[ii].actionMask);
+    testActionMask = 0;
+    nextState = AXP_Execute_SM(
+        sm,
+        SM_Rcv_Tests[ii].action,
+        SM_Rcv_Tests[ii].currentState,
+        NULL);
+    printf(
+        " got {x,x, nextState: %d, action: 0x%04x}...\n",
+        nextState,
+        testActionMask);
+    if ((nextState != SM_Rcv_Tests[ii].resultantState) ||
+        (testActionMask != SM_Rcv_Tests[ii].actionMask))
+        retVal = false;
+    ii++;
+      }
 
-	    /*
-	     * Last things last, we need to substitute the real action routines
-	     * with the test versions.
-	     */
-	    printf("...Resetting Receive State Machine for Use...\n");
-	    for (ii = 0; ii < AXP_ACT_MAX; ii++)
-		for (jj = 0; jj < AXP_RCV_MAX_STATE; jj++)
-		{
-		    entry = AXP_SM_ENTRY(sm, ii, jj);
-		    if (entry->actionRtn != NULL)
-		    {
-			if (entry->actionRtn == Test_Echo_Data)
-			    entry->actionRtn = Echo_Data;
-			else if (entry->actionRtn == Test_Save_CMD)
-			    entry->actionRtn = Save_CMD;
-			else if (entry->actionRtn == Test_Process_CMD)
-			    entry->actionRtn = Process_CMD;
-			else if (entry->actionRtn == Test_Cvt_Process_IAC)
-			    entry->actionRtn = Cvt_Process_IAC;
-			else if (entry->actionRtn == Test_SubOpt_Clear)
-			    entry->actionRtn = SubOpt_Clear;
-			else if (entry->actionRtn == Test_SubOpt_Accumulate)
-			    entry->actionRtn = SubOpt_Accumulate;
-			else if (entry->actionRtn == Test_SubOpt_TermProcess)
-			    entry->actionRtn = SubOpt_TermProcess;
-		    }
-		}
+      /*
+       * Last things last, we need to substitute the real action routines
+       * with the test versions.
+       */
+      printf("...Resetting Receive State Machine for Use...\n");
+      for (ii = 0; ii < AXP_ACT_MAX; ii++)
+    for (jj = 0; jj < AXP_RCV_MAX_STATE; jj++)
+    {
+        entry = AXP_SM_ENTRY(sm, ii, jj);
+        if (entry->actionRtn != NULL)
+        {
+      if (entry->actionRtn == Test_Echo_Data)
+          entry->actionRtn = Echo_Data;
+      else if (entry->actionRtn == Test_Save_CMD)
+          entry->actionRtn = Save_CMD;
+      else if (entry->actionRtn == Test_Process_CMD)
+          entry->actionRtn = Process_CMD;
+      else if (entry->actionRtn == Test_Cvt_Process_IAC)
+          entry->actionRtn = Cvt_Process_IAC;
+      else if (entry->actionRtn == Test_SubOpt_Clear)
+          entry->actionRtn = SubOpt_Clear;
+      else if (entry->actionRtn == Test_SubOpt_Accumulate)
+          entry->actionRtn = SubOpt_Accumulate;
+      else if (entry->actionRtn == Test_SubOpt_TermProcess)
+          entry->actionRtn = SubOpt_TermProcess;
+        }
+    }
     }
 
     /*
@@ -570,18 +570,18 @@ int main(void)
     printf("\nTesting Options and Receive State Machines...\n");
     if (AXP_TraceInit() == true)
     {
-	retVal = test_options_StateMachine();
-	if (retVal == true)
-	{
-	    printf("\nTesting Telnet Server...\n");
-	    AXP_Telnet_Main();
-	}
+  retVal = test_options_StateMachine();
+  if (retVal == true)
+  {
+      printf("\nTesting Telnet Server...\n");
+      AXP_Telnet_Main();
+  }
     }
     else
-	retVal = false;
+  retVal = false;
     if (retVal == true)
-	printf("All Tests Successful!\n");
+  printf("All Tests Successful!\n");
     else
-	printf("At Least One Test Failed.\n");
+  printf("At Least One Test Failed.\n");
     return(0);
 }

@@ -140,12 +140,12 @@ typedef enum
  */
 #define AXP_RCV_ACTION(c)						\
     (((c) == NUL) ? AXP_ACT_NUL :					\
-	(((c) == IAC) ? AXP_ACT_IAC :					\
-	    (((c) == CR) ? AXP_ACT_R :				\
-		((((c) >= WILL) && ((c) <= DONT)) ? AXP_ACT_CMD :	\
-		    (((c) == SE) ? AXP_ACT_SE :				\
-			(((c) == SB) ? AXP_ACT_SB :			\
-			    AXP_ACT_CATCHALL))))))
+  (((c) == IAC) ? AXP_ACT_IAC :					\
+      (((c) == CR) ? AXP_ACT_R :				\
+    ((((c) >= WILL) && ((c) <= DONT)) ? AXP_ACT_CMD :	\
+        (((c) == SE) ? AXP_ACT_SE :				\
+      (((c) == SB) ? AXP_ACT_SB :			\
+          AXP_ACT_CATCHALL))))))
 
 typedef struct
 {
@@ -193,7 +193,7 @@ typedef struct
  */
 #define AXP_TELNET_OPTIONS(ses, action)					\
     ((((action) >= YES_CLI) && ((action) <= WONT))) ?			\
-	(ses)->theirOptions : (ses)->myOptions)
+  (ses)->theirOptions : (ses)->myOptions)
 
 /*
  * Function prototypes.

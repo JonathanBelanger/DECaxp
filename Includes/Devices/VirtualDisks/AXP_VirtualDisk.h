@@ -372,11 +372,11 @@ typedef struct
     AXP_VHD_APPLY_SNAP_VER ver;
     union
     {
-	struct
-	{
-	    AXP_VHDX_GUID snapId;
-	    AXP_VHDX_GUID leafSnapId;
-	} ver_1;
+  struct
+  {
+      AXP_VHDX_GUID snapId;
+      AXP_VHDX_GUID leafSnapId;
+  } ver_1;
     };
 } AXP_VHD_APPLY_SNAP_PARAM;
 typedef struct
@@ -384,10 +384,10 @@ typedef struct
     AXP_VHD_ATTACH_VER ver;
     union
     {
-	struct
-	{
-	    u32 res_1;
-	} ver_1;
+  struct
+  {
+      u32 res_1;
+  } ver_1;
     };
 } AXP_VHD_ATTACH_PARAM;
 typedef struct
@@ -395,10 +395,10 @@ typedef struct
     AXP_VHD_COMPACT_VER ver;
     union
     {
-	struct
-	{
-	    u32 res_1;
-	} ver_1;
+  struct
+  {
+      u32 res_1;
+  } ver_1;
     };
 } AXP_VHD_COMPACT_PARAM;
 typedef struct
@@ -406,63 +406,63 @@ typedef struct
     AXP_VHD_CREATE_VERSION ver;
     union
     {
-	struct
-	{
-	    AXP_VHDX_GUID GUID;
-	    u64 maxSize;
-	    u32 blkSize;
-	    u32 sectorSize;
-	    char *parentPath;
-	    char *srcPath;
-	} ver_1;
-	struct
-	{
-	    AXP_VHDX_GUID GUID;
-	    u64 maxSize;
-	    u32 blkSize;
-	    u32 sectorSize;
-	    u32 physSectorSize;
-	    char *parentPath;
-	    char *srcPath;
-	    AXP_VHD_OPEN_FLAG flags;
-	    AXP_VHD_STORAGE_TYPE parentStorageType;
-	    AXP_VHD_STORAGE_TYPE srcStorageType;
-	    AXP_VHDX_GUID resiliencyGUID;
-	} ver_2;
-	struct
-	{
-	    AXP_VHDX_GUID GUID;
-	    u64 maxSize;
-	    u32 blkSize;
-	    u32 sectorSize;
-	    u32 physSectorSize;
-	    char *parentPath;
-	    char *srcPath;
-	    AXP_VHD_OPEN_FLAG flags;
-	    AXP_VHD_STORAGE_TYPE parentStorageType;
-	    AXP_VHD_STORAGE_TYPE srcStorageType;
-	    AXP_VHDX_GUID resiliencyGUID;
-	    char *srcLimitPath;
-	    AXP_VHD_STORAGE_TYPE backingStorageType;
-	} ver_3;
-	struct
-	{
-	    AXP_VHDX_GUID GUID;
-	    u64 maxSize;
-	    u32 blkSize;
-	    u32 sectorSize;
-	    u32 phySectorSize;
-	    char *parentPath;
-	    char *srcPath;
-	    AXP_VHD_OPEN_FLAG flags;
-	    AXP_VHD_STORAGE_TYPE parentStorageType;
-	    AXP_VHD_STORAGE_TYPE srcStorageType;
-	    AXP_VHDX_GUID resiliencyGUID;
-	    char *srcLimitPath;
-	    AXP_VHD_STORAGE_TYPE backingStorageType;
-	    AXP_VHDX_GUID pMemAddrAbstractionType;
-	    u64 dataAlignment;
-	} ver_4;
+  struct
+  {
+      AXP_VHDX_GUID GUID;
+      u64 maxSize;
+      u32 blkSize;
+      u32 sectorSize;
+      char *parentPath;
+      char *srcPath;
+  } ver_1;
+  struct
+  {
+      AXP_VHDX_GUID GUID;
+      u64 maxSize;
+      u32 blkSize;
+      u32 sectorSize;
+      u32 physSectorSize;
+      char *parentPath;
+      char *srcPath;
+      AXP_VHD_OPEN_FLAG flags;
+      AXP_VHD_STORAGE_TYPE parentStorageType;
+      AXP_VHD_STORAGE_TYPE srcStorageType;
+      AXP_VHDX_GUID resiliencyGUID;
+  } ver_2;
+  struct
+  {
+      AXP_VHDX_GUID GUID;
+      u64 maxSize;
+      u32 blkSize;
+      u32 sectorSize;
+      u32 physSectorSize;
+      char *parentPath;
+      char *srcPath;
+      AXP_VHD_OPEN_FLAG flags;
+      AXP_VHD_STORAGE_TYPE parentStorageType;
+      AXP_VHD_STORAGE_TYPE srcStorageType;
+      AXP_VHDX_GUID resiliencyGUID;
+      char *srcLimitPath;
+      AXP_VHD_STORAGE_TYPE backingStorageType;
+  } ver_3;
+  struct
+  {
+      AXP_VHDX_GUID GUID;
+      u64 maxSize;
+      u32 blkSize;
+      u32 sectorSize;
+      u32 phySectorSize;
+      char *parentPath;
+      char *srcPath;
+      AXP_VHD_OPEN_FLAG flags;
+      AXP_VHD_STORAGE_TYPE parentStorageType;
+      AXP_VHD_STORAGE_TYPE srcStorageType;
+      AXP_VHDX_GUID resiliencyGUID;
+      char *srcLimitPath;
+      AXP_VHD_STORAGE_TYPE backingStorageType;
+      AXP_VHDX_GUID pMemAddrAbstractionType;
+      u64 dataAlignment;
+  } ver_4;
     };
 } AXP_VHD_CREATE_PARAM;
 typedef struct
@@ -470,10 +470,10 @@ typedef struct
     AXP_VHD_DELETE_SNAP_VER ver;
     union
     {
-	struct
-	{
-	    AXP_VHDX_GUID snapsId;
-	} ver_1;
+  struct
+  {
+      AXP_VHDX_GUID snapsId;
+  } ver_1;
     };
 } AXP_VHD_DELETE_SNAP_PARAM;
 typedef struct
@@ -481,10 +481,10 @@ typedef struct
     AXP_VHD_EXPAND_VER ver;
     union
     {
-	struct
-	{
-	    u64 newSize;
-	} ver_1;
+  struct
+  {
+      u64 newSize;
+  } ver_1;
     };
 } AXP_VHD_EXPAND_PARAM;
 typedef struct
@@ -492,41 +492,41 @@ typedef struct
     AXP_VHD_GET_INFO_VER ver;
     union
     {
-	struct
-	{
-	    u64 virtSize;
-	    u64 physSize;
-	    u32 blkSize;
-	    u32 sectorSize;
-	} size;
-	AXP_VHDX_GUID ID;
-	struct
-	{
-	    bool parentResolved;
-	    char parentLocBuffer[1];
-	} parentLoc;
-	AXP_VHDX_GUID parentID;
-	u32 parentTimestamp;
-	AXP_VHD_STORAGE_TYPE storageType;
-	u32 providerSubtype;
-	bool is4kAligned;
-	bool isLoaded;
-	struct
-	{
-	    u32 logSectorSize;
-	    u32 physSectorSize;
-	    bool isRemote;
-	} physDisk;
-	u32 vhdPhysSectorSize;
-	u64 smallestSafeVirtSize;
-	u32 fragPercentage;
-	AXP_VHDX_GUID virtDiskID;
-	struct
-	{
-	    bool enabled;
-	    bool newerChanges;
-	    char mostRecentID[1];
-	} changeTrackingState;
+  struct
+  {
+      u64 virtSize;
+      u64 physSize;
+      u32 blkSize;
+      u32 sectorSize;
+  } size;
+  AXP_VHDX_GUID ID;
+  struct
+  {
+      bool parentResolved;
+      char parentLocBuffer[1];
+  } parentLoc;
+  AXP_VHDX_GUID parentID;
+  u32 parentTimestamp;
+  AXP_VHD_STORAGE_TYPE storageType;
+  u32 providerSubtype;
+  bool is4kAligned;
+  bool isLoaded;
+  struct
+  {
+      u32 logSectorSize;
+      u32 physSectorSize;
+      bool isRemote;
+  } physDisk;
+  u32 vhdPhysSectorSize;
+  u64 smallestSafeVirtSize;
+  u32 fragPercentage;
+  AXP_VHDX_GUID virtDiskID;
+  struct
+  {
+      bool enabled;
+      bool newerChanges;
+      char mostRecentID[1];
+  } changeTrackingState;
     };
 } AXP_VHD_GET_INFO;
 typedef struct
@@ -534,15 +534,15 @@ typedef struct
     AXP_VHD_MERGE_VER ver;
     union
     {
-	struct
-	{
-	    u32 mergeDepth;
-	} ver_1;
-	struct
-	{
-	    u32 mergeSrcDepth;
-	    u32 mergeTargetDepth;
-	} ver_2;
+  struct
+  {
+      u32 mergeDepth;
+  } ver_1;
+  struct
+  {
+      u32 mergeSrcDepth;
+      u32 mergeTargetDepth;
+  } ver_2;
     };
 } AXP_VHD_MERGE_PARAM;
 typedef struct
@@ -550,10 +550,10 @@ typedef struct
     AXP_VHD_MIRROR_VER ver;
     union
     {
-	struct
-	{
-	    char *mirrorDiskPath;
-	} ver_1;
+  struct
+  {
+      char *mirrorDiskPath;
+  } ver_1;
     };
 } AXP_VHD_MIRROR_PARAM;
 typedef struct
@@ -561,13 +561,13 @@ typedef struct
     AXP_VHD_MOD_VER ver;
     union
     {
-	struct
-	{
-	    AXP_VHDX_GUID snapID;
-	    char *snapFilePath;
-	} snapPath;
-	AXP_VHDX_GUID snapID;
-	char *defFilePath;
+  struct
+  {
+      AXP_VHDX_GUID snapID;
+      char *snapFilePath;
+  } snapPath;
+  AXP_VHDX_GUID snapID;
+  char *defFilePath;
     };
 } AXP_VHD_MOD_PARAM;
 typedef struct
@@ -575,23 +575,23 @@ typedef struct
     AXP_VHD_OPEN_VER ver;
     union
     {
-	struct
-	{
-	    u32 rWDepth;
-	} ver_1;
-	struct
-	{
-	    bool getInfoOnly;
-	    bool readOnly;
-	    AXP_VHDX_GUID resiliencyGUID;
-	} ver_2;
-	struct
-	{
-	    bool getInfoOnly;
-	    bool readOnly;
-	    AXP_VHDX_GUID resiliencyGUID;
-	    AXP_VHDX_GUID snapID;
-	} ver_3;
+  struct
+  {
+      u32 rWDepth;
+  } ver_1;
+  struct
+  {
+      bool getInfoOnly;
+      bool readOnly;
+      AXP_VHDX_GUID resiliencyGUID;
+  } ver_2;
+  struct
+  {
+      bool getInfoOnly;
+      bool readOnly;
+      AXP_VHDX_GUID resiliencyGUID;
+      AXP_VHDX_GUID snapID;
+  } ver_3;
     };
 } AXP_VHD_OPEN_PARAM;
 typedef struct
@@ -605,18 +605,18 @@ typedef struct
     AXP_VHD_RAW_SCSI_VER ver;
     union
     {
-	struct
-	{
-	    bool rSVDHandle;
-	    u8 dataIn;
-	    u8 cdbLen;
-	    u8 senseInfoLen;
-	    u32 srbFlags;
-	    u32 dataXferLen;
-	    void *dataBuf;
-	    u8 *senseInfo;
-	    u8 *cdb;
-	} ver_1;
+  struct
+  {
+      bool rSVDHandle;
+      u8 dataIn;
+      u8 cdbLen;
+      u8 senseInfoLen;
+      u32 srbFlags;
+      u32 dataXferLen;
+      void *dataBuf;
+      u8 *senseInfo;
+      u8 *cdb;
+  } ver_1;
     };
 } AXP_VHD_RAW_SCSI_PARAM;
 typedef struct
@@ -624,12 +624,12 @@ typedef struct
     AXP_VHD_RAW_SCSI_VER ver;
     union
     {
-	struct
-	{
-	    u8 ccsiStatus;
-	    u8 senseInfoLen;
-	    u32 dataXferLen;
-	} ver_1;
+  struct
+  {
+      u8 ccsiStatus;
+      u8 senseInfoLen;
+      u32 dataXferLen;
+  } ver_1;
     };
 } AXP_VHD_RAW_SCSI_RSP;
 typedef struct
@@ -637,21 +637,21 @@ typedef struct
     AXP_VHD_SET_INFO_VER ver;
     union
     {
-	char *parentFilePath;
-	AXP_VHDX_GUID GUID;
-	struct
-	{
-	    u32 childDepth;
-	    char *parentFilePath;
-	} parentPathWithDepthInfo;
-	u32 vhdPhysSectorSize;
-	AXP_VHDX_GUID virtDiskId;
-	bool changeTrackingEnabled;
-	struct
-	{
-	    AXP_VHDX_GUID linkageID;
-	    char *parentFilePath;
-	} parentLoc;
+  char *parentFilePath;
+  AXP_VHDX_GUID GUID;
+  struct
+  {
+      u32 childDepth;
+      char *parentFilePath;
+  } parentPathWithDepthInfo;
+  u32 vhdPhysSectorSize;
+  AXP_VHDX_GUID virtDiskId;
+  bool changeTrackingEnabled;
+  struct
+  {
+      AXP_VHDX_GUID linkageID;
+      char *parentFilePath;
+  } parentLoc;
     };
 } AXP_VHD_SET_INFO_PARAM;
 typedef struct
@@ -677,8 +677,8 @@ typedef struct
     u32 numEntries;
     union
     {
-	AXP_VHD_STORAGE_DEP_INFO_1 entriesV1[1];
-	AXP_VHD_STORAGE_DEP_INFO_2 entriesV2[1];
+  AXP_VHD_STORAGE_DEP_INFO_1 entriesV1[1];
+  AXP_VHD_STORAGE_DEP_INFO_2 entriesV2[1];
     };
 } AXP_VHD_STORAGE_DEP_INFO;
 typedef struct
@@ -686,10 +686,10 @@ typedef struct
     AXP_VHD_TAKE_SNAP_VER ver;
     union
     {
-	struct
-	{
-	    AXP_VHDX_GUID snapsID;
-	} ver_1;
+  struct
+  {
+      AXP_VHDX_GUID snapsID;
+  } ver_1;
     };
 } AXP_VHD_TAKE_SNAP_PARAM;
 typedef struct
@@ -704,10 +704,10 @@ typedef struct
     AXP_VHD_RESIZE_VER ver;
     union
     {
-	struct
-	{
-	    u64 newSize;
-	} ver_1;
+  struct
+  {
+      u64 newSize;
+  } ver_1;
     };
 } AXP_VHD_RESIZE_PARAM;
 
@@ -717,12 +717,12 @@ typedef struct
     u32 *internalHi;
     union
     {
-	struct
-	{
-	    u32 offset;
-	    u32 offsetHi;
-	};
-	void *ptr;
+  struct
+  {
+      u32 offset;
+      u32 offsetHi;
+  };
+  void *ptr;
     };
     void *hEvent;
 } AXP_VHD_ASYNC;
@@ -735,21 +735,21 @@ typedef void AXP_VHD_SEC_DSC;
  * Applies a snapshot of the current virtual disk for VHD Set files.
  */
 u32 AXP_VHD_ApplySnap(
-		AXP_VHD_HANDLE handle,
-		const AXP_VHD_APPLY_SNAP_VER *param,
-		AXP_VHD_APPLY_SNAP_FLAG flags);
+    AXP_VHD_HANDLE handle,
+    const AXP_VHD_APPLY_SNAP_VER *param,
+    AXP_VHD_APPLY_SNAP_FLAG flags);
 
 /*
  * Attaches a virtual hard disk (VHD) or CD or DVD image file (ISO) by locating
  * an appropriate VHD provider to accomplish the attachment.
  */
 u32 AXP_VHD_Attach(
-		AXP_VHD_HANDLE handle,
-		AXP_VHD_SEC_DSC *securityDsc,
-		AXP_VHD_ATTACH_FLAG flags,
-		u32 providerSpecFlags,
-		AXP_VHD_ATTACH_PARAM *param,
-		AXP_VHD_ASYNC *async);
+    AXP_VHD_HANDLE handle,
+    AXP_VHD_SEC_DSC *securityDsc,
+    AXP_VHD_ATTACH_FLAG flags,
+    u32 providerSpecFlags,
+    AXP_VHD_ATTACH_PARAM *param,
+    AXP_VHD_ASYNC *async);
 
 /*
  * Breaks a previously initiated mirror operation and sets the mirror to be the
@@ -761,52 +761,52 @@ u32 AXP_VHD_BreakMirror(AXP_VHD_HANDLE handle);
  * Reduces the size of a virtual hard disk (VHD) backing store file.
  */
 u32 AXP_VHD_Compact(
-		AXP_VHD_HANDLE handle,
-		AXP_VHD_COMPACT_FLAG flags,
-		AXP_VHD_COMPACT_PARAM *param,
-		AXP_VHD_ASYNC *async);
+    AXP_VHD_HANDLE handle,
+    AXP_VHD_COMPACT_FLAG flags,
+    AXP_VHD_COMPACT_PARAM *param,
+    AXP_VHD_ASYNC *async);
 
 /*
  * Creates a virtual hard disk (VHD) image file, either using default
  * parameters or using an existing virtual disk or physical disk.
  */
 u32 AXP_VHD_Create(
-		AXP_VHD_STORAGE_TYPE *storageType,
-		char *path,
-		AXP_VHD_ACCESS_MASK accessMask,
-		AXP_VHD_SEC_DSC *securityDsc,
-		AXP_VHD_CREATE_FLAG flags,
-		u32 providerSpecFlags,
-		AXP_VHD_CREATE_PARAM *param,
-		AXP_VHD_ASYNC *async,
-		AXP_VHD_HANDLE *handle);
+    AXP_VHD_STORAGE_TYPE *storageType,
+    char *path,
+    AXP_VHD_ACCESS_MASK accessMask,
+    AXP_VHD_SEC_DSC *securityDsc,
+    AXP_VHD_CREATE_FLAG flags,
+    u32 providerSpecFlags,
+    AXP_VHD_CREATE_PARAM *param,
+    AXP_VHD_ASYNC *async,
+    AXP_VHD_HANDLE *handle);
 
 /*
  * Deletes a snapshot from a VHD Set file.
  */
 u32 AXP_VHD_DeleteSnap(
-		AXP_VHD_HANDLE handle,
-		const AXP_VHD_DELETE_SNAP_PARAM *param,
-		AXP_VHD_DELETE_SNAP_FLAG flags);
+    AXP_VHD_HANDLE handle,
+    const AXP_VHD_DELETE_SNAP_PARAM *param,
+    AXP_VHD_DELETE_SNAP_FLAG flags);
 
 /*
  * Detaches a virtual hard disk (VHD) or CD or DVD image file (ISO) by locating
  * an appropriate virtual disk provider to accomplish the operation.
  */
 u32 AXP_VHD_Detach(
-		AXP_VHD_HANDLE handle,
-		AXP_VHD_DETACH_FLAG flags,
-		u32 ProviderSpecFlags);
+    AXP_VHD_HANDLE handle,
+    AXP_VHD_DETACH_FLAG flags,
+    u32 ProviderSpecFlags);
 
 /*
  * Increases the size of a fixed or dynamically expandable virtual hard disk
  * (VHD).
  */
 u32 AXP_VHD_Expand(
-		AXP_VHD_HANDLE handle,
-		AXP_VHD_EXPAND_FLAG flags,
-		AXP_VHD_EXPAND_PARAM *param,
-		AXP_VHD_ASYNC *async);
+    AXP_VHD_HANDLE handle,
+    AXP_VHD_EXPAND_FLAG flags,
+    AXP_VHD_EXPAND_PARAM *param,
+    AXP_VHD_ASYNC *async);
 
 /*
  * Returns the relationships between virtual hard disks (VHDs) or CD or DVD
@@ -814,114 +814,114 @@ u32 AXP_VHD_Expand(
  * parent disk or volume.
  */
 u32 AXP_VHD_GetStorageDepInfo(
-		AXP_VHD_HANDLE handle,
-		AXP_VHD_GET_STORAGE_DEP_FLAG flags,
-		u32 storageDepInfoSize,
-		AXP_VHD_STORAGE_DEP_INFO *storageDepInfo,
-		u32 *sizeUsed);
+    AXP_VHD_HANDLE handle,
+    AXP_VHD_GET_STORAGE_DEP_FLAG flags,
+    u32 storageDepInfoSize,
+    AXP_VHD_STORAGE_DEP_INFO *storageDepInfo,
+    u32 *sizeUsed);
 
 /*
  * Retrieves information about a VHD.
  */
 u32 AXP_VHD_GetInfo(
-		AXP_VHD_HANDLE handle,
-		u32 *infoSize,
-		AXP_VHD_GET_INFO *info,
-		u32 *sizeUsed);
+    AXP_VHD_HANDLE handle,
+    u32 *infoSize,
+    AXP_VHD_GET_INFO *info,
+    u32 *sizeUsed);
 
 /*
  * Checks the progress of an asynchronous virtual hard disk (VHD) operation.
  */
 u32 AXP_VHD_GetProgress(
-		AXP_VHD_HANDLE handle,
-		AXP_VHD_ASYNC *async,
-		AXP_VHD_PROGRESS *prog);
+    AXP_VHD_HANDLE handle,
+    AXP_VHD_ASYNC *async,
+    AXP_VHD_PROGRESS *prog);
 
 /*
  * Retrieves the path to the physical device object that contains a virtual
  * hard disk (VHD) or CD or DVD image file (ISO).
  */
 u32 AXP_VHD_GetPhysPath(
-		AXP_VHD_HANDLE handle,
-		u32 *diskPathSize,
-		char *diskPath);
+    AXP_VHD_HANDLE handle,
+    u32 *diskPathSize,
+    char *diskPath);
 
 /*
  * Merges a child virtual hard disk (VHD) in a differencing chain with one or
  * more parent virtual disks in the chain.
  */
 u32 AXP_VHD_Merge(
-		AXP_VHD_HANDLE handle,
-		AXP_VHD_MERGE_FLAG flags,
-		AXP_VHD_MERGE_PARAM *parameters,
-		AXP_VHD_ASYNC *async);
+    AXP_VHD_HANDLE handle,
+    AXP_VHD_MERGE_FLAG flags,
+    AXP_VHD_MERGE_PARAM *parameters,
+    AXP_VHD_ASYNC *async);
 
 /*
  * Initiates a mirror operation for a virtual disk.
  */
 u32 AXP_VHD_Mirror(
-		AXP_VHD_HANDLE handle,
-		AXP_VHD_MIRROR_FLAG flags,
-		AXP_VHD_MIRROR_PARAM *param,
-		AXP_VHD_ASYNC *async);
+    AXP_VHD_HANDLE handle,
+    AXP_VHD_MIRROR_FLAG flags,
+    AXP_VHD_MIRROR_PARAM *param,
+    AXP_VHD_ASYNC *async);
 
 /*
  * Modifies the internal contents of a virtual disk file. Can be used to set
  * the active leaf, or to fix up snapshot entries.
  */
 u32 AXP_VHD_Modify(
-		AXP_VHD_HANDLE handle,
-		const AXP_VHD_MOD_PARAM *param,
-		AXP_VHD_MOD_FLAG flags);
+    AXP_VHD_HANDLE handle,
+    const AXP_VHD_MOD_PARAM *param,
+    AXP_VHD_MOD_FLAG flags);
 
 /*
  * Opens a virtual hard disk (VHD) or CD or DVD image file (ISO) for use.
  */
 u32 AXP_VHD_Open(
-		AXP_VHD_STORAGE_TYPE *type,
-		char *path,
-		AXP_VHD_ACCESS_MASK accessMask,
-		AXP_VHD_OPEN_FLAG flags,
-		AXP_VHD_OPEN_PARAM *param,
-		AXP_VHD_HANDLE *handle);
+    AXP_VHD_STORAGE_TYPE *type,
+    char *path,
+    AXP_VHD_ACCESS_MASK accessMask,
+    AXP_VHD_OPEN_FLAG flags,
+    AXP_VHD_OPEN_PARAM *param,
+    AXP_VHD_HANDLE *handle);
 
 /*
  * Retrieves information about changes to the specified areas of a virtual hard
  * disk (VHD) that are tracked by resilient change tracking (RCT).
  */
 u32 AXP_VHD_QueryChanges(
-		AXP_VHD_HANDLE handle,
-		char *chgTrackID,
-		u64 offset,
-		u64 len,
-		AXP_VHD_QUERY_CHANGES_FLAG flags,
-		AXP_VHD_QUERY_CHANGES_RANGE *ranges,
-		u32 *rangeCnt,
-		u64 *procLen);
+    AXP_VHD_HANDLE handle,
+    char *chgTrackID,
+    u64 offset,
+    u64 len,
+    AXP_VHD_QUERY_CHANGES_FLAG flags,
+    AXP_VHD_QUERY_CHANGES_RANGE *ranges,
+    u32 *rangeCnt,
+    u64 *procLen);
 
 /*
  * Issues an embedded SCSI request directly to a virtual hard disk.
  */
 u32 AXP_VHD_RawSCSI(
-		AXP_VHD_HANDLE handle,
-		const AXP_VHD_RAW_SCSI_PARAM *param,
-		AXP_VHD_RAW_SCSI_FLAG flags,
-		AXP_VHD_RAW_SCSI_RSP *rsp);
+    AXP_VHD_HANDLE handle,
+    const AXP_VHD_RAW_SCSI_PARAM *param,
+    AXP_VHD_RAW_SCSI_FLAG flags,
+    AXP_VHD_RAW_SCSI_RSP *rsp);
 
 /*
  * Sets information about a virtual hard disk (VHD).
  */
 u32 AXP_VHD_SetInfo(
-		AXP_VHD_HANDLE handle,
-		AXP_VHD_SET_INFO_PARAM *info);
+    AXP_VHD_HANDLE handle,
+    AXP_VHD_SET_INFO_PARAM *info);
 
 /*
  * Creates a snapshot of the current virtual disk for VHD Set files.
  */
 u32 AXP_VHD_TakeSnap(
-		AXP_VHD_HANDLE handle,
-		const AXP_VHD_TAKE_SNAP_PARAM *param,
-		AXP_VHD_TAKE_SNAP_FLAG flags);
+    AXP_VHD_HANDLE handle,
+    const AXP_VHD_TAKE_SNAP_PARAM *param,
+    AXP_VHD_TAKE_SNAP_FLAG flags);
 
 /*
  * This is not part of the VHD interface but is how a Handle is closed, and
@@ -945,36 +945,36 @@ u32 AXP_VHD_DeleteMeta(AXP_VHD_HANDLE handle, const AXP_VHDX_GUID *item);
  * Enumerates the metadata associated with a virtual disk.
  */
 u32 AXP_VHD_EnumerateMeta(
-		AXP_VHD_HANDLE handle,
-		u32 *numItems,
-		AXP_VHDX_GUID *items);
+    AXP_VHD_HANDLE handle,
+    u32 *numItems,
+    AXP_VHDX_GUID *items);
 
 /*
  * Retrieves the specified metadata from the virtual disk.
  */
 u32 AXP_VHD_GetMeta(
-		AXP_VHD_HANDLE handle,
-		const AXP_VHDX_GUID *item,
-		u32 *metaSize,
-		void *metaData);
+    AXP_VHD_HANDLE handle,
+    const AXP_VHDX_GUID *item,
+    u32 *metaSize,
+    void *metaData);
 
 /*
  * Resizes a virtual disk.
  */
 u32 AXP_VHD_Resize(
-		AXP_VHD_HANDLE handle,
-		AXP_VHD_RESIZE_FLAG plags,
-		AXP_VHD_RESIZE_PARAM *param,
-		AXP_VHD_ASYNC *async);
+    AXP_VHD_HANDLE handle,
+    AXP_VHD_RESIZE_FLAG plags,
+    AXP_VHD_RESIZE_PARAM *param,
+    AXP_VHD_ASYNC *async);
 
 /*
  * Sets a metadata item for a virtual disk.
  */
 u32 AXP_VHD_SetMeta(
-		AXP_VHD_HANDLE handle,
-		const AXP_VHDX_GUID *item,
-		u32 metaSize,
-		const void *metaData);
+    AXP_VHD_HANDLE handle,
+    const AXP_VHDX_GUID *item,
+    u32 metaSize,
+    const void *metaData);
 
 /*
  * These are not part of the API, but are added because we need to be able to
@@ -983,16 +983,16 @@ u32 AXP_VHD_SetMeta(
  * Read one or more sectors from the VHD.
  */
 u32 AXP_VHD_ReadSectors(AXP_VHD_HANDLE handle,
-			u64 lba,
-			u32 *sectorsRead,
-			u8 *outBuf);
+      u64 lba,
+      u32 *sectorsRead,
+      u8 *outBuf);
 
 /*
  * Write one or more sectors to the VHD.
  */
 u32 AXP_VHD_WriteSectors(AXP_VHD_HANDLE handle,
-			u64 lba,
-			u32 *sectorsWritten,
-			u8 *outBuf);
+      u64 lba,
+      u32 *sectorsWritten,
+      u8 *outBuf);
 
 #endif /* AXP_VIRTUALDISK_H_ */

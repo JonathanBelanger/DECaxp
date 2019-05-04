@@ -27,64 +27,64 @@ add_executable(AXP_21264_Cache_Test
     AXP_21264_Cache_Test.c)
 
 target_include_directories(AXP_21264_Cache_Test PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 
 add_executable(AXP_21264_Dump_Test
     AXP_21264_Dump_Test.c)
 
 target_include_directories(AXP_21264_Dump_Test PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 
 add_executable(AXP_21264_FloatingPointTest_Test
     AXP_21264_FloatingPointTest.c)
 
 target_include_directories(AXP_21264_FloatingPointTest_Test PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 
 add_executable(AXP_21264_Icache_Test
     AXP_21264_Icache_Test.c)
 
 target_include_directories(AXP_21264_Icache_Test PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 
 add_executable(AXP_21264_IntegerLoadTest
     AXP_21264_IntegerLoadTest.c)
 
 target_include_directories(AXP_21264_IntegerLoadTest PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 
 add_executable(AXP_21264_Prediction_Test
     AXP_21264_Prediction_Test.c)
 
 target_include_directories(AXP_21264_Prediction_Test PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 
 add_executable(AXP_Disk_Test
     AXP_Disk_Test.c)
 
 target_include_directories(AXP_Disk_Test PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 
 add_executable(AXP_DS12887A_Test
     AXP_DS12887A_Test.c)
 
 target_include_directories(AXP_DS12887A_Test PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 
 add_executable(AXP_Telnet_Test
     AXP_Telnet_Test.c)
 
 target_include_directories(AXP_Telnet_Test PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 
 add_executable(AXP_Test_Structure_Sizes
     AXP_Test_Structure_Sizes.c)
 
 target_include_directories(AXP_Test_Structure_Sizes PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 
 add_executable(AXP_Test_WinPcap
     AXP_Test_WinPcap.c)
 
 target_include_directories(AXP_Test_WinPcap PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

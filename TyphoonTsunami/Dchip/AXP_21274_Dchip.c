@@ -84,8 +84,8 @@ void AXP_21274_DchipInit(AXP_21274_SYSTEM *sys)
      * The first byte is replicated 8 times.
      */
     sys->dsc.dchip7 = sys->dsc.dchip6 = sys->dsc.dchip5 = sys->dsc.dchip4 =
-	    sys->dsc.dchip3 = sys->dsc.dchip2 = sys->dsc.dchip1 =
-	            sys->dsc.dchip0;
+      sys->dsc.dchip3 = sys->dsc.dchip2 = sys->dsc.dchip1 =
+              sys->dsc.dchip0;
 
     /*
      * Initialization for DSC2 (HRM Table 10-32)
@@ -109,8 +109,8 @@ void AXP_21274_DchipInit(AXP_21274_SYSTEM *sys)
      * The first byte is replicated 8 times.
      */
     sys->str.dchip7 = sys->str.dchip6 = sys->str.dchip5 = sys->str.dchip4 =
-	    sys->str.dchip3 = sys->str.dchip2 = sys->str.dchip1 =
-	            sys->str.dchip0;
+      sys->str.dchip3 = sys->str.dchip2 = sys->str.dchip1 =
+              sys->str.dchip0;
 
     /*
      * Initialization for DREV (HRM Table 10-34)

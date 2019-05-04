@@ -88,7 +88,7 @@ AXP_EXCEPTIONS AXP_LDF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_LONG(va);
+  vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
     /*
      * Get the value out of memory (it'll be in memory format and is 32-bits)
@@ -186,7 +186,7 @@ AXP_EXCEPTIONS AXP_LDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_LONG(va);
+  vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
     /*
      * Get the value out of memory (it'll be in memory format and is 32-bits)
@@ -286,14 +286,14 @@ AXP_EXCEPTIONS AXP_STF(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_LONG(va);
+  vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
     /*
      * Extract the exponent, then compress it from 11-bits to 8-bits.
      */
     exp = instr->src1v.fp.fCvt.exponent;
     if (exp != 0)
-	exp = exp - AXP_G_BIAS + AXP_F_BIAS;
+  exp = exp - AXP_G_BIAS + AXP_F_BIAS;
 
     /*
      * Now put everything back together, but this time in memory format and
@@ -401,16 +401,16 @@ AXP_EXCEPTIONS AXP_STS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_LONG(va);
+  vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
     /*
      * Extract the exponent, then compress it from 11-bits to 8-bits.
      */
     exp = instr->src1v.fp.sCvt.exponent;
     if (exp == AXP_R_NAN)
-	exp = AXP_S_NAN;
+  exp = AXP_S_NAN;
     else if (exp != 0)
-	exp = exp - AXP_T_BIAS + AXP_S_BIAS;
+  exp = exp - AXP_T_BIAS + AXP_S_BIAS;
 
     /*
      * Now put everything back together, but this time in memory format and

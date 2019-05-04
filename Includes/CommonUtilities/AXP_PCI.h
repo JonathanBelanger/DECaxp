@@ -130,17 +130,17 @@ typedef union
     u16 devCtrl;
     struct
     {
-	u16 ioSpace : 1;
-	u16 memSpace : 1;
-	u16 busMaster : 1;
-	u16 specialCycles : 1;
-	u16 memWriteInv : 1;
-	u16 vgaPaletteSnoop : 1;
-	u16 parityErrorRsp : 1;
-	u16 steppingCtrl : 1;
-	u16 serrNumEnable : 1;
-	u16 fastB2BEnable : 1;
-	u16 res : 6;
+  u16 ioSpace : 1;
+  u16 memSpace : 1;
+  u16 busMaster : 1;
+  u16 specialCycles : 1;
+  u16 memWriteInv : 1;
+  u16 vgaPaletteSnoop : 1;
+  u16 parityErrorRsp : 1;
+  u16 steppingCtrl : 1;
+  u16 serrNumEnable : 1;
+  u16 fastB2BEnable : 1;
+  u16 res : 6;
     };
 } AXP_PCI_DEV_CTRL;
 
@@ -149,18 +149,18 @@ typedef union
     u16 status;
     struct
     {
-	u16 res_1 : 4;
-	u16 capList : 1;
-	u16 sixtySixMHzCap : 1;
-	u16 res_2 : 1;
-	u16 fastB2BEnable : 1;
-	u16 masterDataParityErr : 1;
-	u16 devSelTiming : 2;
-	u16 sentTargetAbt : 1;
-	u16 rcvdTargetAbt : 1;
-	u16 sentMasterAbt : 1;
-	u16 rcvdMasterAbt : 1;
-	u16 detectParityErr : 1;
+  u16 res_1 : 4;
+  u16 capList : 1;
+  u16 sixtySixMHzCap : 1;
+  u16 res_2 : 1;
+  u16 fastB2BEnable : 1;
+  u16 masterDataParityErr : 1;
+  u16 devSelTiming : 2;
+  u16 sentTargetAbt : 1;
+  u16 rcvdTargetAbt : 1;
+  u16 sentMasterAbt : 1;
+  u16 rcvdMasterAbt : 1;
+  u16 detectParityErr : 1;
     };
 } AXP_PCI_DEV_STATUS;
 
@@ -173,10 +173,10 @@ typedef union
     u8 bist;
     struct
     {
-	u8 complCode : 4;
-	u8 res : 2;
-	u8 startBiST : 1;
-	u8 bistCap : 1;
+  u8 complCode : 4;
+  u8 res : 2;
+  u8 startBiST : 1;
+  u8 bistCap : 1;
     };
 } AXP_PCI_BIST;
 
@@ -185,16 +185,16 @@ typedef union
     u32 baseAddrReg;
     struct
     {
-	u32 memSpaceInd : 1;	/* set to 0 for memory space */
-	u32 type : 2;
-	u32 prefetchable : 1;
-	u32 baseAddr : 28;
+  u32 memSpaceInd : 1;	/* set to 0 for memory space */
+  u32 type : 2;
+  u32 prefetchable : 1;
+  u32 baseAddr : 28;
     } mem;
     struct
     {
-	u32 ioSpaceInd : 1;	/* set to 1 for IO space */
-	u32 res : 1;
-	u32 baseAddr : 30;
+  u32 ioSpaceInd : 1;	/* set to 1 for IO space */
+  u32 res : 1;
+  u32 baseAddr : 30;
     } io;
 } AXP_BAR;
 
@@ -206,9 +206,9 @@ typedef union
     u32 expansionROMBaseAddr;
     struct
     {
-	u32 expROMEnable : 1;
-	u32 res : 10;
-	u32 expROMBAR : 21;
+  u32 expROMEnable : 1;
+  u32 res : 10;
+  u32 expROMBAR : 21;
     };
 } AXP_ROM_BAR;
 
@@ -281,11 +281,11 @@ typedef union
     u16 msgCtrl;
     struct
     {
-	u16 msiEnable : 1;
-	u16 multMsgCap : 3;
-	u16 multMsgEba : 3;
-	u16 addr64 : 1;
-	u16 res : 8;
+  u16 msiEnable : 1;
+  u16 multMsgCap : 3;
+  u16 multMsgEba : 3;
+  u16 addr64 : 1;
+  u16 res : 8;
     };
 } AXP_MSGCTRL;
 

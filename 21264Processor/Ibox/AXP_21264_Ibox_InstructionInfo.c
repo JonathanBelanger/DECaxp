@@ -825,312 +825,312 @@ void AXP_Dispatcher(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
     OP_ADDL: /* OPCODE: 0x10 */
     switch (instr->function)
     {
-	case AXP_FUNC_ADDL:
-	    instr->excRegMask = AXP_ADDL(cpu, instr);
-	    break;
+  case AXP_FUNC_ADDL:
+      instr->excRegMask = AXP_ADDL(cpu, instr);
+      break;
 
-	case AXP_FUNC_S4ADDL:
-	    instr->excRegMask = AXP_S4ADDL(cpu, instr);
-	    break;
+  case AXP_FUNC_S4ADDL:
+      instr->excRegMask = AXP_S4ADDL(cpu, instr);
+      break;
 
-	case AXP_FUNC_SUBL:
-	    instr->excRegMask = AXP_SUBL(cpu, instr);
-	    break;
+  case AXP_FUNC_SUBL:
+      instr->excRegMask = AXP_SUBL(cpu, instr);
+      break;
 
-	case AXP_FUNC_S4SUBL:
-	    instr->excRegMask = AXP_S4SUBL(cpu, instr);
-	    break;
+  case AXP_FUNC_S4SUBL:
+      instr->excRegMask = AXP_S4SUBL(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMPBGE:
-	    instr->excRegMask = AXP_CMPBGE(cpu, instr);
-	    break;
+  case AXP_FUNC_CMPBGE:
+      instr->excRegMask = AXP_CMPBGE(cpu, instr);
+      break;
 
-	case AXP_FUNC_S8ADDL:
-	    instr->excRegMask = AXP_S8ADDL(cpu, instr);
-	    break;
+  case AXP_FUNC_S8ADDL:
+      instr->excRegMask = AXP_S8ADDL(cpu, instr);
+      break;
 
-	case AXP_FUNC_S8SUBL:
-	    instr->excRegMask = AXP_S8SUBL(cpu, instr);
-	    break;
+  case AXP_FUNC_S8SUBL:
+      instr->excRegMask = AXP_S8SUBL(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMPULT:
-	    instr->excRegMask = AXP_CMPULT(cpu, instr);
-	    break;
+  case AXP_FUNC_CMPULT:
+      instr->excRegMask = AXP_CMPULT(cpu, instr);
+      break;
 
-	case AXP_FUNC_ADDQ:
-	    instr->excRegMask = AXP_ADDQ(cpu, instr);
-	    break;
+  case AXP_FUNC_ADDQ:
+      instr->excRegMask = AXP_ADDQ(cpu, instr);
+      break;
 
-	case AXP_FUNC_S4ADDQ:
-	    instr->excRegMask = AXP_S4ADDQ(cpu, instr);
-	    break;
+  case AXP_FUNC_S4ADDQ:
+      instr->excRegMask = AXP_S4ADDQ(cpu, instr);
+      break;
 
-	case AXP_FUNC_SUBQ:
-	    instr->excRegMask = AXP_SUBQ(cpu, instr);
-	    break;
+  case AXP_FUNC_SUBQ:
+      instr->excRegMask = AXP_SUBQ(cpu, instr);
+      break;
 
-	case AXP_FUNC_S4SUBQ:
-	    instr->excRegMask = AXP_S4SUBQ(cpu, instr);
-	    break;
+  case AXP_FUNC_S4SUBQ:
+      instr->excRegMask = AXP_S4SUBQ(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMPEQ:
-	    instr->excRegMask = AXP_CMPEQ(cpu, instr);
-	    break;
+  case AXP_FUNC_CMPEQ:
+      instr->excRegMask = AXP_CMPEQ(cpu, instr);
+      break;
 
-	case AXP_FUNC_S8ADDQ:
-	    instr->excRegMask = AXP_S8ADDQ(cpu, instr);
-	    break;
+  case AXP_FUNC_S8ADDQ:
+      instr->excRegMask = AXP_S8ADDQ(cpu, instr);
+      break;
 
-	case AXP_FUNC_S8SUBQ:
-	    instr->excRegMask = AXP_S8SUBQ(cpu, instr);
-	    break;
+  case AXP_FUNC_S8SUBQ:
+      instr->excRegMask = AXP_S8SUBQ(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMPULE:
-	    instr->excRegMask = AXP_CMPULE(cpu, instr);
-	    break;
+  case AXP_FUNC_CMPULE:
+      instr->excRegMask = AXP_CMPULE(cpu, instr);
+      break;
 
-	case AXP_FUNC_ADDL_V:
-	    instr->excRegMask = AXP_ADDL_V(cpu, instr);
-	    break;
+  case AXP_FUNC_ADDL_V:
+      instr->excRegMask = AXP_ADDL_V(cpu, instr);
+      break;
 
-	case AXP_FUNC_SUBL_V:
-	    instr->excRegMask = AXP_SUBL_V(cpu, instr);
-	    break;
+  case AXP_FUNC_SUBL_V:
+      instr->excRegMask = AXP_SUBL_V(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMPLT:
-	    instr->excRegMask = AXP_CMPLT(cpu, instr);
-	    break;
+  case AXP_FUNC_CMPLT:
+      instr->excRegMask = AXP_CMPLT(cpu, instr);
+      break;
 
-	case AXP_FUNC_ADDQ_V:
-	    instr->excRegMask = AXP_ADDQ_V(cpu, instr);
-	    break;
+  case AXP_FUNC_ADDQ_V:
+      instr->excRegMask = AXP_ADDQ_V(cpu, instr);
+      break;
 
-	case AXP_FUNC_SUBQ_V:
-	    instr->excRegMask = AXP_SUBQ_V(cpu, instr);
-	    break;
+  case AXP_FUNC_SUBQ_V:
+      instr->excRegMask = AXP_SUBQ_V(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMPLE:
-	    instr->excRegMask = AXP_CMPLE(cpu, instr);
-	    break;
+  case AXP_FUNC_CMPLE:
+      instr->excRegMask = AXP_CMPLE(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     OP_AND: /* OPCODE: 0x11 */
     switch (instr->function)
     {
-	case AXP_FUNC_AND:
-	    instr->excRegMask = AXP_AND(cpu, instr);
-	    break;
+  case AXP_FUNC_AND:
+      instr->excRegMask = AXP_AND(cpu, instr);
+      break;
 
-	case AXP_FUNC_BIC:
-	    instr->excRegMask = AXP_BIC(cpu, instr);
-	    break;
+  case AXP_FUNC_BIC:
+      instr->excRegMask = AXP_BIC(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMOVLBS:
-	    instr->excRegMask = AXP_CMOVLBS(cpu, instr);
-	    break;
+  case AXP_FUNC_CMOVLBS:
+      instr->excRegMask = AXP_CMOVLBS(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMOVLBC:
-	    instr->excRegMask = AXP_CMOVLBC(cpu, instr);
-	    break;
+  case AXP_FUNC_CMOVLBC:
+      instr->excRegMask = AXP_CMOVLBC(cpu, instr);
+      break;
 
-	case AXP_FUNC_BIS:
-	    instr->excRegMask = AXP_BIS(cpu, instr);
-	    break;
+  case AXP_FUNC_BIS:
+      instr->excRegMask = AXP_BIS(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMOVEQ:
-	    instr->excRegMask = AXP_CMOVEQ(cpu, instr);
-	    break;
+  case AXP_FUNC_CMOVEQ:
+      instr->excRegMask = AXP_CMOVEQ(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMOVNE:
-	    instr->excRegMask = AXP_CMOVNE(cpu, instr);
-	    break;
+  case AXP_FUNC_CMOVNE:
+      instr->excRegMask = AXP_CMOVNE(cpu, instr);
+      break;
 
-	case AXP_FUNC_ORNOT:
-	    instr->excRegMask = AXP_ORNOT(cpu, instr);
-	    break;
+  case AXP_FUNC_ORNOT:
+      instr->excRegMask = AXP_ORNOT(cpu, instr);
+      break;
 
-	case AXP_FUNC_XOR:
-	    instr->excRegMask = AXP_XOR(cpu, instr);
-	    break;
+  case AXP_FUNC_XOR:
+      instr->excRegMask = AXP_XOR(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMOVLT:
-	    instr->excRegMask = AXP_CMOVLT(cpu, instr);
-	    break;
+  case AXP_FUNC_CMOVLT:
+      instr->excRegMask = AXP_CMOVLT(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMOVGE:
-	    instr->excRegMask = AXP_CMOVGE(cpu, instr);
-	    break;
+  case AXP_FUNC_CMOVGE:
+      instr->excRegMask = AXP_CMOVGE(cpu, instr);
+      break;
 
-	case AXP_FUNC_EQV:
-	    instr->excRegMask = AXP_EQV(cpu, instr);
-	    break;
+  case AXP_FUNC_EQV:
+      instr->excRegMask = AXP_EQV(cpu, instr);
+      break;
 
-	case AXP_FUNC_AMASK:
-	    instr->excRegMask = AXP_AMASK(cpu, instr);
-	    break;
+  case AXP_FUNC_AMASK:
+      instr->excRegMask = AXP_AMASK(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMOVLE:
-	    instr->excRegMask = AXP_CMOVLE(cpu, instr);
-	    break;
+  case AXP_FUNC_CMOVLE:
+      instr->excRegMask = AXP_CMOVLE(cpu, instr);
+      break;
 
-	case AXP_FUNC_CMOVGT:
-	    instr->excRegMask = AXP_CMOVGT(cpu, instr);
-	    break;
+  case AXP_FUNC_CMOVGT:
+      instr->excRegMask = AXP_CMOVGT(cpu, instr);
+      break;
 
-	case AXP_FUNC_IMPLVER:
-	    instr->excRegMask = AXP_IMPLVER(cpu, instr);
-	    break;
+  case AXP_FUNC_IMPLVER:
+      instr->excRegMask = AXP_IMPLVER(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     OP_MSKBL: /* OPCODE: 0x11 */
     switch (instr->function)
     {
-	case AXP_FUNC_MSKBL:
-	    instr->excRegMask = AXP_MSKBL(cpu, instr);
-	    break;
+  case AXP_FUNC_MSKBL:
+      instr->excRegMask = AXP_MSKBL(cpu, instr);
+      break;
 
-	case AXP_FUNC_EXTBL:
-	    instr->excRegMask = AXP_EXTBL(cpu, instr);
-	    break;
+  case AXP_FUNC_EXTBL:
+      instr->excRegMask = AXP_EXTBL(cpu, instr);
+      break;
 
-	case AXP_FUNC_INSBL:
-	    instr->excRegMask = AXP_INSBL(cpu, instr);
-	    break;
+  case AXP_FUNC_INSBL:
+      instr->excRegMask = AXP_INSBL(cpu, instr);
+      break;
 
-	case AXP_FUNC_MSKWL:
-	    instr->excRegMask = AXP_MSKWL(cpu, instr);
-	    break;
+  case AXP_FUNC_MSKWL:
+      instr->excRegMask = AXP_MSKWL(cpu, instr);
+      break;
 
-	case AXP_FUNC_EXTWL:
-	    instr->excRegMask = AXP_EXTWL(cpu, instr);
-	    break;
+  case AXP_FUNC_EXTWL:
+      instr->excRegMask = AXP_EXTWL(cpu, instr);
+      break;
 
-	case AXP_FUNC_INSWL:
-	    instr->excRegMask = AXP_INSWL(cpu, instr);
-	    break;
+  case AXP_FUNC_INSWL:
+      instr->excRegMask = AXP_INSWL(cpu, instr);
+      break;
 
-	case AXP_FUNC_MSKLL:
-	    instr->excRegMask = AXP_MSKLL(cpu, instr);
-	    break;
+  case AXP_FUNC_MSKLL:
+      instr->excRegMask = AXP_MSKLL(cpu, instr);
+      break;
 
-	case AXP_FUNC_EXTLL:
-	    instr->excRegMask = AXP_EXTLL(cpu, instr);
-	    break;
+  case AXP_FUNC_EXTLL:
+      instr->excRegMask = AXP_EXTLL(cpu, instr);
+      break;
 
-	case AXP_FUNC_INSLL:
-	    instr->excRegMask = AXP_INSLL(cpu, instr);
-	    break;
+  case AXP_FUNC_INSLL:
+      instr->excRegMask = AXP_INSLL(cpu, instr);
+      break;
 
-	case AXP_FUNC_ZAP:
-	    instr->excRegMask = AXP_ZAP(cpu, instr);
-	    break;
+  case AXP_FUNC_ZAP:
+      instr->excRegMask = AXP_ZAP(cpu, instr);
+      break;
 
-	case AXP_FUNC_ZAPNOT:
-	    instr->excRegMask = AXP_ZAPNOT(cpu, instr);
-	    break;
+  case AXP_FUNC_ZAPNOT:
+      instr->excRegMask = AXP_ZAPNOT(cpu, instr);
+      break;
 
-	case AXP_FUNC_MSKQL:
-	    instr->excRegMask = AXP_MSKQL(cpu, instr);
-	    break;
+  case AXP_FUNC_MSKQL:
+      instr->excRegMask = AXP_MSKQL(cpu, instr);
+      break;
 
-	case AXP_FUNC_SRL:
-	    instr->excRegMask = AXP_SRL(cpu, instr);
-	    break;
+  case AXP_FUNC_SRL:
+      instr->excRegMask = AXP_SRL(cpu, instr);
+      break;
 
-	case AXP_FUNC_EXTQL:
-	    instr->excRegMask = AXP_EXTQL(cpu, instr);
-	    break;
+  case AXP_FUNC_EXTQL:
+      instr->excRegMask = AXP_EXTQL(cpu, instr);
+      break;
 
-	case AXP_FUNC_SLL:
-	    instr->excRegMask = AXP_SLL(cpu, instr);
-	    break;
+  case AXP_FUNC_SLL:
+      instr->excRegMask = AXP_SLL(cpu, instr);
+      break;
 
-	case AXP_FUNC_INSQL:
-	    instr->excRegMask = AXP_INSQL(cpu, instr);
-	    break;
+  case AXP_FUNC_INSQL:
+      instr->excRegMask = AXP_INSQL(cpu, instr);
+      break;
 
-	case AXP_FUNC_SRA:
-	    instr->excRegMask = AXP_SRA(cpu, instr);
-	    break;
+  case AXP_FUNC_SRA:
+      instr->excRegMask = AXP_SRA(cpu, instr);
+      break;
 
-	case AXP_FUNC_MSKWH:
-	    instr->excRegMask = AXP_MSKWH(cpu, instr);
-	    break;
+  case AXP_FUNC_MSKWH:
+      instr->excRegMask = AXP_MSKWH(cpu, instr);
+      break;
 
-	case AXP_FUNC_INSWH:
-	    instr->excRegMask = AXP_INSWH(cpu, instr);
-	    break;
+  case AXP_FUNC_INSWH:
+      instr->excRegMask = AXP_INSWH(cpu, instr);
+      break;
 
-	case AXP_FUNC_EXTWH:
-	    instr->excRegMask = AXP_EXTWH(cpu, instr);
-	    break;
+  case AXP_FUNC_EXTWH:
+      instr->excRegMask = AXP_EXTWH(cpu, instr);
+      break;
 
-	case AXP_FUNC_MSKLH:
-	    instr->excRegMask = AXP_MSKLH(cpu, instr);
-	    break;
+  case AXP_FUNC_MSKLH:
+      instr->excRegMask = AXP_MSKLH(cpu, instr);
+      break;
 
-	case AXP_FUNC_INSLH:
-	    instr->excRegMask = AXP_INSLH(cpu, instr);
-	    break;
+  case AXP_FUNC_INSLH:
+      instr->excRegMask = AXP_INSLH(cpu, instr);
+      break;
 
-	case AXP_FUNC_EXTLH:
-	    instr->excRegMask = AXP_EXTLH(cpu, instr);
-	    break;
+  case AXP_FUNC_EXTLH:
+      instr->excRegMask = AXP_EXTLH(cpu, instr);
+      break;
 
-	case AXP_FUNC_MSKQH:
-	    instr->excRegMask = AXP_MSKQH(cpu, instr);
-	    break;
+  case AXP_FUNC_MSKQH:
+      instr->excRegMask = AXP_MSKQH(cpu, instr);
+      break;
 
-	case AXP_FUNC_INSQH:
-	    instr->excRegMask = AXP_INSQH(cpu, instr);
-	    break;
+  case AXP_FUNC_INSQH:
+      instr->excRegMask = AXP_INSQH(cpu, instr);
+      break;
 
-	case AXP_FUNC_EXTQH:
-	    instr->excRegMask = AXP_EXTQH(cpu, instr);
-	    break;
+  case AXP_FUNC_EXTQH:
+      instr->excRegMask = AXP_EXTQH(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     OP_MULL: /* OPCODE: 0x13 */
     switch (instr->function)
     {
-	case AXP_FUNC_MULL:
-	    instr->excRegMask = AXP_MULL(cpu, instr);
-	    break;
+  case AXP_FUNC_MULL:
+      instr->excRegMask = AXP_MULL(cpu, instr);
+      break;
 
-	case AXP_FUNC_MULQ:
-	    instr->excRegMask = AXP_MULQ(cpu, instr);
-	    break;
+  case AXP_FUNC_MULQ:
+      instr->excRegMask = AXP_MULQ(cpu, instr);
+      break;
 
-	case AXP_FUNC_UMULH:
-	    instr->excRegMask = AXP_UMULH(cpu, instr);
-	    break;
+  case AXP_FUNC_UMULH:
+      instr->excRegMask = AXP_UMULH(cpu, instr);
+      break;
 
-	case AXP_FUNC_MULL_V:
-	    instr->excRegMask = AXP_MULL_V(cpu, instr);
-	    break;
+  case AXP_FUNC_MULL_V:
+      instr->excRegMask = AXP_MULL_V(cpu, instr);
+      break;
 
-	case AXP_FUNC_MULQ_V:
-	    instr->excRegMask = AXP_MULQ_V(cpu, instr);
-	    break;
+  case AXP_FUNC_MULQ_V:
+      instr->excRegMask = AXP_MULQ_V(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
@@ -1141,55 +1141,55 @@ void AXP_Dispatcher(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
     FUNC_ITOF: /* FNC: 0x4 */
     switch (fpFunc.src)
     {
-	case AXP_FP_S:
-	    instr->excRegMask = AXP_ITOFS(cpu, instr);
-	    break;
+  case AXP_FP_S:
+      instr->excRegMask = AXP_ITOFS(cpu, instr);
+      break;
 
-	case AXP_FP14_F:
-	    instr->excRegMask = AXP_ITOFF(cpu, instr);
-	    break;
+  case AXP_FP14_F:
+      instr->excRegMask = AXP_ITOFF(cpu, instr);
+      break;
 
-	case AXP_FP_T:
-	    instr->excRegMask = AXP_ITOFT(cpu, instr);
-	    break;
+  case AXP_FP_T:
+      instr->excRegMask = AXP_ITOFT(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_SQRTFG: /* FNC: 0xa */
     switch (fpFunc.src)
     {
-	case AXP_FP14_F:
-	    instr->excRegMask = AXP_SQRTF(cpu, instr);
-	    break;
+  case AXP_FP14_F:
+      instr->excRegMask = AXP_SQRTF(cpu, instr);
+      break;
 
-	case AXP_FP_G:
-	    instr->excRegMask = AXP_SQRTG(cpu, instr);
-	    break;
+  case AXP_FP_G:
+      instr->excRegMask = AXP_SQRTG(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_SQRTST: /* FNC: 0xb */
     switch (fpFunc.src)
     {
-	case AXP_FP_S:
-	    instr->excRegMask = AXP_SQRTS(cpu, instr);
-	    break;
+  case AXP_FP_S:
+      instr->excRegMask = AXP_SQRTS(cpu, instr);
+      break;
 
-	case AXP_FP_T:
-	    instr->excRegMask = AXP_SQRTT(cpu, instr);
-	    break;
+  case AXP_FP_T:
+      instr->excRegMask = AXP_SQRTT(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
@@ -1199,140 +1199,140 @@ void AXP_Dispatcher(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
     FUNC_VAX_ADD: switch (fpFunc.src)
     {
-	case AXP_FP_F:
-	    instr->excRegMask = AXP_ADDF(cpu, instr);
-	    break;
+  case AXP_FP_F:
+      instr->excRegMask = AXP_ADDF(cpu, instr);
+      break;
 
-	case AXP_FP_G:
-	    instr->excRegMask = AXP_ADDG(cpu, instr);
-	    break;
+  case AXP_FP_G:
+      instr->excRegMask = AXP_ADDG(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_VAX_SUB: switch (fpFunc.src)
     {
-	case AXP_FP_F:
-	    instr->excRegMask = AXP_SUBF(cpu, instr);
-	    break;
+  case AXP_FP_F:
+      instr->excRegMask = AXP_SUBF(cpu, instr);
+      break;
 
-	case AXP_FP_G:
-	    instr->excRegMask = AXP_SUBG(cpu, instr);
-	    break;
+  case AXP_FP_G:
+      instr->excRegMask = AXP_SUBG(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_VAX_MUL: switch (fpFunc.src)
     {
-	case AXP_FP_F:
-	    instr->excRegMask = AXP_MULF(cpu, instr);
-	    break;
+  case AXP_FP_F:
+      instr->excRegMask = AXP_MULF(cpu, instr);
+      break;
 
-	case AXP_FP_G:
-	    instr->excRegMask = AXP_MULG(cpu, instr);
-	    break;
+  case AXP_FP_G:
+      instr->excRegMask = AXP_MULG(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_VAX_DIV: switch (fpFunc.src)
     {
-	case AXP_FP_F:
-	    instr->excRegMask = AXP_DIVF(cpu, instr);
-	    break;
+  case AXP_FP_F:
+      instr->excRegMask = AXP_DIVF(cpu, instr);
+      break;
 
-	case AXP_FP_G:
-	    instr->excRegMask = AXP_DIVG(cpu, instr);
-	    break;
+  case AXP_FP_G:
+      instr->excRegMask = AXP_DIVG(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_VAX_CMPEQ: if (fpFunc.src == AXP_FP_G)
     {
-	instr->excRegMask = AXP_CMPGEQ(cpu, instr);
-	goto COMPL_RETIRE;
+  instr->excRegMask = AXP_CMPGEQ(cpu, instr);
+  goto COMPL_RETIRE;
     }
     goto RESERVED_OP;
 
     FUNC_VAX_CMPLT: switch (fpFunc.src)
     {
-	case AXP_FP_F:
-	    break;
+  case AXP_FP_F:
+      break;
 
-	case AXP_FP_G:
-	    instr->excRegMask = AXP_CMPGLT(cpu, instr);
-	    break;
+  case AXP_FP_G:
+      instr->excRegMask = AXP_CMPGLT(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_VAX_CMPLE: if (fpFunc.src == AXP_FP_G)
     {
-	instr->excRegMask = AXP_CMPGLE(cpu, instr);
-	goto COMPL_RETIRE;
+  instr->excRegMask = AXP_CMPGLE(cpu, instr);
+  goto COMPL_RETIRE;
     }
     goto RESERVED_OP;
 
     FUNC_VAX_CVTF: switch (fpFunc.src)
     {
-	case AXP_FP_G:
-	    instr->excRegMask = AXP_CVTGF(cpu, instr);
-	    break;
+  case AXP_FP_G:
+      instr->excRegMask = AXP_CVTGF(cpu, instr);
+      break;
 
-	case AXP_FP_Q:
-	    instr->excRegMask = AXP_CVTQF(cpu, instr);
-	    break;
+  case AXP_FP_Q:
+      instr->excRegMask = AXP_CVTQF(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_VAX_CVTD: if (fpFunc.src == AXP_FP_G)
     {
-	instr->excRegMask = AXP_CVTGD(cpu, instr);
-	goto COMPL_RETIRE;
+  instr->excRegMask = AXP_CVTGD(cpu, instr);
+  goto COMPL_RETIRE;
     }
     goto RESERVED_OP;
 
     FUNC_VAX_CVTG: switch (fpFunc.src)
     {
-	case AXP_FP_D:
-	    instr->excRegMask = AXP_CVTDG(cpu, instr);
-	    break;
+  case AXP_FP_D:
+      instr->excRegMask = AXP_CVTDG(cpu, instr);
+      break;
 
-	case AXP_FP_Q:
-	    instr->excRegMask = AXP_CVTQG(cpu, instr);
-	    break;
+  case AXP_FP_Q:
+      instr->excRegMask = AXP_CVTQG(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_VAX_CVTQ: if (fpFunc.src == AXP_FP_G)
     {
-	instr->excRegMask = AXP_CVTGQ(cpu, instr);
-	goto COMPL_RETIRE;
+  instr->excRegMask = AXP_CVTGQ(cpu, instr);
+  goto COMPL_RETIRE;
     }
     goto RESERVED_OP;
 
@@ -1342,273 +1342,273 @@ void AXP_Dispatcher(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
     FUNC_IEEE_ADD: switch (fpFunc.src)
     {
-	case AXP_FP_S:
-	    instr->excRegMask = AXP_ADDS(cpu, instr);
-	    break;
+  case AXP_FP_S:
+      instr->excRegMask = AXP_ADDS(cpu, instr);
+      break;
 
-	case AXP_FP_T:
-	    instr->excRegMask = AXP_ADDT(cpu, instr);
-	    break;
+  case AXP_FP_T:
+      instr->excRegMask = AXP_ADDT(cpu, instr);
+      break;
 
-	case AXP_FP_Q:
-	default:
-	    goto RESERVED_OP;
-	    break;
+  case AXP_FP_Q:
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_IEEE_SUB: switch (fpFunc.src)
     {
-	case AXP_FP_S:
-	    instr->excRegMask = AXP_SUBS(cpu, instr);
-	    break;
+  case AXP_FP_S:
+      instr->excRegMask = AXP_SUBS(cpu, instr);
+      break;
 
-	case AXP_FP_T:
-	    instr->excRegMask = AXP_SUBT(cpu, instr);
-	    break;
+  case AXP_FP_T:
+      instr->excRegMask = AXP_SUBT(cpu, instr);
+      break;
 
-	case AXP_FP_Q:
-	default:
-	    goto RESERVED_OP;
-	    break;
+  case AXP_FP_Q:
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_IEEE_MUL: switch (fpFunc.src)
     {
-	case AXP_FP_S:
-	    instr->excRegMask = AXP_MULS(cpu, instr);
-	    break;
+  case AXP_FP_S:
+      instr->excRegMask = AXP_MULS(cpu, instr);
+      break;
 
-	case AXP_FP_T:
-	    instr->excRegMask = AXP_MULT(cpu, instr);
-	    break;
+  case AXP_FP_T:
+      instr->excRegMask = AXP_MULT(cpu, instr);
+      break;
 
-	case AXP_FP_Q:
-	default:
-	    goto RESERVED_OP;
-	    break;
+  case AXP_FP_Q:
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_IEEE_DIV: switch (fpFunc.src)
     {
-	case AXP_FP_S:
-	    instr->excRegMask = AXP_DIVS(cpu, instr);
-	    break;
+  case AXP_FP_S:
+      instr->excRegMask = AXP_DIVS(cpu, instr);
+      break;
 
-	case AXP_FP_T:
-	    instr->excRegMask = AXP_DIVT(cpu, instr);
-	    break;
+  case AXP_FP_T:
+      instr->excRegMask = AXP_DIVT(cpu, instr);
+      break;
 
-	case AXP_FP_Q:
-	default:
-	    goto RESERVED_OP;
-	    break;
+  case AXP_FP_Q:
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_IEEE_CMPUN: if (fpFunc.src == AXP_FP_T)
     {
-	instr->excRegMask = AXP_CMPTUN(cpu, instr);
-	goto COMPL_RETIRE;
+  instr->excRegMask = AXP_CMPTUN(cpu, instr);
+  goto COMPL_RETIRE;
     }
     goto RESERVED_OP;
 
     FUNC_IEEE_CMPEQ: if (fpFunc.src == AXP_FP_T)
     {
-	instr->excRegMask = AXP_CMPTEQ(cpu, instr);
-	goto COMPL_RETIRE;
+  instr->excRegMask = AXP_CMPTEQ(cpu, instr);
+  goto COMPL_RETIRE;
     }
     goto RESERVED_OP;
 
     FUNC_IEEE_CMPLT: if (fpFunc.src == AXP_FP_T)
     {
-	instr->excRegMask = AXP_CMPTLT(cpu, instr);
-	goto COMPL_RETIRE;
+  instr->excRegMask = AXP_CMPTLT(cpu, instr);
+  goto COMPL_RETIRE;
     }
     goto RESERVED_OP;
 
     FUNC_IEEE_CMPLE: if (fpFunc.src == AXP_FP_T)
     {
-	instr->excRegMask = AXP_CMPTLE(cpu, instr);
-	goto COMPL_RETIRE;
+  instr->excRegMask = AXP_CMPTLE(cpu, instr);
+  goto COMPL_RETIRE;
     }
     goto RESERVED_OP;
 
     FUNC_IEEE_CVTS: switch (fpFunc.src)
     {
-	case AXP_FP_T:
-	    instr->excRegMask = AXP_CVTTS(cpu, instr);
-	    break;
+  case AXP_FP_T:
+      instr->excRegMask = AXP_CVTTS(cpu, instr);
+      break;
 
-	case AXP_FP_Q:
-	    instr->excRegMask = AXP_CVTQS(cpu, instr);
-	    break;
+  case AXP_FP_Q:
+      instr->excRegMask = AXP_CVTQS(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_IEEE_CVTT: switch (fpFunc.src)
     {
-	case AXP_FP_S:
-	    instr->excRegMask = AXP_CVTST(cpu, instr);
-	    break;
+  case AXP_FP_S:
+      instr->excRegMask = AXP_CVTST(cpu, instr);
+      break;
 
-	case AXP_FP_Q:
-	    instr->excRegMask = AXP_CVTQT(cpu, instr);
-	    break;
+  case AXP_FP_Q:
+      instr->excRegMask = AXP_CVTQT(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     FUNC_IEEE_CVTQ: if (fpFunc.src == AXP_FP_T)
     {
-	instr->excRegMask = AXP_CVTTQ(cpu, instr);
-	goto COMPL_RETIRE;
+  instr->excRegMask = AXP_CVTTQ(cpu, instr);
+  goto COMPL_RETIRE;
     }
     goto RESERVED_OP;
 
     OP_CVTLQ: /* OPCODE: 0x17 */
     switch (instr->function)
     {
-	case AXP_FUNC_CVTLQ:
-	    instr->excRegMask = AXP_CVTLQ(cpu, instr);
-	    break;
+  case AXP_FUNC_CVTLQ:
+      instr->excRegMask = AXP_CVTLQ(cpu, instr);
+      break;
 
-	case AXP_FUNC_CPYS:
-	    instr->excRegMask = AXP_CPYS(cpu, instr);
-	    break;
+  case AXP_FUNC_CPYS:
+      instr->excRegMask = AXP_CPYS(cpu, instr);
+      break;
 
-	case AXP_FUNC_CPYSN:
-	    instr->excRegMask = AXP_CPYSN(cpu, instr);
-	    break;
+  case AXP_FUNC_CPYSN:
+      instr->excRegMask = AXP_CPYSN(cpu, instr);
+      break;
 
-	case AXP_FUNC_CPYSE:
-	    instr->excRegMask = AXP_CPYSE(cpu, instr);
-	    break;
+  case AXP_FUNC_CPYSE:
+      instr->excRegMask = AXP_CPYSE(cpu, instr);
+      break;
 
-	case AXP_FUNC_MT_FPCR:
-	    instr->excRegMask = AXP_MT_FPCR(cpu, instr);
-	    break;
+  case AXP_FUNC_MT_FPCR:
+      instr->excRegMask = AXP_MT_FPCR(cpu, instr);
+      break;
 
-	case AXP_FUNC_MF_FPCR:
-	    instr->excRegMask = AXP_MF_FPCR(cpu, instr);
-	    break;
+  case AXP_FUNC_MF_FPCR:
+      instr->excRegMask = AXP_MF_FPCR(cpu, instr);
+      break;
 
-	case AXP_FUNC_FCMOVEQ:
-	    instr->excRegMask = AXP_FCMOVEQ(cpu, instr);
-	    break;
+  case AXP_FUNC_FCMOVEQ:
+      instr->excRegMask = AXP_FCMOVEQ(cpu, instr);
+      break;
 
-	case AXP_FUNC_FCMOVNE:
-	    instr->excRegMask = AXP_FCMOVNE(cpu, instr);
-	    break;
+  case AXP_FUNC_FCMOVNE:
+      instr->excRegMask = AXP_FCMOVNE(cpu, instr);
+      break;
 
-	case AXP_FUNC_FCMOVLT:
-	    instr->excRegMask = AXP_FCMOVLT(cpu, instr);
-	    break;
+  case AXP_FUNC_FCMOVLT:
+      instr->excRegMask = AXP_FCMOVLT(cpu, instr);
+      break;
 
-	case AXP_FUNC_FCMOVGE:
-	    instr->excRegMask = AXP_FCMOVGE(cpu, instr);
-	    break;
+  case AXP_FUNC_FCMOVGE:
+      instr->excRegMask = AXP_FCMOVGE(cpu, instr);
+      break;
 
-	case AXP_FUNC_FCMOVLE:
-	    instr->excRegMask = AXP_FCMOVLE(cpu, instr);
-	    break;
+  case AXP_FUNC_FCMOVLE:
+      instr->excRegMask = AXP_FCMOVLE(cpu, instr);
+      break;
 
-	case AXP_FUNC_FCMOVGT:
-	    instr->excRegMask = AXP_FCMOVGT(cpu, instr);
-	    break;
+  case AXP_FUNC_FCMOVGT:
+      instr->excRegMask = AXP_FCMOVGT(cpu, instr);
+      break;
 
-	case AXP_FUNC_CVTQL:
-	case AXP_FUNC_CVTQL_V:
-	case AXP_FUNC_CVTQL_SV:
-	    instr->excRegMask = AXP_CVTQL(cpu, instr);
-	    break;
+  case AXP_FUNC_CVTQL:
+  case AXP_FUNC_CVTQL_V:
+  case AXP_FUNC_CVTQL_SV:
+      instr->excRegMask = AXP_CVTQL(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     OP_TRAPB: /* OPCODE: 0x18 */
     switch (instr->function)
     {
-	case AXP_FUNC_TRAPB:
-	    instr->excRegMask = AXP_TRAPB(cpu, instr);
-	    goto COMPLETION_OP;
-	    break;
+  case AXP_FUNC_TRAPB:
+      instr->excRegMask = AXP_TRAPB(cpu, instr);
+      goto COMPLETION_OP;
+      break;
 
-	case AXP_FUNC_EXCB:
-	    instr->excRegMask = AXP_EXCB(cpu, instr);
-	    goto COMPLETION_OP;
-	    break;
+  case AXP_FUNC_EXCB:
+      instr->excRegMask = AXP_EXCB(cpu, instr);
+      goto COMPLETION_OP;
+      break;
 
-	case AXP_FUNC_MB:
-	    instr->excRegMask = AXP_MB(cpu, instr);
-	    goto COMPLETION_OP;
-	    break;
+  case AXP_FUNC_MB:
+      instr->excRegMask = AXP_MB(cpu, instr);
+      goto COMPLETION_OP;
+      break;
 
-	case AXP_FUNC_WMB:
-	    instr->excRegMask = AXP_WMB(cpu, instr);
-	    goto COMPLETION_OP;
-	    break;
+  case AXP_FUNC_WMB:
+      instr->excRegMask = AXP_WMB(cpu, instr);
+      goto COMPLETION_OP;
+      break;
 
-	case AXP_FUNC_FETCH:
-	    instr->excRegMask = AXP_FETCH(cpu, instr);
-	    goto COMPLETION_OP;
-	    break;
+  case AXP_FUNC_FETCH:
+      instr->excRegMask = AXP_FETCH(cpu, instr);
+      goto COMPLETION_OP;
+      break;
 
-	case AXP_FUNC_FETCH_M:
-	    instr->excRegMask = AXP_FETCH_M(cpu, instr);
-	    goto COMPLETION_OP;
-	    break;
+  case AXP_FUNC_FETCH_M:
+      instr->excRegMask = AXP_FETCH_M(cpu, instr);
+      goto COMPLETION_OP;
+      break;
 
-	case AXP_FUNC_RPCC:
-	    instr->excRegMask = AXP_RPCC(cpu, instr);
-	    goto COMPLETION_OP;
-	    break;
+  case AXP_FUNC_RPCC:
+      instr->excRegMask = AXP_RPCC(cpu, instr);
+      goto COMPLETION_OP;
+      break;
 
-	case AXP_FUNC_RC:
-	    instr->excRegMask = AXP_RC(cpu, instr);
-	    goto COMPL_RETIRE;
-	    break;
+  case AXP_FUNC_RC:
+      instr->excRegMask = AXP_RC(cpu, instr);
+      goto COMPL_RETIRE;
+      break;
 
-	case AXP_FUNC_ECB:
-	    instr->excRegMask = AXP_ECB(cpu, instr);
-	    goto COMPLETION_OP;
-	    break;
+  case AXP_FUNC_ECB:
+      instr->excRegMask = AXP_ECB(cpu, instr);
+      goto COMPLETION_OP;
+      break;
 
-	case AXP_FUNC_RS:
-	    instr->excRegMask = AXP_RS(cpu, instr);
-	    goto COMPL_RETIRE;
-	    break;
+  case AXP_FUNC_RS:
+      instr->excRegMask = AXP_RS(cpu, instr);
+      goto COMPL_RETIRE;
+      break;
 
-	case AXP_FUNC_WH64:
-	    instr->excRegMask = AXP_WH64(cpu, instr);
-	    goto COMPLETION_OP;
-	    break;
+  case AXP_FUNC_WH64:
+      instr->excRegMask = AXP_WH64(cpu, instr);
+      goto COMPLETION_OP;
+      break;
 
-	case AXP_FUNC_WH64EN:
-	    instr->excRegMask = AXP_WH64EN(cpu, instr);
-	    goto COMPLETION_OP;
-	    break;
+  case AXP_FUNC_WH64EN:
+      instr->excRegMask = AXP_WH64EN(cpu, instr);
+      goto COMPLETION_OP;
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
 
     OP_HW_MFPR: /* OPCODE: 0x19 */
     if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
-	goto RESERVED_OP;
+  goto RESERVED_OP;
     instr->excRegMask = AXP_HWMFPR(cpu, instr);
     goto COMPL_RETIRE;
 
@@ -1618,114 +1618,114 @@ void AXP_Dispatcher(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
     OP_HW_LD: /* OPCODE: 0x1b */
     if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
-	goto RESERVED_OP;
+  goto RESERVED_OP;
     instr->excRegMask = AXP_HWLD(cpu, instr);
     goto COMPLETION_OP;
 
     OP_SEXTB: /* OPCODE: 0x1c */
     switch (instr->function)
     {
-	case AXP_FUNC_SEXTB:
-	    instr->excRegMask = AXP_SEXTB(cpu, instr);
-	    break;
+  case AXP_FUNC_SEXTB:
+      instr->excRegMask = AXP_SEXTB(cpu, instr);
+      break;
 
-	case AXP_FUNC_SEXTW:
-	    instr->excRegMask = AXP_SEXTW(cpu, instr);
-	    break;
+  case AXP_FUNC_SEXTW:
+      instr->excRegMask = AXP_SEXTW(cpu, instr);
+      break;
 
-	case AXP_FUNC_CTPOP:
-	    instr->excRegMask = AXP_CTPOP(cpu, instr);
-	    break;
+  case AXP_FUNC_CTPOP:
+      instr->excRegMask = AXP_CTPOP(cpu, instr);
+      break;
 
-	case AXP_FUNC_PERR:
-	    instr->excRegMask = AXP_PERR(cpu, instr);
-	    break;
+  case AXP_FUNC_PERR:
+      instr->excRegMask = AXP_PERR(cpu, instr);
+      break;
 
-	case AXP_FUNC_CTLZ:
-	    instr->excRegMask = AXP_CTLZ(cpu, instr);
-	    break;
+  case AXP_FUNC_CTLZ:
+      instr->excRegMask = AXP_CTLZ(cpu, instr);
+      break;
 
-	case AXP_FUNC_CTTZ:
-	    instr->excRegMask = AXP_CTTZ(cpu, instr);
-	    break;
+  case AXP_FUNC_CTTZ:
+      instr->excRegMask = AXP_CTTZ(cpu, instr);
+      break;
 
-	case AXP_FUNC_UNPKBW:
-	    instr->excRegMask = AXP_UNPKBW(cpu, instr);
-	    break;
+  case AXP_FUNC_UNPKBW:
+      instr->excRegMask = AXP_UNPKBW(cpu, instr);
+      break;
 
-	case AXP_FUNC_UNPKBL:
-	    instr->excRegMask = AXP_UNPKBL(cpu, instr);
-	    break;
+  case AXP_FUNC_UNPKBL:
+      instr->excRegMask = AXP_UNPKBL(cpu, instr);
+      break;
 
-	case AXP_FUNC_PKWB:
-	    instr->excRegMask = AXP_PKWB(cpu, instr);
-	    break;
+  case AXP_FUNC_PKWB:
+      instr->excRegMask = AXP_PKWB(cpu, instr);
+      break;
 
-	case AXP_FUNC_PKLB:
-	    instr->excRegMask = AXP_PKLB(cpu, instr);
-	    break;
+  case AXP_FUNC_PKLB:
+      instr->excRegMask = AXP_PKLB(cpu, instr);
+      break;
 
-	case AXP_FUNC_MINSB8:
-	    instr->excRegMask = AXP_MINSB8(cpu, instr);
-	    break;
+  case AXP_FUNC_MINSB8:
+      instr->excRegMask = AXP_MINSB8(cpu, instr);
+      break;
 
-	case AXP_FUNC_MINSW4:
-	    instr->excRegMask = AXP_MINSW4(cpu, instr);
-	    break;
+  case AXP_FUNC_MINSW4:
+      instr->excRegMask = AXP_MINSW4(cpu, instr);
+      break;
 
-	case AXP_FUNC_MINUB8:
-	    instr->excRegMask = AXP_MINUB8(cpu, instr);
-	    break;
+  case AXP_FUNC_MINUB8:
+      instr->excRegMask = AXP_MINUB8(cpu, instr);
+      break;
 
-	case AXP_FUNC_MINUW4:
-	    instr->excRegMask = AXP_MINUW4(cpu, instr);
-	    break;
+  case AXP_FUNC_MINUW4:
+      instr->excRegMask = AXP_MINUW4(cpu, instr);
+      break;
 
-	case AXP_FUNC_MAXUB8:
-	    instr->excRegMask = AXP_MAXUB8(cpu, instr);
-	    break;
+  case AXP_FUNC_MAXUB8:
+      instr->excRegMask = AXP_MAXUB8(cpu, instr);
+      break;
 
-	case AXP_FUNC_MAXUW4:
-	    instr->excRegMask = AXP_MAXUW4(cpu, instr);
-	    break;
+  case AXP_FUNC_MAXUW4:
+      instr->excRegMask = AXP_MAXUW4(cpu, instr);
+      break;
 
-	case AXP_FUNC_MAXSB8:
-	    instr->excRegMask = AXP_MAXSB8(cpu, instr);
-	    break;
+  case AXP_FUNC_MAXSB8:
+      instr->excRegMask = AXP_MAXSB8(cpu, instr);
+      break;
 
-	case AXP_FUNC_MAXSW4:
-	    instr->excRegMask = AXP_MAXSW4(cpu, instr);
-	    break;
+  case AXP_FUNC_MAXSW4:
+      instr->excRegMask = AXP_MAXSW4(cpu, instr);
+      break;
 
-	case AXP_FUNC_FTOIT:
-	    instr->excRegMask = AXP_FTOIT(cpu, instr);
-	    break;
+  case AXP_FUNC_FTOIT:
+      instr->excRegMask = AXP_FTOIT(cpu, instr);
+      break;
 
-	case AXP_FUNC_FTOIS:
-	    instr->excRegMask = AXP_FTOIS(cpu, instr);
-	    break;
+  case AXP_FUNC_FTOIS:
+      instr->excRegMask = AXP_FTOIS(cpu, instr);
+      break;
 
-	default:
-	    goto RESERVED_OP;
-	    break;
+  default:
+      goto RESERVED_OP;
+      break;
     }
     goto COMPL_RETIRE;
 
     OP_HW_MTPR: /* OPCODE: 0x1d */
     if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
-	goto RESERVED_OP;
+  goto RESERVED_OP;
     instr->excRegMask = AXP_HWMTPR(cpu, instr);
     goto COMPL_RETIRE;
 
     OP_HW_RET: /* OPCODE: 0x1e */
     if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
-	goto RESERVED_OP;
+  goto RESERVED_OP;
     instr->excRegMask = AXP_HWRET(cpu, instr);
     goto COMPL_RETIRE;
 
     OP_HW_ST: /* OPCODE: 0x1f */
     if ((instr->pc.pal != AXP_PAL_MODE) && (cpu->iCtl.hwe != 1))
-	goto RESERVED_OP;
+  goto RESERVED_OP;
     instr->excRegMask = AXP_HWST(cpu, instr);
     goto COMPL_RETIRE;
 
@@ -1870,10 +1870,10 @@ void AXP_Dispatcher(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
     locked = true;
     if (instr->state == Executing)
     {
-	instr->excRegMask = IllegalOperand;
-	AXP_21264_Ibox_Event(cpu,
-	AXP_OPCDEC, instr->pc, *(u64 *) &instr->pc, instr->opcode,
-	AXP_UNMAPPED_REG, false, false);
+  instr->excRegMask = IllegalOperand;
+  AXP_21264_Ibox_Event(cpu,
+  AXP_OPCDEC, instr->pc, *(u64 *) &instr->pc, instr->opcode,
+  AXP_UNMAPPED_REG, false, false);
     }
 
     /*
@@ -1886,14 +1886,14 @@ void AXP_Dispatcher(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * If we didn't lock the ROB mutex above, then do so now.
      */
     if (locked == false)
-	pthread_mutex_lock(&cpu->robMutex);
+  pthread_mutex_lock(&cpu->robMutex);
 
     /*
      * If this instruction is in Executing state, then we can change it to
      * Waiting Retirement.
      */
     if (instr->state == Executing)
-	instr->state = WaitingRetirement;
+  instr->state = WaitingRetirement;
 
     /*
      * OK, the ROB mutex can be unlocked.
@@ -1938,22 +1938,22 @@ AXP_INS_TYPE AXP_InstructionFormat(AXP_INS_FMT inst)
     if (inst.pal.opcode <= 0x3f)
     {
 
-	/*
-	 * Look up the instruction type from the instruction array, which is
-	 * indexed by opcode.
-	 */
-	retVal = insDecode[inst.pal.opcode].format;
+  /*
+   * Look up the instruction type from the instruction array, which is
+   * indexed by opcode.
+   */
+  retVal = insDecode[inst.pal.opcode].format;
 
-	/*
-	 * If the returned value from the above look up is 'Cond', then we are
-	 * dealing with opcode = 0x1c.  This particular opcode has 2 potential
-	 * values, depending upon the function code.  If the function code is
-	 * either 0x70 or 0x78, then type instruction type is 'FP' (Floating
-	 * Point).  Otherwise, it is 'Opr'.
-	 */
-	if (retVal == Cond)
-	    retVal =
-		((inst.fp.func == 0x70) || (inst.fp.func == 0x78)) ? FP : Opr;
+  /*
+   * If the returned value from the above look up is 'Cond', then we are
+   * dealing with opcode = 0x1c.  This particular opcode has 2 potential
+   * values, depending upon the function code.  If the function code is
+   * either 0x70 or 0x78, then type instruction type is 'FP' (Floating
+   * Point).  Otherwise, it is 'Opr'.
+   */
+  if (retVal == Cond)
+      retVal =
+    ((inst.fp.func == 0x70) || (inst.fp.func == 0x78)) ? FP : Opr;
     }
 
     /*
@@ -1987,11 +1987,11 @@ AXP_OPER_TYPE AXP_OperationType(u32 opcode)
     if (opcode <= 0x3f)
     {
 
-	/*
-	 * Look up the instruction type from the instruction array, which is
-	 * indexed by opcode.
-	 */
-	retVal = insDecode[opcode].type;
+  /*
+   * Look up the instruction type from the instruction array, which is
+   * indexed by opcode.
+   */
+  retVal = insDecode[opcode].type;
     }
 
     /*
@@ -2029,11 +2029,11 @@ AXP_REG_DECODE AXP_RegisterDecoding(u32 opcode)
     if (opcode <= 0x3f)
     {
 
-	/*
-	 * Look up the instruction type from the instruction array, which is
-	 * indexed by opcode.
-	 */
-	retVal = insDecode[opcode].registers;
+  /*
+   * Look up the instruction type from the instruction array, which is
+   * indexed by opcode.
+   */
+  retVal = insDecode[opcode].registers;
     }
 
     /*
@@ -2067,11 +2067,11 @@ u16 AXP_InstructionQueue(u32 opcode)
     if (opcode <= 0x3f)
     {
 
-	/*
-	 * Look up the instruction type from the instruction array, which is
-	 * indexed by opcode.
-	 */
-	retVal = insDecode[opcode].whichQ;
+  /*
+   * Look up the instruction type from the instruction array, which is
+   * indexed by opcode.
+   */
+  retVal = insDecode[opcode].whichQ;
     }
 
     /*
@@ -2106,253 +2106,253 @@ AXP_PIPELINE AXP_InstructionPipeline(u32 opcode, u32 func)
      */
     switch (opcode)
     {
-	case ITFP:
-	    switch (func)
-	    {
-		case AXP_FUNC_SQRTF_C:
-		case AXP_FUNC_SQRTS_C:
-		case AXP_FUNC_SQRTG_C:
-		case AXP_FUNC_SQRTT_C:
-		case AXP_FUNC_SQRTS_M:
-		case AXP_FUNC_SQRTT_M:
-		case AXP_FUNC_SQRTF:
-		case AXP_FUNC_SQRTS:
-		case AXP_FUNC_SQRTG:
-		case AXP_FUNC_SQRTT:
-		case AXP_FUNC_SQRTS_D:
-		case AXP_FUNC_SQRTT_D:
-		case AXP_FUNC_SQRTF_UC:
-		case AXP_FUNC_SQRTS_UC:
-		case AXP_FUNC_SQRTG_UC:
-		case AXP_FUNC_SQRTT_UC:
-		case AXP_FUNC_SQRTS_UM:
-		case AXP_FUNC_SQRTT_UM:
-		case AXP_FUNC_SQRTF_U:
-		case AXP_FUNC_SQRTS_U:
-		case AXP_FUNC_SQRTG_U:
-		case AXP_FUNC_SQRTT_U:
-		case AXP_FUNC_SQRTS_UD:
-		case AXP_FUNC_SQRTT_UD:
-		case AXP_FUNC_SQRTF_SC:
-		case AXP_FUNC_SQRTG_SC:
-		case AXP_FUNC_SQRTF_S:
-		case AXP_FUNC_SQRTG_S:
-		case AXP_FUNC_SQRTF_SUC:
-		case AXP_FUNC_SQRTS_SUC:
-		case AXP_FUNC_SQRTG_SUC:
-		case AXP_FUNC_SQRTT_SUC:
-		case AXP_FUNC_SQRTS_SUM:
-		case AXP_FUNC_SQRTT_SUM:
-		case AXP_FUNC_SQRTF_SU:
-		case AXP_FUNC_SQRTS_SU:
-		case AXP_FUNC_SQRTG_SU:
-		case AXP_FUNC_SQRTT_SU:
-		case AXP_FUNC_SQRTS_SUD:
-		case AXP_FUNC_SQRTT_SUD:
-		case AXP_FUNC_SQRTS_SUIC:
-		case AXP_FUNC_SQRTT_SUIC:
-		case AXP_FUNC_SQRTS_SUIM:
-		case AXP_FUNC_SQRTT_SUIM:
-		case AXP_FUNC_SQRTS_SUI:
-		case AXP_FUNC_SQRTT_SUI:
-		case AXP_FUNC_SQRTS_SUID:
-		case AXP_FUNC_SQRTT_SUID:
-		    retVal = FboxOther;
-		    break;
+  case ITFP:
+      switch (func)
+      {
+    case AXP_FUNC_SQRTF_C:
+    case AXP_FUNC_SQRTS_C:
+    case AXP_FUNC_SQRTG_C:
+    case AXP_FUNC_SQRTT_C:
+    case AXP_FUNC_SQRTS_M:
+    case AXP_FUNC_SQRTT_M:
+    case AXP_FUNC_SQRTF:
+    case AXP_FUNC_SQRTS:
+    case AXP_FUNC_SQRTG:
+    case AXP_FUNC_SQRTT:
+    case AXP_FUNC_SQRTS_D:
+    case AXP_FUNC_SQRTT_D:
+    case AXP_FUNC_SQRTF_UC:
+    case AXP_FUNC_SQRTS_UC:
+    case AXP_FUNC_SQRTG_UC:
+    case AXP_FUNC_SQRTT_UC:
+    case AXP_FUNC_SQRTS_UM:
+    case AXP_FUNC_SQRTT_UM:
+    case AXP_FUNC_SQRTF_U:
+    case AXP_FUNC_SQRTS_U:
+    case AXP_FUNC_SQRTG_U:
+    case AXP_FUNC_SQRTT_U:
+    case AXP_FUNC_SQRTS_UD:
+    case AXP_FUNC_SQRTT_UD:
+    case AXP_FUNC_SQRTF_SC:
+    case AXP_FUNC_SQRTG_SC:
+    case AXP_FUNC_SQRTF_S:
+    case AXP_FUNC_SQRTG_S:
+    case AXP_FUNC_SQRTF_SUC:
+    case AXP_FUNC_SQRTS_SUC:
+    case AXP_FUNC_SQRTG_SUC:
+    case AXP_FUNC_SQRTT_SUC:
+    case AXP_FUNC_SQRTS_SUM:
+    case AXP_FUNC_SQRTT_SUM:
+    case AXP_FUNC_SQRTF_SU:
+    case AXP_FUNC_SQRTS_SU:
+    case AXP_FUNC_SQRTG_SU:
+    case AXP_FUNC_SQRTT_SU:
+    case AXP_FUNC_SQRTS_SUD:
+    case AXP_FUNC_SQRTT_SUD:
+    case AXP_FUNC_SQRTS_SUIC:
+    case AXP_FUNC_SQRTT_SUIC:
+    case AXP_FUNC_SQRTS_SUIM:
+    case AXP_FUNC_SQRTT_SUIM:
+    case AXP_FUNC_SQRTS_SUI:
+    case AXP_FUNC_SQRTT_SUI:
+    case AXP_FUNC_SQRTS_SUID:
+    case AXP_FUNC_SQRTT_SUID:
+        retVal = FboxOther;
+        break;
 
-		default:
-		    break;
-	    }
-	    break;
+    default:
+        break;
+      }
+      break;
 
-	case FLTV:
-	    switch (func)
-	    {
-		case AXP_FUNC_MULF_C:
-		case AXP_FUNC_DIVF_C:
-		case AXP_FUNC_MULG_C:
-		case AXP_FUNC_DIVG_C:
-		case AXP_FUNC_MULF:
-		case AXP_FUNC_DIVF:
-		case AXP_FUNC_MULG:
-		case AXP_FUNC_DIVG:
-		case AXP_FUNC_MULF_UC:
-		case AXP_FUNC_DIVF_UC:
-		case AXP_FUNC_MULG_UC:
-		case AXP_FUNC_DIVG_UC:
-		case AXP_FUNC_MULF_U:
-		case AXP_FUNC_DIVF_U:
-		case AXP_FUNC_MULG_U:
-		case AXP_FUNC_DIVG_U:
-		case AXP_FUNC_MULF_SC:
-		case AXP_FUNC_DIVF_SC:
-		case AXP_FUNC_MULG_SC:
-		case AXP_FUNC_DIVG_SC:
-		case AXP_FUNC_MULF_S:
-		case AXP_FUNC_DIVF_S:
-		case AXP_FUNC_MULG_S:
-		case AXP_FUNC_DIVG_S:
-		case AXP_FUNC_MULF_SUC:
-		case AXP_FUNC_DIVF_SUC:
-		case AXP_FUNC_MULG_SUC:
-		case AXP_FUNC_DIVG_SUC:
-		case AXP_FUNC_MULF_SU:
-		case AXP_FUNC_DIVF_SU:
-		case AXP_FUNC_MULG_SU:
-		case AXP_FUNC_DIVG_SU:
-		    retVal = FboxMul;
-		    break;
+  case FLTV:
+      switch (func)
+      {
+    case AXP_FUNC_MULF_C:
+    case AXP_FUNC_DIVF_C:
+    case AXP_FUNC_MULG_C:
+    case AXP_FUNC_DIVG_C:
+    case AXP_FUNC_MULF:
+    case AXP_FUNC_DIVF:
+    case AXP_FUNC_MULG:
+    case AXP_FUNC_DIVG:
+    case AXP_FUNC_MULF_UC:
+    case AXP_FUNC_DIVF_UC:
+    case AXP_FUNC_MULG_UC:
+    case AXP_FUNC_DIVG_UC:
+    case AXP_FUNC_MULF_U:
+    case AXP_FUNC_DIVF_U:
+    case AXP_FUNC_MULG_U:
+    case AXP_FUNC_DIVG_U:
+    case AXP_FUNC_MULF_SC:
+    case AXP_FUNC_DIVF_SC:
+    case AXP_FUNC_MULG_SC:
+    case AXP_FUNC_DIVG_SC:
+    case AXP_FUNC_MULF_S:
+    case AXP_FUNC_DIVF_S:
+    case AXP_FUNC_MULG_S:
+    case AXP_FUNC_DIVG_S:
+    case AXP_FUNC_MULF_SUC:
+    case AXP_FUNC_DIVF_SUC:
+    case AXP_FUNC_MULG_SUC:
+    case AXP_FUNC_DIVG_SUC:
+    case AXP_FUNC_MULF_SU:
+    case AXP_FUNC_DIVF_SU:
+    case AXP_FUNC_MULG_SU:
+    case AXP_FUNC_DIVG_SU:
+        retVal = FboxMul;
+        break;
 
-		default:
-		    break;
-	    }
-	    break;
+    default:
+        break;
+      }
+      break;
 
-	case FLTI:
-	    switch (func)
-	    {
-		case AXP_FUNC_MULS_C:
-		case AXP_FUNC_DIVS_C:
-		case AXP_FUNC_MULT_C:
-		case AXP_FUNC_DIVT_C:
-		case AXP_FUNC_MULS_M:
-		case AXP_FUNC_DIVS_M:
-		case AXP_FUNC_MULT_M:
-		case AXP_FUNC_DIVT_M:
-		case AXP_FUNC_MULS:
-		case AXP_FUNC_DIVS:
-		case AXP_FUNC_MULT:
-		case AXP_FUNC_DIVT:
-		case AXP_FUNC_MULS_D:
-		case AXP_FUNC_DIVS_D:
-		case AXP_FUNC_MULT_D:
-		case AXP_FUNC_DIVT_D:
-		case AXP_FUNC_MULS_UC:
-		case AXP_FUNC_DIVS_UC:
-		case AXP_FUNC_MULT_UC:
-		case AXP_FUNC_DIVT_UC:
-		case AXP_FUNC_MULS_UM:
-		case AXP_FUNC_DIVS_UM:
-		case AXP_FUNC_MULT_UM:
-		case AXP_FUNC_DIVT_UM:
-		case AXP_FUNC_MULS_U:
-		case AXP_FUNC_DIVS_U:
-		case AXP_FUNC_MULT_U:
-		case AXP_FUNC_DIVT_U:
-		case AXP_FUNC_MULS_UD:
-		case AXP_FUNC_DIVS_UD:
-		case AXP_FUNC_MULT_UD:
-		case AXP_FUNC_DIVT_UD:
-		case AXP_FUNC_MULS_SUC:
-		case AXP_FUNC_DIVS_SUC:
-		case AXP_FUNC_MULT_SUC:
-		case AXP_FUNC_DIVT_SUC:
-		case AXP_FUNC_MULS_SUM:
-		case AXP_FUNC_DIVS_SUM:
-		case AXP_FUNC_MULT_SUM:
-		case AXP_FUNC_DIVT_SUM:
-		case AXP_FUNC_MULS_SU:
-		case AXP_FUNC_DIVS_SU:
-		case AXP_FUNC_MULT_SU:
-		case AXP_FUNC_DIVT_SU:
-		case AXP_FUNC_MULS_SUD:
-		case AXP_FUNC_DIVS_SUD:
-		case AXP_FUNC_MULT_SUD:
-		case AXP_FUNC_DIVT_SUD:
-		case AXP_FUNC_MULS_SUIC:
-		case AXP_FUNC_DIVS_SUIC:
-		case AXP_FUNC_MULT_SUIC:
-		case AXP_FUNC_DIVT_SUIC:
-		case AXP_FUNC_MULS_SUIM:
-		case AXP_FUNC_DIVS_SUIM:
-		case AXP_FUNC_MULT_SUIM:
-		case AXP_FUNC_MULS_SUI:
-		case AXP_FUNC_DIVS_SUI:
-		case AXP_FUNC_MULT_SUI:
-		case AXP_FUNC_DIVT_SUI:
-		case AXP_FUNC_MULS_SUID:
-		case AXP_FUNC_DIVS_SUID:
-		case AXP_FUNC_MULT_SUID:
-		    retVal = FboxMul;
-		    break;
+  case FLTI:
+      switch (func)
+      {
+    case AXP_FUNC_MULS_C:
+    case AXP_FUNC_DIVS_C:
+    case AXP_FUNC_MULT_C:
+    case AXP_FUNC_DIVT_C:
+    case AXP_FUNC_MULS_M:
+    case AXP_FUNC_DIVS_M:
+    case AXP_FUNC_MULT_M:
+    case AXP_FUNC_DIVT_M:
+    case AXP_FUNC_MULS:
+    case AXP_FUNC_DIVS:
+    case AXP_FUNC_MULT:
+    case AXP_FUNC_DIVT:
+    case AXP_FUNC_MULS_D:
+    case AXP_FUNC_DIVS_D:
+    case AXP_FUNC_MULT_D:
+    case AXP_FUNC_DIVT_D:
+    case AXP_FUNC_MULS_UC:
+    case AXP_FUNC_DIVS_UC:
+    case AXP_FUNC_MULT_UC:
+    case AXP_FUNC_DIVT_UC:
+    case AXP_FUNC_MULS_UM:
+    case AXP_FUNC_DIVS_UM:
+    case AXP_FUNC_MULT_UM:
+    case AXP_FUNC_DIVT_UM:
+    case AXP_FUNC_MULS_U:
+    case AXP_FUNC_DIVS_U:
+    case AXP_FUNC_MULT_U:
+    case AXP_FUNC_DIVT_U:
+    case AXP_FUNC_MULS_UD:
+    case AXP_FUNC_DIVS_UD:
+    case AXP_FUNC_MULT_UD:
+    case AXP_FUNC_DIVT_UD:
+    case AXP_FUNC_MULS_SUC:
+    case AXP_FUNC_DIVS_SUC:
+    case AXP_FUNC_MULT_SUC:
+    case AXP_FUNC_DIVT_SUC:
+    case AXP_FUNC_MULS_SUM:
+    case AXP_FUNC_DIVS_SUM:
+    case AXP_FUNC_MULT_SUM:
+    case AXP_FUNC_DIVT_SUM:
+    case AXP_FUNC_MULS_SU:
+    case AXP_FUNC_DIVS_SU:
+    case AXP_FUNC_MULT_SU:
+    case AXP_FUNC_DIVT_SU:
+    case AXP_FUNC_MULS_SUD:
+    case AXP_FUNC_DIVS_SUD:
+    case AXP_FUNC_MULT_SUD:
+    case AXP_FUNC_DIVT_SUD:
+    case AXP_FUNC_MULS_SUIC:
+    case AXP_FUNC_DIVS_SUIC:
+    case AXP_FUNC_MULT_SUIC:
+    case AXP_FUNC_DIVT_SUIC:
+    case AXP_FUNC_MULS_SUIM:
+    case AXP_FUNC_DIVS_SUIM:
+    case AXP_FUNC_MULT_SUIM:
+    case AXP_FUNC_MULS_SUI:
+    case AXP_FUNC_DIVS_SUI:
+    case AXP_FUNC_MULT_SUI:
+    case AXP_FUNC_DIVT_SUI:
+    case AXP_FUNC_MULS_SUID:
+    case AXP_FUNC_DIVS_SUID:
+    case AXP_FUNC_MULT_SUID:
+        retVal = FboxMul;
+        break;
 
-		default:
-		    break;
-	    }
-	    break;
+    default:
+        break;
+      }
+      break;
 
-	case FLTL:
-	    switch (func)
-	    {
-		case AXP_FUNC_CVTLQ:
-		case AXP_FUNC_CVTQL:
-		case AXP_FUNC_CVTQL_V:
-		case AXP_FUNC_CVTQL_SV:
-		    break;
+  case FLTL:
+      switch (func)
+      {
+    case AXP_FUNC_CVTLQ:
+    case AXP_FUNC_CVTQL:
+    case AXP_FUNC_CVTQL_V:
+    case AXP_FUNC_CVTQL_SV:
+        break;
 
-		default:
-		    retVal = FboxOther;
-		    break;
-	    }
-	    break;
+    default:
+        retVal = FboxOther;
+        break;
+      }
+      break;
 
-	case MISC:
-	    switch (func)
-	    {
-		case AXP_FUNC_MB:
-		case AXP_FUNC_WMB:
-		case AXP_FUNC_FETCH:
-		case AXP_FUNC_FETCH_M:
-		case AXP_FUNC_RPCC:
-		case AXP_FUNC_ECB:
-		case AXP_FUNC_RC:
-		case AXP_FUNC_RS:
-		case AXP_FUNC_WH64:
-		case AXP_FUNC_WH64EN:
-		    retVal = EboxL1;
-		    break;
+  case MISC:
+      switch (func)
+      {
+    case AXP_FUNC_MB:
+    case AXP_FUNC_WMB:
+    case AXP_FUNC_FETCH:
+    case AXP_FUNC_FETCH_M:
+    case AXP_FUNC_RPCC:
+    case AXP_FUNC_ECB:
+    case AXP_FUNC_RC:
+    case AXP_FUNC_RS:
+    case AXP_FUNC_WH64:
+    case AXP_FUNC_WH64EN:
+        retVal = EboxL1;
+        break;
 
-		default:
-		    break;
-	    }
-	    break;
+    default:
+        break;
+      }
+      break;
 
-	case FPTI:
-	    switch (func)
-	    {
-		case AXP_FUNC_PERR:
-		case AXP_FUNC_UNPKBW:
-		case AXP_FUNC_UNPKBL:
-		case AXP_FUNC_PKWB:
-		case AXP_FUNC_PKLB:
-		case AXP_FUNC_MINSB8:
-		case AXP_FUNC_MINSW4:
-		case AXP_FUNC_MINUB8:
-		case AXP_FUNC_MINUW4:
-		case AXP_FUNC_MAXUB8:
-		case AXP_FUNC_MAXUW4:
-		case AXP_FUNC_MAXSB8:
-		case AXP_FUNC_MAXSW4:
-		    retVal = EboxU0;
-		    break;
+  case FPTI:
+      switch (func)
+      {
+    case AXP_FUNC_PERR:
+    case AXP_FUNC_UNPKBW:
+    case AXP_FUNC_UNPKBL:
+    case AXP_FUNC_PKWB:
+    case AXP_FUNC_PKLB:
+    case AXP_FUNC_MINSB8:
+    case AXP_FUNC_MINSW4:
+    case AXP_FUNC_MINUB8:
+    case AXP_FUNC_MINUW4:
+    case AXP_FUNC_MAXUB8:
+    case AXP_FUNC_MAXUW4:
+    case AXP_FUNC_MAXSB8:
+    case AXP_FUNC_MAXSW4:
+        retVal = EboxU0;
+        break;
 
-		case AXP_FUNC_FTOIT:
-		case AXP_FUNC_FTOIS:
-		    retVal = FboxOther;
-		    break;
+    case AXP_FUNC_FTOIT:
+    case AXP_FUNC_FTOIS:
+        retVal = FboxOther;
+        break;
 
-		default:
-		    break;
-	    }
-	    break;
+    default:
+        break;
+      }
+      break;
 
-	case HW_MTPR:
-	case HW_MFPR:
-	    retVal = hw_mxpr_pipe[func];
-	    break;
+  case HW_MTPR:
+  case HW_MFPR:
+      retVal = hw_mxpr_pipe[func];
+      break;
 
-	default:
-	    break;
+  default:
+      break;
     }
 
     /*

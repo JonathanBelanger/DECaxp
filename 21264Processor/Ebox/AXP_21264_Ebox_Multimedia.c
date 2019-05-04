@@ -58,7 +58,7 @@ AXP_EXCEPTIONS AXP_MINUB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Execute the instruction.
      */
     for (ii = 0; ii < (sizeof(u64) / sizeof(u8)); ii++)
-	Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
+  Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -97,7 +97,7 @@ AXP_EXCEPTIONS AXP_MINSB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Execute the instruction.
      */
     for (ii = 0; ii < (sizeof(i64) / sizeof(i8)); ii++)
-	Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
+  Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -129,7 +129,7 @@ AXP_EXCEPTIONS AXP_MINUW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
     u16 *Rav = (u16 *) &instr->src1v.r.uq;
     u16 *Rbv =
-	(u16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
+  (u16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
     u16 *Rcv = (u16 *) &instr->destv.r.uq;
     int ii;
 
@@ -137,7 +137,7 @@ AXP_EXCEPTIONS AXP_MINUW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Execute the instruction.
      */
     for (ii = 0; ii < (sizeof(u64) / sizeof(u16)); ii++)
-	Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
+  Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -169,7 +169,7 @@ AXP_EXCEPTIONS AXP_MINSW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
     i16 *Rav = (i16 *) &instr->src1v.r.uq;
     i16 *Rbv =
-	(i16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
+  (i16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
     i16 *Rcv = (i16 *) &instr->destv.r.uq;
     int ii;
 
@@ -177,7 +177,7 @@ AXP_EXCEPTIONS AXP_MINSW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Execute the instruction.
      */
     for (ii = 0; ii < (sizeof(i64) / sizeof(i16)); ii++)
-	Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
+  Rcv[ii] = Rav[ii] < Rbv[ii] ? Rav[ii] : Rbv[ii];
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -216,7 +216,7 @@ AXP_EXCEPTIONS AXP_MAXUB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Execute the instruction.
      */
     for (ii = 0; ii < (sizeof(u64) / sizeof(u8)); ii++)
-	Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
+  Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -255,7 +255,7 @@ AXP_EXCEPTIONS AXP_MAXSB8(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Execute the instruction.
      */
     for (ii = 0; ii < (sizeof(i64) / sizeof(i8)); ii++)
-	Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
+  Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -287,7 +287,7 @@ AXP_EXCEPTIONS AXP_MAXUW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
     u16 *Rav = (u16 *) &instr->src1v.r.uq;
     u16 *Rbv =
-	(u16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
+  (u16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
     u16 *Rcv = (u16 *) &instr->destv.r.uq;
     int ii;
 
@@ -295,7 +295,7 @@ AXP_EXCEPTIONS AXP_MAXUW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Execute the instruction.
      */
     for (ii = 0; ii < (sizeof(u64) / sizeof(u16)); ii++)
-	Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
+  Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -327,7 +327,7 @@ AXP_EXCEPTIONS AXP_MAXSW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 {
     i16 *Rav = (i16 *) &instr->src1v.r.uq;
     i16 *Rbv =
-	(i16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
+  (i16 *) (instr->useLiteral ? &instr->literal : &instr->src2v.r.uq);
     i16 *Rcv = (i16 *) &instr->destv.r.uq;
     int ii;
 
@@ -335,7 +335,7 @@ AXP_EXCEPTIONS AXP_MAXSW4(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Execute the instruction.
      */
     for (ii = 0; ii < (sizeof(i64) / sizeof(i16)); ii++)
-	Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
+  Rcv[ii] = Rav[ii] > Rbv[ii] ? Rav[ii] : Rbv[ii];
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -374,7 +374,7 @@ AXP_EXCEPTIONS AXP_PERR(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Execute the instruction.
      */
     for (ii = 0; ii < (sizeof(u64) / sizeof(u8)); ii++)
-	temp += abs(Rav[ii] - Rbv[ii]);
+  temp += abs(Rav[ii] - Rbv[ii]);
     instr->destv.r.uq = temp;
 
     /*

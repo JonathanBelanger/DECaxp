@@ -21,19 +21,19 @@
  *
  * Revision History:
  *
- *  V01.000	10-May-2017	Jonathan D. Belanger
+ *  V01.000 10-May-2017 Jonathan D. Belanger
  *  Initially written.
  *
- *  V01.001	14-May-2017	Jonathan D. Belanger
+ *  V01.001 14-May-2017 Jonathan D. Belanger
  *  Added includes for a number of standard header files.
  *
- *  V01.002	17-Jun-2017	Jonathan D. Belanger
+ *  V01.002 17-Jun-2017 Jonathan D. Belanger
  *  Added counted queues and counted queue entries.
  *
- *  V01.003	05-Jul-2017	Jonathan D. Belanger
+ *  V01.003 05-Jul-2017 Jonathan D. Belanger
  *  Added definitions for unsigned/signed 128-bit values.
  *
- *  V01.004	10-Jul-2017	Jonathan D. Belanger
+ *  V01.004 10-Jul-2017 Jonathan D. Belanger
  *  I tried to utilize the MPFR - Multi-Precision Float Rounding utility,
  *  but had problems getting it to link in correctly.  Additionally, this
  *  utility did not support subnormal values directly (there was a way to
@@ -41,11 +41,11 @@
  *  of this utility has been questioned.  Therefore, I'm reverting to what
  *  I was doing before.
  *
- *  V01.004	18-Nov-2017	Jonathan D. Belanger
+ *  V01.004 18-Nov-2017 Jonathan D. Belanger
  *  Uncommented the pthread.h include.  We are going threading.
  *
- *  V01.005	29-Dec-2017	Jonathan D. Belanger
- *  When sending data from the CPU to the System, we do so in upto 64-byte
+ *  V01.005 29-Dec-2017 Jonathan D. Belanger
+ *  When sending data from the CPU to the System, we do so in up to 64-byte
  *  blocks.  Since these blocks are not necessarily consecutive, there may be
  *  gaps between the end of what section of relevant data and the start of the
  *  next.  In the real CPU, this would be broken down into a series of
@@ -53,7 +53,7 @@
  *  but do it in a single step.  We need some macros to set/decode the
  *  appropriate set of mask bits (each bit represent a single byte).
  *
- *  V01.006	26-Apr-2018	Jonathan D. Belanger
+ *  V01.006 26-Apr-2018 Jonathan D. Belanger
  *  Added macros to INSQUE and REMQUE entries from a doubly linked list.
  */
 #ifndef _AXP_UTIL_DEFS_
@@ -62,7 +62,7 @@
 /*
  * Includes used throughout the code.
  */
-#define _FILE_OFFSET_BITS	64
+#define _FILE_OFFSET_BITS 64
 #define __USE_LINUX_IOCTL_DEFS
 #include <unistd.h>
 #include <pthread.h>
@@ -86,76 +86,76 @@
 /*
  * Define some regularly utilized definitions.
  */
-#define ONE_K				1024		/* 1K */
-#define TWO_K				2048		/* 2K */
-#define FOUR_K				4096		/* 4K */
-#define EIGHT_K				8192		/* 8K */
-#define THIRTYTWO_K			32768		/* 32K */
-#define SIXTYFOUR_K			65536		/* 64K */
-#define ONE_M				1048576		/* 1M */
-#define ONE_G				1073741824	/* 1G */
-#define ONE_T				1099511627776	/* 1T */
+#define ONE_K                        1024   /* 1K */
+#define TWO_K                        2048   /* 2K */
+#define FOUR_K                       4096   /* 4K */
+#define EIGHT_K                      8192   /* 8K */
+#define THIRTYTWO_K                 32768   /* 32K */
+#define SIXTYFOUR_K                 65536   /* 64K */
+#define ONE_M                     1048576   /* 1M */
+#define ONE_G                  1073741824   /* 1G */
+#define ONE_T               1099511627776   /* 1T */
 
 /*
  * Test for power of 2
  */
-#define IS_POWER_OF_2(value)		((value) && !((value) & (value - 1)))
+#define IS_POWER_OF_2(value)    ((value) && !((value) & (value - 1)))
 
 /*
  * Define some standard data types.
  */
-typedef unsigned char u8; /* 1 byte (8 bits) in length */
-typedef unsigned short u16; /* 2 bytes (16 bits) in length */
-typedef unsigned int u32; /* 4 bytes (32 bits) in length */
+typedef unsigned char u8;       /* 1 byte (8 bits) in length */
+typedef unsigned short u16;     /* 2 bytes (16 bits) in length */
+typedef unsigned int u32;       /* 4 bytes (32 bits) in length */
 typedef unsigned long long u64; /* 8 bytes (64 bits) in length */
 typedef unsigned __int128 u128; /* 16 bytes (128 bits) in length */
-typedef char i8; /* 1 byte (8 bits) in length */
-typedef short i16; /* 2 bytes (16 bits) in length */
-typedef int i32; /* 4 bytes (32 bits) in length */
-typedef long long i64; /* 8 bytes (64 bits) in length */
-typedef __int128 i128; /* 16 bytes (128 bits) in length */
+typedef char i8;                /* 1 byte (8 bits) in length */
+typedef short i16;              /* 2 bytes (16 bits) in length */
+typedef int i32;                /* 4 bytes (32 bits) in length */
+typedef long long i64;          /* 8 bytes (64 bits) in length */
+typedef __int128 i128;          /* 16 bytes (128 bits) in length */
 
 /*
  * Define some standard data type lengths (only the unique ones).
  */
-#define BYTE_LEN			sizeof(u8)
-#define WORD_LEN			sizeof(u16)
-#define LONG_LEN			sizeof(u32)
-#define QUAD_LEN			sizeof(u64)
-#define CACHE_LEN			64
+#define BYTE_LEN    sizeof(u8)
+#define WORD_LEN    sizeof(u16)
+#define LONG_LEN    sizeof(u32)
+#define QUAD_LEN    sizeof(u64)
+#define CACHE_LEN   64
 
 /*
  * Various values that are used throughout the code.
  */
-#define AXP_LOW_BYTE		0x00000000000000ffll
-#define AXP_LOW_WORD		0x000000000000ffffll
-#define AXP_LOW_LONG		0x00000000ffffffffll
-#define AXP_LOW_QUAD		(i64) 0xffffffffffffffffll
-#define AXP_LOW_6BITS		0x000000000000003fll
-#define AXP_LOW_3BITS		0x0000000000000007ll
+#define AXP_LOW_BYTE    0x00000000000000ffll
+#define AXP_LOW_WORD    0x000000000000ffffll
+#define AXP_LOW_LONG    0x00000000ffffffffll
+#define AXP_LOW_QUAD    (i64) 0xffffffffffffffffll
+#define AXP_LOW_6BITS   0x000000000000003fll
+#define AXP_LOW_3BITS   0x0000000000000007ll
 
 /*
  * Define the SROM handle for reading in an SROM file.
  */
-#define AXP_FILENAME_MAX	131
+#define AXP_FILENAME_MAX    131
 typedef struct
 {
     char fileName[AXP_FILENAME_MAX + 1];
     u32 *writeBuf;
     FILE *fp;
-    u32 validPat; /* must be 0x5a5ac3c3 */
-    u32 inverseVP; /* must be 0xa5a53c3c */
+    u32 validPat;   /* must be 0x5a5ac3c3 */
+    u32 inverseVP;  /* must be 0xa5a53c3c */
     u32 hdrSize;
     u32 imgChecksum;
-    u32 imgSize; /* memory footprint */
+    u32 imgSize;    /* memory footprint */
     u32 decompFlag;
     u64 destAddr;
     u8 hdrRev;
-    u8 fwID; /* Firmware ID */
+    u8 fwID;        /* Firmware ID */
     u8 hdrRevExt;
     u8 res;
     u32 romImgSize;
-    u64 optFwID; /* Optional Firmware ID */
+    u64 optFwID;    /* Optional Firmware ID */
     u32 romOffset;
     u32 hdrChecksum;
     u32 verImgChecksum;
@@ -163,26 +163,26 @@ typedef struct
     bool openForWrite;
 } AXP_SROM_HANDLE;
 
-#define AXP_ROM_HDR_LEN		(14*4)
-#define AXP_ROM_HDR_CNT		15				/* romOffset[Valid] read as one */
-#define AXP_ROM_VAL_PAT		0x5a5ac3c3
-#define AXP_ROM_INV_VP_PAT	0xa5a53c3c
-#define AXP_ROM_HDR_VER		1
-#define AXP_ROM_FWID_DBM	0	/* Alpha Motherboards Debug Monitor firmware */
-#define AXP_ROM_FWID_WNT	1	/* Windows NT firmware */
-#define AXP_ROM_FWID_SRM	2	/* Alpha System Reference Manual Console */
-#define AXP_ROM_FWID_FSB	6	/* Alpha Motherboards Fail-Safe Booter */
-#define AXP_ROM_FWID_MILO	7	/* Linux Miniloader */
-#define AXP_ROM_FWID_VXWRKS	8	/* VxWorks Real-Time Operating System */
-#define AXP_ROM_FWID_SROM	10	/* Serial ROM */
+#define AXP_ROM_HDR_LEN     (14*4)
+#define AXP_ROM_HDR_CNT     15          /* romOffset[Valid] read as one */
+#define AXP_ROM_VAL_PAT     0x5a5ac3c3
+#define AXP_ROM_INV_VP_PAT  0xa5a53c3c
+#define AXP_ROM_HDR_VER     1
+#define AXP_ROM_FWID_DBM    0           /* Alpha Motherboards Debug Monitor firmware */
+#define AXP_ROM_FWID_WNT    1           /* Windows NT firmware */
+#define AXP_ROM_FWID_SRM    2           /* Alpha System Reference Manual Console */
+#define AXP_ROM_FWID_FSB    6           /* Alpha Motherboards Fail-Safe Booter */
+#define AXP_ROM_FWID_MILO   7           /* Linux Miniloader */
+#define AXP_ROM_FWID_VXWRKS 8           /* VxWorks Real-Time Operating System */
+#define AXP_ROM_FWID_SROM   10          /* Serial ROM */
 
 /*
  * CPU <--> System Mask generation macro definitions.
  */
-#define AXP_MASK_BYTE				0x0001
-#define AXP_MASK_WORD				0x0003
-#define AXP_MASK_LONG				0x000f
-#define AXP_MASK_QUAD				0x00ff
+#define AXP_MASK_BYTE       0x0001
+#define AXP_MASK_WORD       0x0003
+#define AXP_MASK_LONG       0x000f
+#define AXP_MASK_QUAD       0x00ff
 
 /*
  * Define a basic queue.  This will be used to define a number of other queue
@@ -197,21 +197,21 @@ typedef struct queueHeader
 /*
  * Macros to use with the basic queue.
  */
-#define AXP_INIT_QUE(queue)		queue.flink = queue.blink = (void *) &queue
-#define AXP_INIT_QUEP(queue)	queue->flink = queue->blink = (void *) queue
-#define AXP_QUE_EMPTY(queue)	(queue.flink == (void *) &queue.flink)
-#define AXP_QUEP_EMPTY(queue)	(queue->flink == (void *) &queue->flink)
-#define AXP_REMQUE(entry) 							\
-    {										\
-	(entry)->blink->flink = (entry)->flink;					\
-	(entry)->flink->blink = (entry)->blink;					\
+#define AXP_INIT_QUE(queue)     queue.flink = queue.blink = (void *) &queue
+#define AXP_INIT_QUEP(queue)    queue->flink = queue->blink = (void *) queue
+#define AXP_QUE_EMPTY(queue)    (queue.flink == (void *) &queue.flink)
+#define AXP_QUEP_EMPTY(queue)   (queue->flink == (void *) &queue->flink)
+#define AXP_REMQUE(entry)                                                   \
+    {                                                                       \
+        (entry)->blink->flink = (entry)->flink;                             \
+        (entry)->flink->blink = (entry)->blink;                             \
     }
-#define AXP_INSQUE(pred, entry)							\
-    {										\
-	(entry)->flink = (pred)->flink;						\
-	(entry)->blink = (AXP_QUEUE_HDR *) (pred);				\
-	(pred)->flink = (AXP_QUEUE_HDR *) (entry);				\
-	(entry)->flink->blink = (AXP_QUEUE_HDR *) (entry);			\
+#define AXP_INSQUE(pred, entry)                                             \
+    {                                                                       \
+        (entry)->flink = (pred)->flink;                                     \
+        (entry)->blink = (AXP_QUEUE_HDR *) (pred);                          \
+        (pred)->flink = (AXP_QUEUE_HDR *) (entry);                          \
+        (entry)->flink->blink = (AXP_QUEUE_HDR *) (entry);                  \
     }
 
 /*
@@ -235,10 +235,10 @@ typedef struct countedQueueRoot
     pthread_mutex_t mutex;
 } AXP_COUNTED_QUEUE;
 
-#define AXP_INIT_CQENTRY(queue, prent)	\
-		queue.flink = NULL;				\
-		queue.blink = NULL;				\
-		queue.parent = &prent;
+#define AXP_INIT_CQENTRY(queue, prent)                                      \
+    queue.flink = NULL;                                                     \
+    queue.blink = NULL;                                                     \
+    queue.parent = &prent;
 
 /*
  * Conditional queues (using pthreads)
@@ -248,8 +248,7 @@ typedef struct countedQueueRoot
  */
 typedef enum
 {
-    AXPCondQueue,
-    AXPCountedCondQueue
+    AXPCondQueue, AXPCountedCondQueue
 } AXP_COND_Q_TYPE;
 
 typedef struct condQueueHeader
@@ -292,13 +291,13 @@ typedef struct condQueueCountRoot
 /*
  * Error returns for various AXP Utility file load functions.
  */
-#define AXP_S_NORMAL		 0
-#define AXP_E_FNF 		-1
-#define AXP_E_BUFTOOSMALL	-2
-#define AXP_E_EOF		-3
-#define AXP_E_READERR		-4
-#define AXP_E_BADSROMFILE	-5
-#define AXP_E_BADCFGFILE	-6
+#define AXP_S_NORMAL        0
+#define AXP_E_FNF           -1
+#define AXP_E_BUFTOOSMALL   -2
+#define AXP_E_EOF           -3
+#define AXP_E_READERR       -4
+#define AXP_E_BADSROMFILE   -5
+#define AXP_E_BADCFGFILE    -6
 
 /*
  * Prototype Definitions
@@ -365,13 +364,7 @@ i32 AXP_UTF16_2Ascii(uint16_t *, size_t, char *, size_t *);
  */
 typedef enum
 {
-    U8,
-    U16,
-    U32,
-    U64,
-    GUID,
-    CRC32,
-    CVTMax
+    U8, U16, U32, U64, GUID, CRC32, CVTMax
 } AXP_CVT_Types;
 void AXP_Convert_To(AXP_CVT_Types, void *, void *);
 void AXP_Convert_From(AXP_CVT_Types, void *, void *);

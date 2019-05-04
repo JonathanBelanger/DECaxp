@@ -85,9 +85,9 @@ AXP_EXCEPTIONS AXP_AMASK(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Return the masked off CPU Features.
      */
     if (cpu->majorType < EV56)
-	instr->destv.r.uq = Rbv;
+  instr->destv.r.uq = Rbv;
     else
-	instr->destv.r.uq = Rbv & ~*aMask;
+  instr->destv.r.uq = Rbv & ~*aMask;
 
     /*
      * Indicate that the instruction is ready to be retired.
@@ -566,31 +566,31 @@ AXP_EXCEPTIONS AXP_WH64EN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
     (cpu->majorType == EV68CX) || /* 21264 */
     (cpu->majorType == EV69A)) /* 21264 */
     {
-	retVal = AXP_WH64(cpu, instr);
+  retVal = AXP_WH64(cpu, instr);
     }
     else if ((cpu->majorType == EV7) || /* 21364 */
     (cpu->majorType == EV79)) /* 21364 */
     {
 
-	/*
-	 * TODO:	This instruction is used to provide a "hint" that the
-	 * 			address specified in Rbv will not be read again, but will
-	 * 			be overwritten shortly.  A cache resource/location may be
-	 *			allocated, but the contents of the memory location where
-	 *			this cached address resides, may not be read.  Any error
-	 *			that occurs (access violation, translation not valid, and
-	 *			so forth) will cause this instruction to behave like a
-	 *			NOOP.
-	 *
-	 *			The difference between this instruction and WH64 is that
-	 *			this one indicates that eviction policy for the indicated
-	 *			64 byte location is different than the other.
-	 */
+  /*
+   * TODO:	This instruction is used to provide a "hint" that the
+   * 			address specified in Rbv will not be read again, but will
+   * 			be overwritten shortly.  A cache resource/location may be
+   *			allocated, but the contents of the memory location where
+   *			this cached address resides, may not be read.  Any error
+   *			that occurs (access violation, translation not valid, and
+   *			so forth) will cause this instruction to behave like a
+   *			NOOP.
+   *
+   *			The difference between this instruction and WH64 is that
+   *			this one indicates that eviction policy for the indicated
+   *			64 byte location is different than the other.
+   */
 
-	/*
-	 * Indicate that the instruction is ready to be retired.
-	 */
-	instr->state = WaitingRetirement;
+  /*
+   * Indicate that the instruction is ready to be retired.
+   */
+  instr->state = WaitingRetirement;
     }
 
     /*

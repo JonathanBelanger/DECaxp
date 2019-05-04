@@ -32,4 +32,4 @@ add_library(Fbox STATIC
     AXP_21264_Fbox.c)
 
 target_include_directories(Fbox PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

@@ -33,4 +33,4 @@ add_library(21264Processor STATIC
     AXP_21264_CPU.c)
 
 target_include_directories(21264Processor PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

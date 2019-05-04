@@ -122,12 +122,12 @@ char *ip62s(struct sockaddr *sockaddr, char *address, u32 addrlen)
      * Get the name information from the sock address supplied on the call.
      */
     if (getnameinfo(
-            sockaddr, 
-            sockaddrlen, 
-            address, 
-            addrlen, 
-            NULL, 
-            0, 
+            sockaddr,
+            sockaddrlen,
+            address,
+            addrlen,
+            NULL,
+            0,
             NI_NUMERICHOST) != 0)
     {
         strcpy(address, "<Error Getting IPv6 hostname>");

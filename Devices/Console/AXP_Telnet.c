@@ -61,147 +61,147 @@ AXP_SM_Entry TN_Option[AXP_OPT_MAX_ACTION][AXP_OPT_MAX_STATE] =
 {
     /* YES_SRV	- NOT PREFERRED */
     {
-	{AXP_OPT_WANTYES_SRV,	Send_WILL},
-	{AXP_OPT_WANTNO_CLI,	NULL},
-	{AXP_OPT_WANTNO_CLI,	NULL},
-	{AXP_OPT_WANTYES_SRV,	NULL},
-	{AXP_OPT_WANTYES_SRV,	NULL},
-	{AXP_OPT_YES,		NULL}
+  {AXP_OPT_WANTYES_SRV,	Send_WILL},
+  {AXP_OPT_WANTNO_CLI,	NULL},
+  {AXP_OPT_WANTNO_CLI,	NULL},
+  {AXP_OPT_WANTYES_SRV,	NULL},
+  {AXP_OPT_WANTYES_SRV,	NULL},
+  {AXP_OPT_YES,		NULL}
     },
     /* YES_SRV	- PREFERRED */
     {
-	{AXP_OPT_WANTYES_SRV,	Send_WILL},
-	{AXP_OPT_WANTNO_CLI,	NULL},
-	{AXP_OPT_WANTNO_CLI,	NULL},
-	{AXP_OPT_WANTYES_SRV,	NULL},
-	{AXP_OPT_WANTYES_SRV,	NULL},
-	{AXP_OPT_YES,		NULL}
+  {AXP_OPT_WANTYES_SRV,	Send_WILL},
+  {AXP_OPT_WANTNO_CLI,	NULL},
+  {AXP_OPT_WANTNO_CLI,	NULL},
+  {AXP_OPT_WANTYES_SRV,	NULL},
+  {AXP_OPT_WANTYES_SRV,	NULL},
+  {AXP_OPT_YES,		NULL}
     },
     /* NO_SRV	- NOT PREFERRED */
     {
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_SRV,	NULL},
-	{AXP_OPT_WANTNO_SRV,	NULL},
-	{AXP_OPT_WANTYES_CLI,	NULL},
-	{AXP_OPT_WANTYES_CLI,	NULL},
-	{AXP_OPT_WANTNO_SRV,	Send_WONT}
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_WANTNO_SRV,	NULL},
+  {AXP_OPT_WANTNO_SRV,	NULL},
+  {AXP_OPT_WANTYES_CLI,	NULL},
+  {AXP_OPT_WANTYES_CLI,	NULL},
+  {AXP_OPT_WANTNO_SRV,	Send_WONT}
     },
     /* NO_SRV	- PREFERRED */
     {
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_SRV,	NULL},
-	{AXP_OPT_WANTNO_SRV,	NULL},
-	{AXP_OPT_WANTYES_CLI,	NULL},
-	{AXP_OPT_WANTYES_CLI,	NULL},
-	{AXP_OPT_WANTNO_SRV,	Send_WONT}
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_WANTNO_SRV,	NULL},
+  {AXP_OPT_WANTNO_SRV,	NULL},
+  {AXP_OPT_WANTYES_CLI,	NULL},
+  {AXP_OPT_WANTYES_CLI,	NULL},
+  {AXP_OPT_WANTNO_SRV,	Send_WONT}
     },
     /* YES_CLI	- NOT PREFERRED */
     {
-	{AXP_OPT_WANTYES_SRV,	Send_DO},
-	{AXP_OPT_WANTNO_CLI,	NULL},
-	{AXP_OPT_WANTNO_CLI,	NULL},
-	{AXP_OPT_WANTYES_SRV,	NULL},
-	{AXP_OPT_WANTYES_SRV,	NULL},
-	{AXP_OPT_YES,		NULL}
+  {AXP_OPT_WANTYES_SRV,	Send_DO},
+  {AXP_OPT_WANTNO_CLI,	NULL},
+  {AXP_OPT_WANTNO_CLI,	NULL},
+  {AXP_OPT_WANTYES_SRV,	NULL},
+  {AXP_OPT_WANTYES_SRV,	NULL},
+  {AXP_OPT_YES,		NULL}
     },
     /* YES_CLI	- PREFERRED */
     {
-	{AXP_OPT_WANTYES_SRV,	Send_DO},
-	{AXP_OPT_WANTNO_CLI,	NULL},
-	{AXP_OPT_WANTNO_CLI,	NULL},
-	{AXP_OPT_WANTYES_SRV,	NULL},
-	{AXP_OPT_WANTYES_SRV,	NULL},
-	{AXP_OPT_YES,		NULL}
+  {AXP_OPT_WANTYES_SRV,	Send_DO},
+  {AXP_OPT_WANTNO_CLI,	NULL},
+  {AXP_OPT_WANTNO_CLI,	NULL},
+  {AXP_OPT_WANTYES_SRV,	NULL},
+  {AXP_OPT_WANTYES_SRV,	NULL},
+  {AXP_OPT_YES,		NULL}
     },
     /* NO_CLI	- NOT PREFERRED */
     {
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_SRV,	NULL},
-	{AXP_OPT_WANTNO_SRV,	NULL},
-	{AXP_OPT_WANTYES_CLI,	NULL},
-	{AXP_OPT_WANTYES_CLI,	NULL},
-	{AXP_OPT_WANTNO_SRV,	Send_DONT}
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_WANTNO_SRV,	NULL},
+  {AXP_OPT_WANTNO_SRV,	NULL},
+  {AXP_OPT_WANTYES_CLI,	NULL},
+  {AXP_OPT_WANTYES_CLI,	NULL},
+  {AXP_OPT_WANTNO_SRV,	Send_DONT}
     },
     /* NO_CLI	- PREFERRED */
     {
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTNO_SRV,	NULL},
-	{AXP_OPT_WANTNO_SRV,	NULL},
-	{AXP_OPT_WANTYES_CLI,	NULL},
-	{AXP_OPT_WANTYES_CLI,	NULL},
-	{AXP_OPT_WANTNO_SRV,	Send_DONT}
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_WANTNO_SRV,	NULL},
+  {AXP_OPT_WANTNO_SRV,	NULL},
+  {AXP_OPT_WANTYES_CLI,	NULL},
+  {AXP_OPT_WANTYES_CLI,	NULL},
+  {AXP_OPT_WANTNO_SRV,	Send_DONT}
     },
     /* WILL	- NOT PREFERRED */
     {
-	{AXP_OPT_NO,		Send_DONT},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_WANTNO_SRV,	Send_DONT},
-	{AXP_OPT_YES,		NULL}
+  {AXP_OPT_NO,		Send_DONT},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_YES,		NULL},
+  {AXP_OPT_YES,		NULL},
+  {AXP_OPT_WANTNO_SRV,	Send_DONT},
+  {AXP_OPT_YES,		NULL}
     },
     /* WILL	- PREFERRED */
     {
-	{AXP_OPT_YES,		Send_DO},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_WANTNO_SRV,	Send_DONT},
-	{AXP_OPT_YES,		NULL}
+  {AXP_OPT_YES,		Send_DO},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_YES,		NULL},
+  {AXP_OPT_YES,		NULL},
+  {AXP_OPT_WANTNO_SRV,	Send_DONT},
+  {AXP_OPT_YES,		NULL}
     },
     /* WONT	- NOT PREFERRED */
     {
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTYES_SRV,	Send_DO},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		Send_DONT}
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_WANTYES_SRV,	Send_DO},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		Send_DONT}
     },
     /* WONT	- PREFERRED */
     {
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTYES_SRV,	Send_DO},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		Send_DONT}
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_WANTYES_SRV,	Send_DO},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		Send_DONT}
     },
     /* DO	- NOT PREFERRED */
     {
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_WANTNO_SRV,	Send_WONT},
-	{AXP_OPT_YES,		NULL}
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_YES,		NULL},
+  {AXP_OPT_YES,		NULL},
+  {AXP_OPT_WANTNO_SRV,	Send_WONT},
+  {AXP_OPT_YES,		NULL}
     },
     /* DO	- PREFERRED */
     {
-	{AXP_OPT_YES,		Send_WILL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_YES,		NULL},
-	{AXP_OPT_WANTNO_SRV,	Send_WONT},
-	{AXP_OPT_YES,		NULL}
+  {AXP_OPT_YES,		Send_WILL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_YES,		NULL},
+  {AXP_OPT_YES,		NULL},
+  {AXP_OPT_WANTNO_SRV,	Send_WONT},
+  {AXP_OPT_YES,		NULL}
     },
     /* DONT	- NOT PREFERRED */
     {
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTYES_SRV,	Send_WILL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		Send_WONT}
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_WANTYES_SRV,	Send_WILL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		Send_WONT}
     },
     /* DONT	- PREFERRED */
     {
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_WANTYES_SRV,	Send_WILL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		NULL},
-	{AXP_OPT_NO,		Send_WONT}
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_WANTYES_SRV,	Send_WILL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		NULL},
+  {AXP_OPT_NO,		Send_WONT}
     }
 };
 AXP_StateMachine TN_Option_SM =
@@ -220,66 +220,66 @@ AXP_SM_Entry TN_Receive[AXP_ACT_MAX][AXP_RCV_MAX_STATE] =
 {
     /* '\0' */
     {
-	{AXP_RCV_DATA,		Echo_Data},
-	{AXP_RCV_DATA,		NULL},
-	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		NULL},
-	{AXP_RCV_SB,		SubOpt_Accumulate},
-	{AXP_RCV_IAC,		Cvt_Process_IAC}
+  {AXP_RCV_DATA,		Echo_Data},
+  {AXP_RCV_DATA,		NULL},
+  {AXP_RCV_DATA,		Process_CMD},
+  {AXP_RCV_DATA,		NULL},
+  {AXP_RCV_SB,		SubOpt_Accumulate},
+  {AXP_RCV_IAC,		Cvt_Process_IAC}
     },
     /* IAC */
     {
-	{AXP_RCV_IAC,		NULL},
-	{AXP_RCV_DATA,		Echo_Data},
-	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		Echo_Data},
-	{AXP_RCV_SE,		NULL},
-	{AXP_RCV_SB,		SubOpt_Accumulate}
+  {AXP_RCV_IAC,		NULL},
+  {AXP_RCV_DATA,		Echo_Data},
+  {AXP_RCV_DATA,		Process_CMD},
+  {AXP_RCV_DATA,		Echo_Data},
+  {AXP_RCV_SE,		NULL},
+  {AXP_RCV_SB,		SubOpt_Accumulate}
     },
     /* '\r' */
     {
-	{AXP_RCV_CR,		Echo_Data},
-	{AXP_RCV_DATA,		NULL},
-	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		NULL},
-	{AXP_RCV_SB,		SubOpt_Accumulate},
-	{AXP_RCV_IAC,		Cvt_Process_IAC}
+  {AXP_RCV_CR,		Echo_Data},
+  {AXP_RCV_DATA,		NULL},
+  {AXP_RCV_DATA,		Process_CMD},
+  {AXP_RCV_DATA,		NULL},
+  {AXP_RCV_SB,		SubOpt_Accumulate},
+  {AXP_RCV_IAC,		Cvt_Process_IAC}
     },
     /* TELNET-CMD */
     {
-	{AXP_RCV_DATA,		Echo_Data},
-	{AXP_RCV_CMD,		Save_CMD},
-	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		Echo_Data},
-	{AXP_RCV_SB,		SubOpt_Accumulate},
-	{AXP_RCV_IAC,		Cvt_Process_IAC}
+  {AXP_RCV_DATA,		Echo_Data},
+  {AXP_RCV_CMD,		Save_CMD},
+  {AXP_RCV_DATA,		Process_CMD},
+  {AXP_RCV_DATA,		Echo_Data},
+  {AXP_RCV_SB,		SubOpt_Accumulate},
+  {AXP_RCV_IAC,		Cvt_Process_IAC}
     },
     /* SE */
     {
-	{AXP_RCV_DATA,		Cvt_Process_IAC},
-	{AXP_RCV_DATA,		NULL},
-	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		Echo_Data},
-	{AXP_RCV_SB,		SubOpt_Accumulate},
-	{AXP_RCV_DATA,		SubOpt_TermProcess}
+  {AXP_RCV_DATA,		Cvt_Process_IAC},
+  {AXP_RCV_DATA,		NULL},
+  {AXP_RCV_DATA,		Process_CMD},
+  {AXP_RCV_DATA,		Echo_Data},
+  {AXP_RCV_SB,		SubOpt_Accumulate},
+  {AXP_RCV_DATA,		SubOpt_TermProcess}
     },
     /* SB */
     {
-	{AXP_RCV_DATA,		Echo_Data},
-	{AXP_RCV_SB,		SubOpt_Clear},
-	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		Echo_Data},
-	{AXP_RCV_SB,		SubOpt_TermProcess},
-	{AXP_RCV_IAC,		Cvt_Process_IAC}
+  {AXP_RCV_DATA,		Echo_Data},
+  {AXP_RCV_SB,		SubOpt_Clear},
+  {AXP_RCV_DATA,		Process_CMD},
+  {AXP_RCV_DATA,		Echo_Data},
+  {AXP_RCV_SB,		SubOpt_TermProcess},
+  {AXP_RCV_IAC,		Cvt_Process_IAC}
     },
     /* CATCH-ALL */
     {
-	{AXP_RCV_DATA,		Echo_Data},
-	{AXP_RCV_DATA,		NULL},
-	{AXP_RCV_DATA,		Process_CMD},
-	{AXP_RCV_DATA,		Echo_Data},
-	{AXP_RCV_SB,		SubOpt_Accumulate},
-	{AXP_RCV_IAC,		Cvt_Process_IAC}
+  {AXP_RCV_DATA,		Echo_Data},
+  {AXP_RCV_DATA,		NULL},
+  {AXP_RCV_DATA,		Process_CMD},
+  {AXP_RCV_DATA,		Echo_Data},
+  {AXP_RCV_SB,		SubOpt_Accumulate},
+  {AXP_RCV_IAC,		Cvt_Process_IAC}
     }
 };
 
@@ -345,9 +345,9 @@ void Send_DO(AXP_SM_Args *args)
 
     if (AXP_UTL_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("\tSend_DO Called (%s).", TELOPT(opt));
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("\tSend_DO Called (%s).", TELOPT(opt));
+  AXP_TRACE_END();
     }
 
     /*
@@ -363,7 +363,7 @@ void Send_DO(AXP_SM_Args *args)
      * server state, so that we can start cleaning up the connection.
      */
     if (retVal == false)
-	srvState = Inactive;
+  srvState = Inactive;
 
     /*
      * Return back to the caller.
@@ -396,9 +396,9 @@ void Send_DONT(AXP_SM_Args *args)
 
     if (AXP_UTL_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("\tSend_DONT Called (%s).", TELOPT(opt));
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("\tSend_DONT Called (%s).", TELOPT(opt));
+  AXP_TRACE_END();
     }
 
     /*
@@ -414,7 +414,7 @@ void Send_DONT(AXP_SM_Args *args)
      * server state, so that we can start cleaning up the connection.
      */
     if (retVal == false)
-	srvState = Inactive;
+  srvState = Inactive;
 
     /*
      * Return back to the caller.
@@ -447,9 +447,9 @@ void Send_WILL(AXP_SM_Args *args)
 
     if (AXP_UTL_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("\tSend_WILL Called (%s).", TELOPT(opt));
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("\tSend_WILL Called (%s).", TELOPT(opt));
+  AXP_TRACE_END();
     }
 
     /*
@@ -465,7 +465,7 @@ void Send_WILL(AXP_SM_Args *args)
      * server state, so that we can start cleaning up the connection.
      */
     if (retVal == false)
-	srvState = Inactive;
+  srvState = Inactive;
 
     /*
      * Return back to the caller.
@@ -498,9 +498,9 @@ void Send_WONT(AXP_SM_Args *args)
 
     if (AXP_UTL_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("\tSend_WONT Called (%s).", TELOPT(opt));
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("\tSend_WONT Called (%s).", TELOPT(opt));
+  AXP_TRACE_END();
     }
 
     /*
@@ -516,7 +516,7 @@ void Send_WONT(AXP_SM_Args *args)
      * server state, so that we can start cleaning up the connection.
      */
     if (retVal == false)
-	srvState = Inactive;
+  srvState = Inactive;
 
     /*
      * Return back to the caller.
@@ -549,9 +549,9 @@ void Echo_Data(AXP_SM_Args *args)
 
     if (AXP_UTL_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("\tEcho_Data Called (%c - %02x).", c, c);
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("\tEcho_Data Called (%c - %02x).", c, c);
+  AXP_TRACE_END();
     }
 
     /*
@@ -560,14 +560,14 @@ void Echo_Data(AXP_SM_Args *args)
      */
     if (ses->myOptions[TELOPT_ECHO].state == AXP_OPT_YES)
     {
-	retVal = AXP_Telnet_Send(ses, &c, 1);
+  retVal = AXP_Telnet_Send(ses, &c, 1);
 
-	/*
-	 * OK, something happened and the session is no longer active.  Set the
-	 * server state, so that we can start cleaning up the connection.
-	 */
-	if (retVal == false)
-	    srvState = Inactive;
+  /*
+   * OK, something happened and the session is no longer active.  Set the
+   * server state, so that we can start cleaning up the connection.
+   */
+  if (retVal == false)
+      srvState = Inactive;
     }
 
     /*
@@ -599,9 +599,9 @@ void Save_CMD(AXP_SM_Args *args)
 
     if (AXP_UTL_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("\tSave_CMD Called (%s).", TELCMD(*((u8 *) args->argp[1])));
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("\tSave_CMD Called (%s).", TELCMD(*((u8 *) args->argp[1])));
+  AXP_TRACE_END();
     }
 
     /*
@@ -641,12 +641,12 @@ void Process_CMD(AXP_SM_Args *args)
 
     if (AXP_UTL_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-		"\tProcess_CMD Called (%s %s).",
-		TELCMD(ses->cmd),
-		TELOPT(opt));
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+    "\tProcess_CMD Called (%s %s).",
+    TELCMD(ses->cmd),
+    TELOPT(opt));
+  AXP_TRACE_END();
     }
 
     /*
@@ -658,13 +658,13 @@ void Process_CMD(AXP_SM_Args *args)
     newArg.argp[0] = (void *) ses;
     newArg.argp[1] = (void *) &opt;
     opts = ((ses->cmd == DO) || (ses->cmd == DONT)) ?
-	ses->myOptions :
-	ses->theirOptions;
+  ses->myOptions :
+  ses->theirOptions;
     opts[opt].state = AXP_Execute_SM(
-			&TN_Option_SM,
-			AXP_OPT_ACTION(ses->cmd, opts[opt]),
-			opts[opt].state,
-			&newArg);
+      &TN_Option_SM,
+      AXP_OPT_ACTION(ses->cmd, opts[opt]),
+      opts[opt].state,
+      &newArg);
     ses->cmd = 0;
 
     /*
@@ -708,9 +708,9 @@ void Cvt_Process_IAC(AXP_SM_Args *args)
 
     if (AXP_UTL_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("\tCvt_Process_IAC Called (IAC %s).", TELCMD(c));
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("\tCvt_Process_IAC Called (IAC %s).", TELCMD(c));
+  AXP_TRACE_END();
     }
 
     newArg.argc = 2;
@@ -751,9 +751,9 @@ void SubOpt_Clear(AXP_SM_Args *args)
 
     if (AXP_UTL_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("\tSubOpt_Clear Called.");
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("\tSubOpt_Clear Called.");
+  AXP_TRACE_END();
     }
 
     /*
@@ -790,9 +790,9 @@ void SubOpt_Accumulate(AXP_SM_Args *args)
 
     if (AXP_UTL_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("\tSubOpt_Accumulate Called 0x%02x - %u.", c, c);
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("\tSubOpt_Accumulate Called 0x%02x - %u.", c, c);
+  AXP_TRACE_END();
     }
 
     /*
@@ -800,7 +800,7 @@ void SubOpt_Accumulate(AXP_SM_Args *args)
      * Otherwise, ignore it.
      */
     if (ses->subOptBufIdx < AXP_TELNET_SB_LEN)
-	ses->subOptBuf[ses->subOptBufIdx++] = c;
+  ses->subOptBuf[ses->subOptBufIdx++] = c;
 
     /*
      * Return back to the caller.
@@ -831,9 +831,9 @@ void SubOpt_TermProcess(AXP_SM_Args *args)
 
     if (AXP_UTL_OPT1)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("\tSubOpt_TermProcess Called.");
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("\tSubOpt_TermProcess Called.");
+  AXP_TRACE_END();
     }
 
     /*
@@ -871,39 +871,39 @@ void Process_Suboption(AXP_SM_Args *args)
 
     switch (ses->subOptBuf[ses->subOptBufIdx++])
     {
-	case TELOPT_STATUS:
-	case TELOPT_RCTE:
-	case TELOPT_NAOCRD:
-	case TELOPT_NAOHTS:
-	case TELOPT_NAOHTD:
-	case TELOPT_NAOFFD:
-	case TELOPT_NAOVTS:
-	case TELOPT_NAOVTD:
-	case TELOPT_NAOLFD:
-	case TELOPT_XASCII:
-	case TELOPT_BM:
-	case TELOPT_DET:
-	case TELOPT_SUPDUPOUTPUT:
-	case TELOPT_SNDLOC:
-	case TELOPT_TTYPE:
-	case TELOPT_TUID:
-	case TELOPT_OUTMRK:
-	case TELOPT_TTYLOC:
-	case TELOPT_3270REGIME:
-	case TELOPT_X3PAD:
-	case TELOPT_TSPEED:
-	case TELOPT_LFLOW:
-	case TELOPT_LINEMODE:
-	case TELOPT_XDISPLOC:
-	case TELOPT_OLD_ENVIRON:
-	case TELOPT_AUTHENTICATION:
-	case TELOPT_ENCRYPT:
-	case TELOPT_NEW_ENVIRON:
-	case TELOPT_EXOPL:
-	    break;
+  case TELOPT_STATUS:
+  case TELOPT_RCTE:
+  case TELOPT_NAOCRD:
+  case TELOPT_NAOHTS:
+  case TELOPT_NAOHTD:
+  case TELOPT_NAOFFD:
+  case TELOPT_NAOVTS:
+  case TELOPT_NAOVTD:
+  case TELOPT_NAOLFD:
+  case TELOPT_XASCII:
+  case TELOPT_BM:
+  case TELOPT_DET:
+  case TELOPT_SUPDUPOUTPUT:
+  case TELOPT_SNDLOC:
+  case TELOPT_TTYPE:
+  case TELOPT_TUID:
+  case TELOPT_OUTMRK:
+  case TELOPT_TTYLOC:
+  case TELOPT_3270REGIME:
+  case TELOPT_X3PAD:
+  case TELOPT_TSPEED:
+  case TELOPT_LFLOW:
+  case TELOPT_LINEMODE:
+  case TELOPT_XDISPLOC:
+  case TELOPT_OLD_ENVIRON:
+  case TELOPT_AUTHENTICATION:
+  case TELOPT_ENCRYPT:
+  case TELOPT_NEW_ENVIRON:
+  case TELOPT_EXOPL:
+      break;
 
-	case TELOPT_NAWS:
-	    break;
+  case TELOPT_NAWS:
+      break;
     }
     SubOpt_Clear(args);
 
@@ -951,108 +951,108 @@ static u32 AXP_Telnet_Trace(int dir, u8 *buf, u32 bufLen)
      */
     if ((bufLen >= 2) && (buf[bufIdx] == IAC) && (buf[bufIdx + 1]) != IAC)
     {
-	u32	cmdLen = 1;
+  u32	cmdLen = 1;
 
-	/*
-	 * We have a TELNET command, but so far we only have the Interpret
-	 * as Command (IAC) portion of the message.  We need to determine
-	 * the total length of the command.
-	 */
-	switch (buf[cmdLen])
-	{
-	    case NOP:
-	    case DM:
-	    case BREAK:
-	    case IP:
-	    case AO:
-	    case AYT:
-	    case EC:
-	    case EL:
-	    case GA:
-		cmdLen = 2;
-		break;
+  /*
+   * We have a TELNET command, but so far we only have the Interpret
+   * as Command (IAC) portion of the message.  We need to determine
+   * the total length of the command.
+   */
+  switch (buf[cmdLen])
+  {
+      case NOP:
+      case DM:
+      case BREAK:
+      case IP:
+      case AO:
+      case AYT:
+      case EC:
+      case EL:
+      case GA:
+    cmdLen = 2;
+    break;
 
-	    case WILL:
-	    case WONT:
-	    case DO:
-	    case DONT:
-		cmdLen = (bufLen >= 3) ? 3 : bufLen;
-		break;
+      case WILL:
+      case WONT:
+      case DO:
+      case DONT:
+    cmdLen = (bufLen >= 3) ? 3 : bufLen;
+    break;
 
-	    case SB:
+      case SB:
 
-		/*
-		 * So we have a <IAC> <SB>, now we need to find the <IAC> <SE>.
-		 */
-		cmdLen++;
-		while (foundEnd == false)
-		{
-		    if (cmdLen < bufLen)
-		    {
-			if (((cmdLen + 2) < bufLen) &&
-			    (buf[cmdLen] == IAC) &&
-			    (buf[cmdLen + 1] == SE))
-			{
-			    cmdLen += 2;
-			    foundEnd = true;
-			}
-			else
-			    cmdLen++;
-		    }
-		    else
-			foundEnd = true;
-		}
-		break;
-	    }
+    /*
+     * So we have a <IAC> <SB>, now we need to find the <IAC> <SE>.
+     */
+    cmdLen++;
+    while (foundEnd == false)
+    {
+        if (cmdLen < bufLen)
+        {
+      if (((cmdLen + 2) < bufLen) &&
+          (buf[cmdLen] == IAC) &&
+          (buf[cmdLen + 1] == SE))
+      {
+          cmdLen += 2;
+          foundEnd = true;
+      }
+      else
+          cmdLen++;
+        }
+        else
+      foundEnd = true;
+    }
+    break;
+      }
 
-	/*
-	 * We now have the start and end of the command, so let's go and
-	 * generate the trace buffer.  NOTE: We do this twice, once for the
-	 * raw bytes (in hex) and once for the interpreted bytes.
-	 */
-	start = 0;
-	AXP_TraceWrite("Tracing Buffer 0x%016llx, Length: %u", buf, cmdLen);
-	while (start < cmdLen)
-	{
-	    int inNaws = 0;
+  /*
+   * We now have the start and end of the command, so let's go and
+   * generate the trace buffer.  NOTE: We do this twice, once for the
+   * raw bytes (in hex) and once for the interpreted bytes.
+   */
+  start = 0;
+  AXP_TraceWrite("Tracing Buffer 0x%016llx, Length: %u", buf, cmdLen);
+  while (start < cmdLen)
+  {
+      int inNaws = 0;
 
-	    end = (cmdLen <= 20) ? cmdLen : 20;
-	    outLen = sprintf(outBuf, "%s ", direction);
-	    for (ii = start; ii < end; ii++)
-		outLen += sprintf(&outBuf[outLen], "%02x ", buf[ii]);
-	    outLen += sprintf(&outBuf[outLen], "%*c: ", (65-outLen), ' ');
-	    for (ii = start; ii < end; ii++)
-	    {
-		if (inNaws > 0)
-		{
-		    u16	size = htons(*((u16 *) &buf[ii++]));
+      end = (cmdLen <= 20) ? cmdLen : 20;
+      outLen = sprintf(outBuf, "%s ", direction);
+      for (ii = start; ii < end; ii++)
+    outLen += sprintf(&outBuf[outLen], "%02x ", buf[ii]);
+      outLen += sprintf(&outBuf[outLen], "%*c: ", (65-outLen), ' ');
+      for (ii = start; ii < end; ii++)
+      {
+    if (inNaws > 0)
+    {
+        u16	size = htons(*((u16 *) &buf[ii++]));
 
-		    outLen += sprintf(&outBuf[outLen], "%u, ", size);
-		    inNaws = (inNaws + 1) % 3;
-		}
-		else if (TELCMD_OK(buf[ii]))
-		    outLen += sprintf(&outBuf[outLen], "%s, ", TELCMD(buf[ii]));
-		else if (TELOPT_OK(buf[ii]))
-		{
-		    outLen += sprintf(&outBuf[outLen], "%s, ", TELOPT(buf[ii]));
-		    inNaws = (buf[ii] == TELOPT_NAWS) ? 1 : 0;
-		}
-		else
-		    outLen += sprintf(
-				&outBuf[outLen],
-				"%c, ",
-				(isprint(buf[ii]) ? buf[ii] : '.'));
-	    }
-	    start += end;
-	    outBuf[outLen-2] = '\0';		/* remove the last ', ' */
-	    AXP_TraceWrite("%s", outBuf);
-	}
+        outLen += sprintf(&outBuf[outLen], "%u, ", size);
+        inNaws = (inNaws + 1) % 3;
+    }
+    else if (TELCMD_OK(buf[ii]))
+        outLen += sprintf(&outBuf[outLen], "%s, ", TELCMD(buf[ii]));
+    else if (TELOPT_OK(buf[ii]))
+    {
+        outLen += sprintf(&outBuf[outLen], "%s, ", TELOPT(buf[ii]));
+        inNaws = (buf[ii] == TELOPT_NAWS) ? 1 : 0;
+    }
+    else
+        outLen += sprintf(
+        &outBuf[outLen],
+        "%c, ",
+        (isprint(buf[ii]) ? buf[ii] : '.'));
+      }
+      start += end;
+      outBuf[outLen-2] = '\0';		/* remove the last ', ' */
+      AXP_TraceWrite("%s", outBuf);
+  }
 
-	/*
-	 * The number of bytes traced is the length of the command just
-	 * output to the log file.
-	 */
-	retVal = cmdLen;
+  /*
+   * The number of bytes traced is the length of the command just
+   * output to the log file.
+   */
+  retVal = cmdLen;
     }
 
     /*
@@ -1061,56 +1061,56 @@ static u32 AXP_Telnet_Trace(int dir, u8 *buf, u32 bufLen)
      */
     else
     {
-	u32	dmpLen = 0;
+  u32	dmpLen = 0;
 
-	for (ii = 0; ((ii < bufLen) || (foundEnd == false)); ii++)
-	{
-	    if (buf[ii] == IAC)
-	    {
-		if (((ii + 1) < bufLen) && (buf[ii] != IAC))
-		{
-		    dmpLen = ii - 1;
-		    foundEnd = true;
-		}
-		else if ((ii + 1) >= bufLen)
-		{
-		    dmpLen = bufLen;
-		    foundEnd = true;
-		}
-	    }
-	}
-	if (foundEnd == false)
-	    dmpLen = bufLen;
+  for (ii = 0; ((ii < bufLen) || (foundEnd == false)); ii++)
+  {
+      if (buf[ii] == IAC)
+      {
+    if (((ii + 1) < bufLen) && (buf[ii] != IAC))
+    {
+        dmpLen = ii - 1;
+        foundEnd = true;
+    }
+    else if ((ii + 1) >= bufLen)
+    {
+        dmpLen = bufLen;
+        foundEnd = true;
+    }
+      }
+  }
+  if (foundEnd == false)
+      dmpLen = bufLen;
 
-	/*
-	 * Let's go dump the buffer.  Since this is not a command, we don't try
-	 * and interpret anything.
-	 */
-	start = 0;
-	AXP_TraceWrite("Tracing Buffer 0x%016llx, Length: %u", buf, dmpLen);
-	while (start < dmpLen)
-	{
-	    end = (dmpLen < 20) ? dmpLen : 20;
-	    outLen = sprintf(outBuf, "%s ", direction);
-	    for (ii = start; ii < end; ii++)
-		outLen += sprintf(&outBuf[outLen], "%02x ", buf[ii]);
-	    outLen += sprintf(&outBuf[outLen], "%*c: ", (65-outLen), ' ');
-	    for (ii = start; ii < end; ii++)
-	    {
-		outLen += sprintf(
-				&outBuf[outLen],
-				"%c",
-				(isprint(buf[ii]) ? buf[ii] : '.'));
-	    }
-	    start += end;
-	    AXP_TraceWrite("%s", outBuf);
-	}
+  /*
+   * Let's go dump the buffer.  Since this is not a command, we don't try
+   * and interpret anything.
+   */
+  start = 0;
+  AXP_TraceWrite("Tracing Buffer 0x%016llx, Length: %u", buf, dmpLen);
+  while (start < dmpLen)
+  {
+      end = (dmpLen < 20) ? dmpLen : 20;
+      outLen = sprintf(outBuf, "%s ", direction);
+      for (ii = start; ii < end; ii++)
+    outLen += sprintf(&outBuf[outLen], "%02x ", buf[ii]);
+      outLen += sprintf(&outBuf[outLen], "%*c: ", (65-outLen), ' ');
+      for (ii = start; ii < end; ii++)
+      {
+    outLen += sprintf(
+        &outBuf[outLen],
+        "%c",
+        (isprint(buf[ii]) ? buf[ii] : '.'));
+      }
+      start += end;
+      AXP_TraceWrite("%s", outBuf);
+  }
 
-	/*
-	 * The number of bytes traced is the length of the buffer just
-	 * output to the log file.
-	 */
-	retVal = dmpLen;
+  /*
+   * The number of bytes traced is the length of the buffer just
+   * output to the log file.
+   */
+  retVal = dmpLen;
     }
 
     /*
@@ -1148,25 +1148,25 @@ static bool AXP_Telnet_Listener(int *sock)
     *sock = socket(AF_INET, SOCK_STREAM, 0);
     if (*sock >= 0)
     {
-	myName.sin_family = AF_INET;
-	myName.sin_addr.s_addr = INADDR_ANY;
-	myName.sin_port = htons(AXP_TELNET_DEFAULT_PORT);
+  myName.sin_family = AF_INET;
+  myName.sin_addr.s_addr = INADDR_ANY;
+  myName.sin_port = htons(AXP_TELNET_DEFAULT_PORT);
     }
     else
-	retVal = false;
+  retVal = false;
 
     /*
      * Now bind the name to the socket
      */
     if (retVal == true)
-	retVal = bind(*sock, (struct sockaddr *) &myName, sizeof(myName)) >= 0;
+  retVal = bind(*sock, (struct sockaddr *) &myName, sizeof(myName)) >= 0;
 
     /*
      * Now set up a listener on the socket (only allow one connection request
      * into the listener queue).
      */
     if (retVal == true)
-	retVal = listen(*sock, 1) >= 0;
+  retVal = listen(*sock, 1) >= 0;
 
     /*
      * Return back to the caller.
@@ -1214,25 +1214,25 @@ static AXP_TELNET_SESSION *AXP_Telnet_Accept(int sock)
     ses->mySocket = accept(sock, &theirName, &theirNameSize);
     if (ses->mySocket < 0)
     {
-	AXP_Deallocate_Block(ses);
-	ses = NULL;
-	printf("Accepting a TELNET connection has failed...\n");
+  AXP_Deallocate_Block(ses);
+  ses = NULL;
+  printf("Accepting a TELNET connection has failed...\n");
     }
     else
     {
-	AXP_OPT_SET_PREF(ses->myOptions, TELOPT_ECHO);
-	AXP_OPT_SET_PREF(ses->myOptions, TELOPT_SGA);
-	AXP_OPT_SET_SUPP(ses->myOptions, TELOPT_TTYPE);
-	AXP_OPT_SET_SUPP(ses->myOptions, TELOPT_NEW_ENVIRON);
-	AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_ECHO);
-	AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_SGA);
-	AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_NAWS);
-	AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_LFLOW);
-	ses->rcvState = AXP_RCV_DATA;
-	args.argc = 1;
-	args.argp[0] = (void *) ses;
-	SubOpt_Clear(&args);
-	printf("A TELNET connection has been accepted...\n");
+  AXP_OPT_SET_PREF(ses->myOptions, TELOPT_ECHO);
+  AXP_OPT_SET_PREF(ses->myOptions, TELOPT_SGA);
+  AXP_OPT_SET_SUPP(ses->myOptions, TELOPT_TTYPE);
+  AXP_OPT_SET_SUPP(ses->myOptions, TELOPT_NEW_ENVIRON);
+  AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_ECHO);
+  AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_SGA);
+  AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_NAWS);
+  AXP_OPT_SET_PREF(ses->theirOptions, TELOPT_LFLOW);
+  ses->rcvState = AXP_RCV_DATA;
+  args.argc = 1;
+  args.argp[0] = (void *) ses;
+  SubOpt_Clear(&args);
+  printf("A TELNET connection has been accepted...\n");
     }
 
     /*
@@ -1281,7 +1281,7 @@ static bool AXP_Telnet_Receive(AXP_TELNET_SESSION *ses, u8 *buf, u32 *bufLen)
      * or us).
      */
     if ((i32) *bufLen <= 0)
-	retVal = false;
+  retVal = false;
 
     /*
      * Return back to the caller.
@@ -1314,9 +1314,9 @@ bool AXP_Telnet_Send(AXP_TELNET_SESSION *ses, u8 *buf, int bufLen)
 
     if (AXP_UTL_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_Telnet_Send called.");
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_Telnet_Send called.");
+  AXP_TRACE_END();
     }
 
     /*
@@ -1326,14 +1326,14 @@ bool AXP_Telnet_Send(AXP_TELNET_SESSION *ses, u8 *buf, int bufLen)
      */
     if (TELCMD_OK(buf[0]))
     {
-	u32	trcLen = 0;
+  u32	trcLen = 0;
 
-	while (trcLen < bufLen)
-	    trcLen += AXP_Telnet_Trace(SENT, &buf[trcLen], (bufLen - trcLen));
+  while (trcLen < bufLen)
+      trcLen += AXP_Telnet_Trace(SENT, &buf[trcLen], (bufLen - trcLen));
     }
     else
     {
-	buf[bufLen] = '\0';
+  buf[bufLen] = '\0';
     }
     bufLen = send(ses->mySocket, buf, bufLen, 0);
 
@@ -1342,15 +1342,15 @@ bool AXP_Telnet_Send(AXP_TELNET_SESSION *ses, u8 *buf, int bufLen)
      * connection has been terminated for one reason or other (them or us).
      */
     if (bufLen <= 0)
-	retVal = false;
+  retVal = false;
 
     if (AXP_UTL_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-		"AXP_Telnet_Send returning, %s.",
-		(retVal ? "Success" : "Failure"));
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+    "AXP_Telnet_Send returning, %s.",
+    (retVal ? "Success" : "Failure"));
+  AXP_TRACE_END();
     }
 
     /*
@@ -1465,22 +1465,22 @@ static bool AXP_Telnet_Processor(AXP_TELNET_SESSION *ses, u8 *buf, u32 bufLen)
     args.argp[0] = (void *) ses;
     while ((ii < bufLen) && (retVal == true))
     {
-	if (AXP_UTL_BUFF)
-	{
-	    AXP_TRACE_BEGIN();
-	    if (ii == trcLen)
-		trcLen += AXP_Telnet_Trace(RCVD, &buf[trcLen], (bufLen - trcLen));
-	    AXP_TRACE_END();
-	}
-	args.argp[1] = (void *) &buf[ii];
-	ses->rcvState = AXP_Execute_SM(
-			&TN_Receive_SM,
-			AXP_RCV_ACTION(buf[ii]),
-			ses->rcvState,
-			&args);
-	if ((srvState != Negotiating) && (srvState != Active))
-	    retVal = false;
-	ii++;
+  if (AXP_UTL_BUFF)
+  {
+      AXP_TRACE_BEGIN();
+      if (ii == trcLen)
+    trcLen += AXP_Telnet_Trace(RCVD, &buf[trcLen], (bufLen - trcLen));
+      AXP_TRACE_END();
+  }
+  args.argp[1] = (void *) &buf[ii];
+  ses->rcvState = AXP_Execute_SM(
+      &TN_Receive_SM,
+      AXP_RCV_ACTION(buf[ii]),
+      ses->rcvState,
+      &args);
+  if ((srvState != Negotiating) && (srvState != Active))
+      retVal = false;
+  ii++;
     }
 
     /*
@@ -1517,110 +1517,110 @@ void AXP_Telnet_Main(void)
 
     if (AXP_UTL_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("TELNET Server is starting");
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("TELNET Server is starting");
+  AXP_TRACE_END();
     }
 
     while(srvState != Finished)
     {
-	switch(srvState)
-	{
-	    case Listen:
-		retVal = AXP_Telnet_Listener(&connSock);
-		srvState = retVal ? Accept : Closing;
-		break;
+  switch(srvState)
+  {
+      case Listen:
+    retVal = AXP_Telnet_Listener(&connSock);
+    srvState = retVal ? Accept : Closing;
+    break;
 
-	    case Accept:
-		ses = AXP_Telnet_Accept(connSock);
-		if (ses != NULL)
-		{
+      case Accept:
+    ses = AXP_Telnet_Accept(connSock);
+    if (ses != NULL)
+    {
 
-		    /*
-		     * If the client does not send us any options to be
-		     * negotiated, then it probably is not a TELNET client.
-		     */
-		    bufferLen = AXP_TELNET_MSG_LEN;
-		    retVal = AXP_Telnet_Receive(ses, buffer, &bufferLen);
-		    srvState = retVal ? Negotiating : Listen;
-		    if (retVal == true)
-		    {
-			retVal = AXP_Telnet_Processor(ses, buffer, bufferLen);
-			if (retVal == false)
-			    srvState = Listen;
-		    }
-		}
-		else
-		    srvState = Listen;
-		break;
+        /*
+         * If the client does not send us any options to be
+         * negotiated, then it probably is not a TELNET client.
+         */
+        bufferLen = AXP_TELNET_MSG_LEN;
+        retVal = AXP_Telnet_Receive(ses, buffer, &bufferLen);
+        srvState = retVal ? Negotiating : Listen;
+        if (retVal == true)
+        {
+      retVal = AXP_Telnet_Processor(ses, buffer, bufferLen);
+      if (retVal == false)
+          srvState = Listen;
+        }
+    }
+    else
+        srvState = Listen;
+    break;
 
-	    case Negotiating:
-		for (ii = 0; ii < NTELOPTS; ii++)
-		{
-		    args.argc = 2;
-		    args.argp[0] = (void *) ses;
-		    args.argp[1] = (void *) &ii;
-		    if (ses->myOptions[ii].preferred == true)
-		    {
-			ses->myOptions[ii].state = AXP_Execute_SM(
-				&TN_Option_SM,
-				AXP_OPT_ACTION(YES_SRV, ses->myOptions[ii]),
-				ses->myOptions[ii].state,
-				&args);
-		    }
-		    if (ses->theirOptions[ii].preferred == true)
-		    {
-			ses->theirOptions[ii].state = AXP_Execute_SM(
-				&TN_Option_SM,
-				AXP_OPT_ACTION(YES_CLI, ses->theirOptions[ii]),
-				ses->theirOptions[ii].state,
-				&args);
-		    }
-		}
+      case Negotiating:
+    for (ii = 0; ii < NTELOPTS; ii++)
+    {
+        args.argc = 2;
+        args.argp[0] = (void *) ses;
+        args.argp[1] = (void *) &ii;
+        if (ses->myOptions[ii].preferred == true)
+        {
+      ses->myOptions[ii].state = AXP_Execute_SM(
+        &TN_Option_SM,
+        AXP_OPT_ACTION(YES_SRV, ses->myOptions[ii]),
+        ses->myOptions[ii].state,
+        &args);
+        }
+        if (ses->theirOptions[ii].preferred == true)
+        {
+      ses->theirOptions[ii].state = AXP_Execute_SM(
+        &TN_Option_SM,
+        AXP_OPT_ACTION(YES_CLI, ses->theirOptions[ii]),
+        ses->theirOptions[ii].state,
+        &args);
+        }
+    }
 
-		/*
-		 * One of the things that could have happened is that while
-		 * possibly sending to the client, the connection was reset or
-		 * terminated.  If this is the case, then the server state has
-		 * already been changed.  Otherwise, the next state is Active.
-		 */
-		if (srvState == Negotiating)
-		    srvState = Active;
-		break;
+    /*
+     * One of the things that could have happened is that while
+     * possibly sending to the client, the connection was reset or
+     * terminated.  If this is the case, then the server state has
+     * already been changed.  Otherwise, the next state is Active.
+     */
+    if (srvState == Negotiating)
+        srvState = Active;
+    break;
 
-	    case Active:
-		while (srvState == Active)
-		{
-		    bufferLen = AXP_TELNET_MSG_LEN;
-		    retVal = AXP_Telnet_Receive(ses, buffer, &bufferLen);
-		    if (retVal == true)
-			retVal = AXP_Telnet_Processor(ses, buffer, bufferLen);
-		    if (retVal == false)
-			srvState = Inactive;
-		}
-		break;
+      case Active:
+    while (srvState == Active)
+    {
+        bufferLen = AXP_TELNET_MSG_LEN;
+        retVal = AXP_Telnet_Receive(ses, buffer, &bufferLen);
+        if (retVal == true)
+      retVal = AXP_Telnet_Processor(ses, buffer, bufferLen);
+        if (retVal == false)
+      srvState = Inactive;
+    }
+    break;
 
-	    case Inactive:
-		retVal = AXP_Telnet_Reject(&ses);
-		ses = NULL;
-		srvState = Listen;
-		break;
+      case Inactive:
+    retVal = AXP_Telnet_Reject(&ses);
+    ses = NULL;
+    srvState = Listen;
+    break;
 
-	    case Closing:
-		retVal = AXP_Telnet_Ignore(connSock);
-		srvState = Finished;
-		break;
+      case Closing:
+    retVal = AXP_Telnet_Ignore(connSock);
+    srvState = Finished;
+    break;
 
-	    case Finished:
-		break;
-	}
+      case Finished:
+    break;
+  }
     }
 
     if (AXP_UTL_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("TELNET Server is exiting.");
-	AXP_TRACE_END();
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("TELNET Server is exiting.");
+  AXP_TRACE_END();
     }
 
     /*

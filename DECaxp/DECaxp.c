@@ -62,20 +62,20 @@ void reconstituteFilename(int argc, char **argv, char *configFilename)
      */
     if (configFilename != NULL)
     {
-	configFilename[0] = '\0';
-	for (ii = 1; ii < argc; ii++)
-	{
-	    if (argv[ii][strlen(argv[ii]) - 1] == '\\')
-		argv[ii][strlen(argv[ii]) - 1] = '\0';
-	    sprintf(&configFilename[strlen(configFilename)], "%s ", argv[ii]);
-	}
+  configFilename[0] = '\0';
+  for (ii = 1; ii < argc; ii++)
+  {
+      if (argv[ii][strlen(argv[ii]) - 1] == '\\')
+    argv[ii][strlen(argv[ii]) - 1] = '\0';
+      sprintf(&configFilename[strlen(configFilename)], "%s ", argv[ii]);
+  }
 
-	/*
-	 * The filename string has an extra space on the end.  Remove it.
-	 */
-	ii = strlen(configFilename);
-	if (ii > 0)
-	    configFilename[ii - 1] = '\0';
+  /*
+   * The filename string has an extra space on the end.  Remove it.
+   */
+  ii = strlen(configFilename);
+  if (ii > 0)
+      configFilename[ii - 1] = '\0';
     }
 
     /*
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
     int retVal = 0;
 
     printf(
-	    "\n%%DECAXP-I-START, The Digital Alpha AXP 21264 CPU Emulator is starting.\n");
+      "\n%%DECAXP-I-START, The Digital Alpha AXP 21264 CPU Emulator is starting.\n");
 
     /*
      * There are 2 arguments on the image activation.  The first is this image
@@ -125,34 +125,34 @@ int main(int argc, char **argv)
      */
     if (argc > 1)
     {
-	reconstituteFilename(argc, argv, filename);
-	if ((AXP_LoadConfig_File(filename) == AXP_S_NORMAL)
-	        && (AXP_TraceInit() == true))
-	    cpu = AXP_21264_AllocateCPU(0);
-	if (cpu != NULL)
-	{
-	    pthread_join(cpu->cBoxThreadID, NULL);
+  reconstituteFilename(argc, argv, filename);
+  if ((AXP_LoadConfig_File(filename) == AXP_S_NORMAL)
+          && (AXP_TraceInit() == true))
+      cpu = AXP_21264_AllocateCPU(0);
+  if (cpu != NULL)
+  {
+      pthread_join(cpu->cBoxThreadID, NULL);
 
-	    /*
-	     * The following calls are just to keep the linker happy.
-	     */
-	    if (false)
-	    {
-		AXP_21264_Set_IRQ(cpu, 0);
-		AXP_21264_Add_PQ(cpu,
-		        AXP_21264_SET_PROBE(AXP_21264_DM_NOP, AXP_21264_NS_NOP),
-			SysDC_Nop, 0x0000000000000000ll, 0, NULL, false, false,
-		        false, false);
-	    }
-	    AXP_TraceEnd();
-	}
-	else
-	    printf(
-		    "\n%%DECAXP-F-RUNNING, The Digital Alpha AXP 21264 CPU Emulator failed to successfully start.\n");
+      /*
+       * The following calls are just to keep the linker happy.
+       */
+      if (false)
+      {
+    AXP_21264_Set_IRQ(cpu, 0);
+    AXP_21264_Add_PQ(cpu,
+            AXP_21264_SET_PROBE(AXP_21264_DM_NOP, AXP_21264_NS_NOP),
+      SysDC_Nop, 0x0000000000000000ll, 0, NULL, false, false,
+            false, false);
+      }
+      AXP_TraceEnd();
+  }
+  else
+      printf(
+        "\n%%DECAXP-F-RUNNING, The Digital Alpha AXP 21264 CPU Emulator failed to successfully start.\n");
     }
     else
     {
-	printf("usage: DECaxp <config-file>\n");
+  printf("usage: DECaxp <config-file>\n");
     }
     return (retVal);
 }

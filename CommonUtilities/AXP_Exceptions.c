@@ -59,61 +59,61 @@ void AXP_SetException(AXP_INSTRUCTION *instr, u32 exception)
      * First, set the exception summary register
      */
     if (exception & AXP_EXC_SW_COMPL)
-	instr->excSum.swc = 1;
+  instr->excSum.swc = 1;
     if (exception & AXP_EXC_INV_OPER)
-	instr->excSum.inv = 1;
+  instr->excSum.inv = 1;
     if (exception & AXP_EXC_DIV_BY_ZERO)
-	instr->excSum.dze = 1;
+  instr->excSum.dze = 1;
     if (exception & AXP_EXC_FP_OVERFLOW)
-	instr->excSum.ovf = 1;
+  instr->excSum.ovf = 1;
     if (exception & AXP_EXC_UNDERFLOW)
-	instr->excSum.unf = 1;
+  instr->excSum.unf = 1;
     if (exception & AXP_EXC_INEXACT_RES)
-	instr->excSum.ine = 1;
+  instr->excSum.ine = 1;
     if (exception & AXP_EXC_INT_OVERFLOW)
-	instr->excSum.iov = 1;
+  instr->excSum.iov = 1;
 
     /*
      * If this was the result of a floating-point operation, also set both the
      * set_* fields in the excSum and the correct register mask.
      */
     if (((instr->opcode >= ITFP) && (instr->opcode <= FLTL))
-	    || ((instr->opcode >= LDF) && (instr->opcode <= STT))
-	    || ((instr->opcode >= FBEQ) && (instr->opcode <= FBGT)
-	            && (instr->opcode != BSR))
-	    || ((instr->opcode == FPTI)
-	            && ((instr->function == AXP_FUNC_FTOIT)
-	                    || (instr->function == AXP_FUNC_FTOIS))))
+      || ((instr->opcode >= LDF) && (instr->opcode <= STT))
+      || ((instr->opcode >= FBEQ) && (instr->opcode <= FBGT)
+              && (instr->opcode != BSR))
+      || ((instr->opcode == FPTI)
+              && ((instr->function == AXP_FUNC_FTOIT)
+                      || (instr->function == AXP_FUNC_FTOIS))))
     {
-	if (exception & AXP_EXC_INV_OPER)
-	    instr->excSum.set_inv = 1;
-	;
-	if (exception & AXP_EXC_DIV_BY_ZERO)
-	    instr->excSum.set_dze = 1;
-	if (exception & AXP_EXC_FP_OVERFLOW)
-	    instr->excSum.set_ovf = 1;
-	if (exception & AXP_EXC_UNDERFLOW)
-	    instr->excSum.set_unf = 1;
-	if (exception & AXP_EXC_INEXACT_RES)
-	    instr->excSum.set_ine = 1;
-	if (exception & AXP_EXC_INT_OVERFLOW)
-	{
-	    instr->excSum.set_iov = 1;
-	    instr->excSum.sext_set_iov = 0xffff; /* Sign-extend set_iov */
-	}
+  if (exception & AXP_EXC_INV_OPER)
+      instr->excSum.set_inv = 1;
+  ;
+  if (exception & AXP_EXC_DIV_BY_ZERO)
+      instr->excSum.set_dze = 1;
+  if (exception & AXP_EXC_FP_OVERFLOW)
+      instr->excSum.set_ovf = 1;
+  if (exception & AXP_EXC_UNDERFLOW)
+      instr->excSum.set_unf = 1;
+  if (exception & AXP_EXC_INEXACT_RES)
+      instr->excSum.set_ine = 1;
+  if (exception & AXP_EXC_INT_OVERFLOW)
+  {
+      instr->excSum.set_iov = 1;
+      instr->excSum.sext_set_iov = 0xffff; /* Sign-extend set_iov */
+  }
 
-	/*
-	 * Set the correct FP register mask (destination).
-	 */
-	instr->excRegMask = 0x100000000ll << instr->aDest;
+  /*
+   * Set the correct FP register mask (destination).
+   */
+  instr->excRegMask = 0x100000000ll << instr->aDest;
     }
     else
     {
 
-	/*
-	 * Set the correct register mask (destination).
-	 */
-	instr->excRegMask = 0x1 << instr->aDest;
+  /*
+   * Set the correct register mask (destination).
+   */
+  instr->excRegMask = 0x1 << instr->aDest;
     }
 
     /*

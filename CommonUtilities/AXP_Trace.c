@@ -64,27 +64,27 @@ void AXP_TraceInit_Once(void)
      */
     getEnvStr = getenv(AXPTRCLOG);
     if (getEnvStr != NULL)
-	sscanf(getEnvStr, "0x%08x", &_axp_trc_log_);
+  sscanf(getEnvStr, "0x%08x", &_axp_trc_log_);
     if (_axp_trc_log_ != 0)
     {
-	getEnvStr = getenv(AXPTRCFIL);
-	if (getEnvStr == NULL)
-	{
-	    strcpy(_axp_trc_out_, "Standard Output");
-	    _axp_trc_fp_ = stdout;
-	}
-	else
-	{
-	    sscanf(getEnvStr, "%80s", _axp_trc_out_);
-	    _axp_trc_fp_ = fopen(_axp_trc_out_, "w");
-	}
-	_axp_trc_active_ = true;
-	AXP_TraceWrite("Digital Alpha AXP 21264 CPU Emulator Trace Utility.");
-	AXP_TraceWrite("AXP_TRCLOG = 0x%08x : AXP_TRCFIL = %s", _axp_trc_log_,
-	        _axp_trc_out_);
-	AXP_TraceWrite("Copyright 2018, Jonathan D. Belanger.");
-	AXP_TraceWrite("");
-	AXP_TraceConfig();
+  getEnvStr = getenv(AXPTRCFIL);
+  if (getEnvStr == NULL)
+  {
+      strcpy(_axp_trc_out_, "Standard Output");
+      _axp_trc_fp_ = stdout;
+  }
+  else
+  {
+      sscanf(getEnvStr, "%80s", _axp_trc_out_);
+      _axp_trc_fp_ = fopen(_axp_trc_out_, "w");
+  }
+  _axp_trc_active_ = true;
+  AXP_TraceWrite("Digital Alpha AXP 21264 CPU Emulator Trace Utility.");
+  AXP_TraceWrite("AXP_TRCLOG = 0x%08x : AXP_TRCFIL = %s", _axp_trc_log_,
+          _axp_trc_out_);
+  AXP_TraceWrite("Copyright 2018, Jonathan D. Belanger.");
+  AXP_TraceWrite("");
+  AXP_TraceConfig();
     }
 
     /*
@@ -176,7 +176,7 @@ void AXP_TraceWrite(char *fmt, ...)
      */
     gettimeofday(&now, NULL);
     strftime(outBuf, sizeof(outBuf), "%H:%M:%S",
-	    localtime_r(&now.tv_sec, &timeNow));
+      localtime_r(&now.tv_sec, &timeNow));
     fprintf(_axp_trc_fp_, "%s.%03ld: ", outBuf, (now.tv_usec / 1000));
 
     /*
@@ -226,17 +226,17 @@ void AXP_TraceBuffer(u8 *buf, u32 bufLen)
 
     while (remLen > 0)
     {
-	sprintf(&outBuf[offset], fmt1, buf[0]);
-	for (ii = 1; ((ii < 20) && (ii < remLen)); ii++)
-	    offset += sprintf(&outBuf[offset], fmt2, buf[ii]);
-	offset += sprintf(&outBuf[offset], fmt3, (60-offset), ' ');
-	for (ii = 0; ((ii < 20) && (ii < remLen)); ii++)
-	    offset += sprintf(
-			&outBuf[offset],
-			fmt4,
-			(isprint(buf[ii]) ? buf[ii] : '.'));
-	AXP_TraceWrite("%s", outBuf);
-	remLen -= ii;
+  sprintf(&outBuf[offset], fmt1, buf[0]);
+  for (ii = 1; ((ii < 20) && (ii < remLen)); ii++)
+      offset += sprintf(&outBuf[offset], fmt2, buf[ii]);
+  offset += sprintf(&outBuf[offset], fmt3, (60-offset), ' ');
+  for (ii = 0; ((ii < 20) && (ii < remLen)); ii++)
+      offset += sprintf(
+      &outBuf[offset],
+      fmt4,
+      (isprint(buf[ii]) ? buf[ii] : '.'));
+  AXP_TraceWrite("%s", outBuf);
+  remLen -= ii;
     }
 
     /*

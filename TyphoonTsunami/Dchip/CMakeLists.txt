@@ -27,4 +27,4 @@ add_library(Dchip STATIC
     AXP_21274_Dchip.c)
 
 target_include_directories(Dchip PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

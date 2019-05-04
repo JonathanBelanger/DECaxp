@@ -31,4 +31,4 @@ add_library(Cbox STATIC
     SystemInterface/AXP_21264_to_System.c)
 
 target_include_directories(Cbox PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
