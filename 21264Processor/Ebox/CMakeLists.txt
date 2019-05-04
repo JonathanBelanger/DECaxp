@@ -35,4 +35,4 @@ add_library(Ebox STATIC
     AXP_21264_Ebox.c)
 
 target_include_directories(Ebox PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

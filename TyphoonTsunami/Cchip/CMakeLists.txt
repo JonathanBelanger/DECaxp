@@ -28,4 +28,4 @@ add_library(Cchip STATIC
     CPUInterface/AXP_21274_to_CPU.c)
 
 target_include_directories(Cchip PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

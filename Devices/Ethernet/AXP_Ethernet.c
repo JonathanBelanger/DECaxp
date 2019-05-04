@@ -59,28 +59,28 @@ AXP_Ethernet_Handle *AXP_EthernetOpen(char *name, u8 cardNo)
     if (retVal != NULL)
     {
 
-	retVal->handle = pcap_open(
-				name,
-				SIXTYFOUR_K,
-				(PCAP_OPENFLAG_PROMISCUOUS |
-				    PCAP_OPENFLAG_NOCAPTURE_LOCAL),
-				AXP_ETH_READ_TIMEOUT,
-				NULL,
-				retVal->errorBuf);
-	if (retVal->handle == NULL)
-	{
-	    AXP_Deallocate_Block(retVal);
-	    retVal = NULL;
-	}
-	else
-	{
-	    retVal->macAddr[0] = 0x08;
-	    retVal->macAddr[1] = 0x00;
-	    retVal->macAddr[2] = 0x2b;
-	    retVal->macAddr[3] = 0xde;
-	    retVal->macAddr[4] = 0xcc;
-	    retVal->macAddr[5] = cardNo;
-	}
+  retVal->handle = pcap_open(
+        name,
+        SIXTYFOUR_K,
+        (PCAP_OPENFLAG_PROMISCUOUS |
+            PCAP_OPENFLAG_NOCAPTURE_LOCAL),
+        AXP_ETH_READ_TIMEOUT,
+        NULL,
+        retVal->errorBuf);
+  if (retVal->handle == NULL)
+  {
+      AXP_Deallocate_Block(retVal);
+      retVal = NULL;
+  }
+  else
+  {
+      retVal->macAddr[0] = 0x08;
+      retVal->macAddr[1] = 0x00;
+      retVal->macAddr[2] = 0x2b;
+      retVal->macAddr[3] = 0xde;
+      retVal->macAddr[4] = 0xcc;
+      retVal->macAddr[5] = cardNo;
+  }
     }
 
     /*
@@ -108,8 +108,8 @@ void AXP_EthernetClose(AXP_Ethernet_Handle *handle)
 {
     if (handle->handle != NULL)
     {
-	pcap_close(handle->handle);
-	handle->handle = NULL;
+  pcap_close(handle->handle);
+  handle->handle = NULL;
     }
     AXP_Deallocate_Block(handle);
 

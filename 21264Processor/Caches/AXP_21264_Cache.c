@@ -61,8 +61,8 @@ typedef union
     u64 idxSet;
     struct
     {
-	u32 index;
-	u32 set;
+  u32 index;
+  u32 set;
     } idxOrSet;
 } AXP_DCACHE_IDXSET;
 
@@ -111,13 +111,13 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_findTLBEntry for address 0x%016llx in %s called.",
-	    virtAddr,
-	    (dtb ? "DTB" : "ITB"));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_findTLBEntry for address 0x%016llx in %s called.",
+      virtAddr,
+      (dtb ? "DTB" : "ITB"));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -126,26 +126,26 @@ AXP_21264_TLB *AXP_findTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, bool dtb)
      */
     for (ii = 0; ii < AXP_TB_LEN; ii++)
     {
-	if (tlbArray[ii].valid == true)
-	{
-	    if ((tlbArray[ii].virtAddr == (virtAddr & tlbArray[ii].matchMask))
-		&& (tlbArray[ii].asn == asn))
-	    {
-		retVal = &tlbArray[ii];
-		break;
-	    }
-	}
+  if (tlbArray[ii].valid == true)
+  {
+      if ((tlbArray[ii].virtAddr == (virtAddr & tlbArray[ii].matchMask))
+    && (tlbArray[ii].asn == asn))
+      {
+    retVal = &tlbArray[ii];
+    break;
+      }
+  }
     }
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_findTLBEntry returning %s at 0x%016llx.",
-	    (dtb ? "DTB" : "ITB"),
-	    (u64 *) retVal);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_findTLBEntry returning %s at 0x%016llx.",
+      (dtb ? "DTB" : "ITB"),
+      (u64 *) retVal);
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -190,10 +190,10 @@ AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_getNextFreeTLB called.");
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_getNextFreeTLB called.");
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -210,60 +210,60 @@ AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
     if (tlbArray[*nextTLB].valid == true)
     {
 
-	/*
-	 * We start looking at the entry the TLB index was just moved to.
-	 */
-	start1 = *nextTLB;
+  /*
+   * We start looking at the entry the TLB index was just moved to.
+   */
+  start1 = *nextTLB;
 
-	/*
-	 * If we are starting at the first entry in the index, then we scan the
-	 * entire array starting at 0 and stopping at the end of the array.
-	 * Otherwise, we start from the current location to the end of the
-	 * array, and then go back to the start of the array and search until
-	 * the current location.
-	 */
-	if (start1 > 0)
-	{
-	    start2 = 0;
-	    end1 = AXP_TB_LEN;
-	    end2 = start1;
-	}
-	else
-	    start2 = -1; /* Searching 0-end, no need to do second search. */
+  /*
+   * If we are starting at the first entry in the index, then we scan the
+   * entire array starting at 0 and stopping at the end of the array.
+   * Otherwise, we start from the current location to the end of the
+   * array, and then go back to the start of the array and search until
+   * the current location.
+   */
+  if (start1 > 0)
+  {
+      start2 = 0;
+      end1 = AXP_TB_LEN;
+      end2 = start1;
+  }
+  else
+      start2 = -1; /* Searching 0-end, no need to do second search. */
 
-	/*
-	 * Perform the first, and possibly the only, search for a not-in-use
-	 * entry.
-	 */
-	for (ii = start1; ii < end1; ii++)
-	    if (tlbArray[ii].valid == false)
-	    {
-		*nextTLB = ii;
-		start2 = -1; /* Don't do second search (either way). */
-		break;
-	    }
+  /*
+   * Perform the first, and possibly the only, search for a not-in-use
+   * entry.
+   */
+  for (ii = start1; ii < end1; ii++)
+      if (tlbArray[ii].valid == false)
+      {
+    *nextTLB = ii;
+    start2 = -1; /* Don't do second search (either way). */
+    break;
+      }
 
-	/*
-	 * The second start entry is -1, either when we are searching from the
-	 * start of the array, or when we found a not-in-use entry.
-	 */
-	if (start2 == 0)
-	    for (ii = start2; ii < end2; ii++)
-		if (tlbArray[ii].valid == false)
-		{
-		    *nextTLB = ii;
-		    break;
-		}
+  /*
+   * The second start entry is -1, either when we are searching from the
+   * start of the array, or when we found a not-in-use entry.
+   */
+  if (start2 == 0)
+      for (ii = start2; ii < end2; ii++)
+    if (tlbArray[ii].valid == false)
+    {
+        *nextTLB = ii;
+        break;
+    }
     }
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_getNextFreeTLB returning 0x%016llx",
-	    (u64 *) retVal);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_getNextFreeTLB returning 0x%016llx",
+      (u64 *) retVal);
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -299,14 +299,14 @@ void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_addTLBEntry for address (va: 0x%016llx, pa: 0x%016llx) to %s called.",
-	    virtAddr,
-	    physAddr,
-	    (dtb ? "DTB" : "ITB"));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_addTLBEntry for address (va: 0x%016llx, pa: 0x%016llx) to %s called.",
+      virtAddr,
+      physAddr,
+      (dtb ? "DTB" : "ITB"));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -319,10 +319,10 @@ void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
      */
     if (tlbEntry == NULL)
     {
-	if (dtb)
-	    tlbEntry = AXP_getNextFreeTLB(cpu->dtb, &cpu->nextDTB);
-	else
-	    tlbEntry = AXP_getNextFreeTLB(cpu->itb, &cpu->nextITB);
+  if (dtb)
+      tlbEntry = AXP_getNextFreeTLB(cpu->dtb, &cpu->nextDTB);
+  else
+      tlbEntry = AXP_getNextFreeTLB(cpu->itb, &cpu->nextITB);
     }
 
     /*
@@ -332,7 +332,7 @@ void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
     tlbEntry->keepMask = GH_KEEP(dtb ? cpu->dtbPte0.gh : cpu->itbPte.gh);
     tlbEntry->virtAddr = virtAddr & tlbEntry->matchMask;
     tlbEntry->physAddr = physAddr
-	& GH_PHYS(dtb ? cpu->dtbPte0.gh : cpu->itbPte.gh);
+  & GH_PHYS(dtb ? cpu->dtbPte0.gh : cpu->itbPte.gh);
 
     /*
      * Now update the specific fields from the correct PTE.
@@ -340,45 +340,45 @@ void AXP_addTLBEntry(AXP_21264_CPU *cpu, u64 virtAddr, u64 physAddr, bool dtb)
     if (dtb)
     {
 
-	/*
-	 * We use the DTE_PTE0 and DTE_ASN0 IPRs to initialize the TLB entry.
-	 */
-	tlbEntry->faultOnRead = cpu->dtbPte0._for;
-	tlbEntry->faultOnWrite = cpu->dtbPte0.fow;
-	tlbEntry->faultOnExecute = 0;
-	tlbEntry->kre = cpu->dtbPte0.kre;
-	tlbEntry->ere = cpu->dtbPte0.ere;
-	tlbEntry->sre = cpu->dtbPte0.sre;
-	tlbEntry->ure = cpu->dtbPte0.ure;
-	tlbEntry->kwe = cpu->dtbPte0.kwe;
-	tlbEntry->ewe = cpu->dtbPte0.ewe;
-	tlbEntry->swe = cpu->dtbPte0.swe;
-	tlbEntry->uwe = cpu->dtbPte0.uwe;
-	tlbEntry->_asm = cpu->dtbPte0._asm;
-	tlbEntry->asn = cpu->dtbAsn0.asn;
+  /*
+   * We use the DTE_PTE0 and DTE_ASN0 IPRs to initialize the TLB entry.
+   */
+  tlbEntry->faultOnRead = cpu->dtbPte0._for;
+  tlbEntry->faultOnWrite = cpu->dtbPte0.fow;
+  tlbEntry->faultOnExecute = 0;
+  tlbEntry->kre = cpu->dtbPte0.kre;
+  tlbEntry->ere = cpu->dtbPte0.ere;
+  tlbEntry->sre = cpu->dtbPte0.sre;
+  tlbEntry->ure = cpu->dtbPte0.ure;
+  tlbEntry->kwe = cpu->dtbPte0.kwe;
+  tlbEntry->ewe = cpu->dtbPte0.ewe;
+  tlbEntry->swe = cpu->dtbPte0.swe;
+  tlbEntry->uwe = cpu->dtbPte0.uwe;
+  tlbEntry->_asm = cpu->dtbPte0._asm;
+  tlbEntry->asn = cpu->dtbAsn0.asn;
     }
     else
     {
 
-	/*
-	 * We use the ITB_PTE and PCTX IPRs to initialize the TLB entry.
-	 *
-	 * The following fault-on-read/write/execute are hard coded to keep the
-	 * rest of the code happy.
-	 */
-	tlbEntry->faultOnRead = 1;
-	tlbEntry->faultOnWrite = 0;
-	tlbEntry->faultOnExecute = 1;
-	tlbEntry->kre = cpu->itbPte.kre;
-	tlbEntry->ere = cpu->itbPte.ere;
-	tlbEntry->sre = cpu->itbPte.sre;
-	tlbEntry->ure = cpu->itbPte.ure;
-	tlbEntry->kwe = 0;
-	tlbEntry->ewe = 0;
-	tlbEntry->swe = 0;
-	tlbEntry->uwe = 0;
-	tlbEntry->_asm = cpu->itbPte._asm;
-	tlbEntry->asn = cpu->pCtx.asn;
+  /*
+   * We use the ITB_PTE and PCTX IPRs to initialize the TLB entry.
+   *
+   * The following fault-on-read/write/execute are hard coded to keep the
+   * rest of the code happy.
+   */
+  tlbEntry->faultOnRead = 1;
+  tlbEntry->faultOnWrite = 0;
+  tlbEntry->faultOnExecute = 1;
+  tlbEntry->kre = cpu->itbPte.kre;
+  tlbEntry->ere = cpu->itbPte.ere;
+  tlbEntry->sre = cpu->itbPte.sre;
+  tlbEntry->ure = cpu->itbPte.ure;
+  tlbEntry->kwe = 0;
+  tlbEntry->ewe = 0;
+  tlbEntry->swe = 0;
+  tlbEntry->uwe = 0;
+  tlbEntry->_asm = cpu->itbPte._asm;
+  tlbEntry->asn = cpu->pCtx.asn;
     }
     tlbEntry->valid = true; /* Mark the TLB entry as valid. */
 
@@ -413,12 +413,12 @@ void AXP_tbia(AXP_21264_CPU *cpu, bool dtb)
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_tbia to invalidate all %s entries called.",
-	    (dtb ? "DTB" : "ITB"));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_tbia to invalidate all %s entries called.",
+      (dtb ? "DTB" : "ITB"));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -426,15 +426,15 @@ void AXP_tbia(AXP_21264_CPU *cpu, bool dtb)
      * entries that are already invalidated).
      */
     for (ii = 0; ii < AXP_TB_LEN; ii++)
-	tlbArray[ii].valid = false;
+  tlbArray[ii].valid = false;
 
     /*
      * Reset the next TLB entry to select to the start of the list.
      */
     if (dtb)
-	cpu->nextDTB = 0;
+  cpu->nextDTB = 0;
     else
-	cpu->nextITB = 0;
+  cpu->nextITB = 0;
 
     /*
      * Return back to the caller.
@@ -467,12 +467,12 @@ void AXP_tbiap(AXP_21264_CPU *cpu, bool dtb)
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_tbiap to invalidate all process specific %s entries called.",
-	    (dtb ? "DTB" : "ITB"));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_tbiap to invalidate all process specific %s entries called.",
+      (dtb ? "DTB" : "ITB"));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -481,8 +481,8 @@ void AXP_tbiap(AXP_21264_CPU *cpu, bool dtb)
      * valid or otherwise.
      */
     for (ii = 0; ii < AXP_TB_LEN; ii++)
-	if (tlbArray[ii]._asm == 0)
-	    tlbArray[ii].valid = false;
+  if (tlbArray[ii]._asm == 0)
+      tlbArray[ii].valid = false;
 
     /*
      * Return back to the caller.
@@ -516,13 +516,13 @@ void AXP_tbis(AXP_21264_CPU *cpu, u64 va, bool dtb)
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_tbis to invalidate a single %s entry for 0x%016llx called.",
-	    (dtb ? "DTB" : "ITB"),
-	    va);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_tbis to invalidate a single %s entry for 0x%016llx called.",
+      (dtb ? "DTB" : "ITB"),
+      va);
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -530,7 +530,7 @@ void AXP_tbis(AXP_21264_CPU *cpu, u64 va, bool dtb)
      * We'll just quietly continue on.
      */
     if (tlb != NULL)
-	tlb->valid = false;
+  tlb->valid = false;
 
     /*
      * Return back to the caller.
@@ -592,13 +592,13 @@ AXP_EXCEPTIONS AXP_21264_checkMemoryAccess(
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_21264_checkMemoryAccess tlb: 0x%016llx, access: %s called.",
-	    (u64 *) tlb,
-	    accStr[acc]);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_21264_checkMemoryAccess tlb: 0x%016llx, access: %s called.",
+      (u64 *) tlb,
+      accStr[acc]);
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -607,133 +607,133 @@ AXP_EXCEPTIONS AXP_21264_checkMemoryAccess(
      */
     switch (cpu->ierCm.cm)
     {
-	case AXP_CM_KERNEL:
-	    switch (acc)
-	    {
-		case None:
-		    break;
+  case AXP_CM_KERNEL:
+      switch (acc)
+      {
+    case None:
+        break;
 
-		case Read:
-		    if ((tlb->kre == 0) || (tlb->faultOnRead == 1))
-			retVal = FaultOnRead;
-		    break;
+    case Read:
+        if ((tlb->kre == 0) || (tlb->faultOnRead == 1))
+      retVal = FaultOnRead;
+        break;
 
-		case Write:
-		    if ((tlb->kwe == 0) || (tlb->faultOnWrite == 1))
-			retVal = FaultOnWrite;
-		    break;
+    case Write:
+        if ((tlb->kwe == 0) || (tlb->faultOnWrite == 1))
+      retVal = FaultOnWrite;
+        break;
 
-		case Execute:
-		    if ((tlb->kre == 0) || (tlb->faultOnExecute == 1))
-			retVal = FaultOnExecute;
-		    break;
+    case Execute:
+        if ((tlb->kre == 0) || (tlb->faultOnExecute == 1))
+      retVal = FaultOnExecute;
+        break;
 
-		case Modify:
-		    if ((tlb->kwe == 0) || (tlb->faultOnWrite == 1))
-			retVal = FaultOnWrite;
-		    else if ((tlb->kre == 0) || (tlb->faultOnRead == 1))
-			retVal = FaultOnRead;
-		    break;
-	    }
-	    break;
+    case Modify:
+        if ((tlb->kwe == 0) || (tlb->faultOnWrite == 1))
+      retVal = FaultOnWrite;
+        else if ((tlb->kre == 0) || (tlb->faultOnRead == 1))
+      retVal = FaultOnRead;
+        break;
+      }
+      break;
 
-	case AXP_CM_EXEC:
-	    switch (acc)
-	    {
-		case None:
-		    break;
+  case AXP_CM_EXEC:
+      switch (acc)
+      {
+    case None:
+        break;
 
-		case Read:
-		    if ((tlb->ere == 0) || (tlb->faultOnRead == 1))
-			retVal = FaultOnRead;
-		    break;
+    case Read:
+        if ((tlb->ere == 0) || (tlb->faultOnRead == 1))
+      retVal = FaultOnRead;
+        break;
 
-		case Write:
-		    if ((tlb->ewe == 0) || (tlb->faultOnWrite == 1))
-			retVal = FaultOnWrite;
-		    break;
+    case Write:
+        if ((tlb->ewe == 0) || (tlb->faultOnWrite == 1))
+      retVal = FaultOnWrite;
+        break;
 
-		case Execute:
-		    if ((tlb->ere == 0) || (tlb->faultOnExecute == 1))
-			retVal = FaultOnExecute;
-		    break;
+    case Execute:
+        if ((tlb->ere == 0) || (tlb->faultOnExecute == 1))
+      retVal = FaultOnExecute;
+        break;
 
-		case Modify:
-		    if ((tlb->ewe == 0) || (tlb->faultOnWrite == 1))
-			retVal = FaultOnWrite;
-		    else if ((tlb->ere == 0) || (tlb->faultOnRead == 1))
-			retVal = FaultOnRead;
-		    break;
-	    }
-	    break;
+    case Modify:
+        if ((tlb->ewe == 0) || (tlb->faultOnWrite == 1))
+      retVal = FaultOnWrite;
+        else if ((tlb->ere == 0) || (tlb->faultOnRead == 1))
+      retVal = FaultOnRead;
+        break;
+      }
+      break;
 
-	case AXP_CM_SUPER:
-	    switch (acc)
-	    {
-		case None:
-		    break;
+  case AXP_CM_SUPER:
+      switch (acc)
+      {
+    case None:
+        break;
 
-		case Read:
-		    if ((tlb->sre == 0) || (tlb->faultOnRead == 1))
-			retVal = FaultOnRead;
-		    break;
+    case Read:
+        if ((tlb->sre == 0) || (tlb->faultOnRead == 1))
+      retVal = FaultOnRead;
+        break;
 
-		case Write:
-		    if ((tlb->swe == 0) || (tlb->faultOnWrite == 1))
-			retVal = FaultOnWrite;
-		    break;
+    case Write:
+        if ((tlb->swe == 0) || (tlb->faultOnWrite == 1))
+      retVal = FaultOnWrite;
+        break;
 
-		case Execute:
-		    if ((tlb->sre == 0) || (tlb->faultOnExecute == 1))
-			retVal = FaultOnExecute;
-		    break;
+    case Execute:
+        if ((tlb->sre == 0) || (tlb->faultOnExecute == 1))
+      retVal = FaultOnExecute;
+        break;
 
-		case Modify:
-		    if ((tlb->swe == 0) || (tlb->faultOnWrite == 1))
-			retVal = FaultOnWrite;
-		    else if ((tlb->sre == 0) || (tlb->faultOnRead == 1))
-			retVal = FaultOnRead;
-		    break;
-	    }
-	    break;
+    case Modify:
+        if ((tlb->swe == 0) || (tlb->faultOnWrite == 1))
+      retVal = FaultOnWrite;
+        else if ((tlb->sre == 0) || (tlb->faultOnRead == 1))
+      retVal = FaultOnRead;
+        break;
+      }
+      break;
 
-	case AXP_CM_USER:
-	    switch (acc)
-	    {
-		case None:
-		    break;
+  case AXP_CM_USER:
+      switch (acc)
+      {
+    case None:
+        break;
 
-		case Read:
-		    if ((tlb->ure == 0) || (tlb->faultOnRead == 1))
-			retVal = FaultOnRead;
-		    break;
+    case Read:
+        if ((tlb->ure == 0) || (tlb->faultOnRead == 1))
+      retVal = FaultOnRead;
+        break;
 
-		case Write:
-		    if ((tlb->uwe == 0) || (tlb->faultOnWrite == 1))
-			retVal = FaultOnWrite;
-		    break;
+    case Write:
+        if ((tlb->uwe == 0) || (tlb->faultOnWrite == 1))
+      retVal = FaultOnWrite;
+        break;
 
-		case Execute:
-		    if ((tlb->ure == 0) || (tlb->faultOnExecute == 1))
-			retVal = FaultOnExecute;
-		    break;
+    case Execute:
+        if ((tlb->ure == 0) || (tlb->faultOnExecute == 1))
+      retVal = FaultOnExecute;
+        break;
 
-		case Modify:
-		    if ((tlb->uwe == 0) || (tlb->faultOnWrite == 1))
-			retVal = FaultOnWrite;
-		    else if ((tlb->ure == 0) || (tlb->faultOnRead == 1))
-			retVal = FaultOnRead;
-		    break;
-	    }
-	    break;
+    case Modify:
+        if ((tlb->uwe == 0) || (tlb->faultOnWrite == 1))
+      retVal = FaultOnWrite;
+        else if ((tlb->ure == 0) || (tlb->faultOnRead == 1))
+      retVal = FaultOnRead;
+        break;
+      }
+      break;
     } /* switch(cpu->ierCm.cm) */
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_21264_checkMemoryAccess returning %d.", retVal);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_21264_checkMemoryAccess returning %d.", retVal);
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -800,7 +800,7 @@ AXP_EXCEPTIONS AXP_21264_checkMemoryAccess(
  * Return Value:
  *	0:	The virtual address could not be converted (yet, usually because of
  *		a fault).
- *	~0:	The physical address associated with the virtual address.
+ *	!0:	The physical address associated with the virtual address.
  */
 u64 AXP_va2pa(
     AXP_21264_CPU *cpu,
@@ -824,9 +824,9 @@ u64 AXP_va2pa(
      * Initialize the output parameters.
      */
     if (_asm != NULL)
-	*_asm = false;
+  *_asm = false;
     if (fault != NULL)
-	*fault = 0;
+  *fault = 0;
     *memChk = NoException;
 
     /*
@@ -834,7 +834,7 @@ u64 AXP_va2pa(
      * the same.
      */
     if (pc.pal == AXP_PAL_MODE)
-	pa = va;
+  pa = va;
 
     /*
      * If we are using a super page and are in Kernel mode, then we need to go
@@ -842,28 +842,28 @@ u64 AXP_va2pa(
      */
     else if ((spe != 0) && (cpu->ierCm.cm == AXP_CM_KERNEL))
     {
-	if ((spe & AXP_SPE2_BIT) && (vaSpe.spe2.spe2 == AXP_SPE2_VA_VAL))
-	{
-	    pa = va & AXP_SPE2_VA_MASK;
-	    if (_asm != NULL)
-		*_asm = false;
-	    return (pa);
-	}
-	else if ((spe & AXP_SPE1_BIT) && (vaSpe.spe1.spe1 == AXP_SPE1_VA_VAL))
-	{
-	    pa = ((va & AXP_SPE1_VA_MASK)
-		| ((va & AXP_SPE1_VA_40) ? AXP_SPE1_PA_43_41 : 0));
-	    if (_asm != NULL)
-		*_asm = false;
-	    return (pa);
-	}
-	else if ((spe & AXP_SPE0_BIT) && (vaSpe.spe0.spe0 == AXP_SPE0_VA_VAL))
-	{
-	    pa = va & AXP_SPE0_VA_MASK;
-	    if (_asm != NULL)
-		*_asm = false;
-	    return (pa);
-	}
+  if ((spe & AXP_SPE2_BIT) && (vaSpe.spe2.spe2 == AXP_SPE2_VA_VAL))
+  {
+      pa = va & AXP_SPE2_VA_MASK;
+      if (_asm != NULL)
+    *_asm = false;
+      return (pa);
+  }
+  else if ((spe & AXP_SPE1_BIT) && (vaSpe.spe1.spe1 == AXP_SPE1_VA_VAL))
+  {
+      pa = ((va & AXP_SPE1_VA_MASK)
+    | ((va & AXP_SPE1_VA_40) ? AXP_SPE1_PA_43_41 : 0));
+      if (_asm != NULL)
+    *_asm = false;
+      return (pa);
+  }
+  else if ((spe & AXP_SPE0_BIT) && (vaSpe.spe0.spe0 == AXP_SPE0_VA_VAL))
+  {
+      pa = va & AXP_SPE0_VA_MASK;
+      if (_asm != NULL)
+    *_asm = false;
+      return (pa);
+  }
     }
 
     /*
@@ -879,23 +879,23 @@ u64 AXP_va2pa(
      */
     if ((tlb == NULL) && (fault != NULL))
     {
-	if (cpu->tbMissOutstanding == true)
-	{
-	    if (cpu->iCtl.va_48 == 0)
-		*fault = AXP_DTBM_DOUBLE_3;
-	    else
-		*fault = AXP_DTBM_DOUBLE_4;
-	}
-	else if (dtb == true)
-	{
-	    *fault = AXP_DTBM_SINGLE;
-	    cpu->tbMissOutstanding = true;
-	}
-	else
-	{
-	    *fault = AXP_ITB_MISS;
-	    cpu->tbMissOutstanding = true;
-	}
+  if (cpu->tbMissOutstanding == true)
+  {
+      if (cpu->iCtl.va_48 == 0)
+    *fault = AXP_DTBM_DOUBLE_3;
+      else
+    *fault = AXP_DTBM_DOUBLE_4;
+  }
+  else if (dtb == true)
+  {
+      *fault = AXP_DTBM_SINGLE;
+      cpu->tbMissOutstanding = true;
+  }
+  else
+  {
+      *fault = AXP_ITB_MISS;
+      cpu->tbMissOutstanding = true;
+  }
     }
 
     /*
@@ -904,24 +904,24 @@ u64 AXP_va2pa(
      */
     else
     {
-	cpu->tbMissOutstanding = false;
-	*memChk = AXP_21264_checkMemoryAccess(cpu, tlb, acc);
-	if (*memChk != NoException)
-	{
-	    if (fault != NULL)
-	    {
-		if (dtb == true)
-		    *fault = AXP_DFAULT;
-		else
-		    *fault = AXP_IACV;
-	    }
-	}
-	else
-	{
-	    pa = tlb->physAddr | (va & tlb->keepMask);
-	    if (_asm != NULL)
-		*_asm = tlb->_asm;
-	}
+  cpu->tbMissOutstanding = false;
+  *memChk = AXP_21264_checkMemoryAccess(cpu, tlb, acc);
+  if (*memChk != NoException)
+  {
+      if (fault != NULL)
+      {
+    if (dtb == true)
+        *fault = AXP_DFAULT;
+    else
+        *fault = AXP_IACV;
+      }
+  }
+  else
+  {
+      pa = tlb->physAddr | (va & tlb->keepMask);
+      if (_asm != NULL)
+    *_asm = tlb->_asm;
+  }
     }
 
     /*
@@ -1029,7 +1029,7 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
      * instructions where they are intended to work on unaligned data.
      */
     if ((disableUnaligned == false) && ((va & ~(len - 1)) != va))
-	retVal = DataAlignmentTrap;
+  retVal = DataAlignmentTrap;
 
     /*
      * If not exception was detected, then let's go see if we can find the
@@ -1038,177 +1038,177 @@ AXP_EXCEPTIONS AXP_Dcache_Status(
     if (retVal == NoException)
     {
 
-	/*
-	 * Before we go too far, initialize the return values to "nothing".
-	 */
-	if (indexSetOffset != NULL)
-	{
-	    indexSetOffset->set = 0;
-	    indexSetOffset->offset = 0;
-	    indexSetOffset->index = 0;
-	}
-	*status = AXP_21264_CACHE_MISS;
+  /*
+   * Before we go too far, initialize the return values to "nothing".
+   */
+  if (indexSetOffset != NULL)
+  {
+      indexSetOffset->set = 0;
+      indexSetOffset->offset = 0;
+      indexSetOffset->index = 0;
+  }
+  *status = AXP_21264_CACHE_MISS;
 
-	/*
-	 * Get the number of Dcache sets currently in play.  It is either 1 or
-	 * 2.  Don't forget to lock/unlock the Mbox IPR mutex around this, so
-	 * that it is not changed while we are looking at it.
-	 */
-	pthread_mutex_lock(&cpu->mBoxIPRMutex);
-	activeSets = (cpu->dcCtl.set_en == 1) ? 1 : 2;
-	pthread_mutex_unlock(&cpu->mBoxIPRMutex);
+  /*
+   * Get the number of Dcache sets currently in play.  It is either 1 or
+   * 2.  Don't forget to lock/unlock the Mbox IPR mutex around this, so
+   * that it is not changed while we are looking at it.
+   */
+  pthread_mutex_lock(&cpu->mBoxIPRMutex);
+  activeSets = (cpu->dcCtl.set_en == 1) ? 1 : 2;
+  pthread_mutex_unlock(&cpu->mBoxIPRMutex);
 
-	/*
-	 * Make sure we lock the DTAG mutex before we do anything else.  We
-	 * don't want to be interrupted while we are doing this work.
-	 */
-	pthread_mutex_lock(&cpu->dtagMutex);
+  /*
+   * Make sure we lock the DTAG mutex before we do anything else.  We
+   * don't want to be interrupted while we are doing this work.
+   */
+  pthread_mutex_lock(&cpu->dtagMutex);
 
-	/*
-	 * Because the number of Dcache entries is large enough that the index
-	 * shares 2 bits from the VPN, it is possible that a particular
-	 * physical address may be in anyone of 4 locations.  Therefore, we
-	 * need to find the first location that actually contains the item for
-	 * which we are looking.  Since it is the high 2 bits, of a 9 bit value,
-	 * we just scroll through the setting of these 2 bits (note: the 2 bits
-	 * in question were cleared above, so that the code below is simpler).
-	 */
-	for (ii = index; ((ii < index + 0x180) & (*status == 0)); ii += 0x080)
-	{
+  /*
+   * Because the number of Dcache entries is large enough that the index
+   * shares 2 bits from the VPN, it is possible that a particular
+   * physical address may be in anyone of 4 locations.  Therefore, we
+   * need to find the first location that actually contains the item for
+   * which we are looking.  Since it is the high 2 bits, of a 9 bit value,
+   * we just scroll through the setting of these 2 bits (note: the 2 bits
+   * in question were cleared above, so that the code below is simpler).
+   */
+  for (ii = index; ((ii < index + 0x180) & (*status == 0)); ii += 0x080)
+  {
 
-	    /*
-	     * Search through each of the possible sets.
-	     */
-	    for (jj = 0; ((jj < activeSets) & (*status == 0)); jj++)
-	    {
-		if ((cpu->dtag[ii][jj].valid == true)
-		    && (cpu->dtag[ii][jj].physTag == tag))
-		{
-		    *status = AXP_21264_CACHE_HIT;
-		    if (cpu->dtag[ii][jj].dirty == true)
-			*status |= AXP_21264_CACHE_DIRTY;
-		    if (cpu->dtag[ii][jj].shared == true)
-			*status |= AXP_21264_CACHE_SHARED;
-		    if (indexSetOffset != NULL)
-		    {
-			indexSetOffset->set = jj;
-			indexSetOffset->offset = offset;
-			indexSetOffset->index = ii;
-		    }
-		}
-	    }
-	}
+      /*
+       * Search through each of the possible sets.
+       */
+      for (jj = 0; ((jj < activeSets) & (*status == 0)); jj++)
+      {
+    if ((cpu->dtag[ii][jj].valid == true)
+        && (cpu->dtag[ii][jj].physTag == tag))
+    {
+        *status = AXP_21264_CACHE_HIT;
+        if (cpu->dtag[ii][jj].dirty == true)
+      *status |= AXP_21264_CACHE_DIRTY;
+        if (cpu->dtag[ii][jj].shared == true)
+      *status |= AXP_21264_CACHE_SHARED;
+        if (indexSetOffset != NULL)
+        {
+      indexSetOffset->set = jj;
+      indexSetOffset->offset = offset;
+      indexSetOffset->index = ii;
+        }
+    }
+      }
+  }
 
-	/*
-	 * HRM 4.5.5: If we did not get a Hit, then we need to see if we need
-	 * to evict someone.  We perform the following steps:
-	 *
-	 *		1.	First, see if the slot we are supposed to use it is use and
-	 *			the modified bit set.
-	 *		2.	If #1 is true, then evict it as necessary.
-	 *		3.	Either way, indicate that this location is waiting to be
-	 *			filled.
-	 *
-	 * NOTE:	If the block is evicted, then it is sent to the Cbox for
-	 *			processing.
-	 *			Also, we can evict the block here, even if it gets filled
-	 *			directly from the Bcache.  The Bcache is much larger, and
-	 *			this is possible, but we still need to evict the current
-	 *			block.
-	 */
-	if ((*status == 0) && (indexSetOffset != NULL))
-	{
-	    u32 ctagIndex = cpu->dtag[index][set].ctagIndex;
-	    u32 ctagSet = cpu->dtag[index][set].ctagSet;
+  /*
+   * HRM 4.5.5: If we did not get a Hit, then we need to see if we need
+   * to evict someone.  We perform the following steps:
+   *
+   *		1.	First, see if the slot we are supposed to use it is use and
+   *			the modified bit set.
+   *		2.	If #1 is true, then evict it as necessary.
+   *		3.	Either way, indicate that this location is waiting to be
+   *			filled.
+   *
+   * NOTE:	If the block is evicted, then it is sent to the Cbox for
+   *			processing.
+   *			Also, we can evict the block here, even if it gets filled
+   *			directly from the Bcache.  The Bcache is much larger, and
+   *			this is possible, but we still need to evict the current
+   *			block.
+   */
+  if ((*status == 0) && (indexSetOffset != NULL))
+  {
+      u32 ctagIndex = cpu->dtag[index][set].ctagIndex;
+      u32 ctagSet = cpu->dtag[index][set].ctagSet;
 
-	    /*
-	     * First thing we need to do is determine which set we are to be
-	     * using.
-	     */
-	    set = (cpu->dtag[index][0].set_0_1 == false) ? 0 : 1;
+      /*
+       * First thing we need to do is determine which set we are to be
+       * using.
+       */
+      set = (cpu->dtag[index][0].set_0_1 == false) ? 0 : 1;
 
-	    /*
-	     * If the entry we are to be using is valid and has been modified,
-	     * then we need to write it to the Bcache.
-	     */
-	    if ((cpu->dtag[index][set].valid == true)
-		&& (cpu->dtag[index][set].modified == true))
-	    {
-		pthread_mutex_lock(&cpu->dCacheMutex);
-		AXP_21264_Add_VDB(
-		    cpu,
-		    toBcache,
-		    pa,
-		    cpu->dCache[index][set].data,
-		    false,
-		    false);
-		pthread_mutex_unlock(&cpu->dCacheMutex);
-	    }
+      /*
+       * If the entry we are to be using is valid and has been modified,
+       * then we need to write it to the Bcache.
+       */
+      if ((cpu->dtag[index][set].valid == true)
+    && (cpu->dtag[index][set].modified == true))
+      {
+    pthread_mutex_lock(&cpu->dCacheMutex);
+    AXP_21264_Add_VDB(
+        cpu,
+        toBcache,
+        pa,
+        cpu->dCache[index][set].data,
+        false,
+        false);
+    pthread_mutex_unlock(&cpu->dCacheMutex);
+      }
 
-	    /*
-	     * Now reset the DTAG to indicate that the block is valid but in a
-	     * pending state, until filled.  Then, unhook the associated CTAG
-	     * block, resetting it as well, then link the new CTAG with this
-	     * DTAG.
-	     */
-	    cpu->dtag[index][set].valid = false;
-	    cpu->dtag[index][set].dirty = false;
-	    cpu->dtag[index][set].modified = false;
-	    cpu->dtag[index][set].shared = false;
-	    cpu->dtag[index][set].physTag = physAddr.vaIdxInfo.tag;
-	    cpu->dtag[index][set].state = Pending;
+      /*
+       * Now reset the DTAG to indicate that the block is valid but in a
+       * pending state, until filled.  Then, unhook the associated CTAG
+       * block, resetting it as well, then link the new CTAG with this
+       * DTAG.
+       */
+      cpu->dtag[index][set].valid = false;
+      cpu->dtag[index][set].dirty = false;
+      cpu->dtag[index][set].modified = false;
+      cpu->dtag[index][set].shared = false;
+      cpu->dtag[index][set].physTag = physAddr.vaIdxInfo.tag;
+      cpu->dtag[index][set].state = Pending;
 
-	    /*
-	     * Before we reset the associated CTAG, lock the mutex for it.
-	     * We'll keep it lock while we link the new CTAG.
-	     */
-	    pthread_mutex_lock(&cpu->cBoxIPRMutex);
-	    cpu->ctag[ctagIndex][ctagSet].valid = false;
-	    cpu->ctag[ctagIndex][ctagSet].dirty = false;
-	    cpu->ctag[ctagIndex][ctagSet].shared = false;
-	    cpu->ctag[ctagIndex][ctagSet].physTag = 0;
-	    cpu->ctag[ctagIndex][ctagSet].dtagIndex = 0;
+      /*
+       * Before we reset the associated CTAG, lock the mutex for it.
+       * We'll keep it lock while we link the new CTAG.
+       */
+      pthread_mutex_lock(&cpu->cBoxIPRMutex);
+      cpu->ctag[ctagIndex][ctagSet].valid = false;
+      cpu->ctag[ctagIndex][ctagSet].dirty = false;
+      cpu->ctag[ctagIndex][ctagSet].shared = false;
+      cpu->ctag[ctagIndex][ctagSet].physTag = 0;
+      cpu->ctag[ctagIndex][ctagSet].dtagIndex = 0;
 
-	    /*
-	     * The CTAG is physically indexed and tagged, unlike the Dcache,
-	     * which is virtually indexed, but physically tagged.
-	     */
-	    ctagIndex = physAddr.vaIdxInfo.index;
-	    ctagSet = set;
-	    cpu->ctag[ctagIndex][ctagSet].valid = true;
-	    cpu->ctag[ctagIndex][ctagSet].dirty = false;
-	    cpu->ctag[ctagIndex][ctagSet].shared = false;
-	    cpu->ctag[ctagIndex][ctagSet].physTag = physAddr.vaIdxInfo.tag;
-	    cpu->ctag[ctagIndex][ctagSet].dtagIndex = index;
-	    pthread_mutex_unlock(&cpu->cBoxIPRMutex);
+      /*
+       * The CTAG is physically indexed and tagged, unlike the Dcache,
+       * which is virtually indexed, but physically tagged.
+       */
+      ctagIndex = physAddr.vaIdxInfo.index;
+      ctagSet = set;
+      cpu->ctag[ctagIndex][ctagSet].valid = true;
+      cpu->ctag[ctagIndex][ctagSet].dirty = false;
+      cpu->ctag[ctagIndex][ctagSet].shared = false;
+      cpu->ctag[ctagIndex][ctagSet].physTag = physAddr.vaIdxInfo.tag;
+      cpu->ctag[ctagIndex][ctagSet].dtagIndex = index;
+      pthread_mutex_unlock(&cpu->cBoxIPRMutex);
 
-	    /*
-	     * If this "new" block should be evicted next time we need the
-	     * Dcache location, then don't change the flag on whether set 0 or
-	     * set 1 should be used.
-	     */
-	    if ((evict == false) && (activeSets == 2))
-		cpu->dtag[index][0].set_0_1 = ~cpu->dtag[index][0].set_0_1;
+      /*
+       * If this "new" block should be evicted next time we need the
+       * Dcache location, then don't change the flag on whether set 0 or
+       * set 1 should be used.
+       */
+      if ((evict == false) && (activeSets == 2))
+    cpu->dtag[index][0].set_0_1 = !cpu->dtag[index][0].set_0_1;
 
-	    /*
-	     * Even when we don't have a hit, we still return the location
-	     * where the Dcache data should be placed.  If the data is in the
-	     * Bcache, it is copied directly into this location.  If it is not,
-	     * then it is copied from memory into this location by the Cbox.
-	     */
-	    if (indexSetOffset != NULL)
-	    {
-		indexSetOffset->set = set;
-		indexSetOffset->offset = offset;
-		indexSetOffset->index = index;
-	    }
-	}
+      /*
+       * Even when we don't have a hit, we still return the location
+       * where the Dcache data should be placed.  If the data is in the
+       * Bcache, it is copied directly into this location.  If it is not,
+       * then it is copied from memory into this location by the Cbox.
+       */
+      if (indexSetOffset != NULL)
+      {
+    indexSetOffset->set = set;
+    indexSetOffset->offset = offset;
+    indexSetOffset->index = index;
+      }
+  }
 
-	/*
-	 * Last thing we need to do is unlock the DTAG mutex so other
-	 * accessors (Cbox) can to it's thing.
-	 */
-	pthread_mutex_unlock(&cpu->dtagMutex);
+  /*
+   * Last thing we need to do is unlock the DTAG mutex so other
+   * accessors (Cbox) can to it's thing.
+   */
+  pthread_mutex_unlock(&cpu->dtagMutex);
     }
 
     /*
@@ -1276,40 +1276,40 @@ bool AXP_DcacheWrite(
     pthread_mutex_lock(&cpu->dCacheMutex);
     switch (len)
     {
-	case 1:
-	    *((u8 *) dest) = *((u8 *) data);
-	    break;
+  case 1:
+      *((u8 *) dest) = *((u8 *) data);
+      break;
 
-	case 2:
-	    *((u16 *) dest) = *((u16 *) data);
-	    break;
+  case 2:
+      *((u16 *) dest) = *((u16 *) data);
+      break;
 
-	case 4:
-	    *((u32 *) dest) = *((u32 *) data);
-	    break;
+  case 4:
+      *((u32 *) dest) = *((u32 *) data);
+      break;
 
-	case 8:
-	    *((u64 *) dest) = *((u8 *) data);
-	    break;
+  case 8:
+      *((u64 *) dest) = *((u8 *) data);
+      break;
 
-	case 64:
-	    memcpy(dcache->data, data, len);
-	    if (status == 0)
-		dtag->dirty = true;
-	    else
-	    {
-		if (AXP_CACHE_DIRTY(status) || AXP_CACHE_DIRTY_SHARED(status))
-		    dtag->dirty = true;
-		else
-		    dtag->dirty = false;
-		if (AXP_CACHE_CLEAN_SHARED(
-		    status) || AXP_CACHE_DIRTY_SHARED(status))
-		    dtag->shared = true;
-		else
-		    dtag->shared = false;
-	    }
-	    dtag->state = Ready;
-	    break;
+  case 64:
+      memcpy(dcache->data, data, len);
+      if (status == 0)
+    dtag->dirty = true;
+      else
+      {
+    if (AXP_CACHE_DIRTY(status) || AXP_CACHE_DIRTY_SHARED(status))
+        dtag->dirty = true;
+    else
+        dtag->dirty = false;
+    if (AXP_CACHE_CLEAN_SHARED(
+        status) || AXP_CACHE_DIRTY_SHARED(status))
+        dtag->shared = true;
+    else
+        dtag->shared = false;
+      }
+      dtag->state = Ready;
+      break;
     }
 
     /*
@@ -1337,7 +1337,7 @@ bool AXP_DcacheWrite(
      * have just one.  Decrement the number of lockers.
      */
     if (dtag->lockers > 0)
-	dtag->lockers--;
+  dtag->lockers--;
 
     /*
      * If there are no more lockers and there was an attempt to evict this
@@ -1345,39 +1345,39 @@ bool AXP_DcacheWrite(
      */
     if ((dtag->lockers == 0) && (dtag->evict == true))
     {
-	u64 pa = AXP_VA2PA(dtag->physTag, dtag->ctagIndex);
+  u64 pa = AXP_VA2PA(dtag->physTag, dtag->ctagIndex);
 
-	/*
-	 * We are no longer needing to wait to evict this block.
-	 */
-	dtag->evict = false;
+  /*
+   * We are no longer needing to wait to evict this block.
+   */
+  dtag->evict = false;
 
-	/*
-	 * If the Dcache block was modified, then write it to the Bcache, but
-	 * make sure that the Dcache mutex is locked around this code.
-	 */
-	if (dtag->modified == true)
-	{
-	    pthread_mutex_lock(&cpu->dCacheMutex);
-	    AXP_21264_Bcache_Write(cpu, pa, dcache->data);
-	    pthread_mutex_unlock(&cpu->dCacheMutex);
-	}
-	dtag->set_0_1 = false;
-	dtag->physTag = 0;
-	dtag->dirty = false;
-	dtag->modified = false;
-	dtag->shared = false;
-	dtag->valid = false;
+  /*
+   * If the Dcache block was modified, then write it to the Bcache, but
+   * make sure that the Dcache mutex is locked around this code.
+   */
+  if (dtag->modified == true)
+  {
+      pthread_mutex_lock(&cpu->dCacheMutex);
+      AXP_21264_Bcache_Write(cpu, pa, dcache->data);
+      pthread_mutex_unlock(&cpu->dCacheMutex);
+  }
+  dtag->set_0_1 = false;
+  dtag->physTag = 0;
+  dtag->dirty = false;
+  dtag->modified = false;
+  dtag->shared = false;
+  dtag->valid = false;
 
-	/*
-	 * Don't forget to reset the CTAG bits as well.
-	 */
-	pthread_mutex_lock(&cpu->cBoxIPRMutex);
-	ctag->physTag = 0;
-	ctag->dirty = false;
-	ctag->shared = false;
-	ctag->valid = false;
-	pthread_mutex_unlock(&cpu->cBoxIPRMutex);
+  /*
+   * Don't forget to reset the CTAG bits as well.
+   */
+  pthread_mutex_lock(&cpu->cBoxIPRMutex);
+  ctag->physTag = 0;
+  ctag->dirty = false;
+  ctag->shared = false;
+  ctag->valid = false;
+  pthread_mutex_unlock(&cpu->cBoxIPRMutex);
     }
 
     /*
@@ -1418,11 +1418,11 @@ void AXP_CopyBcacheToDcache(
     pthread_mutex_lock(&cpu->dtagMutex);
     pthread_mutex_lock(&cpu->dCacheMutex);
     AXP_21264_Bcache_Read(
-	cpu,
-	pa,
-	cpu->dCache[index][set].data,
-	&cpu->dtag[index][set].dirty,
-	&cpu->dtag[index][set].shared);
+  cpu,
+  pa,
+  cpu->dCache[index][set].data,
+  &cpu->dtag[index][set].dirty,
+  &cpu->dtag[index][set].shared);
     cpu->dtag[index][set].modified = false;
     cpu->dtag[index][set].state = Ready;
 
@@ -1470,42 +1470,42 @@ void AXP_DcacheFlush(AXP_21264_CPU *cpu)
      * Go through each cache item and invalidate and reset it.
      */
     for (ii = 0; ii < AXP_CACHE_ENTRIES; ii++)
-	for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
-	{
-	    if (cpu->dtag[ii][jj].lockers > 0)
-	    {
-		ctagIdx = cpu->dtag[ii][jj].ctagIndex;
-		if ((cpu->dtag[ii][jj].valid == true)
-		    && (cpu->dtag[ii][jj].modified == true))
-		{
+  for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
+  {
+      if (cpu->dtag[ii][jj].lockers > 0)
+      {
+    ctagIdx = cpu->dtag[ii][jj].ctagIndex;
+    if ((cpu->dtag[ii][jj].valid == true)
+        && (cpu->dtag[ii][jj].modified == true))
+    {
 
-		    /*
-		     * Using the information we have convert the virtual address to
-		     * its physical equivalent.
-		     *
-		     * NOTE:	We don't have to worry about the offset within the
-		     *			block, as we are copying the entire block from its
-		     *			zero offset.
-		     */
-		    pa = AXP_VA2PA(cpu->ctag[ctagIdx][jj].physTag, ctagIdx);
-		    /* Update the Bcache with this modified block. */
-		    AXP_21264_Bcache_Write(cpu, pa, cpu->dCache[ii][jj].data);
-		    cpu->dtag[ii][jj].modified = false;
-		}
-		cpu->dtag[ii][jj].set_0_1 = false;
-		cpu->dtag[ii][jj].physTag = 0;
-		cpu->dtag[ii][jj].dirty = false;
-		cpu->dtag[ii][jj].modified = false;
-		cpu->dtag[ii][jj].shared = false;
-		cpu->dtag[ii][jj].valid = false;
-		cpu->ctag[ctagIdx][jj].physTag = 0;
-		cpu->ctag[ctagIdx][jj].dirty = false;
-		cpu->ctag[ctagIdx][jj].shared = false;
-		cpu->ctag[ctagIdx][jj].valid = false;
-	    }
-	    else
-		cpu->dtag[ii][jj].evict = true;
-	}
+        /*
+         * Using the information we have convert the virtual address to
+         * its physical equivalent.
+         *
+         * NOTE:	We don't have to worry about the offset within the
+         *			block, as we are copying the entire block from its
+         *			zero offset.
+         */
+        pa = AXP_VA2PA(cpu->ctag[ctagIdx][jj].physTag, ctagIdx);
+        /* Update the Bcache with this modified block. */
+        AXP_21264_Bcache_Write(cpu, pa, cpu->dCache[ii][jj].data);
+        cpu->dtag[ii][jj].modified = false;
+    }
+    cpu->dtag[ii][jj].set_0_1 = false;
+    cpu->dtag[ii][jj].physTag = 0;
+    cpu->dtag[ii][jj].dirty = false;
+    cpu->dtag[ii][jj].modified = false;
+    cpu->dtag[ii][jj].shared = false;
+    cpu->dtag[ii][jj].valid = false;
+    cpu->ctag[ctagIdx][jj].physTag = 0;
+    cpu->ctag[ctagIdx][jj].dirty = false;
+    cpu->ctag[ctagIdx][jj].shared = false;
+    cpu->ctag[ctagIdx][jj].valid = false;
+      }
+      else
+    cpu->dtag[ii][jj].evict = true;
+  }
 
     /*
      * Finally we need to unlock access to the Dcache and Dtag.  Always unlock
@@ -1566,60 +1566,60 @@ void AXP_DcacheEvict(AXP_21264_CPU *cpu, u64 va, AXP_PC pc)
      */
     if (exception == NoException)
     {
-	physAddr.va = pa;
+  physAddr.va = pa;
 
-	/*
-	 * First we need to lock access to the Dcache and Dtag.
-	 */
-	pthread_mutex_lock(&cpu->dCacheMutex);
-	pthread_mutex_lock(&cpu->dtagMutex);
-	pthread_mutex_lock(&cpu->cBoxIPRMutex);
+  /*
+   * First we need to lock access to the Dcache and Dtag.
+   */
+  pthread_mutex_lock(&cpu->dCacheMutex);
+  pthread_mutex_lock(&cpu->dtagMutex);
+  pthread_mutex_lock(&cpu->cBoxIPRMutex);
 
-	if ((cpu->dtag[index][0].valid == true)
-	    && (cpu->dtag[index][0].physTag == physAddr.vaIdxInfo.tag))
-	{
-	    dtag = &cpu->dtag[index][0];
-	    dcache = &cpu->dCache[index][0];
-	    ctag = &cpu->ctag[dtag->ctagIndex][0];
-	}
-	else if ((cpu->dcCtl.set_en == 1) && (cpu->dtag[index][1].valid == true)
-	    && (cpu->dtag[index][1].physTag == physAddr.vaIdxInfo.tag))
-	{
-	    dtag = &cpu->dtag[index][1];
-	    dcache = &cpu->dCache[index][1];
-	    ctag = &cpu->ctag[dtag->ctagIndex][0];
-	}
+  if ((cpu->dtag[index][0].valid == true)
+      && (cpu->dtag[index][0].physTag == physAddr.vaIdxInfo.tag))
+  {
+      dtag = &cpu->dtag[index][0];
+      dcache = &cpu->dCache[index][0];
+      ctag = &cpu->ctag[dtag->ctagIndex][0];
+  }
+  else if ((cpu->dcCtl.set_en == 1) && (cpu->dtag[index][1].valid == true)
+      && (cpu->dtag[index][1].physTag == physAddr.vaIdxInfo.tag))
+  {
+      dtag = &cpu->dtag[index][1];
+      dcache = &cpu->dCache[index][1];
+      ctag = &cpu->ctag[dtag->ctagIndex][0];
+  }
 
-	if (dtag != NULL)
-	{
-	    if (dtag->lockers > 0)
-	    {
-		if (dtag->modified == true)
-		    AXP_21264_Bcache_Write(cpu, pa, dcache->data);
-		dtag->set_0_1 = false;
-		dtag->physTag = 0;
-		dtag->dirty = false;
-		dtag->modified = false;
-		dtag->shared = false;
-		dtag->valid = false;
-		ctag->physTag = 0;
-		ctag->dirty = false;
-		ctag->shared = false;
-		ctag->valid = false;
-	    }
-	    else
-		dtag->evict = true;
-	}
+  if (dtag != NULL)
+  {
+      if (dtag->lockers > 0)
+      {
+    if (dtag->modified == true)
+        AXP_21264_Bcache_Write(cpu, pa, dcache->data);
+    dtag->set_0_1 = false;
+    dtag->physTag = 0;
+    dtag->dirty = false;
+    dtag->modified = false;
+    dtag->shared = false;
+    dtag->valid = false;
+    ctag->physTag = 0;
+    ctag->dirty = false;
+    ctag->shared = false;
+    ctag->valid = false;
+      }
+      else
+    dtag->evict = true;
+  }
 
-	/*
-	 * Finally we need to unlock access to the Dcache and Dtag.  Always unlock
-	 * in the reverse order of how they were locked.  Also,  always make sure
-	 * that these locks are locked in the same order where ever both are
-	 * locked.
-	 */
-	pthread_mutex_unlock(&cpu->cBoxIPRMutex);
-	pthread_mutex_unlock(&cpu->dtagMutex);
-	pthread_mutex_unlock(&cpu->dCacheMutex);
+  /*
+   * Finally we need to unlock access to the Dcache and Dtag.  Always unlock
+   * in the reverse order of how they were locked.  Also,  always make sure
+   * that these locks are locked in the same order where ever both are
+   * locked.
+   */
+  pthread_mutex_unlock(&cpu->cBoxIPRMutex);
+  pthread_mutex_unlock(&cpu->dtagMutex);
+  pthread_mutex_unlock(&cpu->dCacheMutex);
     }
 
     /*
@@ -1685,11 +1685,11 @@ void AXP_Dcache_Lock(AXP_21264_CPU *cpu, u64 va, u64 pa)
      * eviction, but not all the writers have been retired.
      */
     if ((cpu->dtag[index][0].valid == true)
-	&& (cpu->dtag[index][0].physTag == tag))
-	cpu->dtag[index][0].lockers++;
+  && (cpu->dtag[index][0].physTag == tag))
+  cpu->dtag[index][0].lockers++;
     else if ((sets == 2) && (cpu->dtag[index][1].valid == true)
-	&& (cpu->dtag[index][1].physTag == tag))
-	cpu->dtag[index][1].lockers++;
+  && (cpu->dtag[index][1].physTag == tag))
+  cpu->dtag[index][1].lockers++;
 
     /*
      * Return back to that caller.
@@ -1755,7 +1755,7 @@ bool AXP_DcacheRead(
     .va = pa
     };
     i32 lenOver = ((va % AXP_DCACHE_DATA_LEN) + len - 1)
-	- (AXP_DCACHE_DATA_LEN - 1);
+  - (AXP_DCACHE_DATA_LEN - 1);
     u32 ii;
     u32 sets;
 
@@ -1789,14 +1789,14 @@ bool AXP_DcacheRead(
      */
     if ((len < 64) && (lenOver > 0))
     {
-	retVal = AXP_DcacheRead(
-	    cpu,
-	    va + AXP_DCACHE_DATA_LEN,
-	    pa + AXP_DCACHE_DATA_LEN,
-	    (u32) lenOver,
-	    (void *) ((u8 *) data + len - lenOver),
-	    NULL);
-	len -= lenOver;
+  retVal = AXP_DcacheRead(
+      cpu,
+      va + AXP_DCACHE_DATA_LEN,
+      pa + AXP_DCACHE_DATA_LEN,
+      (u32) lenOver,
+      (void *) ((u8 *) data + len - lenOver),
+      NULL);
+  len -= lenOver;
     }
 
     /*
@@ -1833,27 +1833,27 @@ bool AXP_DcacheRead(
      */
     for (ii = 0; ii < sets; ii++)
     {
-	if ((cpu->dtag[virtAddr.vaIdx.index][ii].valid == true)
-	    && (cpu->dtag[virtAddr.vaIdx.index][ii].physTag
-		== physAddr.vaIdxInfo.tag))
-	{
+  if ((cpu->dtag[virtAddr.vaIdx.index][ii].valid == true)
+      && (cpu->dtag[virtAddr.vaIdx.index][ii].physTag
+    == physAddr.vaIdxInfo.tag))
+  {
 
-	    /*
-	     * Combine the index and set associated with this data and return
-	     * that into the caller supplied parameter.
-	     */
-	    indexAndSet.index = virtAddr.vaIdx.index;
-	    indexAndSet.offset = virtAddr.vaIdx.offset;
-	    indexAndSet.set = ii;
-	    if (idxSet != NULL)
-		*idxSet = indexAndSet;
+      /*
+       * Combine the index and set associated with this data and return
+       * that into the caller supplied parameter.
+       */
+      indexAndSet.index = virtAddr.vaIdx.index;
+      indexAndSet.offset = virtAddr.vaIdx.offset;
+      indexAndSet.set = ii;
+      if (idxSet != NULL)
+    *idxSet = indexAndSet;
 
-	    /*
-	     * Indicate that we are returning the data requested.
-	     */
-	    retVal = true;
-	    break;
-	}
+      /*
+       * Indicate that we are returning the data requested.
+       */
+      retVal = true;
+      break;
+  }
     }
     pthread_mutex_unlock(&cpu->dtagMutex);
 
@@ -1863,36 +1863,36 @@ bool AXP_DcacheRead(
      */
     if (retVal == true)
     {
-	u32 index = indexAndSet.index;
-	u32 offset = indexAndSet.offset;
-	u32 set = indexAndSet.set;
+  u32 index = indexAndSet.index;
+  u32 offset = indexAndSet.offset;
+  u32 set = indexAndSet.set;
 
-	switch (len)
-	{
-	    case 1:
-		*((u8 *) data) =
-		    *((u8 *) &cpu->dCache[index][set].data[offset]);
-		break;
+  switch (len)
+  {
+      case 1:
+    *((u8 *) data) =
+        *((u8 *) &cpu->dCache[index][set].data[offset]);
+    break;
 
-	    case 2:
-		*((u16 *) data) =
-		    *((u16 *) &cpu->dCache[index][set].data[offset]);
-		break;
+      case 2:
+    *((u16 *) data) =
+        *((u16 *) &cpu->dCache[index][set].data[offset]);
+    break;
 
-	    case 4:
-		*((u32 *) data) =
-		    *((u32 *) &cpu->dCache[index][set].data[offset]);
-		break;
+      case 4:
+    *((u32 *) data) =
+        *((u32 *) &cpu->dCache[index][set].data[offset]);
+    break;
 
-	    case 8:
-		*((u64 *) data) =
-		    *((u64 *) &cpu->dCache[index][set].data[offset]);
-		break;
+      case 8:
+    *((u64 *) data) =
+        *((u64 *) &cpu->dCache[index][set].data[offset]);
+    break;
 
-	    default:
-		memcpy(data, &cpu->dCache[index][set].data[offset], len);
-		break;
-	}
+      default:
+    memcpy(data, &cpu->dCache[index][set].data[offset], len);
+    break;
+  }
     }
 
     /*
@@ -1963,14 +1963,14 @@ void AXP_IcacheAdd(
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_IcacheAdd at pc = 0x%016llx (0x%08x) for tlb: 0x%016llx called.",
-	    *((u64 *) &pc),
-	    *nextInst,
-	    (u64 *) itb);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_IcacheAdd at pc = 0x%016llx (0x%08x) for tlb: 0x%016llx called.",
+      *((u64 *) &pc),
+      *nextInst,
+      (u64 *) itb);
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -2002,38 +2002,38 @@ void AXP_IcacheAdd(
     if (sets == 2)
     {
 
-	/*
-	 * First see if set zero or set one are not currently in use.  If so,
-	 * then use the first one found.  If both are currently in use, we need
-	 * to evict one.  Use the set_0_1 bit in set zero to determine which
-	 * one to select.  If set_0_1 equals 1, then use set zero.  Otherwise,
-	 * use set one.  This is kind of a round-robin methodology.
-	 */
-	if (cpu->iCache[index][0].vb == 0)
-	{
-	    whichSet = 0;
-	    cpu->iCache[index][0].set_0_1 = 1;
-	}
-	else if (cpu->iCache[index][1].vb == 0)
-	{
-	    whichSet = 1;
-	    cpu->iCache[index][0].set_0_1 = 0;
-	}
-	else if (cpu->iCache[index][0].set_0_1 == 0)
-	{
-	    whichSet = 0;
-	    cpu->iCache[index][0].set_0_1 = 1;
-	}
-	else
-	{
-	    whichSet = 1;
-	    cpu->iCache[index][0].set_0_1 = 0;
-	}
+  /*
+   * First see if set zero or set one are not currently in use.  If so,
+   * then use the first one found.  If both are currently in use, we need
+   * to evict one.  Use the set_0_1 bit in set zero to determine which
+   * one to select.  If set_0_1 equals 1, then use set zero.  Otherwise,
+   * use set one.  This is kind of a round-robin methodology.
+   */
+  if (cpu->iCache[index][0].vb == 0)
+  {
+      whichSet = 0;
+      cpu->iCache[index][0].set_0_1 = 1;
+  }
+  else if (cpu->iCache[index][1].vb == 0)
+  {
+      whichSet = 1;
+      cpu->iCache[index][0].set_0_1 = 0;
+  }
+  else if (cpu->iCache[index][0].set_0_1 == 0)
+  {
+      whichSet = 0;
+      cpu->iCache[index][0].set_0_1 = 1;
+  }
+  else
+  {
+      whichSet = 1;
+      cpu->iCache[index][0].set_0_1 = 0;
+  }
     }
     else
     {
-	whichSet = 0; /* just one set is in use. */
-	cpu->iCache[index][0].set_0_1 = 0;
+  whichSet = 0; /* just one set is in use. */
+  cpu->iCache[index][0].set_0_1 = 0;
     }
 
     /*
@@ -2049,7 +2049,7 @@ void AXP_IcacheAdd(
     cpu->iCache[index][whichSet].vb = 1;
     cpu->iCache[index][whichSet].tag = tag;
     for (ii = 0; ii < AXP_ICACHE_LINE_INS; ii++)
-	cpu->iCache[index][whichSet].instructions[ii].instr = nextInst[ii];
+  cpu->iCache[index][whichSet].instructions[ii].instr = nextInst[ii];
 
     /*
      * Return back to the caller.
@@ -2058,13 +2058,13 @@ void AXP_IcacheAdd(
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_IcacheAdd added at iCache[%u][%u].",
-	    index,
-	    whichSet);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_IcacheAdd added at iCache[%u][%u].",
+      index,
+      whichSet);
+  AXP_TRACE_END()
+  ;
     }
     return;
 }
@@ -2096,10 +2096,10 @@ void AXP_IcacheFlush(AXP_21264_CPU *cpu, bool purgeAsm)
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_IcacheFlush (asm: %d) called.", purgeAsm);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_IcacheFlush (asm: %d) called.", purgeAsm);
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -2111,57 +2111,57 @@ void AXP_IcacheFlush(AXP_21264_CPU *cpu, bool purgeAsm)
     for (ii = 0; ii < AXP_CACHE_ENTRIES; ii++)
     {
 
-	/*
-	 * Purge the cache entry based on the setting of the purgeAsm flag.
-	 *
-	 * Set Zero
-	 */
-	if (cpu->iCache[ii][0].vb == 1)
-	{
-	    if (((purgeAsm == true) && (cpu->iCache[ii][0]._asm == 0))
-		|| (purgeAsm == false))
-	    {
-		cpu->iCache[ii][0].kre = 0;
-		cpu->iCache[ii][0].ere = 0;
-		cpu->iCache[ii][0].sre = 0;
-		cpu->iCache[ii][0].ure = 0;
-		cpu->iCache[ii][0]._asm = 0;
-		cpu->iCache[ii][0].asn = 0;
-		cpu->iCache[ii][0].pal = 0;
-		cpu->iCache[ii][0].vb = 0;
-		cpu->iCache[ii][0].tag = 0;
-		for (jj = 0; jj < AXP_ICACHE_LINE_INS; jj++)
-		    memset(
-			&cpu->iCache[ii][0].instructions[jj],
-			0,
-			sizeof(AXP_INS_FMT));
-	    }
-	}
+  /*
+   * Purge the cache entry based on the setting of the purgeAsm flag.
+   *
+   * Set Zero
+   */
+  if (cpu->iCache[ii][0].vb == 1)
+  {
+      if (((purgeAsm == true) && (cpu->iCache[ii][0]._asm == 0))
+    || (purgeAsm == false))
+      {
+    cpu->iCache[ii][0].kre = 0;
+    cpu->iCache[ii][0].ere = 0;
+    cpu->iCache[ii][0].sre = 0;
+    cpu->iCache[ii][0].ure = 0;
+    cpu->iCache[ii][0]._asm = 0;
+    cpu->iCache[ii][0].asn = 0;
+    cpu->iCache[ii][0].pal = 0;
+    cpu->iCache[ii][0].vb = 0;
+    cpu->iCache[ii][0].tag = 0;
+    for (jj = 0; jj < AXP_ICACHE_LINE_INS; jj++)
+        memset(
+      &cpu->iCache[ii][0].instructions[jj],
+      0,
+      sizeof(AXP_INS_FMT));
+      }
+  }
 
-	/*
-	 * Set One
-	 */
-	if (cpu->iCache[ii][1].vb == 1)
-	{
-	    if (((purgeAsm == true) && (cpu->iCache[ii][1]._asm == 0))
-		|| (purgeAsm == false))
-	    {
-		cpu->iCache[ii][1].kre = 0;
-		cpu->iCache[ii][1].ere = 0;
-		cpu->iCache[ii][1].sre = 0;
-		cpu->iCache[ii][1].ure = 0;
-		cpu->iCache[ii][1]._asm = 0;
-		cpu->iCache[ii][1].asn = 0;
-		cpu->iCache[ii][1].pal = 0;
-		cpu->iCache[ii][1].vb = 0;
-		cpu->iCache[ii][1].tag = 0;
-		for (jj = 0; jj < AXP_ICACHE_LINE_INS; jj++)
-		    memset(
-			&cpu->iCache[ii][1].instructions[jj],
-			0,
-			sizeof(AXP_INS_FMT));
-	    }
-	}
+  /*
+   * Set One
+   */
+  if (cpu->iCache[ii][1].vb == 1)
+  {
+      if (((purgeAsm == true) && (cpu->iCache[ii][1]._asm == 0))
+    || (purgeAsm == false))
+      {
+    cpu->iCache[ii][1].kre = 0;
+    cpu->iCache[ii][1].ere = 0;
+    cpu->iCache[ii][1].sre = 0;
+    cpu->iCache[ii][1].ure = 0;
+    cpu->iCache[ii][1]._asm = 0;
+    cpu->iCache[ii][1].asn = 0;
+    cpu->iCache[ii][1].pal = 0;
+    cpu->iCache[ii][1].vb = 0;
+    cpu->iCache[ii][1].tag = 0;
+    for (jj = 0; jj < AXP_ICACHE_LINE_INS; jj++)
+        memset(
+      &cpu->iCache[ii][1].instructions[jj],
+      0,
+      sizeof(AXP_INS_FMT));
+      }
+  }
     }
 
     /*
@@ -2173,18 +2173,18 @@ void AXP_IcacheFlush(AXP_21264_CPU *cpu, bool purgeAsm)
 
 /*
  * AXP_IcacheFetch
- * 	The instruction pre-fetcher (pre-decode) reads an octaword (16 bytes), 
- * 	containing up to four naturally aligned instructions per cycle from the 
- * 	Icache.  Branch prediction and line prediction bits accompany the four 
- * 	instructions.  The branch prediction scheme operates most efficiently when 
- * 	there is only one branch instruction is contained in the four fetched 
- * 	instructions. 
- * 
- * 	An entry from the subroutine prediction stack, together with set 
- * 	prediction bits for use by the Icache stream controller, are fetched along 
- * 	with the octaword.  The Icache stream controller generates fetch requests 
- * 	for additional cache lines and stores the Istream data in the Icache. There 
- * 	is no separate buffer to hold Istream requests. 
+ * 	The instruction pre-fetcher (pre-decode) reads an octaword (16 bytes),
+ * 	containing up to four naturally aligned instructions per cycle from the
+ * 	Icache.  Branch prediction and line prediction bits accompany the four
+ * 	instructions.  The branch prediction scheme operates most efficiently when
+ * 	there is only one branch instruction is contained in the four fetched
+ * 	instructions.
+ *
+ * 	An entry from the subroutine prediction stack, together with set
+ * 	prediction bits for use by the Icache stream controller, are fetched along
+ * 	with the octaword.  The Icache stream controller generates fetch requests
+ * 	for additional cache lines and stores the Istream data in the Icache. There
+ * 	is no separate buffer to hold Istream requests.
  *
  * Input Parameters:
  * 	cpu:
@@ -2219,12 +2219,12 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_IcacheFetch for pc = 0x%016llx called.",
-	    *((u64 *) &pc));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_IcacheFetch for pc = 0x%016llx called.",
+      *((u64 *) &pc));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -2255,16 +2255,16 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
     sets = (cpu->iCtl.ic_en == 1) ? 1 : 2;
 
     if ((cpu->iCache[index][next->setPrediction].vb == 1)
-	&& (cpu->iCache[index][next->setPrediction].tag == tag))
+  && (cpu->iCache[index][next->setPrediction].tag == tag))
     {
-	whichSet = next->setPrediction;
-	retVal = true;
+  whichSet = next->setPrediction;
+  retVal = true;
     }
     else if ((cpu->iCache[index][(next->setPrediction + 1) & 1].vb == 1)
-	&& (cpu->iCache[index][(next->setPrediction + 1) & 1].tag == tag))
+  && (cpu->iCache[index][(next->setPrediction + 1) & 1].tag == tag))
     {
-	whichSet = (next->setPrediction + 1) & 1;
-	retVal = true;
+  whichSet = (next->setPrediction + 1) & 1;
+  retVal = true;
     }
 
     /*
@@ -2273,58 +2273,58 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
      */
     if (retVal == true)
     {
-	tmpPC = pc;
-	for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
-	{
-	    next->instructions[ii] =
-		cpu->iCache[index][whichSet].instructions[offset + ii];
-	    next->instrType[ii] = AXP_InstructionFormat(next->instructions[ii]);
-	    next->instrPC[ii] = tmpPC;
-	    tmpPC.pc++;
-	}
+  tmpPC = pc;
+  for (ii = 0; ii < AXP_NUM_FETCH_INS; ii++)
+  {
+      next->instructions[ii] =
+    cpu->iCache[index][whichSet].instructions[offset + ii];
+      next->instrType[ii] = AXP_InstructionFormat(next->instructions[ii]);
+      next->instrPC[ii] = tmpPC;
+      tmpPC.pc++;
+  }
 
-	/*
-	 * Line (index) and Set prediction, at this point, should indicate the
-	 * next instruction to be read from the cache (it could be the current
-	 * list and set).  The following logic is used:
-	 *
-	 * If there are instructions left in the current cache line, then we
-	 * 		use the same line and set
-	 * Otherwise,
-	 * 	If we are only utilizing a single set, then we go to the next line
-	 * 		and the same set
-	 * 	Otherwise,
-	 * 		If we are at the first set, then we go to the next set on the
-	 * 			same line
-	 * 		Otherwise,
-	 * 			We go to the next line and the first set.
-	 *
-	 * NOTE: When the prediction code is run, it may recalculate these
-	 * 		 values.
-	 */
-	if ((offset + AXP_NUM_FETCH_INS + 1) < AXP_ICACHE_LINE_INS)
-	{
-	    next->linePrediction = index; /* same line */
-	    next->setPrediction = whichSet; /* same set */
-	}
-	else
-	{
-	    if (sets == 1)
-	    {
-		next->linePrediction = index + 1; /* next line */
-		next->setPrediction = 0; /* only set */
-	    }
-	    else if (whichSet == 0)
-	    {
-		next->linePrediction = index + 1; /* same line */
-		next->setPrediction = 1; /* second set */
-	    }
-	    else
-	    {
-		next->linePrediction = index + 1; /* next line */
-		next->setPrediction = 0; /* first set */
-	    }
-	}
+  /*
+   * Line (index) and Set prediction, at this point, should indicate the
+   * next instruction to be read from the cache (it could be the current
+   * list and set).  The following logic is used:
+   *
+   * If there are instructions left in the current cache line, then we
+   * 		use the same line and set
+   * Otherwise,
+   * 	If we are only utilizing a single set, then we go to the next line
+   * 		and the same set
+   * 	Otherwise,
+   * 		If we are at the first set, then we go to the next set on the
+   * 			same line
+   * 		Otherwise,
+   * 			We go to the next line and the first set.
+   *
+   * NOTE: When the prediction code is run, it may recalculate these
+   * 		 values.
+   */
+  if ((offset + AXP_NUM_FETCH_INS + 1) < AXP_ICACHE_LINE_INS)
+  {
+      next->linePrediction = index; /* same line */
+      next->setPrediction = whichSet; /* same set */
+  }
+  else
+  {
+      if (sets == 1)
+      {
+    next->linePrediction = index + 1; /* next line */
+    next->setPrediction = 0; /* only set */
+      }
+      else if (whichSet == 0)
+      {
+    next->linePrediction = index + 1; /* same line */
+    next->setPrediction = 1; /* second set */
+      }
+      else
+      {
+    next->linePrediction = index + 1; /* next line */
+    next->setPrediction = 0; /* first set */
+      }
+  }
     }
 
     /*
@@ -2334,14 +2334,14 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_IcacheFetch returning iCache[%u][%u] with status %d.",
-	    index,
-	    whichSet,
-	    retVal);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_IcacheFetch returning iCache[%u][%u] with status %d.",
+      index,
+      whichSet,
+      retVal);
+  AXP_TRACE_END()
+  ;
     }
 
     return (retVal);
@@ -2381,12 +2381,12 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "AXP_IcacheValid at pc = 0x%016llx called.",
-	    *((u64 *) &pc));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "AXP_IcacheValid at pc = 0x%016llx called.",
+      *((u64 *) &pc));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -2418,9 +2418,9 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
 
     for (ii = 0; ((ii < sets) & (retVal == false)); ii++)
     {
-	if ((cpu->iCache[index][ii].vb == 1)
-	    && (cpu->iCache[index][ii].tag == tag))
-	    retVal = true;
+  if ((cpu->iCache[index][ii].vb == 1)
+      && (cpu->iCache[index][ii].tag == tag))
+      retVal = true;
     }
 
     /*
@@ -2430,10 +2430,10 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
 
     if (AXP_CACHE_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_IcacheValid return status %d.", retVal);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_IcacheValid return status %d.", retVal);
+  AXP_TRACE_END()
+  ;
     }
     return (retVal);
 }

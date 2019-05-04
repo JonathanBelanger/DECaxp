@@ -30,7 +30,7 @@ target_link_libraries(DECaxp_Generate_SROM PRIVATE
     CommonUtilities)
 
 target_include_directories(DECaxp_Generate_SROM PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 
 add_executable(DECaxp
     DECaxp.c)
@@ -42,5 +42,5 @@ target_link_libraries(DECaxp PRIVATE
     Devices)
 
 target_include_directories(DECaxp PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)
 

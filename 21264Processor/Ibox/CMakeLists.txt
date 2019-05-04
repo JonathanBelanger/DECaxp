@@ -31,4 +31,4 @@ add_library(Ibox STATIC
     AXP_21264_Ibox.c)
 
 target_include_directories(Ibox PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

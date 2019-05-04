@@ -1,69 +1,69 @@
 DECemu Interfaces
 
-	Ibox
-		Ebox
-			IQ - Integer Issue Queue
-		Fbox
-			FQ - Floating-Point Issue Queue
-		Cbox
-			MAF - Miss Address File (for iCache fills)
-		Ibox
-			EQ - Event Queue (Icache Miss and ITB miss)
-	Ebox
-		L0
-			Mbox
-				LQ - Load Queue
-				SQ - Store Queue
-			Ibox
-				Retire Unit
-		U0
-			Ibox
-				Retire Unit
-		L1
-			Mbox
-				LQ - Load Queue
-				SQ - Store Queue
-			Ibox
-				Retire Unit
-		U1
-			Ibox
-				Retire Unit
-	Fbox
-		FP0
-			Ibox
-				Retire Unit
-			Mbox
-				LQ - Load Queue
-				SQ - Store Queue
-		FP1
-			Ibox
-				Retire Unit
-			Mbox
-				LQ - Load Queue
-				SQ - Store Queue
-	Mbox
-		Cbox
-			MAF - Miss Address File (for dCache and I/O Reads)
-			IOWB - I/O Write Buffer
-			CTAG - Cbox Duplicate Tag (Physically Indexed, Virtually Tagged)
-			VB - Victim Buffer
-			Dcache - (Write dirty to Memory)
-		Ibox
-			EQ - Dchace miss and DTB miss
-	Cbox
-		Ibox
-			Icache - (Istream Fill - Virtually Indexed, Virtually Tagged)
-			EQ - IRQ events
-		Mbox
-			DTAG - Duplicate Dcache Tag (Virtually Indexed, Physically Tagged)
-			Dcache - (Dstream Fill - Virtually Indexed, Physically Tagged)
-		System
-			PQ - (Probe Queue)
-			SysAddIn - SysAddIn_L[14:0] pins (Messages and Data received from System)
-			SysAddOut - SysAddOut_L[14:0] pins (Messages and Data sent to the System)
-			IRQ - IRQ_H[5:0] pins for Interrupts from System
-	System
-		Cbox
-			SysAddOut - SysAddOut_L[14:0] pins (Messages and Data received from CPU)
-			SysAddIn - SysAddIn_L[14:0] pins (Messages and Data sent to CPU)
-			IRQ - IRQ_H[5:0] pins for Interrupt to CPU
+  Ibox
+    Ebox
+      IQ - Integer Issue Queue
+    Fbox
+      FQ - Floating-Point Issue Queue
+    Cbox
+      MAF - Miss Address File (for iCache fills)
+    Ibox
+      EQ - Event Queue (Icache Miss and ITB miss)
+  Ebox
+    L0
+      Mbox
+        LQ - Load Queue
+        SQ - Store Queue
+      Ibox
+        Retire Unit
+    U0
+      Ibox
+        Retire Unit
+    L1
+      Mbox
+        LQ - Load Queue
+        SQ - Store Queue
+      Ibox
+        Retire Unit
+    U1
+      Ibox
+        Retire Unit
+  Fbox
+    FP0
+      Ibox
+        Retire Unit
+      Mbox
+        LQ - Load Queue
+        SQ - Store Queue
+    FP1
+      Ibox
+        Retire Unit
+      Mbox
+        LQ - Load Queue
+        SQ - Store Queue
+  Mbox
+    Cbox
+      MAF - Miss Address File (for dCache and I/O Reads)
+      IOWB - I/O Write Buffer
+      CTAG - Cbox Duplicate Tag (Physically Indexed, Virtually Tagged)
+      VB - Victim Buffer
+      Dcache - (Write dirty to Memory)
+    Ibox
+      EQ - Dchace miss and DTB miss
+  Cbox
+    Ibox
+      Icache - (Istream Fill - Virtually Indexed, Virtually Tagged)
+      EQ - IRQ events
+    Mbox
+      DTAG - Duplicate Dcache Tag (Virtually Indexed, Physically Tagged)
+      Dcache - (Dstream Fill - Virtually Indexed, Physically Tagged)
+    System
+      PQ - (Probe Queue)
+      SysAddIn - SysAddIn_L[14:0] pins (Messages and Data received from System)
+      SysAddOut - SysAddOut_L[14:0] pins (Messages and Data sent to the System)
+      IRQ - IRQ_H[5:0] pins for Interrupts from System
+  System
+    Cbox
+      SysAddOut - SysAddOut_L[14:0] pins (Messages and Data received from CPU)
+      SysAddIn - SysAddIn_L[14:0] pins (Messages and Data sent to CPU)
+      IRQ - IRQ_H[5:0] pins for Interrupt to CPU

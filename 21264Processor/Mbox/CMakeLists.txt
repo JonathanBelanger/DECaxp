@@ -26,4 +26,4 @@ add_library(Mbox STATIC
     AXP_21264_Mbox.c)
 
 target_include_directories(Mbox PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

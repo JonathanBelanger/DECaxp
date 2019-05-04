@@ -305,15 +305,15 @@ typedef struct
  * Function Prototypes
  */
 u32 _AXP_VHDX_Create(
-		char *,
-		AXP_VHD_CREATE_FLAG,
-		char *,
-		u32,
-		u64,
-		u32,
-		u32,
-		u32,
-		AXP_VHD_HANDLE *);
+    char *,
+    AXP_VHD_CREATE_FLAG,
+    char *,
+    u32,
+    u64,
+    u32,
+    u32,
+    u32,
+    AXP_VHD_HANDLE *);
 u32 _AXP_VHDX_Open(char *, AXP_VHD_OPEN_FLAG, u32, AXP_VHD_HANDLE *);
 
 #endif /* _AXP_VHDX_H_ */

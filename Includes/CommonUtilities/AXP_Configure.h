@@ -349,13 +349,13 @@ typedef struct
     u64 bCacheSizeHigh;
     struct
     {
-	u32 ieeeRndInf :1; /* h/w support for rounding to +/-Inf */
-	u32 bwx :1; /* Byte/Word Extensions */
-	u32 mvi :1; /* Multimedia Extensions */
-	u32 fix :1; /* Integer to/from FP move and SQRT */
-	u32 cix :1; /* Counting and Finding Bits extension */
-	u32 pfmi :1; /* Prefetch with modify intent support */
-	u32 res :26;
+  u32 ieeeRndInf :1; /* h/w support for rounding to +/-Inf */
+  u32 bwx :1; /* Byte/Word Extensions */
+  u32 mvi :1; /* Multimedia Extensions */
+  u32 fix :1; /* Integer to/from FP move and SQRT */
+  u32 cix :1; /* Counting and Finding Bits extension */
+  u32 pfmi :1; /* Prefetch with modify intent support */
+  u32 res :26;
     } isa;
 } AXP_CPU_CONFIG;
 
@@ -483,15 +483,15 @@ typedef struct
     AXP_21264_OWNER_INFO owner;
     struct
     {
-	AXP_21264_DISK_INFO *disks;
-	AXP_21264_NETWORK_INFO *networks;
-	AXP_21264_MODEL_INFO model;
-	AXP_21264_SROM_INFO srom;
-	AXP_21264_CPU_INFO cpus;
-	AXP_21264_DARRAY_INFO darrays;
-	AXP_21264_CONSOLE_INFO console;
-	u32 diskCount;
-	u32 networkCount;
+  AXP_21264_DISK_INFO *disks;
+  AXP_21264_NETWORK_INFO *networks;
+  AXP_21264_MODEL_INFO model;
+  AXP_21264_SROM_INFO srom;
+  AXP_21264_CPU_INFO cpus;
+  AXP_21264_DARRAY_INFO darrays;
+  AXP_21264_CONSOLE_INFO console;
+  u32 diskCount;
+  u32 networkCount;
     } system;
 } AXP_21264_CONFIG;
 

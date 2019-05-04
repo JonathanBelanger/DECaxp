@@ -34,4 +34,5 @@ add_library(CommonUtilities STATIC
     AXP_Utility.c)
 
 target_include_directories(CommonUtilities PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes
+    /usr/include/libxml2)

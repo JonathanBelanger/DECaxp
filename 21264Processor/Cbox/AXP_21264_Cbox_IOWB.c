@@ -58,15 +58,15 @@ int AXP_21264_IOWB_Empty(AXP_21264_CPU *cpu)
 
     if (cpu->iowbTop > cpu->iowbBottom)
     {
-	start1 = cpu->iowbTop;
-	end1 = AXP_21264_IOWB_LEN - 1;
-	start2 = 0;
-	end2 = cpu->iowbBottom;
+  start1 = cpu->iowbTop;
+  end1 = AXP_21264_IOWB_LEN - 1;
+  start2 = 0;
+  end2 = cpu->iowbBottom;
     }
     else
     {
-	start1 = cpu->iowbTop;
-	end1 = cpu->iowbBottom;
+  start1 = cpu->iowbTop;
+  end1 = cpu->iowbBottom;
     }
 
     /*
@@ -76,16 +76,16 @@ int AXP_21264_IOWB_Empty(AXP_21264_CPU *cpu)
     end = end1;
     while ((ii <= end) && (retVal == -1))
     {
-	if ((cpu->iowb[ii].valid == true) && (cpu->iowb[ii].processed == false))
-	    retVal = ii;
-	if ((retVal == -1) && (start2 != -1) && (ii = end))
-	{
-	    ii = start2;
-	    end = end2;
-	    start2 = -1;
-	}
-	else
-	    ii++;
+  if ((cpu->iowb[ii].valid == true) && (cpu->iowb[ii].processed == false))
+      retVal = ii;
+  if ((retVal == -1) && (start2 != -1) && (ii = end))
+  {
+      ii = start2;
+      end = end2;
+      start2 = -1;
+  }
+  else
+      ii++;
     }
 
     /*
@@ -122,21 +122,21 @@ void AXP_21264_Process_IOWB(AXP_21264_CPU *cpu, int entry)
      */
     switch (iowb->storeLen)
     {
-	case BYTE_LEN:
-	    sys.cmd = WrBytes;
-	    break;
+  case BYTE_LEN:
+      sys.cmd = WrBytes;
+      break;
 
-	case WORD_LEN:
-	    sys.cmd = WrBytes;
-	    break;
+  case WORD_LEN:
+      sys.cmd = WrBytes;
+      break;
 
-	case LONG_LEN:
-	    sys.cmd = WrLWs;
-	    break;
+  case LONG_LEN:
+      sys.cmd = WrLWs;
+      break;
 
-	case QUAD_LEN:
-	    sys.cmd = WrQWs;
-	    break;
+  case QUAD_LEN:
+      sys.cmd = WrQWs;
+      break;
     }
 
     /*
@@ -208,25 +208,25 @@ bool AXP_21264_Merge_IOWB(
      * not yet been processed, and the block is for aligned values.
      */
     if ((iowb->valid == true) && (iowb->storeLen == dataLen)
-	&& (iowb->processed == false))
+  && (iowb->processed == false))
     {
-	paEnd = iowb->pa + iowb->bufLen;
+  paEnd = iowb->pa + iowb->bufLen;
 
-	/*
-	 * If the merge register is not full, then copy this next block
-	 * into it and update the length.  Also, indicate that an IOWB
-	 * does not need to be allocated.
-	 */
-	if ((paEnd <= pa) && ((pa + dataLen) <= (iowb->pa + maxLen)))
-	{
-	    if (dataLen == LONG_LEN)
-		*((u32 *) &iowb->sysData[pa - iowb->pa]) = *((u32 *) data);
-	    else
-		*((u64 *) &iowb->sysData[pa - iowb->pa]) = *((u64 *) data);
-	    iowb->bufLen = (pa + dataLen) - iowb->pa;
-	    AXP_MaskSet(&iowb->mask, iowb->pa, pa, dataLen);
-	    retVal = false;
-	}
+  /*
+   * If the merge register is not full, then copy this next block
+   * into it and update the length.  Also, indicate that an IOWB
+   * does not need to be allocated.
+   */
+  if ((paEnd <= pa) && ((pa + dataLen) <= (iowb->pa + maxLen)))
+  {
+      if (dataLen == LONG_LEN)
+    *((u32 *) &iowb->sysData[pa - iowb->pa]) = *((u32 *) data);
+      else
+    *((u64 *) &iowb->sysData[pa - iowb->pa]) = *((u64 *) data);
+      iowb->bufLen = (pa + dataLen) - iowb->pa;
+      AXP_MaskSet(&iowb->mask, iowb->pa, pa, dataLen);
+      retVal = false;
+  }
     }
 
     /*
@@ -307,58 +307,58 @@ void AXP_21264_Add_IOWB(
      */
     if ((dataLen != BYTE_LEN) || (dataLen != WORD_LEN)) /* Don't merge Bytes/Words */
     {
-	int maxLen;
-	int end, start1, end1, start2 = -1, end2 = -1;
+  int maxLen;
+  int end, start1, end1, start2 = -1, end2 = -1;
 
-	if (cpu->iowbTop > cpu->iowbBottom)
-	{
-	    start1 = cpu->iowbTop;
-	    end1 = AXP_21264_IOWB_LEN - 1;
-	    start2 = 0;
-	    end2 = cpu->iowbBottom;
-	}
-	else
-	{
-	    start1 = cpu->iowbTop;
-	    end1 = cpu->iowbBottom;
-	}
+  if (cpu->iowbTop > cpu->iowbBottom)
+  {
+      start1 = cpu->iowbTop;
+      end1 = AXP_21264_IOWB_LEN - 1;
+      start2 = 0;
+      end2 = cpu->iowbBottom;
+  }
+  else
+  {
+      start1 = cpu->iowbTop;
+      end1 = cpu->iowbBottom;
+  }
 
-	/*
-	 * We either have a longword or a quadword.  Longwords can be merged
-	 * upto 32-bytes long.  Quadwords can either be merged upto 64-bytes or
-	 * 32-bytes, depending upon the setting of the 32_BYTE_IO field in the
-	 * Cbox CSR.
-	 */
-	if (((dataLen == QUAD_LEN) && (cpu->csr.ThirtyTwoByteIo == 1))
-	    || (dataLen == LONG_LEN))
-	    maxLen = AXP_21264_SIZE_LONG;
-	else
-	    maxLen = AXP_21264_SIZE_QUAD;
+  /*
+   * We either have a longword or a quadword.  Longwords can be merged
+   * upto 32-bytes long.  Quadwords can either be merged upto 64-bytes or
+   * 32-bytes, depending upon the setting of the 32_BYTE_IO field in the
+   * Cbox CSR.
+   */
+  if (((dataLen == QUAD_LEN) && (cpu->csr.ThirtyTwoByteIo == 1))
+      || (dataLen == LONG_LEN))
+      maxLen = AXP_21264_SIZE_LONG;
+  else
+      maxLen = AXP_21264_SIZE_QUAD;
 
-	/*
-	 * Search through each of the allocated IOWBs and see if they are
-	 * candidates for merging.
-	 */
-	ii = start1;
-	end = end1;
-	while ((ii <= end) && (allocateIOWB == true))
-	{
-	    allocateIOWB = AXP_21264_Merge_IOWB(
-		&cpu->iowb[ii],
-		pa,
-		lqSqEntry,
-		data,
-		dataLen,
-		maxLen);
-	    if ((allocateIOWB == false) && (start2 != -1) && (ii = end))
-	    {
-		ii = start2;
-		end = end2;
-		start2 = -1;
-	    }
-	    else
-		ii++;
-	}
+  /*
+   * Search through each of the allocated IOWBs and see if they are
+   * candidates for merging.
+   */
+  ii = start1;
+  end = end1;
+  while ((ii <= end) && (allocateIOWB == true))
+  {
+      allocateIOWB = AXP_21264_Merge_IOWB(
+    &cpu->iowb[ii],
+    pa,
+    lqSqEntry,
+    data,
+    dataLen,
+    maxLen);
+      if ((allocateIOWB == false) && (start2 != -1) && (ii = end))
+      {
+    ii = start2;
+    end = end2;
+    start2 = -1;
+      }
+      else
+    ii++;
+  }
     }
 
     /*
@@ -367,23 +367,23 @@ void AXP_21264_Add_IOWB(
      */
     if (allocateIOWB == true)
     {
-	if (cpu->iowb[cpu->iowbBottom].valid == true)
-	    cpu->iowbBottom = (cpu->iowbBottom + 1) & 0x03;
-	iowb = &cpu->iowb[cpu->iowbBottom];
-	iowb->pa = pa;
-	iowb->lqSqEntry[0] = lqSqEntry;
-	for (ii = 1; ii < AXP_21264_MBOX_MAX; ii++)
-	    iowb->lqSqEntry[ii] = 0;
-	iowb->storeLen = iowb->bufLen = dataLen;
-	if (data != NULL) /* this is a store */
-	    memcpy(iowb->sysData, data, dataLen);
-	else
-	    memset(iowb->sysData, 0, sizeof(iowb->sysData));
-	iowb->bufLen = dataLen;
-	AXP_MaskReset(&iowb->mask);
-	AXP_MaskSet(&iowb->mask, iowb->pa, pa, dataLen);
-	iowb->processed = false;
-	iowb->valid = true;
+  if (cpu->iowb[cpu->iowbBottom].valid == true)
+      cpu->iowbBottom = (cpu->iowbBottom + 1) & 0x03;
+  iowb = &cpu->iowb[cpu->iowbBottom];
+  iowb->pa = pa;
+  iowb->lqSqEntry[0] = lqSqEntry;
+  for (ii = 1; ii < AXP_21264_MBOX_MAX; ii++)
+      iowb->lqSqEntry[ii] = 0;
+  iowb->storeLen = iowb->bufLen = dataLen;
+  if (data != NULL) /* this is a store */
+      memcpy(iowb->sysData, data, dataLen);
+  else
+      memset(iowb->sysData, 0, sizeof(iowb->sysData));
+  iowb->bufLen = dataLen;
+  AXP_MaskReset(&iowb->mask);
+  AXP_MaskSet(&iowb->mask, iowb->pa, pa, dataLen);
+  iowb->processed = false;
+  iowb->valid = true;
     }
 
     /*
@@ -431,15 +431,15 @@ void AXP_21264_Free_IOWB(AXP_21264_CPU *cpu, u8 entry)
      */
     if (cpu->iowbTop > cpu->iowbBottom)
     {
-	start1 = cpu->iowbTop;
-	end1 = AXP_21264_IOWB_LEN - 1;
-	start2 = 0;
-	end2 = cpu->iowbBottom;
+  start1 = cpu->iowbTop;
+  end1 = AXP_21264_IOWB_LEN - 1;
+  start2 = 0;
+  end2 = cpu->iowbBottom;
     }
     else
     {
-	start1 = cpu->iowbTop;
-	end1 = cpu->iowbBottom;
+  start1 = cpu->iowbTop;
+  end1 = cpu->iowbBottom;
     }
 
     /*
@@ -449,18 +449,18 @@ void AXP_21264_Free_IOWB(AXP_21264_CPU *cpu, u8 entry)
     end = end1;
     while ((ii <= end) && (done == false))
     {
-	if (cpu->iowb[ii].valid == false)
-	    cpu->iowbTop = (cpu->iowbTop + 1) & 0x07;
-	else
-	    done = true;
-	if ((done == false) && (start2 != -1) && (ii == end))
-	{
-	    ii = start2;
-	    end = end2;
-	    start2 = -1;
-	}
-	else
-	    ii++;
+  if (cpu->iowb[ii].valid == false)
+      cpu->iowbTop = (cpu->iowbTop + 1) & 0x07;
+  else
+      done = true;
+  if ((done == false) && (start2 != -1) && (ii == end))
+  {
+      ii = start2;
+      end = end2;
+      start2 = -1;
+  }
+  else
+      ii++;
     }
 
     /*
@@ -469,8 +469,8 @@ void AXP_21264_Free_IOWB(AXP_21264_CPU *cpu, u8 entry)
      */
     for (ii = 0; ii < AXP_21264_MBOX_MAX; ii++)
     {
-	if (iowb->lqSqEntry != 0)
-	    AXP_21264_Mbox_CboxCompl(cpu, iowb->lqSqEntry[ii], NULL, 0, false);
+  if (iowb->lqSqEntry != 0)
+      AXP_21264_Mbox_CboxCompl(cpu, iowb->lqSqEntry[ii], NULL, 0, false);
     }
 
     /*

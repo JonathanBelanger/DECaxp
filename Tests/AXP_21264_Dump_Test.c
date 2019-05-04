@@ -57,50 +57,50 @@ u8	memory[EIGHT_M];
  */
 int AXP_21264_LoadMemory(char *fileName)
 {
-	bool	done = false;
-	FILE	*fp;
-	int		ii = 0;
-	u32		scratch;
+  bool	done = false;
+  FILE	*fp;
+  int		ii = 0;
+  u32		scratch;
 
-	fp = fopen(fileName, "r");
-	if (fp != NULL)
-	{
+  fp = fopen(fileName, "r");
+  if (fp != NULL)
+  {
 
-		/*
-		 * Skip the fist 576 (0x240) bytes of the file.
-		 */
-		for (ii = 0; ii < 0x240; ii++)
-		{
-			if (feof(fp))
-				break;
-			fread(&scratch, 1, 1, fp);
-		}
+    /*
+     * Skip the fist 576 (0x240) bytes of the file.
+     */
+    for (ii = 0; ii < 0x240; ii++)
+    {
+      if (feof(fp))
+        break;
+      fread(&scratch, 1, 1, fp);
+    }
 
-		/*
-		 * Now start reading the file.
-		 */
-		ii = 0;
-		while ((feof(fp) == 0) && (done == false))
-		{
-			fread(&memory[ii++], 1, 1, fp);
-			if (ii >= EIGHT_M)
-			{
-				printf(
-					"Input file %s is too big for %d Meg of memory.\n",
-					fileName,
-					(EIGHT_M/ONE_M));
-				ii = 0;
-				done = true;
-			}
-		}
-		fclose(fp);
-	}
-	else
-	{
-		printf("Unable to open file: %s\n", fileName);
-		ii = 0;
-	}
-	return(ii-1);	/* remove the EOF */
+    /*
+     * Now start reading the file.
+     */
+    ii = 0;
+    while ((feof(fp) == 0) && (done == false))
+    {
+      fread(&memory[ii++], 1, 1, fp);
+      if (ii >= EIGHT_M)
+      {
+        printf(
+          "Input file %s is too big for %d Meg of memory.\n",
+          fileName,
+          (EIGHT_M/ONE_M));
+        ii = 0;
+        done = true;
+      }
+    }
+    fclose(fp);
+  }
+  else
+  {
+    printf("Unable to open file: %s\n", fileName);
+    ii = 0;
+  }
+  return(ii-1);	/* remove the EOF */
 }
 
 /*
@@ -120,37 +120,37 @@ int AXP_21264_LoadMemory(char *fileName)
  */
 int main()
 {
-	char 	decodedLine[256];
-	u32		*instr;
-	AXP_PC	pc;
-	int		retVal = 0;
-	int		totalBytesRead = 0;
-	int		totalInstructions = 0;
-	int		ii;
+  char 	decodedLine[256];
+  u32		*instr;
+  AXP_PC	pc;
+  int		retVal = 0;
+  int		totalBytesRead = 0;
+  int		totalInstructions = 0;
+  int		ii;
 
-	printf("\nAXP 21264 Instruction Dumping Tester\n");
-	totalBytesRead = AXP_LoadExecutable(
-							"../dat/cl67srmrom.exe",
-							memory,
-							sizeof(memory));
-	if (totalBytesRead > 0)
-	{
-		totalInstructions = totalBytesRead / sizeof(AXP_INS_FMT);
-		instr = (u32 *) &memory[0];
-		pc.pal = 1;					/* Set the PALmode bit */
-		pc.res = 0;
-		for (ii = 0; ii < totalInstructions; ii++)
-		{
-			pc.pc = ii;
-			AXP_Decode_Instruction(
-				&pc,
-				(AXP_INS_FMT) instr[ii],
-				false,
-				decodedLine);
-			printf("%s\n", decodedLine);
-		}
-	}
-	else
-		retVal = -1;
-	return(retVal);
+  printf("\nAXP 21264 Instruction Dumping Tester\n");
+  totalBytesRead = AXP_LoadExecutable(
+              "../dat/cl67srmrom.exe",
+              memory,
+              sizeof(memory));
+  if (totalBytesRead > 0)
+  {
+    totalInstructions = totalBytesRead / sizeof(AXP_INS_FMT);
+    instr = (u32 *) &memory[0];
+    pc.pal = 1;					/* Set the PALmode bit */
+    pc.res = 0;
+    for (ii = 0; ii < totalInstructions; ii++)
+    {
+      pc.pc = ii;
+      AXP_Decode_Instruction(
+        &pc,
+        (AXP_INS_FMT) instr[ii],
+        false,
+        decodedLine);
+      printf("%s\n", decodedLine);
+    }
+  }
+  else
+    retVal = -1;
+  return(retVal);
 }

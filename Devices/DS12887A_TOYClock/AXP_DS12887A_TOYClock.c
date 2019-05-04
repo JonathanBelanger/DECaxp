@@ -141,7 +141,7 @@ static pthread_mutex_t rtcMutex = PTHREAD_MUTEX_INITIALIZER;
 #define AXP_DS12887A_LOCK		\
     pthread_mutex_lock(&rtcMutex);	\
     if (initialized == false)		\
-	AXP_DS12887A_Initialize()
+  AXP_DS12887A_Initialize()
 #define AXP_DS12887A_UNLOCK	pthread_mutex_unlock(&rtcMutex)
 
 /*
@@ -242,74 +242,74 @@ static int AXP_DS12887A_DST(u8 y, u8 M, u8 d, u8 h, u8 m, u8 s)
      */
     if (ctrlB->dse == 1)
     {
-	mid = (5 * year) / 4;		/* Middle part of the formula */
+  mid = (5 * year) / 4;		/* Middle part of the formula */
 
-	/*
-	 * If this is not European DST (US DST), then determine the
-	 * start and end month and day for DST.
-	 */
-	if (ctrlD->eu == 0)
-	{
+  /*
+   * If this is not European DST (US DST), then determine the
+   * start and end month and day for DST.
+   */
+  if (ctrlD->eu == 0)
+  {
 
-	    /*
-	     * For years prior to 2007, US DST:
-	     *	Starts: First Sunday in April at 2:00am.
-	     *	Ends: Last Sunday in October at 2:00am.
-	     */
-	    if (year < 2007)
-	    {
-		dstStart =
-		    (4 << 22) +				/* April */
-		    ((7-((4 + mid) % 7)) << 17) +	/* First Sunday */
-		    (2 << 12);				/* 2:00 am */
-		dstEnd =
-		    (10 << 22) +				/* October */
-		    ((31-((1 + mid) % 7)) << 17) +	/* Last Sunday */
-		    (2 << 12);				/* 2:00 am */
-	    }
+      /*
+       * For years prior to 2007, US DST:
+       *	Starts: First Sunday in April at 2:00am.
+       *	Ends: Last Sunday in October at 2:00am.
+       */
+      if (year < 2007)
+      {
+    dstStart =
+        (4 << 22) +				/* April */
+        ((7-((4 + mid) % 7)) << 17) +	/* First Sunday */
+        (2 << 12);				/* 2:00 am */
+    dstEnd =
+        (10 << 22) +				/* October */
+        ((31-((1 + mid) % 7)) << 17) +	/* Last Sunday */
+        (2 << 12);				/* 2:00 am */
+      }
 
-	    /*
-	     * For years starting in 2007, US DST:
-	     *	Starts: Second Sunday in March at 2:00am.
-	     *	Ends: First Sunday in November at 2:00am.
-	     */
-	    else
-	    {
-		dstStart =
-		    (3 << 22) +				/* March */
-		    ((14-((1 + mid) % 7)) << 17) +	/* Second Sunday */
-		    (2 << 12);				/* 2:00 am */
-		dstEnd =
-		    (11 << 22) +				/* November */
-		    ((7 - ((1 + mid) % 7)) << 17) +	/* First Sunday */
-		    (2 << 12);				/* 2:00 am */
-	    }
-	}
+      /*
+       * For years starting in 2007, US DST:
+       *	Starts: Second Sunday in March at 2:00am.
+       *	Ends: First Sunday in November at 2:00am.
+       */
+      else
+      {
+    dstStart =
+        (3 << 22) +				/* March */
+        ((14-((1 + mid) % 7)) << 17) +	/* Second Sunday */
+        (2 << 12);				/* 2:00 am */
+    dstEnd =
+        (11 << 22) +				/* November */
+        ((7 - ((1 + mid) % 7)) << 17) +	/* First Sunday */
+        (2 << 12);				/* 2:00 am */
+      }
+  }
 
-	/*
-	 * For years starting 1996 US DST:
-	 *	Starts: Last Sunday in March at 2:00am.
-	 *	Ends: Last Sunday in November at 2:00am.
-	 */
-	else if (year >= 1996)
-	{
-	    dstStart =
-		(3 << 22) +				/* March */
-		((31 - ((4 + mid) % 7)) << 17) +	/* Last Sunday */
-		(2 << 12);				/* 2:00 am */
-	    dstEnd =
-		(11 << 22) +				/* November */
-		((31 - ((1 + mid) % 7)) << 17) +	/* First Sunday */
-		(2 << 12);				/* 2:00 am */
-	}
+  /*
+   * For years starting 1996 US DST:
+   *	Starts: Last Sunday in March at 2:00am.
+   *	Ends: Last Sunday in November at 2:00am.
+   */
+  else if (year >= 1996)
+  {
+      dstStart =
+    (3 << 22) +				/* March */
+    ((31 - ((4 + mid) % 7)) << 17) +	/* Last Sunday */
+    (2 << 12);				/* 2:00 am */
+      dstEnd =
+    (11 << 22) +				/* November */
+    ((31 - ((1 + mid) % 7)) << 17) +	/* First Sunday */
+    (2 << 12);				/* 2:00 am */
+  }
 
-	/*
-	 * For everything else, DST is not supported, so clear the Daylight
-	 * Savings Time flag in the Control Register B, so that we can skip all
-	 * this processing.
-	 */
-	else
-	    ctrlB->dse = 0;
+  /*
+   * For everything else, DST is not supported, so clear the Daylight
+   * Savings Time flag in the Control Register B, so that we can skip all
+   * this processing.
+   */
+  else
+      ctrlB->dse = 0;
     }
 
     /*
@@ -319,48 +319,48 @@ static int AXP_DS12887A_DST(u8 y, u8 M, u8 d, u8 h, u8 m, u8 s)
      */
     if (ctrlB->dse == 1)
     {
-	bool	newIsDst = false;
-	bool	isDst = (ctrlD->isDst == 1);
+  bool	newIsDst = false;
+  bool	isDst = (ctrlD->isDst == 1);
 
-	/*
-	 * If the date is between the DST start and end dates, and not because
-	 * we shifted
-	 */
-	if ((dstStart < date) && (date < dstEnd) && (ctrlD->fellBack == 0))
-	    newIsDst = true;
-	else if ((dstStart >= date) || (date >= dstEnd))
-	    ctrlD->fellBack = 0;
+  /*
+   * If the date is between the DST start and end dates, and not because
+   * we shifted
+   */
+  if ((dstStart < date) && (date < dstEnd) && (ctrlD->fellBack == 0))
+      newIsDst = true;
+  else if ((dstStart >= date) || (date >= dstEnd))
+      ctrlD->fellBack = 0;
 
-	/*
-	 * Now we are ready to figure out what we should be doing.  If the time
-	 * provided is in DST and the previous time we checked it was NOT in
-	 * DST, then we need to spring forward.
-	 */
-	if ((newIsDst == true) && (isDst == false))
-	{
-	    retVal = 1;
-	    ctrlD->isDst = 1;
-	}
+  /*
+   * Now we are ready to figure out what we should be doing.  If the time
+   * provided is in DST and the previous time we checked it was NOT in
+   * DST, then we need to spring forward.
+   */
+  if ((newIsDst == true) && (isDst == false))
+  {
+      retVal = 1;
+      ctrlD->isDst = 1;
+  }
 
-	/*
-	 * The only three other options are:
-	 *	1) The time provided is NOT in DST and the previous time was
-	 *	   also NOT in DST.
-	 *	2) The time provided is NOT in DST and the previous time was in
-	 *	   DST.
-	 *	3) The time provided is in DST and the previous time was also
-	 *	   in DST.
-	 * Of these, only option 2 requires us to do something.  So, if the
-	 * time provided DST and the previous time DST do not match, then we
-	 * need to fall back.
-	 * Otherwise, nothing changed from the last time we checked.
-	 */
-	else if (newIsDst != isDst)
-	{
-	    retVal = -1;
-	    ctrlD->isDst = 0;
-	    ctrlD->fellBack = 1;
-	}
+  /*
+   * The only three other options are:
+   *	1) The time provided is NOT in DST and the previous time was
+   *	   also NOT in DST.
+   *	2) The time provided is NOT in DST and the previous time was in
+   *	   DST.
+   *	3) The time provided is in DST and the previous time was also
+   *	   in DST.
+   * Of these, only option 2 requires us to do something.  So, if the
+   * time provided DST and the previous time DST do not match, then we
+   * need to fall back.
+   * Otherwise, nothing changed from the last time we checked.
+   */
+  else if (newIsDst != isDst)
+  {
+      retVal = -1;
+      ctrlD->isDst = 0;
+      ctrlD->fellBack = 1;
+  }
     }
 
     /*
@@ -423,19 +423,19 @@ static void AXP_DS12887A_Normalize(struct tm *timeSpec, bool justTime)
     timeSpec->tm_min %= 60;
     if (justTime == false)
     {
-	timeSpec->tm_mday += (timeSpec->tm_hour / 24);
-	timeSpec->tm_hour %= 24;
-	timeSpec->tm_year += (timeSpec->tm_mon / 12);
-	timeSpec->tm_mon %= 12;
-	tmp = (timeSpec->tm_year >= 70 ? 1900 : 2000) + timeSpec->tm_year;
-	mDays[1] += (
-	    ((tmp % 400) == 0) ?
-		(((tmp % 100) == 0) ? 1 : 0) : (((tmp % 4) == 0) ? 1 : 0));
-	tmp = timeSpec->tm_mon;
-	timeSpec->tm_mon += (timeSpec->tm_mday / mDays[tmp]);
-	timeSpec->tm_mday %= mDays[tmp];
-	timeSpec->tm_year += (timeSpec->tm_mon / 12);
-	timeSpec->tm_mon %= 12;
+  timeSpec->tm_mday += (timeSpec->tm_hour / 24);
+  timeSpec->tm_hour %= 24;
+  timeSpec->tm_year += (timeSpec->tm_mon / 12);
+  timeSpec->tm_mon %= 12;
+  tmp = (timeSpec->tm_year >= 70 ? 1900 : 2000) + timeSpec->tm_year;
+  mDays[1] += (
+      ((tmp % 400) == 0) ?
+    (((tmp % 100) == 0) ? 1 : 0) : (((tmp % 4) == 0) ? 1 : 0));
+  tmp = timeSpec->tm_mon;
+  timeSpec->tm_mon += (timeSpec->tm_mday / mDays[tmp]);
+  timeSpec->tm_mday %= mDays[tmp];
+  timeSpec->tm_year += (timeSpec->tm_mon / 12);
+  timeSpec->tm_mon %= 12;
     }
 
     /*
@@ -468,27 +468,27 @@ static void AXP_DS12887A_CheckIRQF(void)
      * bit in Control Register C.
      */
     if (((ctrlB->pie == 1) && (ctrlC->pf == 1)) ||
-	((ctrlB->aie == 1) && (ctrlC->af == 1)) ||
-	((ctrlB->uie == 1) && (ctrlC->uf == 1)))
-	ctrlC->irqf = 1;
+  ((ctrlB->aie == 1) && (ctrlC->af == 1)) ||
+  ((ctrlB->uie == 1) && (ctrlC->uf == 1)))
+  ctrlC->irqf = 1;
     else
-	ctrlC->irqf = 0;
+  ctrlC->irqf = 0;
 
     /*
      * If we have some one to notify, then do so now.
      */
     if ((irqMutex != NULL) && (irqField != NULL))
     {
-	pthread_mutex_lock(irqMutex);
-	if (ctrlC->irqf == 0)
-	    *irqField &= ~irqMask;
-	else
-	{
-	    *irqField |= irqMask;
-	    if ((ctrlC->irqf == 1) && (irqHSet == false) && (irqCond != NULL))
-		pthread_cond_signal(irqCond);
-	}
-	pthread_mutex_unlock(irqMutex);
+  pthread_mutex_lock(irqMutex);
+  if (ctrlC->irqf == 0)
+      *irqField &= ~irqMask;
+  else
+  {
+      *irqField |= irqMask;
+      if ((ctrlC->irqf == 1) && (irqHSet == false) && (irqCond != NULL))
+    pthread_cond_signal(irqCond);
+  }
+  pthread_mutex_unlock(irqMutex);
     }
 
     /*
@@ -517,43 +517,43 @@ void AXP_DS12887A_Notify(sigval_t sv)
 
     if (timersArmed == true)
     {
-	while (ctrlA->uip == 1)
-	    pthread_cond_wait(&rtcCond, &rtcMutex);
+  while (ctrlA->uip == 1)
+      pthread_cond_wait(&rtcCond, &rtcMutex);
 
-	/*
-	 * Set the appropriate interrupt flag.
-	 */
-	switch (sv.sival_int)
-	{
-	    case AXP_DS12887A_TIMER_PERIOD:
-		ctrlC->pf = 1; /* always assume the period expired */
-		break;
+  /*
+   * Set the appropriate interrupt flag.
+   */
+  switch (sv.sival_int)
+  {
+      case AXP_DS12887A_TIMER_PERIOD:
+    ctrlC->pf = 1; /* always assume the period expired */
+    break;
 
-	    case AXP_DS12887A_TIMER_ALARM:
-		ctrlC->af = 1;
-		AXP_DS12887A_StartTimers(false);
-		break;
+      case AXP_DS12887A_TIMER_ALARM:
+    ctrlC->af = 1;
+    AXP_DS12887A_StartTimers(false);
+    break;
 
-	    case AXP_DS12887A_TIMER_UPDATE:
+      case AXP_DS12887A_TIMER_UPDATE:
 
-		/*
-		 * If the Update-In-Progress bit and the SET bit are not set, then
-		 * we can indicate that the interrupt has been triggered.  We don't
-		 * care what the initial value of the flag was, we just set it.
-		 */
-		if ((ctrlA->uip == 0) && (ctrlB->set == 0))
-		    ctrlC->uf = 1;	/* always assume the update occurred */
-		break;
+    /*
+     * If the Update-In-Progress bit and the SET bit are not set, then
+     * we can indicate that the interrupt has been triggered.  We don't
+     * care what the initial value of the flag was, we just set it.
+     */
+    if ((ctrlA->uip == 0) && (ctrlB->set == 0))
+        ctrlC->uf = 1;	/* always assume the update occurred */
+    break;
 
-	    default:
-		break;
-	}
+      default:
+    break;
+  }
 
-	/*
-	 * If any of the flags are set and the interrupt enabled, then set the IRQF
-	 * bit in Control Register C.
-	 */
-	AXP_DS12887A_CheckIRQF();
+  /*
+   * If any of the flags are set and the interrupt enabled, then set the IRQF
+   * bit in Control Register C.
+   */
+  AXP_DS12887A_CheckIRQF();
     }
     AXP_DS12887A_UNLOCK;
 
@@ -590,29 +590,29 @@ static void AXP_DS12887A_StartTimers(bool all)
     int flag = 0;
     u64 periods[] =
     {
-	0,
-	3906250,
-	7812500,
-	122070,
-	244141,
-	488281,
-	976562,
-	1953125,
-	3906250,
-	7812500,
-	15625000,
-	31250000,
-	62500000,
-	125000000,
-	250000000,
-	500000000
+  0,
+  3906250,
+  7812500,
+  122070,
+  244141,
+  488281,
+  976562,
+  1953125,
+  3906250,
+  7812500,
+  15625000,
+  31250000,
+  62500000,
+  125000000,
+  250000000,
+  500000000
     };
 
     if (AXP_SYS_OPT2)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_DS12887A_StartTimers has been called.");
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_DS12887A_StartTimers has been called.");
+  AXP_TRACE_END()
     }
 
     /*
@@ -620,19 +620,19 @@ static void AXP_DS12887A_StartTimers(bool all)
      */
     if ((all == true) && (ctrlA->rs != AXP_PIR_NONE))
     {
-	if (AXP_SYS_OPT2)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite("AXP_DS12887A_StartTimers Periodic Timer Started "
-		"at %d nanoseconds", periods[ctrlA->rs]);
-	    AXP_TRACE_END()
-	}
-	ts.it_interval.tv_nsec = periods[ctrlA->rs];
-	ts.it_interval.tv_sec = 0;
-	ts.it_value.tv_nsec = periods[ctrlA->rs];
-	ts.it_value.tv_sec = 0;
-	timer_settime(periodicTimer, 0, &ts, NULL);
-	timersArmed = true;
+  if (AXP_SYS_OPT2)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite("AXP_DS12887A_StartTimers Periodic Timer Started "
+    "at %d nanoseconds", periods[ctrlA->rs]);
+      AXP_TRACE_END()
+  }
+  ts.it_interval.tv_nsec = periods[ctrlA->rs];
+  ts.it_interval.tv_sec = 0;
+  ts.it_value.tv_nsec = periods[ctrlA->rs];
+  ts.it_value.tv_sec = 0;
+  timer_settime(periodicTimer, 0, &ts, NULL);
+  timersArmed = true;
     }
 
     /*
@@ -670,17 +670,17 @@ static void AXP_DS12887A_StartTimers(bool all)
     ts.it_value.tv_nsec = 0;
     ts.it_value.tv_sec = 0;
     if ((ram[AXP_ADDR_SecondsAlarm] > 59) && (ram[AXP_ADDR_MinutesAlarm] > 59)
-	&& (ram[AXP_ADDR_HoursAlarm] > 23))
+  && (ram[AXP_ADDR_HoursAlarm] > 23))
     {
-	ts.it_interval.tv_sec = 1; /* every 1 second */
-	ts.it_value.tv_sec = 1; /* in 1 second */
-	if (AXP_SYS_OPT2)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
-		"at 1 second and every 1 second");
-	    AXP_TRACE_END()
-	}
+  ts.it_interval.tv_sec = 1; /* every 1 second */
+  ts.it_value.tv_sec = 1; /* in 1 second */
+  if (AXP_SYS_OPT2)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
+    "at 1 second and every 1 second");
+      AXP_TRACE_END()
+  }
     }
 
     /*
@@ -689,15 +689,15 @@ static void AXP_DS12887A_StartTimers(bool all)
      */
     else if (ram[AXP_ADDR_MinutesAlarm] > 59)
     {
-	ts.it_interval.tv_sec = 60; /* every 1 minute */
-	ts.it_value.tv_sec = 60; /* in 1 minute */
-	if (AXP_SYS_OPT2)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
-		"at 1 minute and every 1 minute");
-	    AXP_TRACE_END()
-	}
+  ts.it_interval.tv_sec = 60; /* every 1 minute */
+  ts.it_value.tv_sec = 60; /* in 1 minute */
+  if (AXP_SYS_OPT2)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
+    "at 1 minute and every 1 minute");
+      AXP_TRACE_END()
+  }
     }
 
     /*
@@ -706,15 +706,15 @@ static void AXP_DS12887A_StartTimers(bool all)
      */
     else if (ram[AXP_ADDR_HoursAlarm] > 23)
     {
-	ts.it_interval.tv_sec = 3600; /* every 1 hour */
-	ts.it_value.tv_sec = 3600; /* in 1 hour */
-	if (AXP_SYS_OPT2)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
-		"at 1 hour and every 1 hour");
-	    AXP_TRACE_END()
-	}
+  ts.it_interval.tv_sec = 3600; /* every 1 hour */
+  ts.it_value.tv_sec = 3600; /* in 1 hour */
+  if (AXP_SYS_OPT2)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
+    "at 1 hour and every 1 hour");
+      AXP_TRACE_END()
+  }
     }
 
     /*
@@ -723,53 +723,53 @@ static void AXP_DS12887A_StartTimers(bool all)
      */
     else if (ram[AXP_ADDR_SecondsAlarm] <= 59)
     {
-	struct tm gmt, nextA;
-	time_t now;
+  struct tm gmt, nextA;
+  time_t now;
 
-	now = time(NULL);
-	gmtime_r(&now, &gmt);
-	nextA.tm_sec = gmt.tm_sec - ram[AXP_ADDR_SecondsAlarm];
-	nextA.tm_min = gmt.tm_min - ram[AXP_ADDR_MinutesAlarm];
-	nextA.tm_hour = gmt.tm_hour - ram[AXP_ADDR_HoursAlarm];
-	nextA.tm_min += (nextA.tm_sec / 60);
-	nextA.tm_sec %= 60;
-	nextA.tm_hour += (nextA.tm_min / 60);
-	nextA.tm_min %= 60;
-	nextA.tm_hour %= 24;
-	nextA.tm_mday = gmt.tm_mday;
-	nextA.tm_mon = gmt.tm_mon;
-	nextA.tm_year = gmt.tm_year;
+  now = time(NULL);
+  gmtime_r(&now, &gmt);
+  nextA.tm_sec = gmt.tm_sec - ram[AXP_ADDR_SecondsAlarm];
+  nextA.tm_min = gmt.tm_min - ram[AXP_ADDR_MinutesAlarm];
+  nextA.tm_hour = gmt.tm_hour - ram[AXP_ADDR_HoursAlarm];
+  nextA.tm_min += (nextA.tm_sec / 60);
+  nextA.tm_sec %= 60;
+  nextA.tm_hour += (nextA.tm_min / 60);
+  nextA.tm_min %= 60;
+  nextA.tm_hour %= 24;
+  nextA.tm_mday = gmt.tm_mday;
+  nextA.tm_mon = gmt.tm_mon;
+  nextA.tm_year = gmt.tm_year;
 
-	/*
-	 * If the alarm time is in the future, then schedule it for today.
-	 * Otherwise, schedule it for tomorrow.
-	 */
-	if (gmt.tm_hour > nextA.tm_hour)
-	    nextA.tm_mday++;
-	else if ((gmt.tm_hour == nextA.tm_hour) && (gmt.tm_min > nextA.tm_min))
-	    nextA.tm_mday++;
-	else if ((gmt.tm_hour == nextA.tm_hour) && (gmt.tm_min == nextA.tm_min)
-	    && (gmt.tm_sec > nextA.tm_sec))
-	    nextA.tm_mday++;
+  /*
+   * If the alarm time is in the future, then schedule it for today.
+   * Otherwise, schedule it for tomorrow.
+   */
+  if (gmt.tm_hour > nextA.tm_hour)
+      nextA.tm_mday++;
+  else if ((gmt.tm_hour == nextA.tm_hour) && (gmt.tm_min > nextA.tm_min))
+      nextA.tm_mday++;
+  else if ((gmt.tm_hour == nextA.tm_hour) && (gmt.tm_min == nextA.tm_min)
+      && (gmt.tm_sec > nextA.tm_sec))
+      nextA.tm_mday++;
 
-	/*
-	 * Normalize the time, then get the absolute time for the next trigger.
-	 */
-	AXP_DS12887A_Normalize(&nextA, false);
-	ts.it_value.tv_sec = mktime(&nextA);
-	flag = TIMER_ABSTIME;
-	if (AXP_SYS_OPT2)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
-		"at %d seconds", ts.it_value.tv_sec);
-	    AXP_TRACE_END()
-	}
+  /*
+   * Normalize the time, then get the absolute time for the next trigger.
+   */
+  AXP_DS12887A_Normalize(&nextA, false);
+  ts.it_value.tv_sec = mktime(&nextA);
+  flag = TIMER_ABSTIME;
+  if (AXP_SYS_OPT2)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite("AXP_DS12887A_StartTimers Alarm Timer Started "
+    "at %d seconds", ts.it_value.tv_sec);
+      AXP_TRACE_END()
+  }
     }
     if (ts.it_value.tv_sec != 0)
     {
-	timer_settime(alarmTimer, flag, &ts, NULL);
-	timersArmed = true;
+  timer_settime(alarmTimer, flag, &ts, NULL);
+  timersArmed = true;
     }
 
     /*
@@ -777,26 +777,26 @@ static void AXP_DS12887A_StartTimers(bool all)
      */
     if ((all == true) && (ctrlB->set == 0))
     {
-	if (AXP_SYS_OPT2)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite(
-		"AXP_DS12887A_StartTimers Update Timer Started at 1 seconds.");
-	    AXP_TRACE_END()
-	}
-	ts.it_interval.tv_nsec = 0;
-	ts.it_interval.tv_sec = 1;
-	ts.it_value.tv_nsec = 0;
-	ts.it_value.tv_sec = 1;
-	timer_settime(updateTimer, 0, &ts, NULL);
-	timersArmed = true;
+  if (AXP_SYS_OPT2)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite(
+    "AXP_DS12887A_StartTimers Update Timer Started at 1 seconds.");
+      AXP_TRACE_END()
+  }
+  ts.it_interval.tv_nsec = 0;
+  ts.it_interval.tv_sec = 1;
+  ts.it_value.tv_nsec = 0;
+  ts.it_value.tv_sec = 1;
+  timer_settime(updateTimer, 0, &ts, NULL);
+  timersArmed = true;
     }
 
     if (AXP_SYS_OPT2)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_DS12887A_StartTimers returning.");
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_DS12887A_StartTimers returning.");
+  AXP_TRACE_END()
     }
 
     /*
@@ -831,35 +831,35 @@ static void AXP_DS12887A_StopTimers(void)
 
     if (timersArmed == true)
     {
-	if (AXP_SYS_OPT2)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite("AXP_DS12887A_StopTimers has been called.");
-	    AXP_TRACE_END()
-	}
+  if (AXP_SYS_OPT2)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite("AXP_DS12887A_StopTimers has been called.");
+      AXP_TRACE_END()
+  }
 
-	/*
-	 * Set the timer specification to all zeros, which will disarm the timer.
-	 */
-	ts.it_interval.tv_nsec = 0;
-	ts.it_interval.tv_sec = 0;
-	ts.it_value.tv_nsec = 0;
-	ts.it_value.tv_sec = 0;
+  /*
+   * Set the timer specification to all zeros, which will disarm the timer.
+   */
+  ts.it_interval.tv_nsec = 0;
+  ts.it_interval.tv_sec = 0;
+  ts.it_value.tv_nsec = 0;
+  ts.it_value.tv_sec = 0;
 
-	/*
-	 * Disarm all the timers.
-	 */
-	timer_settime(periodicTimer, 0, &ts, NULL);
-	timer_settime(alarmTimer, 0, &ts, NULL);
-	timer_settime(updateTimer, 0, &ts, NULL);
-	timersArmed = false;
+  /*
+   * Disarm all the timers.
+   */
+  timer_settime(periodicTimer, 0, &ts, NULL);
+  timer_settime(alarmTimer, 0, &ts, NULL);
+  timer_settime(updateTimer, 0, &ts, NULL);
+  timersArmed = false;
 
-	if (AXP_SYS_OPT2)
-	{
-	    AXP_TRACE_BEGIN();
-	    AXP_TraceWrite("AXP_DS12887A_StopTimers returning.");
-	    AXP_TRACE_END()
-	}
+  if (AXP_SYS_OPT2)
+  {
+      AXP_TRACE_BEGIN();
+      AXP_TraceWrite("AXP_DS12887A_StopTimers returning.");
+      AXP_TRACE_END()
+  }
     }
 
     /*
@@ -897,16 +897,16 @@ static void AXP_DS12887A_Initialize(void)
      */
     if (AXP_SYS_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Dallas Semiconductor RTC (DS12887A) is initializing");
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Dallas Semiconductor RTC (DS12887A) is initializing");
+  AXP_TRACE_END()
     }
 
     /*
      * Set everything to zero.
      */
     for (ii = 0; ii < AXP_DS12887A_RAM_SIZE; ii++)
-	ram[ii] = 0;
+  ram[ii] = 0;
 
     /*
      * Now initialize a number of the control fields.
@@ -948,9 +948,9 @@ static void AXP_DS12887A_Initialize(void)
      */
     if (AXP_SYS_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("DS12887A initialization complete.");
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("DS12887A initialization complete.");
+  AXP_TRACE_END()
     }
 
     /*
@@ -997,9 +997,9 @@ void AXP_DS12887A_Config(
 {
     if (AXP_SYS_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("DS12887A Configure has been called.");
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("DS12887A Configure has been called.");
+  AXP_TRACE_END()
     }
 
     irqCond = cond;
@@ -1010,9 +1010,9 @@ void AXP_DS12887A_Config(
 
     if (AXP_SYS_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("DS12887A Configure returning.");
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("DS12887A Configure returning.");
+  AXP_TRACE_END()
     }
 
     /*
@@ -1038,9 +1038,9 @@ void AXP_DS12887A_Reset(void)
 {
     if (AXP_SYS_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("DS12887A Reset has been called.");
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("DS12887A Reset has been called.");
+  AXP_TRACE_END()
     }
 
     /*
@@ -1061,9 +1061,9 @@ void AXP_DS12887A_Reset(void)
 
     if (AXP_SYS_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("DS12887A Reset returning.");
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("DS12887A Reset returning.");
+  AXP_TRACE_END()
     }
 
     /*
@@ -1106,294 +1106,294 @@ void AXP_DS12887A_Write(u8 addr, u8 value)
 
     if (AXP_SYS_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_DS12887A_Write has been called.");
-	AXP_TraceWrite(
-	    "\taddr: 0x%02x(%d); value: 0x%02x(%d)",
-	    addr,
-	    addr,
-	    value,
-	    value);
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_DS12887A_Write has been called.");
+  AXP_TraceWrite(
+      "\taddr: 0x%02x(%d); value: 0x%02x(%d)",
+      addr,
+      addr,
+      value,
+      value);
+  AXP_TRACE_END()
     }
 
     while (ctrlA->uip == 1)
-	pthread_cond_wait(&rtcCond, &rtcMutex);
+  pthread_cond_wait(&rtcCond, &rtcMutex);
     switch (addr)
     {
-	case AXP_ADDR_Seconds:
-	    if (ctrlB->set == 1)
-	    {
-		AXP_DS12887A_Seconds updSec =
-		{
-		    .value = value
-		};
-		u8 sec;
+  case AXP_ADDR_Seconds:
+      if (ctrlB->set == 1)
+      {
+    AXP_DS12887A_Seconds updSec =
+    {
+        .value = value
+    };
+    u8 sec;
 
-		if (ctrlB->dm == 1)
-		    sec = updSec.bin.sec;
-		else
-		    sec = updSec.BCD.tenSec * 10 + updSec.BCD.sec;
-		ram[AXP_ADDR_Seconds] = currentTime.tm_sec - (i8) sec;
-	    }
-	    break;
+    if (ctrlB->dm == 1)
+        sec = updSec.bin.sec;
+    else
+        sec = updSec.BCD.tenSec * 10 + updSec.BCD.sec;
+    ram[AXP_ADDR_Seconds] = currentTime.tm_sec - (i8) sec;
+      }
+      break;
 
-	case AXP_ADDR_SecondsAlarm:
-	    if (ctrlB->set == 1)
-	    {
-		AXP_DS12887A_SecondsAlarm updSec =
-		{
-		    .value = value
-		};
-		u8 sec;
+  case AXP_ADDR_SecondsAlarm:
+      if (ctrlB->set == 1)
+      {
+    AXP_DS12887A_SecondsAlarm updSec =
+    {
+        .value = value
+    };
+    u8 sec;
 
-		if (AXP_CHECK_DONT_CARE(value))
-		    ram[AXP_ADDR_SecondsAlarm] = 60;
-		else
-		{
-		    if (ctrlB->dm == 1)
-			sec = updSec.bin.sec;
-		    else
-			sec = updSec.BCD.tenSec * 10 + updSec.BCD.sec;
-		    ram[AXP_ADDR_SecondsAlarm] = sec + ram[AXP_ADDR_Seconds];
-		}
-	    }
-	    break;
+    if (AXP_CHECK_DONT_CARE(value))
+        ram[AXP_ADDR_SecondsAlarm] = 60;
+    else
+    {
+        if (ctrlB->dm == 1)
+      sec = updSec.bin.sec;
+        else
+      sec = updSec.BCD.tenSec * 10 + updSec.BCD.sec;
+        ram[AXP_ADDR_SecondsAlarm] = sec + ram[AXP_ADDR_Seconds];
+    }
+      }
+      break;
 
-	case AXP_ADDR_Minutes:
-	    if (ctrlB->set == 1)
-	    {
-		AXP_DS12887A_Minutes updMin =
-		{
-		    .value = value
-		};
-		u8 min;
+  case AXP_ADDR_Minutes:
+      if (ctrlB->set == 1)
+      {
+    AXP_DS12887A_Minutes updMin =
+    {
+        .value = value
+    };
+    u8 min;
 
-		if (ctrlB->dm == 1)
-		    min = updMin.bin.min;
-		else
-		    min = updMin.BCD.tenMin * 10 + updMin.BCD.min;
-		ram[AXP_ADDR_Minutes] = currentTime.tm_min - (i8) min;
-	    }
-	    break;
+    if (ctrlB->dm == 1)
+        min = updMin.bin.min;
+    else
+        min = updMin.BCD.tenMin * 10 + updMin.BCD.min;
+    ram[AXP_ADDR_Minutes] = currentTime.tm_min - (i8) min;
+      }
+      break;
 
-	case AXP_ADDR_MinutesAlarm:
-	    if (ctrlB->set == 1)
-	    {
-		AXP_DS12887A_MinutesAlarm updMin =
-		{
-		    .value = value
-		};
-		u8 min;
+  case AXP_ADDR_MinutesAlarm:
+      if (ctrlB->set == 1)
+      {
+    AXP_DS12887A_MinutesAlarm updMin =
+    {
+        .value = value
+    };
+    u8 min;
 
-		if (AXP_CHECK_DONT_CARE(value))
-		    ram[AXP_ADDR_MinutesAlarm] = 60;
-		else
-		{
-		    if (ctrlB->dm == 1)
-			min = updMin.bin.min;
-		    else
-			min = updMin.BCD.tenMin * 10 + updMin.BCD.min;
-		    ram[AXP_ADDR_MinutesAlarm] = min + ram[AXP_ADDR_Minutes];
-		}
-	    }
-	    break;
+    if (AXP_CHECK_DONT_CARE(value))
+        ram[AXP_ADDR_MinutesAlarm] = 60;
+    else
+    {
+        if (ctrlB->dm == 1)
+      min = updMin.bin.min;
+        else
+      min = updMin.BCD.tenMin * 10 + updMin.BCD.min;
+        ram[AXP_ADDR_MinutesAlarm] = min + ram[AXP_ADDR_Minutes];
+    }
+      }
+      break;
 
-	case AXP_ADDR_Hours:
-	    if (ctrlB->set == 1)
-	    {
-		AXP_DS12887A_Hours updHrs =
-		{
-		    .value = value
-		};
-		u8 hrs;
+  case AXP_ADDR_Hours:
+      if (ctrlB->set == 1)
+      {
+    AXP_DS12887A_Hours updHrs =
+    {
+        .value = value
+    };
+    u8 hrs;
 
-		if (ctrlB->dm == 1)
-		    hrs = updHrs.bin.hrs;
-		else
-		    hrs = updHrs.BCD.tenHrs * 10 + updHrs.BCD.hrs;
-		if (ctrlB->twentyFour == 0)
-		{
-		    if (updHrs.bin.amPm == 1)
-			hrs += 12;
-		    hrs--;
-		}
-		ram[AXP_ADDR_Hours] = currentTime.tm_hour - (i8) hrs;
-	    }
-	    break;
+    if (ctrlB->dm == 1)
+        hrs = updHrs.bin.hrs;
+    else
+        hrs = updHrs.BCD.tenHrs * 10 + updHrs.BCD.hrs;
+    if (ctrlB->twentyFour == 0)
+    {
+        if (updHrs.bin.amPm == 1)
+      hrs += 12;
+        hrs--;
+    }
+    ram[AXP_ADDR_Hours] = currentTime.tm_hour - (i8) hrs;
+      }
+      break;
 
-	case AXP_ADDR_HoursAlarm:
-	    if (ctrlB->set == 1)
-	    {
-		AXP_DS12887A_HoursAlarm updHrs =
-		{
-		    .value = value
-		};
-		u8 hrs;
+  case AXP_ADDR_HoursAlarm:
+      if (ctrlB->set == 1)
+      {
+    AXP_DS12887A_HoursAlarm updHrs =
+    {
+        .value = value
+    };
+    u8 hrs;
 
-		if (AXP_CHECK_DONT_CARE(value))
-		    ram[AXP_ADDR_HoursAlarm] = 24;
-		else
-		{
-		    if (ctrlB->dm == 1)
-			hrs = updHrs.bin.hrs;
-		    else
-			hrs = updHrs.BCD.tenHrs * 10 + updHrs.BCD.hrs;
-		    if (ctrlB->twentyFour == 0)
-		    {
-			if (updHrs.bin.amPm == 1)
-			    hrs += 12;
-			hrs--;
-		    }
-		    ram[AXP_ADDR_HoursAlarm] = hrs + ram[AXP_ADDR_Hours];
-		}
-	    }
-	    break;
+    if (AXP_CHECK_DONT_CARE(value))
+        ram[AXP_ADDR_HoursAlarm] = 24;
+    else
+    {
+        if (ctrlB->dm == 1)
+      hrs = updHrs.bin.hrs;
+        else
+      hrs = updHrs.BCD.tenHrs * 10 + updHrs.BCD.hrs;
+        if (ctrlB->twentyFour == 0)
+        {
+      if (updHrs.bin.amPm == 1)
+          hrs += 12;
+      hrs--;
+        }
+        ram[AXP_ADDR_HoursAlarm] = hrs + ram[AXP_ADDR_Hours];
+    }
+      }
+      break;
 
-	case AXP_ADDR_Date:
-	    if (ctrlB->set == 1)
-	    {
-		AXP_DS12887A_Date updDate =
-		{
-		    .value = value
-		};
-		u8 date;
+  case AXP_ADDR_Date:
+      if (ctrlB->set == 1)
+      {
+    AXP_DS12887A_Date updDate =
+    {
+        .value = value
+    };
+    u8 date;
 
-		if (ctrlB->dm == 1)
-		    date = updDate.bin.date;
-		else
-		    date = updDate.BCD.tenDate * 10 + updDate.BCD.date;
-		ram[AXP_ADDR_Date] = currentTime.tm_mday - (i8) date;
-	    }
-	    break;
+    if (ctrlB->dm == 1)
+        date = updDate.bin.date;
+    else
+        date = updDate.BCD.tenDate * 10 + updDate.BCD.date;
+    ram[AXP_ADDR_Date] = currentTime.tm_mday - (i8) date;
+      }
+      break;
 
-	case AXP_ADDR_Month:
-	    if (ctrlB->set == 1)
-	    {
-		AXP_DS12887A_Month updMonth =
-		{
-		    .value = value
-		};
-		u8 month;
+  case AXP_ADDR_Month:
+      if (ctrlB->set == 1)
+      {
+    AXP_DS12887A_Month updMonth =
+    {
+        .value = value
+    };
+    u8 month;
 
-		if (ctrlB->dm == 1)
-		    month = updMonth.bin.month;
-		else
-		    month = updMonth.BCD.tenMonth * 10 + updMonth.BCD.month;
-		ram[AXP_ADDR_Month] = currentTime.tm_mon - (i8) (month - 1);
-	    }
-	    break;
+    if (ctrlB->dm == 1)
+        month = updMonth.bin.month;
+    else
+        month = updMonth.BCD.tenMonth * 10 + updMonth.BCD.month;
+    ram[AXP_ADDR_Month] = currentTime.tm_mon - (i8) (month - 1);
+      }
+      break;
 
-	case AXP_ADDR_Year:
-	    if (ctrlB->set == 1)
-	    {
-		AXP_DS12887A_Year updYear =
-		{
-		    .value = value
-		};
-		u8 year;
-		u8 curYear;
+  case AXP_ADDR_Year:
+      if (ctrlB->set == 1)
+      {
+    AXP_DS12887A_Year updYear =
+    {
+        .value = value
+    };
+    u8 year;
+    u8 curYear;
 
-		curYear = currentTime.tm_year
-		    - (currentTime.tm_year >= 100 ? 100 : 0);
-		if (ctrlB->dm == 1)
-		    year = updYear.bin.year;
-		else
-		    year = updYear.BCD.tenYear * 10 + updYear.BCD.year;
-		ram[AXP_ADDR_Year] = curYear - (i8) year;
-	    }
-	    break;
+    curYear = currentTime.tm_year
+        - (currentTime.tm_year >= 100 ? 100 : 0);
+    if (ctrlB->dm == 1)
+        year = updYear.bin.year;
+    else
+        year = updYear.BCD.tenYear * 10 + updYear.BCD.year;
+    ram[AXP_ADDR_Year] = curYear - (i8) year;
+      }
+      break;
 
-	case AXP_ADDR_ControlA:
-	    ctrlA->value = value & AXP_MASK_ControlA;
-	    break;
+  case AXP_ADDR_ControlA:
+      ctrlA->value = value & AXP_MASK_ControlA;
+      break;
 
-	case AXP_ADDR_ControlB:
-	    if (ctrlB->set == 0)
-	    {
-		AXP_DS12887A_ControlB updVal =
-		{
-		    .value = value
-		};
-		time_t now;
+  case AXP_ADDR_ControlB:
+      if (ctrlB->set == 0)
+      {
+    AXP_DS12887A_ControlB updVal =
+    {
+        .value = value
+    };
+    time_t now;
 
-		if (updVal.set == 1)
-		{
-		    AXP_DS12887A_StopTimers();
-		    now = time(NULL);
-		    gmtime_r(&now, &currentTime);
-		}
-	    }
-	    else
-	    {
-		AXP_DS12887A_ControlB updVal =
-		{
-		    .value = value
-		};
+    if (updVal.set == 1)
+    {
+        AXP_DS12887A_StopTimers();
+        now = time(NULL);
+        gmtime_r(&now, &currentTime);
+    }
+      }
+      else
+      {
+    AXP_DS12887A_ControlB updVal =
+    {
+        .value = value
+    };
 
-		startIRQF = updVal.set == 0;
-	    }
-	    ctrlB->value = value;
+    startIRQF = updVal.set == 0;
+      }
+      ctrlB->value = value;
 
-	    /*
-	     * If we need to start the timers, we also need to make sure the
-	     * DST information is set properly.
-	     */
-	    if (startIRQF == true)
-	    {
-		struct tm	binTime;
+      /*
+       * If we need to start the timers, we also need to make sure the
+       * DST information is set properly.
+       */
+      if (startIRQF == true)
+      {
+    struct tm	binTime;
 
-		binTime.tm_sec = currentTime.tm_sec - ram[AXP_ADDR_Seconds];
-		binTime.tm_min = currentTime.tm_min - ram[AXP_ADDR_Minutes];
-		binTime.tm_hour = currentTime.tm_hour - ram[AXP_ADDR_Hours];
-		binTime.tm_mday = currentTime.tm_mday - ram[AXP_ADDR_Date];
-		binTime.tm_mon = currentTime.tm_mon - ram[AXP_ADDR_Month] + 1;
-		binTime.tm_year = (currentTime.tm_year -
-		    (currentTime.tm_year >= 100 ? 100 : 0)) - ram[AXP_ADDR_Year];
-		AXP_DS12887A_Normalize(&binTime, false);
+    binTime.tm_sec = currentTime.tm_sec - ram[AXP_ADDR_Seconds];
+    binTime.tm_min = currentTime.tm_min - ram[AXP_ADDR_Minutes];
+    binTime.tm_hour = currentTime.tm_hour - ram[AXP_ADDR_Hours];
+    binTime.tm_mday = currentTime.tm_mday - ram[AXP_ADDR_Date];
+    binTime.tm_mon = currentTime.tm_mon - ram[AXP_ADDR_Month] + 1;
+    binTime.tm_year = (currentTime.tm_year -
+        (currentTime.tm_year >= 100 ? 100 : 0)) - ram[AXP_ADDR_Year];
+    AXP_DS12887A_Normalize(&binTime, false);
 
-		/*
-		 * This call will set the DST bit, we can ignore the rest of
-		 * the information.
-		 */
-		(void) AXP_DS12887A_DST(
-				binTime.tm_year,
-				binTime.tm_mon,
-				binTime.tm_mday,
-				binTime.tm_hour,
-				binTime.tm_min,
-				binTime.tm_sec);
-		AXP_DS12887A_StartTimers(true);
-	    }
-	    break;
+    /*
+     * This call will set the DST bit, we can ignore the rest of
+     * the information.
+     */
+    (void) AXP_DS12887A_DST(
+        binTime.tm_year,
+        binTime.tm_mon,
+        binTime.tm_mday,
+        binTime.tm_hour,
+        binTime.tm_min,
+        binTime.tm_sec);
+    AXP_DS12887A_StartTimers(true);
+      }
+      break;
 
-	    /*
-	     * These 2 locations are read-only, so just ignore any write that is
-	     * attempted.
-	     */
-	case AXP_ADDR_ControlC:
-	case AXP_ADDR_ControlD:
-	    break;
+      /*
+       * These 2 locations are read-only, so just ignore any write that is
+       * attempted.
+       */
+  case AXP_ADDR_ControlC:
+  case AXP_ADDR_ControlD:
+      break;
 
-	    /*
-	     * This location is calculated when day information is being read.
-	     */
-	case AXP_ADDR_Day:
-	    break;
+      /*
+       * This location is calculated when day information is being read.
+       */
+  case AXP_ADDR_Day:
+      break;
 
-	    /*
-	     * It is a RAM location.  Just write the data and be done with it.
-	     */
-	default:
-	    ram[addr] = value;
-	    break;
+      /*
+       * It is a RAM location.  Just write the data and be done with it.
+       */
+  default:
+      ram[addr] = value;
+      break;
     }
 
     if (AXP_SYS_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_DS12887A_Write returning.");
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_DS12887A_Write returning.");
+  AXP_TRACE_END()
     }
 
     AXP_DS12887A_CheckIRQF();
@@ -1450,14 +1450,14 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
 
     if (AXP_SYS_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_DS12887A_Read has been called.");
-	AXP_TraceWrite("\taddr: 0x%02x(%d)", addr, addr);
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_DS12887A_Read has been called.");
+  AXP_TraceWrite("\taddr: 0x%02x(%d)", addr, addr);
+  AXP_TRACE_END()
     }
 
     while (ctrlA->uip == 1)
-	pthread_cond_wait(&rtcCond, &rtcMutex);
+  pthread_cond_wait(&rtcCond, &rtcMutex);
 
     /*
      * We need to get the current time and then calculate the binary value to
@@ -1481,13 +1481,13 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
      * Step 2:
      */
     binTime.tm_sec =
-	currentTime.tm_sec - (i8) ram[AXP_ADDR_Seconds];
+  currentTime.tm_sec - (i8) ram[AXP_ADDR_Seconds];
     binTime.tm_min = currentTime.tm_min - ram[AXP_ADDR_Minutes];
     binTime.tm_hour = currentTime.tm_hour - ram[AXP_ADDR_Hours];
     binTime.tm_mday = currentTime.tm_mday - ram[AXP_ADDR_Date];
     binTime.tm_mon = currentTime.tm_mon - ram[AXP_ADDR_Month] + 1;
     binTime.tm_year = (currentTime.tm_year
-	- (currentTime.tm_year >= 100 ? 100 : 0)) - ram[AXP_ADDR_Year];
+  - (currentTime.tm_year >= 100 ? 100 : 0)) - ram[AXP_ADDR_Year];
 
     /*
      * Step 3:
@@ -1499,231 +1499,231 @@ void AXP_DS12887A_Read(u8 addr, u8 *value)
      */
     if (ctrlB->dse == 1)
     {
-	int	hourAdjust;
+  int	hourAdjust;
 
-	hourAdjust = AXP_DS12887A_DST(
-			    binTime.tm_year,
-			    binTime.tm_mon,
-			    binTime.tm_mday,
-			    binTime.tm_hour,
-			    binTime.tm_min,
-			    binTime.tm_sec);
-	binTime.tm_hour += hourAdjust;
-	ram[AXP_ADDR_Hours] -= hourAdjust;
+  hourAdjust = AXP_DS12887A_DST(
+          binTime.tm_year,
+          binTime.tm_mon,
+          binTime.tm_mday,
+          binTime.tm_hour,
+          binTime.tm_min,
+          binTime.tm_sec);
+  binTime.tm_hour += hourAdjust;
+  ram[AXP_ADDR_Hours] -= hourAdjust;
     }
 
     /*
      * Step 5:
      */
     if ((ram[AXP_ADDR_SecondsAlarm] < 60) &&
-	(ram[AXP_ADDR_MinutesAlarm] < 60) &&
-	(ram[AXP_ADDR_HoursAlarm] < 24))
+  (ram[AXP_ADDR_MinutesAlarm] < 60) &&
+  (ram[AXP_ADDR_HoursAlarm] < 24))
     {
-	binTimeA.tm_sec = currentTime.tm_sec- ram[AXP_ADDR_SecondsAlarm];
-	binTimeA.tm_min = currentTime.tm_min - ram[AXP_ADDR_MinutesAlarm];
-	binTimeA.tm_hour = currentTime.tm_hour - ram[AXP_ADDR_HoursAlarm];
+  binTimeA.tm_sec = currentTime.tm_sec- ram[AXP_ADDR_SecondsAlarm];
+  binTimeA.tm_min = currentTime.tm_min - ram[AXP_ADDR_MinutesAlarm];
+  binTimeA.tm_hour = currentTime.tm_hour - ram[AXP_ADDR_HoursAlarm];
 
-	/*
-	 * Step 6:
-	 */
-	AXP_DS12887A_Normalize(&binTimeA, true);
+  /*
+   * Step 6:
+   */
+  AXP_DS12887A_Normalize(&binTimeA, true);
     }
 
     switch (addr)
     {
-	case AXP_ADDR_Seconds:
-	    if (ctrlB->dm == 1)
-	    {
-		retSec->bin.sec = binTime.tm_sec;
-		retSec->bin.res = 0;
-	    }
-	    else
-	    {
-		retSec->BCD.tenSec = binTime.tm_sec / 10;
-		retSec->BCD.sec = binTime.tm_sec % 10;
-		retSec->BCD.res = 0;
-	    }
-	    break;
+  case AXP_ADDR_Seconds:
+      if (ctrlB->dm == 1)
+      {
+    retSec->bin.sec = binTime.tm_sec;
+    retSec->bin.res = 0;
+      }
+      else
+      {
+    retSec->BCD.tenSec = binTime.tm_sec / 10;
+    retSec->BCD.sec = binTime.tm_sec % 10;
+    retSec->BCD.res = 0;
+      }
+      break;
 
-	case AXP_ADDR_SecondsAlarm:
-	    if (ram[AXP_ADDR_SecondsAlarm] > 59)
-		retSecA->value = AXP_ALARM_DONT_CARE;
-	    else
-	    {
-		if (ctrlB->dm == 1)
-		{
-		    retSecA->bin.sec = binTimeA.tm_sec;
-		    retSecA->bin.res = 0;
-		}
-		else
-		{
-		    retSecA->BCD.tenSec = binTimeA.tm_sec / 10;
-		    retSecA->BCD.sec = binTimeA.tm_sec % 10;
-		}
-	    }
-	    break;
+  case AXP_ADDR_SecondsAlarm:
+      if (ram[AXP_ADDR_SecondsAlarm] > 59)
+    retSecA->value = AXP_ALARM_DONT_CARE;
+      else
+      {
+    if (ctrlB->dm == 1)
+    {
+        retSecA->bin.sec = binTimeA.tm_sec;
+        retSecA->bin.res = 0;
+    }
+    else
+    {
+        retSecA->BCD.tenSec = binTimeA.tm_sec / 10;
+        retSecA->BCD.sec = binTimeA.tm_sec % 10;
+    }
+      }
+      break;
 
-	case AXP_ADDR_Minutes:
-	    if (ctrlB->dm == 1)
-	    {
-		retMin->bin.min = binTime.tm_min;
-		retMin->bin.res = 0;
-	    }
-	    else
-	    {
-		retMin->BCD.tenMin = binTime.tm_min / 10;
-		retMin->BCD.min = binTime.tm_min % 10;
-		retMin->BCD.res = 0;
-	    }
-	    break;
+  case AXP_ADDR_Minutes:
+      if (ctrlB->dm == 1)
+      {
+    retMin->bin.min = binTime.tm_min;
+    retMin->bin.res = 0;
+      }
+      else
+      {
+    retMin->BCD.tenMin = binTime.tm_min / 10;
+    retMin->BCD.min = binTime.tm_min % 10;
+    retMin->BCD.res = 0;
+      }
+      break;
 
-	case AXP_ADDR_MinutesAlarm:
-	    if (ram[AXP_ADDR_MinutesAlarm] > 59)
-		retMinA->value = AXP_ALARM_DONT_CARE;
-	    else
-	    {
-		if (ctrlB->dm == 1)
-		{
-		    retMinA->bin.min = binTimeA.tm_min;
-		    retMinA->bin.res = 0;
-		}
-		else
-		{
-		    retMinA->BCD.tenMin = binTimeA.tm_min / 10;
-		    retMinA->BCD.min = binTimeA.tm_min % 10;
-		}
-	    }
-	    break;
+  case AXP_ADDR_MinutesAlarm:
+      if (ram[AXP_ADDR_MinutesAlarm] > 59)
+    retMinA->value = AXP_ALARM_DONT_CARE;
+      else
+      {
+    if (ctrlB->dm == 1)
+    {
+        retMinA->bin.min = binTimeA.tm_min;
+        retMinA->bin.res = 0;
+    }
+    else
+    {
+        retMinA->BCD.tenMin = binTimeA.tm_min / 10;
+        retMinA->BCD.min = binTimeA.tm_min % 10;
+    }
+      }
+      break;
 
-	case AXP_ADDR_Hours:
-	    retHrs->bin.amPm = 0;
-	    if ((ctrlB->twentyFour == 0) && (binTime.tm_hour >= 12))
-	    {
-		binTime.tm_hour -= 11;
-		retHrs->bin.amPm = 1;
-	    }
-	    if (ctrlB->dm == 1)
-	    {
-		retHrs->bin.hrs = binTime.tm_hour;
-		retHrs->bin.res = 0;
-	    }
-	    else
-	    {
-		retHrs->BCD.tenHrs = binTime.tm_hour / 10;
-		retHrs->BCD.hrs = binTime.tm_hour % 10;
-		retHrs->BCD.res = 0;
-	    }
-	    break;
+  case AXP_ADDR_Hours:
+      retHrs->bin.amPm = 0;
+      if ((ctrlB->twentyFour == 0) && (binTime.tm_hour >= 12))
+      {
+    binTime.tm_hour -= 11;
+    retHrs->bin.amPm = 1;
+      }
+      if (ctrlB->dm == 1)
+      {
+    retHrs->bin.hrs = binTime.tm_hour;
+    retHrs->bin.res = 0;
+      }
+      else
+      {
+    retHrs->BCD.tenHrs = binTime.tm_hour / 10;
+    retHrs->BCD.hrs = binTime.tm_hour % 10;
+    retHrs->BCD.res = 0;
+      }
+      break;
 
-	case AXP_ADDR_HoursAlarm:
-	    if (ram[AXP_ADDR_HoursAlarm] > 23)
-		retHrsA->value = AXP_ALARM_DONT_CARE;
-	    else
-	    {
-		retHrs->bin.amPm = 0;
-		if ((ctrlB->twentyFour == 0) && (binTimeA.tm_hour >= 12))
-		{
-		    binTimeA.tm_hour -= 11;
-		    retHrsA->bin.amPm = 1;
-		}
-		if (ctrlB->dm == 1)
-		{
-		    retHrsA->bin.hrs = binTimeA.tm_hour;
-		    retHrsA->bin.res = 0;
-		}
-		else
-		{
-		    retHrsA->BCD.tenHrs = binTimeA.tm_hour / 10;
-		    retHrsA->BCD.hrs = binTimeA.tm_hour % 10;
-		    retHrsA->BCD.res = 0;
-		}
-	    }
-	    break;
+  case AXP_ADDR_HoursAlarm:
+      if (ram[AXP_ADDR_HoursAlarm] > 23)
+    retHrsA->value = AXP_ALARM_DONT_CARE;
+      else
+      {
+    retHrs->bin.amPm = 0;
+    if ((ctrlB->twentyFour == 0) && (binTimeA.tm_hour >= 12))
+    {
+        binTimeA.tm_hour -= 11;
+        retHrsA->bin.amPm = 1;
+    }
+    if (ctrlB->dm == 1)
+    {
+        retHrsA->bin.hrs = binTimeA.tm_hour;
+        retHrsA->bin.res = 0;
+    }
+    else
+    {
+        retHrsA->BCD.tenHrs = binTimeA.tm_hour / 10;
+        retHrsA->BCD.hrs = binTimeA.tm_hour % 10;
+        retHrsA->BCD.res = 0;
+    }
+      }
+      break;
 
-	case AXP_ADDR_Day:
-	    binTime.tm_year += AXP_DOW_YEAR(binTime.tm_year);
-	    retDay->bin.day =
-		AXP_DOW(binTime.tm_year, binTime.tm_mon, binTime.tm_mday) + 1;
-	    retDay->bin.res = 0;
-	    break;
+  case AXP_ADDR_Day:
+      binTime.tm_year += AXP_DOW_YEAR(binTime.tm_year);
+      retDay->bin.day =
+    AXP_DOW(binTime.tm_year, binTime.tm_mon, binTime.tm_mday) + 1;
+      retDay->bin.res = 0;
+      break;
 
-	case AXP_ADDR_Date:
-	    if (ctrlB->dm == 1)
-	    {
-		retDate->bin.date = binTime.tm_mday;
-		retDate->bin.res = 0;
-	    }
-	    else
-	    {
-		retDate->BCD.tenDate = binTime.tm_mday / 10;
-		retDate->BCD.date = binTime.tm_mday % 10;
-		retDate->BCD.res = 0;
-	    }
-	    break;
+  case AXP_ADDR_Date:
+      if (ctrlB->dm == 1)
+      {
+    retDate->bin.date = binTime.tm_mday;
+    retDate->bin.res = 0;
+      }
+      else
+      {
+    retDate->BCD.tenDate = binTime.tm_mday / 10;
+    retDate->BCD.date = binTime.tm_mday % 10;
+    retDate->BCD.res = 0;
+      }
+      break;
 
-	case AXP_ADDR_Month:
-	    if (ctrlB->dm == 1)
-	    {
-		retMonth->bin.month = binTime.tm_mon;
-		retMonth->bin.res = 0;
-	    }
-	    else
-	    {
-		retMonth->BCD.tenMonth = binTime.tm_mon / 10;
-		retMonth->BCD.month = binTime.tm_mon % 10;
-		retMonth->BCD.res = 0;
-	    }
-	    break;
+  case AXP_ADDR_Month:
+      if (ctrlB->dm == 1)
+      {
+    retMonth->bin.month = binTime.tm_mon;
+    retMonth->bin.res = 0;
+      }
+      else
+      {
+    retMonth->BCD.tenMonth = binTime.tm_mon / 10;
+    retMonth->BCD.month = binTime.tm_mon % 10;
+    retMonth->BCD.res = 0;
+      }
+      break;
 
-	case AXP_ADDR_Year:
-	    if (ctrlB->dm == 1)
-	    {
-		retYear->bin.year = binTime.tm_year;
-		retYear->bin.res = 0;
-	    }
-	    else
-	    {
-		retYear->BCD.tenYear = binTime.tm_year / 10;
-		retYear->BCD.year = binTime.tm_year % 10;
-	    }
-	    break;
+  case AXP_ADDR_Year:
+      if (ctrlB->dm == 1)
+      {
+    retYear->bin.year = binTime.tm_year;
+    retYear->bin.res = 0;
+      }
+      else
+      {
+    retYear->BCD.tenYear = binTime.tm_year / 10;
+    retYear->BCD.year = binTime.tm_year % 10;
+      }
+      break;
 
-	case AXP_ADDR_ControlA:
-	    *value = ctrlA->value;
-	    break;
+  case AXP_ADDR_ControlA:
+      *value = ctrlA->value;
+      break;
 
-	case AXP_ADDR_ControlB:
-	    *value = ctrlB->value;
-	    break;
+  case AXP_ADDR_ControlB:
+      *value = ctrlB->value;
+      break;
 
-	case AXP_ADDR_ControlC:
-	    *value = ctrlC->value & AXP_MASK_ControlC;
-	    ctrlC->value = 0; /* This register is cleared upon reading */
-	    break;
+  case AXP_ADDR_ControlC:
+      *value = ctrlC->value & AXP_MASK_ControlC;
+      ctrlC->value = 0; /* This register is cleared upon reading */
+      break;
 
-	case AXP_ADDR_ControlD:
-	    *value = ctrlD->value & AXP_MASK_ControlD;
-	    break;
+  case AXP_ADDR_ControlD:
+      *value = ctrlD->value & AXP_MASK_ControlD;
+      break;
 
-	    /*
-	     * It is a RAM location.  Just read the data and be done with it.
-	     */
-	default:
-	    *value = ram[addr];
-	    break;
+      /*
+       * It is a RAM location.  Just read the data and be done with it.
+       */
+  default:
+      *value = ram[addr];
+      break;
     }
 
     if (AXP_SYS_CALL)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("AXP_DS12887A_Read returning.");
-	AXP_TraceWrite(
-	    "\taddr: 0x%02x(%d); value: 0x%02x(%d)",
-	    addr,
-	    addr,
-	    *value,
-	    *value);
-	AXP_TRACE_END()
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("AXP_DS12887A_Read returning.");
+  AXP_TraceWrite(
+      "\taddr: 0x%02x(%d); value: 0x%02x(%d)",
+      addr,
+      addr,
+      *value,
+      *value);
+  AXP_TRACE_END()
     }
 
     AXP_DS12887A_CheckIRQF();

@@ -64,124 +64,124 @@ configuration file is XML formatted.  Below is an example file:
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This is the first definition of a DECaxp emulated
-		system -->
+    system -->
 <DECaxp>
-	<!-- The Owner field is for informational purposes only -->
-	<Owner>
-		<Name>
-			<First>Jonathan</First>
-			<MI>D.</MI>
-			<Last>Belanger</Last>
-			<Suffix />
-		</Name>
-		<CreationDate>02-Jan-2018</CreationDate>
-		<ModifyDate>28-Jan-2018</ModifyDate>
-	</Owner>
-	<!-- This is where the real emulation definitions begin -->
-	<System>
-		<!-- This is the computer system information -->
-		<Model>
-			<Name>Compaq ES40</Name>
-			<Model>ES40</Model>
-		</Model>
-		<!-- 
-				This defines where various information is stored
-				The InitFile is the file containing the code that
-					initializes the CPUs, prior to loading the
-					Console
-				This PALImage is the file contains the executable
-					image that is used to burn in the PALcode
-				The ROMImage is the file that is burnt in from
-					the PALImage
-				The NVRamFile is the file that contains the last
-					saved Non-Volitile RAM information
-		-->
-		<SROM>
-			<InitFile>
-				../dat/CPU Initialization Load File.dat
-			</InitFile>
-			<PALImage>../dat/cl67srmrom.exe</PALImage>
-			<ROMImage>
-				../dat/DEC_Alpha_AXP_Code_Compiler.rom
-			</ROMImage>
-			<NVRamFile>../dat/DECaxp 21264.nvr</NVRamFile>
-			<CboxCSRFile>
-				../dat/AXP_21264_Cbox_CSR.nvp
-			</CboxCSRFile>
-		</SROM>
-		<!-- 
-				This defines the actual CPUs.
-				The number of CPUs that can be defined is
-					determined by the System/Model information
-				The Generation contains what version of the
-					Digitial Alpha AXP CPU we are emulating
-				The Pass contains the manufacturing pass for the
-					generation of the CPU
-		-->
-		<CPUs>
-			<Count>1</Count>
-			<Generation>EV68CB</Generation>
-			<Pass>5</Pass>
-		</CPUs>
-		<!--
-			This defines the individual memory modules and their
-			size.  In reality the sizes are summed for total
-			memory size.  The individual DIMMs are simulated.
-		-->
-		<DIMMs>
-			<Count>4</Count>
-			<Size>4.0GB</Size>
-		</DIMMs>
-		<!--
-			This is where this the disk files are defined.  The
-			type determines whether the device is read-only or
-			read-write.
-		-->
-		<Disks>
-			<Disk number="1">
-				<Type>Disk</Type>
-				<Name>RZ02</Name>
-				<Size>100.0GB</Size>
-				<File>../dat/RZ02-1.dsk</File>
-			</Disk>
-			<Disk number="2">
-				<Type>CDROM</Type>
-				<Name>RZCD02</Name>
-				<Size>100.0GB</Size>
-				<File>../dat/RZCD02-1.dsk</File>
-			</Disk>
-		</Disks>
-		<!--
-			The console definition contains the information
-			required to be able to have a telnet terminal
-			connect to the emulator as the console.
-		-->
-		<Console>
-			<Port>780</Port>
-		</Console>
-		<!--
-			The network definition contains the adapter name and
-			the MAC address to be assigned to it.
-		-->
-		<Networks>
-			<Network number="1">
-				<Name>es04</Name>
-				<MAC>08-00-20-01-23-45</MAC>
-			</Network>
-		</Networks>
-		<!--
-			This is a place holder for Printer definitions.
-		-->
-		<Printers>
-			<Printer number="1" />
-		</Printers>
-		<!--
-			This is a place holder for Tape definitions.
-		-->
-		<Tapes>
-			<Tape number="1" />
-		</Tapes>
-	</System>
+  <!-- The Owner field is for informational purposes only -->
+  <Owner>
+    <Name>
+      <First>Jonathan</First>
+      <MI>D.</MI>
+      <Last>Belanger</Last>
+      <Suffix />
+    </Name>
+    <CreationDate>02-Jan-2018</CreationDate>
+    <ModifyDate>28-Jan-2018</ModifyDate>
+  </Owner>
+  <!-- This is where the real emulation definitions begin -->
+  <System>
+    <!-- This is the computer system information -->
+    <Model>
+      <Name>Compaq ES40</Name>
+      <Model>ES40</Model>
+    </Model>
+    <!--
+        This defines where various information is stored
+        The InitFile is the file containing the code that
+          initializes the CPUs, prior to loading the
+          Console
+        This PALImage is the file contains the executable
+          image that is used to burn in the PALcode
+        The ROMImage is the file that is burnt in from
+          the PALImage
+        The NVRamFile is the file that contains the last
+          saved Non-Volitile RAM information
+    -->
+    <SROM>
+      <InitFile>
+        ../dat/CPU Initialization Load File.dat
+      </InitFile>
+      <PALImage>../dat/cl67srmrom.exe</PALImage>
+      <ROMImage>
+        ../dat/DEC_Alpha_AXP_Code_Compiler.rom
+      </ROMImage>
+      <NVRamFile>../dat/DECaxp 21264.nvr</NVRamFile>
+      <CboxCSRFile>
+        ../dat/AXP_21264_Cbox_CSR.nvp
+      </CboxCSRFile>
+    </SROM>
+    <!--
+        This defines the actual CPUs.
+        The number of CPUs that can be defined is
+          determined by the System/Model information
+        The Generation contains what version of the
+          Digitial Alpha AXP CPU we are emulating
+        The Pass contains the manufacturing pass for the
+          generation of the CPU
+    -->
+    <CPUs>
+      <Count>1</Count>
+      <Generation>EV68CB</Generation>
+      <Pass>5</Pass>
+    </CPUs>
+    <!--
+      This defines the individual memory modules and their
+      size.  In reality the sizes are summed for total
+      memory size.  The individual DIMMs are simulated.
+    -->
+    <DIMMs>
+      <Count>4</Count>
+      <Size>4.0GB</Size>
+    </DIMMs>
+    <!--
+      This is where this the disk files are defined.  The
+      type determines whether the device is read-only or
+      read-write.
+    -->
+    <Disks>
+      <Disk number="1">
+        <Type>Disk</Type>
+        <Name>RZ02</Name>
+        <Size>100.0GB</Size>
+        <File>../dat/RZ02-1.dsk</File>
+      </Disk>
+      <Disk number="2">
+        <Type>CDROM</Type>
+        <Name>RZCD02</Name>
+        <Size>100.0GB</Size>
+        <File>../dat/RZCD02-1.dsk</File>
+      </Disk>
+    </Disks>
+    <!--
+      The console definition contains the information
+      required to be able to have a telnet terminal
+      connect to the emulator as the console.
+    -->
+    <Console>
+      <Port>780</Port>
+    </Console>
+    <!--
+      The network definition contains the adapter name and
+      the MAC address to be assigned to it.
+    -->
+    <Networks>
+      <Network number="1">
+        <Name>es04</Name>
+        <MAC>08-00-20-01-23-45</MAC>
+      </Network>
+    </Networks>
+    <!--
+      This is a place holder for Printer definitions.
+    -->
+    <Printers>
+      <Printer number="1" />
+    </Printers>
+    <!--
+      This is a place holder for Tape definitions.
+    -->
+    <Tapes>
+      <Tape number="1" />
+    </Tapes>
+  </System>
 </DECaxp>
 ```
 
@@ -197,7 +197,7 @@ This is first environment variable.  If it is not defined or is defined to all
 zeros (if there is an error in converting the environment variable, 0 is
 assumed).  This variable has the following format/definition:
 
-	`export AXP_LOGMASK=0xffffffff'
+  `export AXP_LOGMASK=0xffffffff'
 
 This variable is defined as a hexidecimal value, where each bit represents some
 level of logging to be performed.  The following set of bits are used:
@@ -250,5 +250,5 @@ not, then the emulator will write to standard output.  This variable represent
 a filename, including path, where the log information is to be written.  It has
 the following format:
 
-	`export AXP_LOGFILE=log/tracefile.txt'
+  `export AXP_LOGFILE=log/tracefile.txt'
 

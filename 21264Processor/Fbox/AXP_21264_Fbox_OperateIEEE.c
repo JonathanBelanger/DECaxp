@@ -77,53 +77,53 @@ AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, &instr->src2v.fp) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 32-bit float, perform the math,
-	 * and then convert the result back into 64-bit register format.
-	 */
-	src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
-	src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
+  /*
+   * Convert from 64-bit register format to 32-bit float, perform the math,
+   * and then convert the result back into 64-bit register format.
+   */
+  src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
+  src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = src1v + src2v;
+  /*
+   * Execute the instruction.
+   */
+  destv = src1v + src2v;
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     /*
@@ -135,15 +135,15 @@ AXP_EXCEPTIONS AXP_ADDS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
+  instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW))
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -200,53 +200,53 @@ AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, &instr->src2v.fp) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 64-bit double, perform the
-	 * math, and then convert the result back into 64-bit register format.
-	 */
-	src1v = *((double *) &instr->src1v.fp.uq);
-	src2v = *((double *) &instr->src2v.fp.uq);
+  /*
+   * Convert from 64-bit register format to 64-bit double, perform the
+   * math, and then convert the result back into 64-bit register format.
+   */
+  src1v = *((double *) &instr->src1v.fp.uq);
+  src2v = *((double *) &instr->src2v.fp.uq);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = src1v + src2v;
+  /*
+   * Execute the instruction.
+   */
+  destv = src1v + src2v;
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     raised &= (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
@@ -255,15 +255,15 @@ AXP_EXCEPTIONS AXP_ADDT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp.uq = *((u64 *) &destv);
+  instr->destv.fp.uq = *((u64 *) &destv);
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW))
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -312,14 +312,14 @@ AXP_EXCEPTIONS AXP_CMPTEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
     if ((src1Enc == NotANumber) || (src2Enc == NotANumber))
     {
-	if ((fpFunc->trp & (AXP_FP_TRP_U | AXP_FP_TRP_S)) != 0)
-	    raised = FE_INVALID;
-	instr->destv.fp.uq = AXP_FPR_ZERO;
+  if ((fpFunc->trp & (AXP_FP_TRP_U | AXP_FP_TRP_S)) != 0)
+      raised = FE_INVALID;
+  instr->destv.fp.uq = AXP_FPR_ZERO;
     }
     else if (*src1v == *src2v)
-	instr->destv.fp.uq = AXP_T_TWO;
+  instr->destv.fp.uq = AXP_T_TWO;
     else
-	instr->destv.fp.uq = AXP_FPR_ZERO;
+  instr->destv.fp.uq = AXP_FPR_ZERO;
 
     /*
      * Set the exception bits (I probably don't have to do this, but I will
@@ -327,7 +327,7 @@ AXP_EXCEPTIONS AXP_CMPTEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * instruction).
      */
     if (raised != 0)
-	AXP_FP_SetFPCR(cpu, instr, raised, false);
+  AXP_FP_SetFPCR(cpu, instr, raised, false);
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -371,14 +371,14 @@ AXP_EXCEPTIONS AXP_CMPTLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
     if ((src1Enc == NotANumber) || (src2Enc == NotANumber))
     {
-	if ((fpFunc->trp & (AXP_FP_TRP_U | AXP_FP_TRP_S)) != 0)
-	    raised = FE_INVALID;
-	instr->destv.fp.uq = AXP_FPR_ZERO;
+  if ((fpFunc->trp & (AXP_FP_TRP_U | AXP_FP_TRP_S)) != 0)
+      raised = FE_INVALID;
+  instr->destv.fp.uq = AXP_FPR_ZERO;
     }
     else if (*src1v <= *src2v)
-	instr->destv.fp.uq = AXP_T_TWO;
+  instr->destv.fp.uq = AXP_T_TWO;
     else
-	instr->destv.fp.uq = AXP_FPR_ZERO;
+  instr->destv.fp.uq = AXP_FPR_ZERO;
 
     /*
      * Set the exception bits (I probably don't have to do this, but I will
@@ -386,7 +386,7 @@ AXP_EXCEPTIONS AXP_CMPTLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * instruction).
      */
     if (raised != 0)
-	AXP_FP_SetFPCR(cpu, instr, raised, false);
+  AXP_FP_SetFPCR(cpu, instr, raised, false);
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -430,14 +430,14 @@ AXP_EXCEPTIONS AXP_CMPTLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
     if ((src1Enc == NotANumber) || (src2Enc == NotANumber))
     {
-	if ((fpFunc->trp & (AXP_FP_TRP_U | AXP_FP_TRP_S)) != 0)
-	    raised = FE_INVALID;
-	instr->destv.fp.uq = AXP_FPR_ZERO;
+  if ((fpFunc->trp & (AXP_FP_TRP_U | AXP_FP_TRP_S)) != 0)
+      raised = FE_INVALID;
+  instr->destv.fp.uq = AXP_FPR_ZERO;
     }
     else if (*src1v < *src2v)
-	instr->destv.fp.uq = AXP_T_TWO;
+  instr->destv.fp.uq = AXP_T_TWO;
     else
-	instr->destv.fp.uq = AXP_FPR_ZERO;
+  instr->destv.fp.uq = AXP_FPR_ZERO;
 
     /*
      * Set the exception bits (I probably don't have to do this, but I will
@@ -445,7 +445,7 @@ AXP_EXCEPTIONS AXP_CMPTLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * instruction).
      */
     if (raised != 0)
-	AXP_FP_SetFPCR(cpu, instr, raised, false);
+  AXP_FP_SetFPCR(cpu, instr, raised, false);
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -481,10 +481,10 @@ AXP_EXCEPTIONS AXP_CMPTUN(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * to NaN (Not a Number).
      */
     if ((AXP_FP_ENCODE(&instr->src1v.fp.fpr,true) == NotANumber)
-	|| (AXP_FP_ENCODE(&instr->src1v.fp.fpr,true) == NotANumber))
-	instr->destv.fp.uq = AXP_T_TWO;
+  || (AXP_FP_ENCODE(&instr->src1v.fp.fpr,true) == NotANumber))
+  instr->destv.fp.uq = AXP_T_TWO;
     else
-	instr->destv.fp.uq = AXP_FPR_ZERO;
+  instr->destv.fp.uq = AXP_FPR_ZERO;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -537,52 +537,52 @@ AXP_EXCEPTIONS AXP_CVTTQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, NULL) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 64-bit double, perform the
-	 * math, and then convert the result back into 64-bit register format.
-	 */
-	src1v = *((double *) &instr->src1v.fp.uq);
+  /*
+   * Convert from 64-bit register format to 64-bit double, perform the
+   * math, and then convert the result back into 64-bit register format.
+   */
+  src1v = *((double *) &instr->src1v.fp.uq);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = src1v;
+  /*
+   * Execute the instruction.
+   */
+  destv = src1v;
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     raised &= (FE_INEXACT | FE_OVERFLOW | FE_INVALID);
@@ -591,15 +591,15 @@ AXP_EXCEPTIONS AXP_CVTTQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp.uq = destv;
+  instr->destv.fp.uq = destv;
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & (FE_INEXACT | FE_OVERFLOW))
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -691,9 +691,9 @@ AXP_EXCEPTIONS AXP_CVTQS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Convert the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
+  instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
     else
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -785,9 +785,9 @@ AXP_EXCEPTIONS AXP_CVTQT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp.uq = *((u64 *) &destv);
+  instr->destv.fp.uq = *((u64 *) &destv);
     else
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -843,52 +843,52 @@ AXP_EXCEPTIONS AXP_CVTST(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, NULL) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 32-bit float, perform the
-	 * math, and then convert the result back into 64-bit register format.
-	 */
-	src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
+  /*
+   * Convert from 64-bit register format to 32-bit float, perform the
+   * math, and then convert the result back into 64-bit register format.
+   */
+  src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = src1v;
+  /*
+   * Execute the instruction.
+   */
+  destv = src1v;
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     raised &= FE_INVALID;
@@ -897,9 +897,9 @@ AXP_EXCEPTIONS AXP_CVTST(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp.uq = *((u64 *) &destv);
+  instr->destv.fp.uq = *((u64 *) &destv);
     else
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -958,52 +958,52 @@ AXP_EXCEPTIONS AXP_CVTTS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, NULL) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 32-bit float, perform the
-	 * math, and then convert the result back into 64-bit register format.
-	 */
-	src1v = *((double *) &instr->src1v.fp.uq);
+  /*
+   * Convert from 64-bit register format to 32-bit float, perform the
+   * math, and then convert the result back into 64-bit register format.
+   */
+  src1v = *((double *) &instr->src1v.fp.uq);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = src1v;
+  /*
+   * Execute the instruction.
+   */
+  destv = src1v;
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     raised &= (FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW | FE_INEXACT);
@@ -1012,15 +1012,15 @@ AXP_EXCEPTIONS AXP_CVTTS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp.uq = *((u64 *) &destv);
+  instr->destv.fp.uq = *((u64 *) &destv);
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW))
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -1079,74 +1079,74 @@ AXP_EXCEPTIONS AXP_DIVS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, &instr->src2v.fp) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 32-bit float, perform the math,
-	 * and then convert the result back into 64-bit register format.
-	 */
-	src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
-	src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
+  /*
+   * Convert from 64-bit register format to 32-bit float, perform the math,
+   * and then convert the result back into 64-bit register format.
+   */
+  src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
+  src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = src1v / src2v;
+  /*
+   * Execute the instruction.
+   */
+  destv = src1v / src2v;
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     /*
      * We only care about this set of exceptions.
      */
     raised &= (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID
-	| FE_DIVBYZERO);
+  | FE_DIVBYZERO);
 
     /*
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
+  instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_DIVBYZERO))
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -1204,71 +1204,71 @@ AXP_EXCEPTIONS AXP_DIVT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, &instr->src2v.fp) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 64-bit double, perform the
-	 * math, and then convert the result back into 64-bit register format.
-	 */
-	src1v = *((double *) &instr->src1v.fp.uq);
-	src2v = *((double *) &instr->src2v.fp.uq);
+  /*
+   * Convert from 64-bit register format to 64-bit double, perform the
+   * math, and then convert the result back into 64-bit register format.
+   */
+  src1v = *((double *) &instr->src1v.fp.uq);
+  src2v = *((double *) &instr->src2v.fp.uq);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = src1v / src2v;
+  /*
+   * Execute the instruction.
+   */
+  destv = src1v / src2v;
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     raised &= (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID
-	| FE_DIVBYZERO);
+  | FE_DIVBYZERO);
 
     /*
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp.uq = *((u64 *) &destv);
+  instr->destv.fp.uq = *((u64 *) &destv);
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_DIVBYZERO))
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -1308,9 +1308,9 @@ AXP_EXCEPTIONS AXP_FTOIS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Execute the instruction.
      */
     instr->destv.r.uq = ((
-	instr->src1v.fp.fpr32.sign == 1 ? 0xffffffff80000000ll : 0)
-	| ((instr->src1v.fp.uq & 0x4000000000000000ll) >> 24)
-	| ((instr->src1v.fp.uq & 0x07FFFFFFE0000000ll) >> 29));
+  instr->src1v.fp.fpr32.sign == 1 ? 0xffffffff80000000ll : 0)
+  | ((instr->src1v.fp.uq & 0x4000000000000000ll) >> 24)
+  | ((instr->src1v.fp.uq & 0x07FFFFFFE0000000ll) >> 29));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -1466,53 +1466,53 @@ AXP_EXCEPTIONS AXP_MULS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, &instr->src2v.fp) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 32-bit float, perform the math,
-	 * and then convert the result back into 64-bit register format.
-	 */
-	src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
-	src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
+  /*
+   * Convert from 64-bit register format to 32-bit float, perform the math,
+   * and then convert the result back into 64-bit register format.
+   */
+  src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
+  src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = src1v * src2v;
+  /*
+   * Execute the instruction.
+   */
+  destv = src1v * src2v;
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     /*
@@ -1524,15 +1524,15 @@ AXP_EXCEPTIONS AXP_MULS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
+  instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW))
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -1589,53 +1589,53 @@ AXP_EXCEPTIONS AXP_MULT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, &instr->src2v.fp) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 64-bit double, perform the
-	 * math, and then convert the result back into 64-bit register format.
-	 */
-	src1v = *((double *) &instr->src1v.fp.uq);
-	src2v = *((double *) &instr->src2v.fp.uq);
+  /*
+   * Convert from 64-bit register format to 64-bit double, perform the
+   * math, and then convert the result back into 64-bit register format.
+   */
+  src1v = *((double *) &instr->src1v.fp.uq);
+  src2v = *((double *) &instr->src2v.fp.uq);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = src1v * src2v;
+  /*
+   * Execute the instruction.
+   */
+  destv = src1v * src2v;
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     raised &= (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
@@ -1644,15 +1644,15 @@ AXP_EXCEPTIONS AXP_MULT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp.uq = *((u64 *) &destv);
+  instr->destv.fp.uq = *((u64 *) &destv);
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW))
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -1708,52 +1708,52 @@ AXP_EXCEPTIONS AXP_SQRTS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, NULL) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 32-bit float, perform the math,
-	 * and then convert the result back into 64-bit register format.
-	 */
-	src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
+  /*
+   * Convert from 64-bit register format to 32-bit float, perform the math,
+   * and then convert the result back into 64-bit register format.
+   */
+  src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = sqrt(src1v);
+  /*
+   * Execute the instruction.
+   */
+  destv = sqrt(src1v);
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     /*
@@ -1765,15 +1765,15 @@ AXP_EXCEPTIONS AXP_SQRTS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
+  instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & FE_INEXACT)
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -1829,52 +1829,52 @@ AXP_EXCEPTIONS AXP_SQRTT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, NULL) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 64-bit double, perform the
-	 * math, and then convert the result back into 64-bit register format.
-	 */
-	src1v = *((double *) &instr->src1v.fp.uq);
+  /*
+   * Convert from 64-bit register format to 64-bit double, perform the
+   * math, and then convert the result back into 64-bit register format.
+   */
+  src1v = *((double *) &instr->src1v.fp.uq);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = sqrt(src1v);
+  /*
+   * Execute the instruction.
+   */
+  destv = sqrt(src1v);
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     raised &= (FE_INEXACT | FE_INVALID);
@@ -1883,15 +1883,15 @@ AXP_EXCEPTIONS AXP_SQRTT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp.uq = *((u64 *) &destv);
+  instr->destv.fp.uq = *((u64 *) &destv);
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW))
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -1949,53 +1949,53 @@ AXP_EXCEPTIONS AXP_SUBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, &instr->src2v.fp) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 32-bit float, perform the math,
-	 * and then convert the result back into 64-bit register format.
-	 */
-	src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
-	src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
+  /*
+   * Convert from 64-bit register format to 32-bit float, perform the math,
+   * and then convert the result back into 64-bit register format.
+   */
+  src1v = AXP_FP_CvtFPRToFloat(instr->src1v.fp);
+  src2v = AXP_FP_CvtFPRToFloat(instr->src2v.fp);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = src1v - src2v;
+  /*
+   * Execute the instruction.
+   */
+  destv = src1v - src2v;
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     /*
@@ -2007,15 +2007,15 @@ AXP_EXCEPTIONS AXP_SUBS(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
+  instr->destv.fp = AXP_FP_CvtFloatToFPR(destv);
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW))
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.
@@ -2073,53 +2073,53 @@ AXP_EXCEPTIONS AXP_SUBT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * do it myself.
      */
     if (AXP_FP_CheckForIEEEInvalid(&instr->src1v.fp, &instr->src2v.fp) == true)
-	raised = FE_INVALID;
+  raised = FE_INVALID;
 
     if (raised == 0)
     {
 
-	/*
-	 * Convert from 64-bit register format to 64-bit double, perform the
-	 * math, and then convert the result back into 64-bit register format.
-	 */
-	src1v = *((double *) &instr->src1v.fp.uq);
-	src2v = *((double *) &instr->src2v.fp.uq);
+  /*
+   * Convert from 64-bit register format to 64-bit double, perform the
+   * math, and then convert the result back into 64-bit register format.
+   */
+  src1v = *((double *) &instr->src1v.fp.uq);
+  src2v = *((double *) &instr->src2v.fp.uq);
 
-	/*
-	 * Set the rounding mode, based on the function code and/or the FPCR.
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
+  /*
+   * Set the rounding mode, based on the function code and/or the FPCR.
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(cpu, fpFunc, oldRndMode);
 
-	/*
-	 * Clear the current set of exceptions.
-	 */
-	feclearexcept(FE_ALL_EXCEPT);
+  /*
+   * Clear the current set of exceptions.
+   */
+  feclearexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Disable any exception modes indicating in the FPCR.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
+  /*
+   * Disable any exception modes indicating in the FPCR.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(cpu, oldExcMode);
 
-	/*
-	 * Execute the instruction.
-	 */
-	destv = src1v - src2v;
+  /*
+   * Execute the instruction.
+   */
+  destv = src1v - src2v;
 
-	/*
-	 * Test to see what exceptions were raised.
-	 */
-	raised = fetestexcept(FE_ALL_EXCEPT);
+  /*
+   * Test to see what exceptions were raised.
+   */
+  raised = fetestexcept(FE_ALL_EXCEPT);
 
-	/*
-	 * Enable any exception modes that were set prior to getting into this
-	 * function.
-	 */
-	oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
+  /*
+   * Enable any exception modes that were set prior to getting into this
+   * function.
+   */
+  oldExcMode = AXP_FP_SetExceptionMode(NULL, oldExcMode);
 
-	/*
-	 * Reset the rounding mode
-	 */
-	oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
+  /*
+   * Reset the rounding mode
+   */
+  oldRndMode = AXP_FP_SetRoundingMode(NULL, NULL, oldRndMode);
     }
 
     raised &= (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW | FE_INVALID);
@@ -2128,15 +2128,15 @@ AXP_EXCEPTIONS AXP_SUBT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Copy the results into the destination register value.
      */
     if (raised == 0)
-	instr->destv.fp.uq = *((u64 *) &destv);
+  instr->destv.fp.uq = *((u64 *) &destv);
 
     /*
      * Set the return code, based on any raised exceptions
      */
     if (raised & FE_INVALID)
-	retVal = IllegalOperand;
+  retVal = IllegalOperand;
     else if (raised & (FE_INEXACT | FE_OVERFLOW | FE_UNDERFLOW))
-	retVal = ArithmeticTraps;
+  retVal = ArithmeticTraps;
 
     /*
      * Set the FPCR and ExcSum registers.

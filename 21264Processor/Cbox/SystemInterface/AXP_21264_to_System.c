@@ -53,7 +53,7 @@ void AXP_21264_SendToSystem(AXP_21264_CPU *cpu, AXP_21264_SYSBUS_System *msg)
     /*
      * Queue up the next PQ entry for the CPU to process.
     if (cpu->system.rq[*cpu->system.rqEnd].valid == true)
-	*cpu->system.rqEnd = (*cpu->system.rqEnd + 1) % AXP_21264_CCHIP_RQ_LEN;
+  *cpu->system.rqEnd = (*cpu->system.rqEnd + 1) % AXP_21264_CCHIP_RQ_LEN;
      *
      * TODO:	The below is bogus.  We need to rationalize the interfaces
      *		between components.  This is just to keep the compiler happy.
@@ -83,23 +83,23 @@ void AXP_21264_SendToSystem(AXP_21264_CPU *cpu, AXP_21264_SYSBUS_System *msg)
     rq->mask = msg->mask;
     switch (msg->cmd)
     {
-	case ReadDataError:
-	    memset(rq->sysData, 0xff, AXP_21264_DATA_SIZE);
+  case ReadDataError:
+      memset(rq->sysData, 0xff, (AXP_21264_DATA_SIZE * sizeof(rq->sysData)));
 /*	    rq->dm = true; */
-	    break;
+      break;
 
-	case ReadData:
-	case ReadDataDirty:
-	case ReadDataShared:
-	case ReadDataSharedDirty:
-	    memcpy(rq->sysData, msg->sysData, AXP_21264_DATA_SIZE);
+  case ReadData:
+  case ReadDataDirty:
+  case ReadDataShared:
+  case ReadDataSharedDirty:
+      memcpy(rq->sysData, msg->sysData, AXP_21264_DATA_SIZE);
 /*	    rq->dm = true;
-	    rq->wrap = msg->wrap; */
-	    break;
+      rq->wrap = msg->wrap; */
+      break;
 
-	default:
+  default:
 /*	    rq->dm = false; */
-	    break;
+      break;
     }
 
     /*

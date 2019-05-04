@@ -63,87 +63,87 @@ int main(int argc, char **argv)
     bool opened = false;
 
     printf(
-	    "\n%%DECAXP-I-START, The Digital Alpha AXP 21264 CPU Emulator is starting.\n");
+      "\n%%DECAXP-I-START, The Digital Alpha AXP 21264 CPU Emulator is starting.\n");
     if (argc == 3)
     {
-	inFile = argv[1];
-	outFile = argv[2];
+  inFile = argv[1];
+  outFile = argv[2];
 
-	inFP = fopen(inFile, "r");
-	if (inFP != NULL)
-	{
-	    char *ptr;
-	    char *addr = &readLine[0];
-	    char *instr = &readLine[9];
+  inFP = fopen(inFile, "r");
+  if (inFP != NULL)
+  {
+      char *ptr;
+      char *addr = &readLine[0];
+      char *instr = &readLine[9];
 
-	    if (fgets(readLine, 132, inFP) != NULL)
-	    {
-		u32 binAddr;
-		u64 baseAddr = 0;
+      if (fgets(readLine, 132, inFP) != NULL)
+      {
+    u32 binAddr;
+    u64 baseAddr = 0;
 
-		addr[8] = '\0';
-		instr[8] = '\0';
-		binAddr = strtoul(addr, &ptr, 16);
-		baseAddr = binAddr; /* convert from 32-bit to 64-bit */
-		done = AXP_OpenWrite_SROM(outFile, &sromHandle, baseAddr,
-		AXP_ROM_FWID_SROM);
-		if (done == false)
-		    opened = true;
-		else
-		    retVal = -4;
-	    }
-	    while ((feof(inFP) == 0) && (done == false))
-	    {
-		instruction = strtoul(instr, &ptr, 16);
-		done = AXP_Write_SROM(&sromHandle, &instruction, 1);
-		if (done == false)
-		{
-		    blkOffset = (blkOffset + 1) & 0x03;
-		    done = (fgets(readLine, 132, inFP) == NULL);
-		    addr[8] = '\0';
-		    instr[8] = '\0';
-		}
-	    }
-	    if (opened == true)
-	    {
-		int ii;
+    addr[8] = '\0';
+    instr[8] = '\0';
+    binAddr = strtoul(addr, &ptr, 16);
+    baseAddr = binAddr; /* convert from 32-bit to 64-bit */
+    done = AXP_OpenWrite_SROM(outFile, &sromHandle, baseAddr,
+    AXP_ROM_FWID_SROM);
+    if (done == false)
+        opened = true;
+    else
+        retVal = -4;
+      }
+      while ((feof(inFP) == 0) && (done == false))
+      {
+    instruction = strtoul(instr, &ptr, 16);
+    done = AXP_Write_SROM(&sromHandle, &instruction, 1);
+    if (done == false)
+    {
+        blkOffset = (blkOffset + 1) & 0x03;
+        done = (fgets(readLine, 132, inFP) == NULL);
+        addr[8] = '\0';
+        instr[8] = '\0';
+    }
+      }
+      if (opened == true)
+      {
+    int ii;
 
-		done = false;
-		if (blkOffset != 0)
-		{
-		    for (ii = blkOffset; ii < 4; ii++)
-			done = AXP_Write_SROM(&sromHandle, &noop, 1);
-		}
-		if (done == false)
-		{
-		    done = AXP_Close_SROM(&sromHandle);
-		    if (done == true)
-			retVal = -6;
-		}
-		else
-		    retVal = -5;
-	    }
+    done = false;
+    if (blkOffset != 0)
+    {
+        for (ii = blkOffset; ii < 4; ii++)
+      done = AXP_Write_SROM(&sromHandle, &noop, 1);
+    }
+    if (done == false)
+    {
+        done = AXP_Close_SROM(&sromHandle);
+        if (done == true)
+      retVal = -6;
+    }
+    else
+        retVal = -5;
+      }
 
-	    /*
-	     * Close the input file.
-	     */
-	    fclose(inFP);
-	}
-	else if (inFP == NULL)
-	{
-	    printf("\nUnable to open file %s for reading.\n", inFile);
-	    retVal = -2;
-	}
-	else
-	{
-	    printf("\nUnable to open file %s for writing.\n", outFile);
-	    retVal = -3;
-	}
+      /*
+       * Close the input file.
+       */
+      fclose(inFP);
+  }
+  else if (inFP == NULL)
+  {
+      printf("\nUnable to open file %s for reading.\n", inFile);
+      retVal = -2;
+  }
+  else
+  {
+      printf("\nUnable to open file %s for writing.\n", outFile);
+      retVal = -3;
+  }
     }
     else
     {
-	printf("\nusage: %s <input-file> <output-file>\n", argv[0]);
-	retVal = -1;
+  printf("\nusage: %s <input-file> <output-file>\n", argv[0]);
+  retVal = -1;
     }
 
     /*

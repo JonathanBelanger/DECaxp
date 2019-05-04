@@ -1753,17 +1753,17 @@ typedef struct
 {
     union
     {
-	struct
-	{
-	    u8 bc :2; /* Base configuration */
-	    u8 c0cfp :1; /* CPU0 clock forward preset */
-	    u8 c1cfp :1; /* CPU1 clock forward preset */
-	    u8 c2cfp :1; /* CPU2 clock forward preset */
-	    u8 c3cfp :1; /* CPU3 clock forward preset */
-	    u8 p1p :1; /* Pchip 1 present */
-	    u8 res_7 :1; /* Reserved at bit 7 */
-	};
-	u8 dchip0;
+  struct
+  {
+      u8 bc :2; /* Base configuration */
+      u8 c0cfp :1; /* CPU0 clock forward preset */
+      u8 c1cfp :1; /* CPU1 clock forward preset */
+      u8 c2cfp :1; /* CPU2 clock forward preset */
+      u8 c3cfp :1; /* CPU3 clock forward preset */
+      u8 p1p :1; /* Pchip 1 present */
+      u8 res_7 :1; /* Reserved at bit 7 */
+  };
+  u8 dchip0;
     };
     u8 dchip1;
     u8 dchip2;
@@ -1894,14 +1894,14 @@ typedef struct
 {
     union
     {
-	struct
-	{
-	    u8 aw :1; /* Array width */
-	    u8 iddr :3; /* Issue to data delay for memory reads */
-	    u8 iddw :2; /* issue to data delay for non reads */
-	    u8 res_7 :2; /* Reserved at bit 7 */
-	};
-	u8 dchip0;
+  struct
+  {
+      u8 aw :1; /* Array width */
+      u8 iddr :3; /* Issue to data delay for memory reads */
+      u8 iddw :2; /* issue to data delay for non reads */
+      u8 res_7 :2; /* Reserved at bit 7 */
+  };
+  u8 dchip0;
     };
     u8 dchip1;
     u8 dchip2;

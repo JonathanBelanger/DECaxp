@@ -319,8 +319,8 @@ typedef struct
 #define AXP_Q_NEGMAX			0x8000000000000000ll
 
 #define AXP_R_Q2L_OVERFLOW(val)	(((val) & AXP_R_SIGN) ? 					\
-								 ((val) < AXP_R_LONG_SMALL) :				\
-								 ((val) > AXP_R_LONG_LARGE))
+                 ((val) < AXP_R_LONG_SMALL) :				\
+                 ((val) > AXP_R_LONG_LARGE))
 
 /*
  * Exploded rounding constants
@@ -376,48 +376,48 @@ typedef enum
 } AXP_FP_ENCODING;
 
 #define AXP_FP_ENCODE(ur, ieeeFP)											\
-	((ur)->exponent == AXP_R_EXP_MAX ?										\
-		((ieeeFP) ?															\
-			 ((ur)->fraction == 0 ?											\
-					 Infinity : 											\
-					 NotANumber) : 											\
-			 Finite) : 														\
-		((ur)->exponent == 0 ?												\
-			((ieeeFP) ?														\
-				((ur)->fraction == 0 ?										\
-					Zero :													\
-					Denormal) :												\
-				((ur)->sign == 1 ?											\
-					Reserved :												\
-					((ur)->fraction == 0 ?									\
-						Zero :												\
-						DirtyZero))) :										\
-		Finite))
+  ((ur)->exponent == AXP_R_EXP_MAX ?										\
+    ((ieeeFP) ?															\
+       ((ur)->fraction == 0 ?											\
+           Infinity : 											\
+           NotANumber) : 											\
+       Finite) : 														\
+    ((ur)->exponent == 0 ?												\
+      ((ieeeFP) ?														\
+        ((ur)->fraction == 0 ?										\
+          Zero :													\
+          Denormal) :												\
+        ((ur)->sign == 1 ?											\
+          Reserved :												\
+          ((ur)->fraction == 0 ?									\
+            Zero :												\
+            DirtyZero))) :										\
+    Finite))
 
 #define AXP_FP_CVT_EXP_F2T(fp)												\
-	((fp).exponent ? (fp).exponent - (1 + AXP_F_BIAS - AXP_T_BIAS) : 0) & AXP_T_EXP_MASK
+  ((fp).exponent ? (fp).exponent - (1 + AXP_F_BIAS - AXP_T_BIAS) : 0) & AXP_T_EXP_MASK
 #define AXP_FP_CVT_EXP_T2F(fp)												\
-	((fp).exponent ? (fp).exponent + (1 + AXP_F_BIAS - AXP_T_BIAS) : 0)
+  ((fp).exponent ? (fp).exponent + (1 + AXP_F_BIAS - AXP_T_BIAS) : 0)
 
 #define AXP_FP_CVT_EXP_G2F(fp)												\
-	((fp).exponent ? (fp).exponent - (AXP_G_BIAS - AXP_F_BIAS) : 0)
+  ((fp).exponent ? (fp).exponent - (AXP_G_BIAS - AXP_F_BIAS) : 0)
 #define AXP_FP_CVT_EXP_F2G(fp)												\
-	((fp).exponent ? (fp).exponent + (AXP_G_BIAS - AXP_F_BIAS) : 0) & AXP_G_EXP_MASK
+  ((fp).exponent ? (fp).exponent + (AXP_G_BIAS - AXP_F_BIAS) : 0) & AXP_G_EXP_MASK
 
 #define AXP_FP_CVT_EXP_G2D(fp)												\
-	((fp).exponent ? (fp).exponent - (AXP_G_BIAS - AXP_D_BIAS) : 0)
+  ((fp).exponent ? (fp).exponent - (AXP_G_BIAS - AXP_D_BIAS) : 0)
 #define AXP_FP_CVT_EXP_D2G(fp)												\
-	((fp).exponent ? (fp).exponent + (AXP_G_BIAS - AXP_D_BIAS) : 0) & AXP_G_EXP_MASK
+  ((fp).exponent ? (fp).exponent + (AXP_G_BIAS - AXP_D_BIAS) : 0) & AXP_G_EXP_MASK
 
 #define AXP_FP_CVT_EXP_G2X(fp)												\
-	((fp).exponent ? (fp).exponent - (1 + AXP_G_BIAS - AXP_X_BIAS) : 0) & AXP_X_EXP_MASK
+  ((fp).exponent ? (fp).exponent - (1 + AXP_G_BIAS - AXP_X_BIAS) : 0) & AXP_X_EXP_MASK
 #define AXP_FP_CVT_EXP_X2G(fp)												\
-	((fp).exponent ? (fp).exponent + (1 + AXP_G_BIAS + AXP_X_BIAS) : 0)
+  ((fp).exponent ? (fp).exponent + (1 + AXP_G_BIAS + AXP_X_BIAS) : 0)
 
 #define AXP_FP_CVT_EXP_S2T(fp)												\
-	((fp).exponent ? (fp).exponent + (AXP_S_BIAS - AXP_T_BIAS) : 0) & AXP_T_EXP_MASK
+  ((fp).exponent ? (fp).exponent + (AXP_S_BIAS - AXP_T_BIAS) : 0) & AXP_T_EXP_MASK
 #define AXP_FP_CVT_EXP_T2S(fp)												\
-	((fp).exponent ? (fp).exponent - (AXP_S_BIAS - AXP_T_BIAS) : 0)
+  ((fp).exponent ? (fp).exponent - (AXP_S_BIAS - AXP_T_BIAS) : 0)
 
 /*
  * Initialization and Main Functions for Fbox.

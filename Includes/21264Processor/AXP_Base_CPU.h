@@ -658,14 +658,14 @@ typedef struct
  * These definitions zero extend various sized data
  */
 #define AXP_SEXT_BYTE(val)												\
-	((val) & 0x0000000000000080ll) ? (0xffffffffffffff00ll | (val)) :	\
-			AXP_ZEXT_BYTE(val)
+  ((val) & 0x0000000000000080ll) ? (0xffffffffffffff00ll | (val)) :	\
+      AXP_ZEXT_BYTE(val)
 #define AXP_SEXT_WORD(val)												\
-	((val) & 0x0000000000008000ll) ? (0xffffffffffff0000ll | (val)) :	\
-			AXP_ZEXT_WORD(val)
+  ((val) & 0x0000000000008000ll) ? (0xffffffffffff0000ll | (val)) :	\
+      AXP_ZEXT_WORD(val)
 #define AXP_SEXT_LONG(val)												\
-	((val) & 0x0000000080000000ll) ? (0xffffffff00000000ll | (val)) :	\
-			AXP_ZEXT_LONG(val)
+  ((val) & 0x0000000080000000ll) ? (0xffffffff00000000ll | (val)) :	\
+      AXP_ZEXT_LONG(val)
 #define AXP_SEXT_QUAD(val)		(val)
 
 /*

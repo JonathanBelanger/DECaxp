@@ -18,7 +18,7 @@
  *
  *  This header file contains the definitions to support the VHD formatted
  *  virtual disk image.
-*
+ *
  * Revision History:
  *
  *  V01.000	08-Jul-2018	Jonathan D. Belanger
@@ -40,13 +40,10 @@
 
 typedef enum
 {
-    DiskNone = 0,
-    DiskFixed = 2,
-    DiskDynamic = 3,
-    DiskDifferencing = 4
+    DiskNone = 0, DiskFixed = 2, DiskDynamic = 3, DiskDifferencing = 4
 } AXP_VHD_DiskType;
 
-#define AXP_VHD_TypeValid(type)	\
+#define AXP_VHD_TypeValid(type)	                                            \
     (((type) >= DiskFixed) && ((type) <= DiskDifferencing))
 
 /*
@@ -62,32 +59,32 @@ typedef enum
 #define AXP_VHD_FOOTER_RES_LEN		427
 typedef struct
 {
-    u16		cylinders;
-    u8		heads;
-    u8		sectors;
+    u16 cylinders;
+    u8 heads;
+    u8 sectors;
 } AXP_VHD_DiskGeo;
 typedef struct
 {
-    u64			cookie;		/* conectix */
-    u32			features;
-    u32			formatVer;
-    u64			dataOffset;
-    u32			timestamp;	/* seconds since 01/01/2000 00:00 GMT */
-    u32			creator;
-    u32			creatorVer;
-    u32			creatorHostOS;
-    u64			originalSize;
-    u64			currentSize;
+    u64 cookie;         /* conectix */
+    u32 features;
+    u32 formatVer;
+    u64 dataOffset;
+    u32 timestamp;      /* seconds since 01/01/2000 00:00 GMT */
+    u32 creator;
+    u32 creatorVer;
+    u32 creatorHostOS;
+    u64 originalSize;
+    u64 currentSize;
     union
     {
-	u32		diskGeo;
-	AXP_VHD_DiskGeo chs;
+        u32 diskGeo;
+        AXP_VHD_DiskGeo chs;
     };
-    AXP_VHD_DiskType	diskType;
-    u32			checksum;
-    AXP_VHDX_GUID	guid;
-    u8			saveState;
-    u8			res_1[AXP_VHD_FOOTER_RES_LEN];
+    AXP_VHD_DiskType diskType;
+    u32 checksum;
+    AXP_VHDX_GUID guid;
+    u8 saveState;
+    u8 res_1[AXP_VHD_FOOTER_RES_LEN];
 } AXP_VHD_Footer;
 
 #define AXP_VHDFILE_SIG		0x78697463656e6f63ll
@@ -112,11 +109,11 @@ typedef struct
 #define AXP_VHD_PARENT_LOC_CNT	8
 typedef struct
 {
-    u32			code;
-    u32			dataSpace;	/* in sectors */
-    u32			dataLen;	/* in bytes */
-    u32			res_1;
-    u32			dataOff;
+    u32 code;
+    u32 dataSpace;  /* in sectors */
+    u32 dataLen;    /* in bytes */
+    u32 res_1;
+    u32 dataOff;
 } AXP_VHD_ParentLoc;
 
 #define AXP_VHD_PCODE_NONE	0x00000000l
@@ -129,19 +126,19 @@ typedef struct
 
 typedef struct
 {
-    u64			cookie;		/* cxsparse */
-    u64			dataOff;
-    u64			tableOff;
-    u32			headerVer;
-    u32			maxTableEnt;
-    u32			blockSize;
-    u32			checksum;
-    AXP_VHDX_GUID	parentGuid;
-    u32			parentTimestamp;
-    u32			res_1;
-    uint16_t		parentName;
-    AXP_VHD_ParentLoc	parentLoc[AXP_VHD_PARENT_LOC_CNT];
-    u8			res_2[AXP_VHD_DYNAMIC_RES_LEN];
+    u64 cookie;     /* cxsparse */
+    u64 dataOff;
+    u64 tableOff;
+    u32 headerVer;
+    u32 maxTableEnt;
+    u32 blockSize;
+    u32 checksum;
+    AXP_VHDX_GUID parentGuid;
+    u32 parentTimestamp;
+    u32 res_1;
+    uint16_t parentName;
+    AXP_VHD_ParentLoc parentLoc[AXP_VHD_PARENT_LOC_CNT];
+    u8 res_2[AXP_VHD_DYNAMIC_RES_LEN];
 } AXP_VHD_Dynamic;
 
 #define AXP_VHD_DYNAMIC_SIG	0x6573726170737863ll
@@ -164,24 +161,23 @@ typedef struct
  * The BAT is always extended to a sector boundary. The “Max Table Entries”
  * field within the Dynamic Disk Header indicates how many entries are valid.
  */
-typedef u32		AXP_VHD_BAT_ENT;
+typedef u32 AXP_VHD_BAT_ENT;
 #define AXP_VHD_BAT_UNUSED	0xffffffffl
 
 /*
  * Function Prototypes
  */
-u32 _AXP_VHD_Create(
-		char *,
-		AXP_VHD_CREATE_FLAG,
-		char *,
-		u32,
-		u64,
-		u32,
-		u32,
-		u32,
-		AXP_VHD_HANDLE *);
+u32 _AXP_VHD_Create(char *,
+                    AXP_VHD_CREATE_FLAG,
+                    char *,
+                    u32,
+                    u64,
+                    u32,
+                    u32,
+                    u32,
+                    AXP_VHD_HANDLE *);
 u32 _AXP_VHD_Open(char *, AXP_VHD_OPEN_FLAG, u32, AXP_VHD_HANDLE *);
-u32 _AXP_VHD_ReadSectors(AXP_VHD_HANDLE, u64, u32 *, u8 *);
+u32 _AXP_VHD_ReadSectors(AXP_VHD_HANDLE, u64, size_t *, u8 *);
 u32 _AXP_VHD_WritreSectors(AXP_VHD_HANDLE, u64, u32 *, u8 *);
 
 #endif /* _AXP_VHD_H_ */

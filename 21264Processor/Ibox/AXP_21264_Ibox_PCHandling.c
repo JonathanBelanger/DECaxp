@@ -122,18 +122,18 @@ void AXP_21264_AddVPC(AXP_21264_CPU *cpu, AXP_PC vpc)
 {
     if (AXP_IBOX_OPT2)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "Adding vPC[%d] 0x%016llx",
-	    cpu->vpcEnd,
-	    *((u64 *) &vpc));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "Adding vPC[%d] 0x%016llx",
+      cpu->vpcEnd,
+      *((u64 *) &vpc));
+  AXP_TRACE_END()
+  ;
     }
     cpu->vpc[cpu->vpcEnd] = vpc;
     cpu->vpcEnd = (cpu->vpcEnd + 1) % AXP_INFLIGHT_MAX;
     if (cpu->vpcEnd == cpu->vpcStart)
-	cpu->vpcStart = (cpu->vpcStart + 1) % AXP_INFLIGHT_MAX;
+  cpu->vpcStart = (cpu->vpcStart + 1) % AXP_INFLIGHT_MAX;
 
     /*
      * Return back to the caller.
@@ -183,30 +183,30 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
      */
     if (cpu->majorType >= EV6)
     {
-	pc.bits21264.highPC = palBase.bits21264.highPC;
-	pc.bits21264.mbz_2 = 0;
-	pc.bits21264.mbo = 1;
-	pc.bits21264.func_7 = palFunc.bits.func_7;
-	pc.bits21264.func_5_0 = palFunc.bits.func_5_0;
-	pc.bits21264.mbz_1 = 0;
-	pc.bits21264.palMode = AXP_PAL_MODE;
+  pc.bits21264.highPC = palBase.bits21264.highPC;
+  pc.bits21264.mbz_2 = 0;
+  pc.bits21264.mbo = 1;
+  pc.bits21264.func_7 = palFunc.bits.func_7;
+  pc.bits21264.func_5_0 = palFunc.bits.func_5_0;
+  pc.bits21264.mbz_1 = 0;
+  pc.bits21264.palMode = AXP_PAL_MODE;
     }
     else
     {
-	pc.bits21164.highPC = palBase.bits21164.highPC;
-	pc.bits21164.mbo = 1;
-	pc.bits21164.func_7 = palFunc.bits.func_7;
-	pc.bits21164.func_5_0 = palFunc.bits.func_5_0;
-	pc.bits21164.mbz = 0;
-	pc.bits21164.palMode = AXP_PAL_MODE;
+  pc.bits21164.highPC = palBase.bits21164.highPC;
+  pc.bits21164.mbo = 1;
+  pc.bits21164.func_7 = palFunc.bits.func_7;
+  pc.bits21164.func_5_0 = palFunc.bits.func_5_0;
+  pc.bits21164.mbz = 0;
+  pc.bits21164.palMode = AXP_PAL_MODE;
     }
 
     if (AXP_IBOX_OPT2)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Generated PAL vPC 0x%016llx", *((u64 *) &pc));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Generated PAL vPC 0x%016llx", *((u64 *) &pc));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -239,8 +239,8 @@ AXP_PC AXP_21264_MakeVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 {
     union
     {
-	u64 pc;
-	AXP_PC vpc;
+  u64 pc;
+  AXP_PC vpc;
     } vpc;
 
     vpc.pc = pc;
@@ -249,10 +249,10 @@ AXP_PC AXP_21264_MakeVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 
     if (AXP_IBOX_OPT2)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Getting vPC 0x%016llx", *((u64 *) &vpc));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Getting vPC 0x%016llx", *((u64 *) &vpc));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -291,13 +291,13 @@ AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
 
     if (AXP_IBOX_OPT2)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "Getting Next vPC[%d] 0x%016llx",
-	    prevVPC,
-	    *((u64 *) &retVal));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "Getting Next vPC[%d] 0x%016llx",
+      prevVPC,
+      *((u64 *) &retVal));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -337,10 +337,10 @@ AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *cpu)
 
     if (AXP_IBOX_OPT2)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite("Incremented vPC 0x%016llx", *((u64 *) &vpc));
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite("Incremented vPC 0x%016llx", *((u64 *) &vpc));
+  AXP_TRACE_END()
+  ;
     }
 
     /*
@@ -377,13 +377,13 @@ AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, AXP_PC pc, i64 displacement)
 
     if (AXP_IBOX_OPT2)
     {
-	AXP_TRACE_BEGIN();
-	AXP_TraceWrite(
-	    "Displacement vPC 0x%016llx (0x%016llx)",
-	    *((u64 *) &vpc),
-	    displacement);
-	AXP_TRACE_END()
-	;
+  AXP_TRACE_BEGIN();
+  AXP_TraceWrite(
+      "Displacement vPC 0x%016llx (0x%016llx)",
+      *((u64 *) &vpc),
+      displacement);
+  AXP_TRACE_END()
+  ;
     }
 
     /*

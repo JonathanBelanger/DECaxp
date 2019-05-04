@@ -61,13 +61,13 @@
  *  AXP_VHD_OUTOFMEMORY:	Insufficient memory to perform operation.
  */
 u32 _AXP_SSD_Create(
-		char *path,
-		AXP_VHD_CREATE_FLAG flags,
-		u64 diskSize,
-		u32 blkSize,
-		u32 sectorSize,
-		u32 deviceID,
-		AXP_VHD_HANDLE *handle)
+    char *path,
+    AXP_VHD_CREATE_FLAG flags,
+    u64 diskSize,
+    u32 blkSize,
+    u32 sectorSize,
+    u32 deviceID,
+    AXP_VHD_HANDLE *handle)
 {
     AXP_SSD_Handle	*ssd;
     AXP_SSD_Geometry	header;
@@ -81,31 +81,31 @@ u32 _AXP_SSD_Create(
     if (ssd != NULL)
     {
 
-	ssd->memory = (u8 *) AXP_Allocate_Block(-diskSize);
-	if (ssd->memory != NULL)
-	{
+  ssd->memory = (u8 *) AXP_Allocate_Block(-diskSize);
+  if (ssd->memory != NULL)
+  {
 
-	    /*
-	     * Allocate a buffer long enough for for the filename (plus null
-	     * character).
-	     */
-	    ssd->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
-	    if (ssd->filePath != NULL)
-	    {
-		strcpy(ssd->filePath, path);
-		ssd->deviceID = deviceID;
-		ssd->diskSize = diskSize;
-		ssd->blkSize = blkSize;
-		ssd->sectorSize = sectorSize;
-	    }
-	    else
-		retVal = AXP_VHD_OUTOFMEMORY;
-	}
-	else
-	    retVal = AXP_VHD_OUTOFMEMORY;
+      /*
+       * Allocate a buffer long enough for for the filename (plus null
+       * character).
+       */
+      ssd->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+      if (ssd->filePath != NULL)
+      {
+    strcpy(ssd->filePath, path);
+    ssd->deviceID = deviceID;
+    ssd->diskSize = diskSize;
+    ssd->blkSize = blkSize;
+    ssd->sectorSize = sectorSize;
+      }
+      else
+    retVal = AXP_VHD_OUTOFMEMORY;
+  }
+  else
+      retVal = AXP_VHD_OUTOFMEMORY;
     }
     else
-	retVal = AXP_VHD_OUTOFMEMORY;
+  retVal = AXP_VHD_OUTOFMEMORY;
 
     /*
      * OK, if we still have a success status, go create the backing store file.
@@ -114,58 +114,58 @@ u32 _AXP_SSD_Create(
     if (retVal == AXP_VHD_SUCCESS)
     {
 
-	/*
-	 * First let's see if the backing store file already exists.  If it
-	 * then return an error.  Otherwise, create the file  for write-binary.
-	 * Since we are creating the SSD, there is nothing to be initialized.
-	 */
-	ssd->fp = fopen(path, "rb");
-	if (ssd->fp == NULL)
-	{
-	    ssd->fp = fopen(path, "wb");
-	    if (ssd->fp != NULL)
-	    {
-		u64	totalSectors = diskSize / sectorSize;
-		u8	smallBuf[8];
+  /*
+   * First let's see if the backing store file already exists.  If it
+   * then return an error.  Otherwise, create the file  for write-binary.
+   * Since we are creating the SSD, there is nothing to be initialized.
+   */
+  ssd->fp = fopen(path, "rb");
+  if (ssd->fp == NULL)
+  {
+      ssd->fp = fopen(path, "wb");
+      if (ssd->fp != NULL)
+      {
+    u64	totalSectors = diskSize / sectorSize;
+    u8	smallBuf[8];
 
-		memset(smallBuf, 0, sizeof(smallBuf));
-		memset(&header, 0, sizeof(header));
-		totalSectors = diskSize / sectorSize;
-		ssd->heads = header.heads = 255;
-		ssd->sectors = header.sectors = 63;
-		ssd->cylinders = header.cylinders = totalSectors /
-		    (header.heads * header.sectors);
-		header.ID1 = AXP_SSD_SIG1;
-		header.diskSize = diskSize;
-		header.blkSize = blkSize;
-		header.sectorSize = sectorSize;
-		ssd->byteZeroOffset = header.byteZeroOffset = sizeof(header);
-		header.ID2 = AXP_SSD_SIG2;
+    memset(smallBuf, 0, sizeof(smallBuf));
+    memset(&header, 0, sizeof(header));
+    totalSectors = diskSize / sectorSize;
+    ssd->heads = header.heads = 255;
+    ssd->sectors = header.sectors = 63;
+    ssd->cylinders = header.cylinders = totalSectors /
+        (header.heads * header.sectors);
+    header.ID1 = AXP_SSD_SIG1;
+    header.diskSize = diskSize;
+    header.blkSize = blkSize;
+    header.sectorSize = sectorSize;
+    ssd->byteZeroOffset = header.byteZeroOffset = sizeof(header);
+    header.ID2 = AXP_SSD_SIG2;
 
-		/*
-		 * Write the header.
-		 */
-		if (AXP_WriteAtOffset(ssd->fp, &header, sizeof(header), 0) == false)
-		    retVal = AXP_VHD_WRITE_FAULT;
+    /*
+     * Write the header.
+     */
+    if (AXP_WriteAtOffset(ssd->fp, &header, sizeof(header), 0) == false)
+        retVal = AXP_VHD_WRITE_FAULT;
 
-		/*
-		 * If writing the header succeeded then, write out to the end
-		 * so that we can have the entire file written (a static file).
-		 */
-		else if (AXP_WriteAtOffset(
-					ssd->fp,
-					smallBuf,
-					sizeof(smallBuf),
-					(header.byteZeroOffset +
-					    diskSize -
-					    sizeof(smallBuf))) == false)
-		    retVal = AXP_VHD_WRITE_FAULT;
-	    }
-	    else
-		retVal = AXP_VHD_WRITE_FAULT;
-	}
-	else
-	    retVal = AXP_VHD_FILE_EXISTS;
+    /*
+     * If writing the header succeeded then, write out to the end
+     * so that we can have the entire file written (a static file).
+     */
+    else if (AXP_WriteAtOffset(
+          ssd->fp,
+          smallBuf,
+          sizeof(smallBuf),
+          (header.byteZeroOffset +
+              diskSize -
+              sizeof(smallBuf))) == false)
+        retVal = AXP_VHD_WRITE_FAULT;
+      }
+      else
+    retVal = AXP_VHD_WRITE_FAULT;
+  }
+  else
+      retVal = AXP_VHD_FILE_EXISTS;
     }
 
     /*
@@ -174,11 +174,11 @@ u32 _AXP_SSD_Create(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	ssd->fp = freopen(path, "wb+", ssd->fp);
-	if (ssd->fp == NULL)
-	    retVal = AXP_VHD_INV_HANDLE;
-	else
-	    *handle = (AXP_VHD_HANDLE) ssd;
+  ssd->fp = freopen(path, "wb+", ssd->fp);
+  if (ssd->fp == NULL)
+      retVal = AXP_VHD_INV_HANDLE;
+  else
+      *handle = (AXP_VHD_HANDLE) ssd;
     }
 
     /*
@@ -187,7 +187,7 @@ u32 _AXP_SSD_Create(
      * file were not successfully opened.
      */
     if ((retVal != AXP_VHD_SUCCESS) && (ssd != NULL))
-	AXP_Deallocate_Block(ssd);
+  AXP_Deallocate_Block(ssd);
 
     /*
      * Return the result of this call back to the caller.
@@ -222,10 +222,10 @@ u32 _AXP_SSD_Create(
  *  AXP_VHD_FILE_CORRUPT:	The file appears to be corrupt.
  */
 u32 _AXP_SSD_Open(
-		char *path,
-		AXP_VHD_OPEN_FLAG flags,
-		u32 deviceID,
-		AXP_VHD_HANDLE *handle)
+    char *path,
+    AXP_VHD_OPEN_FLAG flags,
+    u32 deviceID,
+    AXP_VHD_HANDLE *handle)
 {
     AXP_SSD_Handle	*ssd;
     AXP_SSD_Geometry	header;
@@ -240,61 +240,61 @@ u32 _AXP_SSD_Open(
     if (ssd != NULL)
     {
 
-	/*
-	 * Allocate a buffer long enough for for the filename (plus null
-	 * character).
-	 */
-	ssd->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
-	if (ssd->filePath != NULL)
-	{
-	    ssd->fp = fopen(path, "rb");
-	    if (ssd->fp != NULL)
-	    {
-		outLen = sizeof(header);
-		if (AXP_ReadFromOffset(ssd->fp, &header, &outLen, 0) == true)
-		{
-		    if ((header.ID1 == AXP_SSD_SIG1) &&
-			(header.ID2 == AXP_SSD_SIG2))
-		    {
-			ssd->diskSize = header.diskSize;
-			ssd->blkSize = header.blkSize;
-			ssd->sectorSize = header.sectorSize;
-			ssd->byteZeroOffset = header.byteZeroOffset;
-			ssd->cylinders = header.cylinders;
-			ssd->heads = header.heads;
-			ssd->sectors = header.sectors;
-		    }
-		    else
-			retVal = AXP_VHD_FILE_CORRUPT;
-		}
-		else
-		    retVal = AXP_VHD_READ_FAULT;
-	    }
-	    else
-		retVal = AXP_VHD_FILE_NOT_FOUND;
-	}
+  /*
+   * Allocate a buffer long enough for for the filename (plus null
+   * character).
+   */
+  ssd->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+  if (ssd->filePath != NULL)
+  {
+      ssd->fp = fopen(path, "rb");
+      if (ssd->fp != NULL)
+      {
+    outLen = sizeof(header);
+    if (AXP_ReadFromOffset(ssd->fp, &header, &outLen, 0) == true)
+    {
+        if ((header.ID1 == AXP_SSD_SIG1) &&
+      (header.ID2 == AXP_SSD_SIG2))
+        {
+      ssd->diskSize = header.diskSize;
+      ssd->blkSize = header.blkSize;
+      ssd->sectorSize = header.sectorSize;
+      ssd->byteZeroOffset = header.byteZeroOffset;
+      ssd->cylinders = header.cylinders;
+      ssd->heads = header.heads;
+      ssd->sectors = header.sectors;
+        }
+        else
+      retVal = AXP_VHD_FILE_CORRUPT;
+    }
+    else
+        retVal = AXP_VHD_READ_FAULT;
+      }
+      else
+    retVal = AXP_VHD_FILE_NOT_FOUND;
+  }
 
-	/*
-	 * If we get here with a success status, then we have read in the
-	 * backing store file, now allocate the memory needed for the SSD and
-	 * read in the saved SSD data from the file.
-	 */
-	if (retVal == AXP_VHD_SUCCESS)
-	{
-	    ssd->memory = (u8 *) AXP_Allocate_Block(-ssd->diskSize);
-	    if (ssd->memory != NULL)
-	    {
-		outLen = ssd->diskSize;
-		if (AXP_ReadFromOffset(
-				ssd->fp,
-				ssd->memory,
-				&outLen,
-				ssd->byteZeroOffset) == false)
-		    retVal = AXP_VHD_READ_FAULT;
-	    }
-	    else
-		retVal = AXP_VHD_OUTOFMEMORY;
-	}
+  /*
+   * If we get here with a success status, then we have read in the
+   * backing store file, now allocate the memory needed for the SSD and
+   * read in the saved SSD data from the file.
+   */
+  if (retVal == AXP_VHD_SUCCESS)
+  {
+      ssd->memory = (u8 *) AXP_Allocate_Block(-ssd->diskSize);
+      if (ssd->memory != NULL)
+      {
+    outLen = ssd->diskSize;
+    if (AXP_ReadFromOffset(
+        ssd->fp,
+        ssd->memory,
+        &outLen,
+        ssd->byteZeroOffset) == false)
+        retVal = AXP_VHD_READ_FAULT;
+      }
+      else
+    retVal = AXP_VHD_OUTOFMEMORY;
+  }
     }
 
     /*
@@ -303,11 +303,11 @@ u32 _AXP_SSD_Open(
      */
     if (retVal == AXP_VHD_SUCCESS)
     {
-	ssd->fp = freopen(path, "wb+", ssd->fp);
-	if (ssd->fp == NULL)
-	    retVal = AXP_VHD_INV_HANDLE;
-	else
-	    *handle = (AXP_VHD_HANDLE) ssd;
+  ssd->fp = freopen(path, "wb+", ssd->fp);
+  if (ssd->fp == NULL)
+      retVal = AXP_VHD_INV_HANDLE;
+  else
+      *handle = (AXP_VHD_HANDLE) ssd;
     }
 
     /*
@@ -316,7 +316,7 @@ u32 _AXP_SSD_Open(
      * file were not successfully opened.
      */
     if ((retVal != AXP_VHD_SUCCESS) && (ssd != NULL))
-	AXP_Deallocate_Block(ssd);
+  AXP_Deallocate_Block(ssd);
 
     /*
      * Return the result of this call back to the caller.

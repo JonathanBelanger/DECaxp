@@ -32,4 +32,4 @@ add_library(TyphoonTsunami STATIC
     AXP_21274_System.c)
 
 target_include_directories(TyphoonTsunami PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

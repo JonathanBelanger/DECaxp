@@ -58,6 +58,8 @@
  *
  * AXP_21264_Cbox_Bcache.c
  */
+int AXP_21264_Bcache_Index(AXP_21264_CPU *, u64);
+u64 AXP_21264_Bcache_Tag(u64);
 void AXP_21264_Bcache_Evict(AXP_21264_CPU *, u64);
 void AXP_21264_Bcache_Flush(AXP_21264_CPU *);
 bool AXP_21264_Bcache_Valid(AXP_21264_CPU *, u64);

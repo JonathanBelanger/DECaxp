@@ -146,21 +146,21 @@ typedef struct
  *			the time.
  */
 #define AXP_3BIT_INCR(cntr)\
-	if ((cntr) < AXP_3BIT_MAX_VALUE)\
-	{\
-		if ((cntr) == AXP_3BIT_NOT_TAKEN_MAX)\
-			(cntr) = AXP_3BIT_MAX_VALUE;\
-		else\
-			(cntr)++;\
-	}
+  if ((cntr) < AXP_3BIT_MAX_VALUE)\
+  {\
+    if ((cntr) == AXP_3BIT_NOT_TAKEN_MAX)\
+      (cntr) = AXP_3BIT_MAX_VALUE;\
+    else\
+      (cntr)++;\
+  }
 #define AXP_3BIT_DECR(cntr)\
-	if ((cntr) > 0)\
-	{\
-		if ((cntr) == AXP_3BIT_TAKEN_MIN)\
-			(cntr) = 0;\
-		else\
-			(cntr)--;\
-	}
+  if ((cntr) > 0)\
+  {\
+    if ((cntr) == AXP_3BIT_TAKEN_MIN)\
+      (cntr) = 0;\
+    else\
+      (cntr)--;\
+  }
 #define AXP_3BIT_TAKE(cntr)	(((cntr) < AXP_3BIT_TAKEN_MIN) ? false : true)
 
 /*

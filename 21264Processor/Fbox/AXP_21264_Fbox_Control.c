@@ -76,13 +76,13 @@ AXP_EXCEPTIONS AXP_FBEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * then adjust the PC by the displacement.
      */
     if ((instr->src1v.fp.fpr.exponent == 0)
-	&& (instr->src1v.fp.fpr.fraction == 0))
-	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+  && (instr->src1v.fp.fpr.fraction == 0))
+  instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
     else
     {
-	instr->branchPC.pal = 0;
-	instr->branchPC.res = 0;
-	instr->branchPC.pc = 0;
+  instr->branchPC.pal = 0;
+  instr->branchPC.res = 0;
+  instr->branchPC.pc = 0;
     }
 
     /*
@@ -129,12 +129,12 @@ AXP_EXCEPTIONS AXP_FBGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * equal to 0.0, then adjust the PC by the displacement.
      */
     if (instr->src1v.fp.uq <= AXP_R_SIGN)
-	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+  instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
     else
     {
-	instr->branchPC.pal = 0;
-	instr->branchPC.res = 0;
-	instr->branchPC.pc = 0;
+  instr->branchPC.pal = 0;
+  instr->branchPC.res = 0;
+  instr->branchPC.pc = 0;
     }
 
     /*
@@ -181,12 +181,12 @@ AXP_EXCEPTIONS AXP_FBGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * then adjust the PC by the displacement.
      */
     if ((instr->src1v.fp.fpr.sign == 0) && (instr->src1v.fp.uq != 0))
-	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+  instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
     else
     {
-	instr->branchPC.pal = 0;
-	instr->branchPC.res = 0;
-	instr->branchPC.pc = 0;
+  instr->branchPC.pal = 0;
+  instr->branchPC.res = 0;
+  instr->branchPC.pc = 0;
     }
 
     /*
@@ -233,12 +233,12 @@ AXP_EXCEPTIONS AXP_FBLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * to 0.0, then adjust the PC by the displacement.
      */
     if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq == 0))
-	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+  instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
     else
     {
-	instr->branchPC.pal = 0;
-	instr->branchPC.res = 0;
-	instr->branchPC.pc = 0;
+  instr->branchPC.pal = 0;
+  instr->branchPC.res = 0;
+  instr->branchPC.pc = 0;
     }
 
     /*
@@ -285,12 +285,12 @@ AXP_EXCEPTIONS AXP_FBLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * then adjust the PC by the displacement.
      */
     if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq != 0))
-	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+  instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
     else
     {
-	instr->branchPC.pal = 0;
-	instr->branchPC.res = 0;
-	instr->branchPC.pc = 0;
+  instr->branchPC.pal = 0;
+  instr->branchPC.res = 0;
+  instr->branchPC.pc = 0;
     }
 
     /*
@@ -337,12 +337,12 @@ AXP_EXCEPTIONS AXP_FBNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * then adjust the PC by the displacement.
      */
     if ((instr->src1v.fp.uq & ~AXP_R_SIGN) != 0)
-	instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
+  instr->branchPC = AXP_21264_DisplaceVPC(cpu, pc, instr->displacement);
     else
     {
-	instr->branchPC.pal = 0;
-	instr->branchPC.res = 0;
-	instr->branchPC.pc = 0;
+  instr->branchPC.pal = 0;
+  instr->branchPC.res = 0;
+  instr->branchPC.pc = 0;
     }
 
     /*

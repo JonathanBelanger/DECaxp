@@ -211,13 +211,13 @@ AXP_EXCEPTIONS AXP_CVTQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
 
     if (func->trp == AXP_FP_TRP_V)
     {
-	if (AXP_R_Q2L_OVERFLOW(instr->src1v.fp.uq))
-	{
-	    int raised = FE_INEXACT | FE_OVERFLOW;
+  if (AXP_R_Q2L_OVERFLOW(instr->src1v.fp.uq))
+  {
+      int raised = FE_INEXACT | FE_OVERFLOW;
 
-	    retVal = ArithmeticTraps;
-	    AXP_FP_SetFPCR(cpu, instr, raised, true);
-	}
+      retVal = ArithmeticTraps;
+      AXP_FP_SetFPCR(cpu, instr, raised, true);
+  }
     }
 
     /*
@@ -253,8 +253,8 @@ AXP_EXCEPTIONS AXP_FCMOVEQ(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if ((instr->src1v.fp.fpr.exponent == 0)
-	&& (instr->src1v.fp.fpr.fraction == 0))
-	instr->destv.fp.uq = instr->src2v.fp.uq;
+  && (instr->src1v.fp.fpr.fraction == 0))
+  instr->destv.fp.uq = instr->src2v.fp.uq;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -289,7 +289,7 @@ AXP_EXCEPTIONS AXP_FCMOVGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if (instr->src1v.fp.uq <= AXP_R_SIGN)
-	instr->destv.fp.uq = instr->src2v.fp.uq;
+  instr->destv.fp.uq = instr->src2v.fp.uq;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -324,7 +324,7 @@ AXP_EXCEPTIONS AXP_FCMOVGT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if ((instr->src1v.fp.fpr.sign == 0) && (instr->src1v.fp.uq != 0))
-	instr->destv.fp.uq = instr->src2v.fp.uq;
+  instr->destv.fp.uq = instr->src2v.fp.uq;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -359,7 +359,7 @@ AXP_EXCEPTIONS AXP_FCMOVLE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq == 0))
-	instr->destv.fp.uq = instr->src2v.fp.uq;
+  instr->destv.fp.uq = instr->src2v.fp.uq;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -394,7 +394,7 @@ AXP_EXCEPTIONS AXP_FCMOVLT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if ((instr->src1v.fp.fpr.sign == 1) || (instr->src1v.fp.uq != 0))
-	instr->destv.fp.uq = instr->src2v.fp.uq;
+  instr->destv.fp.uq = instr->src2v.fp.uq;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -429,7 +429,7 @@ AXP_EXCEPTIONS AXP_FCMOVNE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction
      */
     if ((instr->src1v.fp.uq & ~AXP_R_SIGN) != 0)
-	instr->destv.fp.uq = instr->src2v.fp.uq;
+  instr->destv.fp.uq = instr->src2v.fp.uq;
 
     /*
      * Return back to the caller with any exception that may have occurred.

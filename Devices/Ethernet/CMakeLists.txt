@@ -27,4 +27,4 @@ add_library(Ethernet STATIC
     AXP_Ethernet.c)
 
 target_include_directories(Ethernet PRIVATE
-    ${PROJECT_SOURCE_DIR}/Include)
+    ${PROJECT_SOURCE_DIR}/Includes)

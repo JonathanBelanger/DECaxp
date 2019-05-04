@@ -59,28 +59,28 @@ static bool _GetDiskInfo(AXP_RAW_Handle *raw)
      * Let's get information about the device.
      */
     while ((retVal == true) && (done == false))
-	switch(ioctlCnt++)
-	{
-	    case 0:
-		retVal = ioctl(raw->fd, BLKROGET, &ro) == 0;
-		raw->readOnly = ro != 0;
-		break;
+  switch(ioctlCnt++)
+  {
+      case 0:
+    retVal = ioctl(raw->fd, BLKROGET, &ro) == 0;
+    raw->readOnly = ro != 0;
+    break;
 
-	    case 1:
-		retVal = ioctl(raw->fd, BLKGETSIZE64, &raw->diskSize) == 0;
-		break;
+      case 1:
+    retVal = ioctl(raw->fd, BLKGETSIZE64, &raw->diskSize) == 0;
+    break;
 
-	    case 2:
-		retVal = ioctl(raw->fd, BLKBSZGET, &raw->blkSize) == 0;
-		break;
+      case 2:
+    retVal = ioctl(raw->fd, BLKBSZGET, &raw->blkSize) == 0;
+    break;
 
-	    case 3:
-		retVal = ioctl(raw->fd, BLKSSZGET, &raw->sectorSize) == 0;
+      case 3:
+    retVal = ioctl(raw->fd, BLKSSZGET, &raw->sectorSize) == 0;
 
-	    default:
-		done = true;
-		break;
-	}
+      default:
+    done = true;
+    break;
+  }
 
     /*
      * Calculate some geometry numbers.  This code is consistent with the
@@ -90,12 +90,12 @@ static bool _GetDiskInfo(AXP_RAW_Handle *raw)
      */
     if (retVal == true)
     {
-	u64	totalSectors;
+  u64	totalSectors;
 
-	totalSectors = raw->diskSize / raw->sectorSize;
-	raw->heads = 255;
-	raw->sectors = 63;
-	raw->cylinders = totalSectors / (raw->heads * raw->sectors);
+  totalSectors = raw->diskSize / raw->sectorSize;
+  raw->heads = 255;
+  raw->sectors = 63;
+  raw->cylinders = totalSectors / (raw->heads * raw->sectors);
     }
 
     /*
@@ -130,10 +130,10 @@ static bool _GetDiskInfo(AXP_RAW_Handle *raw)
  *  AXP_VHD_OUTOFMEMORY:	Insufficient memory to perform operation.
  */
 u32 _AXP_RAW_Open(
-		char *path,
-		AXP_VHD_OPEN_FLAG flags,
-		u32 deviceID,
-		AXP_VHD_HANDLE *handle)
+    char *path,
+    AXP_VHD_OPEN_FLAG flags,
+    u32 deviceID,
+    AXP_VHD_HANDLE *handle)
 {
     AXP_RAW_Handle	*raw;
     u32			retVal = AXP_VHD_SUCCESS;
@@ -146,41 +146,41 @@ u32 _AXP_RAW_Open(
     if (raw != NULL)
     {
 
-	/*
-	 * Allocate a buffer long enough for for the filename (plus null
-	 * character).
-	 */
-	raw->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
-	if (raw->filePath != NULL)
-	{
-	    int	mode = (deviceID == STORAGE_TYPE_DEV_ISO) ? O_RDONLY : O_RDWR;
+  /*
+   * Allocate a buffer long enough for for the filename (plus null
+   * character).
+   */
+  raw->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+  if (raw->filePath != NULL)
+  {
+      int	mode = (deviceID == STORAGE_TYPE_DEV_ISO) ? O_RDONLY : O_RDWR;
 
-	    strcpy(raw->filePath, path);
-	    raw->deviceID = deviceID;
+      strcpy(raw->filePath, path);
+      raw->deviceID = deviceID;
 
-	    /*
-	     * Open the device/file.  If it is an ISO file or a CDROM device,
-	     * then do some initialization and we are done.  If it is a
-	     * physical device, then we re-open the device for binary
-	     * read/write.
-	     *
-	     * TODO: Do we need to do something different for ISO files.
-	     */
-	    raw->fd = open(path, mode, 0);
-	    if (raw->fd >= 0)
-	    {
-		raw->deviceID = deviceID;
-		if (_GetDiskInfo(raw) == false)
-		    retVal = AXP_VHD_READ_FAULT;
-	    }
-	    else
-		retVal = AXP_VHD_FILE_NOT_FOUND;
-	}
-	else
-	    retVal = AXP_VHD_OUTOFMEMORY;
+      /*
+       * Open the device/file.  If it is an ISO file or a CDROM device,
+       * then do some initialization and we are done.  If it is a
+       * physical device, then we re-open the device for binary
+       * read/write.
+       *
+       * TODO: Do we need to do something different for ISO files.
+       */
+      raw->fd = open(path, mode, 0);
+      if (raw->fd >= 0)
+      {
+    raw->deviceID = deviceID;
+    if (_GetDiskInfo(raw) == false)
+        retVal = AXP_VHD_READ_FAULT;
+      }
+      else
+    retVal = AXP_VHD_FILE_NOT_FOUND;
+  }
+  else
+      retVal = AXP_VHD_OUTOFMEMORY;
     }
     else
-	retVal = AXP_VHD_OUTOFMEMORY;
+  retVal = AXP_VHD_OUTOFMEMORY;
 
     /*
      * OK, if we don't have a success at this point, and we allocated a VHD
@@ -188,7 +188,7 @@ u32 _AXP_RAW_Open(
      * opened.
      */
     if ((retVal != AXP_VHD_SUCCESS) && (raw != NULL))
-	AXP_Deallocate_Block(raw);
+  AXP_Deallocate_Block(raw);
 
     /*
      * Return the outcome of this call back to the caller.

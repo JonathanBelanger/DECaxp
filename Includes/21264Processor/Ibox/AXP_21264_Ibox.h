@@ -35,7 +35,7 @@
 #include "21264Processor/Caches/AXP_21264_Cache.h"
 #include "21264Processor/Ibox/AXP_21264_Ibox_InstructionInfo.h"
 #include "21264Processor/AXP_21264_Instructions.h"
-#include "21264Processor/AXP_21264_RegisterRenaming.h"
+#include "21264Processor/Ibox/AXP_21264_RegisterRenaming.h"
 #include "21264Processor/Cbox/AXP_21264_Cbox.h"
 
 #define AXP_NONE	0

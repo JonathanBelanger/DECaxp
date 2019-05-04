@@ -116,11 +116,11 @@
 #define AXP_R22_SHADOW		(AXP_MAX_REGISTERS + 6)		/* R38 */
 #define AXP_R23_SHADOW		(AXP_MAX_REGISTERS + 7)		/* R39 */
 #define AXP_REG(regNum, palMode)					\
-		((palMode) ?						\
-		 (((cpu->iCtl.sde & AXP_I_CTL_SDE_ENABLE) != 0) ?	\
-		  ((((regNum) >= 4) && ((regNum) <= 7)) ?		\
-		   ((regNum) + 28) : ((((regNum) >= 20) && ((regNum) <= 23)) ? \
-			((regNum) + 16) : (regNum))) : (regNum)) : (regNum))
+    ((palMode) ?						\
+     (((cpu->iCtl.sde & AXP_I_CTL_SDE_ENABLE) != 0) ?	\
+      ((((regNum) >= 4) && ((regNum) <= 7)) ?		\
+       ((regNum) + 28) : ((((regNum) >= 20) && ((regNum) <= 23)) ? \
+      ((regNum) + 16) : (regNum))) : (regNum)) : (regNum))
 #define AXP_TB_LEN		128
 #define AXP_ICB_INS_CNT		16
 #define AXP_21264_PAGE_SIZE	8192	/* 8KB page size */
@@ -153,19 +153,19 @@
  * Prediction stack macros.
  */
 #define AXP_PUSH(pc)							\
-	if (cpu->predStackIdx > 0)					\
-		cpu->predictionStack[--cpu->predStackIdx] = (pc)
+  if (cpu->predStackIdx > 0)					\
+    cpu->predictionStack[--cpu->predStackIdx] = (pc)
 #define AXP_POP(pc)							\
-	if (cpu->predStackIdx < AXP_INFLIGHT_MAX)			\
-		pc = cpu->predictionStack[cpu->predStackIdx++]
+  if (cpu->predStackIdx < AXP_INFLIGHT_MAX)			\
+    pc = cpu->predictionStack[cpu->predStackIdx++]
 #define AXP_SWAP(pc)							\
-	if (cpu->predStackIdx < AXP_INFLIGHT_MAX)			\
-	{								\
-		AXP_PC tmpPC;						\
-		tmpPC = cpu->predictionStack[cpu->predStackIdx];	\
-		cpu->predictionStack[cpu->predStackIdx] = (pc);		\
-		pc = tmpPC;						\
-	}
+  if (cpu->predStackIdx < AXP_INFLIGHT_MAX)			\
+  {								\
+    AXP_PC tmpPC;						\
+    tmpPC = cpu->predictionStack[cpu->predStackIdx];	\
+    cpu->predictionStack[cpu->predStackIdx] = (pc);		\
+    pc = tmpPC;						\
+  }
 
 /*
  * PALcode Exception Entry Points

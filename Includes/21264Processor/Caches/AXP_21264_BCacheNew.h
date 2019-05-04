@@ -23,14 +23,7 @@
  *	for the specific CPU.  There will not be a direct way for the modification
  *	of a Dcache record in one CPU to update the Bcache record in another CPU.
  */
-typedef enum
-{
-    Invalid,
-    Clean,
-    Dirty,
-    SharedClean,
-    SharedDirty
-} AXP_21264_CACHE_ST;
+#include "21264Processor/Caches/AXP_21264_CacheDefs.h"
 
 #define AXP_21264_BLK_SIZE	8	/* 8 quadwords = 64 bytes */
 

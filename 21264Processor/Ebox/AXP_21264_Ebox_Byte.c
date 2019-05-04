@@ -60,10 +60,10 @@ AXP_EXCEPTIONS AXP_CMPBGE(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction.
      */
     instr->destv.r.uq = (Rav[0] >= Rbv[0] ? 0x01 : 0x00)
-	| (Rav[1] >= Rbv[1] ? 0x02 : 0x00) | (Rav[2] >= Rbv[2] ? 0x04 : 0x00)
-	| (Rav[3] >= Rbv[3] ? 0x08 : 0x00) | (Rav[4] >= Rbv[4] ? 0x10 : 0x00)
-	| (Rav[5] >= Rbv[5] ? 0x20 : 0x00) | (Rav[6] >= Rbv[6] ? 0x40 : 0x00)
-	| (Rav[7] >= Rbv[7] ? 0x80 : 0x00);
+  | (Rav[1] >= Rbv[1] ? 0x02 : 0x00) | (Rav[2] >= Rbv[2] ? 0x04 : 0x00)
+  | (Rav[3] >= Rbv[3] ? 0x08 : 0x00) | (Rav[4] >= Rbv[4] ? 0x10 : 0x00)
+  | (Rav[5] >= Rbv[5] ? 0x20 : 0x00) | (Rav[6] >= Rbv[6] ? 0x40 : 0x00)
+  | (Rav[7] >= Rbv[7] ? 0x80 : 0x00);
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -100,13 +100,13 @@ AXP_EXCEPTIONS AXP_EXTBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq = AXP_BYTE_MASK(
-	instr->src1v.r.uq >> ((Rbv & AXP_LOW_3BITS) * 8));
+  instr->src1v.r.uq >> ((Rbv & AXP_LOW_3BITS) * 8));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -143,13 +143,13 @@ AXP_EXCEPTIONS AXP_EXTWL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq = AXP_WORD_MASK(
-	instr->src1v.r.uq >> ((Rbv & AXP_LOW_3BITS) * 8));
+  instr->src1v.r.uq >> ((Rbv & AXP_LOW_3BITS) * 8));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -186,13 +186,13 @@ AXP_EXCEPTIONS AXP_EXTLL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq = AXP_LONG_MASK(
-	instr->src1v.r.uq >> ((Rbv & AXP_LOW_3BITS) * 8));
+  instr->src1v.r.uq >> ((Rbv & AXP_LOW_3BITS) * 8));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -229,13 +229,13 @@ AXP_EXCEPTIONS AXP_EXTQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq = AXP_QUAD_MASK(
-	instr->src1v.r.uq >> ((Rbv & AXP_LOW_3BITS) * 8));
+  instr->src1v.r.uq >> ((Rbv & AXP_LOW_3BITS) * 8));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -272,14 +272,14 @@ AXP_EXCEPTIONS AXP_EXTWH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq =
-	AXP_WORD_MASK(
-	    instr->src1v.r.uq << ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS));
+  AXP_WORD_MASK(
+      instr->src1v.r.uq << ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -316,14 +316,14 @@ AXP_EXCEPTIONS AXP_EXTLH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq =
-	AXP_LONG_MASK(
-	    instr->src1v.r.uq << ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS));
+  AXP_LONG_MASK(
+      instr->src1v.r.uq << ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -360,14 +360,14 @@ AXP_EXCEPTIONS AXP_EXTQH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq =
-	AXP_QUAD_MASK(
-	    instr->src1v.r.uq << ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS));
+  AXP_QUAD_MASK(
+      instr->src1v.r.uq << ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -404,7 +404,7 @@ AXP_EXCEPTIONS AXP_INSBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
@@ -446,7 +446,7 @@ AXP_EXCEPTIONS AXP_INSWL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
@@ -488,7 +488,7 @@ AXP_EXCEPTIONS AXP_INSLL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
@@ -530,7 +530,7 @@ AXP_EXCEPTIONS AXP_INSQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
@@ -572,16 +572,16 @@ AXP_EXCEPTIONS AXP_INSWH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq =
-	(Rbv & AXP_LOW_3BITS) ?
-	    (instr->src1v.r.uw
-		>> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS)) :
-	    0;
+  (Rbv & AXP_LOW_3BITS) ?
+      (instr->src1v.r.uw
+    >> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS)) :
+      0;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -618,16 +618,16 @@ AXP_EXCEPTIONS AXP_INSLH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq =
-	(Rbv & AXP_LOW_3BITS) ?
-	    (instr->src1v.r.ul
-		>> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS)) :
-	    0;
+  (Rbv & AXP_LOW_3BITS) ?
+      (instr->src1v.r.ul
+    >> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS)) :
+      0;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -664,16 +664,16 @@ AXP_EXCEPTIONS AXP_INSQH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq =
-	(Rbv & AXP_LOW_3BITS) ?
-	    (instr->src1v.r.uq
-		>> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS)) :
-	    0;
+  (Rbv & AXP_LOW_3BITS) ?
+      (instr->src1v.r.uq
+    >> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) & AXP_LOW_6BITS)) :
+      0;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -710,13 +710,13 @@ AXP_EXCEPTIONS AXP_MSKBL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq = instr->src1v.r.uq
-	& ~(AXP_LOW_BYTE << ((Rbv & AXP_LOW_3BITS) * 8));
+  & ~(AXP_LOW_BYTE << ((Rbv & AXP_LOW_3BITS) * 8));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -753,13 +753,13 @@ AXP_EXCEPTIONS AXP_MSKWL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq = instr->src1v.r.uq
-	& ~(AXP_LOW_WORD << ((Rbv & AXP_LOW_3BITS) * 8));
+  & ~(AXP_LOW_WORD << ((Rbv & AXP_LOW_3BITS) * 8));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -796,13 +796,13 @@ AXP_EXCEPTIONS AXP_MSKLL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq = instr->src1v.r.uq
-	& ~(AXP_LOW_LONG << ((Rbv & AXP_LOW_3BITS) * 8));
+  & ~(AXP_LOW_LONG << ((Rbv & AXP_LOW_3BITS) * 8));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -839,13 +839,13 @@ AXP_EXCEPTIONS AXP_MSKQL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq = instr->src1v.r.uq
-	& ~((u64) AXP_LOW_QUAD << ((Rbv & AXP_LOW_3BITS) * 8));
+  & ~((u64) AXP_LOW_QUAD << ((Rbv & AXP_LOW_3BITS) * 8));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -882,17 +882,17 @@ AXP_EXCEPTIONS AXP_MSKWH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq =
-	(Rbv & AXP_LOW_3BITS) ?
-	    (instr->src1v.r.uq
-		& ~(AXP_LOW_WORD >> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) &
-		AXP_LOW_6BITS))) :
-	    instr->src1v.r.uq;
+  (Rbv & AXP_LOW_3BITS) ?
+      (instr->src1v.r.uq
+    & ~(AXP_LOW_WORD >> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) &
+    AXP_LOW_6BITS))) :
+      instr->src1v.r.uq;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -929,17 +929,17 @@ AXP_EXCEPTIONS AXP_MSKLH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq =
-	(Rbv & AXP_LOW_3BITS) ?
-	    (instr->src1v.r.uq
-		& ~(AXP_LOW_LONG >> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) &
-		AXP_LOW_6BITS))) :
-	    instr->src1v.r.uq;
+  (Rbv & AXP_LOW_3BITS) ?
+      (instr->src1v.r.uq
+    & ~(AXP_LOW_LONG >> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) &
+    AXP_LOW_6BITS))) :
+      instr->src1v.r.uq;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -976,17 +976,17 @@ AXP_EXCEPTIONS AXP_MSKQH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
+  Rbv = AXP_BIG_ENDIAN_BYTE(Rbv);
 
     /*
      * Implement the instruction.
      */
     instr->destv.r.uq =
-	(Rbv & AXP_LOW_3BITS) ?
-	    (instr->src1v.r.uq
-		& ~(AXP_LOW_QUAD >> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) &
-		AXP_LOW_6BITS))) :
-	    instr->src1v.r.uq;
+  (Rbv & AXP_LOW_3BITS) ?
+      (instr->src1v.r.uq
+    & ~(AXP_LOW_QUAD >> ((64 - ((Rbv & AXP_LOW_3BITS) * 8)) &
+    AXP_LOW_6BITS))) :
+      instr->src1v.r.uq;
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -1092,14 +1092,14 @@ AXP_EXCEPTIONS AXP_ZAP(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction.
      */
     instr->destv.r.uq = instr->src1v.r.uq
-	& (((Rbv[0] & 0x01) ? 0 : 0x00000000000000ffll)
-	    | ((Rbv[0] & 0x02) ? 0 : 0x000000000000ff00ll)
-	    | ((Rbv[0] & 0x04) ? 0 : 0x0000000000ff0000ll)
-	    | ((Rbv[0] & 0x08) ? 0 : 0x00000000ff000000ll)
-	    | ((Rbv[0] & 0x10) ? 0 : 0x000000ff00000000ll)
-	    | ((Rbv[0] & 0x20) ? 0 : 0x0000ff0000000000ll)
-	    | ((Rbv[0] & 0x40) ? 0 : 0x00ff000000000000ll)
-	    | ((Rbv[0] & 0x80) ? 0 : 0xff00000000000000ll));
+  & (((Rbv[0] & 0x01) ? 0 : 0x00000000000000ffll)
+      | ((Rbv[0] & 0x02) ? 0 : 0x000000000000ff00ll)
+      | ((Rbv[0] & 0x04) ? 0 : 0x0000000000ff0000ll)
+      | ((Rbv[0] & 0x08) ? 0 : 0x00000000ff000000ll)
+      | ((Rbv[0] & 0x10) ? 0 : 0x000000ff00000000ll)
+      | ((Rbv[0] & 0x20) ? 0 : 0x0000ff0000000000ll)
+      | ((Rbv[0] & 0x40) ? 0 : 0x00ff000000000000ll)
+      | ((Rbv[0] & 0x80) ? 0 : 0xff00000000000000ll));
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -1135,14 +1135,14 @@ AXP_EXCEPTIONS AXP_ZAPNOT(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction.
      */
     instr->destv.r.uq = instr->src1v.r.uq
-	& (((Rbv[0] & 0x01) ? 0x00000000000000ffll : 0)
-	    | ((Rbv[0] & 0x02) ? 0x000000000000ff00ll : 0)
-	    | ((Rbv[0] & 0x04) ? 0x0000000000ff0000ll : 0)
-	    | ((Rbv[0] & 0x08) ? 0x00000000ff000000ll : 0)
-	    | ((Rbv[0] & 0x10) ? 0x000000ff00000000ll : 0)
-	    | ((Rbv[0] & 0x20) ? 0x0000ff0000000000ll : 0)
-	    | ((Rbv[0] & 0x40) ? 0x00ff000000000000ll : 0)
-	    | ((Rbv[0] & 0x80) ? 0xff00000000000000ll : 0));
+  & (((Rbv[0] & 0x01) ? 0x00000000000000ffll : 0)
+      | ((Rbv[0] & 0x02) ? 0x000000000000ff00ll : 0)
+      | ((Rbv[0] & 0x04) ? 0x0000000000ff0000ll : 0)
+      | ((Rbv[0] & 0x08) ? 0x00000000ff000000ll : 0)
+      | ((Rbv[0] & 0x10) ? 0x000000ff00000000ll : 0)
+      | ((Rbv[0] & 0x20) ? 0x0000ff0000000000ll : 0)
+      | ((Rbv[0] & 0x40) ? 0x00ff000000000000ll : 0)
+      | ((Rbv[0] & 0x80) ? 0xff00000000000000ll : 0));
 
     /*
      * Return back to the caller with any exception that may have occurred.

@@ -59,7 +59,7 @@
  * of Address Match Wait, Page Hit, and Older Request vectors.
  */
 #define AXP_21264_ENTRY(bitVector, entry)	\
-	(((bitVecotr) >> ((entry * 2)) & AXP_21274_AGE_MASK)
+  (((bitVecotr) >> ((entry * 2)) & AXP_21274_AGE_MASK)
 
 /*
  * HRM Table 6-7 Cchip-to-Pchip Commands
@@ -242,8 +242,8 @@ typedef struct
     u8 res;				/* reserved */
 } AXP_CAPbusMsg;
 
-#include "AXP_21274_Pchip.h"
-#include "AXP_21274_Dchip.h"
+#include "TyphoonTsunami/Pchip/AXP_21274_Pchip.h"
+#include "TyphoonTsunami/Dchip/AXP_21274_Dchip.h"
 
 /*
  * Cchip Function Prototypes

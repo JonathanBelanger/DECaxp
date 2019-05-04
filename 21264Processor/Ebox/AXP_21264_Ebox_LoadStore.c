@@ -123,7 +123,7 @@ AXP_EXCEPTIONS AXP_LDAH(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * Implement the instruction.
      */
     instr->destv.r.uq = instr->src1v.r.uq
-	+ (instr->displacement * AXP_LDAH_MULT);
+  + (instr->displacement * AXP_LDAH_MULT);
 
     /*
      * Indicate that the instruction is ready to be retired.
@@ -171,7 +171,7 @@ AXP_EXCEPTIONS AXP_LDBU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_BYTE(va);
+  vaPrime = AXP_BIG_ENDIAN_BYTE(va);
 
     AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 
@@ -216,7 +216,7 @@ AXP_EXCEPTIONS AXP_LDWU(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_WORD(va);
+  vaPrime = AXP_BIG_ENDIAN_WORD(va);
     AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 
     /*
@@ -266,7 +266,7 @@ AXP_EXCEPTIONS AXP_LDL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_LONG(va);
+  vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
     AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 
@@ -396,7 +396,7 @@ AXP_EXCEPTIONS AXP_LDL_L(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_LONG(va);
+  vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
     AXP_21264_Mbox_ReadMem(cpu, instr, instr->slot, vaPrime);
 
@@ -479,14 +479,14 @@ AXP_EXCEPTIONS AXP_STL_C(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_LONG(va);
+  vaPrime = AXP_BIG_ENDIAN_LONG(va);
 
     AXP_21264_Mbox_WriteMem(
-	cpu,
-	instr,
-	instr->slot,
-	vaPrime,
-	instr->src1v.r.ul);
+  cpu,
+  instr,
+  instr->slot,
+  vaPrime,
+  instr->src1v.r.ul);
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -567,14 +567,14 @@ AXP_EXCEPTIONS AXP_STB(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_BYTE(va);
+  vaPrime = AXP_BIG_ENDIAN_BYTE(va);
 
     AXP_21264_Mbox_WriteMem(
-	cpu,
-	instr,
-	instr->slot,
-	vaPrime,
-	instr->src1v.r.ub);
+  cpu,
+  instr,
+  instr->slot,
+  vaPrime,
+  instr->src1v.r.ub);
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -617,17 +617,17 @@ AXP_EXCEPTIONS AXP_STW(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_WORD(va);
+  vaPrime = AXP_BIG_ENDIAN_WORD(va);
 
     /*
      * Queue up the request to store this value into memory (Dcache).
      */
     AXP_21264_Mbox_WriteMem(
-	cpu,
-	instr,
-	instr->slot,
-	vaPrime,
-	instr->src1v.r.uw);
+  cpu,
+  instr,
+  instr->slot,
+  vaPrime,
+  instr->src1v.r.uw);
 
     /*
      * Return back to the caller with any exception that may have occurred.
@@ -670,13 +670,13 @@ AXP_EXCEPTIONS AXP_STL(AXP_21264_CPU *cpu, AXP_INSTRUCTION *instr)
      * adjustment.
      */
     if (cpu->vaCtl.b_endian == 1)
-	vaPrime = AXP_BIG_ENDIAN_LONG(va);
+  vaPrime = AXP_BIG_ENDIAN_LONG(va);
     AXP_21264_Mbox_WriteMem(
-	cpu,
-	instr,
-	instr->slot,
-	vaPrime,
-	instr->src1v.r.ul);
+  cpu,
+  instr,
+  instr->slot,
+  vaPrime,
+  instr->src1v.r.ul);
 
     /*
      * Return back to the caller with any exception that may have occurred.

@@ -16,47 +16,47 @@
  *
  * Description:
  *
- *	This header file contains the function definitions implemented in the
- *	AXP_21264_Cbox.c module.
+ *  This header file contains the function definitions implemented in the
+ *  AXP_21264_Cbox.c module.
  *
  * Revision History:
  *
- *	V01.000		14-May-2017	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000 14-May-2017 Jonathan D. Belanger
+ *  Initially written.
  *
- *	V01.001		12-Oct-2017	Jonathan D. Belanger
- *	Change the CTAG structure to contain the DTAG index for the corresponding
- *	entry.  This should make keeping these 2 arrays, along with the Dcache
- *	itself, in synch.  NOTE: The set information is the same for all.
+ *  V01.001 12-Oct-2017 Jonathan D. Belanger
+ *  Change the CTAG structure to contain the DTAG index for the corresponding
+ *  entry.  This should make keeping these 2 arrays, along with the Dcache
+ *  itself, in synch.  NOTE: The set information is the same for all.
  *
- *	V01.002		14-Oct-2017	Jonathan D. Belanger
- *	Started defining the CPU to System and System to CPU messages.
+ *  V01.002 14-Oct-2017 Jonathan D. Belanger
+ *  Started defining the CPU to System and System to CPU messages.
  *
- *	V01.003		22-Oct-2017	Jonathan D. Belanger
- *	Differentiated between messages that come over the SysAddIn_L[14:0] pins
- *	and SysAddOut_L[14:0] pins.  Also defined a number of the remaining
- *	structures needed by the Cbox.
+ *  V01.003 22-Oct-2017 Jonathan D. Belanger
+ *  Differentiated between messages that come over the SysAddIn_L[14:0] pins
+ *  and SysAddOut_L[14:0] pins.  Also defined a number of the remaining
+ *  structures needed by the Cbox.
  *
- *	V01.004		06-Nov-2017	Jonathan D. Belanger
- *	Split this fine into 2 separate files.  One to include the definitions for
- *	the Cbox CSRs and one to be included by AXP_21264_Cbox.c so that it will
- *	compile cleanly.  This file is the one with the CSRs define within it.
+ *  V01.004 06-Nov-2017 Jonathan D. Belanger
+ *  Split this fine into 2 separate files.  One to include the definitions for
+ *  the Cbox CSRs and one to be included by AXP_21264_Cbox.c so that it will
+ *  compile cleanly.  This file is the one with the CSRs define within it.
  *
- *	V01.005		16-Nov-2017	Jonathan D. Belanger
- *	Added code to manage the Bcache.  We still need to figure out how to do
- *	the write-though to memory when updating a location in the Bcache.
+ *  V01.005 16-Nov-2017 Jonathan D. Belanger
+ *  Added code to manage the Bcache.  We still need to figure out how to do
+ *  the write-though to memory when updating a location in the Bcache.
  *
- *	V01.006		22-Dec-2017	Jonathan D. Belanger
- *	We need a merge length a store length in each IOWB.  The store length is
- *	used to determine how big the data was for the store that allocated the
- *	IOWB.  This is used to make sure we merge like sizes only.
+ *  V01.006 22-Dec-2017 Jonathan D. Belanger
+ *  We need a merge length a store length in each IOWB.  The store length is
+ *  used to determine how big the data was for the store that allocated the
+ *  IOWB.  This is used to make sure we merge like sizes only.
  *
- *	V01.007		31-Mar-2018	Jonathan D. Belanger
- *	Move the definitions out of this header file that need to be common between
- *	the CPU and System emulations.  This is the requests and responses sent
- *	between the 2 emulations.  These definitions have to be maintained so that
- *	they are identical, except in name.  This way the CPU does not have to
- *	include all the System header files and the System the CPU header files.
+ *  V01.007 31-Mar-2018 Jonathan D. Belanger
+ *  Move the definitions out of this header file that need to be common between
+ *  the CPU and System emulations.  This is the requests and responses sent
+ *  between the 2 emulations.  These definitions have to be maintained so that
+ *  they are identical, except in name.  This way the CPU does not have to
+ *  include all the System header files and the System the CPU header files.
  */
 #ifndef _AXP_21264_CBOX_DEFS_
 #define _AXP_21264_CBOX_DEFS_
@@ -162,11 +162,11 @@ typedef struct
 /*
  * MB definitions.
  */
-#define AXP_21264_1MB			(1 * ONE_M)
-#define AXP_21264_2MB			(2 * ONE_M)
-#define AXP_21264_4MB			(4 * ONE_M)
-#define AXP_21264_8MB			(8 * ONE_M)
-#define AXP_21264_16MB			(16 * ONE_M)
+#define AXP_21264_1MB   (1 * ONE_M)
+#define AXP_21264_2MB   (2 * ONE_M)
+#define AXP_21264_4MB   (4 * ONE_M)
+#define AXP_21264_8MB   (8 * ONE_M)
+#define AXP_21264_16MB  (16 * ONE_M)
 
 typedef enum
 {
@@ -260,24 +260,24 @@ typedef struct
  * HRM Table 4-15
  * INVALID_TO_DIRTY_ENABLE values.
  */
-#define AXP_WH64_CVT_RDMODX00		0	/* b'x0' */
-#define AXP_WH64_CVT_RDMODX10		2	/* b'x0' */
-#define AXP_WH64_ENA_INT_ACK		1	/* b'01' */
-#define AXP_WH64_ENA_INT_INV2DIR	3	/* b'11' */
+#define AXP_WH64_CVT_RDMODX00       0    /* b'x0' */
+#define AXP_WH64_CVT_RDMODX10       2    /* b'x0' */
+#define AXP_WH64_ENA_INT_ACK        1    /* b'01' */
+#define AXP_WH64_ENA_INT_INV2DIR    3    /* b'11' */
 
 /*
  * HRM Table 4-16
  * SET_DIRTY_ENABLE values.
  *
  * This is a mask with the following meaning (when set):
- * 		bit 0:	Only Clean Blocks generate external ACK - CleanToDirty
- * 		bit 1:	Only Clean/Shared Blocks generate external ACK - SharedToDirty
- * 		bit 2:	Only Dirty/Shared Blocks generate external ACK - SharedToDirty
+ *       bit 0:    Only Clean Blocks generate external ACK - CleanToDirty
+ *       bit 1:    Only Clean/Shared Blocks generate external ACK - SharedToDirty
+ *       bit 2:    Only Dirty/Shared Blocks generate external ACK - SharedToDirty
  */
-#define AXP_ACK_INTERNALLY			0	/* b'000' Uniprocessor */
-#define AXP_CLEAN_ACK_ONLY			1	/* b'001' CleanToDirty */
-#define AXP_CLEAN_SHARED_ACK_ONLY	2	/* b'010' SharedToDirty */
-#define AXP_DIRTY_SHARED_ACK_ONLY	4	/* b'100' SharedToDirty */
+#define AXP_ACK_INTERNALLY          0    /* b'000' Uniprocessor */
+#define AXP_CLEAN_ACK_ONLY          1    /* b'001' CleanToDirty */
+#define AXP_CLEAN_SHARED_ACK_ONLY   2    /* b'010' SharedToDirty */
+#define AXP_DIRTY_SHARED_ACK_ONLY   4    /* b'100' SharedToDirty */
 
 /*
  * HRM Table 4-42
@@ -285,72 +285,64 @@ typedef struct
  *
  * An easy calculation is the value of BC_SIZE + 1 in MB.
  */
-#define	AXP_BCACHE_1MB				0					/* b000000 */
-#define	AXP_BCACHE_2MB				1					/* b000001 */
-#define	AXP_BCACHE_4MB				3					/* b000011 */
-#define	AXP_BCACHE_8MB				7					/* b000111 */
-#define	AXP_BCACHE_16MB				15					/* b001111 */
+#define    AXP_BCACHE_1MB           0                    /* b000000 */
+#define    AXP_BCACHE_2MB           1                    /* b000001 */
+#define    AXP_BCACHE_4MB           3                    /* b000011 */
+#define    AXP_BCACHE_8MB           7                    /* b000111 */
+#define    AXP_BCACHE_16MB          15                   /* b001111 */
 
 /*
  * Mask bits for the offset, index, and tag information for the Bcache.  The
  * size of the index bits is dependent upon the size of the cache.  The offset
  * and tag bits are always the same.
  */
-#define AXP_BCACHE_OFF_BITS		0x000000000000003fll	/* bits  5 -  0 */
-#define AXP_BCACHE_TAG_BITS		0x00000fffffffffffll	/* bits 63 - 20 */
-#define AXP_BCACHE_IDX_FILL		0x0000000000003fffll
-#define AXP_BCACHE_IDX_SHIFT	6
-#define AXP_BCACHE_TAG_SHIFT	20
-
-/*
- * Macros to extract the index and tag bits from a physical address.
- */
-#define AXP_BCACHE_INDEX(cpu, pa)	(((pa) >> AXP_BCACHE_IDX_SHIFT) &		\
-									 (((cpu)->csr.BcSize << 14) || AXP_BCACHE_IDX_FILL))
-#define AXP_BCACHE_TAG(cpu, pa)		(((pa) >> AXP_BCACHE_TAG_SHIFT) &		\
-									 AXP_BCACHE_TAG_BITS)
+#define AXP_BCACHE_OFF_BITS     0x000000000000003fll    /* bits  5 -  0 */
+#define AXP_BCACHE_TAG_BITS     0x00000fffffffffffll    /* bits 63 - 20 */
+#define AXP_BCACHE_IDX_FILL     0x0000000000003fffll
+#define AXP_BCACHE_IDX_SHIFT    6
+#define AXP_BCACHE_TAG_SHIFT    20
 
 /*
  * HRM Section 4.7.7
  * There are 2 commands to be sent from the System to the CPU.  These are
  * they.
  */
-#define AXP_SYSTEM_DATA_TRANSFER	false
-#define AXP_SYSTEM_PROBE			true
+#define AXP_SYSTEM_DATA_TRANSFER    false
+#define AXP_SYSTEM_PROBE            true
 
 /*
  * HRM Tables 4-21 and 4-22
  * Probe Command
  */
-#define AXP_21264_DM_NOP			0	/* b'00' */
-#define AXP_21264_DM_RDHIT			1	/* b'01' */
-#define AXP_21264_DM_RDDIRTY		2	/* b'10' */
-#define AXP_21264_DM_RDANY			3	/* b'00' */
+#define AXP_21264_DM_NOP            0    /* b'00' */
+#define AXP_21264_DM_RDHIT          1    /* b'01' */
+#define AXP_21264_DM_RDDIRTY        2    /* b'10' */
+#define AXP_21264_DM_RDANY          3    /* b'00' */
 
-#define AXP_21264_NS_NOP			0	/* b'000' */
-#define AXP_21264_NS_CLEAN			1	/* b'001' */
-#define AXP_21264_NS_CLEAN_SHARED	2	/* b'010' */
-#define AXP_21264_NS_TRANS3			3	/* b'011' */
-#define AXP_21264_NS_DIRTY_SHARED	4	/* b'100' */
-#define AXP_21264_NS_INVALID		5	/* b'101' */
-#define AXP_21264_NS_TRANS1			6	/* b'110' */
-#define AXP_21264_NS_RES			7	/* b'111' */
+#define AXP_21264_NS_NOP            0    /* b'000' */
+#define AXP_21264_NS_CLEAN          1    /* b'001' */
+#define AXP_21264_NS_CLEAN_SHARED   2    /* b'010' */
+#define AXP_21264_NS_TRANS3         3    /* b'011' */
+#define AXP_21264_NS_DIRTY_SHARED   4    /* b'100' */
+#define AXP_21264_NS_INVALID        5    /* b'101' */
+#define AXP_21264_NS_TRANS1         6    /* b'110' */
+#define AXP_21264_NS_RES            7    /* b'111' */
 
-#define AXP_21264_GET_PROBE_DM(probe)	(((probe) & 0x18) >> 3)
-#define AXP_21264_GET_PROBE_NS(probe)	((probe) & 0x07)
-#define AXP_21264_SET_PROBE(dm, ns)		((((dm) & 0x03) << 3) || ((ns) & 0x07))
+#define AXP_21264_GET_PROBE_DM(probe)   (((probe) & 0x18) >> 3)
+#define AXP_21264_GET_PROBE_NS(probe)   ((probe) & 0x07)
+#define AXP_21264_SET_PROBE(dm, ns)     ((((dm) & 0x03) << 3) || ((ns) & 0x07))
 
-#define AXP_21264_SIZE_LONG		32
-#define AXP_21264_SIZE_QUAD		64
+#define AXP_21264_SIZE_LONG         32
+#define AXP_21264_SIZE_QUAD         64
 
 /*
  * sysData size in quadwords
  *
- * NOTE:	This definition must match with the AXP_21274_DATA_SIZE definition
- *			in the system/AXP_21274_to_CPU.h and the AXP_21264_DATA_SIZE
- *			definition in the cpu/AXP_21264_CboxDefs.h.
+ * NOTE:    This definition must match with the AXP_21274_DATA_SIZE definition
+ *          in the system/AXP_21274_to_CPU.h and the AXP_21264_DATA_SIZE
+ *          definition in the cpu/AXP_21264_CboxDefs.h.
  */
-#define AXP_21264_DATA_SIZE	8
+#define AXP_21264_DATA_SIZE         8
 
 /*
  * HRM 2.1.4.1
@@ -358,10 +350,10 @@ typedef struct
  * and Victim Data File (VDF).  Together these structures form an 8-entry
  * victim buffer used for holding:
  *
- * 		Dcache blocks to be written to the Bcache
- * 		Istream cache blocks from memory to the Bcache
- * 		Bcache blocks to be written to memory
- * 		Cache blocks sent to the system in response to probe commands
+ *       Dcache blocks to be written to the Bcache
+ *       Istream cache blocks from memory to the Bcache
+ *       Bcache blocks to be written to memory
+ *       Cache blocks sent to the system in response to probe commands
  */
 typedef enum
 {
@@ -386,8 +378,8 @@ typedef struct
  * In HRM Section 2, the MAF is documented as being in the Mbox/Memory
  * Reference Unit.  In HRM Section 4.1.1.1, it states the following:
  *
- *		The Cbox contains an 8-entry miss buffer (MAF) and an 8-entry victim
- *		buffer (VAF).
+ *      The Cbox contains an 8-entry miss buffer (MAF) and an 8-entry victim
+ *      buffer (VAF).
  */
 typedef enum
 {
@@ -403,7 +395,7 @@ typedef enum
     MemoryBarrier
 } AXP_CBOX_MAF_TYPE;
 
-#define AXP_21264_MBOX_MAX		8
+#define AXP_21264_MBOX_MAX        8
 typedef struct
 {
     AXP_CBOX_MAF_TYPE type;
@@ -421,9 +413,9 @@ typedef struct
 /*
  * HRM 2.12
  * Each IOWB entry has the following:
- * 		64 bytes of data
- * 		physical address
- * 		control logic	(TBD)
+ *       64 bytes of data
+ *       physical address
+ *       control logic    (TBD)
  */
 typedef struct
 {
@@ -437,18 +429,18 @@ typedef struct
     i8 lqSqEntry[AXP_21264_MBOX_MAX];
 } AXP_21264_CBOX_IOWB;
 
-#define AXP_IOWB_ID_MASK		0x08
-#define AXP_21264_IOWB_ID(id)	(((id) & AXP_IOWB_ID_MASK) == AXP_IOWB_ID_MASK)
-#define AXP_MASK_ID(id)			((id) & ~AXP_IOWB_ID_MASK)
+#define AXP_IOWB_ID_MASK        0x08
+#define AXP_21264_IOWB_ID(id)   (((id) & AXP_IOWB_ID_MASK) == AXP_IOWB_ID_MASK)
+#define AXP_MASK_ID(id)         ((id) & ~AXP_IOWB_ID_MASK)
 
 /*
  * This structure is the definition for one Cbox copy of Dcache Tag Array.  A
  * block contains the following:
  *
- *		Physical tag bits
- *		Index and set into corresponding DTAG array (which is the same as the
- *			Dcache)
- *		Valid bit - the CTAG array entry is in use.
+ *      Physical tag bits
+ *      Index and set into corresponding DTAG array (which is the same as the
+ *          Dcache)
+ *      Valid bit - the CTAG array entry is in use.
  */
 typedef struct
 {
@@ -462,7 +454,7 @@ typedef struct
 /*
  * Bcache definitions
  */
-#define AXP_BCACHE_BLOCK_SIZE	64
+#define AXP_BCACHE_BLOCK_SIZE    64
 typedef u8 AXP_21264_BCACHE_BLK[AXP_BCACHE_BLOCK_SIZE];
 typedef struct
 {
