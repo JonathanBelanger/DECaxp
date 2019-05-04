@@ -24,7 +24,7 @@
  *  V01.000	03-Jul-2018	Jonathan D. Belanger
  *  Initially written.
  */
-#include "Devices/VirtualDisks/AXP_VirtualDisk.h""
+#include "Devices/VirtualDisks/AXP_VirtualDisk.h"
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Configure.h"
 #include "CommonUtilities/AXP_Blocks.h"
