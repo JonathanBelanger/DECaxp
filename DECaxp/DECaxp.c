@@ -26,10 +26,10 @@
  */
 #include "CommonUtilities/AXP_Configure.h"
 #include "CommonUtilities/AXP_Utility.h"
+#include "CPU/AXP_21264_CPU.h"
+#include "CPU/Cbox/AXP_21264_CboxDefs.h"
+#include "CPU/Cbox/AXP_21264_Cbox.h"
 #include "CommonUtilities/AXP_Trace.h"
-#include "21264Processor/AXP_21264_CPU.h"
-#include "21264Processor/Cbox/AXP_21264_CboxDefs.h"
-#include "21264Processor/Cbox/AXP_21264_Cbox.h"
 
 /*
  * reconstituteFilename

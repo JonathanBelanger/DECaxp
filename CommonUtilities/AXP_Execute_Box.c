@@ -31,9 +31,9 @@
  *	just wait on its condition variable.
  */
 #include "CommonUtilities/AXP_Configure.h"
-#include "21264Processor/Fbox/AXP_21264_Fbox.h"
-#include "21264Processor/Ibox/AXP_21264_Ibox.h"
-#include "21264Processor/Ibox/AXP_21264_Ibox_InstructionInfo.h"
+#include "CPU/Fbox/AXP_21264_Fbox.h"
+#include "CPU/Ibox/AXP_21264_Ibox.h"
+#include "CPU/Ibox/AXP_21264_Ibox_InstructionInfo.h"
 #include "CommonUtilities/AXP_Trace.h"
 
 #define AXP_PIPE_OPTIONS	10

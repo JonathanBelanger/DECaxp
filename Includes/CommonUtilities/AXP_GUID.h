@@ -23,7 +23,7 @@
  *
  * Revision History:
  *
- *  V01.000	04-Jul-2018	Jonathan D. Belanger
+ *  V01.000 04-Jul-2018 Jonathan D. Belanger
  *  Initially written.
  */
 #ifndef _AXP_VHDX_GUID_H_
@@ -34,23 +34,22 @@
 
 typedef union
 {
-    uuid_t	uuid;
+    uuid_t uuid;
     struct
     {
-  u32	data1;
-  u16	data2;
-  u16	data3;
-  u64	data4;
+        u32 data1;
+        u16 data2;
+        u16 data3;
+        u64 data4;
     };
 } AXP_VHDX_GUID;
-#define AXP_VHDX_GUID_INIT(name, data_1, data_2, data_3, data_4)	\
-    name = (AXP_VHDX_GUID)						\
-    {									\
-  .data1 = data_1,						\
-  .data2 = data_2,						\
-  .data3 = data_3,						\
-  .data4 = data_4							\
+#define AXP_VHDX_GUID_INIT(name, data_1, data_2, data_3, data_4)            \
+    name = (AXP_VHDX_GUID)                                                  \
+    {                                                                       \
+        .data1 = data_1,                                                    \
+        .data2 = data_2,                                                    \
+        .data3 = data_3,                                                    \
+        .data4 = data_4                                                     \
     }
-
 
 #endif /* _AXP_VHDX_GUID_H_ */

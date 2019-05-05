@@ -28,7 +28,7 @@
 #define _AXP_EXCEPTIONS_DEFS_
 
 #include "CommonUtilities/AXP_Utility.h"
-#include "21264Processor/AXP_21264_Instructions.h"
+#include "CPU/AXP_21264_Instructions.h"
 
 void AXP_SetException(AXP_INSTRUCTION *, u32);
 

@@ -25,9 +25,9 @@
  */
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Blocks.h"
-#include "21264Processor/AXP_21264_Instructions.h"
-#include "21264Processor/AXP_21264_CPU.h"
-#include "21264Processor/Ebox/AXP_21264_Ebox.h"
+#include "CPU/AXP_21264_Instructions.h"
+#include "CPU/AXP_21264_CPU.h"
+#include "CPU/Ebox/AXP_21264_Ebox.h"
 
 /*
  * NOTE:	We need to run a series of tests to utilize the various
