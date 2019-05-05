@@ -20,4 +20,4 @@ If you can think of any others, please let me know.
 
 BTW: One of the ironies of all this is that this emulation is for the Alpha AXP 21264 processor (primarily), which was actually something the Compaq had brought to market.  So, though at the beginning I said that I did not acknowledge Compaq's and HP's acquisition of what had been DEC as DEC, I feel that most of the ideas behind the 21264 came from the original DEC Alpha AXP 21064, which was entirely DEC.  One of the tragedies of all this is that Compaq decided not to keep the development going on this processor.  I think it could have remained the faster (commercially avaliable) CPU on the planet.
 
-Copyright 2017-2018 by Jonathan D. Belanger
+Copyright 2017-2019 by Jonathan D. Belanger
