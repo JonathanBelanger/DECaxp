@@ -31,9 +31,9 @@
 
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Blocks.h"
-#include "21264Processor/AXP_21264_Instructions.h"
-#include "21264Processor/AXP_21264_CPU.h"
-#include "21264Processor/Fbox/AXP_21264_Fbox.h"
+#include "CPU/AXP_21264_Instructions.h"
+#include "CPU/AXP_21264_CPU.h"
+#include "CPU/Fbox/AXP_21264_Fbox.h"
 
 /*
  * IEEE Format:  One of the following:

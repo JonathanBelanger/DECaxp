@@ -30,7 +30,7 @@
 
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Configure.h"
-#include "21264Processor/AXP_Base_CPU.h"
-#include "21264Processor/AXP_21264_Instructions.h"
+#include "CPU/AXP_Base_CPU.h"
+#include "CPU/AXP_21264_Instructions.h"
 
 #endif	/* _AXP_DUMPS_DEFS_DEFS_ */

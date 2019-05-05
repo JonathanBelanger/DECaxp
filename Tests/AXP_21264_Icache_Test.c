@@ -28,8 +28,8 @@
  *	Updated to utilize the new, combined, cache and TLB functionality.
  */
 #include "CommonUtilities/AXP_Blocks.h"
-#include "21264Processor/AXP_21264_CPU.h"
-#include "21264Processor/Ibox/AXP_21264_Ibox.h"
+#include "CPU/AXP_21264_CPU.h"
+#include "CPU/Ibox/AXP_21264_Ibox.h"
 
 static u32 memory[] =
 {

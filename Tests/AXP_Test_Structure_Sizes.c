@@ -29,7 +29,7 @@
 /*
  * Include comutl.
  */
-#include "21264Processor/Cbox/AXP_21264_Cbox.h"
+#include "CPU/Cbox/AXP_21264_Cbox.h"
 #include "CommonUtilities/AXP_Configure.h"
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Blocks.h"
@@ -37,19 +37,19 @@
 /*
  * Include cpu
  */
-#include "21264Processor/AXP_21264_Instructions.h"
-#include "21264Processor/AXP_Base_CPU.h"
-#include "21264Processor/AXP_21264_IPRs.h"
-#include "21264Processor/Ibox/AXP_21264_Predictions.h"
-#include "21264Processor/Caches/AXP_21264_Cache.h"
-#include "21264Processor/Ibox/AXP_21264_Ibox.h"
-#include "21264Processor/Fbox/AXP_21264_Fbox.h"
-#include "21264Processor/AXP_21264_CPU.h"
+#include "CPU/AXP_21264_Instructions.h"
+#include "CPU/AXP_Base_CPU.h"
+#include "CPU/AXP_21264_IPRs.h"
+#include "CPU/Ibox/AXP_21264_Predictions.h"
+#include "CPU/Caches/AXP_21264_Cache.h"
+#include "CPU/Ibox/AXP_21264_Ibox.h"
+#include "CPU/Fbox/AXP_21264_Fbox.h"
+#include "CPU/AXP_21264_CPU.h"
 #include "Devices/VirtualDisks/AXP_VHDX.h"
 
 #define PRINT_SIZE(type, size, test) 					\
   if (sizeof(type) != size) test = false;	\
-  printf("%-25s= %4lu (%4d): %s\n", #type, sizeof(type), size, (sizeof(type) == size ? pass : fail))
+  printf("    %-25s= %4lu (%4d): %s\n", #type, sizeof(type), size, (sizeof(type) == size ? pass : fail))
 
 /*
  * main

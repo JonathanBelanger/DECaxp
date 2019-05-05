@@ -28,12 +28,12 @@ cmake_minimum_required(VERSION 3.6)
 project(DECaxp VERSION 1.0.0)
 
 set(CMAKE_C_FLAGS
-    "${CMAKE_C_FLAGS} -c -m64 -std=gnu99 -Wall -D_AXP_COMPILER_PRESENT_")
-set(CMAKE_LINK_LIBRARY_FLAG
-    "${CMAKE_LINK_LIBRARY_FLAG} -lxml2 -lm -liconv -luuid -L /cygdrive/c/WINDOWS/system32 -lwpcap")
+    "${CMAKE_C_FLAGS} -m64 -std=gnu99 -Wall -D_AXP_COMPILER_PRESENT_")
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Executables")
 
 add_subdirectory(CommonUtilities)
-add_subdirectory(21264Processor)
+add_subdirectory(CPU)
 add_subdirectory(TyphoonTsunami)
 add_subdirectory(Devices)
 add_subdirectory(DECaxp)
