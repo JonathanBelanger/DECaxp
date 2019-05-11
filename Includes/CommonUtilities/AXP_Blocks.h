@@ -41,7 +41,7 @@
 
 #include "CommonUtilities/AXP_Utility.h"
 #include "CPU/AXP_21264_CPU.h"
-#include "TyphoonTsunami/AXP_21274_System.h"
+#include "Motherboard/AXP_21274_System.h"
 #include "Devices/Console/AXP_Telnet.h"
 #include "Devices/VirtualDisks/AXP_VHDX.h"
 #include "Devices/VirtualDisks/AXP_RAW.h"

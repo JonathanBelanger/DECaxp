@@ -30,10 +30,10 @@
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Configure.h"
 #include "CommonUtilities/AXP_Trace.h"
-#include "TyphoonTsunami/AXP_21274_Registers.h"
-#include "TyphoonTsunami/Cchip/AXP_21274_Cchip.h"
-#include "TyphoonTsunami/Pchip/AXP_21274_Pchip.h"
-#include "TyphoonTsunami/AXP_21274_System.h"
+#include "Motherboard/AXP_21274_Registers.h"
+#include "Motherboard/Cchip/AXP_21274_Cchip.h"
+#include "Motherboard/Pchip/AXP_21274_Pchip.h"
+#include "Motherboard/AXP_21274_System.h"
 
 /*
  * Table 7–2 PADbus Command Encodings

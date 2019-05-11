@@ -54,10 +54,10 @@
  *  loop will send this response to the appropriate CPU upon return from the
  *  read and write.
  */
-#include "TyphoonTsunami/AXP_21274_System.h"
-#include "TyphoonTsunami/Cchip/AXP_21274_Cchip.h"
-#include "TyphoonTsunami/Cchip/CPUInterface/AXP_21274_21264_Common.h"
-#include "TyphoonTsunami/AXP_21274_AddressMapping.h"
+#include "Motherboard/AXP_21274_System.h"
+#include "Motherboard/Cchip/AXP_21274_Cchip.h"
+#include "Motherboard/Cchip/CPUInterface/AXP_21274_21264_Common.h"
+#include "Motherboard/AXP_21274_AddressMapping.h"
 
 /*
  * Local Prototypes

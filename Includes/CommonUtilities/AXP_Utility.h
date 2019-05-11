@@ -81,8 +81,6 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
-#include "CommonUtilities/AXP_NoCompilerHack.h"
-
 /*
  * Define some regularly utilized definitions.
  */
@@ -197,10 +195,14 @@ typedef struct queueHeader
 /*
  * Macros to use with the basic queue.
  */
-#define AXP_INIT_QUE(queue)     queue.flink = queue.blink = (void *) &queue
-#define AXP_INIT_QUEP(queue)    queue->flink = queue->blink = (void *) queue
-#define AXP_QUE_EMPTY(queue)    (queue.flink == (void *) &queue.flink)
-#define AXP_QUEP_EMPTY(queue)   (queue->flink == (void *) &queue->flink)
+#define AXP_INIT_QUE(queue)                                                 \
+    queue.flink = queue.blink = (AXP_QUEUE_HDR*) &queue
+#define AXP_INIT_QUEP(queue)                                                \
+    queue->flink = queue->blink = (AXP_QUEUE_HDR *) queue
+#define AXP_QUE_EMPTY(queue)                                                \
+    (queue.flink == (AXP_QUEUE_HDR *) &queue.flink)
+#define AXP_QUEP_EMPTY(queue)                                               \
+    (queue->flink == (AXP_QUEUE_HDR *) &queue->flink)
 #define AXP_REMQUE(entry)                                                   \
     {                                                                       \
         (entry)->blink->flink = (entry)->flink;                             \
@@ -239,6 +241,10 @@ typedef struct countedQueueRoot
     queue.flink = NULL;                                                     \
     queue.blink = NULL;                                                     \
     queue.parent = &prent;
+#define AXP_INIT_CQENTRYP(queue, prent)                                     \
+    queue->flink = NULL;                                                    \
+    queue->blink = NULL;                                                    \
+    queue->parent = prent;
 
 /*
  * Conditional queues (using pthreads)
