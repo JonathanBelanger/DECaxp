@@ -16,7 +16,7 @@
 #
 # Description:
 #
-#   This CMake file is used to build the Typhoon/Tsunami static library for the
+#   This CMake file is used to build the Motherboard static library for the
 #   DECaxp project.
 #
 # Revision History:
@@ -27,9 +27,9 @@ add_subdirectory(Cchip)
 add_subdirectory(Dchip)
 add_subdirectory(Pchip)
 
-add_library(TyphoonTsunami STATIC
+add_library(Motherboard STATIC
     AXP_21274_AddressMapping.c
     AXP_21274_System.c)
 
-target_include_directories(TyphoonTsunami PRIVATE
+target_include_directories(Motherboard PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)

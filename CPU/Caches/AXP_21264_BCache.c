@@ -23,6 +23,14 @@
  *
  *  V01.000 29-Dec-2017 Jonathan D. Belanger
  *  Initially written.
+ *
+ *  V01.001 11-May-2019 Jonathan D. Belanger
+ *  GCC 7.4.0, and possibly earlier, turns on strict-aliasing rules by default.
+ *  There are a number of issues in this module where the address of one
+ *  variable is cast to extract a value in a different format.  In this module
+ *  these all appear to be when trying to get the 64-bit value equivalent of
+ *  the 64-bit long PC structure.  We will use shifts (in a macro) instead of
+ *  the casts.
  */
 #include "CPU/Cbox/AXP_21264_Cbox.h"
 #include "CommonUtilities/AXP_Configure.h"
@@ -188,6 +196,7 @@ void AXP_21264_Bcache_Flush(AXP_21264_CPU *cpu)
             break;
 
         case AXP_BCACHE_16MB:
+        default:    /* This is just to keep the compiler from complaining. */
             bCacheArraySize = AXP_21264_16MB / AXP_BCACHE_BLOCK_SIZE;
             break;
     }

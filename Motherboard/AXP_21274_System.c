@@ -26,11 +26,11 @@
 #include "CommonUtilities/AXP_Configure.h"
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Blocks.h"
-#include "TyphoonTsunami/AXP_21274_System.h"
-#include "TyphoonTsunami/Cchip/AXP_21274_Cchip.h"
-#include "TyphoonTsunami/Dchip/AXP_21274_Dchip.h"
-#include "TyphoonTsunami/Pchip/AXP_21274_Pchip.h"
-#include "TyphoonTsunami/AXP_21274_InitRoutines.h"
+#include "Motherboard/AXP_21274_System.h"
+#include "Motherboard/Cchip/AXP_21274_Cchip.h"
+#include "Motherboard/Dchip/AXP_21274_Dchip.h"
+#include "Motherboard/Pchip/AXP_21274_Pchip.h"
+#include "Motherboard/AXP_21274_InitRoutines.h"
 
 AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
 {

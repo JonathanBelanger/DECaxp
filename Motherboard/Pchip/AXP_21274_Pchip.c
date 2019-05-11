@@ -41,8 +41,8 @@
  */
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Configure.h"
-#include "TyphoonTsunami/AXP_21274_System.h"
-#include "TyphoonTsunami/Pchip/AXP_21274_Pchip.h"
+#include "Motherboard/AXP_21274_System.h"
+#include "Motherboard/Pchip/AXP_21274_Pchip.h"
 
 /*
  * Local Prototypes

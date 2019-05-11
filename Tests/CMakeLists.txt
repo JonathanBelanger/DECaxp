@@ -174,6 +174,12 @@ target_link_libraries(AXP_Telnet_Test PRIVATE
     -liconv
     /cygdrive/c/WINDOWS/system32/wpcap.dll)
 
+add_executable(AXP_Test_Queues
+    AXP_Test_Queues.c)
+
+target_include_directories(AXP_Test_Queues PRIVATE
+    ${PROJECT_SOURCE_DIR}/Includes)
+
 add_executable(AXP_Test_Structure_Sizes
     AXP_Test_Structure_Sizes.c)
 

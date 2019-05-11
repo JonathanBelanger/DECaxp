@@ -33,9 +33,9 @@
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Configure.h"
 #include "CommonUtilities/AXP_Trace.h"
-#include "TyphoonTsunami/AXP_21274_Registers.h"
-#include "TyphoonTsunami/Cchip/AXP_21274_Cchip.h"
-#include "TyphoonTsunami/Dchip/AXP_21274_Dchip.h"
+#include "Motherboard/AXP_21274_Registers.h"
+#include "Motherboard/Cchip/AXP_21274_Cchip.h"
+#include "Motherboard/Dchip/AXP_21274_Dchip.h"
 
 /*
  * The following definition contains the fields and data structures required to

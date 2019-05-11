@@ -34,7 +34,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Executables")
 
 add_subdirectory(CommonUtilities)
 add_subdirectory(CPU)
-add_subdirectory(TyphoonTsunami)
+add_subdirectory(Motherboard)
 add_subdirectory(Devices)
 add_subdirectory(DECaxp)
 add_subdirectory(Tests)

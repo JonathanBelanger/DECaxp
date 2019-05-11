@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -48,6 +48,14 @@
  *
  *  V01.005 20-Dec-2017 Jonathan D. Belanger
  *  The Dcache code needs to be changed and simplified.
+ *
+ *  V01.006 11-May-2019 Jonathan D. Belanger
+ *  GCC 7.4.0, and possibly earlier, turns on strict-aliasing rules by default.
+ *  There are a number of issues in this module where the address of one
+ *  variable is cast to extract a value in a different format.  In this module
+ *  these all appear to be when trying to get the 64-bit value equivalent of
+ *  the 64-bit long PC structure.  We will use shifts (in a macro) instead of
+ *  the casts.
  */
 #include "CPU/Caches/AXP_21264_Cache.h"
 #include "CommonUtilities/AXP_Trace.h"
@@ -2032,7 +2040,7 @@ void AXP_IcacheAdd(AXP_21264_CPU *cpu,
     {
         AXP_TRACE_BEGIN();
         AXP_TraceWrite("AXP_IcacheAdd at pc = 0x%016llx (0x%08x) for tlb: 0x%016llx called.",
-                       *((u64 *) &pc),
+                       AXP_GET_PC(pc),
                        *nextInst,
                        (u64 *) itb);
         AXP_TRACE_END();
@@ -2278,13 +2286,13 @@ bool AXP_IcacheFetch(AXP_21264_CPU *cpu, AXP_PC pc, AXP_INS_LINE *next)
     u64 tag = vpc.vpcFields.tag;
     u32 offset = vpc.vpcFields.offset % AXP_ICACHE_LINE_INS;
     u32 ii;
-    u32 sets, whichSet;
+    u32 sets, whichSet = 0;
 
     if (AXP_CACHE_CALL)
     {
         AXP_TRACE_BEGIN();
         AXP_TraceWrite("AXP_IcacheFetch for pc = 0x%016llx called.",
-                       *((u64 *) &pc));
+                       AXP_GET_PC(pc));
         AXP_TRACE_END();
     }
 
@@ -2440,7 +2448,7 @@ bool AXP_IcacheValid(AXP_21264_CPU *cpu, AXP_PC pc)
     {
         AXP_TRACE_BEGIN();
         AXP_TraceWrite("AXP_IcacheValid at pc = 0x%016llx called.",
-                       *((u64 *) &pc));
+                       AXP_GET_PC(pc));
         AXP_TRACE_END();
     }
 

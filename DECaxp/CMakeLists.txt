@@ -51,7 +51,7 @@ target_link_libraries(DECaxp PRIVATE
     Fbox
     Mbox
     Caches
-    TyphoonTsunami
+    Motherboard
     Cchip
     Dchip
     Pchip

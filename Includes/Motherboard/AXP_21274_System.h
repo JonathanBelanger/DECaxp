@@ -28,11 +28,11 @@
 
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Configure.h"
-#include "TyphoonTsunami/Cchip/CPUInterface/AXP_21274_21264_Common.h"
-#include "TyphoonTsunami/AXP_21274_Registers.h"
-#include "TyphoonTsunami/Cchip/AXP_21274_Cchip.h"
-#include "TyphoonTsunami/Pchip/AXP_21274_Pchip.h"
-#include "TyphoonTsunami/Dchip/AXP_21274_Dchip.h"
+#include "Motherboard/Cchip/CPUInterface/AXP_21274_21264_Common.h"
+#include "Motherboard/AXP_21274_Registers.h"
+#include "Motherboard/Cchip/AXP_21274_Cchip.h"
+#include "Motherboard/Pchip/AXP_21274_Pchip.h"
+#include "Motherboard/Dchip/AXP_21274_Dchip.h"
 
 /*
  * The following structure contains the information needed to be able to

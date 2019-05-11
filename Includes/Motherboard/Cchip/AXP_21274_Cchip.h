@@ -30,8 +30,8 @@
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Configure.h"
 #include "CommonUtilities/AXP_Trace.h"
-#include "TyphoonTsunami/Cchip/CPUInterface/AXP_21274_21264_Common.h"
-#include "TyphoonTsunami/AXP_21274_Registers.h"
+#include "Motherboard/Cchip/CPUInterface/AXP_21274_21264_Common.h"
+#include "Motherboard/AXP_21274_Registers.h"
 
 /*
  * The following definitions are used for the bit vectors, addrMatchWait,
@@ -242,8 +242,8 @@ typedef struct
     u8 res;				/* reserved */
 } AXP_CAPbusMsg;
 
-#include "TyphoonTsunami/Pchip/AXP_21274_Pchip.h"
-#include "TyphoonTsunami/Dchip/AXP_21274_Dchip.h"
+#include "Motherboard/Pchip/AXP_21274_Pchip.h"
+#include "Motherboard/Dchip/AXP_21274_Dchip.h"
 
 /*
  * Cchip Function Prototypes

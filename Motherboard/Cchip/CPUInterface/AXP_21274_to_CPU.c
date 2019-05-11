@@ -24,10 +24,10 @@
  *  V01.000 30-Mar2018  Jonathan D. Belanger
  *  Initially written.
  */
-#include "TyphoonTsunami/Cchip/CPUInterface/AXP_21274_21264_Common.h"
+#include "Motherboard/Cchip/CPUInterface/AXP_21274_21264_Common.h"
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Configure.h"
-#include "TyphoonTsunami/AXP_21274_System.h"
+#include "Motherboard/AXP_21274_System.h"
 
 /*
  * AXP_21274_SendToCPU

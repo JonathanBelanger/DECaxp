@@ -44,7 +44,7 @@
  *	V01.000		22-Mar-2018	Jonathan D. Belanger
  *	Initially written.
  */
-#include "TyphoonTsunami/Dchip/AXP_21274_Dchip.h"
+#include "Motherboard/Dchip/AXP_21274_Dchip.h"
 
 /*
  * AXP_21274_DchipInit

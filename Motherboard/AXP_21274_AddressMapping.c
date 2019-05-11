@@ -26,8 +26,8 @@
  */
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Configure.h"
-#include "TyphoonTsunami/Cchip/CPUInterface/AXP_21274_21264_Common.h"
-#include "TyphoonTsunami/AXP_21274_AddressMapping.h"
+#include "Motherboard/Cchip/CPUInterface/AXP_21274_21264_Common.h"
+#include "Motherboard/AXP_21274_AddressMapping.h"
 
 /*
  * The following definitions are used for Linear (Memory and I/O) Address

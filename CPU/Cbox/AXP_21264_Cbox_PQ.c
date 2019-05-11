@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -23,6 +23,11 @@
  *
  *  V01.000 29-Dec-2017 Jonathan D. Belanger
  *  Initially written.
+ *
+ *  V01.001 11-May-2019 Jonathan D. Belanger
+ *  GCC 7.4.0, and possibly earlier, turns on strict-aliasing rules by default.
+ *  There are a number of issues in this module where the address of one
+ *  variable is cast to extract a value in a different format.
  */
 #include "CPU/Cbox/AXP_21264_Cbox.h"
 #include "CommonUtilities/AXP_Configure.h"
@@ -64,7 +69,7 @@ void AXP_21264_OldestPQFlags(AXP_21264_CPU *cpu, bool *m1, bool *m2, bool *ch)
 {
     AXP_21264_CBOX_PQ *pq = NULL;
     int ii, entry;
-    int end, start1, end1, start2 = -1, end2;
+    int end, start1, end1, start2 = -1, end2 = 0;
 
     if (cpu->pqTop > cpu->pqBottom)
     {
@@ -84,15 +89,16 @@ void AXP_21264_OldestPQFlags(AXP_21264_CPU *cpu, bool *m1, bool *m2, bool *ch)
      */
     ii = start1;
     end = end1;
-    while ((ii <= end) && (pq == NULL ))
+    while ((ii <= end) && (pq == NULL))
     {
-        if ((cpu->pq[ii].valid == true) && (cpu->pq[ii].pendingRsp == false)
-            && (cpu->pq[ii].processed == true))
+        if ((cpu->pq[ii].valid == true) &&
+            (cpu->pq[ii].pendingRsp == false) &&
+            (cpu->pq[ii].processed == true))
         {
             pq = &cpu->pq[ii];
             entry = ii;
         }
-        if ((pq == NULL ) && (start2 != -1) && (ii == end))
+        if ((pq == NULL) && (start2 != -1) && (ii == end))
         {
             ii = start2;
             end = end2;
@@ -263,7 +269,7 @@ int AXP_21264_PQ_Empty(AXP_21264_CPU *cpu)
 {
     int retVal = -1;
     int ii;
-    int end, start1, end1, start2 = -1, end2;
+    int end, start1, end1, start2 = -1, end2 = 0;
 
     if (cpu->pqTop > cpu->pqBottom)
     {
@@ -313,11 +319,11 @@ int AXP_21264_PQ_Empty(AXP_21264_CPU *cpu)
  *  containing the PQ records.
  *
  * Input Parameters:
- *   cpu:
- *      A pointer to the CPU structure for the emulated Alpha AXP 21264
- *      processor.
+ *  cpu:
+ *    A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *    processor.
  *  entry:
- *      An integer value that is the entry in the PQ to be processed.
+ *    An integer value that is the entry in the PQ to be processed.
  *
  * Output Parameters:
  *  None.
@@ -331,7 +337,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
     AXP_ProbeStatus probeStatus;
     AXP_VA physAddr = {.va = pq->pa};
     u32 ctagIndex = physAddr.vaIdxInfo.index;
-    u32 setToUse;
+    u32 setToUse = 0;
     u32 dCacheStatus = AXP_21264_CACHE_MISS;
     u32 bCacheStatus;
     u8 vdb = 0;
@@ -407,7 +413,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
                 probeStatus = HitShared;
             }
             else if ((AXP_CACHE_DIRTY(dCacheStatus) == true) ||
-                     (AXP_CACHE_DIRTY(bCacheStatus) == true))
+                    (AXP_CACHE_DIRTY(bCacheStatus) == true))
             {
                 probeStatus = HitDirty;
             }
@@ -498,11 +504,11 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 
                     /*
                      * TODO:    This code is completely bogus.  It is only here
-                     *          to keep the compiler happy.  Cache coherence is
-                     *          to be vastly changed.  There will be no need
-                     *          for Probes and Prober Responses through the
-                     *          system.  The Bcaches are going to maintain
-                     *          coherence automatically.
+                     *        to keep the compiler happy.  Cache coherence is
+                     *        to be vastly changed.  There will be no need
+                     *        for Probes and Prober Responses through the
+                     *        system.  The Bcaches are going to maintain
+                     *        coherence automatically.
                      */
                     sys.cmd = ProbeResponse;
                     sys.ch = vs;
@@ -1006,7 +1012,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
  *  then free up the PQ entries.
  *
  * Input Parameters:
- *   cpu:
+ *  cpu:
  *      A pointer to the CPU structure for the emulated Alpha AXP 21264
  *      processor.
  *
@@ -1020,7 +1026,7 @@ void AXP_21264_Process_PQ(AXP_21264_CPU *cpu, int entry)
 void AXP_21264_SendRsps_PQ(AXP_21264_CPU *cpu)
 {
     int ii;
-    int end, start1, end1, start2 = -1, end2;
+    int end, start1, end1, start2 = -1, end2 = 0;
 
     if (cpu->pqTop > cpu->pqBottom)
     {
@@ -1203,9 +1209,9 @@ void AXP_21264_Add_PQ(AXP_21264_CPU *cpu,
  *   as necessary.
  *
  * Input Parameters:
- *   cpu:
- *       A pointer to the CPU structure for the emulated Alpha AXP 21264
- *       processor.
+ *  cpu:
+ *      A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *      processor.
  *  entry:
  *      An integer value that is the entry in the PQ to be invalidated.
  *
@@ -1219,7 +1225,7 @@ void AXP_21264_Free_PQ(AXP_21264_CPU *cpu, u8 entry)
 {
     AXP_21264_CBOX_PQ *pq = &cpu->pq[entry];
     int ii;
-    int end, start1, end1, start2 = -1, end2;
+    int end, start1, end1, start2 = -1, end2 = 0;
     bool done = false;
 
     /*
@@ -1258,7 +1264,7 @@ void AXP_21264_Free_PQ(AXP_21264_CPU *cpu, u8 entry)
         {
             done = true;
         }
-        if ((done == false) && (start2 != -1) && (ii = end))
+        if ((done == false) && (start2 != -1) && (ii == end))
         {
             ii = start2;
             end = end2;
