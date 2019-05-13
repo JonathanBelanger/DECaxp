@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -21,8 +21,16 @@
  *
  * Revision History:
  *
- *  V01.000		29-Dec-2017	Jonathan D. Belanger
+ *  V01.000 29-Dec-2017 Jonathan D. Belanger
  *  Initially written.
+ *
+ *  V01.001 12-May-2019 Jonathan D. Belanger
+ *  GCC 7.4.0, and possibly earlier, turns on strict-aliasing rules by default.
+ *  There are a number of issues in this module where the address of one
+ *  variable is cast to extract a value in a different format.  In this module
+ *  these all appear to be when trying to get the 64-bit value equivalent of
+ *  the 64-bit long PC structure.  We will use shifts (in a macro) instead of
+ *  the casts.
  */
 #include "CPU/Cbox/AXP_21264_Cbox.h"
 #include "CommonUtilities/AXP_Configure.h"
@@ -40,33 +48,34 @@
  *
  * Input Parameters:
  *  cpu:
- *	A pointer to the CPU structure for the emulated Alpha AXP 21264
- *	processor.
+ *      A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *      processor.
  *
  * Output Parameters:
  *  None.
  *
  * Return Values:
- *  -1:		No entries requiring processing.
- *  >=0:	Index of next entry that can be processed.
+ *  -1:     No entries requiring processing.
+ *  >=0:    Index of next entry that can be processed.
  */
-int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
+int
+AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
 {
     int retVal = -1;
     int ii;
-    int end, start1, end1, start2 = -1, end2;
+    int end, start1, end1, start2 = -1, end2 = 0;
 
     if (cpu->vdbTop > cpu->vdbBottom)
     {
-  start1 = cpu->vdbTop;
-  end1 = AXP_21264_VDB_LEN - 1;
-  start2 = 0;
-  end2 = cpu->vdbBottom;
+        start1 = cpu->vdbTop;
+        end1 = AXP_21264_VDB_LEN - 1;
+        start2 = 0;
+        end2 = cpu->vdbBottom;
     }
     else
     {
-  start1 = cpu->vdbTop;
-  end1 = cpu->vdbBottom;
+        start1 = cpu->vdbTop;
+        end1 = cpu->vdbBottom;
     }
 
     /*
@@ -76,16 +85,20 @@ int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
     end = end1;
     while ((ii <= end) && (retVal == -1))
     {
-  if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].processed == false))
-      retVal = ii;
-  if ((retVal == -1) && (start2 != -1) && (ii == end))
-  {
-      ii = start2;
-      end = end2;
-      start2 = -1;
-  }
-  else
-      ii++;
+        if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].processed == false))
+        {
+            retVal = ii;
+        }
+        if ((retVal == -1) && (start2 != -1) && (ii == end))
+        {
+            ii = start2;
+            end = end2;
+            start2 = -1;
+        }
+        else
+        {
+            ii++;
+        }
     }
 
     /*
@@ -101,10 +114,10 @@ int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
  *
  * Input Parameters:
  *  cpu:
- *	A pointer to the CPU structure for the emulated Alpha AXP 21264
- *	processor.
+ *      A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *      processor.
  *  entry:
- *	An integer value that is the entry in the VDB to be processed.
+ *      An integer value that is the entry in the VDB to be processed.
  *
  * Output Parameters:
  *  None.
@@ -112,7 +125,8 @@ int AXP_21264_VDB_Empty(AXP_21264_CPU *cpu)
  * Return Values:
  *  None.
  */
-void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
+void
+AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
 {
     AXP_21264_CBOX_VIC_BUF *vdb = &cpu->vdb[entry];
     AXP_21264_SYSBUS_System sys;
@@ -123,40 +137,40 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
     switch (vdb->type)
     {
 
-  /*
-   * Istream cache blocks from memory or Dcache blocks to be written to
-   * the Bcache.
-   */
-  case toBcache:
-      AXP_21264_Bcache_Write(cpu, vdb->pa, (u8 *) vdb->sysData);
-      break;
+        /*
+         * Istream cache blocks from memory or Dcache blocks to be written to
+         * the Bcache.
+         */
+        case toBcache:
+            AXP_21264_Bcache_Write(cpu, vdb->pa, (u8 *) vdb->sysData);
+            break;
 
-      /*
-       * We need to write a Bcache block out to memory.
-       * 			or
-       * Dcache or Bcache blocks to send to the system in response to a
-       * probe command.
-       */
-  case toMemory:
-  case probeResponse:
+            /*
+             * We need to write a Bcache block out to memory.
+             *           or
+             * Dcache or Bcache blocks to send to the system in response to a
+             * probe command.
+             */
+        case toMemory:
+        case probeResponse:
 
-      /*
-       * Go check the Oldest pending PQ and set the flags for it here and
-       * now.  Only if the oldest PQ entry is a miss.
-       */
-      AXP_21264_OldestPQFlags(cpu, &sys.m1, &sys.m2, &sys.ch);
+            /*
+             * Go check the Oldest pending PQ and set the flags for it here and
+             * now.  Only if the oldest PQ entry is a miss.
+             */
+            AXP_21264_OldestPQFlags(cpu, &sys.m1, &sys.m2, &sys.ch);
 
-      /*
-       * OK, send what we have to the System.
-       */
-      sys.cmd = WrVictimBlk;
-      sys.mask = AXP_LOW_QUAD;
-      sys.rv = true;
-      sys.id = entry;
-      sys.pa = vdb->pa;
-      memcpy(sys.sysData, vdb->sysData, AXP_21264_SIZE_QUAD);
-      AXP_21264_SendToSystem(cpu, &sys);
-      break;
+            /*
+             * OK, send what we have to the System.
+             */
+            sys.cmd = WrVictimBlk;
+            sys.mask = AXP_LOW_QUAD;
+            sys.rv = true;
+            sys.id = entry;
+            sys.pa = vdb->pa;
+            memcpy(sys.sysData, vdb->sysData, AXP_21264_SIZE_QUAD);
+            AXP_21264_SendToSystem(cpu, &sys);
+            break;
     }
 
     /*
@@ -171,14 +185,14 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
  *  This function is called to add an Victim Data Buffer (VDB) entry on to the
  *  queue for processing.
  *
- *  NOTE:	The Mbox and Cbox call this function.  The Mbox to have a Dcache
- *		block to be written to the Bcache.  The Cbox to have Istream blocks
- *		recently written to the Icache to the Bcache as well
+ *  NOTE:   The Mbox and Cbox call this function.  The Mbox to have a Dcache
+ *          block to be written to the Bcache.  The Cbox to have Istream blocks
+ *          recently written to the Icache to the Bcache as well
  *
  * Input Parameters:
  *  cpu:
- *	A pointer to the CPU structure for the emulated Alpha AXP 21264
- *	processor.
+ *      A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *      processor.
  *
  * Output Parameters:
  *  None.
@@ -186,13 +200,13 @@ void AXP_21264_Process_VDB(AXP_21264_CPU *cpu, int entry)
  * Return Values:
  *  entry used.
  */
-u8 AXP_21264_Add_VDB(
-    AXP_21264_CPU *cpu,
-    AXP_21264_VDB_TYPE type,
-    u64 pa,
-    u8 *buf,
-    bool probe,
-    bool alreadyLocked)
+u8
+AXP_21264_Add_VDB(AXP_21264_CPU *cpu,
+                  AXP_21264_VDB_TYPE type,
+                  u64 pa,
+                  u8 *buf,
+                  bool probe,
+                  bool alreadyLocked)
 {
     bool locked = false;
 
@@ -202,15 +216,17 @@ u8 AXP_21264_Add_VDB(
      */
     if (alreadyLocked == false)
     {
-  pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
-  locked = true;
+        pthread_mutex_lock(&cpu->cBoxInterfaceMutex);
+        locked = true;
     }
 
     /*
      * Add a record to the next available VDB.
      */
     if (cpu->vdb[cpu->vdbBottom].valid == true)
-  cpu->vdbBottom = (cpu->vdbBottom + 1) & 0x07;
+    {
+        cpu->vdbBottom = (cpu->vdbBottom + 1) & 0x07;
+    }
     cpu->vdb[cpu->vdbBottom].type = type;
     cpu->vdb[cpu->vdbBottom].pa = pa;
     cpu->vdb[cpu->vdbBottom].validProbe = probe;
@@ -225,8 +241,8 @@ u8 AXP_21264_Add_VDB(
      */
     if (locked == true)
     {
-  pthread_cond_signal(&cpu->cBoxInterfaceCond);
-  pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
+        pthread_cond_signal(&cpu->cBoxInterfaceCond);
+        pthread_mutex_unlock(&cpu->cBoxInterfaceMutex);
     }
     return (cpu->vdbBottom);
 }
@@ -239,35 +255,37 @@ u8 AXP_21264_Add_VDB(
  *
  * Input Parameters:
  *  cpu:
- *	A pointer to the CPU structure for the emulated Alpha AXP 21264
- *	processor.
+ *      A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *      processor.
  *  pa:
- *	A 64-bit virtual address to be matched to a VDB entry.
+ *      A 64-bit virtual address to be matched to a VDB entry.
  *
  * Output Parameters:
  *  None.
  *
  * Return Values:
- *  true:	The P-bit is set, so no ProbeResponses will be returned to the
- *		system until this bit is cleared.
- *  false:	The P-bit is not set, so go ahead and send the response.
+ *  true:   The P-bit is set, so no ProbeResponses will be returned to the
+ *          system until this bit is cleared.
+ *  false:  The P-bit is not set, so go ahead and send the response.
  */
-bool AXP_21264_IsSetP_VDB(AXP_21264_CPU *cpu, u64 pa)
+bool
+AXP_21264_IsSetP_VDB(AXP_21264_CPU *cpu, u64 pa)
 {
     bool retVal = false;
     int ii;
-    int end, start1, end1, start2 = -1, end2;
+    int end, start1, end1, start2 = -1, end2 = 0;
+
     if (cpu->vdbTop > cpu->vdbBottom)
     {
-  start1 = cpu->vdbTop;
-  end1 = AXP_21264_VDB_LEN - 1;
-  start2 = 0;
-  end2 = cpu->vdbBottom;
+        start1 = cpu->vdbTop;
+        end1 = AXP_21264_VDB_LEN - 1;
+        start2 = 0;
+        end2 = cpu->vdbBottom;
     }
     else
     {
-  start1 = cpu->vdbTop;
-  end1 = cpu->vdbBottom;
+        start1 = cpu->vdbTop;
+        end1 = cpu->vdbBottom;
     }
 
     /*
@@ -277,16 +295,20 @@ bool AXP_21264_IsSetP_VDB(AXP_21264_CPU *cpu, u64 pa)
     end = end1;
     while ((ii <= end) && (retVal == false))
     {
-  if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].pa == pa))
-      retVal = true;
-  if ((retVal == false) && (start2 != -1) && (ii == end))
-  {
-      ii = start2;
-      end = end2;
-      start2 = -1;
-  }
-  else
-      ii++;
+        if ((cpu->vdb[ii].valid == true) && (cpu->vdb[ii].pa == pa))
+        {
+            retVal = true;
+        }
+        if ((retVal == false) && (start2 != -1) && (ii == end))
+        {
+            ii = start2;
+            end = end2;
+            start2 = -1;
+        }
+        else
+        {
+            ii++;
+        }
     }
 
     /*
@@ -301,11 +323,11 @@ bool AXP_21264_IsSetP_VDB(AXP_21264_CPU *cpu, u64 pa)
  *
  * Input Parameters:
  *  cpu:
- *	A pointer to the CPU structure for the emulated Alpha AXP 21264
- *	processor.
+ *      A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *      processor.
  *  entry:
- *	An integer value that is the entry in the VDB to have it's P bit
- *	cleared.
+ *      An integer value that is the entry in the VDB to have it's P bit
+ *      cleared.
  *
  * Output Parameters:
  *  None.
@@ -313,7 +335,8 @@ bool AXP_21264_IsSetP_VDB(AXP_21264_CPU *cpu, u64 pa)
  * Return Values:
  *  None.
  */
-void AXP_21264_ClearP_VDB(AXP_21264_CPU *cpu, u8 entry)
+void
+AXP_21264_ClearP_VDB(AXP_21264_CPU *cpu, u8 entry)
 {
     AXP_21264_CBOX_VIC_BUF *vdb = &cpu->vdb[entry];
 
@@ -341,10 +364,10 @@ void AXP_21264_ClearP_VDB(AXP_21264_CPU *cpu, u8 entry)
  *
  * Input Parameters:
  *  cpu:
- *	A pointer to the CPU structure for the emulated Alpha AXP 21264
- *	processor.
+ *      A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *      processor.
  *  entry:
- *	An integer value that is the entry in the VDB to be invalidated.
+ *      An integer value that is the entry in the VDB to be invalidated.
  *
  * Output Parameters:
  *  None.
@@ -352,11 +375,12 @@ void AXP_21264_ClearP_VDB(AXP_21264_CPU *cpu, u8 entry)
  * Return Values:
  *  None.
  */
-void AXP_21264_Free_VDB(AXP_21264_CPU *cpu, u8 entry)
+void
+AXP_21264_Free_VDB(AXP_21264_CPU *cpu, u8 entry)
 {
     AXP_21264_CBOX_VIC_BUF *vdb = &cpu->vdb[entry];
     int ii;
-    int end, start1, end1, start2 = -1, end2;
+    int end, start1, end1, start2 = -1, end2 = 0;
     bool done = false;
 
     /*
@@ -369,15 +393,15 @@ void AXP_21264_Free_VDB(AXP_21264_CPU *cpu, u8 entry)
      */
     if (cpu->vdbTop > cpu->vdbBottom)
     {
-  start1 = cpu->vdbTop;
-  end1 = AXP_21264_VDB_LEN - 1;
-  start2 = 0;
-  end2 = cpu->vdbBottom;
+        start1 = cpu->vdbTop;
+        end1 = AXP_21264_VDB_LEN - 1;
+        start2 = 0;
+        end2 = cpu->vdbBottom;
     }
     else
     {
-  start1 = cpu->vdbTop;
-  end1 = cpu->vdbBottom;
+        start1 = cpu->vdbTop;
+        end1 = cpu->vdbBottom;
     }
 
     /*
@@ -387,18 +411,24 @@ void AXP_21264_Free_VDB(AXP_21264_CPU *cpu, u8 entry)
     end = end1;
     while ((ii <= end) && (done == false))
     {
-  if (cpu->vdb[ii].valid == false)
-      cpu->vdbTop = (cpu->vdbTop + 1) & 0x07;
-  else
-      done = true;
-  if ((done == false) && (start2 != -1) && (ii == end))
-  {
-      ii = start2;
-      end = end2;
-      start2 = -1;
-  }
-  else
-      ii++;
+        if (cpu->vdb[ii].valid == false)
+        {
+            cpu->vdbTop = (cpu->vdbTop + 1) & 0x07;
+        }
+        else
+        {
+            done = true;
+        }
+        if ((done == false) && (start2 != -1) && (ii == end))
+        {
+            ii = start2;
+            end = end2;
+            start2 = -1;
+        }
+        else
+        {
+            ii++;
+        }
     }
 
     /*
