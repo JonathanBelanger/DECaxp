@@ -387,7 +387,13 @@ typedef struct
     u64 res :1;
     u64 pc :62;
 } AXP_PC;
-#define AXP_GET_PC(pc64)  ((pc64.pc << 2) | pc64.pal)
+#define AXP_GET_PC(pc64)    ((pc64.pc << 2) | pc64.pal)
+#define AXP_PUT_PC(pc64, inpc)                                              \
+    {                                                                       \
+        pc64.pc = (inpc & 0xfffffffffffffffcll) >> 2;                       \
+        pc64.res = 0;                                                       \
+        pc64.pal = inpc & 1;                                                \
+    }
 
 /*
  * Page Table Entry (PTE) Definition
