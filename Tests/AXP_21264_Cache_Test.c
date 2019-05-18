@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -99,7 +99,7 @@ int main()
     AXP_PC pc;
     AXP_EXCEPTIONS except;
     u64 zeroPCval = 0;
-    AXP_PC zeroPC = *((AXP_PC *) &zeroPCval);
+    AXP_PC zeroPC;
     u32 noOp = 0x47ff041f;
     u32 readIns[AXP_ICACHE_LINE_INS];
     FILE *fp = NULL;
@@ -126,6 +126,7 @@ int main()
     u32 totalOper;
 
     printf("\nAXP 21264 Data and Instruction Cache Tester\n");
+    AXP_PUT_PC(zeroPC, zeroPCval);
     line = AXP_Allocate_Block(-lineLen);
     cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
     if (cpu != NULL)
@@ -367,14 +368,14 @@ int main()
                          * one a 64 byte boundary.
                          */
                         va = addr; /* We use this when searching for the TLB */
-                        pc = *((AXP_PC *) &va);
+                        AXP_PUT_PC(pc, va);
                         if (AXP_IcacheFetch(cpu, pc, &nextIns) == false)
                         {
                             AXP_PC boundaryPC;
                             u64 tmpAddr = addr;
 
                             tmpAddr &= 0x7ffffc0; /* Round to 64 byte boundary */
-                            boundaryPC = *((AXP_PC *) &tmpAddr);
+                            AXP_PUT_PC(boundaryPC, tmpAddr);
 
                             itb = AXP_findTLBEntry(cpu, va, false);
                             if (itb == NULL)

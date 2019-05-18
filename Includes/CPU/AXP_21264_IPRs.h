@@ -70,7 +70,14 @@ typedef struct
     u32 offset;
 } AXP_EBOX_CC;          /* Cycle Counter Register */
 #define AXP_EBOX_READ_CC(dest, cpu)                                         \
-    dest = ((u64) (cpu->cc.offset << 32)) | (u64) cpu->cc.counter
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_EBOX_CC tmp2;                                               \
+        } src = { .tmp2 = cpu->cc };                                        \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_EBOX_WRITE_CC(src, cpu)                                         \
     cpu->cc.offset = (u32) (src & 0xffffffff)
 
@@ -83,8 +90,12 @@ typedef struct
 } AXP_EBOX_CC_CTL;      /* Cycle Counter Control Register */
 #define AXP_EBOX_WRITE_CC_CTL(src, cpu)                                     \
     {                                                                       \
-        cpu->ccCtl.counter = (src & 0x00000000fffffff0ll) >> 4;             \
-        cpu->ccCtl.cc_ena = (src & 0x0000000100000000ll) >> 32;             \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_EBOX_CC_CTL tmp2;                                           \
+        } dest = { .tmp1 = src };                                           \
+        cpu->ccCtl = dest.tmp2;                                             \
     }
 
 typedef u64 AXP_EBOX_VA; /* Virtual Address Register */
@@ -100,10 +111,12 @@ typedef struct
 } AXP_EBOX_VA_CTL;
 #define AXP_EBOX_WRITE_VA_CTL(src, cpu)                                     \
     {                                                                       \
-        cpu->vaCtl.b_endian = src & 0x0000000000000001ll;                   \
-        cpu->vaCtl.va_48 = (src & 0x0000000000000002ll) >> 1;               \
-        cpu->vaCtl.va_form_32 = (src & 0x0000000000000004ll) >> 2;          \
-        cpu->vaCtl.vptb = (src & 0xffffffffc0000000ll) >> 30;               \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_EBOX_VA_CTL tmp2;                                           \
+        } dest = { .tmp1 = src };                                           \
+        cpu->vaCtl = dest.tmp2;                                             \
     }
 
 typedef struct
@@ -153,7 +166,7 @@ typedef union
 } AXP_EBOX_VA_FORM;
 #define AXP_EBOX_READ_VA_FORM(dest, cpu)                                    \
     dest = (cpu->vaForm.form & (0xffffffffc03ffff8ll |                      \
-            ((cpu->vaCtl.va_form_32 == 0) ? 0x000000003fc00000ll : 0)))
+        ((cpu->vaCtl.va_form_32 == 0) ? 0x000000003fc00000ll : 0)))
 
 /*
  * The following definitions are for the Fbox IPRs
@@ -226,7 +239,14 @@ typedef struct
     u64 res_2 :16;
 } AXP_IBOX_ITB_TAG;
 #define AXP_IBOX_WRITE_ITB_TAG(src, cpu)                                    \
-        cpu->itbTag.tag = (src & 0x0000ffffffffe000ll) >> 13
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_ITB_TAG tmp2;                                          \
+        } dest = { .tmp1 = src };                                           \
+        cpu->itbTag = dest.tmp2;                                            \
+    }
 
 typedef struct
 {
@@ -244,13 +264,12 @@ typedef struct
 } AXP_IBOX_ITB_PTE;
 #define AXP_IBOX_WRITE_ITB_PTE(src, cpu)                                    \
     {                                                                       \
-        cpu->itbPte._asm = (src & 0x0000000000000010ll) >> 4;               \
-        cpu->itbPte.gh = (src & 0x0000000000000060ll) >> 5;                 \
-        cpu->itbPte.kre = (src & 0x0000000000000100ll) >> 8;                \
-        cpu->itbPte.ere = (src & 0x0000000000000200ll) >> 9;                \
-        cpu->itbPte.sre = (src & 0x0000000000000400ll) >> 10;               \
-        cpu->itbPte.ure = (src & 0x0000000000000800ll) >> 11;               \
-        cpu->itbPte.pfn = (src & 0x00000fffffffe000ll) >> 13;               \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_ITB_PTE tmp2;                                          \
+        } dest = { .tmp1 = src };                                           \
+        cpu->itbPte = dest.tmp2;                                            \
     }
 
 typedef struct
@@ -260,7 +279,14 @@ typedef struct
     u64 res_2 :16;
 } AXP_IBOX_ITB_IS;
 #define AXP_IBOX_WRITE_ITB_IS(src, cpu)                                     \
-    cpu->itbIs.inval_itb = (src & 0x0000ffffffffe000ll) >> 13
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_ITB_IS tmp2;                                           \
+        } dest = { .tmp1 = src };                                           \
+        cpu->itbIs = dest.tmp2;                                             \
+    }
 
 typedef union
 {
@@ -309,7 +335,7 @@ typedef union
     u64 form;
 } AXP_IBOX_IVA_FORM;
 #define AXP_IBOX_READ_IVA_FORM(dest, cpu)                                   \
-  dest = (cpu->ivaForm.form & (0xffffffffc03ffff8ll |                       \
+    dest = (cpu->ivaForm.form & (0xffffffffc03ffff8ll |                     \
           ((cpu->vaCtl.va_form_32 == 0) ? 0x000000003fc00000ll : 0)))
 
 /*
@@ -335,40 +361,51 @@ typedef struct
 } AXP_IBOX_IER_CM;
 #define AXP_IBOX_READ_CM(dest, cpu)     dest = cpu->ierCm.cm << 3
 #define AXP_IBOX_READ_IER(dest, cpu)                                        \
-    dest = (cpu->ierCm.asten << 13) |                                       \
-           (cpu->ierCm.sien << 14) |                                        \
-           (cpu->ierCm.pcen << 29) |                                        \
-           (cpu->ierCm.cren << 31) |                                        \
-           (cpu->ierCm.slen << 32) |                                        \
-           (cpu->eirCm.eien << 33)
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_IER_CM tmp2;                                           \
+        } src = { .tmp2 = cpu->ierCm };                                     \
+        src.tmp2.cm = 0;                                                    \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_IBOX_READ_IER_CM(dest, cpu)                                     \
-    dest = (cpu->ierCm.cm << 3) |                                           \
-           (cpu->ierCm.asten << 13) |                                       \
-           (cpu->ierCm.sien << 14) |                                        \
-           (cpu->ierCm.pcen << 29) |                                        \
-           (cpu->ierCm.cren << 31) |                                        \
-           (cpu->ierCm.slen << 32) |                                        \
-           (cpu->eirCm.eien << 33)
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_IER_CM tmp2;                                           \
+        } src = { .tmp2 = cpu->ierCm };                                     \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_IBOX_WRITE_CM(src, cpu)                                         \
-        cpu->ierCm.cm = (src & 0x0000000000000018ll) >> 3
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_IER_CM tmp2;                                           \
+        } dest = { .tmp1 = src };                                           \
+        cpu->ierCm.cm = dest.tmp2.cm;                                       \
+    }
 #define AXP_IBOX_WRITE_IER(src, cpu)                                        \
     {                                                                       \
-        cpu->ierCm.asten = (src & 0x0000000000002000ll) >> 13;              \
-        cpu->ierCm.sien = (src & 0x000000001fffc000ll) >> 14;               \
-        cpu->ierCm.pcen = (src & 0x0000000060000000ll) >> 29;               \
-        cpu->ierCm.cren = (src & 0x0000000080000000ll) >> 31;               \
-        cpu->ierCm.slen = (src & 0x0000000100000000ll) >> 32;               \
-        cpu->ierCm.eien = (src & 0x0000007e00000000ll) >> 33;               \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_IER_CM tmp2;                                           \
+        } dest = { .tmp1 = src };                                           \
+        dest.tmp2.cm = cpu->ierCm.cm;                                       \
+        cpu->ierCm = dest.tmp2;                                             \
     }
 #define AXP_IBOX_WRITE_IER_CM(src, cpu)                                     \
     {                                                                       \
-        cpu->ierCm.cm = (src & 0x0000000000000018ll) >> 3;                  \
-        cpu->ierCm.asten = (src & 0x0000000000002000ll) >> 13;              \
-        cpu->ierCm.sien = (src & 0x000000001fffc000ll) >> 14;               \
-        cpu->ierCm.pcen = (src & 0x0000000060000000ll) >> 29;               \
-        cpu->ierCm.cren = (src & 0x0000000080000000ll) >> 31;               \
-        cpu->ierCm.slen = (src & 0x0000000100000000ll) >> 32;               \
-        cpu->ierCm.eien = (src & 0x0000007e00000000ll) >> 33;               \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_IER_CM tmp2;                                           \
+        } dest = { .tmp1 = src };                                           \
+        cpu->ierCm = dest.tmp2;                                             \
     }
 
 typedef struct
@@ -377,9 +414,24 @@ typedef struct
     u64 sir :15;    /* Software interrupt requests */
     u64 res_2 :35;
 } AXP_IBOX_SIRR;
-#define AXP_IBOX_READ_SIRR(dest, cpu)   dest = cpu->sirr.sir << 14
+#define AXP_IBOX_READ_SIRR(dest, cpu)                                       \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_SIRR tmp2;                                             \
+        } src = { .tmp2 = cpu->sirr };                                      \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_IBOX_WRITE_SIRR(src, cpu)                                       \
-    cpu->sirr.sir = (src & 0x000000001fffc000ll) >> 14
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_SIRR tmp2;                                             \
+        } dest = { .tmp1 = src };                                           \
+        cpu->sirr = dest.tmp2;                                              \
+    }
 
 /*
  * Interrupt Summary Register - Used to report what interrupts are currently
@@ -405,15 +457,14 @@ typedef struct
     u64 res_4 :25;
 } AXP_IBOX_ISUM;
 #define AXP_IBOX_READ_ISUM(dest, cpu)                                       \
-    dest = (cpu->iSum.astk << 3) |                                          \
-           (cpu->iSum.aste << 4) |                                          \
-           (cpu->iSum.asts << 9) |                                          \
-           (cpu->iSum.astu << 10) |                                         \
-           (cpu->iSum.si << 14) |                                           \
-           (cpu->iSum.pc << 19) |                                           \
-           (cpu->iSum.cr << 21) |                                           \
-           (cpu->iSum.sl << 22) |                                           \
-           (cpu->iSum.ei << 23)
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_ISUM tmp2;                                             \
+        } src = { .tmp2 = cpu->iSum };                                      \
+        dest = src.tmp1;                                                    \
+    }
 
 typedef struct
 {
@@ -428,11 +479,12 @@ typedef struct
 } AXP_IBOX_HW_INT_CLR;
 #define AXP_IBOX_WRITE_HW_INT_CLR(src, cpu)                                 \
     {                                                                       \
-        cpu->hwIntClr.fbtp = (src &   0x0000000004000000ll) >> 26;            \
-        cpu->hwIntClr.mchk_d = (src & 0x0000000008000000ll) >> 27;          \
-        cpu->hwIntClr.pc = (src &     0x0000000060000000ll) >> 29;              \
-        cpu->hwIntClr.cr = (src &     0x0000000080000000ll) >> 31;              \
-        cpu->hwIntClr.sl = (src &     0x0000000100000000ll) >> 32;              \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_HW_INT_CLR tmp2;                                       \
+        } dest = { .tmp1 = src };                                           \
+        cpu->hwIntClr = dest.tmp2;                                          \
     }
 
 typedef struct
@@ -458,24 +510,14 @@ typedef struct
     u64 sext_set_iov :16; /* Sign-extended (SEXT) of SET_IOV */
 } AXP_IBOX_EXC_SUM;
 #define AXP_IBOX_READ_EXC_SUM(dest, cpu)                                    \
-    dest = cpu->excSum.swc |                                                \
-           (cpu->excSum.inv << 1) |                                         \
-           (cpu->excSum.dze << 2) |                                         \
-           (cpu->excSum.ovf << 3) |                                         \
-           (cpu->excSum.unf << 4) |                                         \
-           (cpu->excSum.ine << 5) |                                         \
-           (cpu->excSum.iov << 6) |                                         \
-           (cpu->excSum._int << 7) |                                        \
-           (cpu->excSum.reg << 8) |                                         \
-           (cpu->excSum.bad_ivm << 13) |                                    \
-           (cpu->excSum.pc_ovfl << 41) |                                    \
-           (cpu->excSum.set_inv << 42) |                                    \
-           (cpu->excSum.set_dze << 43) |                                    \
-           (cpu->excSum.set_ovf << 44) |                                    \
-           (cpu->excSum.set_unf << 45) |                                    \
-           (cpu->excSum.set_ine << 46) |                                    \
-           (cpu->excSum.set_iov << 47) |                                    \
-           (cpu->excSum.set_iov ? 0xffff000000000000ll : 0)
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_EXC_SUM tmp2;                                          \
+        } src = { .tmp2 = cpu->excSum };                                    \
+        dest = src.tmp1;                                                    \
+    }
 
 typedef union
 {
@@ -523,50 +565,22 @@ typedef struct
     u64 sext_vptb :16;      /* Sign extension of 'vptb' */
 } AXP_IBOX_I_CTL;
 #define AXP_IBOX_READ_I_CTL(dest, cpu)                                      \
-    dest = cpu->iCtl.spce |                                                 \
-           (cpu->iCtl.ic_en << 1) |                                         \
-           (cpu->iCtl.spe << 3) |                                           \
-           (cpu->iCtl.sde << 6) |                                           \
-           (cpu->iCtl.sbe << 8) |                                           \
-           (cpu->iCtl.bp_mode << 10) |                                      \
-           (cpu->iCtl.hwe << 12) |                                          \
-           (cpu->iCtl.sl_xmit << 13) |                                      \
-           (cpu->iCtl.sl_rcv << 14) |                                       \
-           (cpu->iCtl.va_48 << 15) |                                        \
-           (cpu->iCtl.va_form_32 << 16) |                                   \
-           (cpu->iCtl.single_issue_h << 17) |                               \
-           (cpu->iCtl.pct0_en << 18) |                                      \
-           (cpu->iCtl.pct1_en << 19) |                                      \
-           (cpu->iCtl.call_pal_r23 << 20) |                                   \
-           (cpu->iCtl.mchk_en << 21) |                                      \
-           (cpu->iCtl.tb_mb_en << 22) |                                     \
-           (cpu->iCtl.bist_fail << 23) |                                    \
-           (cpu->iCtl.chip_id << 24) |                                      \
-           (cpu->iCtl.vptb << 30) |                                         \
-           cpu->iCtl.vptb ? 0xffff000000000000ll : 0
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_I_CTL tmp2;                                            \
+        } src = { .tmp2 = cpu->iCtl };                                      \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_IBOX_WRITE_I_CTL(src, cpu)                                      \
     {                                                                       \
-        cpu->iCtl.spce = src & 0x0000000000000001ll;                        \
-        cpu->iCtl.ic_en = (src & 0x0000000000000006ll) >> 1;                \
-        cpu->iCtl.spe = (src & 0x0000000000000038ll) >> 3;                  \
-        cpu->iCtl.sde = (src & 0x00000000000000c0ll) >> 6;                  \
-        cpu->iCtl.sbe = (src & 0x0000000000000300ll) >> 8;                  \
-        cpu->iCtl.bp_mode = (src & 0x0000000000000c00ll) >> 10;             \
-        cpu->iCtl.hwe = (src & 0x0000000000001000ll) >> 12;                 \
-        cpu->iCtl.sl_xmit = (src & 0x0000000000002000ll) >> 13;             \
-        cpu->iCtl.sl_rcv = (src & 0x0000000000004000ll) >> 14;              \
-        cpu->iCtl.va_48 = (src & 0x0000000000008000ll) >> 15;               \
-        cpu->iCtl.va_form_32 = (src & 0x0000000000010000ll) >> 16;          \
-        cpu->iCtl.single_issue_h = (src & 0x0000000000020000ll) >> 17;      \
-        cpu->iCtl.pct0_en = (src & 0x0000000000040000ll) >> 18;             \
-        cpu->iCtl.pct1_en = (src & 0x0000000000080000ll) >> 19;             \
-        cpu->iCtl.call_pal_r23 = (src & 0x0000000000100000ll) >> 20;          \
-        cpu->iCtl.mchk_en = (src & 0x0000000000200000ll) >> 21;             \
-        cpu->iCtl.tb_mb_en = (src & 0x0000000000400000ll) >> 22;            \
-        cpu->iCtl.bist_fail = (src & 0x0000000000800000ll) >> 23;           \
-        cpu->iCtl.chip_id = (src & 0x000000003f000000ll) >> 24;             \
-        cpu->iCtl.vptb = (src & 0x0000ffffc0000000ll) >> 30;                \
-        cpu->iCtl.sext_vptb = cpu->iCtl.vptb ? 0xffff : 0;                  \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_I_CTL tmp2;                                            \
+        } dest = { .tmp1 = src };                                           \
+        cpu->iCtl = dest.tmp2;                                              \
     }
 
 #define AXP_I_CTL_BP_MODE_FALL      0x2 /* 1x, where 'x' is not relevant */
@@ -584,18 +598,28 @@ typedef struct
     u64 res_2 :33;
 } AXP_IBOX_I_STAT;
 #define AXP_IBOX_READ_I_STAT(dest, cpu)                                     \
-    dest = (cpu->iStat.tpe << 29) |                                         \
-           (cpu->iStat.dpe << 30)
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_I_STAT tmp2;                                           \
+        } src = { .tmp2 = cpu->iStat };                                     \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_IBOX_WRITE_I_STAT(src, cpu)                                     \
     {                                                                       \
-        cpu->iStat.tpe = src & 0x00000000000020000000ll;                    \
-        cpu->iStat.dpe = src & 0x00000000000040000000ll;                    \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_I_STAT tmp2;                                           \
+        } dest = { .tmp1 = src };                                           \
+        cpu->iStat = dest.tmp2;                                             \
     }
 
 /*
  * Process Context Register
  *   The 'aster' and 'astrr' fields can have the following values:
- *       0x1 = Kernal mode
+ *       0x1 = Kernel mode
  *       0x2 = Supervisor mode
  *       0x4 = Executive mode
  *       0x8 = User mode
@@ -613,11 +637,14 @@ typedef struct
     u64 res_4 :17;
 } AXP_IBOX_PCTX;
 #define AXP_IBOX_READ_PCTX(dest, cpu)                                       \
-    dest = (cpu->pCtx.ppce << 1) |                                          \
-           (cpu->pCtx.fpe << 2) |                                           \
-           (cpu->pCtx.aster << 5) |                                         \
-           (cpu->pCtx.astrr << 9) |                                         \
-           (cpu->pCtx.asn << 39)
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_PCTX tmp2;                                             \
+        } src = { .tmp2 = cpu->pCtx };                                      \
+        dest = src.tmp1;                                                    \
+    }
 /* NOTE: No write macro because writing to individual fields is easier */
 
 /*
@@ -646,19 +673,24 @@ typedef struct
     u64 sext_pctr0 :16;
 } AXP_IBOX_PCTR_CTL;
 #define AXP_IBOX_READ_PCTR_CTL(dest, cpu)                                   \
-    dest = cpu->pCtrCtl.sl1 |                                               \
-           (cpu->pCtrCtl.sl0 << 4) |                                        \
-           (cpu->pCtrCtl.pctr1 << 6) |                                      \
-           (cpu->pCtrCtl.pctr0 << 28) |                                     \
-           (cpu->pCtrCtl.pctr0 & 0x00080000) ? 0xffff000000000000ll : 0
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_PCTR_CTL tmp2;                                         \
+        } src = { .tmp2 = cpu->pCtrCtl };                                   \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_IBOX_WRITE_PCTR_CTL(src, cpu)                                   \
     {                                                                       \
-        cpu->pCtrCtl.sl1 = src & 0x000000000000000fll;                      \
-        cpu->pCtrCtl.sl0 = (src & 0x0000000000000010ll) >> 4;               \
-        cpu->pCtrCtl.pctr1 = (src & 0x0000000003ffffc0ll) >> 6;             \
-        cpu->pCtrCtl.pctr0 = (src & 0x0000fffff0000000ll) >> 28;            \
-        cpu->pCtrCtl.sext_pctr0 = (src & 0x0000800000000000ll) ?            \
-                                  0x0000ffff : 0;                           \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_PCTR_CTL tmp2;                                         \
+        } dest = { .tmp1 = src };                                           \
+        cpu->pCtrCtl = dest.tmp2;                                           \
+        cpu->pCtrCtl.sext_pctr0 = (cpu->pCtrCtl.pctr0 & 0x00080000) ?       \
+            0x0000ffff : 0;                                                 \
     }
 
 /*
@@ -693,9 +725,23 @@ typedef struct
     u64 res_2 :16;
 } AXP_MBOX_DTB_TAG;
 #define AXP_MBOX_WRITE_DTB_TAG0(src, cpu)                                   \
-    cpu->dtbTag0.va = (src & 0x0000ffffffffe000ll) >> 13
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_TAG tmp2;                                          \
+        } dest = { .tmp1 = src };                                           \
+        cpu->dtbTag0 = dest.tmp2;                                           \
+    }
 #define AXP_MBOX_WRITE_DTB_TAG1(src, cpu)                                   \
-    cpu->dtbTag1.va = (src & 0x0000ffffffffe000ll) >> 13
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_TAG tmp2;                                          \
+        } dest = { .tmp1 = src };                                           \
+        cpu->dtbTag1 = dest.tmp2;                                           \
+    }
 
 typedef struct
 {
@@ -720,35 +766,21 @@ typedef struct
 } AXP_MBOX_DTB_PTE;
 #define AXP_MBOX_WRITE_DTB_PTE0(src, cpu)                                   \
     {                                                                       \
-        cpu->dtbPte0._for = (src & 0x0000000000000002ll) >> 1;              \
-        cpu->dtbPte0.fow =  (src & 0x0000000000000004ll) >> 2;              \
-        cpu->dtbPte0._asm = (src & 0x0000000000000010ll) >> 4;              \
-        cpu->dtbPte0.gh =   (src & 0x0000000000000060ll) >> 5;              \
-        cpu->dtbPte0.kre =  (src & 0x0000000000000100ll) >> 8;              \
-        cpu->dtbPte0.ere =  (src & 0x0000000000000200ll) >> 9;              \
-        cpu->dtbPte0.sre =  (src & 0x0000000000000400ll) >> 10;             \
-        cpu->dtbPte0.ure =  (src & 0x0000000000000800ll) >> 11;             \
-        cpu->dtbPte0.kwe =  (src & 0x0000000000001000ll) >> 12;             \
-        cpu->dtbPte0.ewe =  (src & 0x0000000000002000ll) >> 13;             \
-        cpu->dtbPte0.swe =  (src & 0x0000000000004000ll) >> 14;             \
-        cpu->dtbPte0.uwe =  (src & 0x0000000000008000ll) >> 15;             \
-        cpu->dtbPte0.pa =   (src & 0x7fffffff00000000ll) >> 21;             \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_PTE tmp2;                                          \
+        } dest = { .tmp1 = src };                                           \
+        cpu->dtbPte0 = dest.tmp2;                                           \
     }
 #define AXP_MBOX_WRITE_DTB_PTE1(src, cpu)                                   \
     {                                                                       \
-        cpu->dtbPte1._for = (src & 0x0000000000000002ll) >> 1;              \
-        cpu->dtbPte1.fow =  (src & 0x0000000000000004ll) >> 2;              \
-        cpu->dtbPte1._asm = (src & 0x0000000000000010ll) >> 4;              \
-        cpu->dtbPte1.gh =   (src & 0x0000000000000060ll) >> 5;              \
-        cpu->dtbPte1.kre =  (src & 0x0000000000000100ll) >> 8;              \
-        cpu->dtbPte1.ere =  (src & 0x0000000000000200ll) >> 9;              \
-        cpu->dtbPte1.sre =  (src & 0x0000000000000400ll) >> 10;             \
-        cpu->dtbPte1.ure =  (src & 0x0000000000000800ll) >> 11;             \
-        cpu->dtbPte1.kwe =  (src & 0x0000000000001000ll) >> 12;             \
-        cpu->dtbPte1.ewe =  (src & 0x0000000000002000ll) >> 13;             \
-        cpu->dtbPte1.swe =  (src & 0x0000000000004000ll) >> 14;             \
-        cpu->dtbPte1.uwe =  (src & 0x0000000000008000ll) >> 15;             \
-        cpu->dtbPte1.pa =   (src & 0x7fffffff00000000ll) >> 21;             \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_PTE tmp2;                                          \
+        } dest = { .tmp1 = src };                                           \
+        cpu->dtbPte1 = dest.tmp2;                                           \
     }
 
 typedef struct
@@ -757,7 +789,14 @@ typedef struct
     u64 res :62;
 } AXP_MBOX_DTB_ALTMODE;
 #define AXP_MBOX_WRITE_DTB_ALTMODE(src, cpu)                                \
-    cpu->dtbAltMode.alt_mode = (src & 0x0000000000000003ll) >> 2
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_ALTMODE tmp2;                                      \
+        } dest = { .tmp1 = src };                                           \
+        cpu->dtbAltMode = dest.tmp2;                                        \
+    }
 
 #define AXP_MBOX_ALTMODE_KERNEL 0
 #define AXP_MBOX_ALTMODE_EXEC   1
@@ -766,9 +805,23 @@ typedef struct
 
 typedef AXP_IBOX_ITB_IS AXP_MBOX_DTB_IS;
 #define AXP_MBOX_WRITE_DTB_IS0(src, cpu)                                    \
-    cpu->dtbIs0.inval_itb = (src & 0x0000ffffffffe000ll) >> 13
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_IS tmp2;                                           \
+        } dest = { .tmp1 = src };                                           \
+        cpu->dtbIs0 = dest.tmp2;                                            \
+    }
 #define AXP_MBOX_WRITE_DTB_IS1(src, cpu)                                    \
-    cpu->dtbIs1.inval_itb = (src & 0x0000ffffffffe000ll) >> 13
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_IS tmp2;                                           \
+        } dest = { .tmp1 = src };                                           \
+        cpu->dtbIs1 = dest.tmp2;                                            \
+    }
 
 typedef struct
 {
@@ -777,9 +830,23 @@ typedef struct
     u64 res_2 :32;
 } AXP_MBOX_DTB_ASN;
 #define AXP_MBOX_WRITE_DTB_ASN0(src, cpu)                                   \
-    cpu->dtbAsn0.asn = (src & 0x00000000ff000000ll) >> 24
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_ASN tmp2;                                          \
+        } dest = { .tmp1 = src };                                           \
+        cpu->dtbAsn0 = dest.tmp2;                                           \
+    }
 #define AXP_MBOX_WRITE_DTB_ASN1(src, cpu)                                   \
-    cpu->dtbAsn1.asn = (src & 0x00000000ff000000ll) >> 24
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_ASN tmp2;                                          \
+        } dest = { .tmp1 = src };                                           \
+        cpu->dtbAsn1 = dest.tmp2;                                           \
+    }
 
 typedef struct
 {
@@ -792,12 +859,14 @@ typedef struct
     u64 res :53;
 } AXP_MBOX_MM_STAT;
 #define AXP_MBOX_READ_MM_STAT(dest, cpu)                                    \
-    dest = cpu->mmStat.wr |                                                 \
-           (cpu->mmStat.acv << 1) |                                          \
-           (cpu->mmStat._for << 2) |                                        \
-           (cpu->mmStat.fow << 3) |                                         \
-           (cpu->mmStat.opcodes << 4) |                                     \
-           (cpu->mmStat.dc_tag_perr << 10)
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_MM_STAT tmp2;                                          \
+        } src = { .tmp2 = cpu->mmStat };                                    \
+        dest = src.tmp1;                                                    \
+    }
 
 typedef struct
 {
@@ -806,7 +875,14 @@ typedef struct
     u64 res_2 :60;
 } AXP_MBOX_M_CTL;
 #define AXP_MBOX_WRITE_M_CTL(src, cpu)                                      \
-    cpu->mCtl.spe = (src & 0x000000000000000ell) >> 1
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_M_CTL tmp2;                                            \
+        } dest = { .tmp1 = src };                                           \
+        cpu->mCtl = dest.tmp2;                                              \
+    }
 
 typedef struct
 {
@@ -821,12 +897,12 @@ typedef struct
 } AXP_MBOX_DC_CTL;
 #define AXP_MBOX_WRITE_DC_CTL(src, cpu)                                     \
     {                                                                       \
-        cpu->dcCtl.set_en = src & 0x0000000000000003ll;                     \
-        cpu->dcCtl.f_hit = (src & 0x0000000000000004ll) >> 2;               \
-        cpu->dcCtl.f_bad_tpar = (src & 0x0000000000000010ll) >> 4;          \
-        cpu->dcCtl.f_bad_decc = (src & 0x0000000000000020ll) >> 5;          \
-        cpu->dcCtl.dctag_par_en = (src & 0x0000000000000040ll) >> 6;        \
-        cpu->dcCtl.dcdat_err_en = (src & 0x0000000000000080ll) >> 7;        \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DC_CTL tmp2;                                           \
+        } dest = { .tmp1 = src };                                           \
+        cpu->dcCtl = dest.tmp2;                                             \
     }
 
 typedef struct
@@ -839,19 +915,23 @@ typedef struct
     u64 res :59;
 } AXP_MBOX_DC_STAT;
 #define AXP_MBOX_READ_DC_STAT(dest, cpu)                                    \
-    dest = cpu->dcStat.tperr_p0 |                                           \
-           (cpu->dcStat.tperr_p1 << 1) |                                    \
-           (cpu->dcStat.ecc_err_st << 2) |                                  \
-           (cpu->dcStat.ecc_err_ld << 3) |                                  \
-           (cpu->dcStat.seo << 4)
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DC_STAT tmp2;                                          \
+        } src = { .tmp2 = cpu->dcStat };                                    \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_MBOX_WRITE_DC_STAT(src, cpu)                                    \
     {                                                                       \
-        cpu->dcStat.tperr_p0 = src & 0x0000000000000001ll;                  \
-        cpu->dcStat.tperr_p1 = (src & 0x0000000000000002ll) >> 1;           \
-        cpu->dcStat.ecc_err_st = (src & 0x0000000000000004ll) >> 2;         \
-        cpu->dcStat.ecc_err_ld = (src & 0x0000000000000008ll) >> 3;         \
-        cpu->dcStat.seo = (src & 0x0000000000000010ll) >> 4;                \
-     }
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DC_STAT tmp2;                                          \
+        } dest = { .tmp1 = src };                                           \
+        cpu->dcStat = dest.tmp2;                                            \
+    }
 
 /*
  * The following definitions are for the Cbox IPRs
