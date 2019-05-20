@@ -16,28 +16,36 @@
  *
  * Description:
  *
- *	The Pchip is the interface chip between devices on the PCI bus and the rest
- *	of the system.  There can be one or two Pchips, and corresponding single or
- *	dual PCI buses, connected to the Cchip and Dchips. The Pchip performs the
- *	following functions:
- *		- Accepts requests from the Cchip by means of the CAPbus and enqueues
- *		  them
- *		- Issues commands to the PCI bus based on these requests
- *		- Accepts requests from the PCI bus and enqueues them
- *		- Issues commands to the Cchip by means of the CAPbus based on these
- *		  requests
- *		- Transfers data to and from the Dchips based on the above commands and
- *		  requests
- *		- Buffers the data when necessary
- *		- Reports errors to the Cchip, after recording the nature of the error
+ *  The Pchip is the interface chip between devices on the PCI bus and the rest
+ *  of the system.  There can be one or two Pchips, and corresponding single or
+ *  dual PCI buses, connected to the Cchip and Dchips. The Pchip performs the
+ *  following functions:
+ *      - Accepts requests from the Cchip by means of the CAPbus and enqueues
+ *        them
+ *      - Issues commands to the PCI bus based on these requests
+ *      - Accepts requests from the PCI bus and enqueues them
+ *      - Issues commands to the Cchip by means of the CAPbus based on these
+ *        requests
+ *      - Transfers data to and from the Dchips based on the above commands and
+ *        requests
+ *      - Buffers the data when necessary
+ *      - Reports errors to the Cchip, after recording the nature of the error
  *
  * Revision History:
  *
- *	V01.000		22-Mar-2018	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000 22-Mar-2018 Jonathan D. Belanger
+ *  Initially written.
  *
- *	V01.001		12-May-2018	Jonathan D. Belanger
- *	Moved the Pchip CSRs to this module.
+ *  V01.001 12-May-2018 Jonathan D. Belanger
+ *  Moved the Pchip CSRs to this module.
+ *
+ *  V01.001 19-May-2019 Jonathan D. Belanger
+ *  GCC 7.4.0, and possibly earlier, turns on strict-aliasing rules by default.
+ *  There are a number of issues in this module where the address of one
+ *  variable is cast to extract a value in a different format.  In this module
+ *  these all appear to be when trying to get the 64-bit value equivalent of
+ *  the 64-bit long PC structure.  We will use shifts (in a macro) instead of
+ *  the casts.
  */
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Configure.h"
@@ -52,21 +60,21 @@ static void AXP_21274_WritePCSR(AXP_21274_PCHIP *, AXP_CAPbusMsg *);
 
 /*
  * AXP_21274_ReadPCSR
- *	This function is called when a read request has come in for a Pchip CSR.
+ *  This function is called when a read request has come in for a Pchip CSR.
  *
  * Input Parameters:
- *	p:
- *		A pointer to the Pchip data structure from which the emulation
- *		information is maintained.
- *	msg:
- *		A pointer to the request from the Cchuo that contains the CSR to be
- *		read.
+ *  p:
+ *      A pointer to the Pchip data structure from which the emulation
+ *      information is maintained.
+ *  msg:
+ *      A pointer to the request from the Cchip that contains the CSR to be
+ *      read.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- *	An unsigned  64-bit value read from the CSR.
+ *  An unsigned  64-bit value read from the CSR.
  */
 static u64 AXP_21274_ReadPCSR(AXP_21274_PCHIP *p, AXP_CAPbusMsg *msg)
 {
@@ -77,81 +85,98 @@ static u64 AXP_21274_ReadPCSR(AXP_21274_PCHIP *p, AXP_CAPbusMsg *msg)
      */
     switch (msg->csr)
     {
-  case 0x00: /* WSBA0 */
-      retVal = *((u64 *) &p->wsba0) & AXP_21274_WSBAn_RMASK;
-      break;
+        case 0x00: /* WSBA0 */
+            AXP_PCHIP_READ_WSBA0(retVal, p);
+            retVal &= AXP_21274_WSBAn_RMASK;
+            break;
 
-  case 0x01: /* WSBA1 */
-      retVal = *((u64 *) &p->wsba1) & AXP_21274_WSBAn_RMASK;
-      break;
+        case 0x01: /* WSBA1 */
+            AXP_PCHIP_READ_WSBA1(retVal, p);
+            retVal &= AXP_21274_WSBAn_RMASK;
+            break;
 
-  case 0x02: /* WSBA2 */
-      retVal = *((u64 *) &p->wsba2) & AXP_21274_WSBAn_RMASK;
-      break;
+        case 0x02: /* WSBA2 */
+            AXP_PCHIP_READ_WSBA2(retVal, p);
+            retVal &= AXP_21274_WSBAn_RMASK;
+            break;
 
-  case 0x03: /* WSBA3 */
-      retVal = *((u64 *) &p->wsba3) & AXP_21274_WSBA3_RMASK;
-      break;
+        case 0x03: /* WSBA3 */
+            AXP_PCHIP_READ_WSBA3(retVal, p);
+            retVal &= AXP_21274_WSBA3_RMASK;
+            break;
 
-  case 0x04: /* WSM0 */
-      retVal = *((u64 *) &p->wsm0) & AXP_21274_WSMn_RMASK;
-      break;
+        case 0x04: /* WSM0 */
+            AXP_PCHIP_READ_WSM0(retVal, p);
+            retVal &= AXP_21274_WSMn_RMASK;
+            break;
 
-  case 0x05: /* WSM1 */
-      retVal = *((u64 *) &p->wsm1) & AXP_21274_WSMn_RMASK;
-      break;
+        case 0x05: /* WSM1 */
+            AXP_PCHIP_READ_WSM1(retVal, p);
+            retVal &= AXP_21274_WSMn_RMASK;
+            break;
 
-  case 0x06: /* WSM2 */
-      retVal = *((u64 *) &p->wsm2) & AXP_21274_WSMn_RMASK;
-      break;
+        case 0x06: /* WSM2 */
+            AXP_PCHIP_READ_WSM2(retVal, p);
+            retVal &= AXP_21274_WSMn_RMASK;
+            break;
 
-  case 0x07: /* WSM3 */
-      retVal = *((u64 *) &p->wsm3) & AXP_21274_WSMn_RMASK;
-      break;
+        case 0x07: /* WSM3 */
+            AXP_PCHIP_READ_WSM3(retVal, p);
+            retVal &= AXP_21274_WSMn_RMASK;
+            break;
 
-  case 0x08: /* TBA0 */
-      retVal = *((u64 *) &p->tba0) & AXP_21274_TBAn_RMASK;
-      break;
+        case 0x08: /* TBA0 */
+            AXP_PCHIP_READ_TBA0(retVal, p);
+            retVal &= AXP_21274_TBAn_RMASK;
+            break;
 
-  case 0x09: /* TBA1 */
-      retVal = *((u64 *) &p->tba1) & AXP_21274_TBAn_RMASK;
-      break;
+        case 0x09: /* TBA1 */
+            AXP_PCHIP_READ_TBA1(retVal, p);
+            retVal &= AXP_21274_TBAn_RMASK;
+            break;
 
-  case 0x0a: /* TBA2 */
-      retVal = *((u64 *) &p->tba2) & AXP_21274_TBAn_RMASK;
-      break;
+        case 0x0a: /* TBA2 */
+            AXP_PCHIP_READ_TBA2(retVal, p);
+            retVal &= AXP_21274_TBAn_RMASK;
+            break;
 
-  case 0x0b: /* TBA3 */
-      retVal = *((u64 *) &p->tba3) & AXP_21274_TBAn_RMASK;
-      break;
+        case 0x0b: /* TBA3 */
+            AXP_PCHIP_READ_TBA3(retVal, p);
+            retVal &= AXP_21274_TBAn_RMASK;
+            break;
 
-  case 0x0c: /* PCTL */
-      retVal = *((u64 *) &p->pctl) & AXP_21274_PCTL_RMASK;
-      break;
+        case 0x0c: /* PCTL */
+            AXP_PCHIP_READ_PCTL(retVal, p);
+            retVal &= AXP_21274_PCTL_RMASK;
+            break;
 
-  case 0x0d: /* PLAT */
-      retVal = *((u64 *) &p->plat) & AXP_21274_PLAT_RMASK;
-      break;
+        case 0x0d: /* PLAT */
+            AXP_PCHIP_READ_PLAT(retVal, p);
+            retVal &= AXP_21274_PLAT_RMASK;
+            break;
 
-  case 0x0f: /* PERROR */
-      retVal = *((u64 *) &p->perror) & AXP_21274_PERROR_RMASK;
-      break;
+        case 0x0f: /* PERROR */
+            AXP_PCHIP_READ_PERROR(retVal, p);
+            retVal &= AXP_21274_PERROR_RMASK;
+            break;
 
-  case 0x10: /* PERRMASK */
-      retVal = *((u64 *) &p->perrMask) & AXP_21274_PERRMASK_RMASK;
-      break;
+        case 0x10: /* PERRMASK */
+            AXP_PCHIP_READ_PERRMASK(retVal, p);
+            retVal &= AXP_21274_PERRMASK_RMASK;
+            break;
 
-  case 0x14: /* PMONCTL */
-      retVal = *((u64 *) &p->pMonCtl) & AXP_21274_PMONC_RMASK;
-      break;
+        case 0x14: /* PMONCTL */
+            AXP_PCHIP_READ_PMONCTL(retVal, p);
+            retVal &= AXP_21274_PMONC_RMASK;
+            break;
 
-  case 0x15: /* PMONCNT */
-      retVal = *((u64 *) &p->pMonCnt);
-      break;
+        case 0x15: /* PMONCNT */
+            AXP_PCHIP_READ_PMONCNT(retVal, p);
+            break;
 
-  default:
-      /* TODO: non-existent memory */
-      break;
+        default:
+            /* TODO: non-existent memory */
+            break;
     }
 
     /*
@@ -182,28 +207,28 @@ typedef union
 
 /*
  * AXP_21274_WritePCSR
- *	This function is called when a write request has come in for a CSR.
+ *  This function is called when a write request has come in for a CSR.
  *
  * Input Parameters:
- *	sys:
- *		A pointer to the system data structure from which the emulation
- *		information is maintained.
- *	pa:
- *		The Physical Address that contains the CSR to be read.
- *	cpuID:
- *		An unsigned 32-bit value indicating the CPU requesting the read.  This
- *		is used when setting the correct ProbeEnable bit.  This can only be a
- *		value between 0 and 3.
+ *  sys:
+ *      A pointer to the system data structure from which the emulation
+ *      information is maintained.
+ *  pa:
+ *      The Physical Address that contains the CSR to be read.
+ *  cpuID:
+ *      An unsigned 32-bit value indicating the CPU requesting the read.  This
+ *      is used when setting the correct ProbeEnable bit.  This can only be a
+ *      value between 0 and 3.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- *	An unsigned  64-bit value read from the CSR.
+ *  An unsigned  64-bit value read from the CSR.
  *
- * NOTE:	Writing to a CSR may not always cause the register to be updated.
- *			It is possible that some other action may be generated by simply
- *			executing the write operation.
+ * NOTE:    Writing to a CSR may not always cause the register to be updated.
+ *          It is possible that some other action may be generated by simply
+ *          executing the write operation.
  */
 static void AXP_21274_WritePCSR(AXP_21274_PCHIP *p, AXP_CAPbusMsg *msg)
 {
@@ -329,21 +354,21 @@ static void AXP_21274_WritePCSR(AXP_21274_PCHIP *p, AXP_CAPbusMsg *msg)
 
 /*
  * AXP_21274_PchipInit
- *	This function is called to initialize the Pchip CSRs as documented in HRM
- *	10.2 Chipset Registers.
+ *  This function is called to initialize the Pchip CSRs as documented in HRM
+ *  10.2 Chipset Registers.
  *
  * Input Parameters:
- *	p:
- *		A pointer to the Pchip data structure from which the emulation
- *		information is maintained.
- *	id:
- *		A value indicating the numeric identifier associated with this Pchip.
+ *  p:
+ *      A pointer to the Pchip data structure from which the emulation
+ *      information is maintained.
+ *  id:
+ *      A value indicating the numeric identifier associated with this Pchip.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
  */
 void AXP_21274_PchipInit(AXP_21274_PCHIP *p, u32 id)
 {
@@ -440,10 +465,10 @@ void AXP_21274_PchipInit(AXP_21274_PCHIP *p, u32 id)
     /*
      * Initialization for PCTL (HRM Table 10-40).
      *
-     * TODO:	Initialize pid from the PID pins.
-     * TODO:	Initialize rpp from the CREQRMT_L pin at system reset.
-     * TODO:	Initialize pclkx from the PCI i_pclkdiv<1:0> pins.
-     * TODO:	Initialize padm from a decode of the b_cap<1:0> pins.
+     * TODO:    Initialize pid from the PID pins.
+     * TODO:    Initialize rpp from the CREQRMT_L pin at system reset.
+     * TODO:    Initialize pclkx from the PCI i_pclkdiv<1:0> pins.
+     * TODO:    Initialize padm from a decode of the b_cap<1:0> pins.
      */
     p->pctl.res_48 = 0;
     p->pctl.pid = 0;
@@ -551,20 +576,20 @@ void AXP_21274_PchipInit(AXP_21274_PCHIP *p, u32 id)
 
 /*
  * AXP_21274_Pchip_Main
- *	This is the main function for the Pchip.  It looks at its queues to
- * 	determine if there is anything that needs to be processed from the Cchip or
- * 	PCI devices.
+ *  This is the main function for the Pchip.  It looks at its queues to
+ *   determine if there is anything that needs to be processed from the Cchip or
+ *   PCI devices.
  *
  * Input Parameters:
- * 	p:
- * 		A pointer to the Pchip structure for the emulated DECchip 21272/21274
- * 		chipsets.
+ *   p:
+ *       A pointer to the Pchip structure for the emulated DECchip 21272/21274
+ *       chipsets.
  *
  * Output Parameters:
- * 	None.
+ *   None.
  *
  * Return Value:
- * 	None.
+ *   None.
  */
 void *AXP_21274_PchipMain(void *voidPtr)
 {

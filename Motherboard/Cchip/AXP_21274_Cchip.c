@@ -128,55 +128,65 @@ static u64 AXP_21274_ReadCCSR(AXP_21274_SYSTEM *sys, u64 pa)
             switch (csrAddr.csr)
             {
                 case 0x00: /* CSC */
-                    retVal = *((u64 *) &sys->csc) & AXP_21274_CSC_RMASK;
+                    AXP_CCHIP_READ_CSC(retVal, sys);
+                    retVal &= AXP_21274_CSC_RMASK;
                     break;
 
                 case 0x01: /* MTR */
-                    retVal = *((u64 *) &sys->mtr) & AXP_21274_MTR_RMASK;
+                    AXP_CCHIP_READ_MTR(retVal, sys);
+                    retVal &= AXP_21274_MTR_RMASK;
                     break;
 
                 case 0x02: /* MISC */
-                    retVal = *((u64 *) &sys->misc) & AXP_21274_MISC_RMASK;
+                    AXP_CCHIP_READ_MISC(retVal, sys);
+                    retVal &= AXP_21274_MISC_RMASK;
                     break;
 
                 case 0x03: /* MPD */
-                    retVal = *((u64 *) &sys->mpd) & AXP_21274_MPD_RMASK;
+                    AXP_CCHIP_READ_MPD(retVal, sys);
+                    retVal &= AXP_21274_MPD_RMASK;
                     break;
 
                 case 0x04: /* AAR0 */
-                    retVal = *((u64 *) &sys->aar0) & AXP_21274_ARRx_RMASK;
+                    AXP_CCHIP_READ_AAR0(retVal, sys);
+                    retVal &= AXP_21274_ARRx_RMASK;
                     break;
 
                 case 0x05: /* AAR1 */
-                    retVal = *((u64 *) &sys->aar1) & AXP_21274_ARRx_RMASK;
+                    AXP_CCHIP_READ_AAR1(retVal, sys);
+                    retVal &= AXP_21274_ARRx_RMASK;
                     break;
 
                 case 0x06: /* AAR2 */
-                    retVal = *((u64 *) &sys->aar2) & AXP_21274_ARRx_RMASK;
+                    AXP_CCHIP_READ_AAR2(retVal, sys);
+                    retVal &= AXP_21274_ARRx_RMASK;
                     break;
 
                 case 0x07: /* AAR3 */
-                    retVal = *((u64 *) &sys->aar3) & AXP_21274_ARRx_RMASK;
+                    AXP_CCHIP_READ_AAR3(retVal, sys);
+                    retVal &= AXP_21274_ARRx_RMASK;
                     break;
 
                 case 0x08: /* DIM0 */
-                    retVal = *((u64 *) &sys->dim0);
+                    retVal = sys->dim0;
                     break;
 
                 case 0x09: /* DIM1 */
-                    retVal = *((u64 *) &sys->dim1);
+                    retVal = sys->dim1;
                     break;
 
                 case 0x0a: /* DIR0 */
-                    retVal = *((u64 *) &sys->dir0) & AXP_21274_DIRn_RMASK;
+                    AXP_CCHIP_READ_DIR0(retVal, sys);
+                    retVal &= AXP_21274_DIRn_RMASK;
                     break;
 
                 case 0x0b: /* DIR1 */
-                    retVal = *((u64 *) &sys->dir1) & AXP_21274_DIRn_RMASK;
+                    AXP_CCHIP_READ_DIR1(retVal, sys);
+                    retVal &= AXP_21274_DIRn_RMASK;
                     break;
 
                 case 0x0c: /* DRIR */
-                    retVal = *((u64 *) &sys->drir);
+                    retVal = sys->drir;
                     break;
 
                 case 0x0d: /* PRBEN */
@@ -201,63 +211,74 @@ static u64 AXP_21274_ReadCCSR(AXP_21274_SYSTEM *sys, u64 pa)
                     break;
 
                 case 0x0e: /* IIC0 */
-                    retVal = *((u64 *) &sys->iic0) & AXP_21274_IICn_RMASK;
+                    AXP_CCHIP_READ_IIC0(retVal, sys);
+                    retVal &= AXP_21274_IICn_RMASK;
                     break;
 
                 case 0x0f: /* IIC1 */
-                    retVal = *((u64 *) &sys->iic1) & AXP_21274_IICn_RMASK;
+                    AXP_CCHIP_READ_IIC1(retVal, sys);
+                    retVal &= AXP_21274_IICn_RMASK;
                     break;
 
                 case 0x16: /* TTR */
-                    retVal = *((u64 *) &sys->ttr) & AXP_21274_TTR_RMASK;
+                    AXP_CCHIP_READ_TTR(retVal, sys);
+                    retVal &= AXP_21274_TTR_RMASK;
                     break;
 
                 case 0x17: /* TDR */
-                    retVal = *((u64 *) &sys->tdr) & AXP_21274_TDR_RMASK;
+                    AXP_CCHIP_READ_TDR(retVal, sys);
+                    retVal &= AXP_21274_TDR_RMASK;
                     break;
 
                 case 0x18: /* DIM2 */
-                    retVal = *((u64 *) &sys->dim2);
+                    retVal = sys->dim2;
                     break;
 
                 case 0x19: /* DIM3 */
-                    retVal = *((u64 *) &sys->dim3);
+                    retVal = sys->dim3;
                     break;
 
                 case 0x1a: /* DIR2 */
-                    retVal = *((u64 *) &sys->dir2) & AXP_21274_DIRn_RMASK;
+                    AXP_CCHIP_READ_DIR2(retVal, sys);
+                    retVal &= AXP_21274_DIRn_RMASK;
                     break;
 
                 case 0x1b: /* DIR3 */
-                    retVal = *((u64 *) &sys->dir3) & AXP_21274_DIRn_RMASK;
+                    AXP_CCHIP_READ_DIR3(retVal, sys);
+                    retVal &= AXP_21274_DIRn_RMASK;
                     break;
 
                 case 0x1c: /* IIC2 */
-                    retVal = *((u64 *) &sys->iic2) & AXP_21274_IICn_RMASK;
+                    AXP_CCHIP_READ_IIC2(retVal, sys);
+                    retVal &= AXP_21274_IICn_RMASK;
                     break;
 
                 case 0x1d: /* IIC3 */
-                    retVal = *((u64 *) &sys->iic3) & AXP_21274_IICn_RMASK;
+                    AXP_CCHIP_READ_IIC2(retVal, sys);
+                    retVal &= AXP_21274_IICn_RMASK;
                     break;
 
                 case 0x1e: /* PWR */
-                    retVal = *((u64 *) &sys->pwr) & AXP_21274_PWR_RMASK;
+                    AXP_CCHIP_READ_PWR(retVal, sys);
+                    retVal &= AXP_21274_PWR_RMASK;
                     break;
 
                 case 0x30: /* CMONCTLA */
-                    retVal = *((u64 *) &sys->cmonctla) & AXP_21274_CMONA_RMASK;
+                    AXP_CCHIP_READ_CMONCTLA(retVal, sys);
+                    retVal &= AXP_21274_CMONA_RMASK;
                     break;
 
                 case 0x31: /* CMONCTLB */
-                    retVal = *((u64 *) &sys->cmonctlb) & AXP_21274_CMONB_RMASK;
+                    AXP_CCHIP_READ_CMONCTLB(retVal, sys);
+                    retVal &= AXP_21274_CMONB_RMASK;
                     break;
 
                 case 0x32: /* CMONCNT01 */
-                    retVal = *((u64 *) &sys->cmoncnt01);
+                    AXP_CCHIP_READ_CMONCNT01(retVal, sys);
                     break;
 
                 case 0x33: /* CMONCNT23 */
-                    retVal = *((u64 *) &sys->cmoncnt23);
+                    AXP_CCHIP_READ_CMONCNT23(retVal, sys);
                     break;
 
                 default:
@@ -270,19 +291,23 @@ static u64 AXP_21274_ReadCCSR(AXP_21274_SYSTEM *sys, u64 pa)
             switch (csrAddr.csr)
             {
                 case 0x20: /* DSC */
-                    retVal = *((u64 *) &sys->dsc) & AXP_21274_DSC_RMASK;
+                    AXP_DCHIP_READ_DSC(retVal, sys);
+                    retVal &= AXP_21274_DSC_RMASK;
                     break;
 
                 case 0x21: /* STR */
-                    retVal = *((u64 *) &sys->str) & AXP_21274_STR_RMASK;
+                    AXP_DCHIP_READ_STR(retVal, sys);
+                    retVal &= AXP_21274_STR_RMASK;
                     break;
 
                 case 0x22: /* DREV */
-                    retVal = *((u64 *) &sys->dRev) & AXP_21274_DREV_RMASK;
+                    AXP_DCHIP_READ_DREV(retVal, sys);
+                    retVal &= AXP_21274_DREV_RMASK;
                     break;
 
                 case 0x23: /* DSC2 */
-                    retVal = *((u64 *) &sys->dsc2) & AXP_21274_DSC2_RMASK;
+                    AXP_DCHIP_READ_DSC2(retVal, sys);
+                    retVal &= AXP_21274_DSC2_RMASK;
                     break;
             }
             break;
@@ -1839,6 +1864,7 @@ void *AXP_21274_CchipMain(void *voidPtr)
             if ((sys->misc.devSup & cpuBit) == 0)
             {
                 bool setBit = false;
+                u64 dir;
 
                 /*
                  * Determine which mask to use and determine if the IRQ<1> bit
@@ -1847,19 +1873,23 @@ void *AXP_21274_CchipMain(void *voidPtr)
                 switch (ii)
                 {
                     case 0:
-                        setBit = (*((u64 *) &sys->drir) & *((u64 *) &sys->dir0)) != 0;
+                        AXP_CCHIP_READ_DIR0(dir, sys);
+                        setBit = (sys->drir & dir) != 0;
                         break;
 
                     case 1:
-                        setBit = (*((u64 *) &sys->drir) & *((u64 *) &sys->dir1)) != 0;
+                        AXP_CCHIP_READ_DIR1(dir, sys);
+                        setBit = (sys->drir & dir) != 0;
                         break;
 
                     case 2:
-                        setBit = (*((u64 *) &sys->drir) & *((u64 *) &sys->dir2)) != 0;
+                        AXP_CCHIP_READ_DIR2(dir, sys);
+                        setBit = (sys->drir & dir) != 0;
                         break;
 
                     case 3:
-                        setBit = (*((u64 *) &sys->drir) & *((u64 *) &sys->dir3)) != 0;
+                        AXP_CCHIP_READ_DIR3(dir, sys);
+                        setBit = (sys->drir & dir) != 0;
                         break;
                 }
 

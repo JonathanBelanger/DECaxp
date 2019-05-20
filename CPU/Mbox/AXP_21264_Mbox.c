@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017-2018.
+ * Copyright (C) Jonathan D. Belanger 2017-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -36,6 +36,14 @@
  *  V01.003 01-Jan-2018 Jonathan D. Belanger
  *  Changed the way instructions are completed when they need to utilize the
  *  Mbox.
+ *
+ *  V01.004 19-May-2019 Jonathan D. Belanger
+ *  GCC 7.4.0, and possibly earlier, turns on strict-aliasing rules by default.
+ *  There are a number of issues in this module where the address of one
+ *  variable is cast to extract a value in a different format.  In this module
+ *  these all appear to be when trying to get the 64-bit value equivalent of
+ *  the 64-bit long PC structure.  We will use shifts (in a macro) instead of
+ *  the casts.
  */
 #include "CommonUtilities/AXP_Configure.h"
 #include "CPU/Mbox/AXP_21264_Mbox.h"
@@ -478,11 +486,12 @@ void AXP_21264_Mbox_CboxCompl(AXP_21264_CPU *cpu,
             break;
 
         default:
-            printf("\n%%DECAXP-F-UNEXLEN, Unexpected data length returned from "
-                   "Cbox, %d at %s, line %d\n",
+            printf("\n%%DECAXP-F-UNEXLEN, Unexpected data length returned "
+                   "from Cbox, %d at %s, line %d\n",
                    dataLen,
                    __FILE__,
                    __LINE__);
+            retData = *((u64 *) data);
             break;
     }
 
