@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2018.
+ * Copyright (C) Jonathan D. Belanger 2018-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -21,8 +21,16 @@
  *
  * Revision History:
  *
- *	V01.000		18-Mar-2018	Jonathan D. Belanger
+ *	V01.000 18-Mar-2018 Jonathan D. Belanger
  *	Initially written.
+ *
+ *  V01.001 19-May-2019 Jonathan D. Belanger
+ *  GCC 7.4.0, and possibly earlier, turns on strict-aliasing rules by default.
+ *  There are a number of issues in this module where the address of one
+ *  variable is cast to extract a value in a different format.  In this module
+ *  these all appear to be when trying to get the 64-bit value equivalent of
+ *  the 64-bit long PC structure.  We will use shifts (in a macro) instead of
+ *  the casts.
  */
 #ifndef _AXP_21274_REGISTERS_H_
 #define _AXP_21274_REGISTERS_H_
@@ -241,48 +249,56 @@
  */
 typedef struct
 {
-    u64 bc :2; /* Base configuration */
-    u64 c0cfp :1; /* CPU0 clock forward preset (see Chapter 11) */
-    u64 c1cfp :1; /* CPU1 clock forward preset (see Chapter 11) */
-    u64 sed :2; /* SysDC extract delay */
-    u64 sfd :1; /* SysDC fill delay */
-    u64 fw :1; /* Available for firmware */
-    u64 aw :1; /* Array width */
-    u64 iddr :3; /* Issue to data delay for memory reads */
-    u64 iddw :2; /* Issue to data delay for all but memory reads */
-    u64 pip :1; /* Pchip 1 preset */
-    u64 res_15 :1; /* Reserved at bit 15 */
-    u64 dwtp :2; /* Minimum delay through Dchip from CPU bus to PADbus */
-    u64 dwfp :2; /* Minimum delay through Dchip from PADbus to CPU bus */
-    u64 drtp :2; /* Minimum delay through Dchip from Memory to PADbus */
-    u64 res_22 :2; /* Reserved at bits 23:22 */
-    u64 pme :1; /* Page mode enable */
-    u64 qpm :1; /* Queue priority mode */
-    u64 fet :2; /* Fill to extract turnaround cycles */
-    u64 qdi :3; /* Queue drain interval */
-    u64 eft :1; /* Extract to fill turnaround cycles */
-    u64 fti :1; /* Force throttle issue */
-    u64 b1d :1; /* Bypass 1 issue path disable */
-    u64 b2d :1; /* Bypass 2 issue path disable */
-    u64 b3d :1; /* Bypass 3 issue path disable */
+    u64 bc :2;      /* Base configuration */
+    u64 c0cfp :1;   /* CPU0 clock forward preset (see Chapter 11) */
+    u64 c1cfp :1;   /* CPU1 clock forward preset (see Chapter 11) */
+    u64 sed :2;     /* SysDC extract delay */
+    u64 sfd :1;     /* SysDC fill delay */
+    u64 fw :1;      /* Available for firmware */
+    u64 aw :1;      /* Array width */
+    u64 iddr :3;    /* Issue to data delay for memory reads */
+    u64 iddw :2;    /* Issue to data delay for all but memory reads */
+    u64 pip :1;     /* Pchip 1 preset */
+    u64 res_15 :1;  /* Reserved at bit 15 */
+    u64 dwtp :2;    /* Minimum delay through Dchip from CPU bus to PADbus */
+    u64 dwfp :2;    /* Minimum delay through Dchip from PADbus to CPU bus */
+    u64 drtp :2;    /* Minimum delay through Dchip from Memory to PADbus */
+    u64 res_22 :2;  /* Reserved at bits 23:22 */
+    u64 pme :1;     /* Page mode enable */
+    u64 qpm :1;     /* Queue priority mode */
+    u64 fet :2;     /* Fill to extract turn-around cycles */
+    u64 qdi :3;     /* Queue drain interval */
+    u64 eft :1;     /* Extract to fill turn-around cycles */
+    u64 fti :1;     /* Force throttle issue */
+    u64 b1d :1;     /* Bypass 1 issue path disable */
+    u64 b2d :1;     /* Bypass 2 issue path disable */
+    u64 b3d :1;     /* Bypass 3 issue path disable */
     u64 tpqmmax :3; /* Maximum entries in TPQM on Dchips, modulo 8 */
-    u64 axd :1; /* Disable memory XOR (Typhoon only) */
+    u64 axd :1;     /* Disable memory XOR (Typhoon only) */
     u64 fpqcmax :3; /* Maximum entries in Dchip FPQ, modulo 8 */
-    u64 res_43 :1; /* Reserved at bit 43 */
+    u64 res_43 :1;  /* Reserved at bit 43 */
     u64 fpqpmax :3; /* Maximum entries in FPQ on Dchips known to Pchips, modulo 8 */
-    u64 res_47 :1; /* Reserved at bit 47 */
-    u64 pdtmax :3; /* Maximum data transfers to one Pchip until ACK, modulo 8 */
-    u64 res_51 :1; /* Reserved at bit 51 */
-    u64 prqmax :3; /* Maximum requests to one Pchip until ACK, modulo 8 */
-    u64 res_55 :1; /* Reserved at bit 55 */
-    u64 pbqmax :3; /* CPU probe queue maximum - 0 indicates 8 entries */
-    u64 res_59 :1; /* Reserved at bit 59 */
-    u64 p0w :1; /* Wide PADbus 0 (Typhoon only) */
-    u64 p1w :1; /* Wide PADbus 1 (Typhoon only) */
-    u64 res_62 :1; /* Reserved at bit 62 */
-    u64 res_63 :1; /* Reserved at bit 63 */
+    u64 res_47 :1;  /* Reserved at bit 47 */
+    u64 pdtmax :3;  /* Maximum data transfers to one Pchip until ACK, modulo 8 */
+    u64 res_51 :1;  /* Reserved at bit 51 */
+    u64 prqmax :3;  /* Maximum requests to one Pchip until ACK, modulo 8 */
+    u64 res_55 :1;  /* Reserved at bit 55 */
+    u64 pbqmax :3;  /* CPU probe queue maximum - 0 indicates 8 entries */
+    u64 res_59 :1;  /* Reserved at bit 59 */
+    u64 p0w :1;     /* Wide PADbus 0 (Typhoon only) */
+    u64 p1w :1;     /* Wide PADbus 1 (Typhoon only) */
+    u64 res_62 :1;  /* Reserved at bit 62 */
+    u64 res_63 :1;  /* Reserved at bit 63 */
 } AXP_21274_CSC;
-
+#define AXP_CCHIP_READ_CSC(dest, sys)                                       \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_CSC tmp2;                                             \
+        } src = { .tmp2 = sys->csc };                                       \
+        dest = src.tmp1;                                                    \
+    }
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
  * Write-Only, and Read-Write.  Reserved is masked out for both reads and
@@ -489,27 +505,36 @@ typedef struct
  */
 typedef struct
 {
-    u64 rcd :1; /* RAS-to-CAS delay */
-    u64 res_1 :1; /* Reserved at bit 1 */
-    u64 cat :1; /* CAS access time */
-    u64 res_3 :1; /* Reserved at bit 3 */
-    u64 ird :3; /* Issue to RAS delay */
-    u64 res_7 :1; /* Reserved at bit 7 */
-    u64 rpw :2; /* Minimum RAS plus width (tRAS) */
-    u64 res_10 :2; /* Reserved at bits 11:10 */
-    u64 rpt :2; /* Minimum RAS precharge time */
-    u64 res_14 :2; /* Reserved at bits 14:15 */
-    u64 rrd :1; /* Minimum same-array different-bank RAS-to-RAS delay */
-    u64 res_17 :3; /* Reserved at bits 19:17 */
-    u64 mpd :1; /* Mask pipeline delay */
-    u64 res_21 :3; /* Reserved at bits 23:21 */
-    u64 ri :6; /* Refresh interval */
-    u64 res_30 :2; /* Reserved at bits 31:30 */
-    u64 phcr :4; /* Page hit cycles for reads */
-    u64 phcw :4; /* Page hit cycles for writes */
-    u64 mph :6; /* Maximum page hits */
+    u64 rcd :1;     /* RAS-to-CAS delay */
+    u64 res_1 :1;   /* Reserved at bit 1 */
+    u64 cat :1;     /* CAS access time */
+    u64 res_3 :1;   /* Reserved at bit 3 */
+    u64 ird :3;     /* Issue to RAS delay */
+    u64 res_7 :1;   /* Reserved at bit 7 */
+    u64 rpw :2;     /* Minimum RAS plus width (tRAS) */
+    u64 res_10 :2;  /* Reserved at bits 11:10 */
+    u64 rpt :2;     /* Minimum RAS pre-charge time */
+    u64 res_14 :2;  /* Reserved at bits 14:15 */
+    u64 rrd :1;     /* Minimum same-array different-bank RAS-to-RAS delay */
+    u64 res_17 :3;  /* Reserved at bits 19:17 */
+    u64 mpd :1;     /* Mask pipeline delay */
+    u64 res_21 :3;  /* Reserved at bits 23:21 */
+    u64 ri :6;      /* Refresh interval */
+    u64 res_30 :2;  /* Reserved at bits 31:30 */
+    u64 phcr :4;    /* Page hit cycles for reads */
+    u64 phcw :4;    /* Page hit cycles for writes */
+    u64 mph :6;     /* Maximum page hits */
     u64 res_46 :18; /* Reserved at bits 63:46 */
 } AXP_21274_MTR;
+#define AXP_CCHIP_READ_MTR(dest, sys)                                       \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_MTR tmp2;                                             \
+        } src = { .tmp2 = sys->mtr };                                       \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -627,21 +652,30 @@ typedef struct
  */
 typedef struct
 {
-    u64 cpuID :2; /* ID of the CPU performing the read */
-    u64 res_2 :2; /* Reserved at bits 3:2 */
-    u64 itintr :4; /* Interval timer interrupt pending - one bit per CPU */
-    u64 ipintr :4; /* Interprocessor interrupt pending - one bit per CPU */
-    u64 ipreq :4; /* Interprocessor interrupt request - one bit per CPU */
-    u64 abw :4; /* Arbitration won - one bit per CPU */
-    u64 abt :4; /* Arbitration try - one bit per CPU */
-    u64 acl :1; /* Arbitration clear */
-    u64 res_25 :3; /* Reserved at bits 27:25 */
-    u64 nxm :1; /* Nonexistent memory address detected */
-    u64 nxs :3; /* NXM source */
-    u64 rev :8; /* Latest revision of Cchip */
-    u64 devSup :4; /* Suppress IRQ 1 (device) interrupts to the CPU */
+    u64 cpuID :2;   /* ID of the CPU performing the read */
+    u64 res_2 :2;   /* Reserved at bits 3:2 */
+    u64 itintr :4;  /* Interval timer interrupt pending - one bit per CPU */
+    u64 ipintr :4;  /* Interprocessor interrupt pending - one bit per CPU */
+    u64 ipreq :4;   /* Interprocessor interrupt request - one bit per CPU */
+    u64 abw :4;     /* Arbitration won - one bit per CPU */
+    u64 abt :4;     /* Arbitration try - one bit per CPU */
+    u64 acl :1;     /* Arbitration clear */
+    u64 res_25 :3;  /* Reserved at bits 27:25 */
+    u64 nxm :1;     /* Nonexistent memory address detected */
+    u64 nxs :3;     /* NXM source */
+    u64 rev :8;     /* Latest revision of Cchip */
+    u64 devSup :4;  /* Suppress IRQ 1 (device) interrupts to the CPU */
     u64 res_44 :20; /* Reserved at bits 63:44 */
 } AXP_21274_MISC;
+#define AXP_CCHIP_READ_MISC(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_MISC tmp2;                                            \
+        } src = { .tmp2 = sys->misc };                                      \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -718,12 +752,21 @@ typedef struct
  */
 typedef struct
 {
-    u64 cks :1; /* Clock send */
-    u64 ds :1; /* Data send - Must be a 1 to receive */
-    u64 ckr :1; /* Clock receive */
-    u64 dr :1; /* Data receive */
-    u64 res_4 :60; /* Reserved at bits 63:4 */
+    u64 cks :1;     /* Clock send */
+    u64 ds :1;      /* Data send - Must be a 1 to receive */
+    u64 ckr :1;     /* Clock receive */
+    u64 dr :1;      /* Data receive */
+    u64 res_4 :60;  /* Reserved at bits 63:4 */
 } AXP_21274_MPD;
+#define AXP_CCHIP_READ_MPD(dest, sys)                                       \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_MPD tmp2;                                             \
+        } src = { .tmp2 = sys->mpd };                                       \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -805,18 +848,54 @@ typedef struct
  */
 typedef struct
 {
-    u64 bnks :2; /* Number of bank bits in the SDRAMs */
-    u64 rows :2; /* Number of row bits in the SDRAM */
-    u64 res_4 :4; /* Reserved at bits 7:4 */
-    u64 sa :1; /* Split array */
-    u64 tsa :1; /* Twice-split array (Typhoon only).  Reserved (Tsunami) */
-    u64 res_10 :2; /* Reserved at bits 11:10 */
-    u64 asiz :4; /* Array size */
-    u64 dbg :1; /* Enables this memory port to be used as a debug interface */
-    u64 res_17 :7; /* Reserved at bits 23:17 */
-    u64 addr :11; /* Base address */
+    u64 bnks :2;    /* Number of bank bits in the SDRAMs */
+    u64 rows :2;    /* Number of row bits in the SDRAM */
+    u64 res_4 :4;   /* Reserved at bits 7:4 */
+    u64 sa :1;      /* Split array */
+    u64 tsa :1;     /* Twice-split array (Typhoon only).  Reserved (Tsunami) */
+    u64 res_10 :2;  /* Reserved at bits 11:10 */
+    u64 asiz :4;    /* Array size */
+    u64 dbg :1;     /* Enables this memory port to be used as a debug interface */
+    u64 res_17 :7;  /* Reserved at bits 23:17 */
+    u64 addr :11;   /* Base address */
     u64 res_35 :29; /* Reserved at bits 63:35 */
 } AXP_21274_AARx;
+#define AXP_CCHIP_READ_AAR0(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_AARx tmp2;                                            \
+        } src = { .tmp2 = sys->aar0 };                                      \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_CCHIP_READ_AAR1(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_AARx tmp2;                                            \
+        } src = { .tmp2 = sys->aar1 };                                      \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_CCHIP_READ_AAR2(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_AARx tmp2;                                            \
+        } src = { .tmp2 = sys->aar2 };                                      \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_CCHIP_READ_AAR3(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_AARx tmp2;                                            \
+        } src = { .tmp2 = sys->aar3 };                                      \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -973,10 +1052,46 @@ typedef u64 AXP_21274_DIMn;
  */
 typedef struct
 {
-    u64 dev :56; /* IRQ1 PCI interrupts pending to the CPU */
-    u64 res_56 :2; /* Reserved at bits 57:56 */
-    u64 err :6; /* IRQ0 error interrupts */
+    u64 dev :56;    /* IRQ1 PCI interrupts pending to the CPU */
+    u64 res_56 :2;  /* Reserved at bits 57:56 */
+    u64 err :6;     /* IRQ0 error interrupts */
 } AXP_21274_DIRn;
+#define AXP_CCHIP_READ_DIR0(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_DIRn tmp2;                                            \
+        } src = { .tmp2 = sys->dir0 };                                      \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_CCHIP_READ_DIR1(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_DIRn tmp2;                                            \
+        } src = { .tmp2 = sys->dir1 };                                      \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_CCHIP_READ_DIR2(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_DIRn tmp2;                                            \
+        } src = { .tmp2 = sys->dir2 };                                      \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_CCHIP_READ_DIR3(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_DIRn tmp2;                                            \
+        } src = { .tmp2 = sys->dir3 };                                      \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in bits that are Read-Only.
@@ -1142,10 +1257,46 @@ typedef struct
  */
 typedef struct
 {
-    u64 iCnt :24; /* Count of remaining interrupts to ignore */
-    u64 of :1; /* Overflow, indicates negative count */
+    u64 iCnt :24;   /* Count of remaining interrupts to ignore */
+    u64 of :1;      /* Overflow, indicates negative count */
     u64 res_25 :39;
 } AXP_21274_IICn;
+#define AXP_CCHIP_READ_IIC0(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_IICn tmp2;                                            \
+        } src = { .tmp2 = sys->iic0 };                                      \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_CCHIP_READ_IIC1(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_IICn tmp2;                                            \
+        } src = { .tmp2 = sys->iic1 };                                      \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_CCHIP_READ_IIC2(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_IICn tmp2;                                            \
+        } src = { .tmp2 = sys->iic2 };                                      \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_CCHIP_READ_IIC3(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_IICn tmp2;                                            \
+        } src = { .tmp2 = sys->iic3 };                                      \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -1296,16 +1447,25 @@ typedef u64 AXP_21274_MCTL;
  */
 typedef struct
 {
-    u64 as :1; /* Address setup to the address latch before as_1 */
-    u64 ah :1; /* Address hold after as_1 before cs_1 */
-    u64 res_2 :2; /* Reserved at bits 3:2 */
-    u64 is :2; /* Interrupt setup time */
-    u64 res_6 :2; /* Reserved at bits 7:6 */
-    u64 irt :2; /* Interrupt read time */
-    u64 res_10 :2; /* Reserved at bits 11:10 */
-    u64 id :3; /* Interrupt starting device */
+    u64 as :1;      /* Address setup to the address latch before as_1 */
+    u64 ah :1;      /* Address hold after as_1 before cs_1 */
+    u64 res_2 :2;   /* Reserved at bits 3:2 */
+    u64 is :2;      /* Interrupt setup time */
+    u64 res_6 :2;   /* Reserved at bits 7:6 */
+    u64 irt :2;     /* Interrupt read time */
+    u64 res_10 :2;  /* Reserved at bits 11:10 */
+    u64 id :3;      /* Interrupt starting device */
     u64 res_15 :49; /* Reserved at bits 63:15 */
 } AXP_21274_TTR;
+#define AXP_CCHIP_READ_TTR(dest, sys)                                       \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_TTR tmp2;                                             \
+        } src = { .tmp2 = sys->ttr };                                       \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -1392,35 +1552,44 @@ typedef struct
  */
 typedef struct
 {
-    u64 ra0 :4; /* Read access time */
-    u64 rd0 :3; /* Read output disable time */
-    u64 res_7 :1; /* Reserved at bit 7 */
-    u64 ws0 :2; /* Write setup time */
-    u64 res_10 :2; /* Reserved at bits 11:10 */
-    u64 wp0 :3; /* Write pulse width */
-    u64 wh0 :1; /* Write hold time */
-    u64 ra1 :4; /* Read access time */
-    u64 rd1 :3; /* Read output disable time */
-    u64 res_23 :1; /* Reserved at bit 7 */
-    u64 ws1 :2; /* Write setup time */
-    u64 res_26 :2; /* Reserved at bits 11:10 */
-    u64 wp1 :3; /* Write pulse width */
-    u64 wh1 :1; /* Write hold time */
-    u64 ra2 :4; /* Read access time */
-    u64 rd2 :3; /* Read output disable time */
-    u64 res_39 :1; /* Reserved at bit 7 */
-    u64 ws2 :2; /* Write setup time */
-    u64 res_42 :2; /* Reserved at bits 11:10 */
-    u64 wp2 :3; /* Write pulse width */
-    u64 wh2 :1; /* Write hold time */
-    u64 ra3 :4; /* Read access time */
-    u64 rd3 :3; /* Read output disable time */
-    u64 res_55 :1; /* Reserved at bit 7 */
-    u64 ws3 :2; /* Write setup time */
-    u64 res_58 :2; /* Reserved at bits 11:10 */
-    u64 wp3 :3; /* Write pulse width */
-    u64 wh3 :1; /* Write hold time */
+    u64 ra0 :4;     /* Read access time */
+    u64 rd0 :3;     /* Read output disable time */
+    u64 res_7 :1;   /* Reserved at bit 7 */
+    u64 ws0 :2;     /* Write setup time */
+    u64 res_10 :2;  /* Reserved at bits 11:10 */
+    u64 wp0 :3;     /* Write pulse width */
+    u64 wh0 :1;     /* Write hold time */
+    u64 ra1 :4;     /* Read access time */
+    u64 rd1 :3;     /* Read output disable time */
+    u64 res_23 :1;  /* Reserved at bit 7 */
+    u64 ws1 :2;     /* Write setup time */
+    u64 res_26 :2;  /* Reserved at bits 11:10 */
+    u64 wp1 :3;     /* Write pulse width */
+    u64 wh1 :1;     /* Write hold time */
+    u64 ra2 :4;     /* Read access time */
+    u64 rd2 :3;     /* Read output disable time */
+    u64 res_39 :1;  /* Reserved at bit 7 */
+    u64 ws2 :2;     /* Write setup time */
+    u64 res_42 :2;  /* Reserved at bits 11:10 */
+    u64 wp2 :3;     /* Write pulse width */
+    u64 wh2 :1;     /* Write hold time */
+    u64 ra3 :4;     /* Read access time */
+    u64 rd3 :3;     /* Read output disable time */
+    u64 res_55 :1;  /* Reserved at bit 7 */
+    u64 ws3 :2;     /* Write setup time */
+    u64 res_58 :2;  /* Reserved at bits 11:10 */
+    u64 wp3 :3;     /* Write pulse width */
+    u64 wh3 :1;     /* Write hold time */
 } AXP_21274_TDR;
+#define AXP_CCHIP_READ_TDR(dest, sys)                                       \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_TDR tmp2;                                             \
+        } src = { .tmp2 = sys->tdr };                                       \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -1458,9 +1627,18 @@ typedef struct
  */
 typedef struct
 {
-    u64 sr :1; /* Self Refresh */
-    u64 res_1 :63; /* Reserved at bits 63:1 */
+    u64 sr :1;      /* Self Refresh */
+    u64 res_1 :63;  /* Reserved at bits 63:1 */
 } AXP_21274_PWR;
+#define AXP_CCHIP_READ_PWR(dest, sys)                                       \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_PWR tmp2;                                             \
+        } src = { .tmp2 = sys->pwr };                                       \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -1537,21 +1715,30 @@ typedef struct
  */
 typedef struct
 {
-    u64 slct0 :8; /* Select B Minitor<0> */
-    u64 slct1 :8; /* Select B Minitor<1> */
-    u64 slct2 :8; /* Select B Minitor<2> */
-    u64 slct3 :8; /* Select B Minitor<3> */
+    u64 slct0 :8;   /* Select B Minitor<0> */
+    u64 slct1 :8;   /* Select B Minitor<1> */
+    u64 slct2 :8;   /* Select B Minitor<2> */
+    u64 slct3 :8;   /* Select B Minitor<3> */
     u64 slctmbl :2; /* Select memory bus monitor low bits */
-    u64 res_34 :2; /* Reserved at bits 35:34 */
+    u64 res_34 :2;  /* Reserved at bits 35:34 */
     u64 stkdis0 :1; /* ECNT0 stick disable */
     u64 stkdis1 :1; /* ECNT1 stick disable */
     u64 stkdis2 :1; /* ECNT2 stick disable */
     u64 stkdis3 :1; /* ECNT3 stick disable */
-    u64 msk01 :10; /* Mask field for ECNT0 and ECNT1 */
-    u64 res_50 :2; /* Reserverd at bits 51:50 */
-    u64 msk23 :10; /* Mask field for ECNT2 and ECNT3 */
-    u64 res_62 :2; /* Reserved at bits 63:52 */
+    u64 msk01 :10;  /* Mask field for ECNT0 and ECNT1 */
+    u64 res_50 :2;  /* Reserved at bits 51:50 */
+    u64 msk23 :10;  /* Mask field for ECNT2 and ECNT3 */
+    u64 res_62 :2;  /* Reserved at bits 63:52 */
 } AXP_21274_CMONCTLA;
+#define AXP_CCHIP_READ_CMONCTLA(dest, sys)                                  \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_CMONCTLA tmp2;                                        \
+        } src = { .tmp2 = sys->cmonctla };                                  \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -1603,17 +1790,26 @@ typedef struct
  */
 typedef struct
 {
-    u64 dis :1; /* Disable monitor output signals */
-    u64 res_1 :15; /* Reserved at bits 15:1 */
-    u64 mte0 :10; /* Match/entry field - for ECNT0 */
-    u64 res_26 :2; /* Reserved at bits 27:26 */
-    u64 mte1 :10; /* Match/entry field - for ECNT1 */
-    u64 res_38 :2; /* Reserved at bits 39:38 */
-    u64 mte2 :10; /* Match/entry field - for ECNT2 */
-    u64 res_50 :2; /* Reserved at bits 51:50 */
-    u64 mte3 :10; /* Match/entry field - for ECNT3 */
-    u64 res_62 :2; /* Reserved at bits 63:62 */
+    u64 dis :1;     /* Disable monitor output signals */
+    u64 res_1 :15;  /* Reserved at bits 15:1 */
+    u64 mte0 :10;   /* Match/entry field - for ECNT0 */
+    u64 res_26 :2;  /* Reserved at bits 27:26 */
+    u64 mte1 :10;   /* Match/entry field - for ECNT1 */
+    u64 res_38 :2;  /* Reserved at bits 39:38 */
+    u64 mte2 :10;   /* Match/entry field - for ECNT2 */
+    u64 res_50 :2;  /* Reserved at bits 51:50 */
+    u64 mte3 :10;   /* Match/entry field - for ECNT3 */
+    u64 res_62 :2;  /* Reserved at bits 63:62 */
 } AXP_21274_CMONCTLB;
+#define AXP_CCHIP_READ_CMONCTLB(dest, sys)                                  \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_CMONCTLB tmp2;                                        \
+        } src = { .tmp2 = sys->cmonctlb };                                  \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -1687,6 +1883,15 @@ typedef struct
     u32 ecnt0; /* Increments when Event 0 is true */
     u32 ecnt1; /* Increments when Event 1 is true */
 } AXP_21274_CMONCNT01;
+#define AXP_CCHIP_READ_CMONCNT01(dest, sys)                                 \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_CMONCNT01 tmp2;                                       \
+        } src = { .tmp2 = sys->cmoncnt01 };                                 \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * CMONCNT23 Registers - Typhoon Only
@@ -1709,6 +1914,15 @@ typedef struct
     u32 ecnt2; /* Increments when Event 0 is true */
     u32 ecnt3; /* Increments when Event 1 is true */
 } AXP_21274_CMONCNT23;
+#define AXP_CCHIP_READ_CMONCNT23(dest, sys)                                 \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_CMONCNT23 tmp2;                                       \
+        } src = { .tmp2 = sys->cmoncnt23 };                                 \
+        dest = src.tmp1;                                                    \
+    }
 
 /****************************************************************************
  *							HRM 10.2.3 Dchip CSRs							*
@@ -1753,17 +1967,17 @@ typedef struct
 {
     union
     {
-  struct
-  {
-      u8 bc :2; /* Base configuration */
-      u8 c0cfp :1; /* CPU0 clock forward preset */
-      u8 c1cfp :1; /* CPU1 clock forward preset */
-      u8 c2cfp :1; /* CPU2 clock forward preset */
-      u8 c3cfp :1; /* CPU3 clock forward preset */
-      u8 p1p :1; /* Pchip 1 present */
-      u8 res_7 :1; /* Reserved at bit 7 */
-  };
-  u8 dchip0;
+        struct
+        {
+            u8 bc :2;       /* Base configuration */
+            u8 c0cfp :1;    /* CPU0 clock forward preset */
+            u8 c1cfp :1;    /* CPU1 clock forward preset */
+            u8 c2cfp :1;    /* CPU2 clock forward preset */
+            u8 c3cfp :1;    /* CPU3 clock forward preset */
+            u8 p1p :1;      /* Pchip 1 present */
+            u8 res_7 :1;    /* Reserved at bit 7 */
+        };
+        u8 dchip0;
     };
     u8 dchip1;
     u8 dchip2;
@@ -1773,6 +1987,15 @@ typedef struct
     u8 dchip6;
     u8 dchip7;
 } AXP_21274_DSC;
+#define AXP_DCHIP_READ_DSC(dest, sys)                                       \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_DSC tmp2;                                             \
+        } src = { .tmp2 = sys->dsc };                                       \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only.
@@ -1801,11 +2024,20 @@ typedef struct
  */
 typedef struct
 {
-    u64 p0w :1; /* Reserved */
-    u64 p1w :1; /* Reserved */
-    u64 res_2 :3; /* Reserved at bits 4:2 */
-    u64 res_5 :59; /* Reserved at bits 63:5 */
+    u64 p0w :1;     /* Reserved */
+    u64 p1w :1;     /* Reserved */
+    u64 res_2 :3;   /* Reserved at bits 4:2 */
+    u64 res_5 :59;  /* Reserved at bits 63:5 */
 } AXP_21274_DSC2;
+#define AXP_DCHIP_READ_DSC2(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_DSC2 tmp2;                                            \
+        } src = { .tmp2 = sys->dsc2 };                                      \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only.
@@ -1894,14 +2126,14 @@ typedef struct
 {
     union
     {
-  struct
-  {
-      u8 aw :1; /* Array width */
-      u8 iddr :3; /* Issue to data delay for memory reads */
-      u8 iddw :2; /* issue to data delay for non reads */
-      u8 res_7 :2; /* Reserved at bit 7 */
-  };
-  u8 dchip0;
+        struct
+        {
+            u8 aw :1;       /* Array width */
+            u8 iddr :3;     /* Issue to data delay for memory reads */
+            u8 iddw :2;     /* issue to data delay for non reads */
+            u8 res_7 :2;    /* Reserved at bit 7 */
+        };
+        u8 dchip0;
     };
     u8 dchip1;
     u8 dchip2;
@@ -1911,6 +2143,15 @@ typedef struct
     u8 dchip6;
     u8 dchip7;
 } AXP_21274_STR;
+#define AXP_DCHIP_READ_STR(dest, sys)                                       \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_STR tmp2;                                             \
+        } src = { .tmp2 = sys->str };                                       \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -1981,6 +2222,15 @@ typedef struct
     u64 rev7 :4; /* Dchip 7 revision */
     u64 res_60 :4; /* Reserved at bits 7:4 */
 } AXP_21274_DREV;
+#define AXP_DCHIP_READ_DREV(dest, sys)                                      \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_DREV tmp2;                                            \
+        } src = { .tmp2 = sys->dRev };                                      \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only.
@@ -2031,6 +2281,33 @@ typedef struct
     u64 addr :12; /* Base address */
     u64 res_32 :32; /* Reserved at bits 63:32 */
 } AXP_21274_WSBAn;
+#define AXP_PCHIP_READ_WSBA0(dest, pchip)                                   \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_WSBAn tmp2;                                           \
+        } src = { .tmp2 = pchip->wsba0 };                                   \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_PCHIP_READ_WSBA1(dest, pchip)                                   \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_WSBAn tmp2;                                           \
+        } src = { .tmp2 = pchip->wsba1 };                                   \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_PCHIP_READ_WSBA2(dest, pchip)                                   \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_WSBAn tmp2;                                           \
+        } src = { .tmp2 = pchip->wsba2 };                                   \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -2073,6 +2350,15 @@ typedef struct
     u64 dac :1; /* DAC enable */
     u64 res_40 :24; /* Reserved at bits 63:40 */
 } AXP_21274_WSBA3;
+#define AXP_PCHIP_READ_WSBA3(dest, pchip)                                   \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_WSBA3 tmp2;                                           \
+        } src = { .tmp2 = pchip->wsba3 };                                   \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -2111,6 +2397,42 @@ typedef struct
     u64 am :12; /* Address mask */
     u64 res_32 :32; /* Reserved at bits 63-32 */
 } AXP_21274_WSMn;
+#define AXP_PCHIP_READ_WSM0(dest, pchip)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_WSMn tmp2;                                            \
+        } src = { .tmp2 = pchip->wsm0 };                                    \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_PCHIP_READ_WSM1(dest, pchip)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_WSMn tmp2;                                            \
+        } src = { .tmp2 = pchip->wsm1 };                                    \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_PCHIP_READ_WSM2(dest, pchip)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_WSMn tmp2;                                            \
+        } src = { .tmp2 = pchip->wsm2 };                                    \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_PCHIP_READ_WSM3(dest, pchip)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_WSMn tmp2;                                            \
+        } src = { .tmp2 = pchip->wsm3 };                                    \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -2156,6 +2478,42 @@ typedef struct
     u64 addr :25; /* See above TBAn and TBA3 descriptions */
     u64 res_35 :29; /* Reserved at bits 63:35 */
 } AXP_21274_TBAn;
+#define AXP_PCHIP_READ_TBA0(dest, pchip)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_TBAn tmp2;                                            \
+        } src = { .tmp2 = pchip->tba0 };                                    \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_PCHIP_READ_TBA1(dest, pchip)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_TBAn tmp2;                                            \
+        } src = { .tmp2 = pchip->tba1 };                                    \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_PCHIP_READ_TBA2(dest, pchip)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_TBAn tmp2;                                            \
+        } src = { .tmp2 = pchip->tba2 };                                    \
+        dest = src.tmp1;                                                    \
+    }
+#define AXP_PCHIP_READ_TBA3(dest, pchip)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_TBAn tmp2;                                            \
+        } src = { .tmp2 = pchip->tba3 };                                    \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -2317,6 +2675,15 @@ typedef struct
     u64 pid :2; /* Pchip ID */
     u64 res_48 :16; /* Reserved at bits 63:48 */
 } AXP_21274_PCTL;
+#define AXP_PCHIP_READ_PCTL(dest, pchip)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_PCTL tmp2;                                            \
+        } src = { .tmp2 = pchip->pctl };                                    \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -2393,6 +2760,15 @@ typedef struct
     u16 res_16; /* Reserved at bits 31-16 */
     u32 res_32; /* Reserved at bits 63-32 */
 } AXP_21274_PLAT;
+#define AXP_PCHIP_READ_PLAT(dest, pchip)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_PLAT tmp2;                                            \
+        } src = { .tmp2 = pchip->plat };                                    \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -2508,6 +2884,15 @@ typedef struct
     u64 cmd :4; /* PCI command of transaction when error detected */
     u64 syn :8; /* ECC syndrome of error if CRE or UECC */
 } AXP_21274_PERROR;
+#define AXP_PCHIP_READ_PERROR(dest, pchip)                                  \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_PERROR tmp2;                                          \
+        } src = { .tmp2 = pchip->perror };                                  \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -2559,6 +2944,15 @@ typedef struct
     u64 mask :12; /* PERROR register bit enables */
     u64 res_12 :52; /* Reserved at bits 63:12 */
 } AXP_21274_PERRMASK;
+#define AXP_PCHIP_READ_PERRMASK(dest, pchip)                                \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_PERRMASK tmp2;                                        \
+        } src = { .tmp2 = pchip->perrMask };                                \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -2720,6 +3114,15 @@ typedef struct
     u64 stkdis1 :1; /* Sticky count1 disable */
     u64 res_18 :46; /* Reserved at bits 63:18 */
 } AXP_21274_PMONCTL;
+#define AXP_PCHIP_READ_PMONCTL(dest, pchip)                                \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_PMONCTL tmp2;                                        \
+        } src = { .tmp2 = pchip->pMonCtl };                                \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * The following macros mask in or out bits that are Reserved, Read-Only,
@@ -2769,6 +3172,15 @@ typedef struct
     u32 cnt0; /* Counts sysclk cycles that monitor<0> is asserted */
     u32 cnt1; /* Counts i_sysclk cycles that monitor<0> is asserted */
 } AXP_21274_PMONCNT;
+#define AXP_PCHIP_READ_PMONCNT(dest, pchip)                                 \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_21274_PMONCNT tmp2;                                         \
+        } src = { .tmp2 = pchip->pMonCnt };                                 \
+        dest = src.tmp1;                                                    \
+    }
 
 /*
  * This register is not completely documented, but referred to in a number of

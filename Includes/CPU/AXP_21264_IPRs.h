@@ -238,6 +238,15 @@ typedef struct
     u64 tag :35;    /* Virtual address[47:13] = ITB tag */
     u64 res_2 :16;
 } AXP_IBOX_ITB_TAG;
+#define AXP_IBOX_READ_ITB_TAG(dest, cpu)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_ITB_TAG tmp2;                                          \
+        } src = { .tmp2 = cpu->itbTag };                                    \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_IBOX_WRITE_ITB_TAG(src, cpu)                                    \
     {                                                                       \
         union                                                               \
@@ -262,6 +271,15 @@ typedef struct
     u64 pfn :31;    /* Page frame number */
     u64 res_4 :20;
 } AXP_IBOX_ITB_PTE;
+#define AXP_IBOX_READ_ITB_PTE(dest, cpu)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_ITB_PTE tmp2;                                          \
+        } src = { .tmp2 = cpu->itbPte };                                    \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_IBOX_WRITE_ITB_PTE(src, cpu)                                    \
     {                                                                       \
         union                                                               \
@@ -278,6 +296,15 @@ typedef struct
     u64 inval_itb :35; /* ITB Virtual address(tag) to invalidate */
     u64 res_2 :16;
 } AXP_IBOX_ITB_IS;
+#define AXP_IBOX_READ_ITB_IS(dest, cpu)                                     \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_ITB_IS tmp2;                                           \
+        } src = { .tmp2 = cpu->itbIs };                                     \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_IBOX_WRITE_ITB_IS(src, cpu)                                     \
     {                                                                       \
         union                                                               \
@@ -518,6 +545,15 @@ typedef struct
         } src = { .tmp2 = cpu->excSum };                                    \
         dest = src.tmp1;                                                    \
     }
+#define AXP_IBOX_WRITE_EXC_SUM(src, cpu)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_IBOX_EXC_SUM tmp2;                                          \
+        } dest = { .tmp1 = src };                                           \
+        cpu->excSum = dest.tmp2;                                            \
+    }
 
 typedef union
 {
@@ -724,6 +760,15 @@ typedef struct
     u64 va :35;
     u64 res_2 :16;
 } AXP_MBOX_DTB_TAG;
+#define AXP_MBOX_READ_DTB_TAG0(dest, cpu)                                   \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_TAG tmp2;                                          \
+        } src = { .tmp2 = cpu->dtbTag0 };                                   \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_MBOX_WRITE_DTB_TAG0(src, cpu)                                   \
     {                                                                       \
         union                                                               \
@@ -732,6 +777,15 @@ typedef struct
             AXP_MBOX_DTB_TAG tmp2;                                          \
         } dest = { .tmp1 = src };                                           \
         cpu->dtbTag0 = dest.tmp2;                                           \
+    }
+#define AXP_MBOX_READ_DTB_TAG1(dest, cpu)                                   \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_TAG tmp2;                                          \
+        } src = { .tmp2 = cpu->dtbTag1 };                                   \
+        dest = src.tmp1;                                                    \
     }
 #define AXP_MBOX_WRITE_DTB_TAG1(src, cpu)                                   \
     {                                                                       \
@@ -764,6 +818,15 @@ typedef struct
     u64 pa :31;
     u64 res_5 :1;
 } AXP_MBOX_DTB_PTE;
+#define AXP_MBOX_READ_DTB_PTE0(dest, cpu)                                   \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_PTE tmp2;                                          \
+        } src = { .tmp2 = cpu->dtbPte0 };                                   \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_MBOX_WRITE_DTB_PTE0(src, cpu)                                   \
     {                                                                       \
         union                                                               \
@@ -772,6 +835,15 @@ typedef struct
             AXP_MBOX_DTB_PTE tmp2;                                          \
         } dest = { .tmp1 = src };                                           \
         cpu->dtbPte0 = dest.tmp2;                                           \
+    }
+#define AXP_MBOX_READ_DTB_PTE1(dest, cpu)                                   \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_PTE tmp2;                                          \
+        } src = { .tmp2 = cpu->dtbPte1 };                                   \
+        dest = src.tmp1;                                                    \
     }
 #define AXP_MBOX_WRITE_DTB_PTE1(src, cpu)                                   \
     {                                                                       \
@@ -804,6 +876,15 @@ typedef struct
 #define AXP_MBOX_ALTMODE_USER   3
 
 typedef AXP_IBOX_ITB_IS AXP_MBOX_DTB_IS;
+#define AXP_MBOX_READ_DTB_IS0(dest, cpu)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_IS tmp2;                                           \
+        } src = { .tmp2 = cpu->dtbIs0 };                                    \
+        dest = src.tmp1;                                                    \
+    }
 #define AXP_MBOX_WRITE_DTB_IS0(src, cpu)                                    \
     {                                                                       \
         union                                                               \
@@ -812,6 +893,15 @@ typedef AXP_IBOX_ITB_IS AXP_MBOX_DTB_IS;
             AXP_MBOX_DTB_IS tmp2;                                           \
         } dest = { .tmp1 = src };                                           \
         cpu->dtbIs0 = dest.tmp2;                                            \
+    }
+#define AXP_MBOX_READ_DTB_IS1(dest, cpu)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_DTB_IS tmp2;                                           \
+        } src = { .tmp2 = cpu->dtbIs1 };                                    \
+        dest = src.tmp1;                                                    \
     }
 #define AXP_MBOX_WRITE_DTB_IS1(src, cpu)                                    \
     {                                                                       \
@@ -866,6 +956,15 @@ typedef struct
             AXP_MBOX_MM_STAT tmp2;                                          \
         } src = { .tmp2 = cpu->mmStat };                                    \
         dest = src.tmp1;                                                    \
+    }
+#define AXP_MBOX_WRITE_MM_STAT(src, cpu)                                    \
+    {                                                                       \
+        union                                                               \
+        {                                                                   \
+            u64 tmp1;                                                       \
+            AXP_MBOX_MM_STAT tmp2;                                          \
+        } dest = { .tmp1 = src };                                           \
+        cpu->mmStat = dest.tmp2;                                            \
     }
 
 typedef struct

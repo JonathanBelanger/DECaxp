@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2018.
+ * Copyright (C) Jonathan D. Belanger 2018-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -16,13 +16,21 @@
  *
  * Description:
  *
- *	This source file contains the functions needed to implement the
- *	initialization functionality of the Ibox.
+ *  This source file contains the functions needed to implement the
+ *  initialization functionality of the Ibox.
  *
  * Revision History:
  *
- *	V01.000		10-May-2017	Jonathan D. Belanger
- *	Initially written from AXP_21264_Ibox.c.
+ *  V01.000 10-May-2017 Jonathan D. Belanger
+ *  Initially written from AXP_21264_Ibox.c.
+ *
+ *  V01.001 19-May-2019 Jonathan D. Belanger
+ *  GCC 7.4.0, and possibly earlier, turns on strict-aliasing rules by default.
+ *  There are a number of issues in this module where the address of one
+ *  variable is cast to extract a value in a different format.  In this module
+ *  these all appear to be when trying to get the 64-bit value equivalent of
+ *  the 64-bit long PC structure.  We will use shifts (in a macro) instead of
+ *  the casts.
  */
 #include "CommonUtilities/AXP_Configure.h"
 #include "CPU/Ibox/AXP_21264_Ibox.h"
@@ -30,19 +38,19 @@
 
 /*
  * AXP_21264_Ibox_ResetRegMap
- *	This function is called to [re]set the virtual to physical register
- *	mapping.
+ *  This function is called to [re]set the virtual to physical register
+ *  mapping.
  *
  * Input Parameters:
- *	cpu:
- *		A pointer to the CPU structure for the emulated Alpha AXP 21264
- *		processor.
+ *  cpu:
+ *      A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *      processor.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- *	None.
+ *  None.
  */
 void AXP_21264_Ibox_ResetRegMap(AXP_21264_CPU *cpu)
 {
@@ -50,81 +58,89 @@ void AXP_21264_Ibox_ResetRegMap(AXP_21264_CPU *cpu)
 
     if (AXP_IBOX_OPT1)
     {
-  AXP_TRACE_BEGIN();
-  AXP_TraceWrite("AXP_21264_Ibox_ResetRegMap called");
-  AXP_TRACE_END()
-  ;
+        AXP_TRACE_BEGIN();
+        AXP_TraceWrite("AXP_21264_Ibox_ResetRegMap called");
+        AXP_TRACE_END();
     }
 
     /*
      * First set up the mapping:
-     *	R0 --> PR0, R1 --> PR1, ..., R38 --> PR38, R39 --> PR39
-     *	F0 --> PF0, F1 --> PF1, ..., F30 --> PF30, F31 --> PF31
+     *  R0 --> PR0, R1 --> PR1, ..., R38 --> PR38, R39 --> PR39
+     *  F0 --> PF0, F1 --> PF1, ..., F30 --> PF30, F31 --> PF31
      *
-     * NOTE:	R32 to R39 are PALshadow registers.
+     * NOTE:    R32 to R39 are PALshadow registers.
      */
     cpu->prFlStart = cpu->prFlEnd = 0;
     cpu->pfFlStart = cpu->pfFlEnd = 0;
     for (ii = 0; ii < AXP_INT_PHYS_REG; ii++)
     {
-  cpu->pr[ii].value = 0;
-  cpu->pr[ii].refCount = 0;
-  if (ii < AXP_MAX_INT_REGISTERS)
-  {
-      cpu->pr[ii].state = Valid;
-      cpu->prMap[ii] = ii;
-  }
-  else
-  {
-      cpu->pr[ii].state = Free;
-      cpu->prFreeList[cpu->prFlEnd] = ii;
-      cpu->prFlEnd = (cpu->prFlEnd + 1) % AXP_I_FREELIST_SIZE;
-  }
-  if (ii < AXP_FP_PHYS_REG)
-  {
-      cpu->pf[ii].value = 0;
-      cpu->pf[ii].refCount = 0;
-      if (ii < AXP_MAX_FP_REGISTERS)
-      {
-    cpu->pf[ii].state = Valid;
-    cpu->pfMap[ii] = ii;
-      }
-      else
-      {
-    cpu->pf[ii].state = Free;
-    cpu->pfFreeList[cpu->pfFlEnd] = ii;
-    cpu->pfFlEnd = (cpu->pfFlEnd + 1) % AXP_F_FREELIST_SIZE;
-      }
-  }
+        cpu->pr[ii].value = 0;
+        cpu->pr[ii].refCount = 0;
+        if (ii < AXP_MAX_INT_REGISTERS)
+        {
+            cpu->pr[ii].state = Valid;
+            cpu->prMap[ii] = ii;
+        }
+        else
+        {
+            cpu->pr[ii].state = Free;
+            cpu->prFreeList[cpu->prFlEnd] = ii;
+            cpu->prFlEnd = (cpu->prFlEnd + 1) % AXP_I_FREELIST_SIZE;
+        }
+        if (ii < AXP_FP_PHYS_REG)
+        {
+            cpu->pf[ii].value = 0;
+            cpu->pf[ii].refCount = 0;
+            if (ii < AXP_MAX_FP_REGISTERS)
+            {
+                cpu->pf[ii].state = Valid;
+                cpu->pfMap[ii] = ii;
+            }
+            else
+            {
+                cpu->pf[ii].state = Free;
+                cpu->pfFreeList[cpu->pfFlEnd] = ii;
+                cpu->pfFlEnd = (cpu->pfFlEnd + 1) % AXP_F_FREELIST_SIZE;
+            }
+        }
     }
 
     if (AXP_IBOX_OPT1)
     {
-  AXP_TRACE_BEGIN();
-  AXP_TraceWrite("");
-  AXP_TraceWrite("\tInteger Physical Registers");
-  for (ii = 0; ii < AXP_MAX_INT_REGISTERS; ii++)
-      AXP_TraceWrite("\tR%02d --> PR%02u", ii, cpu->prMap[ii]);
-  AXP_TraceWrite("");
-  AXP_TraceWrite("\tStart = %u : End = %u", cpu->prFlStart, cpu->prFlEnd);
-  for (ii = 0; ii < AXP_I_FREELIST_SIZE; ii++)
-      AXP_TraceWrite(
-    "\tR-FreeList[%d] --> PR%02u",
-    ii,
-    cpu->prFreeList[ii]);
-  AXP_TraceWrite("");
-  AXP_TraceWrite("\tFloating-Point Physical Registers");
-  for (ii = 0; ii < AXP_MAX_FP_REGISTERS; ii++)
-      AXP_TraceWrite("\tF%02d --> PF%02u", ii, cpu->pfMap[ii]);
-  AXP_TraceWrite("");
-  AXP_TraceWrite("\tStart = %u : End = %u", cpu->pfFlStart, cpu->pfFlEnd);
-  for (ii = 0; ii < AXP_F_FREELIST_SIZE; ii++)
-      AXP_TraceWrite(
-    "\tF-FreeList[%d] --> PF%02u",
-    ii,
-    cpu->pfFreeList[ii]);
-  AXP_TRACE_END()
-  ;
+        AXP_TRACE_BEGIN();
+        AXP_TraceWrite("");
+        AXP_TraceWrite("\tInteger Physical Registers");
+        for (ii = 0; ii < AXP_MAX_INT_REGISTERS; ii++)
+        {
+            AXP_TraceWrite("\tR%02d --> PR%02u", ii, cpu->prMap[ii]);
+        }
+        AXP_TraceWrite("");
+        AXP_TraceWrite("\tStart = %u : End = %u",
+                       cpu->prFlStart,
+                       cpu->prFlEnd);
+        for (ii = 0; ii < AXP_I_FREELIST_SIZE; ii++)
+        {
+            AXP_TraceWrite("\tR-FreeList[%d] --> PR%02u",
+                           ii,
+                           cpu->prFreeList[ii]);
+        }
+        AXP_TraceWrite("");
+        AXP_TraceWrite("\tFloating-Point Physical Registers");
+        for (ii = 0; ii < AXP_MAX_FP_REGISTERS; ii++)
+        {
+            AXP_TraceWrite("\tF%02d --> PF%02u", ii, cpu->pfMap[ii]);
+        }
+        AXP_TraceWrite("");
+        AXP_TraceWrite("\tStart = %u : End = %u",
+                       cpu->pfFlStart,
+                       cpu->pfFlEnd);
+        for (ii = 0; ii < AXP_F_FREELIST_SIZE; ii++)
+        {
+          AXP_TraceWrite("\tF-FreeList[%d] --> PF%02u",
+                         ii,
+                         cpu->pfFreeList[ii]);
+        }
+        AXP_TRACE_END();
     }
 
     /*
@@ -135,20 +151,20 @@ void AXP_21264_Ibox_ResetRegMap(AXP_21264_CPU *cpu)
 
 /*
  * AXP_21264_Ibox_Init
- *	This function is called to initialize the Ibox.  It will set the IPRs
- *	associated with the Ibox to their initial/reset values.
+ *  This function is called to initialize the Ibox.  It will set the IPRs
+ *  associated with the Ibox to their initial/reset values.
  *
  * Input Parameters:
- *	cpu:
- *		A pointer to the CPU structure for the emulated Alpha AXP 21264
- *		processor.
+ *  cpu:
+ *      A pointer to the CPU structure for the emulated Alpha AXP 21264
+ *      processor.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- *	true:	Failed to perform all initialization processing.
- *	false:	Normal Successful Completion.
+ *  true:   Failed to perform all initialization processing.
+ *  false:  Normal Successful Completion.
  */
 bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 {
@@ -157,10 +173,9 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
 
     if (AXP_IBOX_OPT1)
     {
-  AXP_TRACE_BEGIN();
-  AXP_TraceWrite("Ibox is initializing");
-  AXP_TRACE_END()
-  ;
+        AXP_TRACE_BEGIN();
+        AXP_TraceWrite("Ibox is initializing");
+        AXP_TRACE_END();
     }
 
     /*
@@ -173,15 +188,19 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
      */
     for (ii = 0; ii < ONE_K; ii++)
     {
-  cpu->localHistoryTable.lcl_history[ii] = 0;
-  cpu->localPredictor.lcl_pred[ii] = 0;
-  cpu->choicePredictor.choice_pred[ii] = 0;
+        cpu->localHistoryTable.lcl_history[ii] = 0;
+        cpu->localPredictor.lcl_pred[ii] = 0;
+        cpu->choicePredictor.choice_pred[ii] = 0;
     }
     for (ii = 0; ii < FOUR_K; ii++)
-  cpu->globalPredictor.gbl_pred[ii] = 0;
+    {
+        cpu->globalPredictor.gbl_pred[ii] = 0;
+    }
     cpu->globalPathHistory = 0;
     for (ii = 0; ii < AXP_INFLIGHT_MAX; ii++)
-  *((u64 *) &cpu->predictionStack[ii]) = 0;
+    {
+        AXP_PUT_PC(cpu->predictionStack[ii], 0);
+    }
     cpu->predStackIdx = AXP_INFLIGHT_MAX;
 
     /*
@@ -311,9 +330,9 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
     cpu->vpcEnd = 0;
     for (ii = 0; ii < AXP_INFLIGHT_MAX; ii++)
     {
-  cpu->vpc[ii].pal = 0;
-  cpu->vpc[ii].res = 0;
-  cpu->vpc[ii].pc = 0;
+        cpu->vpc[ii].pal = 0;
+        cpu->vpc[ii].res = 0;
+        cpu->vpc[ii].pc = 0;
     }
 
     /*
@@ -321,22 +340,24 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
      */
     for (ii = 0; ii < AXP_CACHE_ENTRIES; ii++)
     {
-  for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
-  {
-      cpu->iCache[ii][jj].kre = 0;
-      cpu->iCache[ii][jj].ere = 0;
-      cpu->iCache[ii][jj].sre = 0;
-      cpu->iCache[ii][jj].ure = 0;
-      cpu->iCache[ii][jj]._asm = 0;
-      cpu->iCache[ii][jj].asn = 0;
-      cpu->iCache[ii][jj].pal = 0;
-      cpu->iCache[ii][jj].vb = 0;
-      cpu->iCache[ii][jj].tag = 0;
-      cpu->iCache[ii][jj].set_0_1 = 0;
-      cpu->iCache[ii][jj].res_1 = 0;
-      for (kk = 0; kk < AXP_ICACHE_LINE_INS; kk++)
-    cpu->iCache[ii][jj].instructions[kk].instr = 0;
-  }
+        for (jj = 0; jj < AXP_2_WAY_CACHE; jj++)
+        {
+            cpu->iCache[ii][jj].kre = 0;
+            cpu->iCache[ii][jj].ere = 0;
+            cpu->iCache[ii][jj].sre = 0;
+            cpu->iCache[ii][jj].ure = 0;
+            cpu->iCache[ii][jj]._asm = 0;
+            cpu->iCache[ii][jj].asn = 0;
+            cpu->iCache[ii][jj].pal = 0;
+            cpu->iCache[ii][jj].vb = 0;
+            cpu->iCache[ii][jj].tag = 0;
+            cpu->iCache[ii][jj].set_0_1 = 0;
+            cpu->iCache[ii][jj].res_1 = 0;
+            for (kk = 0; kk < AXP_ICACHE_LINE_INS; kk++)
+            {
+                cpu->iCache[ii][jj].instructions[kk].instr = 0;
+            }
+        }
     }
 
     /*
@@ -345,25 +366,25 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
     cpu->nextITB = 0;
     for (ii = 0; ii < AXP_TB_LEN; ii++)
     {
-  cpu->itb[ii].virtAddr = 0;
-  cpu->itb[ii].physAddr = 0;
-  cpu->itb[ii].matchMask = 0;
-  cpu->itb[ii].keepMask = 0;
-  cpu->itb[ii].kre = 0;
-  cpu->itb[ii].ere = 0;
-  cpu->itb[ii].sre = 0;
-  cpu->itb[ii].ure = 0;
-  cpu->itb[ii].kwe = 0;
-  cpu->itb[ii].ewe = 0;
-  cpu->itb[ii].swe = 0;
-  cpu->itb[ii].uwe = 0;
-  cpu->itb[ii].faultOnRead = 0;
-  cpu->itb[ii].faultOnWrite = 0;
-  cpu->itb[ii].faultOnExecute = 0;
-  cpu->itb[ii].res_1 = 0;
-  cpu->itb[ii].asn = 0;
-  cpu->itb[ii]._asm = false;
-  cpu->itb[ii].valid = false;
+        cpu->itb[ii].virtAddr = 0;
+        cpu->itb[ii].physAddr = 0;
+        cpu->itb[ii].matchMask = 0;
+        cpu->itb[ii].keepMask = 0;
+        cpu->itb[ii].kre = 0;
+        cpu->itb[ii].ere = 0;
+        cpu->itb[ii].sre = 0;
+        cpu->itb[ii].ure = 0;
+        cpu->itb[ii].kwe = 0;
+        cpu->itb[ii].ewe = 0;
+        cpu->itb[ii].swe = 0;
+        cpu->itb[ii].uwe = 0;
+        cpu->itb[ii].faultOnRead = 0;
+        cpu->itb[ii].faultOnWrite = 0;
+        cpu->itb[ii].faultOnExecute = 0;
+        cpu->itb[ii].res_1 = 0;
+        cpu->itb[ii].asn = 0;
+        cpu->itb[ii]._asm = false;
+        cpu->itb[ii].valid = false;
     }
 
     /*
@@ -373,15 +394,14 @@ bool AXP_21264_Ibox_Init(AXP_21264_CPU *cpu)
     cpu->robEnd = 0;
     for (ii = 0; ii < AXP_INFLIGHT_MAX; ii++)
     {
-  cpu->rob[ii].state = Retired;
+        cpu->rob[ii].state = Retired;
     }
 
     if (AXP_IBOX_OPT1)
     {
-  AXP_TRACE_BEGIN();
-  AXP_TraceWrite("Ibox has initialized");
-  AXP_TRACE_END()
-  ;
+        AXP_TRACE_BEGIN();
+        AXP_TraceWrite("Ibox has initialized");
+        AXP_TRACE_END();
     }
 
     /*

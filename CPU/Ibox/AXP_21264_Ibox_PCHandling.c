@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2018.
+ * Copyright (C) Jonathan D. Belanger 2018-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -16,18 +16,26 @@
  *
  * Description:
  *
- *	This source file contains the functions needed to implement the
- *	PC handling functionality of the Ibox.
+ *  This source file contains the functions needed to implement the
+ *  PC handling functionality of the Ibox.
  *
  * Revision History:
  *
- *	V01.000		15-Jan-2018	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000 15-Jan-2018 Jonathan D. Belanger
+ *  Initially written.
  *
- *	V01.001		20-Jan-2018	Jonathan D. Belanger
- *	The AXP_21264_GetPALBaseVPC function was not being called.  The
- *	functionality in this function was somewhat redundant with the
- *	AXP_21264_GetPALFuncVPC function.  So, the former was removed.
+ *  V01.001 20-Jan-2018 Jonathan D. Belanger
+ *  The AXP_21264_GetPALBaseVPC function was not being called.  The
+ *  functionality in this function was somewhat redundant with the
+ *  AXP_21264_GetPALFuncVPC function.  So, the former was removed.
+ *
+ *  V01.002 19-May-2019 Jonathan D. Belanger
+ *  GCC 7.4.0, and possibly earlier, turns on strict-aliasing rules by default.
+ *  There are a number of issues in this module where the address of one
+ *  variable is cast to extract a value in a different format.  In this module
+ *  these all appear to be when trying to get the 64-bit value equivalent of
+ *  the 64-bit long PC structure.  We will use shifts (in a macro) instead of
+ *  the casts.
  */
 #include "CommonUtilities/AXP_Configure.h"
 #include "CPU/Ibox/AXP_21264_Ibox.h"
@@ -52,7 +60,6 @@ typedef union
     struct palBaseBits21164 bits21164;
     struct palBaseBits21264 bits21264;
     u64 palBaseAddr;
-
 } AXP_IBOX_PALBASE_BITS;
 
 struct palPCBits21264
@@ -80,6 +87,7 @@ typedef union
     struct palPCBits21164 bits21164;
     struct palPCBits21264 bits21264;
     AXP_PC vpc;
+    u64 pc;
 } AXP_IBOX_PAL_PC;
 
 struct palFuncBits
@@ -98,42 +106,42 @@ typedef union
 
 /*
  * AXP_21264_AddVPC
- * 	This function is called to add a Virtual Program Counter (VPC) to the list
- * 	of VPCs.  This is a round-robin list.  The End points to the next entry to
- * 	be written to.  The Start points to the least recent VPC, which is the one
- * 	immediately after the End.
+ *   This function is called to add a Virtual Program Counter (VPC) to the list
+ *   of VPCs.  This is a round-robin list.  The End points to the next entry to
+ *   be written to.  The Start points to the least recent VPC, which is the one
+ *   immediately after the End.
  *
  * Input Parameters:
- * 	cpu:
- *		A pointer to the structure containing all the fields needed to emulate
- *		an Alpha AXP 21264 CPU.
- *	vpc:
- *		A value of the next VPC to be entered into the VPC list.
+ *  cpu:
+ *      A pointer to the structure containing all the fields needed to emulate
+ *      an Alpha AXP 21264 CPU.
+ *  vpc:
+ *      A value of the next VPC to be entered into the VPC list.
  *
  * Output Parameters:
- * 	cpu:
- * 		The vpc list will be updated with the newly added VPC and the Start and
- * 		End indexes will be updated appropriately.
+ *  cpu:
+ *      The vpc list will be updated with the newly added VPC and the Start and
+ *      End indexes will be updated appropriately.
  *
  * Return Value:
- * 	None.
+ *  None.
  */
 void AXP_21264_AddVPC(AXP_21264_CPU *cpu, AXP_PC vpc)
 {
     if (AXP_IBOX_OPT2)
     {
-  AXP_TRACE_BEGIN();
-  AXP_TraceWrite(
-      "Adding vPC[%d] 0x%016llx",
-      cpu->vpcEnd,
-      *((u64 *) &vpc));
-  AXP_TRACE_END()
-  ;
+        AXP_TRACE_BEGIN();
+        AXP_TraceWrite("Adding vPC[%d] 0x%016llx",
+                       cpu->vpcEnd,
+                       AXP_GET_PC(vpc));
+        AXP_TRACE_END();
     }
     cpu->vpc[cpu->vpcEnd] = vpc;
     cpu->vpcEnd = (cpu->vpcEnd + 1) % AXP_INFLIGHT_MAX;
     if (cpu->vpcEnd == cpu->vpcStart)
-  cpu->vpcStart = (cpu->vpcStart + 1) % AXP_INFLIGHT_MAX;
+    {
+        cpu->vpcStart = (cpu->vpcStart + 1) % AXP_INFLIGHT_MAX;
+    }
 
     /*
      * Return back to the caller.
@@ -143,22 +151,22 @@ void AXP_21264_AddVPC(AXP_21264_CPU *cpu, AXP_PC vpc)
 
 /*
  * AXP_21264_GetPALFuncVPC
- * 	This function is called to get the Virtual Program Counter (VPC) to a
- * 	specific PAL function which is an offset from the address specified in the
- *	PAL_BASE register.
+ *   This function is called to get the Virtual Program Counter (VPC) to a
+ *   specific PAL function which is an offset from the address specified in the
+ *  PAL_BASE register.
  *
  * Input Parameters:
- * 	cpu:
- *		A pointer to the structure containing all the fields needed to emulate
- *		an Alpha AXP 21264 CPU.
- *	func:
- *		The value of the function field in the PALcode Instruction Format.
+ *  cpu:
+ *      A pointer to the structure containing all the fields needed to emulate
+ *      an Alpha AXP 21264 CPU.
+ *  func:
+ *      The value of the function field in the PALcode Instruction Format.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- * 	The value that the PC should be set to to call the requested function.
+ *  The value that the PC should be set to to call the requested function.
  */
 AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 {
@@ -173,40 +181,39 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
      * We assume that the function supplied follows any of the following
      * criteria:
      *
-     *		Is in the range of 0x40 and 0x7f, inclusive
-     *		Is greater than 0xbf
-     *		Is between 0x00 and 0x3f, inclusive, and IER_CM[CM] is not equal to
-     *			the kernel mode value (0).
+     *      Is in the range of 0x40 and 0x7f, inclusive
+     *      Is greater than 0xbf
+     *      Is between 0x00 and 0x3f, inclusive, and IER_CM[CM] is not equal to
+     *          the kernel mode value (0).
      *
      * Now, let's compose the PC for the PALcode function we are being
      * requested to call.
      */
     if (cpu->majorType >= EV6)
     {
-  pc.bits21264.highPC = palBase.bits21264.highPC;
-  pc.bits21264.mbz_2 = 0;
-  pc.bits21264.mbo = 1;
-  pc.bits21264.func_7 = palFunc.bits.func_7;
-  pc.bits21264.func_5_0 = palFunc.bits.func_5_0;
-  pc.bits21264.mbz_1 = 0;
-  pc.bits21264.palMode = AXP_PAL_MODE;
+        pc.bits21264.highPC = palBase.bits21264.highPC;
+        pc.bits21264.mbz_2 = 0;
+        pc.bits21264.mbo = 1;
+        pc.bits21264.func_7 = palFunc.bits.func_7;
+        pc.bits21264.func_5_0 = palFunc.bits.func_5_0;
+        pc.bits21264.mbz_1 = 0;
+        pc.bits21264.palMode = AXP_PAL_MODE;
     }
     else
     {
-  pc.bits21164.highPC = palBase.bits21164.highPC;
-  pc.bits21164.mbo = 1;
-  pc.bits21164.func_7 = palFunc.bits.func_7;
-  pc.bits21164.func_5_0 = palFunc.bits.func_5_0;
-  pc.bits21164.mbz = 0;
-  pc.bits21164.palMode = AXP_PAL_MODE;
+        pc.bits21164.highPC = palBase.bits21164.highPC;
+        pc.bits21164.mbo = 1;
+        pc.bits21164.func_7 = palFunc.bits.func_7;
+        pc.bits21164.func_5_0 = palFunc.bits.func_5_0;
+        pc.bits21164.mbz = 0;
+        pc.bits21164.palMode = AXP_PAL_MODE;
     }
 
     if (AXP_IBOX_OPT2)
     {
-  AXP_TRACE_BEGIN();
-  AXP_TraceWrite("Generated PAL vPC 0x%016llx", *((u64 *) &pc));
-  AXP_TRACE_END()
-  ;
+        AXP_TRACE_BEGIN();
+        AXP_TraceWrite("Generated PAL vPC 0x%016llx", pc.pc);
+        AXP_TRACE_END();
     }
 
     /*
@@ -217,30 +224,30 @@ AXP_PC AXP_21264_GetPALFuncVPC(AXP_21264_CPU *cpu, u32 func)
 
 /*
  * AXP_21264_MakeVPC
- * 	This function is called to set a Virtual Program Counter (VPC) to a
- * 	specific value.
+ *   This function is called to set a Virtual Program Counter (VPC) to a
+ *   specific value.
  *
  * Input Parameters:
- * 	cpu:
- *		A pointer to the structure containing all the fields needed to emulate
- *		an Alpha AXP 21264 CPU.
- *	addr:
- *		A value of the next VPC to be entered into the VPC list.
- *	palMode:
- *		A value to indicate if we will be running in PAL mode.
+ *  cpu:
+ *      A pointer to the structure containing all the fields needed to emulate
+ *      an Alpha AXP 21264 CPU.
+ *  addr:
+ *      A value of the next VPC to be entered into the VPC list.
+ *  palMode:
+ *      A value to indicate if we will be running in PAL mode.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- * 	The calculated VPC, based on a target virtual address.
+ *  The calculated VPC, based on a target virtual address.
  */
 AXP_PC AXP_21264_MakeVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 {
     union
     {
-  u64 pc;
-  AXP_PC vpc;
+        u64 pc;
+        AXP_PC vpc;
     } vpc;
 
     vpc.pc = pc;
@@ -249,10 +256,9 @@ AXP_PC AXP_21264_MakeVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 
     if (AXP_IBOX_OPT2)
     {
-  AXP_TRACE_BEGIN();
-  AXP_TraceWrite("Getting vPC 0x%016llx", *((u64 *) &vpc));
-  AXP_TRACE_END()
-  ;
+        AXP_TRACE_BEGIN();
+        AXP_TraceWrite("Getting vPC 0x%016llx", vpc.pc);
+        AXP_TRACE_END();
     }
 
     /*
@@ -263,19 +269,19 @@ AXP_PC AXP_21264_MakeVPC(AXP_21264_CPU *cpu, u64 pc, u8 pal)
 
 /*
  * AXP_21264_GetNextVPC
- * 	This function is called to retrieve the VPC for the next set of
- * 	instructions to be fetched.
+ *   This function is called to retrieve the VPC for the next set of
+ *   instructions to be fetched.
  *
  * Input Parameters:
- * 	cpu:
- *		A pointer to the structure containing all the fields needed to emulate
- *		an Alpha AXP 21264 CPU.
+ *  cpu:
+ *      A pointer to the structure containing all the fields needed to emulate
+ *      an Alpha AXP 21264 CPU.
  *
  * Output Parameters:
- * 	None.
+ *  None.
  *
  * Return Value:
- * 	The VPC of the next set of instructions to fetch from the cache..
+ *  The VPC of the next set of instructions to fetch from the cache..
  */
 AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
 {
@@ -291,13 +297,11 @@ AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
 
     if (AXP_IBOX_OPT2)
     {
-  AXP_TRACE_BEGIN();
-  AXP_TraceWrite(
-      "Getting Next vPC[%d] 0x%016llx",
-      prevVPC,
-      *((u64 *) &retVal));
-  AXP_TRACE_END()
-  ;
+        AXP_TRACE_BEGIN();
+        AXP_TraceWrite("Getting Next vPC[%d] 0x%016llx",
+                       prevVPC,
+                       AXP_GET_PC(retVal));
+        AXP_TRACE_END();
     }
 
     /*
@@ -308,86 +312,83 @@ AXP_PC AXP_21264_GetNextVPC(AXP_21264_CPU *cpu)
 
 /*
  * AXP_21264_IncrementVPC
- * 	This function is called to increment Virtual Program Counter (VPC).
+ *   This function is called to increment Virtual Program Counter (VPC).
  *
  * Input Parameters:
- * 	cpu:
- *		A pointer to the structure containing all the fields needed to emulate
- *		an Alpha AXP 21264 CPU.
+ *  cpu:
+ *      A pointer to the structure containing all the fields needed to emulate
+ *      an Alpha AXP 21264 CPU.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- * 	The value of the incremented PC.
+ *  The value of the incremented PC.
  */
 AXP_PC AXP_21264_IncrementVPC(AXP_21264_CPU *cpu)
 {
-    AXP_PC vpc;
+    AXP_PC retVal;
 
     /*
      * Get the PC for the instruction just executed.
      */
-    vpc = AXP_21264_GetNextVPC(cpu);
+    retVal = AXP_21264_GetNextVPC(cpu);
 
     /*
      * Increment it.
      */
-    vpc.pc++;
+    retVal.pc++;
 
     if (AXP_IBOX_OPT2)
     {
-  AXP_TRACE_BEGIN();
-  AXP_TraceWrite("Incremented vPC 0x%016llx", *((u64 *) &vpc));
-  AXP_TRACE_END()
-  ;
+        AXP_TRACE_BEGIN();
+        AXP_TraceWrite("Incremented vPC 0x%016llx", AXP_GET_PC(retVal));
+        AXP_TRACE_END();
     }
 
     /*
      * Store it on the VPC List and return to the caller.
      */
-    return (vpc);
+    return (retVal);
 }
 
 /*
  * AXP_21264_DisplaceVPC
- * 	This function is called to add a displacement value to the VPC.
+ *  This function is called to add a displacement value to the VPC.
  *
  * Input Parameters:
- * 	cpu:
- *		A pointer to the structure containing all the fields needed to emulate
- *		an Alpha AXP 21264 CPU.
- *	displacement:
- *		A signed 64-bit value to be added to the VPC.
+ *  cpu:
+ *      A pointer to the structure containing all the fields needed to emulate
+ *      an Alpha AXP 21264 CPU.
+ *  displacement:
+ *      A signed 64-bit value to be added to the VPC.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- * 	The value of the PC with the displacement.
+ *  The value of the PC with the displacement.
  */
 AXP_PC AXP_21264_DisplaceVPC(AXP_21264_CPU *cpu, AXP_PC pc, i64 displacement)
 {
-    AXP_PC vpc = pc;
+    AXP_PC retVal = pc;
 
     /*
      * Increment and then add the displacement.
      */
-    vpc.pc = vpc.pc + displacement;
+    retVal.pc = retVal.pc + displacement;
 
     if (AXP_IBOX_OPT2)
     {
-  AXP_TRACE_BEGIN();
-  AXP_TraceWrite(
-      "Displacement vPC 0x%016llx (0x%016llx)",
-      *((u64 *) &vpc),
-      displacement);
-  AXP_TRACE_END()
-  ;
+        AXP_TRACE_BEGIN();
+        AXP_TraceWrite("Displacement vPC 0x%016llx (0x%016llx)",
+                       AXP_GET_PC(retVal),
+                       displacement);
+        AXP_TRACE_END();
     }
 
     /*
      * Return back to the caller.
      */
-    return (vpc);
+    return (retVal);
 }
