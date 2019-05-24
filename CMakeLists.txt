@@ -25,10 +25,12 @@
 #
 cmake_minimum_required(VERSION 3.6)
 
+#set (CMAKE_C_COMPILER "/cygdrive/g/git/llvm-project/build/bin/clang")
+#set (CMAKE_CXX_COMPILER "/cygdrive/g/git/llvm-project/build/bin/clang++")
+
 project(DECaxp VERSION 1.0.0)
 
-set(CMAKE_C_FLAGS
-    "${CMAKE_C_FLAGS} -m64 -std=gnu99 -Wall -D_AXP_COMPILER_PRESENT_")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64 -std=gnu99 -Wall -D_AXP_COMPILER_PRESENT_")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Executables")
 
