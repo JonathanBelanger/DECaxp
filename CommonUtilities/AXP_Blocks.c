@@ -428,7 +428,7 @@ void *AXP_Allocate_Block(i32 blockType, ...)
     {
         AXP_TRACE_BEGIN();
         AXP_TraceWrite("AXP_Allocate_Block allocated %s of size %d at 0x%016llx",
-                       _blockNames[blockType],
+                       _blockNames[type],
                        size,
                        retBlock);
         AXP_TraceWrite("Calls to AXP_Allocate_Block = %u; "
