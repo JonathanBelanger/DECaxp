@@ -32,8 +32,8 @@ cmake_minimum_required(VERSION 3.6)
 #   NOTE: We define both C and C++ compilers, just in case someone adds a
 #         module written in C++.
 #
-set(CMAKE_C_COMPILER "/cygdrive/g/git/llvm-project/build/bin/clang")
-set(CMAKE_CXX_COMPILER "/cygdrive/g/git/llvm-project/build/bin/clang++")
+#set(CMAKE_C_COMPILER "/cygdrive/g/git/llvm-project/build/bin/clang")
+#set(CMAKE_CXX_COMPILER "/cygdrive/g/git/llvm-project/build/bin/clang++")
 
 #
 # Set the project and version information.

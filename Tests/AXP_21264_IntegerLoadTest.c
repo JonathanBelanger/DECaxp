@@ -125,7 +125,7 @@ bool readNextHex(FILE *fp, void *hex, int len)
 int main()
 {
   FILE			*fp;
-  char			*fileName = "../tst/LDA_LDAH_TestData.csv";
+  char			*fileName = "/cygdrive/g/git/DECaxp/Tests/DataFiles/LDA_LDAH_TestData.csv";
   char			headerStr[81];
   bool			pass = true;
   u64				ldaAddress, ldahAddress;

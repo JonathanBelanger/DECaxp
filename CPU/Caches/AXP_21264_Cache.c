@@ -587,12 +587,12 @@ void AXP_tbis(AXP_21264_CPU *cpu, u64 va, bool dtb)
  *      This parameter can have any of the following enumerated values:
  *          None    - No access
  *          Read    - Read Access
- *          Write    - Write Access
- *          Execute    - Read Access - For the 21264 CPU, there is no execute bit
+ *          Write   - Write Access
+ *          Execute - Read Access - For the 21264 CPU, there is no execute bit
  *                                  to check.  This is because it is assumed
  *                                  that all addresses in the Icache have
  *                                  execute access.
- *          Modify     - Read & Write
+ *          Modify  - Read & Write
  *
  * Output Parameters:
  *  None.
@@ -1306,9 +1306,12 @@ AXP_EXCEPTIONS AXP_Dcache_Status(AXP_21264_CPU *cpu,
  *  Memory Address Space Store Instructions from the Store Queue (SQ).
  *
  * Input Parameters:
- *   cpu:
- *       A pointer to the Digital Alpha AXP 21264 CPU structure containing the
- *       Data Cache (dCache) array.
+ *  cpu:
+ *      A pointer to the Digital Alpha AXP 21264 CPU structure containing the
+ *      Data Cache (dCache) array.
+ *  idxSet:
+ *      A pointer to a 64-bit value specifying the actual index and set to
+ *      where the data is to be stored.
  *  len:
  *      A value indicating the length of the input parameter 'data'.  This
  *      parameter must be one of the following values (assumed signed):
@@ -1317,16 +1320,18 @@ AXP_EXCEPTIONS AXP_Dcache_Status(AXP_21264_CPU *cpu,
  *           4    = longword
  *           8    = quadword
  *          64    = 64 bytes of data being copied from memory to the Dcache
- *   data:
- *       A pointer to the data to be stored in the Dcache, whose length is is
+ *  data:
+ *      A pointer to the data to be stored in the Dcache, whose length is is
  *      specified by the 'len' parameter.
+ *  status:
+ *      A value indicating the status to be set on the cache entry.
  *
  * Output Parameters:
- *   None.
+ *  None.
  *
  * Return Value:
- *   true:  Normal Successful Completion.
- *   false: An error occurred.
+ *  true:   Normal Successful Completion.
+ *  false:  An error occurred.
  */
 bool AXP_DcacheWrite(AXP_21264_CPU *cpu,
                      AXP_DCACHE_LOC *indexSetOffset,
@@ -1799,13 +1804,13 @@ void AXP_Dcache_Lock(AXP_21264_CPU *cpu, u64 va, u64 pa)
  *  Memory Address Space Load Instructions from the Load Queue (LQ).
  *
  * Input Parameters:
- *   cpu:
- *       A pointer to the Digital Alpha AXP 21264 CPU structure containing the
- *       Data Cache (dCache) array.
- *   va:
- *       The virtual address of the data in virtual memory.
- *   pa:
- *       The physical address, as stored in the DTB (Data TLB).
+ *  cpu:
+ *      A pointer to the Digital Alpha AXP 21264 CPU structure containing the
+ *      Data Cache (dCache) array.
+ *  va:
+ *      The virtual address of the data in virtual memory.
+ *  pa:
+ *      The physical address, as stored in the DTB (Data TLB).
  *  len:
  *      A value indicating the length of the output parameter 'data'.  This
  *      parameter must be one of the following values (assumed signed):
@@ -1815,7 +1820,7 @@ void AXP_Dcache_Lock(AXP_21264_CPU *cpu, u64 va, u64 pa)
  *          8    = quadword
  *
  * Output Parameters:
- *   data:
+ *  data:
  *      A pointer a location to receive the data from the data cache.  The size
  *      of this location is determined in the input parameter 'len'.
  *  idxSet:
@@ -1823,8 +1828,8 @@ void AXP_Dcache_Lock(AXP_21264_CPU *cpu, u64 va, u64 pa)
  *      where the data was returned.
  *
  * Return Value:
- *   false: Entry not found.
- *   true:  Found the entry requested.
+ *  false: Entry not found.
+ *  true:  Found the entry requested.
  */
 bool AXP_DcacheRead(AXP_21264_CPU *cpu,
                     u64 va,

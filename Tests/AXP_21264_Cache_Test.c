@@ -129,10 +129,32 @@ int main()
     AXP_PUT_PC(zeroPC, zeroPCval);
     line = AXP_Allocate_Block(-lineLen);
     cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
+
+    /*
+     * We need to set some things in the cpu to set the environment in which
+     * the cache processing works.  We set the following items:
+     *  - memory access is being done in user more
+     *  - the DTE PTR is set to allow user-more reading and writing
+     *  - both cache sets in the I-Cache and D-Cache are enabled
+     *  - allocate a 1MB B-Cache (accessed when a Dcache block is evicted or
+     *    flushed)
+     */
     if (cpu != NULL)
     {
-        cpu->iCtl.ic_en = 3; /* Use both Icache sets */
-        cpu->dcCtl.set_en = 3; /* Use both Dcache sets */
+        u32 bCacheSize = ONE_M / AXP_BCACHE_BLOCK_SIZE;
+
+        cpu->ierCm.cm = AXP_CM_USER;    /* Run this in user mode            */
+        cpu->dtbPte0.ure = 1;           /* Allow for user-mode read access  */
+        cpu->dtbPte0.uwe = 1;           /* Allow for user-mode write access */
+        cpu->dtbPte1 = cpu->dtbPte0;    /* DTB_PTE0 must equal DTB_PTE1     */
+        cpu->iCtl.ic_en = 3;            /* Use both Icache sets             */
+        cpu->dcCtl.set_en = 3;          /* Use both Dcache sets             */
+        cpu->bCache = AXP_Allocate_Block(-(bCacheSize *
+                                           sizeof(AXP_21264_BCACHE_BLK)),
+                                         cpu->bCache);
+        cpu->bTag = AXP_Allocate_Block(-(bCacheSize *
+                                         sizeof(AXP_21264_BCACHE_TAG)),
+                                       cpu->bTag);
     }
     readMiss = 0;
     writeMiss = 0;
@@ -306,35 +328,48 @@ int main()
                          */
                         if (fault == 0)
                         {
+                            u32 dCacheStatus;
 
                             /*
                              * At this point we don't know if the data to be
-                             * saved is already in the Data Cache or not.  We
-                             * first need to fetch it.  If that fails, then we
-                             * either add it or update it.
+                             * saved is already in the Data Cache or not.  Call
+                             * to get the status.  Then either write or update
+                             * it.
                              */
-                            if (AXP_DcacheRead(cpu,
-                                               va,
-                                               pa,
-                                               sizeof(fetchedData),
-                                               &fetchedData,
-                                               &dataLoc) == true)
+                            if (AXP_Dcache_Status(cpu,
+                                                  va,
+                                                  pa,
+                                                  sizeof(fetchedData),
+                                                  true,
+                                                  &dCacheStatus,
+                                                  &dataLoc,
+                                                  false) == NoException)
                             {
-                                writeHit++;
-                                AXP_DcacheWrite(cpu,
-                                                &dataLoc,
-                                                sizeof(data),
-                                                &data,
-                                                0);
+                                if ((dCacheStatus & AXP_21264_CACHE_HIT) ==
+                                    AXP_21264_CACHE_HIT)
+                                {
+                                    writeHit++;
+                                    AXP_DcacheWrite(cpu,
+                                                    &dataLoc,
+                                                    sizeof(data),
+                                                    &data,
+                                                    0);
+                                }
+                                else
+                                {
+                                    writeMiss++;
+                                    AXP_DcacheWrite(cpu,
+                                                    &dataLoc,
+                                                    sizeof(data),
+                                                    &data,
+                                                    0);
+                                }
                             }
                             else
                             {
-                                writeMiss++;
-                                AXP_DcacheWrite(cpu,
-                                                NULL,
-                                                sizeof(data),
-                                                &data,
-                                                0);
+                                printf("Got an DataAlignment exception (Write "
+                                       "1) when we should have!\n");
+                                abort();
                             }
                         }
                         else

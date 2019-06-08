@@ -59,47 +59,47 @@ typedef enum
 
 /*
  * The operation: One of the following:
- *       + for add
- *       - for subtract
- *       * for multiply
- *       / for divide
- *       *+ for fused multiply-add
- *       V for square root
- *       % for remainder
- *       rfi for round float to int
- *       cff for convert between different supported floating-point format
- *       cfi for convert floating-point to integer
- *       cif for convert integer to floating point
- *       cfd for convert to decimal character string
- *       cdf for convert decimal character string to float
- *       qC for quiet comparison
- *       sC for signaling comparison
- *       cp for copy
- *       ~ for negate
- *       A for abs
- *       @ for copy-sign
- *       S for scalb
- *       L for logb
- *       Na for next-after
- *       ? for class
- *       ?- for is-signed
- *       ?n for is-normal
- *       ?f for is-finite
- *       ?0 for is-zero
- *       ?s for is-subnormal
- *       ?i for is-inf
- *       ?N for is-nan
- *       ?sN for is-signaling
- *       ?N for is-nan
- *       <C for min-num
- *       >C for max-num
- *       <A for min-num-mag
- *       >A for max-num-mag
- *       =quant for same-quantum
- *       quant for quantize
- *       Nu for next-up
- *       Nd for next-down
- *       eq for equivalent
+ *      + for add
+ *      - for subtract
+ *      * for multiply
+ *      / for divide
+ *      *+ for fused multiply-add
+ *      V for square root
+ *      % for remainder
+ *      rfi for round float to int
+ *      cff for convert between different supported floating-point format
+ *      cfi for convert floating-point to integer
+ *      cif for convert integer to floating point
+ *      cfd for convert to decimal character string
+ *      cdf for convert decimal character string to float
+ *      qC for quiet comparison
+ *      sC for signaling comparison
+ *      cp for copy
+ *      ~ for negate
+ *      A for abs
+ *      @ for copy-sign
+ *      S for scalb
+ *      L for logb
+ *      Na for next-after
+ *      ? for class
+ *      ?- for is-signed
+ *      ?n for is-normal
+ *      ?f for is-finite
+ *      ?0 for is-zero
+ *      ?s for is-subnormal
+ *      ?i for is-inf
+ *      ?N for is-nan
+ *      ?sN for is-signaling
+ *      ?N for is-nan
+ *      <C for min-num
+ *      >C for max-num
+ *      <A for min-num-mag
+ *      >A for max-num-mag
+ *      =quant for same-quantum
+ *      quant for quantize
+ *      Nu for next-up
+ *      Nd for next-down
+ *      eq for equivalent
  */
 typedef enum
 {
@@ -1064,7 +1064,7 @@ bool isInf(double fpv)
 int main()
 {
     FILE *fp;
-    char *fileName = "../tst/fpTestData/Basic-Types-Inputs.fptest";
+    char *fileName = "/cygdrive/g/git/DECaxp/Tests/DataFiles/fpTestData/Basic-Types-Inputs.fptest";
     char outStr[1024];
     int offset;
     bool pass = true;
