@@ -25,14 +25,36 @@
 #
 cmake_minimum_required(VERSION 3.6)
 
-#set (CMAKE_C_COMPILER "/cygdrive/g/git/llvm-project/build/bin/clang")
-#set (CMAKE_CXX_COMPILER "/cygdrive/g/git/llvm-project/build/bin/clang++")
+#
+# Set the compilers we want to use.  This needs to occur prior to the project
+# statement.
+#
+#   NOTE: We define both C and C++ compilers, just in case someone adds a
+#         module written in C++.
+#
+set(CMAKE_C_COMPILER "/cygdrive/g/git/llvm-project/build/bin/clang")
+set(CMAKE_CXX_COMPILER "/cygdrive/g/git/llvm-project/build/bin/clang++")
 
+#
+# Set the project and version information.
+#
 project(DECaxp VERSION 1.0.0)
 
+#
+# Define the set of compiler flags we want to use throughout the build
+# process.
+#
+#   NOTE: We define compiler flags for both C and C++ compilers, just in case
+#         someone adds a module written in C++.
+#
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64 -std=gnu99 -Wall -D_AXP_COMPILER_PRESENT_")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -std=gnu++98 -Wall -D_AXP_COMPILER_PRESENT_")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Executables")
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" AND "${CMAKE_SYSTEM_NAME}" STREQUAL "CYGWIN")
+    set(compiler-rt "/usr/lib/clang/5.0.1/lib/windows/libclang_rt.builtins-x86_64.a")
+endif()
 
 add_subdirectory(CommonUtilities)
 add_subdirectory(CPU)

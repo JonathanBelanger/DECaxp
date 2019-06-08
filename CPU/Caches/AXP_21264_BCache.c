@@ -68,7 +68,7 @@ int AXP_21264_Bcache_Index(AXP_21264_CPU *cpu, u64 pa)
      * Bcache size bits.
      */
     retVal = ((pa >> AXP_BCACHE_IDX_SHIFT) &
-              ((bCacheSize << 14) || AXP_BCACHE_IDX_FILL));
+              ((bCacheSize << 14) | AXP_BCACHE_IDX_FILL));
 
     /*
      * Return the calculated index into the Bcache back to the caller.

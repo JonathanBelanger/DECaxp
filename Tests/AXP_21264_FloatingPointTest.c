@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -30,6 +30,9 @@
  *  GCC 7.4.0, and possibly earlier, turns on strict-aliasing rules by default.
  *  There are a number of issues in this module where the address of one
  *  variable is cast to extract a value in a different format.
+ *
+ *  V01.003 08-Jun-2019 Jonathan D. Belanger
+ *  Fixing compiler warnings when compiling with Clang.
  */
 #include <math.h>
 #include <float.h>
@@ -1653,7 +1656,7 @@ int main()
             }
             if (printOut)
             {
-                printf(outStr);
+                printf("%s", outStr);
             }
         }
         fclose(fp);

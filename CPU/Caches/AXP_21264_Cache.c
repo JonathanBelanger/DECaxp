@@ -194,7 +194,7 @@ AXP_21264_TLB *AXP_getNextFreeTLB(AXP_21264_TLB *tlbArray, u32 *nextTLB)
     AXP_21264_TLB *retVal;
     int ii;
     int start1, start2;
-    int end1, end2;
+    int end1 = 0, end2;
 
     if (AXP_CACHE_CALL)
     {
