@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2018.
+ * Copyright (C) Jonathan D. Belanger 2018-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -21,12 +21,15 @@
  *
  * Revision History:
  *
- *  V01.000	27-Jan-2018	Jonathan D. Belanger
+ *  V01.000 27-Jan-2018 Jonathan D. Belanger
  *  Initially written.
  *
- *  V01.001	29-Jun-2018	Jonathan D. Belanger
- *  Added a trace buffer function to dump out a buffer in hexidecimal and in
+ *  V01.001 29-Jun-2018 Jonathan D. Belanger
+ *  Added a trace buffer function to dump out a buffer in hexadecimal and in
  *  ASCII.
+ *
+ *  V01.001 01-Jun-2019 Jonathan D. Belanger
+ *  Reformatted to remove tabs and be consistent with other source files.
  */
 #include "CommonUtilities/AXP_Configure.h"
 #include "CommonUtilities/AXP_Utility.h"
@@ -42,17 +45,17 @@ bool _axp_trc_active_ = false;
 
 /*
  * AXP_TraceInit_Once
- *	This function is called using the pthread_once function to make sure that
- *	only one thread can call this function ever.
+ *  This function is called using the pthread_once function to make sure that
+ *  only one thread can call this function ever.
  *
  * Input Parameters:
- *	None.
+ *  None.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- *	None.
+ *  None.
  */
 void AXP_TraceInit_Once(void)
 {
@@ -64,27 +67,30 @@ void AXP_TraceInit_Once(void)
      */
     getEnvStr = getenv(AXPTRCLOG);
     if (getEnvStr != NULL)
-  sscanf(getEnvStr, "0x%08x", &_axp_trc_log_);
+    {
+        sscanf(getEnvStr, "0x%08x", &_axp_trc_log_);
+    }
     if (_axp_trc_log_ != 0)
     {
-  getEnvStr = getenv(AXPTRCFIL);
-  if (getEnvStr == NULL)
-  {
-      strcpy(_axp_trc_out_, "Standard Output");
-      _axp_trc_fp_ = stdout;
-  }
-  else
-  {
-      sscanf(getEnvStr, "%80s", _axp_trc_out_);
-      _axp_trc_fp_ = fopen(_axp_trc_out_, "w");
-  }
-  _axp_trc_active_ = true;
-  AXP_TraceWrite("Digital Alpha AXP 21264 CPU Emulator Trace Utility.");
-  AXP_TraceWrite("AXP_TRCLOG = 0x%08x : AXP_TRCFIL = %s", _axp_trc_log_,
-          _axp_trc_out_);
-  AXP_TraceWrite("Copyright 2018, Jonathan D. Belanger.");
-  AXP_TraceWrite("");
-  AXP_TraceConfig();
+        getEnvStr = getenv(AXPTRCFIL);
+        if (getEnvStr == NULL)
+        {
+            strcpy(_axp_trc_out_, "Standard Output");
+            _axp_trc_fp_ = stdout;
+        }
+        else
+        {
+            sscanf(getEnvStr, "%80s", _axp_trc_out_);
+            _axp_trc_fp_ = fopen(_axp_trc_out_, "w");
+        }
+        _axp_trc_active_ = true;
+        AXP_TraceWrite("Digital Alpha AXP 21264 CPU Emulator Trace Utility.");
+        AXP_TraceWrite("AXP_TRCLOG = 0x%08x : AXP_TRCFIL = %s",
+                       _axp_trc_log_,
+                       _axp_trc_out_);
+        AXP_TraceWrite("Copyright 2018, Jonathan D. Belanger.");
+        AXP_TraceWrite("");
+        AXP_TraceConfig();
     }
 
     /*
@@ -95,18 +101,18 @@ void AXP_TraceInit_Once(void)
 
 /*
  * AXP_TraceInit
- *	This function is called once to initialize the tracing.
+ *  This function is called once to initialize the tracing.
  *
  * Input Parameters:
- *	None.
+ *  None.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- *	true:	The pthread_once function was a success.
- *	false:	The pthread_once function returned EINVAL, indicating one of the
- *			parameters supplied on the call is not valid.
+ *  true:   The pthread_once function was a success.
+ *  false:  The pthread_once function returned EINVAL, indicating one of the
+ *          parameters supplied on the call is not valid.
  */
 bool AXP_TraceInit(void)
 {
@@ -122,16 +128,16 @@ bool AXP_TraceInit(void)
 
 /*
  * AXP_TraceEnd
- *	This function is called end the tracing.
+ *  This function is called end the tracing.
  *
  * Input Parameters:
- *	None.
+ *  None.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
  */
 void AXP_TraceEnd(void)
 {
@@ -149,20 +155,20 @@ void AXP_TraceEnd(void)
 
 /*
  * AXP_TraceWrite
- *	This function is called with a variable list argument and uses vfprintf to
- *	take the format and va_list as parameters.
+ *  This function is called with a variable list argument and uses vfprintf to
+ *  take the format and va_list as parameters.
  *
  * Input Parameters:
- *	fmt:
- *		A pointer to a format string.
- *	...:
- *		A variable number of arguments.
+ *  fmt:
+ *      A pointer to a format string.
+ *  ...:
+ *      A variable number of arguments.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
  */
 void AXP_TraceWrite(char *fmt, ...)
 {
@@ -175,8 +181,10 @@ void AXP_TraceWrite(char *fmt, ...)
      * Write out a time-stamp followed by a colon and a space character
      */
     gettimeofday(&now, NULL);
-    strftime(outBuf, sizeof(outBuf), "%H:%M:%S",
-      localtime_r(&now.tv_sec, &timeNow));
+    strftime(outBuf,
+             sizeof(outBuf),
+             "%H:%M:%S",
+             localtime_r(&now.tv_sec, &timeNow));
     fprintf(_axp_trc_fp_, "%s.%03ld: ", outBuf, (now.tv_usec / 1000));
 
     /*
@@ -200,14 +208,14 @@ void AXP_TraceWrite(char *fmt, ...)
 /*
  * AXP_TraceBuffer
  *  This function is called to trace a buffers worth of data.  It will dump out
- *  a hexidecimal set of bytes, followed by those same bytes in ASCII (a '.'
+ *  a hexadecimal set of bytes, followed by those same bytes in ASCII (a '.'
  *  will be used for non-printable characters.
  *
  * Input Parameters:
  *  buf:
- *	A pointer to the buffer of unsigned bytes to be dumped.
+ *      A pointer to the buffer of unsigned bytes to be dumped.
  *  bufLen:
- *	A value indicating the number of bytes in the buf parameter.
+ *      A value indicating the number of bytes in the buf parameter.
  *
  * Output Parameters:
  *  None.
@@ -226,17 +234,20 @@ void AXP_TraceBuffer(u8 *buf, u32 bufLen)
 
     while (remLen > 0)
     {
-  sprintf(&outBuf[offset], fmt1, buf[0]);
-  for (ii = 1; ((ii < 20) && (ii < remLen)); ii++)
-      offset += sprintf(&outBuf[offset], fmt2, buf[ii]);
-  offset += sprintf(&outBuf[offset], fmt3, (60-offset), ' ');
-  for (ii = 0; ((ii < 20) && (ii < remLen)); ii++)
-      offset += sprintf(
-      &outBuf[offset],
-      fmt4,
-      (isprint(buf[ii]) ? buf[ii] : '.'));
-  AXP_TraceWrite("%s", outBuf);
-  remLen -= ii;
+        sprintf(&outBuf[offset], fmt1, buf[0]);
+        for (ii = 1; ((ii < 20) && (ii < remLen)); ii++)
+        {
+            offset += sprintf(&outBuf[offset], fmt2, buf[ii]);
+        }
+        offset += sprintf(&outBuf[offset], fmt3, (60-offset), ' ');
+        for (ii = 0; ((ii < 20) && (ii < remLen)); ii++)
+        {
+            offset += sprintf(&outBuf[offset],
+                              fmt4,
+                              (isprint(buf[ii]) ? buf[ii] : '.'));
+        }
+        AXP_TraceWrite("%s", outBuf);
+        remLen -= ii;
     }
 
     /*
@@ -276,18 +287,18 @@ void AXP_TraceLock(void)
 
 /*
  * AXP_TraceUnlock
- *	This function is called by the AXP_TRACE_END() macro to unlock the trace
- *	mutex.  We do this so that multiple calls to AXP_TraceWrite associated with
- *	a single trace opportunity are logged together.
+ *  This function is called by the AXP_TRACE_END() macro to unlock the trace
+ *  mutex.  We do this so that multiple calls to AXP_TraceWrite associated with
+ *  a single trace opportunity are logged together.
  *
  * Input Parameters:
- *	None.
+ *  None.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Values:
- *	None.
+ *  None.
  */
 void AXP_TraceUnlock(void)
 {

@@ -41,7 +41,8 @@ target_link_libraries(AXP_21264_Cache_Test PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/wpcap.dll
+    ${compiler-rt})
 
 add_executable(AXP_21264_Dump_Test
     AXP_21264_Dump_Test.c)
@@ -87,7 +88,8 @@ target_link_libraries(AXP_21264_Icache_Test PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/wpcap.dll
+    ${compiler-rt})
 
 target_include_directories(AXP_21264_Icache_Test PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
@@ -111,7 +113,8 @@ target_link_libraries(AXP_21264_IntegerLoadTest PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/wpcap.dll
+    ${compiler-rt})
 
 add_executable(AXP_21264_Prediction_Test
     AXP_21264_Prediction_Test.c)

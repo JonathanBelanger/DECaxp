@@ -1338,7 +1338,7 @@ static void parse_printers_names(xmlDocPtr doc,
             {
                 strcpy(value, (char *) key);
             }
-            parent = NoTapes;
+            parent = NoPrinters;
             xmlFree(key);
         }
         if (parent != NoPrinters)
@@ -2986,7 +2986,7 @@ static void cvt_date_to_rm(char *date, struct tm *time)
      */
     for (ii = 0; ii < strlen(date); ii++)
     {
-        date[ii] = toupper(date[ii]);
+        date[ii] = toupper((int) date[ii]);
         if (date[ii] == '-')
         {
             if (month != NULL)
@@ -3125,7 +3125,7 @@ static void parse_owner_names(xmlDocPtr doc,
             {
                 strcpy(value, (char *) key);
             }
-            parent = NoName;
+            parent = NoOwner;
             xmlFree(key);
         }
 

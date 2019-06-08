@@ -25,7 +25,7 @@
  *	V01.000		23-Jun-2017	Jonathan D. Belanger
  *	Initially written.
  */
-#ifndef _AXP_21264_EBOX_LOGICAL_SHIFT__
+#ifndef _AXP_21264_EBOX_LOGICAL_SHIFT_
 #define _AXP_21264_EBOX_LOGICAL_SHIFT_
 
 #include "CommonUtilities/AXP_Utility.h"
