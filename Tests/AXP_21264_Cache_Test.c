@@ -28,6 +28,11 @@
 #include "CPU/AXP_21264_CPU.h"
 #include "CPU/Ibox/AXP_21264_Ibox.h"
 
+#ifndef AXP_TEST_DATA_FILES
+#define AXP_TEST_DATA_FILES "."
+#endif
+#define AXP_MAX_FILENAME_LEN    256
+
 int parseLine(char *line, u32 *oper, u32 *addr, u32 *data)
 {
     int retVal = 0;
@@ -103,13 +108,8 @@ int main()
     u32 noOp = 0x47ff041f;
     u32 readIns[AXP_ICACHE_LINE_INS];
     FILE *fp = NULL;
-    char *fileNames[] =
-    {
-        "/cygdrive/g/git/DECaxp/Tests/DataFiles/compress.trace",
-        "/cygdrive/g/git/DECaxp/Tests/DataFiles/tex.trace",
-        "/cygdrive/g/git/DECaxp/Tests/DataFiles/cc.trace",
-        NULL
-    };
+    char *fileNames[] = {"compress.trace", "tex.trace", "cc.trace", NULL};
+    char fileName[AXP_MAX_FILENAME_LEN];
     char *line;
     size_t lineLen = 32;
     int ii = 0;
@@ -183,7 +183,8 @@ int main()
     while ((fileNames[ii] != NULL ) && (cpu != NULL ))
     {
         printf("\n>>> Processing file: %s\n", fileNames[ii]);
-        if ((fp = fopen(fileNames[ii], "r")) != NULL)
+        sprintf(fileName, "%s/%s", AXP_TEST_DATA_FILES, fileNames[ii]);
+        if ((fp = fopen(fileName, "r")) != NULL)
         {
             while (getline(&line, &lineLen, fp) != -1)
             {

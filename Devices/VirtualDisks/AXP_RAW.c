@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2018.
+ * Copyright (C) Jonathan D. Belanger 2018-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -25,8 +25,14 @@
  *
  * Revision History:
  *
- *  V01.000	15-Jul-2018	Jonathan D. Belanger
+ *  V01.000 15-Jul-2018 Jonathan D. Belanger
  *  Initially written.
+ *
+ *  V01.001 09-Jun-2019 Jonathan D. Belanger
+ *  AXP_Allocate_Block, when the block type (length) is negative, needs to
+ *  either have a null value or the address of the block being allocated (so
+ *  that it can be replaced) provided on the call, or the call will get a
+ *  segmentation fault.
  */
 #include "Devices/VirtualDisks/AXP_RAW.h"
 #include "CommonUtilities/AXP_Blocks.h"
@@ -38,49 +44,52 @@
  *
  * Input Parameters:
  *  raw:
- *	A pointer to the raw device handle to be initialized according to
- *	information from the device.
+ *      A pointer to the raw device handle to be initialized according to
+ *      information from the device.
  *
  * Output Parameters:
  *  raw:
- *	A pointer to the raw device handle with information from the device.
+ *      A pointer to the raw device handle with information from the device.
  *
  * Return Values:
- *  true:	Normal Successful Completion.
- *  false:	An error occurred.
+ *  true:   Normal Successful Completion.
+ *  false:  An error occurred.
  */
 static bool _GetDiskInfo(AXP_RAW_Handle *raw)
 {
-    bool	retVal = true, done = false;
-    int		ioctlCnt = 0;
-    int		ro;
+    bool retVal = true, done = false;
+    int ioctlCnt = 0;
+    int ro;
 
     /*
      * Let's get information about the device.
      */
     while ((retVal == true) && (done == false))
-  switch(ioctlCnt++)
-  {
-      case 0:
-    retVal = ioctl(raw->fd, BLKROGET, &ro) == 0;
-    raw->readOnly = ro != 0;
-    break;
+    {
+        switch(ioctlCnt++)
+        {
+            case 0:
+                retVal = ioctl(raw->fd, BLKROGET, &ro) == 0;
+                raw->readOnly = ro != 0;
+                break;
 
-      case 1:
-    retVal = ioctl(raw->fd, BLKGETSIZE64, &raw->diskSize) == 0;
-    break;
+            case 1:
+                retVal = ioctl(raw->fd, BLKGETSIZE64, &raw->diskSize) == 0;
+                break;
 
-      case 2:
-    retVal = ioctl(raw->fd, BLKBSZGET, &raw->blkSize) == 0;
-    break;
+            case 2:
+                retVal = ioctl(raw->fd, BLKBSZGET, &raw->blkSize) == 0;
+                break;
 
-      case 3:
-    retVal = ioctl(raw->fd, BLKSSZGET, &raw->sectorSize) == 0;
+            case 3:
+                retVal = ioctl(raw->fd, BLKSSZGET, &raw->sectorSize) == 0;
+                /* no break */
 
-      default:
-    done = true;
-    break;
-  }
+            default:
+                done = true;
+                break;
+        }
+    }
 
     /*
      * Calculate some geometry numbers.  This code is consistent with the
@@ -90,12 +99,12 @@ static bool _GetDiskInfo(AXP_RAW_Handle *raw)
      */
     if (retVal == true)
     {
-  u64	totalSectors;
+        u64 totalSectors;
 
-  totalSectors = raw->diskSize / raw->sectorSize;
-  raw->heads = 255;
-  raw->sectors = 63;
-  raw->cylinders = totalSectors / (raw->heads * raw->sectors);
+        totalSectors = raw->diskSize / raw->sectorSize;
+        raw->heads = 255;
+        raw->sectors = 63;
+        raw->cylinders = totalSectors / (raw->heads * raw->sectors);
     }
 
     /*
@@ -110,33 +119,32 @@ static bool _GetDiskInfo(AXP_RAW_Handle *raw)
  *
  * Input Parameters:
  *  path:
- *	A pointer to a valid string that represents the path to the new RAW
- *	disk image file.
+ *      A pointer to a valid string that represents the path to the new RAW
+ *      disk image file.
  *  flags:
- *	Open flags, which must be a valid combination of the AXP_VHD_OPEN_FLAG
- *	enumeration.
+ *      Open flags, which must be a valid combination of the AXP_VHD_OPEN_FLAG
+ *      enumeration.
  *  deviceID:
- *	An unsigned 32-bit value indicating the disk type being opened.
+ *      An unsigned 32-bit value indicating the disk type being opened.
  *
  * Output Parameters:
  *  handle:
- *  	A pointer to the handle object that represents the newly opened
- *  	RAW disk.
+ *      A pointer to the handle object that represents the newly opened
+ *      RAW disk.
  *
  *  Return Values:
- *  AXP_VHD_SUCCESS:		Normal Successful Completion.
- *  AXP_VHD_FILE_NOT_FOUND:	File Not Found.
- *  AXP_VHD_READ_FAULT:		Failed to read information from the file.
- *  AXP_VHD_OUTOFMEMORY:	Insufficient memory to perform operation.
+ *  AXP_VHD_SUCCESS:        Normal Successful Completion.
+ *  AXP_VHD_FILE_NOT_FOUND: File Not Found.
+ *  AXP_VHD_READ_FAULT:     Failed to read information from the file.
+ *  AXP_VHD_OUTOFMEMORY:    Insufficient memory to perform operation.
  */
-u32 _AXP_RAW_Open(
-    char *path,
-    AXP_VHD_OPEN_FLAG flags,
-    u32 deviceID,
-    AXP_VHD_HANDLE *handle)
+u32 _AXP_RAW_Open(char *path,
+                  AXP_VHD_OPEN_FLAG flags,
+                  u32 deviceID,
+                  AXP_VHD_HANDLE *handle)
 {
-    AXP_RAW_Handle	*raw;
-    u32			retVal = AXP_VHD_SUCCESS;
+    AXP_RAW_Handle *raw;
+    u32 retVal = AXP_VHD_SUCCESS;
 
     /*
      * Let's allocate the block we need to maintain access to the physical disk
@@ -146,41 +154,49 @@ u32 _AXP_RAW_Open(
     if (raw != NULL)
     {
 
-  /*
-   * Allocate a buffer long enough for for the filename (plus null
-   * character).
-   */
-  raw->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
-  if (raw->filePath != NULL)
-  {
-      int	mode = (deviceID == STORAGE_TYPE_DEV_ISO) ? O_RDONLY : O_RDWR;
+        /*
+         * Allocate a buffer long enough for for the filename (plus null
+         * character).
+         */
+        raw->filePath = AXP_Allocate_Block(-(strlen(path) + 1), path);
+        if (raw->filePath != NULL)
+        {
+            int mode = (deviceID == STORAGE_TYPE_DEV_ISO) ? O_RDONLY : O_RDWR;
 
-      strcpy(raw->filePath, path);
-      raw->deviceID = deviceID;
+            strcpy(raw->filePath, path);
+            raw->deviceID = deviceID;
 
-      /*
-       * Open the device/file.  If it is an ISO file or a CDROM device,
-       * then do some initialization and we are done.  If it is a
-       * physical device, then we re-open the device for binary
-       * read/write.
-       *
-       * TODO: Do we need to do something different for ISO files.
-       */
-      raw->fd = open(path, mode, 0);
-      if (raw->fd >= 0)
-      {
-    raw->deviceID = deviceID;
-    if (_GetDiskInfo(raw) == false)
-        retVal = AXP_VHD_READ_FAULT;
-      }
-      else
-    retVal = AXP_VHD_FILE_NOT_FOUND;
-  }
-  else
-      retVal = AXP_VHD_OUTOFMEMORY;
+            /*
+             * Open the device/file.  If it is an ISO file or a CDROM device,
+             * then do some initialization and we are done.  If it is a
+             * physical device, then we re-open the device for binary
+             * read/write.
+             *
+             * TODO: Do we need to do something different for ISO files.
+             */
+            raw->fd = open(path, mode, 0);
+            if (raw->fd >= 0)
+            {
+                raw->deviceID = deviceID;
+                if (_GetDiskInfo(raw) == false)
+                {
+                    retVal = AXP_VHD_READ_FAULT;
+                }
+            }
+            else
+            {
+                retVal = AXP_VHD_FILE_NOT_FOUND;
+            }
+        }
+        else
+        {
+            retVal = AXP_VHD_OUTOFMEMORY;
+        }
     }
     else
-  retVal = AXP_VHD_OUTOFMEMORY;
+    {
+        retVal = AXP_VHD_OUTOFMEMORY;
+    }
 
     /*
      * OK, if we don't have a success at this point, and we allocated a VHD
@@ -188,7 +204,9 @@ u32 _AXP_RAW_Open(
      * opened.
      */
     if ((retVal != AXP_VHD_SUCCESS) && (raw != NULL))
-  AXP_Deallocate_Block(raw);
+    {
+        AXP_Deallocate_Block(raw);
+    }
 
     /*
      * Return the outcome of this call back to the caller.

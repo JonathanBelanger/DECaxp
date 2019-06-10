@@ -23,6 +23,12 @@
 #   V01.000 28-Apr-2019 Jonathan D. Belanger
 #   Initially written, based off of the original Makefile..
 #
+#   V01.001 09-Jun-2019 Jonathan D. Belanger
+#   Added a define to the compile flags to specify the path the the directory
+#   containing the test data.
+#
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DAXP_TEST_DATA_FILES=\\\"${CMAKE_CURRENT_SOURCE_DIR}/DataFiles\\\"")
+
 add_executable(AXP_21264_Cache_Test
     AXP_21264_Cache_Test.c)
 

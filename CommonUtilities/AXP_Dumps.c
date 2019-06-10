@@ -855,7 +855,7 @@ const char *Len = "%-s";
 const char *Stall = "%-s";
 const char *Pad = "%#s";
 const char *Regv = "%c%02d=0x%016llx";
-const char *charSpace = "%s ";
+const char *charSpace = "%c ";
 const char Comma = ',';
 const char Colon = ':';
 const char Space = ' ';

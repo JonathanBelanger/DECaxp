@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2018.
+ * Copyright (C) Jonathan D. Belanger 2018-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -23,6 +23,12 @@
  *
  *  V01.000 03-Jul-2018 Jonathan D. Belanger
  *  Initially written.
+ *
+ *  V01.001 09-Jun-2019 Jonathan D. Belanger
+ *  AXP_Allocate_Block, when the block type (length) is negative, needs to
+ *  either have a null value or the address of the block being allocated (so
+ *  that it can be replaced) provided on the call, or the call will get a
+ *  segmentation fault.
  */
 #include "Devices/VirtualDisks/AXP_VirtualDisk.h"
 #include "CommonUtilities/AXP_Utility.h"
@@ -126,7 +132,7 @@ u32 _AXP_VHDX_Create(char *path,
 {
     AXP_VHDX_Handle *vhdx = NULL;
     char *creator = "Digital Alpha AXP Emulator 1.0";
-    u8 *outBuf;
+    u8 *outBuf = NULL;
     AXP_VHDX_ID *ID;
     AXP_VHDX_HDR *hdr;
     AXP_VHDX_REG_HDR *reg;
@@ -153,7 +159,7 @@ u32 _AXP_VHDX_Create(char *path,
      * We'll need this a bit later, but let's go get all the memory we are
      * going to need up front.
      */
-    outBuf = AXP_Allocate_Block(-SIXTYFOUR_K);
+    outBuf = AXP_Allocate_Block(-SIXTYFOUR_K, outBuf);
 
     /*
      * Let's allocate the block we need to maintain access to the virtual disk
@@ -165,7 +171,8 @@ u32 _AXP_VHDX_Create(char *path,
     }
     if (vhdx != NULL)
     {
-        vhdx->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+        vhdx->filePath = AXP_Allocate_Block(-(strlen(path) + 1),
+                                            vhdx->filePath);
         if (vhdx->filePath != NULL)
         {
             strcpy(vhdx->filePath, path);
@@ -958,7 +965,8 @@ u32 _AXP_VHDX_Open(char *path,
          * Allocate a buffer long enough for for the filename (plus null
          * character).
          */
-        vhdx->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+        vhdx->filePath = AXP_Allocate_Block(-(strlen(path) + 1),
+                                            vhdx->filePath);
         if (vhdx->filePath != NULL)
         {
             strcpy(vhdx->filePath, path);
