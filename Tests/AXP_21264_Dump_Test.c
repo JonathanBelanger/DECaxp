@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -16,141 +16,148 @@
  *
  * Description:
  *
- *	This source file contains the main function to test the code dumping code.
+ *  This source file contains the main function to test the code dumping code.
  *
- *	Revision History:
+ * Revision History:
  *
- *	V01.000		06-Nov-2017	Jonathan D. Belanger
- *	Initially written.
+ *  V01.000 06-Nov-2017 Jonathan D. Belanger
+ *  Initially written.
  *
- *	V01.001		07-Nov-2017	Jonathan D. Belanger
- *	Added functionality to the dump function that changes the functions
- *	parameters and return value.
+ *  V01.001 07-Nov-2017 Jonathan D. Belanger
+ *  Added functionality to the dump function that changes the functions
+ *  parameters and return value.
  *
+ *  V01.002 09-Jun-2019 Jonathan D. Belanger
+ *  Updated the location of the image to be dumped.
  */
 #include "CommonUtilities/AXP_Dumps.h"
+
+#ifndef AXP_TEST_DATA_FILES
+#define AXP_TEST_DATA_FILES "."
+#endif
 
 /*
  * Define some values for 1 and 8 Meg
  */
-#define EIGHT_M	(ONE_M * 8)
+#define EIGHT_M (ONE_M * 8)
 
 /*
  * Allocate memory in which to store the instructions read from a file.
  */
-u8	memory[EIGHT_M];
+u8 memory[EIGHT_M];
 
 /*
  * AXP_21264_LoadMemory
- *	This function is called to open a file containing binary data representing
- *	Alpha AXP code and load that data into the memory buffer.
+ *  This function is called to open a file containing binary data representing
+ *  Alpha AXP code and load that data into the memory buffer.
  *
  * Input Parameters:
- *	fileName:
- *		A string containing the name of the binary file to open.
+ *  fileName:
+ *      A string containing the name of the binary file to open.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- *	Bytes loaded (0 means none/error).
+ *  Bytes loaded (0 means none/error).
  */
 int AXP_21264_LoadMemory(char *fileName)
 {
-  bool	done = false;
-  FILE	*fp;
-  int		ii = 0;
-  u32		scratch;
+    bool done = false;
+    FILE *fp;
+    int ii = 0;
+    u32 scratch;
 
-  fp = fopen(fileName, "r");
-  if (fp != NULL)
-  {
-
-    /*
-     * Skip the fist 576 (0x240) bytes of the file.
-     */
-    for (ii = 0; ii < 0x240; ii++)
+    fp = fopen(fileName, "r");
+    if (fp != NULL)
     {
-      if (feof(fp))
-        break;
-      fread(&scratch, 1, 1, fp);
-    }
 
-    /*
-     * Now start reading the file.
-     */
-    ii = 0;
-    while ((feof(fp) == 0) && (done == false))
-    {
-      fread(&memory[ii++], 1, 1, fp);
-      if (ii >= EIGHT_M)
-      {
-        printf(
-          "Input file %s is too big for %d Meg of memory.\n",
-          fileName,
-          (EIGHT_M/ONE_M));
+        /*
+         * Skip the fist 576 (0x240) bytes of the file.
+         */
+        for (ii = 0; ii < 0x240; ii++)
+        {
+            if (feof(fp))
+            {
+                break;
+            }
+            fread(&scratch, 1, 1, fp);
+        }
+
+        /*
+         * Now start reading the file.
+         */
         ii = 0;
-        done = true;
-      }
+        while ((feof(fp) == 0) && (done == false))
+        {
+            fread(&memory[ii++], 1, 1, fp);
+            if (ii >= EIGHT_M)
+            {
+                printf("Input file %s is too big for %d Meg of memory.\n",
+                       fileName,
+                       (EIGHT_M/ONE_M));
+                ii = 0;
+                done = true;
+            }
+        }
+        fclose(fp);
     }
-    fclose(fp);
-  }
-  else
-  {
-    printf("Unable to open file: %s\n", fileName);
-    ii = 0;
-  }
-  return(ii-1);	/* remove the EOF */
+    else
+    {
+        printf("Unable to open file: %s\n", fileName);
+        ii = 0;
+    }
+    return(ii-1);    /* remove the EOF */
 }
 
 /*
  * main
- *	This function is the main function called to exercise the Digital AXP
- *	Alpha 21264 instruction dump code.
+ *  This function is the main function called to exercise the Digital AXP
+ *  Alpha 21264 instruction dump code.
  *
  * Input Parameters:
- *	None.
+ *  None.
  *
  * Output Parameters:
- *	None.
+ *  None.
  *
  * Return Value:
- *	0 for success
- *	<0 for failure
+ *  0 for success
+ *  <0 for failure
  */
 int main()
 {
-  char 	decodedLine[256];
-  u32		*instr;
-  AXP_PC	pc;
-  int		retVal = 0;
-  int		totalBytesRead = 0;
-  int		totalInstructions = 0;
-  int		ii;
+    char decodedLine[256];
+    u32 *instr;
+    AXP_PC pc;
+    int retVal = 0;
+    int totalBytesRead = 0;
+    int totalInstructions = 0;
+    int ii;
 
-  printf("\nAXP 21264 Instruction Dumping Tester\n");
-  totalBytesRead = AXP_LoadExecutable(
-              "../dat/cl67srmrom.exe",
-              memory,
-              sizeof(memory));
-  if (totalBytesRead > 0)
-  {
-    totalInstructions = totalBytesRead / sizeof(AXP_INS_FMT);
-    instr = (u32 *) &memory[0];
-    pc.pal = 1;					/* Set the PALmode bit */
-    pc.res = 0;
-    for (ii = 0; ii < totalInstructions; ii++)
+    printf("\nAXP 21264 Instruction Dumping Tester\n");
+    sprintf(decodedLine, "%s/%s", AXP_TEST_DATA_FILES, "cl67srmrom.exe");
+    totalBytesRead = AXP_LoadExecutable(decodedLine, memory, EIGHT_M);
+//    totalBytesRead = AXP_21264_LoadMemory(decodedLine);
+    if (totalBytesRead > 0)
     {
-      pc.pc = ii;
-      AXP_Decode_Instruction(
-        &pc,
-        (AXP_INS_FMT) instr[ii],
-        false,
-        decodedLine);
-      printf("%s\n", decodedLine);
+        totalInstructions = totalBytesRead / sizeof(AXP_INS_FMT);
+        instr = (u32 *) &memory[0];
+        pc.pal = 1;                    /* Set the PALmode bit */
+        pc.res = 0;
+        for (ii = 0; ii < totalInstructions; ii++)
+        {
+            pc.pc = ii;
+            AXP_Decode_Instruction(&pc,
+                                   (AXP_INS_FMT) instr[ii],
+                                   false,
+                                   decodedLine);
+            printf("%s\n", decodedLine);
+        }
     }
-  }
-  else
-    retVal = -1;
-  return(retVal);
+    else
+    {
+        retVal = -1;
+    }
+    return(retVal);
 }

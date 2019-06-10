@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2018.
+ * Copyright (C) Jonathan D. Belanger 2018-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -23,6 +23,12 @@
  *
  *  V01.000 08-Jul-2018 Jonathan D. Belanger
  *  Initially written.
+ *
+ *  V01.001 09-Jun-2019 Jonathan D. Belanger
+ *  AXP_Allocate_Block, when the block type (length) is negative, needs to
+ *  either have a null value or the address of the block being allocated (so
+ *  that it can be replaced) provided on the call, or the call will get a
+ *  segmentation fault.
  */
 #include "CommonUtilities/AXP_Blocks.h"
 #include "Devices/VirtualDisks/AXP_VHD.h"
@@ -249,7 +255,7 @@ u32 _AXP_VHD_Create(char *path,
     vhd = (AXP_VHDX_Handle *) AXP_Allocate_Block(AXP_VHDX_BLK);
     if (vhd != NULL)
     {
-        vhd->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+        vhd->filePath = AXP_Allocate_Block(-(strlen(path) + 1), vhd->filePath);
         if (vhd->filePath != NULL)
         {
             strcpy(vhd->filePath, path);
@@ -303,7 +309,9 @@ u32 _AXP_VHD_Create(char *path,
         }
     }
     else
+    {
         retVal = AXP_VHD_OUTOFMEMORY;
+    }
 
     /*
      * OK, if we get this far, the parameters are good, the handle has been
@@ -494,7 +502,7 @@ u32 _AXP_VHD_Create(char *path,
                     ((dyn.tableOff + (dyn.maxTableEnt * sizeof(u32))) %
                        sectorSize);
 
-            vhd->bat = AXP_Allocate_Block(-vhd->batLength);
+            vhd->bat = AXP_Allocate_Block(-vhd->batLength, vhd->bat);
             if (vhd->bat != NULL)
             {
                 AXP_VHD_BAT_ENT *batPtr = (AXP_VHD_BAT_ENT *) vhd->bat;
@@ -643,7 +651,7 @@ u32 _AXP_VHD_Open(char *path,
          * Allocate a buffer long enough for for the filename (plus null
          * character).
          */
-        vhd->filePath = AXP_Allocate_Block(-(strlen(path) + 1));
+        vhd->filePath = AXP_Allocate_Block(-(strlen(path) + 1), vhd->filePath);
         if (vhd->filePath != NULL)
         {
             strcpy(vhd->filePath, path);
@@ -830,7 +838,8 @@ u32 _AXP_VHD_Open(char *path,
                                  * BAT information, but first allocate an array
                                  * of sufficient size.
                                  */
-                                vhd->bat = AXP_Allocate_Block(-vhd->batLength);
+                                vhd->bat = AXP_Allocate_Block(-vhd->batLength,
+                                                              vhd->bat);
                                 if (vhd->bat != NULL)
                                 {
                                     outLen = vhd->batLength;

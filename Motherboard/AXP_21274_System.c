@@ -131,7 +131,8 @@ AXP_21274_SYSTEM *AXP_21274_AllocateSystem(void)
             {
                 if (ii < sys->arrayCount)
                 {
-                    sys->array[ii] = AXP_Allocate_Block(-sys->arraySizes);
+                    sys->array[ii] = AXP_Allocate_Block(-sys->arraySizes,
+                                                        sys->array[ii]);
                 }
                 else
                 {

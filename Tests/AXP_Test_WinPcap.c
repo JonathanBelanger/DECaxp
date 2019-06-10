@@ -14,9 +14,9 @@ char *ip62s(struct sockaddr *, char *, u32);
  */
 void interfacePrint(pcap_addr_t *deviceAddr)
 {
-    pcap_addr_t         *tmpDevAddr;
-    struct sockaddr_in  *addr;
-    char                ip6str[128];
+    pcap_addr_t *tmpDevAddr;
+    struct sockaddr_in *addr;
+    char ip6str[128];
 
     /*
      * IP addresses
@@ -43,24 +43,21 @@ void interfacePrint(pcap_addr_t *deviceAddr)
                 if (tmpDevAddr->broadaddr != NULL)
                 {
                     addr = (struct sockaddr_in *) tmpDevAddr->broadaddr;
-                    printf(
-                        "\t\t\tBroadcast Address: %s\n",
-                        ip2s(addr->sin_addr.s_addr));
+                    printf("\t\t\tBroadcast Address: %s\n",
+                           ip2s(addr->sin_addr.s_addr));
                 }
                 if (tmpDevAddr->dstaddr != NULL)
                 {
                     addr = (struct sockaddr_in *) tmpDevAddr->dstaddr;
-                    printf(
-                        "\t\t\tDestination Address: %s\n",
-                        ip2s(addr->sin_addr.s_addr));
+                    printf("\t\t\tDestination Address: %s\n",
+                           ip2s(addr->sin_addr.s_addr));
                 }
                 break;
 
             case AF_INET6:
                 printf("\t\t\tAddress Family Name: AF_INET6\n");
-                printf(
-                    "\t\t\tAddress: %s\n",
-                    ip62s(tmpDevAddr->addr, ip6str, sizeof(ip6str)));
+                printf("\t\t\tAddress: %s\n",
+                       ip62s(tmpDevAddr->addr, ip6str, sizeof(ip6str)));
                 break;
 
             default:
@@ -88,20 +85,19 @@ void interfacePrint(pcap_addr_t *deviceAddr)
 #define IPTOSBUFFERS    12
 char *ip2s(u32 in)
 {
-    static char     output[IPTOSBUFFERS][16];
-    static short    which;
-    u8              *ptr;
+    static char output[IPTOSBUFFERS][16];
+    static short which;
+    u8 *ptr;
 
     ptr = (u8 *) &in;
     which = (((which + 1) == IPTOSBUFFERS) ? 0 : (which + 1));
-    snprintf(
-        output[which],
-        sizeof(output[which]),
-        "%d.%d.%d.%d",
-        ptr[0],
-        ptr[1],
-        ptr[2],
-        ptr[3]);
+    snprintf(output[which],
+             sizeof(output[which]),
+             "%d.%d.%d.%d",
+             ptr[0],
+             ptr[1],
+             ptr[2],
+             ptr[3]);
 
     /*
      * Return the string back to the caller.
@@ -121,14 +117,13 @@ char *ip62s(struct sockaddr *sockaddr, char *address, u32 addrlen)
     /*
      * Get the name information from the sock address supplied on the call.
      */
-    if (getnameinfo(
-            sockaddr,
-            sockaddrlen,
-            address,
-            addrlen,
-            NULL,
-            0,
-            NI_NUMERICHOST) != 0)
+    if (getnameinfo(sockaddr,
+                    sockaddrlen,
+                    address,
+                    addrlen,
+                    NULL,
+                    0,
+                    NI_NUMERICHOST) != 0)
     {
         strcpy(address, "<Error Getting IPv6 hostname>");
     }
@@ -144,9 +139,9 @@ char *ip62s(struct sockaddr *sockaddr, char *address, u32 addrlen)
  */
 int main(void)
 {
-    pcap_if_t   *allDevices = NULL, *device;
-    char        errorBuf[PCAP_ERRBUF_SIZE];
-    int         retVal, ii = 1;
+    pcap_if_t *allDevices = NULL, *device;
+    char errorBuf[PCAP_ERRBUF_SIZE];
+    int retVal, ii = 1;
 
     /*
      * Call WinPcap to return all network devices that can be opened.
@@ -175,19 +170,24 @@ int main(void)
             device = allDevices;
             while (device != NULL)
             {
-                printf(
-                    "%d: %s\n\tDescription: %s\n\tLoopback: %s\n",
-                    ii++,
-                    device->name,
-                    ((device->description != NULL) ?
-                        device->description :
-                        "No description available"),
-                    ((device->flags & PCAP_IF_LOOPBACK) != 0) ? "Yes" : "No");
+                printf("%d: %s\n\tDescription: %s\n\tLoopback: %s\n",
+                       ii++,
+                       device->name,
+                       ((device->description != NULL) ?
+                           device->description :
+                           "No description available"),
+                       ((device->flags & PCAP_IF_LOOPBACK) != 0) ?
+                           "Yes" :
+                           "No");
                 printf("\tAddresses:\n");
                 if (device->addresses != NULL)
+                {
                     interfacePrint(device->addresses);
+                }
                 else
+                {
                     printf("\t\tNone.\n");
+                }
                 device = device->next;
             }
 
@@ -198,10 +198,14 @@ int main(void)
             pcap_freealldevs(allDevices);
         }
         else
+        {
             printf("No interfaces found!  Make sure WinPcap is installed.\n");
+        }
     }
     else
+    {
         printf("Error returned by pcap_findalldevs_ex; %s\n", errorBuf);
+    }
 
     /*
      * Return from the main program.

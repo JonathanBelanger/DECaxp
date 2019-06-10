@@ -36,12 +36,16 @@
  */
 #include <math.h>
 #include <float.h>
-
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Blocks.h"
 #include "CPU/AXP_21264_Instructions.h"
 #include "CPU/AXP_21264_CPU.h"
 #include "CPU/Fbox/AXP_21264_Fbox.h"
+
+#ifndef AXP_TEST_DATA_FILES
+#define AXP_TEST_DATA_FILES "."
+#endif
+#define AXP_MAX_FILENAME_LEN 256
 
 /*
  * IEEE Format:  One of the following:
@@ -1064,7 +1068,8 @@ bool isInf(double fpv)
 int main()
 {
     FILE *fp;
-    char *fileName = "/cygdrive/g/git/DECaxp/Tests/DataFiles/fpTestData/Basic-Types-Inputs.fptest";
+    char *fileNames[] = {"fpTestData/Basic-Types-Inputs.fptest", NULL};
+    char fileName[AXP_MAX_FILENAME_LEN];
     char outStr[1024];
     int offset;
     bool pass = true;
@@ -1086,7 +1091,7 @@ int main()
     int testCnt = 0, passed = 0, failed = 0, skipped = 0;
     int retVal;
     double *Ra, *Rb, *Rc, *Rd, *expectedRc;
-    int ii;
+    int ii, jj = 0;
 
     /*
      * NOTE:     The current simulation takes in one instruction at a time.  The
@@ -1120,183 +1125,152 @@ int main()
     instr.excSum = excSum.excSum;
     instr.excRegMask = 0; /* Exception Register Mask */
 
-    fp = openNextFile(fileName);
-
-    if (fp != NULL)
+    while(fileNames[jj] != NULL)
     {
-        Ra = (double *) &instr.src1v.fp.uq;
-        Rb = (double *) &instr.src2v.fp.uq;
-        Rd = (double *) &src3v.uq;
-        Rc = (double *) &instr.destv.fp.uq;
-        expectedRc = (double *) &expectedResults;
-        while ((retVal = parseNextLine(fp,
-                                       &oper,
-                                       &operandFmt,
-                                       &resultFmt,
-                                       &roundMode,
-                                       &trappedException,
-                                       &instr.src1v.fp,
-                                       &instr.src2v.fp,
-                                       &src3v,
-                                       &useResults,
-                                       &expectedResults,
-                                       &results,
-                                       &FPCR.FPCR)) != 0)
+        sprintf(fileName, "%s/%s", AXP_TEST_DATA_FILES, fileNames[jj]);
+        fp = openNextFile(fileName);
+
+        if (fp != NULL)
         {
-            testCnt++;
-            offset = 0;
-            printOut = false;
-            switch (retVal)
+            Ra = (double *) &instr.src1v.fp.uq;
+            Rb = (double *) &instr.src2v.fp.uq;
+            Rd = (double *) &src3v.uq;
+            Rc = (double *) &instr.destv.fp.uq;
+            expectedRc = (double *) &expectedResults;
+            while ((retVal = parseNextLine(fp,
+                                           &oper,
+                                           &operandFmt,
+                                           &resultFmt,
+                                           &roundMode,
+                                           &trappedException,
+                                           &instr.src1v.fp,
+                                           &instr.src2v.fp,
+                                           &src3v,
+                                           &useResults,
+                                           &expectedResults,
+                                           &results,
+                                           &FPCR.FPCR)) != 0)
             {
-                case 1:
-                    encoding = AXP_FP_ENCODE(&instr.src1v.fp.fpr, true);
-                    switch (oper)
-                    {
+                testCnt++;
+                offset = 0;
+                printOut = false;
+                switch (retVal)
+                {
+                    case 1:
+                        encoding = AXP_FP_ENCODE(&instr.src1v.fp.fpr, true);
+                        switch (oper)
+                        {
 
-                        /*
-                         * TODO: It may be worth utilizing the comparison
-                         * instructions (CMPTxx) below, instead of the compiler
-                         * provided ones.
-                         *
-                         * TODO: We should look at also executing the
-                         * instructions for T, G, and F floats.  This is
-                         * starting to look like a separate testing function.
-                         */
-                        case addAction:
-                        case copySignAction:
-                        case subtractAction:
-                        case multiplyAction:
-                        case divideAction:
-                        case squareRootAction:
-                            offset += sprintf(&outStr[offset],
-                                              "%7d: ",
-                                              testCnt + 4);
-                            if (oper == addAction)
-                            {
-                                offset += sprintf(&outStr[offset], "ADDS");
-                                instr.function = AXP_FUNC_ADDS;
-                                if (FPCR.FPCR.ine == 1)
+                            /*
+                             * TODO: It may be worth utilizing the comparison
+                             * instructions (CMPTxx) below, instead of the compiler
+                             * provided ones.
+                             *
+                             * TODO: We should look at also executing the
+                             * instructions for T, G, and F floats.  This is
+                             * starting to look like a separate testing function.
+                             */
+                            case addAction:
+                            case copySignAction:
+                            case subtractAction:
+                            case multiplyAction:
+                            case divideAction:
+                            case squareRootAction:
+                                offset += sprintf(&outStr[offset],
+                                                  "%7d: ",
+                                                  testCnt + 4);
+                                if (oper == addAction)
                                 {
-                                    instr.function |= AXP_FUNC_ADDS_SUI;
+                                    offset += sprintf(&outStr[offset], "ADDS");
+                                    instr.function = AXP_FUNC_ADDS;
+                                    if (FPCR.FPCR.ine == 1)
+                                    {
+                                        instr.function |= AXP_FUNC_ADDS_SUI;
+                                    }
                                 }
-                            }
-                            else if (oper == copySignAction)
-                            {
-                                offset += sprintf(&outStr[offset], "CPYS");
-                                instr.function = AXP_FUNC_CPYS;
-                            }
-                            else if (oper == subtractAction)
-                            {
-                                offset += sprintf(&outStr[offset], "SUBS");
-                                instr.function = AXP_FUNC_SUBS;
-                                if (FPCR.FPCR.ine == 1)
+                                else if (oper == copySignAction)
                                 {
-                                    instr.function |= AXP_FUNC_SUBS_SUI;
+                                    offset += sprintf(&outStr[offset], "CPYS");
+                                    instr.function = AXP_FUNC_CPYS;
                                 }
-                            }
-                            else if (oper == multiplyAction)
-                            {
-                                offset += sprintf(&outStr[offset], "MULS");
-                                instr.function = AXP_FUNC_MULS;
-                                if (FPCR.FPCR.ine == 1)
+                                else if (oper == subtractAction)
                                 {
-                                    instr.function |= AXP_FUNC_MULS_SUI;
+                                    offset += sprintf(&outStr[offset], "SUBS");
+                                    instr.function = AXP_FUNC_SUBS;
+                                    if (FPCR.FPCR.ine == 1)
+                                    {
+                                        instr.function |= AXP_FUNC_SUBS_SUI;
+                                    }
                                 }
-                            }
-                            else if (oper == divideAction)
-                            {
-                                offset += sprintf(&outStr[offset], "DIVS");
-                                instr.function = AXP_FUNC_DIVS;
-                                if (FPCR.FPCR.ine == 1)
+                                else if (oper == multiplyAction)
                                 {
-                                    instr.function |= AXP_FUNC_DIVS_SUI;
+                                    offset += sprintf(&outStr[offset], "MULS");
+                                    instr.function = AXP_FUNC_MULS;
+                                    if (FPCR.FPCR.ine == 1)
+                                    {
+                                        instr.function |= AXP_FUNC_MULS_SUI;
+                                    }
                                 }
-                            }
-                            else if (oper == squareRootAction)
-                            {
-                                offset += sprintf(&outStr[offset], "SQRTS");
-                                instr.function = AXP_FUNC_SQRTS;
-                                if (FPCR.FPCR.ine == 1)
+                                else if (oper == divideAction)
                                 {
-                                    instr.function |= AXP_FUNC_SQRTS_SUI;
+                                    offset += sprintf(&outStr[offset], "DIVS");
+                                    instr.function = AXP_FUNC_DIVS;
+                                    if (FPCR.FPCR.ine == 1)
+                                    {
+                                        instr.function |= AXP_FUNC_DIVS_SUI;
+                                    }
                                 }
-                            }
-                            offset += sprintf(&outStr[offset],
-                                              "(%d): Ra: %f, Rb: %f; expecting"
-                                              " %f (0x%016llx) --> ",
-                                              useResults,
-                                              *Ra,
-                                              *Rb,
-                                              *expectedRc,
-                                              FPCR.FPCR64);
-                            instr.opcode = FLTI;
-                            memset(&instr.insFpcr, 0, sizeof(u64));
-                            if (oper == addAction)
-                            {
-                                retValIns = AXP_ADDS(cpu, &instr);
-                            }
-                            else if (oper == copySignAction)
-                            {
-                                retValIns = AXP_CPYS(cpu, &instr);
-                            }
-                            else if (oper == subtractAction)
-                            {
-                                retValIns = AXP_SUBS(cpu, &instr);
-                            }
-                            else if (oper == multiplyAction)
-                            {
-                                retValIns = AXP_MULS(cpu, &instr);
-                            }
-                            else if (oper == divideAction)
-                            {
-                                retValIns = AXP_DIVS(cpu, &instr);
-                            }
-                            else if (oper == squareRootAction)
-                            {
-                                retValIns = AXP_SQRTS(cpu, &instr);
-                            }
-                            if (useResults == 2)
-                            {
-
-                                /*
-                                 * We are only expected an exception.  No need
-                                 * to compare the expected Rc to the returned
-                                 * Rc.  Just compare the expected FPCR to the
-                                 * one in the instruction.
-                                 */
-                                if (memcmp(&FPCR.FPCR,
-                                           &instr.insFpcr,
-                                           sizeof(FPCR.FPCR)) == 0)
+                                else if (oper == squareRootAction)
                                 {
-                                    passed++;
-                                    offset += sprintf(&outStr[offset],
-                                                      "passed");
+                                    offset += sprintf(&outStr[offset], "SQRTS");
+                                    instr.function = AXP_FUNC_SQRTS;
+                                    if (FPCR.FPCR.ine == 1)
+                                    {
+                                        instr.function |= AXP_FUNC_SQRTS_SUI;
+                                    }
                                 }
-                                else
+                                offset += sprintf(&outStr[offset],
+                                                  "(%d): Ra: %f, Rb: %f; expecting"
+                                                  " %f (0x%016llx) --> ",
+                                                  useResults,
+                                                  *Ra,
+                                                  *Rb,
+                                                  *expectedRc,
+                                                  FPCR.FPCR64);
+                                instr.opcode = FLTI;
+                                memset(&instr.insFpcr, 0, sizeof(u64));
+                                if (oper == addAction)
                                 {
-                                    pass = false;
-                                    failed++;
-                                    FPCR.FPCR = instr.insFpcr;
-                                    offset += sprintf(&outStr[offset],
-                                                      " failed FPCR: 0x%016llx",
-                                                      FPCR.FPCR64);
-                                    printOut = true;
+                                    retValIns = AXP_ADDS(cpu, &instr);
                                 }
-                            }
-                            else if ((useResults == 1) || (useResults == 3))
-                            {
-
-                                /*
-                                 * OK, we got 2 things to check out.  First,
-                                 * that the returned Rc is equal to the
-                                 * expected Rc.
-                                 */
-                                if (*expectedRc == *Rc)
+                                else if (oper == copySignAction)
+                                {
+                                    retValIns = AXP_CPYS(cpu, &instr);
+                                }
+                                else if (oper == subtractAction)
+                                {
+                                    retValIns = AXP_SUBS(cpu, &instr);
+                                }
+                                else if (oper == multiplyAction)
+                                {
+                                    retValIns = AXP_MULS(cpu, &instr);
+                                }
+                                else if (oper == divideAction)
+                                {
+                                    retValIns = AXP_DIVS(cpu, &instr);
+                                }
+                                else if (oper == squareRootAction)
+                                {
+                                    retValIns = AXP_SQRTS(cpu, &instr);
+                                }
+                                if (useResults == 2)
                                 {
 
                                     /*
-                                     * OK, the values matched.  Now we need to
-                                     * check the returned exceptions.
+                                     * We are only expected an exception.  No need
+                                     * to compare the expected Rc to the returned
+                                     * Rc.  Just compare the expected FPCR to the
+                                     * one in the instruction.
                                      */
                                     if (memcmp(&FPCR.FPCR,
                                                &instr.insFpcr,
@@ -1308,46 +1282,94 @@ int main()
                                     }
                                     else
                                     {
-                                        FPCR.FPCR = instr.insFpcr;
                                         pass = false;
                                         failed++;
+                                        FPCR.FPCR = instr.insFpcr;
                                         offset += sprintf(&outStr[offset],
-                                                          "Rc values matched, "
-                                                          "exception failed "
-                                                          "FPCR: 0x%016llx",
+                                                          " failed FPCR: 0x%016llx",
                                                           FPCR.FPCR64);
                                         printOut = true;
                                     }
                                 }
-                                else
+                                else if ((useResults == 1) || (useResults == 3))
                                 {
 
                                     /*
-                                     * OK, the values did not match.  If we
-                                     * were supposed to get exceptions, then
-                                     * let's check for their correctness.
-                                     * Otherwise, we failed.
+                                     * OK, we got 2 things to check out.  First,
+                                     * that the returned Rc is equal to the
+                                     * expected Rc.
                                      */
-                                    if (useResults == 3)
+                                    if (*expectedRc == *Rc)
                                     {
-                                        pass = false;
-                                        failed++;
 
                                         /*
-                                         * OK, the values did not matched.  Now
-                                         * we need to check the returned
-                                         * exceptions.
+                                         * OK, the values matched.  Now we need to
+                                         * check the returned exceptions.
                                          */
                                         if (memcmp(&FPCR.FPCR,
                                                    &instr.insFpcr,
                                                    sizeof(FPCR.FPCR)) == 0)
                                         {
+                                            passed++;
+                                            offset += sprintf(&outStr[offset],
+                                                              "passed");
+                                        }
+                                        else
+                                        {
+                                            FPCR.FPCR = instr.insFpcr;
                                             pass = false;
                                             failed++;
                                             offset += sprintf(&outStr[offset],
-                                                              "Rc %f, FPCRs "
-                                                              "matched.",
-                                                              *Rc);
+                                                              "Rc values matched, "
+                                                              "exception failed "
+                                                              "FPCR: 0x%016llx",
+                                                              FPCR.FPCR64);
+                                            printOut = true;
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        /*
+                                         * OK, the values did not match.  If we
+                                         * were supposed to get exceptions, then
+                                         * let's check for their correctness.
+                                         * Otherwise, we failed.
+                                         */
+                                        if (useResults == 3)
+                                        {
+                                            pass = false;
+                                            failed++;
+
+                                            /*
+                                             * OK, the values did not matched.  Now
+                                             * we need to check the returned
+                                             * exceptions.
+                                             */
+                                            if (memcmp(&FPCR.FPCR,
+                                                       &instr.insFpcr,
+                                                       sizeof(FPCR.FPCR)) == 0)
+                                            {
+                                                pass = false;
+                                                failed++;
+                                                offset += sprintf(&outStr[offset],
+                                                                  "Rc %f, FPCRs "
+                                                                  "matched.",
+                                                                  *Rc);
+                                            }
+                                            else
+                                            {
+                                                pass = false;
+                                                failed++;
+                                                FPCR.FPCR = instr.insFpcr;
+                                                offset += sprintf(&outStr[offset],
+                                                                  "Nothing matched"
+                                                                  ", Rc: %f, FPCR:"
+                                                                  " 0x%016llx",
+                                                                  *Rc,
+                                                                  FPCR.FPCR64);
+                                            }
+                                            printOut = true;
                                         }
                                         else
                                         {
@@ -1355,316 +1377,304 @@ int main()
                                             failed++;
                                             FPCR.FPCR = instr.insFpcr;
                                             offset += sprintf(&outStr[offset],
-                                                              "Nothing matched"
-                                                              ", Rc: %f, FPCR:"
-                                                              " 0x%016llx",
+                                                              " failed Rc: %f "
+                                                              "(0x%016llx)",
                                                               *Rc,
                                                               FPCR.FPCR64);
+                                            printOut = true;
                                         }
-                                        printOut = true;
-                                    }
-                                    else
-                                    {
-                                        pass = false;
-                                        failed++;
-                                        FPCR.FPCR = instr.insFpcr;
-                                        offset += sprintf(&outStr[offset],
-                                                          " failed Rc: %f "
-                                                          "(0x%016llx)",
-                                                          *Rc,
-                                                          FPCR.FPCR64);
-                                        printOut = true;
                                     }
                                 }
-                            }
-                            else
-                            {
-
-                                /*
-                                 * We were not expecting anything.  There is
-                                 * probably some test that can occur, but I
-                                 * have no idea what it might be.  I'm just
-                                 * going to blindly assume we passed.
-                                 */
-                                passed++;
-                                offset += sprintf(&outStr[offset], "passed");
-                            }
-                            offset += sprintf(&outStr[offset],
-                                              ", AXP Exception: %d\n",
-                                              retValIns);
-                            break;
-
-                        case isSignedAction:
-                            offset += sprintf(&outStr[offset],
-                                              "%7d: isSigned: %f, expecting "
-                                              "%d --> ",
-                                              testCnt + 4,
-                                              *Ra,
-                                              results);
-                            if (isSigned(*Ra) == results)
-                            {
-                                passed++;
-                                offset += sprintf(&outStr[offset], "passed\n");
-                            }
-                            else
-                            {
-                                pass = false;
-                                failed++;
-                                offset += sprintf(&outStr[offset],
-                                                  "failed (0x%016llx)\n",
-                                                  instr.src1v.fp.uq);
-                                printOut = true;
-                            }
-                            break;
-
-                        case isNormalAction:
-                            offset += sprintf(&outStr[offset],
-                                              "%7d: isNormal (%s): %f, "
-                                              "expecting %d --> ",
-                                              testCnt + 4,
-                                              cvtEncoding[encoding],
-                                              *Ra,
-                                              results);
-                            if (isnormal(*Ra) == results)
-                            {
-                                passed++;
-                                offset += sprintf(&outStr[offset], "passed\n");
-                            }
-                            else
-                            {
-                                pass = false;
-                                failed++;
-                                offset += sprintf(&outStr[offset],
-                                                  "failed (0x%016llx)\n",
-                                                  instr.src1v.fp.uq);
-                                printOut = true;
-                            }
-                            break;
-
-                        case isFiniteAction:
-                            offset += sprintf(&outStr[offset],
-                                              "%7d: isFinite (%s): %f, "
-                                              "expecting %d --> ",
-                                              testCnt + 4,
-                                              cvtEncoding[encoding],
-                                              *Ra,
-                                              results);
-                            if (isfinite(*Ra) == results)
-                            {
-                                passed++;
-                                offset += sprintf(&outStr[offset], "passed\n");
-                            }
-                            else
-                            {
-                                pass = false;
-                                failed++;
-                                offset += sprintf(&outStr[offset],
-                                                  "failed (0x%016llx)\n",
-                                                  instr.src1v.fp.uq);
-                                printOut = true;
-                            }
-                            break;
-
-                        case isZeroAction:
-                            offset += sprintf(&outStr[offset],
-                                              "%7d: isZero (%s): %f, "
-                                              "expecting %d --> ",
-                                              testCnt + 4,
-                                              cvtEncoding[encoding],
-                                              *Ra,
-                                              results);
-                            if ((*Ra == 0.0) == results)
-                            {
-                                passed++;
-                                offset += sprintf(&outStr[offset], "passed\n");
-                            }
-                            else
-                            {
-                                pass = false;
-                                failed++;
-                                offset += sprintf(&outStr[offset],
-                                                  "failed (0x%016llx)\n",
-                                                  instr.src1v.fp.uq);
-                                printOut = true;
-                            }
-                            break;
-
-                        case isSubnormalAction:
-                            offset += sprintf(&outStr[offset],
-                                              "%7d: isSubnormal (%s): %f, "
-                                              "expecting %d --> ",
-                                              testCnt + 4,
-                                              cvtEncoding[encoding],
-                                              *Ra,
-                                              results);
-                            if ((fpclassify(*Ra) == FP_SUBNORMAL) == results)
-                            {
-                                passed++;
-                                offset += sprintf(&outStr[offset], "passed\n");
-                            }
-                            else
-                            {
-                                pass = false;
-                                failed++;
-                                offset += sprintf(&outStr[offset],
-                                                  "failed (0x%016llx)\n",
-                                                  instr.src1v.fp.uq);
-                                printOut = true;
-                            }
-                            break;
-
-                        case isInfiniteAction:
-                            offset += sprintf(&outStr[offset],
-                                              "%7d: isInfinite (%s): %f, "
-                                              "expecting %d --> ",
-                                              testCnt + 4,
-                                              cvtEncoding[encoding],
-                                              *Ra,
-                                              results);
-                            if (isInf(*Ra) == results)
-                            {
-                                passed++;
-                                offset += sprintf(&outStr[offset], "passed\n");
-                            }
-                            else
-                            {
-                                pass = false;
-                                failed++;
-                                offset += sprintf(&outStr[offset],
-                                                  "failed (0x%016llx)\n",
-                                                  instr.src1v.fp.uq);
-                                printOut = true;
-                            }
-                            break;
-
-                        case isNotANumberAction:
-                            offset += sprintf(&outStr[offset],
-                                              "%7d: isNotANumber (%s): %f, "
-                                              "expecting %d --> ",
-                                              testCnt + 4,
-                                              cvtEncoding[encoding],
-                                              *Ra,
-                                              results);
-                            if (isnan(*Ra) == results)
-                            {
-                                passed++;
-                                offset += sprintf(&outStr[offset], "passed\n");
-                            }
-                            else
-                            {
-                                pass = false;
-                                failed++;
-                                offset += sprintf(&outStr[offset],
-                                                  "failed (0x%016llx)\n",
-                                                  instr.src1v.fp.uq);
-                                printOut = true;
-                            }
-                            break;
-
-                        case isSignalingAction:
-                            offset += sprintf(&outStr[offset],
-                                              "%7d: isSignaling (%s): %f, "
-                                              "expecting %d --> ",
-                                              testCnt + 4,
-                                              cvtEncoding[encoding],
-                                              *Ra,
-                                              results);
-                            if (isSignaling(*Ra) == results)
-                            {
-                                passed++;
-                                offset += sprintf(&outStr[offset], "passed\n");
-                            }
-                            else
-                            {
-                                pass = false;
-                                failed++;
-                                offset += sprintf(&outStr[offset],
-                                                  "failed (0x%016llx)\n",
-                                                  instr.src1v.fp.uq);
-                                printOut = true;
-                            }
-                            break;
-
-                        /*
-                        * These are not yet implemented.
-                        */
-                        case multiplyAddAction:
-                        case remainderAction:
-                        case roundFloatToIntAction:
-                        case convertFloatToFloatAction:
-                        case convertFloatToIntAction:
-                        case convertIntToFloatAction:
-                        case convertToDecimalStrAction:
-                        case convertDecimalStrToFloatAction:
-                        case quietComparisonAction:
-                        case signalingComparisonAction:
-                        case copyAction:
-                        case negateAction:
-                        case absoluteValueAction:
-                        case scalbAction:
-                        case logbAction:
-                        case nextAfterAction:
-                        case classAction:
-                        case minNumAction:
-                        case maxNumAction:
-                        case minNumMagAction:
-                        case maxNumMagAction:
-                        case sameQuantumAction:
-                        case quantizeAction:
-                        case nextUpAction:
-                        case nextDownAction:
-                        case equivalentAction:
-                            for (ii = 0; ii < AXP_NUM_OPER; ii++)
-                            {
-                                if (oper == cvtOperStr[ii].oper)
+                                else
                                 {
-                                    break;
+
+                                    /*
+                                     * We were not expecting anything.  There is
+                                     * probably some test that can occur, but I
+                                     * have no idea what it might be.  I'm just
+                                     * going to blindly assume we passed.
+                                     */
+                                    passed++;
+                                    offset += sprintf(&outStr[offset], "passed");
                                 }
-                            }
-                            FPCR.FPCR = instr.insFpcr;
-                            offset +=sprintf(&outStr[offset],
-                                             "%7d: %s (%s): Ra: %f, Rb: %f, "
-                                             "Rd: %f, expecting useResults %d,"
-                                             " results: %d, Rc: %f (0x%016llx)"
-                                             "\n",
-                                             testCnt + 4,
-                                             cvtOperStr[ii].humanReadable,
-                                             cvtEncoding[encoding],
-                                             *Ra,
-                                             *Rb,
-                                             *Rd,
-                                             useResults,
-                                             results,
-                                             *expectedRc,
-                                             FPCR.FPCR64);
-                            skipped++;
-                            break;
+                                offset += sprintf(&outStr[offset],
+                                                  ", AXP Exception: %d\n",
+                                                  retValIns);
+                                break;
 
-                        case NoOp:
-                            break;
-                    }
-                    break;
+                            case isSignedAction:
+                                offset += sprintf(&outStr[offset],
+                                                  "%7d: isSigned: %f, expecting "
+                                                  "%d --> ",
+                                                  testCnt + 4,
+                                                  *Ra,
+                                                  results);
+                                if (isSigned(*Ra) == results)
+                                {
+                                    passed++;
+                                    offset += sprintf(&outStr[offset], "passed\n");
+                                }
+                                else
+                                {
+                                    pass = false;
+                                    failed++;
+                                    offset += sprintf(&outStr[offset],
+                                                      "failed (0x%016llx)\n",
+                                                      instr.src1v.fp.uq);
+                                    printOut = true;
+                                }
+                                break;
 
-                case -1:
-                    offset += sprintf(&outStr[offset],
-                                      "%7d: >>>>>> ReadNextLine Failed <<<<<\n",
-                                      testCnt + 4);
-                    pass = false;
-                    failed++;
-                    printOut = true;
-                    break;
+                            case isNormalAction:
+                                offset += sprintf(&outStr[offset],
+                                                  "%7d: isNormal (%s): %f, "
+                                                  "expecting %d --> ",
+                                                  testCnt + 4,
+                                                  cvtEncoding[encoding],
+                                                  *Ra,
+                                                  results);
+                                if (isnormal(*Ra) == results)
+                                {
+                                    passed++;
+                                    offset += sprintf(&outStr[offset], "passed\n");
+                                }
+                                else
+                                {
+                                    pass = false;
+                                    failed++;
+                                    offset += sprintf(&outStr[offset],
+                                                      "failed (0x%016llx)\n",
+                                                      instr.src1v.fp.uq);
+                                    printOut = true;
+                                }
+                                break;
+
+                            case isFiniteAction:
+                                offset += sprintf(&outStr[offset],
+                                                  "%7d: isFinite (%s): %f, "
+                                                  "expecting %d --> ",
+                                                  testCnt + 4,
+                                                  cvtEncoding[encoding],
+                                                  *Ra,
+                                                  results);
+                                if (isfinite(*Ra) == results)
+                                {
+                                    passed++;
+                                    offset += sprintf(&outStr[offset], "passed\n");
+                                }
+                                else
+                                {
+                                    pass = false;
+                                    failed++;
+                                    offset += sprintf(&outStr[offset],
+                                                      "failed (0x%016llx)\n",
+                                                      instr.src1v.fp.uq);
+                                    printOut = true;
+                                }
+                                break;
+
+                            case isZeroAction:
+                                offset += sprintf(&outStr[offset],
+                                                  "%7d: isZero (%s): %f, "
+                                                  "expecting %d --> ",
+                                                  testCnt + 4,
+                                                  cvtEncoding[encoding],
+                                                  *Ra,
+                                                  results);
+                                if ((*Ra == 0.0) == results)
+                                {
+                                    passed++;
+                                    offset += sprintf(&outStr[offset], "passed\n");
+                                }
+                                else
+                                {
+                                    pass = false;
+                                    failed++;
+                                    offset += sprintf(&outStr[offset],
+                                                      "failed (0x%016llx)\n",
+                                                      instr.src1v.fp.uq);
+                                    printOut = true;
+                                }
+                                break;
+
+                            case isSubnormalAction:
+                                offset += sprintf(&outStr[offset],
+                                                  "%7d: isSubnormal (%s): %f, "
+                                                  "expecting %d --> ",
+                                                  testCnt + 4,
+                                                  cvtEncoding[encoding],
+                                                  *Ra,
+                                                  results);
+                                if ((fpclassify(*Ra) == FP_SUBNORMAL) == results)
+                                {
+                                    passed++;
+                                    offset += sprintf(&outStr[offset], "passed\n");
+                                }
+                                else
+                                {
+                                    pass = false;
+                                    failed++;
+                                    offset += sprintf(&outStr[offset],
+                                                      "failed (0x%016llx)\n",
+                                                      instr.src1v.fp.uq);
+                                    printOut = true;
+                                }
+                                break;
+
+                            case isInfiniteAction:
+                                offset += sprintf(&outStr[offset],
+                                                  "%7d: isInfinite (%s): %f, "
+                                                  "expecting %d --> ",
+                                                  testCnt + 4,
+                                                  cvtEncoding[encoding],
+                                                  *Ra,
+                                                  results);
+                                if (isInf(*Ra) == results)
+                                {
+                                    passed++;
+                                    offset += sprintf(&outStr[offset], "passed\n");
+                                }
+                                else
+                                {
+                                    pass = false;
+                                    failed++;
+                                    offset += sprintf(&outStr[offset],
+                                                      "failed (0x%016llx)\n",
+                                                      instr.src1v.fp.uq);
+                                    printOut = true;
+                                }
+                                break;
+
+                            case isNotANumberAction:
+                                offset += sprintf(&outStr[offset],
+                                                  "%7d: isNotANumber (%s): %f, "
+                                                  "expecting %d --> ",
+                                                  testCnt + 4,
+                                                  cvtEncoding[encoding],
+                                                  *Ra,
+                                                  results);
+                                if (isnan(*Ra) == results)
+                                {
+                                    passed++;
+                                    offset += sprintf(&outStr[offset], "passed\n");
+                                }
+                                else
+                                {
+                                    pass = false;
+                                    failed++;
+                                    offset += sprintf(&outStr[offset],
+                                                      "failed (0x%016llx)\n",
+                                                      instr.src1v.fp.uq);
+                                    printOut = true;
+                                }
+                                break;
+
+                            case isSignalingAction:
+                                offset += sprintf(&outStr[offset],
+                                                  "%7d: isSignaling (%s): %f, "
+                                                  "expecting %d --> ",
+                                                  testCnt + 4,
+                                                  cvtEncoding[encoding],
+                                                  *Ra,
+                                                  results);
+                                if (isSignaling(*Ra) == results)
+                                {
+                                    passed++;
+                                    offset += sprintf(&outStr[offset], "passed\n");
+                                }
+                                else
+                                {
+                                    pass = false;
+                                    failed++;
+                                    offset += sprintf(&outStr[offset],
+                                                      "failed (0x%016llx)\n",
+                                                      instr.src1v.fp.uq);
+                                    printOut = true;
+                                }
+                                break;
+
+                            /*
+                            * These are not yet implemented.
+                            */
+                            case multiplyAddAction:
+                            case remainderAction:
+                            case roundFloatToIntAction:
+                            case convertFloatToFloatAction:
+                            case convertFloatToIntAction:
+                            case convertIntToFloatAction:
+                            case convertToDecimalStrAction:
+                            case convertDecimalStrToFloatAction:
+                            case quietComparisonAction:
+                            case signalingComparisonAction:
+                            case copyAction:
+                            case negateAction:
+                            case absoluteValueAction:
+                            case scalbAction:
+                            case logbAction:
+                            case nextAfterAction:
+                            case classAction:
+                            case minNumAction:
+                            case maxNumAction:
+                            case minNumMagAction:
+                            case maxNumMagAction:
+                            case sameQuantumAction:
+                            case quantizeAction:
+                            case nextUpAction:
+                            case nextDownAction:
+                            case equivalentAction:
+                                for (ii = 0; ii < AXP_NUM_OPER; ii++)
+                                {
+                                    if (oper == cvtOperStr[ii].oper)
+                                    {
+                                        break;
+                                    }
+                                }
+                                FPCR.FPCR = instr.insFpcr;
+                                offset +=sprintf(&outStr[offset],
+                                                 "%7d: %s (%s): Ra: %f, Rb: %f, "
+                                                 "Rd: %f, expecting useResults %d,"
+                                                 " results: %d, Rc: %f (0x%016llx)"
+                                                 "\n",
+                                                 testCnt + 4,
+                                                 cvtOperStr[ii].humanReadable,
+                                                 cvtEncoding[encoding],
+                                                 *Ra,
+                                                 *Rb,
+                                                 *Rd,
+                                                 useResults,
+                                                 results,
+                                                 *expectedRc,
+                                                 FPCR.FPCR64);
+                                skipped++;
+                                break;
+
+                            case NoOp:
+                                break;
+                        }
+                        break;
+
+                    case -1:
+                        offset += sprintf(&outStr[offset],
+                                          "%7d: >>>>>> ReadNextLine Failed <<<<<\n",
+                                          testCnt + 4);
+                        pass = false;
+                        failed++;
+                        printOut = true;
+                        break;
+                }
+                if (printOut)
+                {
+                    printf("%s", outStr);
+                }
             }
-            if (printOut)
-            {
-                printf("%s", outStr);
-            }
+            fclose(fp);
         }
-        fclose(fp);
-    }
-    else
-    {
-        printf("Unable to open test data file: %s\n", fileName);
-        pass = false;
+        else
+        {
+            printf("Unable to open test data file: %s\n", fileName);
+            pass = false;
+        }
+        jj++;
     }
 
     /*

@@ -1,18 +1,18 @@
 /*
  * Copyright (C) Jonathan D. Belanger 2019.
+ * All Rights Reserved.
  *
- *  DECaxp is free software: you can redistribute it and/or modify it under
- *  the terms of the GNU General Public License as published by the Free
- *  Software Foundation, either version 3 of the License, or (at your option)
- *  any later version.
+ * This software is furnished under a license and may be used and copied only
+ * in accordance with the terms of such license and with the inclusion of the
+ * above copyright notice.  This software or any other copies thereof may not
+ * be provided or otherwise made available to any other person.  No title to
+ * and ownership of the software is hereby transferred.
  *
- *  DECaxp is distributed in the hope that it will be useful, but WITHOUT ANY
- *  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- *  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- *  details.
+ * The information in this software is subject to change without notice and
+ * should not be construed as a commitment by the author or co-authors.
  *
- *  You should have received a copy of the GNU General Public License along
- *  with along with DECaxp.  If not, see <https://www.gnu.org/licenses/>.
+ * The author and any co-authors assume no responsibility for the use or
+ * reliability of this software.
  *
  * Description:
  *

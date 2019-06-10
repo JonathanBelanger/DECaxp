@@ -28,6 +28,11 @@
 #include "CPU/AXP_21264_CPU.h"
 #include "CPU/Ibox/AXP_21264_Ibox.h"
 
+#ifndef AXP_TEST_DATA_FILES
+#define AXP_TEST_DATA_FILES "."
+#endif
+#define AXP_MAX_FILENAME_LEN 256
+
 /*
  * main
  *  This function is compiled in when unit testing.  It exercises the branch
@@ -45,22 +50,15 @@
 int main()
 {
     FILE *fp;
-    char *fileList[] =
-        {
-            "/cygdrive/g/git/DECaxp/Tests/DataFiles/trace1.txt",
-            "/cygdrive/g/git/DECaxp/Tests/DataFiles/trace2.txt",
-            "/cygdrive/g/git/DECaxp/Tests/DataFiles/trace3.txt",
-            "/cygdrive/g/git/DECaxp/Tests/DataFiles/trace4.txt",
-            "/cygdrive/g/git/DECaxp/Tests/DataFiles/trace5.txt"
-        };
-    int lineCnt[] =
-        {
-            2213673,
-            1792835,
-            1546797,
-            895842,
-            2422049
-        };
+    char *fileNames[] =
+    {
+        "trace1.txt",
+        "trace2.txt",
+        "trace3.txt",
+        "trace4.txt",
+        "trace5.txt"
+    };
+    char fileName[AXP_MAX_FILENAME_LEN];
     bool taken;
     int takenInt;
     int ii, jj, kk;
@@ -86,7 +84,7 @@ int main()
     int totalChoiceUsed;
     int totalChoiceCorrect;
     int totalChoiceWrong;
-    int numberOfFiles = (int) (sizeof(fileList)/sizeof(char *));
+    int numberOfFiles = (int) (sizeof(fileNames)/sizeof(char *));
 
     /*
      * NOTE:  The current simulation takes in one instruction at a time.  The
@@ -96,7 +94,7 @@ int main()
      */
     printf("\nAXP 21264 Predictions Unit Tester\n");
     printf("%d trace files to be processed\n\n",
-           (int) (sizeof(fileList)/sizeof(char *)));
+           (int) (sizeof(fileNames)/sizeof(char *)));
     cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
     for (kk = 0; kk < 3; kk++)
     {
@@ -133,9 +131,22 @@ int main()
         }
         for (ii = 0; ii < numberOfFiles; ii++)
         {
-            fp = fopen(fileList[ii], "r");
+            sprintf(fileName, "%s/%s", AXP_TEST_DATA_FILES, fileNames[ii]);
+            fp = fopen(fileName, "r");
             if (fp != NULL)
             {
+                int lineCount = 0;
+                int ch;
+
+                while(!feof(fp))
+                {
+                    ch = fgetc(fp);
+                    if(ch == '\n')
+                    {
+                        lineCount++;
+                    }
+                }
+                fseek(fp, 0, SEEK_SET);
                 insCnt = 0;
                 predictedCnt = 0;
                 localCnt = 0;
@@ -143,8 +154,8 @@ int main()
                 choiceUsed = 0;
                 choiceCorrect = 0;
                 printf("\nProcessing trace file: %s (%d)...\n",
-                       fileList[ii],
-                       lineCnt[ii]);
+                       fileNames[ii],
+                       lineCount);
                 while (feof(fp) == 0)
                 {
                     fscanf(fp, "%d %d\n", &vpcInt, &takenInt);
@@ -170,8 +181,10 @@ int main()
 
                     /*
                      * Let's determine how the choice was determined.
+                     *
+                     * No prediction.  Always returns false (fall-through)
                      */
-                    if (kk != 2) /* No prediction.  Always returns false (fall-through) */
+                    if (kk != 2)
                     {
                         if (kk != 1)    /* Local prediction only. */
                         {
@@ -221,7 +234,11 @@ int main()
                      *          both are incorrect, then the choice was not
                      *          used and thus would not have made a difference.
                      */
-                    AXP_Branch_Direction(cpu, vpc, taken, localTaken, globalTaken);
+                    AXP_Branch_Direction(cpu,
+                                         vpc,
+                                         taken,
+                                         localTaken,
+                                         globalTaken);
                 }
                 fclose(fp);
 
@@ -232,12 +249,15 @@ int main()
                 printf("Total instructions:\t\t\t%d\n", insCnt);
                 printf("Correct predictions:\t\t\t%d\n", predictedCnt);
                 printf("Mispredictions:\t\t\t\t%d\n", (insCnt - predictedCnt));
-                printf("Prediction accuracy:\t\t\t%1.6f\n\n", ((float) predictedCnt / (float) insCnt));
+                printf("Prediction accuracy:\t\t\t%1.6f\n\n",
+                       ((float) predictedCnt / (float) insCnt));
                 printf("Times local correct:\t\t\t%d\n", localCnt);
                 printf("Times global correct:\t\t\t%d\n", globalCnt);
                 printf("Times choice used:\t\t\t%d\n", choiceUsed);
-                printf("Times choice selected correctly:\t%d\n", choiceCorrect);
-                printf("Times choice was wrong:\t\t\t%d\n", (choiceUsed - choiceCorrect));
+                printf("Times choice selected correctly:\t%d\n",
+                       choiceCorrect);
+                printf("Times choice was wrong:\t\t\t%d\n",
+                       (choiceUsed - choiceCorrect));
 
                 totalIns += insCnt;
                 totalCorrect += predictedCnt;
@@ -273,7 +293,7 @@ int main()
             }
             else
             {
-                printf("Unable to open trace file: %s\n", fileList[ii]);
+                printf("Unable to open trace file: %s\n", fileName);
             }
         }
         printf("\n---------------------------------------------\n");
@@ -292,7 +312,8 @@ int main()
                 break;
 
             case 0x02:
-                printf("Predictor always returns false (Fall-Through) Average:\n");
+                printf("Predictor always returns false (Fall-Through)"
+                       " Average:\n");
                 break;
         }
         printf("Average number of instructions:\t\t%d\n",

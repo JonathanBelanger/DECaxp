@@ -1558,7 +1558,8 @@ void AXP_Telnet_Main(void)
     if (AXP_UTL_CALL)
     {
         AXP_TRACE_BEGIN();
-        AXP_TraceWrite("TELNET Server is starting");
+        AXP_TraceWrite("TELNET Server is starting on port %d...",
+                       AXP_TELNET_DEFAULT_PORT);
         AXP_TRACE_END();
     }
 
