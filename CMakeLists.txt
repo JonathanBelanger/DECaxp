@@ -47,8 +47,8 @@ project(DECaxp VERSION 1.0.0)
 #   NOTE: We define compiler flags for both C and C++ compilers, just in case
 #         someone adds a module written in C++.
 #
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64 -std=gnu99 -Wall -D_AXP_COMPILER_PRESENT_")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -std=gnu++98 -Wall -D_AXP_COMPILER_PRESENT_")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64 -std=gnu99 -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -std=gnu++98 -Wall")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Executables")
 
