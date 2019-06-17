@@ -28,7 +28,7 @@
 #ifndef _AXP_ETHERNET_H_
 #define _AXP_ETHERNET_H_
 #define HAVE_REMOTE	1
-#include <pcap.h>
+#include <pcap/pcap.h>
 
 #define AXP_ETH_READ_TIMEOUT	1000
 #define AXP_MAC_ADDR_LEN	6

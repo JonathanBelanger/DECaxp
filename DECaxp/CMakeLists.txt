@@ -36,7 +36,7 @@ target_link_libraries(DECaxp_Generate_SROM PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/npcap/wpcap.dll)
 
 target_include_directories(DECaxp_Generate_SROM PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)

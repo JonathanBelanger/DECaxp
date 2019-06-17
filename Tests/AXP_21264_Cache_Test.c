@@ -127,7 +127,7 @@ int main()
 
     printf("\nAXP 21264 Data and Instruction Cache Tester\n");
     AXP_PUT_PC(zeroPC, zeroPCval);
-    line = AXP_Allocate_Block(-lineLen);
+    line = AXP_Allocate_Block(-lineLen, NULL);
     cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);
 
     /*

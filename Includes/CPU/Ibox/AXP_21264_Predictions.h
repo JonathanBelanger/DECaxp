@@ -114,7 +114,7 @@ typedef struct
  * The way this table work is, if the local and global predictions do not
  * match, if the local prediction was correct, then we decrement the 2-bit
  * saturation counter.  Otherwise, we increment the 2-bit saturation counter.
- * If the local and golbal predictions match, we leave the counter alone.
+ * If the local and global predictions match, we leave the counter alone.
  */
 typedef struct
 {
@@ -140,7 +140,7 @@ typedef struct
  * The DECR is called when a branch is not actually taken.
  *
  * NOTE:	We do the following, when incrementing and decrementing, to be able
- *			to provide a bit of a historesis, to precent alternating between
+ *			to provide a bit of a hysteresis, to percent alternating between
  *			the FAVORS_NOT_TAKEN and FAVORS_TAKEN states.  Alternating between
  *			taken and not taken will still properly predict the branch 50% of
  *			the time.

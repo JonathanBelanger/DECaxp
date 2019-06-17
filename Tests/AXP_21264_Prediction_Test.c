@@ -33,6 +33,665 @@
 #endif
 #define AXP_MAX_FILENAME_LEN 256
 
+typedef union
+{
+	struct
+	{
+		u8 b : 1;
+		u8 a : 1;
+		u8 res : 6;
+	};
+	u8 cnt;
+} AXP_2BIT_SAT_CNT;
+#define AXP_2BIT_SAT_MAX 0x03
+#define _AXP_2BIT_INCR(cntr)                                                \
+    {                                                                       \
+        u8 not_a = !cntr.a;                                                 \
+        cntr.a = cntr.a | cntr.b;                                           \
+        cntr.b = not_a & cntr.b;                                            \
+    }
+#define _AXP_2BIT_DECR(cntr)                                                \
+    {                                                                       \
+        u8 a = cntr.a;                                                      \
+        cntr.a = cntr.a & cntr.b;                                           \
+        cntr.b = a & !cntr.b;                                               \
+    }
+typedef union
+{
+	struct
+	{
+		u8 c : 1;
+		u8 b : 1;
+		u8 a : 1;
+		u8 res : 5;
+	};
+	u8 cnt;
+} AXP_3BIT_SAT_CNT;
+#define AXP_3BIT_SAT_MAX 0x07
+#define _AXP_3BIT_INCR(cntr)                                                \
+    {                                                                       \
+        u8 a = cntr.a;                                                      \
+        u8 b = cntr.b;                                                      \
+        cntr.a = cntr.a | (cntr.b & cntr.c);                                \
+        cntr.b = (a & cntr.b & cntr.c) | (cntr.b ^ cntr.c);                 \
+        cntr.c = (a & b) | !cntr.c;                                         \
+    }
+#define _AXP_3BIT_DECR(cntr)                                                \
+    {                                                                       \
+        u8 a = cntr.a;                                                      \
+        u8 b = cntr.b;                                                      \
+        cntr.a = cntr.a & (cntr.b | cntr.c);                                \
+        cntr.b = (a & !(cntr.b ^ cntr.c)) || (cntr.b & cntr.c);             \
+        cntr.c = (!cntr.c) & (a | b);                                       \
+    }
+
+/*
+ * TestSaturatingCounters
+ * 	This function is called to test the performance of using bitwise and
+ * 	conditional	calculations for 2 and 3 bit saturating counters.  To get some
+ * 	real numbers we will generate a set of random numbers of 0 or 1.  These
+ * 	values will be used to iterate through these counters 10,000,000 times.
+ *
+ * Input Parameters:
+ *  None.
+ *
+ * Output Parameters:
+ *  None.
+ *
+ * Return Values:
+ *  None.
+ */
+#define AXP_COUNTER_TESTS 15625
+void TestSaturatingCounters(void)
+{
+    u64 origIteratorBits[AXP_COUNTER_TESTS];
+    u64 iteratorBits[AXP_COUNTER_TESTS];
+    AXP_2BIT_SAT_CNT twoBitSaturatingCounter;
+    AXP_3BIT_SAT_CNT threeBitSaturatingCounter;
+    int ii, jj;
+    bool increment;
+    u8 pre;
+    u8 post;
+
+    printf("\nGenerating %u bits to be used with saturating counters...",
+           AXP_COUNTER_TESTS*64);
+    for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
+    {
+        for (jj = 0; jj < 64; jj++)
+        {
+            origIteratorBits[ii] <<= 1;
+            if (rand() > (RAND_MAX / 2))
+            {
+                origIteratorBits[ii] |= 1;
+            }
+        }
+    }
+    printf("Done!\n");
+    for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
+    {
+        iteratorBits[ii] = origIteratorBits[ii];
+        printf("%6d: %016llx\n", ii, iteratorBits[ii]);
+    }
+    printf("Running 2 bit bitwise saturating counter tests...");
+    twoBitSaturatingCounter.cnt = 0;
+    for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
+    {
+        for(jj = 0; jj < 64; jj++)
+        {
+            increment = (iteratorBits[ii] & 1) != 0;
+            pre = twoBitSaturatingCounter.cnt;
+            iteratorBits[ii] >>= 1;
+            if (increment == true)
+            {
+                _AXP_2BIT_INCR(twoBitSaturatingCounter);
+            }
+            else
+            {
+                _AXP_2BIT_DECR(twoBitSaturatingCounter);
+            }
+            post = twoBitSaturatingCounter.cnt;
+            if (increment == true)
+            {
+                switch(pre)
+                {
+                    case 0:
+                        if (post != 1)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 0, should be 1, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 1:
+                        if (post != 2)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 1, should be 2, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 2:
+                        if (post != 3)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 2, should be 3, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 3:
+                        if (post != 3)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 3, should be 3, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    default:
+                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
+                               pre);
+                        break;
+                }
+            }
+            else
+            {
+                switch(pre)
+                {
+                    case 0:
+                        if (post != 0)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 0, should be 0, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 1:
+                        if (post != 0)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 1, should be 0, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 2:
+                        if (post != 1)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 2, should be 1, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 3:
+                        if (post != 2)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 3, should be 2, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    default:
+                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
+                               pre);
+                        break;
+                }
+            }
+        }
+    }
+    printf("Done!\n");
+    for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
+    {
+        iteratorBits[ii] = origIteratorBits[ii];
+    }
+    printf("Running 2 bit conditional saturating counter tests...");
+    twoBitSaturatingCounter.cnt = 0;
+    for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
+    {
+        for(jj = 0; jj < 64; jj++)
+        {
+            increment = (iteratorBits[ii] & 1) != 0;
+            pre = twoBitSaturatingCounter.cnt;
+            iteratorBits[ii] >>= 1;
+            if (increment == true)
+            {
+                AXP_2BIT_INCR(twoBitSaturatingCounter.cnt);
+            }
+            else
+            {
+                AXP_2BIT_DECR(twoBitSaturatingCounter.cnt);
+            }
+            post = twoBitSaturatingCounter.cnt;
+            if (increment == true)
+            {
+                switch(pre)
+                {
+                    case 0:
+                        if (post != 1)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 0, should be 1, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 1:
+                        if (post != 2)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 1, should be 2, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 2:
+                        if (post != 3)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 2, should be 3, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 3:
+                        if (post != 3)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 3, should be 3, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    default:
+                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
+                               pre);
+                        break;
+                }
+            }
+            else
+            {
+                switch(pre)
+                {
+                    case 0:
+                        if (post != 0)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 0, should be 0, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 1:
+                        if (post != 0)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 1, should be 0, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 2:
+                        if (post != 1)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 2, should be 1, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 3:
+                        if (post != 2)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 3, should be 2, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    default:
+                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
+                               pre);
+                        break;
+                }
+            }
+        }
+    }
+    for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
+    {
+        iteratorBits[ii] = origIteratorBits[ii];
+    }
+    printf("Running 3 bit bitwise saturating counter tests...");
+    threeBitSaturatingCounter.cnt = 0;
+    for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
+    {
+        for(jj = 0; jj < 64; jj++)
+        {
+            increment = (iteratorBits[ii] & 1) != 0;
+            pre = threeBitSaturatingCounter.cnt;
+            iteratorBits[ii] >>= 1;
+            if (increment == true)
+            {
+                _AXP_3BIT_INCR(threeBitSaturatingCounter);
+            }
+            else
+            {
+                _AXP_3BIT_DECR(threeBitSaturatingCounter);
+            }
+            post = threeBitSaturatingCounter.cnt;
+            if (increment == true)
+            {
+                switch(pre)
+                {
+                    case 0:
+                        if (post != 1)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 0, should be 1, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 1:
+                        if (post != 2)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 1, should be 2, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 2:
+                        if (post != 3)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 2, should be 3, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 3:
+                        if (post != 4)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 3, should be 4, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 4:
+                        if (post != 5)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 4, should be 5, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 5:
+                        if (post != 6)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 5, should be 6, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 6:
+                        if (post != 7)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 6, should be 7, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 7:
+                        if (post != 7)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 7, should be 7, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    default:
+                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
+                               pre);
+                        break;
+                }
+            }
+            else
+            {
+                switch(pre)
+                {
+                    case 0:
+                        if (post != 0)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 0, should be 0, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 1:
+                        if (post != 0)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 1, should be 0, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 2:
+                        if (post != 1)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 2, should be 1, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 3:
+                        if (post != 2)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 3, should be 2, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 4:
+                        if (post != 3)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 4, should be 3, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 5:
+                        if (post != 4)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 5, should be 4, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 6:
+                        if (post != 5)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 6, should be 5, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 7:
+                        if (post != 6)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 7, should be 6, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    default:
+                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
+                               pre);
+                        break;
+                }
+            }
+        }
+    }
+    for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
+    {
+        iteratorBits[ii] = origIteratorBits[ii];
+    }
+    printf("Running 3 bit conditional saturating counter tests...");
+    threeBitSaturatingCounter.cnt = 0;
+    for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
+    {
+        for(jj = 0; jj < 64; jj++)
+        {
+            increment = (iteratorBits[ii] & 1) != 0;
+            pre = twoBitSaturatingCounter.cnt;
+            iteratorBits[ii] >>= 1;
+            if (increment == true)
+            {
+                AXP_3BIT_INCR(threeBitSaturatingCounter.cnt);
+            }
+            else
+            {
+                AXP_3BIT_DECR(threeBitSaturatingCounter.cnt);
+            }
+            post = threeBitSaturatingCounter.cnt;
+            if (increment == true)
+            {
+                switch(pre)
+                {
+                    case 0:
+                        if (post != 1)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 0, should be 1, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 1:
+                        if (post != 2)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 1, should be 2, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 2:
+                        if (post != 3)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 2, should be 3, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 3:
+                        if (post != 4)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 3, should be 4, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 4:
+                        if (post != 5)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 4, should be 5, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 5:
+                        if (post != 6)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 5, should be 6, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 6:
+                        if (post != 7)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 6, should be 7, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 7:
+                        if (post != 7)
+                        {
+                            printf("<<<<<< Counter not incremented correctly "
+                                   "was 7, should be 7, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    default:
+                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
+                               pre);
+                        break;
+                }
+            }
+            else
+            {
+                switch(pre)
+                {
+                    case 0:
+                        if (post != 0)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 0, should be 0, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 1:
+                        if (post != 0)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 1, should be 0, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 2:
+                        if (post != 1)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 2, should be 1, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 3:
+                        if (post != 2)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 3, should be 2, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 4:
+                        if (post != 3)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 4, should be 3, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 5:
+                        if (post != 4)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 5, should be 4, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 6:
+                        if (post != 5)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 6, should be 5, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    case 7:
+                        if (post != 6)
+                        {
+                            printf("<<<<<< Counter not decremented correctly "
+                                   "was 7, should be 6, is %u >>>>>>\n", post);
+                        }
+                        break;
+
+                    default:
+                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
+                               pre);
+                        break;
+                }
+            }
+        }
+    }
+    return;
+}
+
 /*
  * main
  *  This function is compiled in when unit testing.  It exercises the branch
@@ -45,7 +704,7 @@
  *  None.
  *
  * Return Value:
- *  None.
+ *  0 - always a success.
  */
 int main()
 {
@@ -56,7 +715,11 @@ int main()
         "trace2.txt",
         "trace3.txt",
         "trace4.txt",
-        "trace5.txt"
+        "trace5.txt",
+		"trace-matmul.txt",
+		"trace-12queens.txt",
+		"trace-fib30.txt",
+		"trace-ray.txt"
     };
     char fileName[AXP_MAX_FILENAME_LEN];
     bool taken;
@@ -93,6 +756,11 @@ int main()
      *        only then is the
      */
     printf("\nAXP 21264 Predictions Unit Tester\n");
+    printf("\nFirst, we run the various implementations of 2 and 3 bit\n");
+    printf("saturating counters through various implementations to test\n");
+    printf("which is faster.\n");
+    TestSaturatingCounters();
+    printf("\nFinally, we'll actually test the branch prediction code.\n");
     printf("%d trace files to be processed\n\n",
            (int) (sizeof(fileNames)/sizeof(char *)));
     cpu = (AXP_21264_CPU *) AXP_Allocate_Block(AXP_21264_CPU_BLK);

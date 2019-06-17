@@ -195,11 +195,11 @@ add_executable(AXP_Test_Structure_Sizes
 target_include_directories(AXP_Test_Structure_Sizes PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
 
-add_executable(AXP_Test_WinPcap
-    AXP_Test_WinPcap.c)
+add_executable(AXP_Test_Npcap
+    AXP_Test_Npcap.c)
 
-target_link_libraries(AXP_Test_WinPcap PRIVATE
-    /cygdrive/c/WINDOWS/system32/wpcap.dll)
+target_link_libraries(AXP_Test_Npcap PRIVATE
+    /cygdrive/c/WINDOWS/system32/npcap/wpcap.dll)
 
-target_include_directories(AXP_Test_WinPcap PRIVATE
+target_include_directories(AXP_Test_Npcap PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
