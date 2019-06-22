@@ -705,6 +705,7 @@ void TestSaturatingCounters(void)
  *
  * Return Value:
  *  0 - always a success.
+ *  None.
  */
 int main()
 {
