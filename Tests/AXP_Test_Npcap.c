@@ -145,6 +145,8 @@ int main(void)
     int retVal, ii = 1;
 
     /*
+     * TODO: Need to use dlopen/dlload/dlclose.
+     *
      * Call WinPcap to return all network devices that can be opened.
      */
     retVal = pcap_findalldevs_ex(PCAP_SRC_IF_STRING,

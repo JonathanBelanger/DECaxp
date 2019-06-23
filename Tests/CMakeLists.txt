@@ -47,7 +47,7 @@ target_link_libraries(AXP_21264_Cache_Test PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll
     ${compiler-rt})
 
 add_executable(AXP_21264_Dump_Test
@@ -59,7 +59,7 @@ target_link_libraries(AXP_21264_Dump_Test PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
 
 target_include_directories(AXP_21264_Dump_Test PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
@@ -74,7 +74,7 @@ target_link_libraries(AXP_21264_FloatingPointTest_Test PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
 
 target_include_directories(AXP_21264_FloatingPointTest_Test PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
@@ -94,7 +94,7 @@ target_link_libraries(AXP_21264_Icache_Test PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll
     ${compiler-rt})
 
 target_include_directories(AXP_21264_Icache_Test PRIVATE
@@ -119,7 +119,7 @@ target_link_libraries(AXP_21264_IntegerLoadTest PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll
     ${compiler-rt})
 
 add_executable(AXP_21264_Prediction_Test
@@ -132,7 +132,7 @@ target_link_libraries(AXP_21264_Prediction_Test PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
 
 target_include_directories(AXP_21264_Prediction_Test PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
@@ -151,7 +151,7 @@ target_link_libraries(AXP_Disk_Test PRIVATE
     -lm
     -liconv
     -luuid
-    /cygdrive/c/WINDOWS/system32/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
 
 add_executable(AXP_DS12887A_Test
     AXP_DS12887A_Test.c)
@@ -166,7 +166,7 @@ target_link_libraries(AXP_DS12887A_Test PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
 
 add_executable(AXP_Telnet_Test
     AXP_Telnet_Test.c)
@@ -181,7 +181,7 @@ target_link_libraries(AXP_Telnet_Test PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
 
 add_executable(AXP_Test_Queues
     AXP_Test_Queues.c)
@@ -199,7 +199,7 @@ add_executable(AXP_Test_Npcap
     AXP_Test_Npcap.c)
 
 target_link_libraries(AXP_Test_Npcap PRIVATE
-    /cygdrive/c/WINDOWS/system32/npcap/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
 
 target_include_directories(AXP_Test_Npcap PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)

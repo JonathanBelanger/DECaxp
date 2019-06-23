@@ -27,7 +27,7 @@ add_executable(DECaxp_Generate_SROM
     DECaxp_Generate_SROM.c)
 
 #set(CMAKE_LINK_LIBRARY_FLAG
-#    "${CMAKE_LINK_LIBRARY_FLAG} -lxml2 -lm -liconv -luuid -L /cygdrive/c/WINDOWS/system32 -lwpcap")
+#    "${CMAKE_LINK_LIBRARY_FLAG} -lxml2 -lm -liconv -luuid -L /cygdrive/c/WINDOWS/system32/Npcap -lwpcap")
 #
 
 target_link_libraries(DECaxp_Generate_SROM PRIVATE
@@ -36,7 +36,7 @@ target_link_libraries(DECaxp_Generate_SROM PRIVATE
     -lxml2
     -lm
     -liconv
-    /cygdrive/c/WINDOWS/system32/npcap/wpcap.dll)
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
 
 target_include_directories(DECaxp_Generate_SROM PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
@@ -65,7 +65,7 @@ target_link_libraries(DECaxp PRIVATE
     -lm
     -liconv
     -luuid
-    /cygdrive/c/WINDOWS/system32/wpcap.dll
+    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll
     ${compiler-rt})
 
 target_include_directories(DECaxp PRIVATE

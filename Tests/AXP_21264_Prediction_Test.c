@@ -46,15 +46,15 @@ typedef union
 #define AXP_2BIT_SAT_MAX 0x03
 #define _AXP_2BIT_INCR(cntr)                                                \
     {                                                                       \
-        u8 not_a = !cntr.a;                                                 \
-        cntr.a = cntr.a | cntr.b;                                           \
-        cntr.b = not_a & cntr.b;                                            \
+        AXP_2BIT_SAT_CNT tmp = cntr;                                        \
+        cntr.a = tmp.a | tmp.b;                                             \
+        cntr.b = tmp.a | (!tmp.b);                                          \
     }
 #define _AXP_2BIT_DECR(cntr)                                                \
     {                                                                       \
-        u8 a = cntr.a;                                                      \
-        cntr.a = cntr.a & cntr.b;                                           \
-        cntr.b = a & !cntr.b;                                               \
+        AXP_2BIT_SAT_CNT tmp = cntr;                                        \
+        cntr.a = tmp.a & tmp.b;                                             \
+        cntr.b = tmp.a & (!tmp.b);                                          \
     }
 typedef union
 {
@@ -70,19 +70,17 @@ typedef union
 #define AXP_3BIT_SAT_MAX 0x07
 #define _AXP_3BIT_INCR(cntr)                                                \
     {                                                                       \
-        u8 a = cntr.a;                                                      \
-        u8 b = cntr.b;                                                      \
-        cntr.a = cntr.a | (cntr.b & cntr.c);                                \
-        cntr.b = (a & cntr.b & cntr.c) | (cntr.b ^ cntr.c);                 \
-        cntr.c = (a & b) | !cntr.c;                                         \
+        AXP_3BIT_SAT_CNT tmp = cntr;                                        \
+        cntr.a = tmp.a | (tmp.b & tmp.c);                                   \
+        cntr.b = (tmp.a & tmp.b & tmp.c) | (tmp.b ^ tmp.c);                 \
+        cntr.c = (tmp.a & tmp.b) | (!tmp.c);                                \
     }
 #define _AXP_3BIT_DECR(cntr)                                                \
     {                                                                       \
-        u8 a = cntr.a;                                                      \
-        u8 b = cntr.b;                                                      \
-        cntr.a = cntr.a & (cntr.b | cntr.c);                                \
-        cntr.b = (a & !(cntr.b ^ cntr.c)) || (cntr.b & cntr.c);             \
-        cntr.c = (!cntr.c) & (a | b);                                       \
+        AXP_3BIT_SAT_CNT tmp = cntr;                                        \
+        cntr.a = tmp.a & (tmp.b | tmp.c);                                   \
+        cntr.b = (tmp.a & (!(tmp.b ^ tmp.c))) | (tmp.b & tmp.c);            \
+        cntr.c = (!tmp.c) & (tmp.a | tmp.b);                                \
     }
 
 /*
@@ -110,6 +108,7 @@ void TestSaturatingCounters(void)
     AXP_3BIT_SAT_CNT threeBitSaturatingCounter;
     int ii, jj;
     bool increment;
+    u32 pass = 0;
     u8 pre;
     u8 post;
 
@@ -127,11 +126,6 @@ void TestSaturatingCounters(void)
         }
     }
     printf("Done!\n");
-    for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
-    {
-        iteratorBits[ii] = origIteratorBits[ii];
-        printf("%6d: %016llx\n", ii, iteratorBits[ii]);
-    }
     printf("Running 2 bit bitwise saturating counter tests...");
     twoBitSaturatingCounter.cnt = 0;
     for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
@@ -157,38 +151,33 @@ void TestSaturatingCounters(void)
                     case 0:
                         if (post != 1)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 0, should be 1, is %u >>>>>>\n", post);
+                            pass = 0x01;
                         }
                         break;
 
                     case 1:
                         if (post != 2)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 1, should be 2, is %u >>>>>>\n", post);
+                            pass = 0x01;
                         }
                         break;
 
                     case 2:
                         if (post != 3)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 2, should be 3, is %u >>>>>>\n", post);
+                            pass = 0x01;
                         }
                         break;
 
                     case 3:
                         if (post != 3)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 3, should be 3, is %u >>>>>>\n", post);
+                            pass = 0x01;
                         }
                         break;
 
                     default:
-                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
-                               pre);
+                        pass = 0x01;
                         break;
                 }
             }
@@ -199,44 +188,47 @@ void TestSaturatingCounters(void)
                     case 0:
                         if (post != 0)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 0, should be 0, is %u >>>>>>\n", post);
+                            pass |= 0x02;
                         }
                         break;
 
                     case 1:
                         if (post != 0)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 1, should be 0, is %u >>>>>>\n", post);
+                            pass |= 0x02;
                         }
                         break;
 
                     case 2:
                         if (post != 1)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 2, should be 1, is %u >>>>>>\n", post);
+                            pass |= 0x02;
                         }
                         break;
 
                     case 3:
                         if (post != 2)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 3, should be 2, is %u >>>>>>\n", post);
+                            pass |= 0x02;
                         }
                         break;
 
                     default:
-                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
-                               pre);
+                        pass |= 0x02;
                         break;
                 }
             }
         }
     }
-    printf("Done!\n");
+    if ((pass && 0x03) != 0)
+    {
+        printf("Failed");
+    }
+    else
+    {
+        printf("Passed");
+    }
+    printf("!\n");
     for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
     {
         iteratorBits[ii] = origIteratorBits[ii];
@@ -266,38 +258,33 @@ void TestSaturatingCounters(void)
                     case 0:
                         if (post != 1)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 0, should be 1, is %u >>>>>>\n", post);
+                            pass |= 0x04;
                         }
                         break;
 
                     case 1:
                         if (post != 2)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 1, should be 2, is %u >>>>>>\n", post);
+                            pass |= 0x04;
                         }
                         break;
 
                     case 2:
                         if (post != 3)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 2, should be 3, is %u >>>>>>\n", post);
+                            pass |= 0x04;
                         }
                         break;
 
                     case 3:
                         if (post != 3)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 3, should be 3, is %u >>>>>>\n", post);
+                            pass |= 0x04;
                         }
                         break;
 
                     default:
-                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
-                               pre);
+                        pass |= 0x04;
                         break;
                 }
             }
@@ -308,43 +295,47 @@ void TestSaturatingCounters(void)
                     case 0:
                         if (post != 0)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 0, should be 0, is %u >>>>>>\n", post);
+                            pass |= 0x08;
                         }
                         break;
 
                     case 1:
                         if (post != 0)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 1, should be 0, is %u >>>>>>\n", post);
+                            pass |= 0x08;
                         }
                         break;
 
                     case 2:
                         if (post != 1)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 2, should be 1, is %u >>>>>>\n", post);
+                            pass |= 0x08;
                         }
                         break;
 
                     case 3:
                         if (post != 2)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 3, should be 2, is %u >>>>>>\n", post);
+                            pass |= 0x08;
                         }
                         break;
 
                     default:
-                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
-                               pre);
+                        pass |= 0x08;
                         break;
                 }
             }
         }
     }
+    if ((pass && 0x06) != 0)
+    {
+        printf("Failed");
+    }
+    else
+    {
+        printf("Passed");
+    }
+    printf("!\n");
     for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
     {
         iteratorBits[ii] = origIteratorBits[ii];
@@ -374,70 +365,61 @@ void TestSaturatingCounters(void)
                     case 0:
                         if (post != 1)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 0, should be 1, is %u >>>>>>\n", post);
+                            pass |= 0x10;
                         }
                         break;
 
                     case 1:
                         if (post != 2)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 1, should be 2, is %u >>>>>>\n", post);
+                            pass |= 0x10;
                         }
                         break;
 
                     case 2:
                         if (post != 3)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 2, should be 3, is %u >>>>>>\n", post);
+                            pass |= 0x10;
                         }
                         break;
 
                     case 3:
                         if (post != 4)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 3, should be 4, is %u >>>>>>\n", post);
+                            pass |= 0x10;
                         }
                         break;
 
                     case 4:
                         if (post != 5)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 4, should be 5, is %u >>>>>>\n", post);
+                            pass |= 0x10;
                         }
                         break;
 
                     case 5:
                         if (post != 6)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 5, should be 6, is %u >>>>>>\n", post);
+                            pass |= 0x10;
                         }
                         break;
 
                     case 6:
                         if (post != 7)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 6, should be 7, is %u >>>>>>\n", post);
+                            pass |= 0x10;
                         }
                         break;
 
                     case 7:
                         if (post != 7)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 7, should be 7, is %u >>>>>>\n", post);
+                            pass |= 0x10;
                         }
                         break;
 
                     default:
-                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
-                               pre);
+                        pass |= 0x10;
                         break;
                 }
             }
@@ -448,75 +430,75 @@ void TestSaturatingCounters(void)
                     case 0:
                         if (post != 0)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 0, should be 0, is %u >>>>>>\n", post);
+                            pass |= 0x20;
                         }
                         break;
 
                     case 1:
                         if (post != 0)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 1, should be 0, is %u >>>>>>\n", post);
+                            pass |= 0x20;
                         }
                         break;
 
                     case 2:
                         if (post != 1)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 2, should be 1, is %u >>>>>>\n", post);
+                            pass |= 0x20;
                         }
                         break;
 
                     case 3:
                         if (post != 2)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 3, should be 2, is %u >>>>>>\n", post);
+                            pass |= 0x20;
                         }
                         break;
 
                     case 4:
                         if (post != 3)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 4, should be 3, is %u >>>>>>\n", post);
+                            pass |= 0x20;
                         }
                         break;
 
                     case 5:
                         if (post != 4)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 5, should be 4, is %u >>>>>>\n", post);
+                            pass |= 0x20;
                         }
                         break;
 
                     case 6:
                         if (post != 5)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 6, should be 5, is %u >>>>>>\n", post);
+                            pass |= 0x20;
                         }
                         break;
 
                     case 7:
                         if (post != 6)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 7, should be 6, is %u >>>>>>\n", post);
+                            pass |= 0x20;
                         }
                         break;
 
                     default:
-                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
-                               pre);
+                        pass |= 0x20;
                         break;
                 }
             }
         }
     }
+    if ((pass && 0x30) != 0)
+    {
+        printf("Failed");
+    }
+    else
+    {
+        printf("Passed");
+    }
+    printf("!\n");
     for(ii = 0; ii < AXP_COUNTER_TESTS; ii++)
     {
         iteratorBits[ii] = origIteratorBits[ii];
@@ -546,70 +528,61 @@ void TestSaturatingCounters(void)
                     case 0:
                         if (post != 1)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 0, should be 1, is %u >>>>>>\n", post);
+                            pass |= 0x40;
                         }
                         break;
 
                     case 1:
                         if (post != 2)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 1, should be 2, is %u >>>>>>\n", post);
+                            pass |= 0x40;
                         }
                         break;
 
                     case 2:
                         if (post != 3)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 2, should be 3, is %u >>>>>>\n", post);
+                            pass |= 0x40;
                         }
                         break;
 
                     case 3:
                         if (post != 4)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 3, should be 4, is %u >>>>>>\n", post);
+                            pass |= 0x40;
                         }
                         break;
 
                     case 4:
                         if (post != 5)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 4, should be 5, is %u >>>>>>\n", post);
+                            pass |= 0x40;
                         }
                         break;
 
                     case 5:
                         if (post != 6)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 5, should be 6, is %u >>>>>>\n", post);
+                            pass |= 0x40;
                         }
                         break;
 
                     case 6:
                         if (post != 7)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 6, should be 7, is %u >>>>>>\n", post);
+                            pass |= 0x40;
                         }
                         break;
 
                     case 7:
                         if (post != 7)
                         {
-                            printf("<<<<<< Counter not incremented correctly "
-                                   "was 7, should be 7, is %u >>>>>>\n", post);
+                            pass |= 0x40;
                         }
                         break;
 
                     default:
-                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
-                               pre);
+                        pass |= 0x40;
                         break;
                 }
             }
@@ -620,74 +593,82 @@ void TestSaturatingCounters(void)
                     case 0:
                         if (post != 0)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 0, should be 0, is %u >>>>>>\n", post);
+                            pass |= 0x80;
                         }
                         break;
 
                     case 1:
                         if (post != 0)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 1, should be 0, is %u >>>>>>\n", post);
+                            pass |= 0x08;
                         }
                         break;
 
                     case 2:
                         if (post != 1)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 2, should be 1, is %u >>>>>>\n", post);
+                            pass |= 0x80;
                         }
                         break;
 
                     case 3:
                         if (post != 2)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 3, should be 2, is %u >>>>>>\n", post);
+                            pass |= 0x80;
                         }
                         break;
 
                     case 4:
                         if (post != 3)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 4, should be 3, is %u >>>>>>\n", post);
+                            pass |= 0x80;
                         }
                         break;
 
                     case 5:
                         if (post != 4)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 5, should be 4, is %u >>>>>>\n", post);
+                            pass |= 0x80;
                         }
                         break;
 
                     case 6:
                         if (post != 5)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 6, should be 5, is %u >>>>>>\n", post);
+                            pass |= 0x80;
                         }
                         break;
 
                     case 7:
                         if (post != 6)
                         {
-                            printf("<<<<<< Counter not decremented correctly "
-                                   "was 7, should be 6, is %u >>>>>>\n", post);
+                            pass |= 0x80;
                         }
                         break;
 
                     default:
-                        printf("<<<<<< Counter not set correctly, %u >>>>>>\n",
-                               pre);
+                        pass |= 0x80;
                         break;
                 }
             }
         }
+    }
+    if ((pass && 0x60) != 0)
+    {
+        printf("Failed");
+    }
+    else
+    {
+        printf("Passed");
+    }
+    printf("!\n");
+    if (pass == 0)
+    {
+        printf("All saturating counter tests passed\n");
+    }
+    else
+    {
+        printf("At lease one saturating counter test failed (0x%02x)\n", pass);
     }
     return;
 }
