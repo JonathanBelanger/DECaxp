@@ -142,11 +142,9 @@ int main(void)
 {
     pcap_if_t *allDevices = NULL, *device;
     char errorBuf[PCAP_ERRBUF_SIZE];
-    int retVal, ii = 1;
+    int retVal = 0, ii = 1;
 
     /*
-     * TODO: Need to use dlopen/dlload/dlclose.
-     *
      * Call WinPcap to return all network devices that can be opened.
      */
     retVal = pcap_findalldevs_ex(PCAP_SRC_IF_STRING,
