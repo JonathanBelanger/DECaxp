@@ -11,7 +11,7 @@ Revision/Update Inforamtion:				This is a new document.
 
 Jonathan D. Belanger
 
-March 2018
+June 2019
 
 The information in this publication is subject to change without notice.
 
@@ -27,13 +27,11 @@ This publication contains information protected by copyright. No part of this
 publication may be photocopied or reproduced in any form without prior written
 consent from Jonathan D. Belanger.
 
-© 2018 Jonathan D. Belanger.
+© 2019 Jonathan D. Belanger.
 All rights reserved. Printed in the U.S.A.
 
 COMPAQ, the Compaq logo, the Digital logo, and VAX are registered trademarks of
 Hewlett Packard Corporation.
-
-Pentium is a registered trademark of Intel Corporation.
 
 Other product names mentioned herein may be trademarks and/or registered
 trademarks of their respective companies.
@@ -55,6 +53,14 @@ cache (Bcache).
 * Supports square-root and floating-point convert extension (FIX).
 * Support for the multimedia extension (MVI).
 * Support for precise arithmetic trap reporting.
+
+## Environment
+
+Because the DECaxp emulator is emulating a 64-bit processor, the underlying
+environment is assumed to also be 64-bits.  Additionally, the development of
+this emulator has been performed on little-endian systems.  It would be
+advantageous to have someone try and build this on a big-endian system and
+update so that it can be compiled for either.
 
 ## Configuration
 
@@ -252,3 +258,9 @@ the following format:
 
   `export AXP_LOGFILE=log/tracefile.txt'
 
+### Running with Npcap verses WinPcap
+
+The test and DECaxp code has been updated to use Npcap instead of WinPcap.  As
+a result, for environments where both Npcap and WinPcap are installed (Cygwin64
+and MinGW64) the `LD_LIBRARY_PATH` environment variable needs to be defined to
+specify the path to Npcap (usually `C:\Windows\System32\Npcap`).
