@@ -118,7 +118,7 @@ bool AXP_Branch_Prediction(AXP_21264_CPU *cpu,
          */
         lpt_index.vpc = vpc;
         lcl_history_idx = lpt_index.index.index;
-        lcl_predictor_idx = cpu->localHistoryTable.lcl_history[lcl_history_idx];
+        lcl_predictor_idx = cpu->localHistoryTable.lcl_history[lcl_history_idx].cnt;
 
         /*
          * Return the take(true)/don't take(false) for each of the Predictor
@@ -220,7 +220,7 @@ void AXP_Branch_Direction(AXP_21264_CPU *cpu,
      */
     lpt_index.vpc = vpc;
     lcl_history_idx = lpt_index.index.index;
-    lcl_predictor_idx = cpu->localHistoryTable.lcl_history[lcl_history_idx];
+    lcl_predictor_idx = cpu->localHistoryTable.lcl_history[lcl_history_idx].cnt;
 
     /*
      * If the choice to take or not take a branch agreed with the local
@@ -285,7 +285,7 @@ void AXP_Branch_Direction(AXP_21264_CPU *cpu,
         }
         AXP_3BIT_INCR(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
         AXP_2BIT_INCR(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
-        AXP_LOCAL_PATH_TAKEN(cpu->localHistoryTable.lcl_history[lcl_history_idx]);
+        AXP_LOCAL_PATH_TAKEN(cpu->localHistoryTable.lcl_history[lcl_history_idx].cnt);
         AXP_GLOBAL_PATH_TAKEN(cpu->globalPathHistory);
     }
     else
@@ -300,7 +300,7 @@ void AXP_Branch_Direction(AXP_21264_CPU *cpu,
         }
         AXP_3BIT_DECR(cpu->localPredictor.lcl_pred[lcl_predictor_idx]);
         AXP_2BIT_DECR(cpu->globalPredictor.gbl_pred[cpu->globalPathHistory]);
-        AXP_LOCAL_PATH_NOT_TAKEN(cpu->localHistoryTable.lcl_history[lcl_history_idx]);
+        AXP_LOCAL_PATH_NOT_TAKEN(cpu->localHistoryTable.lcl_history[lcl_history_idx].cnt);
         AXP_GLOBAL_PATH_NOT_TAKEN(cpu->globalPathHistory);
     }
     return;

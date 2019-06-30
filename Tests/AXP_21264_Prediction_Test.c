@@ -33,55 +33,26 @@
 #endif
 #define AXP_MAX_FILENAME_LEN 256
 
-typedef union
-{
-	struct
-	{
-		u8 b : 1;
-		u8 a : 1;
-		u8 res : 6;
-	};
-	u8 cnt;
-} AXP_2BIT_SAT_CNT;
-#define AXP_2BIT_SAT_MAX 0x03
-#define _AXP_2BIT_INCR(cntr)                                                \
-    {                                                                       \
-        AXP_2BIT_SAT_CNT tmp = cntr;                                        \
-        cntr.a = tmp.a | tmp.b;                                             \
-        cntr.b = tmp.a | (!tmp.b);                                          \
-    }
-#define _AXP_2BIT_DECR(cntr)                                                \
-    {                                                                       \
-        AXP_2BIT_SAT_CNT tmp = cntr;                                        \
-        cntr.a = tmp.a & tmp.b;                                             \
-        cntr.b = tmp.a & (!tmp.b);                                          \
-    }
-typedef union
-{
-	struct
-	{
-		u8 c : 1;
-		u8 b : 1;
-		u8 a : 1;
-		u8 res : 5;
-	};
-	u8 cnt;
-} AXP_3BIT_SAT_CNT;
-#define AXP_3BIT_SAT_MAX 0x07
-#define _AXP_3BIT_INCR(cntr)                                                \
-    {                                                                       \
-        AXP_3BIT_SAT_CNT tmp = cntr;                                        \
-        cntr.a = tmp.a | (tmp.b & tmp.c);                                   \
-        cntr.b = (tmp.a & tmp.b & tmp.c) | (tmp.b ^ tmp.c);                 \
-        cntr.c = (tmp.a & tmp.b) | (!tmp.c);                                \
-    }
-#define _AXP_3BIT_DECR(cntr)                                                \
-    {                                                                       \
-        AXP_3BIT_SAT_CNT tmp = cntr;                                        \
-        cntr.a = tmp.a & (tmp.b | tmp.c);                                   \
-        cntr.b = (tmp.a & (!(tmp.b ^ tmp.c))) | (tmp.b & tmp.c);            \
-        cntr.c = (!tmp.c) & (tmp.a | tmp.b);                                \
-    }
+#define _AXP_2BIT_INCR(cntr) if ((cntr.cnt) < AXP_2BIT_MAX_VALUE) cntr.cnt++
+#define _AXP_2BIT_DECR(cntr) if ((cntr.cnt) > 0) cntr.cnt--
+#define _AXP_2BIT_TAKE(cntr) ((cntr.cnt < AXP_2BIT_TAKEN_MIN) ? false : true)
+#define _AXP_3BIT_INCR(cntr)\
+  if (cntr.cnt < AXP_3BIT_MAX_VALUE)\
+  {\
+    if (cntr.cnt == AXP_3BIT_NOT_TAKEN_MAX)\
+      cntr.cnt = AXP_3BIT_MAX_VALUE;\
+    else\
+      cntr.cnt++;\
+  }
+#define _AXP_3BIT_DECR(cntr)\
+  if (cntr.cnt > 0)\
+  {\
+    if (cntr.cnt == AXP_3BIT_TAKEN_MIN)\
+      cntr.cnt = 0;\
+    else\
+      cntr.cnt--;\
+  }
+#define _AXP_3BIT_TAKE(cntr) ((cntr.cnt < AXP_3BIT_TAKEN_MIN) ? false : true)
 
 /*
  * TestSaturatingCounters
@@ -244,11 +215,11 @@ void TestSaturatingCounters(void)
             iteratorBits[ii] >>= 1;
             if (increment == true)
             {
-                AXP_2BIT_INCR(twoBitSaturatingCounter.cnt);
+                AXP_2BIT_INCR(twoBitSaturatingCounter);
             }
             else
             {
-                AXP_2BIT_DECR(twoBitSaturatingCounter.cnt);
+                AXP_2BIT_DECR(twoBitSaturatingCounter);
             }
             post = twoBitSaturatingCounter.cnt;
             if (increment == true)
@@ -384,7 +355,7 @@ void TestSaturatingCounters(void)
                         break;
 
                     case 3:
-                        if (post != 4)
+                        if (post != 7)
                         {
                             pass |= 0x10;
                         }
@@ -456,7 +427,7 @@ void TestSaturatingCounters(void)
                         break;
 
                     case 4:
-                        if (post != 3)
+                        if (post != 0)
                         {
                             pass |= 0x20;
                         }
@@ -510,15 +481,15 @@ void TestSaturatingCounters(void)
         for(jj = 0; jj < 64; jj++)
         {
             increment = (iteratorBits[ii] & 1) != 0;
-            pre = twoBitSaturatingCounter.cnt;
+            pre = threeBitSaturatingCounter.cnt;
             iteratorBits[ii] >>= 1;
             if (increment == true)
             {
-                AXP_3BIT_INCR(threeBitSaturatingCounter.cnt);
+                AXP_3BIT_INCR(threeBitSaturatingCounter);
             }
             else
             {
-                AXP_3BIT_DECR(threeBitSaturatingCounter.cnt);
+                AXP_3BIT_DECR(threeBitSaturatingCounter);
             }
             post = threeBitSaturatingCounter.cnt;
             if (increment == true)
@@ -547,7 +518,7 @@ void TestSaturatingCounters(void)
                         break;
 
                     case 3:
-                        if (post != 4)
+                        if (post != 7)
                         {
                             pass |= 0x40;
                         }
@@ -619,7 +590,7 @@ void TestSaturatingCounters(void)
                         break;
 
                     case 4:
-                        if (post != 3)
+                        if (post != 0)
                         {
                             pass |= 0x80;
                         }
@@ -926,19 +897,19 @@ int main()
                 cpu->globalPathHistory = 0;
                 for (jj = 0; jj < ONE_K; jj++)
                 {
-                    cpu->localHistoryTable.lcl_history[jj] = 0;
+                    cpu->localHistoryTable.lcl_history[jj].cnt = 0;
                 }
                 for (jj = 0; jj < ONE_K; jj++)
                 {
-                    cpu->localPredictor.lcl_pred[jj] = 0;
+                    cpu->localPredictor.lcl_pred[jj].cnt = 0;
                 }
                 for (jj = 0; jj < FOUR_K; jj++)
                 {
-                    cpu->globalPredictor.gbl_pred[jj] = 0;
+                    cpu->globalPredictor.gbl_pred[jj].cnt = 0;
                 }
                 for (jj = 0; jj < FOUR_K; jj++)
                 {
-                    cpu->choicePredictor.choice_pred[jj] = 0;
+                    cpu->choicePredictor.choice_pred[jj].cnt = 0;
                 }
             }
             else

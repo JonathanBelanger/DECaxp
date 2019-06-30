@@ -86,12 +86,37 @@ typedef union
 #define AXP_3BIT_TAKEN_MIN			4
 
 /*
+ * Define the 2- and 3-bit saturation counter structures.
+ */
+typedef union
+{
+    struct
+    {
+        u8 b : 1;
+        u8 a : 1;
+        u8 res : 6;
+    };
+    u8 cnt;
+} AXP_2BIT_SAT_CNT;
+typedef union
+{
+    struct
+    {
+        u8 c : 1;
+        u8 b : 1;
+        u8 a : 1;
+        u8 res : 5;
+    };
+    u8 cnt;
+} AXP_3BIT_SAT_CNT;
+
+/*
  * Define the table definition for the 2-bit saturation counters for the
  * Global Prediction.
  */
 typedef struct
 {
-    u8 gbl_pred[FOUR_K];
+    AXP_2BIT_SAT_CNT gbl_pred[FOUR_K];
 } GPT;
 
 /*
@@ -100,11 +125,11 @@ typedef struct
  */
 typedef struct
 {
-    u16 lcl_history[ONE_K];
+    AXP_3BIT_SAT_CNT lcl_history[ONE_K];
 } LHT;
 typedef struct
 {
-    u8 lcl_pred[ONE_K];
+    AXP_3BIT_SAT_CNT lcl_pred[ONE_K];
 } LPT;
 
 /*
@@ -118,7 +143,7 @@ typedef struct
  */
 typedef struct
 {
-    u8 choice_pred[FOUR_K];
+    AXP_2BIT_SAT_CNT choice_pred[FOUR_K];
 } CPT;
 
 /*
@@ -128,9 +153,19 @@ typedef struct
  * The INCR is called when a branch is actually taken.
  * The DECR is called when a branch is not actually taken.
  */
-#define AXP_2BIT_INCR(cntr)	if ((cntr) < AXP_2BIT_MAX_VALUE) (cntr)++
-#define AXP_2BIT_DECR(cntr)	if ((cntr) > 0) (cntr)--
-#define AXP_2BIT_TAKE(cntr)	(((cntr) < AXP_2BIT_TAKEN_MIN) ? false : true)
+#define AXP_2BIT_INCR(cntr)                                                 \
+    {                                                                       \
+        AXP_2BIT_SAT_CNT tmp = cntr;                                        \
+        cntr.a = tmp.a | tmp.b;                                             \
+        cntr.b = tmp.a | (!tmp.b);                                          \
+    }
+#define AXP_2BIT_DECR(cntr)                                                 \
+    {                                                                       \
+        AXP_2BIT_SAT_CNT tmp = cntr;                                        \
+        cntr.a = tmp.a & tmp.b;                                             \
+        cntr.b = tmp.a & (!tmp.b);                                          \
+    }
+#define AXP_2BIT_TAKE(cntr) cntr.b
 
 /*
  * Macros for incrementing, decrementing, and determining whether to predict
@@ -145,23 +180,21 @@ typedef struct
  *			taken and not taken will still properly predict the branch 50% of
  *			the time.
  */
-#define AXP_3BIT_INCR(cntr)\
-  if ((cntr) < AXP_3BIT_MAX_VALUE)\
-  {\
-    if ((cntr) == AXP_3BIT_NOT_TAKEN_MAX)\
-      (cntr) = AXP_3BIT_MAX_VALUE;\
-    else\
-      (cntr)++;\
-  }
-#define AXP_3BIT_DECR(cntr)\
-  if ((cntr) > 0)\
-  {\
-    if ((cntr) == AXP_3BIT_TAKEN_MIN)\
-      (cntr) = 0;\
-    else\
-      (cntr)--;\
-  }
-#define AXP_3BIT_TAKE(cntr)	(((cntr) < AXP_3BIT_TAKEN_MIN) ? false : true)
+#define AXP_3BIT_INCR(cntr)                                                 \
+    {                                                                       \
+        AXP_3BIT_SAT_CNT tmp = cntr;                                        \
+        cntr.a = tmp.a | (tmp.b & tmp.c);                                   \
+        cntr.b = tmp.b | tmp.c;                                             \
+        cntr.c = tmp.b | (!tmp.c);                                          \
+    }
+#define AXP_3BIT_DECR(cntr)                                                 \
+    {                                                                       \
+        AXP_3BIT_SAT_CNT tmp = cntr;                                        \
+        cntr.a = (tmp.a & tmp.b) | (tmp.a & tmp.c);                         \
+        cntr.b = tmp.b & tmp.c;                                             \
+        cntr.c = tmp.b & (!tmp.c);                                          \
+    }
+#define AXP_3BIT_TAKE(cntr) cntr.c
 
 /*
  * The following macros are to maintain the Local History Table and the Global
