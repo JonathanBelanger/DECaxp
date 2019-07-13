@@ -12,7 +12,7 @@
       <Suffix />
     </Name>
     <CreationDate>02-Jan-2018</CreationDate>
-    <ModifyDate>28-Jan-2018</ModifyDate>
+    <ModifyDate>13-Jul-2019</ModifyDate>
   </Owner>
 
   <!-- This is where the real emulation definitions begin -->
@@ -31,15 +31,15 @@
       RAM information -->
     <SROM>
       <InitFile>
-        /cygdrive/g/git/DECaxp/dat/CPU Initialization Load File.dat
+        /cygdrive/g/git/DECaxp/DataFiles/CPU Initialization Load File.dat
       </InitFile>
-      <PALImage>/cygdrive/g/git/DECaxp/dat/cl67srmrom.exe</PALImage>
+      <PALImage>/cygdrive/g/git/DECaxp/DataFiles/cl67srmrom.exe</PALImage>
       <ROMImage>
-        /cygdrive/g/git/DECaxp/dat/DEC_Alpha_AXP_Code_Compiler.rom
+        /cygdrive/g/git/DECaxp/DataFiles/DEC_Alpha_AXP_Code_Compiler.rom
       </ROMImage>
-      <NVRamFile>/cygdrive/g/git/DECaxp/dat/DECaxp 21264.nvr</NVRamFile>
+      <NVRamFile>/cygdrive/g/git/DECaxp/DataFiles/DECaxp 21264.nvr</NVRamFile>
       <CboxCSRFile>
-        /cygdrive/g/git/DECaxp/dat/AXP_21264_Cbox_CSR.nvp
+        /cygdrive/g/git/DECaxp/DataFiles/AXP_21264_Cbox_CSR.nvp
       </CboxCSRFile>
     </SROM>
 
@@ -67,13 +67,13 @@
         <Type>Disk</Type>
         <Name>RZ02</Name>
         <Size>100.0GB</Size>
-        <File>/cygwin/g/git/DECaxp/dat/RZ02-1.dsk</File>
+        <File>/cygwin/g/git/DECaxp/DataFiles/RZ02-1.dsk</File>
       </Disk>
       <Disk number="2">
         <Type>CDROM</Type>
         <Name>RZCD02</Name>
         <Size>100.0GB</Size>
-        <File>/cygwin/g/git/DECaxp/dat/RZCD02-1.dsk</File>
+        <File>/cygwin/g/git/DECaxp/DataFiles/RZCD02-1.dsk</File>
       </Disk>
     </Disks>
 

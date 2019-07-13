@@ -687,6 +687,14 @@ AXP_21264_Cbox_Config(AXP_21264_CPU *cpu)
          */
         AXP_Close_NVP_File(fp);
     }
+    else
+    {
+        fprintf(stderr,
+                "%%AXP-F-FILEERR, %s not found or cannot be opened for read\n",
+                name);
+        fflush(stderr);
+        retVal = true;
+    }
 
     if (AXP_CBOX_CALL)
     {
@@ -996,7 +1004,7 @@ AXP_21264_CboxMain(void *voidPtr)
                 if (AXP_CBOX_OPT2)
                 {
                     AXP_TRACE_BEGIN();
-                    AXP_TraceWrite("Cbox is performing a BiST/BiSI testing");
+                    AXP_TraceWrite("Cbox is performing a BiST/BiSI running");
                     AXP_TRACE_END();
                 }
                 pthread_mutex_lock(&cpu->cpuMutex);
@@ -1172,6 +1180,14 @@ AXP_21264_CboxMain(void *voidPtr)
                                  * the SROM has been initialized.
                                  */
                                 AXP_21264_AddVPC(cpu, startingPC);
+                            }
+                            else
+                            {
+                                fprintf(stderr,
+                                        "%%AXP-F-FILEERR, %s not found or "
+                                        "cannot be opened for read\n",
+                                        name);
+                                fflush(stderr);
                             }
                             break;
                     }

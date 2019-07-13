@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2018.
+ * Copyright (C) Jonathan D. Belanger 2018-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -27,6 +27,13 @@
  *  V01.001 02-Mar-2018 Jonathan D. Belanger
  *  Added functions to return values from the configuration structure.  Also
  *  made the configuration structure static.
+ *
+ *  V01.002 13-Jul-2019 Jonathan D. Belanger
+ *  Found a logic error in my recursive calls.  When I get an element node, I
+ *  call back into the same function, setting the parent to the element node
+ *  name, where I will copy the value into a supplied buffer, but since I do
+ *  not change the parent to No<Name>, the value is copied into a global
+ *  variable, then we return back to the caller, where it does it again.
  */
 #include "CommonUtilities/AXP_Utility.h"
 #include "CommonUtilities/AXP_Configure.h"
@@ -42,71 +49,72 @@
  *  DECaxp
  *        Owner
  *        Name
- *            First            string
+ *            First             string
  *            MI                string
- *            Last            string
+ *            Last              string
  *            Suffix            string
- *        Creation Date            DD-MMM-YYYY
- *        Modify Date            DD-MMM-YYYY
+ *        Creation Date         DD-MMM-YYYY
+ *        Modify Date           DD-MMM-YYYY
  *        System
  *        Model
- *            Name            string
- *            Model            string
+ *            Name              string
+ *            Model             string
  *        SROM
- *            InitFile            file-specification
- *            PALImage            file-specification
- *            ROMImage            file-specification
- *            NVRamFile            file-specification
+ *            InitFile          file-specification
+ *            PALImage          file-specification
+ *            ROMImage          file-specification
+ *            NVRamFile         file-specification
  *        CPUS
- *            Count            number
- *            Generation            string
- *            Pass            number
+ *            Count             number
+ *            Generation        string
+ *            Pass              number
  *        DARRAY
- *            Count            number
- *            Size            decimal(MB, GB)
+ *            Count             number
+ *            Size              decimal(MB, GB)
  *        Disks
  *            *Disk (number)
- *            Type            Disk, CDROM, RWCDROM
- *            Name            string
- *            Size            decimal(MB, GB)
- *            File            file-specification
+ *            Type              Disk, CDROM, RWCDROM
+ *            Name              string
+ *            Size              decimal(MB, GB)
+ *            File              file-specification
  *        Console
- *            Port            number
+ *            Port              number
  *        Network
- *            Name            string
- *            MAC                ##-##-##-##-##-##
+ *            Name              string
+ *            MAC               ##-##-##-##-##-##
  *        Printers
  *            *Printer (number)
- *            <TBD>            ignored
+ *            <TBD>             ignored
  *        Tapes
  *            *Table (number)
- *            <TBD>            ignored
+ *            <TBD>             ignored
  */
 
 /*
  * Global variable used throughout the emulator.
  */
 static AXP_21264_CONFIG _axp_21264_config_ =
-    {
-        .owner.first = NULL,
-        .owner.mi = NULL,
-        .owner.last = NULL,
-        .system.disks = NULL,
-        .system.diskCount = 0,
-        .system.networks = NULL,
-        .system.networkCount = 0,
-        .system.model.name = NULL,
-        .system.model.model = NULL,
-        .system.srom.initFile = NULL,
-        .system.srom.PALImage = NULL,
-        .system.srom.ROMImage = NULL,
-        .system.srom.NVRamFile = NULL,
-        .system.srom.CboxCSRFile = NULL,
-        .system.cpus.config = NULL,
-        .system.cpus.count = 0,
-        .system.cpus.minorType = 0,
-        .system.darrays.size = 0,
-        .system.darrays.count = 0};
+{
+    .owner.first = NULL,
+    .owner.mi = NULL,
+    .owner.last = NULL,
+    .system.disks = NULL,
+    .system.diskCount = 0,
+    .system.networks = NULL,
+    .system.networkCount = 0,
+    .system.model.name = NULL,
+    .system.model.model = NULL,
+    .system.srom.initFile = NULL,
+    .system.srom.PALImage = NULL,
+    .system.srom.ROMImage = NULL,
+    .system.srom.NVRamFile = NULL,
+    .system.srom.CboxCSRFile = NULL,
+    .system.cpus.config = NULL,
+    .system.cpus.count = 0,
+    .system.cpus.minorType = 0,
+    .system.darrays.size = 0,
+    .system.darrays.count = 0
+};
 
 /*
  * This mutex is used to make sure multiple threads are not accessing the same
@@ -1454,6 +1462,7 @@ static void parse_network_names(xmlDocPtr doc,
                 strcpy(value, (char *) key);
             }
             xmlFree(key);
+            parent = NoNetwork;
         }
 
         /*
@@ -1753,6 +1762,7 @@ static void parse_console_names(xmlDocPtr doc,
                 strcpy(value, (char *) key);
             }
             xmlFree(key);
+            parent = NoConsole;
         }
 
         /*
@@ -1875,6 +1885,7 @@ static void parse_disk_names(xmlDocPtr doc,
                 strcpy(value, (char *) key);
             }
             xmlFree(key);
+            parent = NoDisk;
         }
 
         /*
@@ -2183,6 +2194,7 @@ static void parse_darrays_names(xmlDocPtr doc,
                 strcpy(value, (char *) key);
             }
             xmlFree(key);
+            parent = NoDARRAYs;
         }
 
         /*
@@ -2313,6 +2325,7 @@ static void parse_cpus_names(xmlDocPtr doc,
                 strcpy(value, (char *) key);
             }
             xmlFree(key);
+            parent = NoCPUs;
         }
 
         /*
@@ -2460,6 +2473,7 @@ static void parse_srom_names(xmlDocPtr doc,
                 strcpy(value, (char *) key);
             }
             xmlFree(key);
+            parent = NoSROM;
         }
 
         /*
@@ -2614,6 +2628,7 @@ static void parse_model_names(xmlDocPtr doc,
                 strcpy(value, (char *) key);
             }
             xmlFree(key);
+            parent = NoModel;
         }
 
         /*
@@ -2884,8 +2899,8 @@ static void parse_name_names(xmlDocPtr doc,
             {
                 strcpy(value, (char *) key);
             }
-            parent = NoName;
             xmlFree(key);
+            parent = NoName;
         }
 
         /*
@@ -3215,6 +3230,10 @@ static void parse_parent_names(xmlDocPtr doc,
                     found = true;
                 }
             }
+        }
+        else
+        {
+            continue;   /* Ignoring Text and Comment nodes */
         }
 
         switch (parent)

@@ -92,6 +92,12 @@ void reconstituteFilename(int argc, char **argv, char *configFilename)
 }
 
 /*
+ * TODO: This does not belong here.  It actually should be called by the
+ *       motherboard code.
+ */
+void AXP_21264_Unlock_CPU(void *cpuPtr);
+
+/*
  * main
  *  This is the main function for the Digital Alpha AXP 21264 Emulator.  It
  *  allocates the things it needs to and then starts the ball rolling around
@@ -127,7 +133,7 @@ int main(int argc, char **argv)
      * There are 2 arguments on the image activation.  The first is this image
      * and can be ignore.  The next is the configuration file to be opened.
      * Because filenames can have spaces and these spaces will utilize
-     * successive argv locations.  Let's call a function and reconstitute them
+     * successive argv locations.  Let's call a function and reconstituted them
      * into a single file specification.
      */
     if (argc > 1)
@@ -140,6 +146,13 @@ int main(int argc, char **argv)
         }
         if (cpu != NULL)
         {
+
+
+            /*
+             * TODO: This does not belong here.  It actually should be called
+             *       by the motherboard code.
+             */
+            AXP_21264_Unlock_CPU(cpu);
             pthread_join(cpu->cBoxThreadID, NULL);
 
             /*

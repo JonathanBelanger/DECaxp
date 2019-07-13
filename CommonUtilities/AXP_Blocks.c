@@ -308,6 +308,9 @@ void *AXP_Allocate_Block(i32 blockType, ...)
                     AXP_BLOCK_TL *tail;
 
                     blk = (u8 *) allocBlock;
+                    head = (AXP_BLOCK_HD *) &blk[0];
+                    tail = (AXP_BLOCK_TL *) &blk[sizeof(AXP_BLOCK_HD) + bytes];
+                    allocBlock = (void *) &blk[sizeof(AXP_BLOCK_HD)];
 
                     /*
                      * If this is a realloc, then we just copy the contents of
@@ -320,33 +323,23 @@ void *AXP_Allocate_Block(i32 blockType, ...)
                             (AXP_BLOCK_HD *) ((u8 *) replaceBlk -
                                 sizeof(AXP_BLOCK_HD));
 
-                        head = (AXP_BLOCK_HD *) &blk[0];
-
                         /*
                          * Copy the old block into the new block, but just from
-                         * the head to the byte just before the tail in the
-                         * old block.
+                         * the head to the tail in the old block.  We'll
+                         * correct the head and tail afterwards.
                          */
-                        memcpy(replaceBlk,
-                               allocBlock,
-                               (head->size - sizeof(AXP_BLOCK_TL)));
-
-                        /*
-                         * Determine the location of the tail block in the
-                         * newly allocated block.
-                         */
-                        head->tail =
-                            (AXP_BLOCK_TL *) &blk[sizeof(AXP_BLOCK_HD) + bytes];
-
-                        /*
-                         * Copy the old tail into the new tail location.
-                         */
-                        memcpy(head->tail, oldHead->tail, sizeof(AXP_BLOCK_TL));
+                        memcpy((void *) head, (void *) oldHead, size);
 
                         /*
                          * Correct the sizes.
                          */
-                        head->size = head->tail->size = size;
+                        head->size = tail->size = size;
+
+                        /*
+                         * Set the location of the tail block in the newly
+                         * allocated block.
+                         */
+                        head->tail = tail;
 
                         /*
                          * We no longer need the old block.
@@ -355,17 +348,13 @@ void *AXP_Allocate_Block(i32 blockType, ...)
                     }
                     else
                     {
-
-                        head = (AXP_BLOCK_HD *) &blk[0];
-                        tail = (AXP_BLOCK_TL *) &blk[sizeof(AXP_BLOCK_HD) + bytes];
-
                         head->type = tail->type = type;
                         head->size = tail->size = size;
                         head->magicNumber = AXP_HD_MAGIC;
                         head->tail = tail;
                         tail->magicNumber = AXP_TL_MAGIC;
-                        AXP_INSQUE(_blkQ.blink, &head->head);
                     }
+                    AXP_INSQUE(_blkQ.blink, &head->head);
 
                     /*
                      * Set the return value to the correct item.
@@ -431,15 +420,12 @@ void *AXP_Allocate_Block(i32 blockType, ...)
                        _blockNames[type],
                        size,
                        retBlock);
-        AXP_TraceWrite("Calls to AXP_Allocate_Block = %u; "
-                       "Calls to AXP_Deallocate_Block = %u; "
-                       "Memory Allocated = %u",
-                       "Memory Deallocated = %u",
-                       "Memory Outstanding = %u",
-                       _blksAllocCalls,
-                       _blksDeallocCalls,
-                       _blksBytesAlloc,
-                       _blksBytesDealloc,
+        AXP_TraceWrite("    Calls to AXP_Allocate_Block = %u", _blksAllocCalls);
+        AXP_TraceWrite("    Calls to AXP_Deallocate_Block = %u",
+                       _blksDeallocCalls);
+        AXP_TraceWrite("    Memory Allocated = %u", _blksBytesAlloc);
+        AXP_TraceWrite("    Memory Deallocated = %u", _blksBytesDealloc);
+        AXP_TraceWrite("    Memory Outstanding = %u",
                        (_blksBytesAlloc - _blksBytesDealloc));
         AXP_TRACE_END();
     }
@@ -486,15 +472,12 @@ void AXP_Deallocate_Block(void *block)
                            _blockNames[head->type],
                            head->size,
                            block);
-            AXP_TraceWrite("Calls to AXP_Allocate_Block = %u; "
-                           "Calls to AXP_Deallocate_Block = %u; "
-                           "Memory Allocated = %u; "
-                           "Memory Deallocated = %u; "
-                           "Memory Outstanding = %u",
-                           _blksAllocCalls,
-                           _blksDeallocCalls,
-                           _blksBytesAlloc,
-                           _blksBytesDealloc,
+            AXP_TraceWrite("    Calls to AXP_Allocate_Block = %u", _blksAllocCalls);
+            AXP_TraceWrite("    Calls to AXP_Deallocate_Block = %u",
+                           _blksDeallocCalls);
+            AXP_TraceWrite("    Memory Allocated = %u", _blksBytesAlloc);
+            AXP_TraceWrite("    Memory Deallocated = %u", _blksBytesDealloc);
+            AXP_TraceWrite("    Memory Outstanding = %u",
                            (_blksBytesAlloc - _blksBytesDealloc));
             AXP_TRACE_END();
         }
