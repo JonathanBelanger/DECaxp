@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Jonathan D. Belanger 2017.
+ * Copyright (C) Jonathan D. Belanger 2017-2019.
  * All Rights Reserved.
  *
  * This software is furnished under a license and may be used and copied only
@@ -16,22 +16,27 @@
  *
  * Description:
  *
- *	This header file contains the structures and definitions required to
- *	implement the branch prediction as part of the emulation for the Alpha
- *	21264 (EV68) processor.
+ *  This header file contains the structures and definitions required to
+ *  implement the branch prediction as part of the emulation for the Alpha
+ *  21264 (EV68) processor.
  *
  * Revision History:
  *
- *	V01.000		05-May-2017	Jonathan D. Belanger
- *	Initially written.
- *	(Happy Cinco Daimio)
+ *  V01.000        05-May-2017    Jonathan D. Belanger
+ *  Initially written.
+ *  (Happy Cinco Daimio)
  *
- *	V01.001		10-May-2017	Jonathan D. Belanger
- *	Included the AXP Utility header file for definitions like u64, i64, etc..
+ *  V01.001        10-May-2017    Jonathan D. Belanger
+ *  Included the AXP Utility header file for definitions like u64, i64, etc..
  *
- *	V01.002		14-May-2017	Jonathan D. Belanger
- *	Included the AXP_Base_CPU header file, which contains definitions common to
- *	all Alpha AXP CPUs.
+ *  V01.002        14-May-2017    Jonathan D. Belanger
+ *  Included the AXP_Base_CPU header file, which contains definitions common to
+ *  all Alpha AXP CPUs.
+ *
+ *  V01.003     01-Jul-2019 Jonathan D. Belanger
+ *  Change the 2- and 3-bit saturating counters to be determined and tested by
+ *  using just bit math.  This is to avoid branch mispredict in the system on
+ *  which the branch prediction emulation code is running.
  *
  */
 #ifndef _AXP_21264_PRED_DEFS_
@@ -57,33 +62,33 @@ typedef union
 /*
  *
  */
-#define AXP_MASK_10_BITS			0x03ff
-#define AXP_MASK_12_BITS			0x0fff
+#define AXP_MASK_10_BITS            0x03ff
+#define AXP_MASK_12_BITS            0x0fff
 
 /*
  * States for the 2-bit Saturation Counter
  */
-#define AXP_2BIT_STRONGLY_NOT_TAKEN	0
-#define AXP_2BIT_WEAKLY_NOT_TAKEN	1
-#define AXP_2BIT_WEAKLY_TAKEN		2
-#define AXP_2BIT_STRONGLY_TAKEN		3
-#define AXP_2BIT_MAX_VALUE			3
-#define AXP_2BIT_TAKEN_MIN			2
+#define AXP_2BIT_STRONGLY_NOT_TAKEN    0
+#define AXP_2BIT_WEAKLY_NOT_TAKEN    1
+#define AXP_2BIT_WEAKLY_TAKEN        2
+#define AXP_2BIT_STRONGLY_TAKEN        3
+#define AXP_2BIT_MAX_VALUE            3
+#define AXP_2BIT_TAKEN_MIN            2
 
 /*
  * States for the 3-bit Saturation Counter
  */
-#define AXP_3BIT_HIGHLY_NOT_TAKEN	0
-#define AXP_3BIT_MOSTLY_NOT_TAKEN	1
-#define AXP_3BIT_USUALLY_NOT_TAKEN	2
-#define AXP_3BIT_FAVORS_NOT_TAKEN	3
-#define AXP_3BIT_FAVORS_TAKEN		4
-#define AXP_3BIT_USUALLY_TAKEN		5
-#define AXP_3BIT_MOSTLY_TAKEN		6
-#define AXP_3BIT_HIGHLY_TAKEN		7
-#define AXP_3BIT_MAX_VALUE			7
-#define AXP_3BIT_NOT_TAKEN_MAX		3
-#define AXP_3BIT_TAKEN_MIN			4
+#define AXP_3BIT_HIGHLY_NOT_TAKEN    0
+#define AXP_3BIT_MOSTLY_NOT_TAKEN    1
+#define AXP_3BIT_USUALLY_NOT_TAKEN    2
+#define AXP_3BIT_FAVORS_NOT_TAKEN    3
+#define AXP_3BIT_FAVORS_TAKEN        4
+#define AXP_3BIT_USUALLY_TAKEN        5
+#define AXP_3BIT_MOSTLY_TAKEN        6
+#define AXP_3BIT_HIGHLY_TAKEN        7
+#define AXP_3BIT_MAX_VALUE            7
+#define AXP_3BIT_NOT_TAKEN_MAX        3
+#define AXP_3BIT_TAKEN_MIN            4
 
 /*
  * Define the 2- and 3-bit saturation counter structures.
@@ -174,11 +179,11 @@ typedef struct
  * The INCR is called when a branch is actually taken.
  * The DECR is called when a branch is not actually taken.
  *
- * NOTE:	We do the following, when incrementing and decrementing, to be able
- *			to provide a bit of a hysteresis, to percent alternating between
- *			the FAVORS_NOT_TAKEN and FAVORS_TAKEN states.  Alternating between
- *			taken and not taken will still properly predict the branch 50% of
- *			the time.
+ * NOTE:    We do the following, when incrementing and decrementing, to be able
+ *          to provide a bit of a hysteresis, to percent alternating between
+ *          the FAVORS_NOT_TAKEN and FAVORS_TAKEN states.  Alternating between
+ *          taken and not taken will still properly predict the branch 50% of
+ *          the time.
  */
 #define AXP_3BIT_INCR(cntr)                                                 \
     {                                                                       \
@@ -200,9 +205,9 @@ typedef struct
  * The following macros are to maintain the Local History Table and the Global
  * History Path.
  */
-#define AXP_LOCAL_PATH_TAKEN(lpte)		(lpte) = (((lpte) * 2) + 1) & AXP_MASK_10_BITS
-#define AXP_LOCAL_PATH_NOT_TAKEN(lpte)	(lpte) = ((lpte) * 2) & AXP_MASK_10_BITS
-#define AXP_GLOBAL_PATH_TAKEN(gph)		(gph) = (((gph) * 2) + 1) & AXP_MASK_12_BITS
-#define AXP_GLOBAL_PATH_NOT_TAKEN(gph)	(gph) = ((gph) * 2) & AXP_MASK_12_BITS
+#define AXP_LOCAL_PATH_TAKEN(lpte)      (lpte) = (((lpte) * 2) + 1) & AXP_MASK_10_BITS
+#define AXP_LOCAL_PATH_NOT_TAKEN(lpte)  (lpte) = ((lpte) * 2) & AXP_MASK_10_BITS
+#define AXP_GLOBAL_PATH_TAKEN(gph)      (gph) = (((gph) * 2) + 1) & AXP_MASK_12_BITS
+#define AXP_GLOBAL_PATH_NOT_TAKEN(gph)  (gph) = ((gph) * 2) & AXP_MASK_12_BITS
 
 #endif /* _AXP_21264_PRED_DEFS_ */

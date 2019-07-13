@@ -107,7 +107,7 @@
 #include "CommonUtilities/AXP_Configure.h"
 #include "CommonUtilities/AXP_Trace.h"
 #include "Devices/TOYClock/AXP_DS12887A_TOYClock.h"
-#include <cygwin/signal.h>
+#include <signal.h>
 
 /*
  * The RAM array contains 128 bytes to store date, time, and general
