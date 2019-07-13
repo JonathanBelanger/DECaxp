@@ -328,18 +328,10 @@ void *AXP_Allocate_Block(i32 blockType, ...)
                          * the head to the tail in the old block.  We'll
                          * correct the head and tail afterwards.
                          */
-                        memcpy((void *) head, (void *) oldHead, size);
-
-                        /*
-                         * Correct the sizes.
-                         */
-                        head->size = tail->size = size;
-
-                        /*
-                         * Set the location of the tail block in the newly
-                         * allocated block.
-                         */
-                        head->tail = tail;
+                        memcpy((void *) head,
+                               (void *) oldHead,
+                               (oldHead->size - sizeof(AXP_BLOCK_TL)));
+                        tail->type = oldHead->type;
 
                         /*
                          * We no longer need the old block.
@@ -349,11 +341,11 @@ void *AXP_Allocate_Block(i32 blockType, ...)
                     else
                     {
                         head->type = tail->type = type;
-                        head->size = tail->size = size;
                         head->magicNumber = AXP_HD_MAGIC;
-                        head->tail = tail;
-                        tail->magicNumber = AXP_TL_MAGIC;
                     }
+                    head->size = tail->size = size;
+                    tail->magicNumber = AXP_TL_MAGIC;
+                    head->tail = tail;
                     AXP_INSQUE(_blkQ.blink, &head->head);
 
                     /*
