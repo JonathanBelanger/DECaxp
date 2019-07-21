@@ -1,0 +1,14 @@
+Scanning dependencies of target CommonUtilities
+[  1%] Building C object CommonUtilities/CMakeFiles/CommonUtilities.dir/AXP_Blocks.c.o
+In file included from /home/belanger/projects/DECaxp/Includes/Devices/VirtualDisks/AXP_VirtualDisk.h:33,
+                 from /home/belanger/projects/DECaxp/Includes/Devices/VirtualDisks/AXP_VHD_Utility.h:29,
+                 from /home/belanger/projects/DECaxp/Includes/Devices/VirtualDisks/AXP_VHDX.h:32,
+                 from /home/belanger/projects/DECaxp/Includes/CommonUtilities/AXP_Blocks.h:46,
+                 from /home/belanger/projects/DECaxp/CommonUtilities/AXP_Blocks.c:42:
+/home/belanger/projects/DECaxp/Includes/CommonUtilities/AXP_GUID.h:33:10: fatal error: uuid/uuid.h: No such file or directory
+ #include <uuid/uuid.h>
+          ^~~~~~~~~~~~~
+compilation terminated.
+make[2]: *** [CommonUtilities/CMakeFiles/CommonUtilities.dir/build.make:63: CommonUtilities/CMakeFiles/CommonUtilities.dir/AXP_Blocks.c.o] Error 1
+make[1]: *** [CMakeFiles/Makefile2:91: CommonUtilities/CMakeFiles/CommonUtilities.dir/all] Error 2
+make: *** [Makefile:84: all] Error 2

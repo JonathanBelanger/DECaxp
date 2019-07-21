@@ -1,0 +1,554 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="CommonUtilities">
+        <in>AXP_Blocks.c</in>
+        <in>AXP_Configure.c</in>
+        <in>AXP_Dumps.c</in>
+        <in>AXP_Exceptions.c</in>
+        <in>AXP_Execute_Box.c</in>
+        <in>AXP_NameValuePair_Read.c</in>
+        <in>AXP_StateMachine.c</in>
+        <in>AXP_Trace.c</in>
+        <in>AXP_Utility.c</in>
+      </df>
+      <df name="CPU">
+        <df name="Caches">
+          <in>AXP_21264_BCache.c</in>
+          <in>AXP_21264_Cache.c</in>
+        </df>
+        <df name="Cbox">
+          <df name="SystemInterface">
+            <in>AXP_21264_to_System.c</in>
+          </df>
+          <in>AXP_21264_Cbox.c</in>
+          <in>AXP_21264_Cbox_IOWB.c</in>
+          <in>AXP_21264_Cbox_MAF.c</in>
+          <in>AXP_21264_Cbox_PQ.c</in>
+          <in>AXP_21264_Cbox_VDB.c</in>
+        </df>
+        <df name="Ebox">
+          <in>AXP_21264_Ebox.c</in>
+          <in>AXP_21264_Ebox_Byte.c</in>
+          <in>AXP_21264_Ebox_Control.c</in>
+          <in>AXP_21264_Ebox_IntegerMath.c</in>
+          <in>AXP_21264_Ebox_LoadStore.c</in>
+          <in>AXP_21264_Ebox_LogicalShift.c</in>
+          <in>AXP_21264_Ebox_Misc.c</in>
+          <in>AXP_21264_Ebox_Multimedia.c</in>
+          <in>AXP_21264_Ebox_PALFunctions.c</in>
+          <in>AXP_21264_Ebox_VAX.c</in>
+        </df>
+        <df name="Fbox">
+          <in>AXP_21264_Fbox.c</in>
+          <in>AXP_21264_Fbox_Control.c</in>
+          <in>AXP_21264_Fbox_FPFunctions.c</in>
+          <in>AXP_21264_Fbox_LoadStore.c</in>
+          <in>AXP_21264_Fbox_OperateIEEE.c</in>
+          <in>AXP_21264_Fbox_OperateMisc.c</in>
+          <in>AXP_21264_Fbox_OperateVAX.c</in>
+        </df>
+        <df name="Ibox">
+          <in>AXP_21264_Ibox.c</in>
+          <in>AXP_21264_Ibox_Initialize.c</in>
+          <in>AXP_21264_Ibox_InstructionDecoding.c</in>
+          <in>AXP_21264_Ibox_InstructionInfo.c</in>
+          <in>AXP_21264_Ibox_PCHandling.c</in>
+          <in>AXP_21264_Ibox_Prediction.c</in>
+        </df>
+        <df name="Mbox">
+          <in>AXP_21264_Mbox.c</in>
+        </df>
+        <in>AXP_21264_CPU.c</in>
+      </df>
+      <df name="DECaxp">
+        <in>DECaxp.c</in>
+        <in>DECaxp_Generate_SROM.c</in>
+      </df>
+      <df name="Devices">
+        <df name="Console">
+          <in>AXP_Telnet.c</in>
+        </df>
+        <df name="DS12887A_TOYClock">
+          <in>AXP_DS12887A_TOYClock.c</in>
+        </df>
+        <df name="Ethernet">
+          <in>AXP_Ethernet.c</in>
+        </df>
+        <df name="VirtualDisks">
+          <in>AXP_RAW.c</in>
+          <in>AXP_SSD.c</in>
+          <in>AXP_VHD.c</in>
+          <in>AXP_VHDX.c</in>
+          <in>AXP_VHD_Utility.c</in>
+          <in>AXP_VirtualDisk.c</in>
+        </df>
+      </df>
+      <df name="Motherboard">
+        <df name="Cchip">
+          <df name="CPUInterface">
+            <in>AXP_21274_to_CPU.c</in>
+          </df>
+          <in>AXP_21274_Cchip.c</in>
+        </df>
+        <df name="Dchip">
+          <in>AXP_21274_Dchip.c</in>
+        </df>
+        <df name="Pchip">
+          <in>AXP_21274_Pchip.c</in>
+        </df>
+        <in>AXP_21274_AddressMapping.c</in>
+        <in>AXP_21274_System.c</in>
+      </df>
+      <df name="Tests">
+        <in>AXP_21264_Cache_Test.c</in>
+        <in>AXP_21264_Dump_Test.c</in>
+        <in>AXP_21264_FloatingPointTest.c</in>
+        <in>AXP_21264_Icache_Test.c</in>
+        <in>AXP_21264_IntegerLoadTest.c</in>
+        <in>AXP_21264_Prediction_Test.c</in>
+        <in>AXP_DS12887A_Test.c</in>
+        <in>AXP_Disk_Test.c</in>
+        <in>AXP_Telnet_Test.c</in>
+        <in>AXP_Test_Npcap.c</in>
+        <in>AXP_Test_Queues.c</in>
+        <in>AXP_Test_Structure_Sizes.c</in>
+      </df>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>CMakeLists.txt</itemPath>
+      <itemPath>Makefile</itemPath>
+      <itemPath>nbproject/private/launcher.properties</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>false</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <flagsDictionary>
+        <element flagsID="0" commonFlags="-m64 -std=gnu99"/>
+      </flagsDictionary>
+      <codeAssistance>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath></executablePath>
+          <cTool>
+            <incDir>
+              <pElem>Includes</pElem>
+            </incDir>
+          </cTool>
+        </makeTool>
+        <preBuild>
+          <preBuildCommandWorkingDir>.</preBuildCommandWorkingDir>
+          <preBuildCommand>${CMAKE} -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=${IDE_CC} -DCMAKE_CXX_COMPILER=${IDE_CXX} -DCMAKE_C_FLAGS_DEBUG="-g3 -gdwarf-2" -DCMAKE_CXX_FLAGS_DEBUG="-g3 -gdwarf-2" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .</preBuildCommand>
+        </preBuild>
+      </makefileType>
+      <item path="CPU/AXP_21264_CPU.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Caches/AXP_21264_BCache.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Caches/AXP_21264_Cache.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Cbox/AXP_21264_Cbox.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Cbox/AXP_21264_Cbox_IOWB.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Cbox/AXP_21264_Cbox_MAF.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Cbox/AXP_21264_Cbox_PQ.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Cbox/AXP_21264_Cbox_VDB.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Cbox/SystemInterface/AXP_21264_to_System.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ebox/AXP_21264_Ebox.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ebox/AXP_21264_Ebox_Byte.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ebox/AXP_21264_Ebox_Control.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ebox/AXP_21264_Ebox_IntegerMath.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ebox/AXP_21264_Ebox_LoadStore.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ebox/AXP_21264_Ebox_LogicalShift.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ebox/AXP_21264_Ebox_Misc.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ebox/AXP_21264_Ebox_Multimedia.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ebox/AXP_21264_Ebox_PALFunctions.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ebox/AXP_21264_Ebox_VAX.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Fbox/AXP_21264_Fbox.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Fbox/AXP_21264_Fbox_Control.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Fbox/AXP_21264_Fbox_FPFunctions.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Fbox/AXP_21264_Fbox_LoadStore.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Fbox/AXP_21264_Fbox_OperateIEEE.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Fbox/AXP_21264_Fbox_OperateMisc.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Fbox/AXP_21264_Fbox_OperateVAX.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ibox/AXP_21264_Ibox.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ibox/AXP_21264_Ibox_Initialize.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ibox/AXP_21264_Ibox_InstructionDecoding.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ibox/AXP_21264_Ibox_InstructionInfo.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ibox/AXP_21264_Ibox_PCHandling.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Ibox/AXP_21264_Ibox_Prediction.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CPU/Mbox/AXP_21264_Mbox.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CommonUtilities/AXP_Blocks.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CommonUtilities/AXP_Configure.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CommonUtilities/AXP_Dumps.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CommonUtilities/AXP_Exceptions.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CommonUtilities/AXP_Execute_Box.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CommonUtilities/AXP_NameValuePair_Read.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CommonUtilities/AXP_StateMachine.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CommonUtilities/AXP_Trace.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="CommonUtilities/AXP_Utility.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="DECaxp/DECaxp.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="DECaxp/DECaxp_Generate_SROM.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Devices/Console/AXP_Telnet.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Devices/DS12887A_TOYClock/AXP_DS12887A_TOYClock.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Devices/Ethernet/AXP_Ethernet.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Devices/VirtualDisks/AXP_RAW.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Devices/VirtualDisks/AXP_SSD.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Devices/VirtualDisks/AXP_VHD.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Devices/VirtualDisks/AXP_VHDX.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Devices/VirtualDisks/AXP_VHD_Utility.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Devices/VirtualDisks/AXP_VirtualDisk.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Motherboard/AXP_21274_AddressMapping.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Motherboard/AXP_21274_System.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Motherboard/Cchip/AXP_21274_Cchip.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Motherboard/Cchip/CPUInterface/AXP_21274_to_CPU.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Motherboard/Dchip/AXP_21274_Dchip.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Motherboard/Pchip/AXP_21274_Pchip.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_21264_Cache_Test.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_21264_Dump_Test.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_21264_FloatingPointTest.c"
+            ex="false"
+            tool="0"
+            flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_21264_Icache_Test.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_21264_IntegerLoadTest.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_21264_Prediction_Test.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_DS12887A_Test.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_Disk_Test.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_Telnet_Test.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_Test_Npcap.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_Test_Queues.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="Tests/AXP_Test_Structure_Sizes.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <folder path="0/CPU/Cbox/SystemInterface">
+        <cTool>
+          <incDir>
+            <pElem>CPU/Cbox</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <folder path="0/CommonUtilities">
+        <cTool>
+          <incDir>
+            <pElem>/usr/include/libxml2</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <folder path="0/Motherboard/Cchip/CPUInterface">
+        <cTool>
+          <incDir>
+            <pElem>Motherboard/Cchip</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <folder path="0/Tests">
+        <cTool>
+          <preprocessorList>
+            <Elem>AXP_TEST_DATA_FILES=\"/home/belanger/projects/DECaxp/Tests/DataFiles\"</Elem>
+          </preprocessorList>
+        </cTool>
+      </folder>
+    </conf>
+  </confs>
+</configurationDescriptor>

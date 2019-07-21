@@ -1,0 +1,15 @@
+called: /usr/bin/gcc
+	/home/belanger/projects/DECaxp/CommonUtilities
+	/usr/bin/gcc
+	-I/home/belanger/projects/DECaxp/Includes
+	-I/usr/include/libxml2
+	-m64
+	-std=gnu99
+	-Wall
+	-g3
+	-gdwarf-2
+	-o
+	CMakeFiles/CommonUtilities.dir/AXP_Blocks.c.o
+	-c
+	/home/belanger/projects/DECaxp/CommonUtilities/AXP_Blocks.c
+

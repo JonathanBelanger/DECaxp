@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name=".settings">
+      </df>
+      <df name="CMakeFiles">
+        <df name="3.13.4">
+          <df name="CompilerIdC">
+            <df name="tmp">
+            </df>
+            <in>CMakeCCompilerId.c</in>
+          </df>
+          <df name="CompilerIdCXX">
+            <df name="tmp">
+            </df>
+            <in>CMakeCXXCompilerId.cpp</in>
+          </df>
+        </df>
+        <df name="CMakeTmp">
+        </df>
+        <df name="Progress">
+        </df>
+        <in>feature_tests.c</in>
+        <in>feature_tests.cxx</in>
+      </df>
+      <df name="CommonUtilities">
+        <df name="CMakeFiles">
+          <df name="CommonUtilities.dir">
+          </df>
+        </df>
+        <in>AXP_Blocks.c</in>
+        <in>AXP_Configure.c</in>
+        <in>AXP_Dumps.c</in>
+        <in>AXP_Exceptions.c</in>
+        <in>AXP_Execute_Box.c</in>
+        <in>AXP_NameValuePair_Read.c</in>
+        <in>AXP_StateMachine.c</in>
+        <in>AXP_Trace.c</in>
+        <in>AXP_Utility.c</in>
+      </df>
+      <df name="CPU">
+        <df name="Caches">
+          <df name="CMakeFiles">
+            <df name="Caches.dir">
+            </df>
+          </df>
+          <in>AXP_21264_BCache.c</in>
+          <in>AXP_21264_Cache.c</in>
+        </df>
+        <df name="Cbox">
+          <df name="CMakeFiles">
+            <df name="Cbox.dir">
+              <df name="SystemInterface">
+              </df>
+            </df>
+          </df>
+          <df name="SystemInterface">
+            <in>AXP_21264_to_System.c</in>
+          </df>
+          <in>AXP_21264_Cbox.c</in>
+          <in>AXP_21264_Cbox_IOWB.c</in>
+          <in>AXP_21264_Cbox_MAF.c</in>
+          <in>AXP_21264_Cbox_PQ.c</in>
+          <in>AXP_21264_Cbox_VDB.c</in>
+        </df>
+        <df name="CMakeFiles">
+          <df name="CPU.dir">
+          </df>
+        </df>
+        <df name="Ebox">
+          <df name="CMakeFiles">
+            <df name="Ebox.dir">
+            </df>
+          </df>
+          <in>AXP_21264_Ebox.c</in>
+          <in>AXP_21264_Ebox_Byte.c</in>
+          <in>AXP_21264_Ebox_Control.c</in>
+          <in>AXP_21264_Ebox_IntegerMath.c</in>
+          <in>AXP_21264_Ebox_LoadStore.c</in>
+          <in>AXP_21264_Ebox_LogicalShift.c</in>
+          <in>AXP_21264_Ebox_Misc.c</in>
+          <in>AXP_21264_Ebox_Multimedia.c</in>
+          <in>AXP_21264_Ebox_PALFunctions.c</in>
+          <in>AXP_21264_Ebox_VAX.c</in>
+        </df>
+        <df name="Fbox">
+          <df name="CMakeFiles">
+            <df name="Fbox.dir">
+            </df>
+          </df>
+          <in>AXP_21264_Fbox.c</in>
+          <in>AXP_21264_Fbox_Control.c</in>
+          <in>AXP_21264_Fbox_FPFunctions.c</in>
+          <in>AXP_21264_Fbox_LoadStore.c</in>
+          <in>AXP_21264_Fbox_OperateIEEE.c</in>
+          <in>AXP_21264_Fbox_OperateMisc.c</in>
+          <in>AXP_21264_Fbox_OperateVAX.c</in>
+        </df>
+        <df name="Ibox">
+          <df name="CMakeFiles">
+            <df name="Ibox.dir">
+            </df>
+          </df>
+          <in>AXP_21264_Ibox.c</in>
+          <in>AXP_21264_Ibox_Initialize.c</in>
+          <in>AXP_21264_Ibox_InstructionDecoding.c</in>
+          <in>AXP_21264_Ibox_InstructionInfo.c</in>
+          <in>AXP_21264_Ibox_PCHandling.c</in>
+          <in>AXP_21264_Ibox_Prediction.c</in>
+        </df>
+        <df name="Mbox">
+          <df name="CMakeFiles">
+            <df name="Mbox.dir">
+            </df>
+          </df>
+          <in>AXP_21264_Mbox.c</in>
+        </df>
+        <in>AXP_21264_CPU.c</in>
+      </df>
+      <df name="DataFiles">
+      </df>
+      <df name="DECaxp">
+        <df name="CMakeFiles">
+          <df name="DECaxp.dir">
+          </df>
+          <df name="DECaxp_Generate_SROM.dir">
+          </df>
+        </df>
+        <in>DECaxp.c</in>
+        <in>DECaxp_Generate_SROM.c</in>
+      </df>
+      <df name="Devices">
+        <df name="CMakeFiles">
+        </df>
+        <df name="Console">
+          <df name="CMakeFiles">
+            <df name="Console.dir">
+            </df>
+          </df>
+          <in>AXP_Telnet.c</in>
+        </df>
+        <df name="DS12887A_TOYClock">
+          <df name="CMakeFiles">
+            <df name="TOYClock.dir">
+            </df>
+          </df>
+          <in>AXP_DS12887A_TOYClock.c</in>
+        </df>
+        <df name="Ethernet">
+          <df name="CMakeFiles">
+            <df name="Ethernet.dir">
+            </df>
+          </df>
+          <in>AXP_Ethernet.c</in>
+        </df>
+        <df name="VirtualDisks">
+          <df name="CMakeFiles">
+            <df name="VirtualDisks.dir">
+            </df>
+          </df>
+          <in>AXP_RAW.c</in>
+          <in>AXP_SSD.c</in>
+          <in>AXP_VHD.c</in>
+          <in>AXP_VHDX.c</in>
+          <in>AXP_VHD_Utility.c</in>
+          <in>AXP_VirtualDisk.c</in>
+        </df>
+      </df>
+      <df name="Executables">
+      </df>
+      <df name="ExternalDocumentation">
+      </df>
+      <df name="Includes">
+        <df name="CommonUtilities">
+          <in>AXP_Blocks.h</in>
+          <in>AXP_CPU_System.h</in>
+          <in>AXP_Configure.h</in>
+          <in>AXP_Dumps.h</in>
+          <in>AXP_DumpsDefs.h</in>
+          <in>AXP_Exceptions.h</in>
+          <in>AXP_Execute_Box.h</in>
+          <in>AXP_GUID.h</in>
+          <in>AXP_NameValuePair_Read.h</in>
+          <in>AXP_PCI.h</in>
+          <in>AXP_StateMachine.h</in>
+          <in>AXP_Trace.h</in>
+          <in>AXP_Utility.h</in>
+        </df>
+        <df name="CPU">
+          <df name="Caches">
+            <in>AXP_21264_BCacheNew.h</in>
+            <in>AXP_21264_Cache.h</in>
+            <in>AXP_21264_CacheDefs.h</in>
+          </df>
+          <df name="Cbox">
+            <df name="SystemInterface">
+              <in>AXP_21264_21274_Common.h</in>
+              <in>AXP_21264_to_System.h</in>
+            </df>
+            <in>AXP_21264_Cbox.h</in>
+            <in>AXP_21264_CboxDefs.h</in>
+          </df>
+          <df name="Ebox">
+            <in>AXP_21264_Ebox.h</in>
+            <in>AXP_21264_Ebox_Byte.h</in>
+            <in>AXP_21264_Ebox_Control.h</in>
+            <in>AXP_21264_Ebox_IntegerMath.h</in>
+            <in>AXP_21264_Ebox_LoadStore.h</in>
+            <in>AXP_21264_Ebox_LogicalShift.h</in>
+            <in>AXP_21264_Ebox_Misc.h</in>
+            <in>AXP_21264_Ebox_Multimedia.h</in>
+            <in>AXP_21264_Ebox_PALfunctions.h</in>
+            <in>AXP_21264_Ebox_VAX.h</in>
+          </df>
+          <df name="Fbox">
+            <in>AXP_21264_Fbox.h</in>
+            <in>AXP_21264_Fbox_Control.h</in>
+            <in>AXP_21264_Fbox_FPFunctions.h</in>
+            <in>AXP_21264_Fbox_LoadStore.h</in>
+            <in>AXP_21264_Fbox_OperateIEEE.h</in>
+            <in>AXP_21264_Fbox_OperateMisc.h</in>
+            <in>AXP_21264_Fbox_OperateVAX.h</in>
+          </df>
+          <df name="Ibox">
+            <in>AXP_21264_Ibox.h</in>
+            <in>AXP_21264_Ibox_Initialize.h</in>
+            <in>AXP_21264_Ibox_InstructionDecoding.h</in>
+            <in>AXP_21264_Ibox_InstructionInfo.h</in>
+            <in>AXP_21264_Ibox_PCHandling.h</in>
+            <in>AXP_21264_Ibox_Prediction.h</in>
+            <in>AXP_21264_Predictions.h</in>
+            <in>AXP_21264_RegisterRenaming.h</in>
+          </df>
+          <df name="Mbox">
+            <in>AXP_21264_Mbox.h</in>
+            <in>AXP_21264_MboxDefs.h</in>
+          </df>
+          <in>AXP_21264_CPU.h</in>
+          <in>AXP_21264_CPUDefs.h</in>
+          <in>AXP_21264_IPRs.h</in>
+          <in>AXP_21264_Instructions.h</in>
+          <in>AXP_Base_CPU.h</in>
+        </df>
+        <df name="Devices">
+          <df name="Console">
+            <in>AXP_Telnet.h</in>
+          </df>
+          <df name="Ethernet">
+            <in>AXP_Ethernet.h</in>
+          </df>
+          <df name="TOYClock">
+            <in>AXP_DS12887A_TOYClock.h</in>
+          </df>
+          <df name="VirtualDisks">
+            <in>AXP_RAW.h</in>
+            <in>AXP_SSD.h</in>
+            <in>AXP_VHD.h</in>
+            <in>AXP_VHDX.h</in>
+            <in>AXP_VHD_Utility.h</in>
+            <in>AXP_VirtualDisk.h</in>
+          </df>
+        </df>
+        <df name="Motherboard">
+          <df name="Cchip">
+            <df name="CPUInterface">
+              <in>AXP_21274_21264_Common.h</in>
+            </df>
+            <in>AXP_21274_Cchip.h</in>
+          </df>
+          <df name="Dchip">
+            <in>AXP_21274_Dchip.h</in>
+          </df>
+          <df name="Pchip">
+            <in>AXP_21274_Pchip.h</in>
+          </df>
+          <in>AXP_21274_AddressMapping.h</in>
+          <in>AXP_21274_InitRoutines.h</in>
+          <in>AXP_21274_Registers.h</in>
+          <in>AXP_21274_System.h</in>
+        </df>
+      </df>
+      <df name="Motherboard">
+        <df name="Cchip">
+          <df name="CMakeFiles">
+            <df name="Cchip.dir">
+              <df name="CPUInterface">
+              </df>
+            </df>
+          </df>
+          <df name="CPUInterface">
+            <in>AXP_21274_to_CPU.c</in>
+          </df>
+          <in>AXP_21274_Cchip.c</in>
+        </df>
+        <df name="CMakeFiles">
+          <df name="Motherboard.dir">
+          </df>
+        </df>
+        <df name="Dchip">
+          <df name="CMakeFiles">
+            <df name="Dchip.dir">
+            </df>
+          </df>
+          <in>AXP_21274_Dchip.c</in>
+        </df>
+        <df name="Pchip">
+          <df name="CMakeFiles">
+            <df name="Pchip.dir">
+            </df>
+          </df>
+          <in>AXP_21274_Pchip.c</in>
+        </df>
+        <in>AXP_21274_AddressMapping.c</in>
+        <in>AXP_21274_System.c</in>
+      </df>
+      <df name="Tests">
+        <df name="CMakeFiles">
+          <df name="AXP_21264_Cache_Test.dir">
+          </df>
+          <df name="AXP_21264_Dump_Test.dir">
+          </df>
+          <df name="AXP_21264_FloatingPointTest_Test.dir">
+          </df>
+          <df name="AXP_21264_Icache_Test.dir">
+          </df>
+          <df name="AXP_21264_IntegerLoadTest.dir">
+          </df>
+          <df name="AXP_21264_Prediction_Test.dir">
+          </df>
+          <df name="AXP_Disk_Test.dir">
+          </df>
+          <df name="AXP_DS12887A_Test.dir">
+          </df>
+          <df name="AXP_Telnet_Test.dir">
+          </df>
+          <df name="AXP_Test_Npcap.dir">
+          </df>
+          <df name="AXP_Test_Queues.dir">
+          </df>
+          <df name="AXP_Test_Structure_Sizes.dir">
+          </df>
+        </df>
+        <df name="DataFiles">
+          <df name="fpTestData">
+          </df>
+          <df name="VHDTests">
+          </df>
+        </df>
+        <in>AXP_21264_Cache_Test.c</in>
+        <in>AXP_21264_Dump_Test.c</in>
+        <in>AXP_21264_FloatingPointTest.c</in>
+        <in>AXP_21264_Icache_Test.c</in>
+        <in>AXP_21264_IntegerLoadTest.c</in>
+        <in>AXP_21264_Prediction_Test.c</in>
+        <in>AXP_DS12887A_Test.c</in>
+        <in>AXP_Disk_Test.c</in>
+        <in>AXP_Telnet_Test.c</in>
+        <in>AXP_Test_Npcap.c</in>
+        <in>AXP_Test_Queues.c</in>
+        <in>AXP_Test_Structure_Sizes.c</in>
+      </df>
+    </df>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>2</platform>
+      </toolsSet>
+      <compile>
+        <compiledirpicklist>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+        </compiledirpicklist>
+        <compiledir>${AUTO_FOLDER}</compiledir>
+        <compilecommandpicklist>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+        </compilecommandpicklist>
+        <compilecommand>${AUTO_COMPILE}</compilecommand>
+      </compile>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <rundir>.</rundir>
+        <buildfirst>false</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>
