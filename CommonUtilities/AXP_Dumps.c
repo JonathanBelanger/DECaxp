@@ -927,7 +927,7 @@ void AXP_Decode_Instruction(AXP_PC *pcAddr,
     const char *funcName = NULL;
     const char *iprName = NULL;
     char regStr[24];
-    char funcStr[24];
+    char funcStr[32];
     u16 index;
     int strLoc = 0;
 
@@ -1988,3 +1988,4 @@ void AXP_Dump_Registers(AXP_INSTRUCTION *instr,
      */
     return;
 }
+

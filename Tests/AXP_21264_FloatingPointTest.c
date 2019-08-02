@@ -716,7 +716,7 @@ i32 parseNextLine(FILE *fp,
             }
             if (found == false)
             {
-                char localStr[80];
+                char localStr[160];
 
                 sprintf(localStr,
                         "floating-point operation (%s) not found",
@@ -749,7 +749,7 @@ i32 parseNextLine(FILE *fp,
             }
             if (found == false)
             {
-                char localStr[80];
+                char localStr[160];
 
                 sprintf(localStr,
                         "floating-point rounding mode (%s) not found",
@@ -1703,3 +1703,5 @@ int main()
      */
     return (0);
 }
+
+

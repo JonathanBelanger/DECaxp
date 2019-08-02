@@ -35,8 +35,8 @@ target_link_libraries(DECaxp_Generate_SROM PRIVATE
     Ethernet
     -lxml2
     -lm
-    -liconv
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
+    -lpthread
+    -lpcap)
 
 target_include_directories(DECaxp_Generate_SROM PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
@@ -63,11 +63,15 @@ target_link_libraries(DECaxp PRIVATE
     VirtualDisks
     -lxml2
     -lm
-    -liconv
     -luuid
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll
+    -lpthread
+    -lpcap
     ${compiler-rt})
 
 target_include_directories(DECaxp PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
+
+
+
+
 

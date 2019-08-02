@@ -46,8 +46,8 @@ target_link_libraries(AXP_21264_Cache_Test PRIVATE
     Ethernet
     -lxml2
     -lm
-    -liconv
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll
+    -lpthread
+    -lpcap
     ${compiler-rt})
 
 add_executable(AXP_21264_Dump_Test
@@ -58,8 +58,8 @@ target_link_libraries(AXP_21264_Dump_Test PRIVATE
     Ethernet
     -lxml2
     -lm
-    -liconv
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
+    -lpthread
+    -lpcap)
 
 target_include_directories(AXP_21264_Dump_Test PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
@@ -73,8 +73,8 @@ target_link_libraries(AXP_21264_FloatingPointTest_Test PRIVATE
     Ethernet
     -lxml2
     -lm
-    -liconv
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
+    -lpthread
+    -lpcap)
 
 target_include_directories(AXP_21264_FloatingPointTest_Test PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
@@ -93,8 +93,8 @@ target_link_libraries(AXP_21264_Icache_Test PRIVATE
     Ethernet
     -lxml2
     -lm
-    -liconv
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll
+    -lpthread
+    -lpcap
     ${compiler-rt})
 
 target_include_directories(AXP_21264_Icache_Test PRIVATE
@@ -118,8 +118,8 @@ target_link_libraries(AXP_21264_IntegerLoadTest PRIVATE
     Ethernet
     -lxml2
     -lm
-    -liconv
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll
+    -lpthread
+    -lpcap
     ${compiler-rt})
 
 add_executable(AXP_21264_Prediction_Test
@@ -131,8 +131,8 @@ target_link_libraries(AXP_21264_Prediction_Test PRIVATE
     Ethernet
     -lxml2
     -lm
-    -liconv
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
+    -lpthread
+    -lpcap)
 
 target_include_directories(AXP_21264_Prediction_Test PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
@@ -148,10 +148,10 @@ target_link_libraries(AXP_Disk_Test PRIVATE
     CommonUtilities
     Ethernet
     -lxml2
-    -lm
-    -liconv
     -luuid
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
+    -lm
+    -lpthread
+    -lpcap)
 
 add_executable(AXP_DS12887A_Test
     AXP_DS12887A_Test.c)
@@ -165,8 +165,9 @@ target_link_libraries(AXP_DS12887A_Test PRIVATE
     Ethernet
     -lxml2
     -lm
-    -liconv
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
+    -lpthread
+    -lpcap
+    -lrt)
 
 add_executable(AXP_Telnet_Test
     AXP_Telnet_Test.c)
@@ -180,8 +181,8 @@ target_link_libraries(AXP_Telnet_Test PRIVATE
     Ethernet
     -lxml2
     -lm
-    -liconv
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
+    -lpthread
+    -lpcap)
 
 add_executable(AXP_Test_Queues
     AXP_Test_Queues.c)
@@ -199,7 +200,11 @@ add_executable(AXP_Test_Npcap
     AXP_Test_Npcap.c)
 
 target_link_libraries(AXP_Test_Npcap PRIVATE
-    /cygdrive/c/WINDOWS/system32/Npcap/wpcap.dll)
+    -lpcap)
 
 target_include_directories(AXP_Test_Npcap PRIVATE
     ${PROJECT_SOURCE_DIR}/Includes)
+
+
+
+

@@ -67,6 +67,7 @@ int AXP_21264_LoadMemory(char *fileName)
     FILE *fp;
     int ii = 0;
     u32 scratch;
+    size_t itemsRead = 1;
 
     fp = fopen(fileName, "r");
     if (fp != NULL)
@@ -77,20 +78,21 @@ int AXP_21264_LoadMemory(char *fileName)
          */
         for (ii = 0; ii < 0x240; ii++)
         {
-            if (feof(fp))
+            if (feof(fp) || (itemsRead == 0))
             {
                 break;
             }
-            fread(&scratch, 1, 1, fp);
+            itemsRead = fread(&scratch, 1, 1, fp);
         }
 
         /*
          * Now start reading the file.
          */
         ii = 0;
-        while ((feof(fp) == 0) && (done == false))
+        itemsRead = 1;
+        while ((feof(fp) == 0) && (done == false) && (itemsRead != 0))
         {
-            fread(&memory[ii++], 1, 1, fp);
+            itemsRead = fread(&memory[ii++], 1, 1, fp);
             if (ii >= EIGHT_M)
             {
                 printf("Input file %s is too big for %d Meg of memory.\n",
@@ -161,3 +163,4 @@ int main()
     }
     return(retVal);
 }
+

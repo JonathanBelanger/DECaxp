@@ -4,31 +4,171 @@
     <df root="." name="0">
       <df name=".settings">
       </df>
-      <df name="CMakeFiles">
-        <df name="3.13.4">
-          <df name="CompilerIdC">
-            <df name="tmp">
+      <df name="build">
+        <df name="CMakeFiles">
+          <df name="3.13.4">
+            <df name="CompilerIdC">
+              <df name="tmp">
+              </df>
+              <in>CMakeCCompilerId.c</in>
             </df>
-            <in>CMakeCCompilerId.c</in>
-          </df>
-          <df name="CompilerIdCXX">
-            <df name="tmp">
+            <df name="CompilerIdCXX">
+              <df name="tmp">
+              </df>
+              <in>CMakeCXXCompilerId.cpp</in>
             </df>
-            <in>CMakeCXXCompilerId.cpp</in>
+          </df>
+          <df name="CMakeTmp">
+          </df>
+          <df name="Progress">
+          </df>
+          <in>feature_tests.c</in>
+          <in>feature_tests.cxx</in>
+        </df>
+        <df name="CommonUtilities">
+          <df name="CMakeFiles">
+            <df name="CommonUtilities.dir">
+            </df>
           </df>
         </df>
-        <df name="CMakeTmp">
+        <df name="CPU">
+          <df name="Caches">
+            <df name="CMakeFiles">
+              <df name="Caches.dir">
+              </df>
+            </df>
+          </df>
+          <df name="Cbox">
+            <df name="CMakeFiles">
+              <df name="Cbox.dir">
+                <df name="SystemInterface">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="CMakeFiles">
+            <df name="CPU.dir">
+            </df>
+          </df>
+          <df name="Ebox">
+            <df name="CMakeFiles">
+              <df name="Ebox.dir">
+              </df>
+            </df>
+          </df>
+          <df name="Fbox">
+            <df name="CMakeFiles">
+              <df name="Fbox.dir">
+              </df>
+            </df>
+          </df>
+          <df name="Ibox">
+            <df name="CMakeFiles">
+              <df name="Ibox.dir">
+              </df>
+            </df>
+          </df>
+          <df name="Mbox">
+            <df name="CMakeFiles">
+              <df name="Mbox.dir">
+              </df>
+            </df>
+          </df>
         </df>
-        <df name="Progress">
+        <df name="DECaxp">
+          <df name="CMakeFiles">
+            <df name="DECaxp.dir">
+            </df>
+            <df name="DECaxp_Generate_SROM.dir">
+            </df>
+          </df>
         </df>
-        <in>feature_tests.c</in>
-        <in>feature_tests.cxx</in>
+        <df name="Devices">
+          <df name="CMakeFiles">
+          </df>
+          <df name="Console">
+            <df name="CMakeFiles">
+              <df name="Console.dir">
+              </df>
+            </df>
+          </df>
+          <df name="DS12887A_TOYClock">
+            <df name="CMakeFiles">
+              <df name="TOYClock.dir">
+              </df>
+            </df>
+          </df>
+          <df name="Ethernet">
+            <df name="CMakeFiles">
+              <df name="Ethernet.dir">
+              </df>
+            </df>
+          </df>
+          <df name="VirtualDisks">
+            <df name="CMakeFiles">
+              <df name="VirtualDisks.dir">
+              </df>
+            </df>
+          </df>
+        </df>
+        <df name="Executables">
+        </df>
+        <df name="Motherboard">
+          <df name="Cchip">
+            <df name="CMakeFiles">
+              <df name="Cchip.dir">
+                <df name="CPUInterface">
+                </df>
+              </df>
+            </df>
+          </df>
+          <df name="CMakeFiles">
+            <df name="Motherboard.dir">
+            </df>
+          </df>
+          <df name="Dchip">
+            <df name="CMakeFiles">
+              <df name="Dchip.dir">
+              </df>
+            </df>
+          </df>
+          <df name="Pchip">
+            <df name="CMakeFiles">
+              <df name="Pchip.dir">
+              </df>
+            </df>
+          </df>
+        </df>
+        <df name="Tests">
+          <df name="CMakeFiles">
+            <df name="AXP_21264_Cache_Test.dir">
+            </df>
+            <df name="AXP_21264_Dump_Test.dir">
+            </df>
+            <df name="AXP_21264_FloatingPointTest_Test.dir">
+            </df>
+            <df name="AXP_21264_Icache_Test.dir">
+            </df>
+            <df name="AXP_21264_IntegerLoadTest.dir">
+            </df>
+            <df name="AXP_21264_Prediction_Test.dir">
+            </df>
+            <df name="AXP_Disk_Test.dir">
+            </df>
+            <df name="AXP_DS12887A_Test.dir">
+            </df>
+            <df name="AXP_Telnet_Test.dir">
+            </df>
+            <df name="AXP_Test_Npcap.dir">
+            </df>
+            <df name="AXP_Test_Queues.dir">
+            </df>
+            <df name="AXP_Test_Structure_Sizes.dir">
+            </df>
+          </df>
+        </df>
       </df>
       <df name="CommonUtilities">
-        <df name="CMakeFiles">
-          <df name="CommonUtilities.dir">
-          </df>
-        </df>
         <in>AXP_Blocks.c</in>
         <in>AXP_Configure.c</in>
         <in>AXP_Dumps.c</in>
@@ -41,20 +181,10 @@
       </df>
       <df name="CPU">
         <df name="Caches">
-          <df name="CMakeFiles">
-            <df name="Caches.dir">
-            </df>
-          </df>
           <in>AXP_21264_BCache.c</in>
           <in>AXP_21264_Cache.c</in>
         </df>
         <df name="Cbox">
-          <df name="CMakeFiles">
-            <df name="Cbox.dir">
-              <df name="SystemInterface">
-              </df>
-            </df>
-          </df>
           <df name="SystemInterface">
             <in>AXP_21264_to_System.c</in>
           </df>
@@ -64,15 +194,7 @@
           <in>AXP_21264_Cbox_PQ.c</in>
           <in>AXP_21264_Cbox_VDB.c</in>
         </df>
-        <df name="CMakeFiles">
-          <df name="CPU.dir">
-          </df>
-        </df>
         <df name="Ebox">
-          <df name="CMakeFiles">
-            <df name="Ebox.dir">
-            </df>
-          </df>
           <in>AXP_21264_Ebox.c</in>
           <in>AXP_21264_Ebox_Byte.c</in>
           <in>AXP_21264_Ebox_Control.c</in>
@@ -85,10 +207,6 @@
           <in>AXP_21264_Ebox_VAX.c</in>
         </df>
         <df name="Fbox">
-          <df name="CMakeFiles">
-            <df name="Fbox.dir">
-            </df>
-          </df>
           <in>AXP_21264_Fbox.c</in>
           <in>AXP_21264_Fbox_Control.c</in>
           <in>AXP_21264_Fbox_FPFunctions.c</in>
@@ -98,10 +216,6 @@
           <in>AXP_21264_Fbox_OperateVAX.c</in>
         </df>
         <df name="Ibox">
-          <df name="CMakeFiles">
-            <df name="Ibox.dir">
-            </df>
-          </df>
           <in>AXP_21264_Ibox.c</in>
           <in>AXP_21264_Ibox_Initialize.c</in>
           <in>AXP_21264_Ibox_InstructionDecoding.c</in>
@@ -110,10 +224,6 @@
           <in>AXP_21264_Ibox_Prediction.c</in>
         </df>
         <df name="Mbox">
-          <df name="CMakeFiles">
-            <df name="Mbox.dir">
-            </df>
-          </df>
           <in>AXP_21264_Mbox.c</in>
         </df>
         <in>AXP_21264_CPU.c</in>
@@ -121,44 +231,20 @@
       <df name="DataFiles">
       </df>
       <df name="DECaxp">
-        <df name="CMakeFiles">
-          <df name="DECaxp.dir">
-          </df>
-          <df name="DECaxp_Generate_SROM.dir">
-          </df>
-        </df>
         <in>DECaxp.c</in>
         <in>DECaxp_Generate_SROM.c</in>
       </df>
       <df name="Devices">
-        <df name="CMakeFiles">
-        </df>
         <df name="Console">
-          <df name="CMakeFiles">
-            <df name="Console.dir">
-            </df>
-          </df>
           <in>AXP_Telnet.c</in>
         </df>
         <df name="DS12887A_TOYClock">
-          <df name="CMakeFiles">
-            <df name="TOYClock.dir">
-            </df>
-          </df>
           <in>AXP_DS12887A_TOYClock.c</in>
         </df>
         <df name="Ethernet">
-          <df name="CMakeFiles">
-            <df name="Ethernet.dir">
-            </df>
-          </df>
           <in>AXP_Ethernet.c</in>
         </df>
         <df name="VirtualDisks">
-          <df name="CMakeFiles">
-            <df name="VirtualDisks.dir">
-            </df>
-          </df>
           <in>AXP_RAW.c</in>
           <in>AXP_SSD.c</in>
           <in>AXP_VHD.c</in>
@@ -282,65 +368,21 @@
       </df>
       <df name="Motherboard">
         <df name="Cchip">
-          <df name="CMakeFiles">
-            <df name="Cchip.dir">
-              <df name="CPUInterface">
-              </df>
-            </df>
-          </df>
           <df name="CPUInterface">
             <in>AXP_21274_to_CPU.c</in>
           </df>
           <in>AXP_21274_Cchip.c</in>
         </df>
-        <df name="CMakeFiles">
-          <df name="Motherboard.dir">
-          </df>
-        </df>
         <df name="Dchip">
-          <df name="CMakeFiles">
-            <df name="Dchip.dir">
-            </df>
-          </df>
           <in>AXP_21274_Dchip.c</in>
         </df>
         <df name="Pchip">
-          <df name="CMakeFiles">
-            <df name="Pchip.dir">
-            </df>
-          </df>
           <in>AXP_21274_Pchip.c</in>
         </df>
         <in>AXP_21274_AddressMapping.c</in>
         <in>AXP_21274_System.c</in>
       </df>
       <df name="Tests">
-        <df name="CMakeFiles">
-          <df name="AXP_21264_Cache_Test.dir">
-          </df>
-          <df name="AXP_21264_Dump_Test.dir">
-          </df>
-          <df name="AXP_21264_FloatingPointTest_Test.dir">
-          </df>
-          <df name="AXP_21264_Icache_Test.dir">
-          </df>
-          <df name="AXP_21264_IntegerLoadTest.dir">
-          </df>
-          <df name="AXP_21264_Prediction_Test.dir">
-          </df>
-          <df name="AXP_Disk_Test.dir">
-          </df>
-          <df name="AXP_DS12887A_Test.dir">
-          </df>
-          <df name="AXP_Telnet_Test.dir">
-          </df>
-          <df name="AXP_Test_Npcap.dir">
-          </df>
-          <df name="AXP_Test_Queues.dir">
-          </df>
-          <df name="AXP_Test_Structure_Sizes.dir">
-          </df>
-        </df>
         <df name="DataFiles">
           <df name="fpTestData">
           </df>

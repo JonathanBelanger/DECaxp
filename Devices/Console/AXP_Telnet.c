@@ -1232,7 +1232,7 @@ static AXP_TELNET_SESSION *AXP_Telnet_Accept(int sock)
     AXP_SM_Args args;
     AXP_TELNET_SESSION *ses;
     struct sockaddr theirName;
-    int theirNameSize = sizeof(theirName);
+    socklen_t theirNameSize = sizeof(theirName);
 
     /*
      * Go allocate a block into which TELNET session information can be
@@ -1679,3 +1679,4 @@ void AXP_Telnet_Main(void)
      */
     return;
 }
+

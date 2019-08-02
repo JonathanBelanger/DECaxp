@@ -153,6 +153,7 @@ int main()
     AXP_EXCEPTIONS retVal;
     int testCnt = 0;
     int ii = 0;
+    int items;
 
     /*
      * NOTE:    The current simulation takes in one instruction at a time.  The
@@ -191,7 +192,11 @@ int main()
         if(fp != NULL)
         {
             printf("\n Processing Test Data File: %s\n", fileName);
-            fscanf(fp, "%80s", headerStr);      /* read first line */
+            items = fscanf(fp, "%80s", headerStr);      /* read first line */
+            if (items == 0)
+            {
+                perror("No items returned from the input file");
+            }
             headerStr[0] = (char) fgetc(fp);    /* new-line */
             headerStr[0] = (char) fgetc(fp);    /* carriage-return */
             if (readNextHex(fp, (u8 *) &ldahAddress, 8))
@@ -357,3 +362,4 @@ int main()
      */
     return(0);
 }
+

@@ -758,6 +758,7 @@ int main()
             {
                 int lineCount = 0;
                 int ch;
+                int items;
 
                 while(!feof(fp))
                 {
@@ -779,7 +780,11 @@ int main()
                        lineCount);
                 while (feof(fp) == 0)
                 {
-                    fscanf(fp, "%d %d\n", &vpcInt, &takenInt);
+                    items = fscanf(fp, "%d %d\n", &vpcInt, &takenInt);
+                    if (items == 0)
+                    {
+                        perror("No items returned from input file");
+                    }
                     insCnt++;
                     vpc.pc = vpcInt;
                     taken = (takenInt == 1) ? true : false;

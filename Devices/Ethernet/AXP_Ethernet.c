@@ -59,14 +59,11 @@ AXP_Ethernet_Handle *AXP_EthernetOpen(char *name, u8 cardNo)
     if (retVal != NULL)
     {
 
-  retVal->handle = pcap_open(
-        name,
-        SIXTYFOUR_K,
-        (PCAP_OPENFLAG_PROMISCUOUS |
-            PCAP_OPENFLAG_NOCAPTURE_LOCAL),
-        AXP_ETH_READ_TIMEOUT,
-        NULL,
-        retVal->errorBuf);
+  retVal->handle = pcap_open_live(name,
+                                  SIXTYFOUR_K,
+                                  true,
+                                  AXP_ETH_READ_TIMEOUT,
+                                  retVal->errorBuf);
   if (retVal->handle == NULL)
   {
       AXP_Deallocate_Block(retVal);
@@ -118,3 +115,6 @@ void AXP_EthernetClose(AXP_Ethernet_Handle *handle)
      */
     return;
 }
+
+
+

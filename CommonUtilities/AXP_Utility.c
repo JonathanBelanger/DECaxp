@@ -1186,6 +1186,7 @@ i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
     int ii, jj;
     bool eofHit = false;
     u8 scratch[4];
+    size_t itemsRead;
 
     if (AXP_UTL_BUFF)
     {
@@ -1215,7 +1216,11 @@ i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
                 eofHit = true;
                 break;
             }
-            fread(&scratch[ii % 4], 1, 1, fp);
+            itemsRead = fread(&scratch[ii % 4], 1, 1, fp);
+            if (itemsRead == 0)
+            {
+                perror(NULL);
+            }
             if (AXP_UTL_BUFF)
             {
                 char traceBuf[256];
@@ -1253,7 +1258,7 @@ i32 AXP_LoadExecutable(char *fileName, u8 *buffer, u32 bufferLen)
         }
         while ((eofHit == false) && (retVal == 0))
         {
-            fread(&buffer[ii], 1, 1, fp);
+            itemsRead = fread(&buffer[ii], 1, 1, fp);
             if (feof(fp))
             {
                 eofHit = true;
@@ -1346,6 +1351,7 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
     char *errMsg = "%%AXP-E-%s, %s";
     char *localFileName = "";
     int ii = 0;
+    size_t itemsRead;
     bool retVal = false;
 
     if (fileName != NULL)
@@ -1386,10 +1392,10 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
             switch (ii)
             {
                 case 0:
-                    fread(&sromHandle->validPat,
-                          sizeof(u32),
-                          1,
-                          sromHandle->fp);
+                    itemsRead = fread(&sromHandle->validPat,
+                                      sizeof(u32),
+                                      1,
+                                      sromHandle->fp);
                     if (sromHandle->validPat != AXP_ROM_VAL_PAT)
                     {
                         if (AXP_UTL_BUFF)
@@ -1405,10 +1411,10 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
                     break;
 
                 case 1:
-                    fread(&sromHandle->inverseVP,
-                          sizeof(u32),
-                          1,
-                          sromHandle->fp);
+                    itemsRead = fread(&sromHandle->inverseVP,
+                                      sizeof(u32),
+                                      1,
+                                      sromHandle->fp);
                     if (sromHandle->inverseVP != AXP_ROM_INV_VP_PAT)
                     {
                         if (AXP_UTL_BUFF)
@@ -1424,7 +1430,7 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
                     break;
 
                 case 2:
-                    fread(&sromHandle->hdrSize, sizeof(u32), 1, sromHandle->fp);
+                    itemsRead = fread(&sromHandle->hdrSize, sizeof(u32), 1, sromHandle->fp);
                     if (sromHandle->hdrSize != AXP_ROM_HDR_LEN)
                     {
                         if (AXP_UTL_BUFF)
@@ -1440,65 +1446,65 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
                     break;
 
                 case 3:
-                    fread(&sromHandle->imgChecksum,
-                          sizeof(u32),
-                          1,
-                          sromHandle->fp);
+                    itemsRead = fread(&sromHandle->imgChecksum,
+                                      sizeof(u32),
+                                      1,
+                                      sromHandle->fp);
                     break;
 
                 case 4:
-                    fread(&sromHandle->imgSize, sizeof(u32), 1, sromHandle->fp);
+                    itemsRead = fread(&sromHandle->imgSize, sizeof(u32), 1, sromHandle->fp);
                     break;
 
                 case 5:
-                    fread(&sromHandle->decompFlag,
-                          sizeof(u32),
-                          1,
-                          sromHandle->fp);
+                    itemsRead = fread(&sromHandle->decompFlag,
+                                      sizeof(u32),
+                                      1,
+                                      sromHandle->fp);
                     break;
 
                 case 6:
-                    fread(&sromHandle->destAddr,
-                          sizeof(u64),
-                          1,
-                          sromHandle->fp);
+                    itemsRead = fread(&sromHandle->destAddr,
+                                      sizeof(u64),
+                                      1,
+                                      sromHandle->fp);
                     break;
 
                 case 7:
-                    fread(&sromHandle->hdrRev, sizeof(u8), 1, sromHandle->fp);
+                    itemsRead = fread(&sromHandle->hdrRev, sizeof(u8), 1, sromHandle->fp);
                     break;
 
                 case 8:
-                    fread(&sromHandle->fwID, sizeof(u8), 1, sromHandle->fp);
+                    itemsRead = fread(&sromHandle->fwID, sizeof(u8), 1, sromHandle->fp);
                     break;
 
                 case 9:
-                    fread(&sromHandle->hdrRevExt,
-                          sizeof(u8),
-                          1,
-                          sromHandle->fp);
+                    itemsRead = fread(&sromHandle->hdrRevExt,
+                                      sizeof(u8),
+                                      1,
+                                      sromHandle->fp);
                     break;
 
                 case 10:
-                    fread(&sromHandle->res, sizeof(u8), 1, sromHandle->fp);
+                    itemsRead = fread(&sromHandle->res, sizeof(u8), 1, sromHandle->fp);
                     break;
 
                 case 11:
-                    fread(&sromHandle->romImgSize,
-                          sizeof(u32),
-                          1,
-                          sromHandle->fp);
+                    itemsRead = fread(&sromHandle->romImgSize,
+                                      sizeof(u32),
+                                      1,
+                                      sromHandle->fp);
                     break;
 
                 case 12:
-                    fread(&sromHandle->optFwID, sizeof(u64), 1, sromHandle->fp);
+                    itemsRead = fread(&sromHandle->optFwID, sizeof(u64), 1, sromHandle->fp);
                     break;
 
                 case 13:
-                    fread(&sromHandle->romOffset,
-                          sizeof(u32),
-                          1,
-                          sromHandle->fp);
+                    itemsRead = fread(&sromHandle->romOffset,
+                                      sizeof(u32),
+                                      1,
+                                      sromHandle->fp);
                     if (sromHandle->romOffset & 1)
                     {
                         sromHandle->romOffsetValid = true;
@@ -1507,10 +1513,10 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
                     break;
 
                 case 14:
-                    fread(&sromHandle->hdrChecksum,
-                          sizeof(u32),
-                          1,
-                          sromHandle->fp);
+                    itemsRead = fread(&sromHandle->hdrChecksum,
+                                      sizeof(u32),
+                                      1,
+                                      sromHandle->fp);
                     break;
             }
 
@@ -1518,7 +1524,7 @@ bool AXP_OpenRead_SROM(char *fileName, AXP_SROM_HANDLE *sromHandle)
              * If we read the end of the file, then this is not a valid SROM
              * file.
              */
-            if (feof(sromHandle->fp) != 0)
+            if ((itemsRead == 0) || (feof(sromHandle->fp) != 0))
             {
                 if (AXP_UTL_BUFF)
                 {
@@ -2656,3 +2662,4 @@ bool AXP_ReadFromOffset(FILE *fp, void *outBuf, size_t *outLen, u64 offset)
      */
     return (retVal);
 }
+

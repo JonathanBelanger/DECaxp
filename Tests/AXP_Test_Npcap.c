@@ -147,10 +147,8 @@ int main(void)
     /*
      * Call WinPcap to return all network devices that can be opened.
      */
-    retVal = pcap_findalldevs_ex(PCAP_SRC_IF_STRING,
-                                 NULL,      /* auth is not needed */
-                                 &allDevices,
-                                 errorBuf);
+    retVal = pcap_findalldevs(&allDevices,
+                              errorBuf);
 
     /*
      * If the above call returns a success, then if any devices were returned,
@@ -216,3 +214,4 @@ int main(void)
      */
     return(0);
 }
+
