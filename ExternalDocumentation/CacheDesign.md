@@ -191,13 +191,12 @@ A cache block has the following cache state when certain bits are set or clean.
 The list of cache states and the bits required to be set or clear.
 
 | Cache State | Valid | Shared | Dirty |
-+-------------+-------+--------+-------+
+|-------------|-------|--------|-------|
 | Invalid | Clear | Any | Any|
 | Clean | Set | Clear | Clear |
 | Dirty | Set | Clear | Set |
 | Shared/Clean | Set | Set | Clear |
 | Shared/Dirty | Set | Set | Set |
-+-------------+-------+--------+-------+
 
 ## Cache Indexing and Set Selection
 
@@ -436,12 +435,10 @@ and a single shared writer.  As such, deadlocking the locks between the dCache
 and CTAG array needs to be avoided.  The following possible locking states will
 be considered:
 
-|---------------|-------------|-------------|
 |               | CTAG reader | CTAG writer |
 |---------------|-------------|-------------|
 | dCache reader |     Yes     |     No      |
 | dCache writer |     Yes     |     Yes     |
-|---------------|-------------|-------------|
 
 **Note**: Because the dCache and CTAG arrays need to be kept in-sync, there
 should never be a dCache reader and CTAG writer.  Since it is possible to
